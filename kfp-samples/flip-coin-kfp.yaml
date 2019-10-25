@@ -1,0 +1,300 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: conditional-execution-pipeline-
+spec:
+  arguments:
+    parameters: []
+  entrypoint: conditional-execution-pipeline
+  serviceAccountName: pipeline-runner
+  templates:
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+          - name: generate-random-number-output
+            value: '{{tasks.generate-random-number.outputs.parameters.generate-random-number-output}}'
+        dependencies:
+        - generate-random-number
+        name: condition-2
+        template: condition-2
+        when: '{{tasks.generate-random-number.outputs.parameters.generate-random-number-output}}
+          > 5'
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+          - name: generate-random-number-output
+            value: '{{tasks.generate-random-number.outputs.parameters.generate-random-number-output}}'
+        dependencies:
+        - generate-random-number
+        name: condition-3
+        template: condition-3
+        when: '{{tasks.generate-random-number.outputs.parameters.generate-random-number-output}}
+          <= 5'
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+        name: generate-random-number
+        template: generate-random-number
+    inputs:
+      parameters:
+      - name: flip-coin-output
+    name: condition-1
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+          - name: generate-random-number-output
+            value: '{{inputs.parameters.generate-random-number-output}}'
+        name: print
+        template: print
+    inputs:
+      parameters:
+      - name: flip-coin-output
+      - name: generate-random-number-output
+    name: condition-2
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+          - name: generate-random-number-output
+            value: '{{inputs.parameters.generate-random-number-output}}'
+        name: print-2
+        template: print-2
+    inputs:
+      parameters:
+      - name: flip-coin-output
+      - name: generate-random-number-output
+    name: condition-3
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+          - name: generate-random-number-2-output
+            value: '{{tasks.generate-random-number-2.outputs.parameters.generate-random-number-2-output}}'
+        dependencies:
+        - generate-random-number-2
+        name: condition-5
+        template: condition-5
+        when: '{{tasks.generate-random-number-2.outputs.parameters.generate-random-number-2-output}}
+          > 15'
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+          - name: generate-random-number-2-output
+            value: '{{tasks.generate-random-number-2.outputs.parameters.generate-random-number-2-output}}'
+        dependencies:
+        - generate-random-number-2
+        name: condition-6
+        template: condition-6
+        when: '{{tasks.generate-random-number-2.outputs.parameters.generate-random-number-2-output}}
+          <= 15'
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+        name: generate-random-number-2
+        template: generate-random-number-2
+    inputs:
+      parameters:
+      - name: flip-coin-output
+    name: condition-4
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+          - name: generate-random-number-2-output
+            value: '{{inputs.parameters.generate-random-number-2-output}}'
+        name: print-3
+        template: print-3
+    inputs:
+      parameters:
+      - name: flip-coin-output
+      - name: generate-random-number-2-output
+    name: condition-5
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{inputs.parameters.flip-coin-output}}'
+          - name: generate-random-number-2-output
+            value: '{{inputs.parameters.generate-random-number-2-output}}'
+        name: print-4
+        template: print-4
+    inputs:
+      parameters:
+      - name: flip-coin-output
+      - name: generate-random-number-2-output
+    name: condition-6
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{tasks.flip-coin.outputs.parameters.flip-coin-output}}'
+        dependencies:
+        - flip-coin
+        name: condition-1
+        template: condition-1
+        when: '{{tasks.flip-coin.outputs.parameters.flip-coin-output}} == heads'
+      - arguments:
+          parameters:
+          - name: flip-coin-output
+            value: '{{tasks.flip-coin.outputs.parameters.flip-coin-output}}'
+        dependencies:
+        - flip-coin
+        name: condition-4
+        template: condition-4
+        when: '{{tasks.flip-coin.outputs.parameters.flip-coin-output}} == tails'
+      - name: flip-coin
+        template: flip-coin
+    name: conditional-execution-pipeline
+  - container:
+      args:
+      - python -c "import random; result = 'heads' if random.randint(0,1) == 0 else
+        'tails'; print(result)" | tee /tmp/output
+      command:
+      - sh
+      - -c
+      image: python:alpine3.6
+    name: flip-coin
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        optional: true
+        path: /mlpipeline-ui-metadata.json
+      - name: mlpipeline-metrics
+        optional: true
+        path: /mlpipeline-metrics.json
+      parameters:
+      - name: flip-coin-output
+        valueFrom:
+          path: /tmp/output
+  - container:
+      args:
+      - python -c "import random; print(random.randint($0, $1))" | tee $2
+      - '0'
+      - '9'
+      - /tmp/output
+      command:
+      - sh
+      - -c
+      image: python:alpine3.6
+    name: generate-random-number
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        optional: true
+        path: /mlpipeline-ui-metadata.json
+      - name: mlpipeline-metrics
+        optional: true
+        path: /mlpipeline-metrics.json
+      parameters:
+      - name: generate-random-number-output
+        valueFrom:
+          path: /tmp/output
+  - container:
+      args:
+      - python -c "import random; print(random.randint($0, $1))" | tee $2
+      - '10'
+      - '19'
+      - /tmp/output
+      command:
+      - sh
+      - -c
+      image: python:alpine3.6
+    name: generate-random-number-2
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        optional: true
+        path: /mlpipeline-ui-metadata.json
+      - name: mlpipeline-metrics
+        optional: true
+        path: /mlpipeline-metrics.json
+      parameters:
+      - name: generate-random-number-2-output
+        valueFrom:
+          path: /tmp/output
+  - container:
+      command:
+      - echo
+      - heads and {{inputs.parameters.generate-random-number-output}} > 5!
+      image: alpine:3.6
+    inputs:
+      parameters:
+      - name: generate-random-number-output
+    name: print
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        optional: true
+        path: /mlpipeline-ui-metadata.json
+      - name: mlpipeline-metrics
+        optional: true
+        path: /mlpipeline-metrics.json
+  - container:
+      command:
+      - echo
+      - heads and {{inputs.parameters.generate-random-number-output}} <= 5!
+      image: alpine:3.6
+    inputs:
+      parameters:
+      - name: generate-random-number-output
+    name: print-2
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        optional: true
+        path: /mlpipeline-ui-metadata.json
+      - name: mlpipeline-metrics
+        optional: true
+        path: /mlpipeline-metrics.json
+  - container:
+      command:
+      - echo
+      - tails and {{inputs.parameters.generate-random-number-2-output}} > 15!
+      image: alpine:3.6
+    inputs:
+      parameters:
+      - name: generate-random-number-2-output
+    name: print-3
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        optional: true
+        path: /mlpipeline-ui-metadata.json
+      - name: mlpipeline-metrics
+        optional: true
+        path: /mlpipeline-metrics.json
+  - container:
+      command:
+      - echo
+      - tails and {{inputs.parameters.generate-random-number-2-output}} <= 15!
+      image: alpine:3.6
+    inputs:
+      parameters:
+      - name: generate-random-number-2-output
+    name: print-4
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        optional: true
+        path: /mlpipeline-ui-metadata.json
+      - name: mlpipeline-metrics
+        optional: true
+        path: /mlpipeline-metrics.json
