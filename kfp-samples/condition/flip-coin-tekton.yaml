@@ -1,0 +1,274 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Condition
+metadata:
+  name: coin
+spec:
+  params:
+    - name: face
+      description: which face of the coin are we looking for
+      type: string
+  resources:
+    - name: coin
+      type: storage
+  check:
+    image: alpine
+    command:
+    - /bin/sh
+    args:
+    - -ce
+    - |
+      COIN_FACE=$(cat $(resources.coin.path)/coin.txt)
+      test "$COIN_FACE" == "$(params.face)"
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Condition
+metadata:
+  name: greaterthan
+spec:
+  params:
+    - name: threshold
+      description: the number that we should be greater than
+      type: string
+  resources:
+    - name: random
+      type: storage
+  check:
+    image: alpine
+    command:
+    - /bin/sh
+    args:
+    - -ce
+    - |
+      MYRANDOM=$(cat $(resources.random.path)/random.txt)
+      [ "$MYRANDOM" -gt "$(params.threshold)" ]
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Condition
+metadata:
+  name: lessorequalthen
+spec:
+  params:
+    - name: threshold
+      description: the number that we should be less or equal to
+      type: string
+  resources:
+    - name: random
+      type: storage
+  check:
+    image: alpine
+    command:
+    - /bin/sh
+    args:
+    - -ce
+    - |
+      MYRANDOM=$(cat $(resources.random.path)/random.txt)
+      [ "$MYRANDOM" -le "$(params.threshold)" ]
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: generate-random
+spec:
+  inputs:
+    params:
+      - name: min
+        description: The lower end of the integer interval
+      - name: max
+        description: The upper end of the integer interval
+  outputs:
+    resources:
+      - name: result
+        type: storage
+  steps:
+    - name: generate-random
+      image: python:alpine3.6
+      command:
+        - /bin/sh
+      args:
+        - -ce
+        - |
+          python -c "import random; print(random.randint($(inputs.params.min), $(inputs.params.max)))" | tee $(outputs.resources.result.path)/random.txt
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: flip-coin
+spec:
+  outputs:
+    resources:
+      - name: result
+        type: storage
+  steps:
+    - name: flip-coin
+      image: python:alpine3.6
+      command:
+        - /bin/sh
+      args:
+        - -ce
+        - |
+          python -c "import random; result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(result)" | tee $(outputs.resources.result.path)/coin.txt
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: print
+spec:
+  inputs:
+    params:
+      - name: message
+        description: Message to be printed. It must include one "%s"for interpolation.
+    resources:
+      - name: random
+        type: storage
+  steps:
+    - name: echo
+      image: python:alpine3.6
+      command:
+        - /bin/sh
+      args:
+        - -ce
+        - |
+          python -c "print(\"$(inputs.params.message)\" % \"$(cat $(inputs.resources.random.path)/random.txt)\")"
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: flip-coin-condition-demo
+spec:
+  resources:
+    - name: coin
+      type: storage
+    - name: random
+      type: storage
+  tasks:
+  - name: initial-flip
+    taskRef:
+      name: flip-coin
+    resources:
+      outputs:
+        - name: result
+          resource: coin
+  - name: random-for-head
+    taskRef:
+      name: generate-random
+    runAfter:
+      - initial-flip
+    conditions:
+      - conditionRef: coin
+        params:
+          - name: face
+            value: heads
+        resources:
+          - name: coin
+            resource: coin
+    params:
+      - name: min
+        value: "0"
+      - name: max
+        value: "9"
+    resources:
+      outputs:
+        - name: result
+          resource: random
+  - name: random-for-tail
+    taskRef:
+      name: generate-random
+    runAfter:
+      - initial-flip
+    conditions:
+      - conditionRef: coin
+        params:
+          - name: face
+            value: tails
+        resources:
+          - name: coin
+            resource: coin
+    params:
+      - name: min
+        value: "10"
+      - name: max
+        value: "19"
+    resources:
+      outputs:
+        - name: result
+          resource: random
+  - name: print-large-tail
+    taskRef:
+      name: print
+    runAfter:
+      - random-for-tail
+    conditions:
+      - conditionRef: greaterthan
+        params:
+          - name: threshold
+            value: "15"
+        resources:
+          - name: random
+            resource: random
+    params:
+      - name: message
+        value: "tails and %s > 15"
+    resources:
+      inputs:
+        - name: random
+          resource: random
+  - name: print-small-tail
+    taskRef:
+      name: print
+    runAfter:
+      - random-for-tail
+    conditions:
+      - conditionRef: lessorequalthen
+        params:
+          - name: threshold
+            value: "15"
+        resources:
+          - name: random
+            resource: random
+    params:
+      - name: message
+        value: "tails and %s <= 15"
+    resources:
+      inputs:
+        - name: random
+          resource: random
+  - name: print-large-head
+    taskRef:
+      name: print
+    runAfter:
+      - random-for-head
+    conditions:
+      - conditionRef: greaterthan
+        params:
+          - name: threshold
+            value: "5"
+        resources:
+          - name: random
+            resource: random
+    params:
+      - name: message
+        value: "heads and %s > 5"
+    resources:
+      inputs:
+        - name: random
+          resource: random
+  - name: print-small-head
+    taskRef:
+      name: print
+    runAfter:
+      - random-for-head
+    conditions:
+      - conditionRef: lessorequalthen
+        params:
+          - name: threshold
+            value: "5"
+        resources:
+          - name: random
+            resource: random
+    params:
+      - name: message
+        value: "heads and %s <= 5"
+    resources:
+      inputs:
+        - name: random
+          resource: random
