@@ -16,6 +16,6 @@ Since the work here will evolve from experimental towards a mature solution, we 
 
 ## CD Foundation
 
-The work here is going to be tracked under the CD Foudnation MLOps Sig. If you are interested in joining, please join the group here
+The work here is going to be tracked under the CD Foundation MLOps Sig. If you are interested in joining, please join the group here
 https://lists.cd.foundation/g/sig-mlops
 
