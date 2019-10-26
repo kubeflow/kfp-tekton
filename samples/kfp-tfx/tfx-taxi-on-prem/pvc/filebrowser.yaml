@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: filebrowser
+  namespace: kubeflow
+  labels:
+    app: filebrowser
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: filebrowser
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: filebrowser
+  namespace: kubeflow
+  labels:
+    app: filebrowser
+spec:
+  template:
+    metadata:
+      labels:
+        app: filebrowser
+    spec:
+      containers:
+        - image: filebrowser/filebrowser:latest
+          name: filebrowser
+          ports:
+            - containerPort: 80
+              name: filebrowser
+          volumeMounts:
+            - name: tfx-volume
+              mountPath: /srv
+      volumes:
+        - name: tfx-volume
+          persistentVolumeClaim:
+            claimName: tfx-volume

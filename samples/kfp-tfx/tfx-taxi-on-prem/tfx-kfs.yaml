@@ -1,0 +1,935 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Constructs a Kubeflow
+      pipeline.\n\n      Creates Kubeflow ContainerOps for each TFX component encountered
+      in the\n      logical pipeline definition.\n      ", "name": "chicago_taxi_pipeline_simple"}'
+  generateName: chicago-taxi-pipeline-simple-
+spec:
+  arguments:
+    parameters:
+    - name: action
+      value: update
+    - name: model-name
+      value: tfx-taxi
+    - name: default-model-uri
+      value: ''
+    - name: canary-model-uri
+      value: ''
+    - name: canary-model-traffic-percentage
+      value: '0'
+    - name: namespace
+      value: default
+    - name: framework
+      value: custom
+    - name: default-custom-model-spec
+      value: '{"name": "tfx-taxi", "image": "tomcli/tf-serving:latest", "port": "8501",
+        "env": [{"name":"MODEL_NAME", "value": "tfx-taxi"},{"name":"MODEL_BASE_PATH",
+        "value": "/models"}]}'
+    - name: canary-custom-model-spec
+      value: '{}'
+    - name: autoscaling-target
+      value: '0'
+    - name: kfserving-endpoint
+      value: ''
+  entrypoint: chicago-taxi-pipeline-simple
+  serviceAccountName: pipeline-runner
+  templates:
+  - dag:
+      tasks:
+      - name: csvexamplegen
+        template: csvexamplegen
+      - dependencies:
+        - csvexamplegen
+        - trainer
+        name: evaluator
+        template: evaluator
+      - dependencies:
+        - schemagen
+        - statisticsgen
+        name: examplevalidator
+        template: examplevalidator
+      - dependencies:
+        - csvexamplegen
+        - trainer
+        name: modelvalidator
+        template: modelvalidator
+      - dependencies:
+        - modelvalidator
+        - trainer
+        name: pusher
+        template: pusher
+      - dependencies:
+        - statisticsgen
+        name: schemagen
+        template: schemagen
+      - dependencies:
+        - csvexamplegen
+        name: statisticsgen
+        template: statisticsgen
+      - dependencies:
+        - schemagen
+        - transform
+        name: trainer
+        template: trainer
+      - dependencies:
+        - csvexamplegen
+        - schemagen
+        name: transform
+        template: transform
+      - arguments:
+          parameters:
+          - name: action
+            value: '{{inputs.parameters.action}}'
+          - name: autoscaling-target
+            value: '{{inputs.parameters.autoscaling-target}}'
+          - name: canary-custom-model-spec
+            value: '{{inputs.parameters.canary-custom-model-spec}}'
+          - name: canary-model-traffic-percentage
+            value: '{{inputs.parameters.canary-model-traffic-percentage}}'
+          - name: canary-model-uri
+            value: '{{inputs.parameters.canary-model-uri}}'
+          - name: default-custom-model-spec
+            value: '{{inputs.parameters.default-custom-model-spec}}'
+          - name: default-model-uri
+            value: '{{inputs.parameters.default-model-uri}}'
+          - name: framework
+            value: '{{inputs.parameters.framework}}'
+          - name: kfserving-endpoint
+            value: '{{inputs.parameters.kfserving-endpoint}}'
+          - name: model-name
+            value: '{{inputs.parameters.model-name}}'
+          - name: namespace
+            value: '{{inputs.parameters.namespace}}'
+        name: kubeflow-serve-model-using-kfserving
+        template: kubeflow-serve-model-using-kfserving
+        dependencies:
+          - pusher
+    inputs:
+      parameters:
+      - name: action
+      - name: autoscaling-target
+      - name: canary-custom-model-spec
+      - name: canary-model-traffic-percentage
+      - name: canary-model-uri
+      - name: default-custom-model-spec
+      - name: default-model-uri
+      - name: framework
+      - name: kfserving-endpoint
+      - name: model-name
+      - name: namespace
+    name: chicago-taxi-pipeline-simple
+  - container:
+      args:
+      - --pipeline_name
+      - chicago_taxi_pipeline_simple
+      - --pipeline_root
+      - /mnt/shared/tfx_taxi_simple
+      - --kubeflow_metadata_config
+      - "{\n  \"mysqlDbServiceHost\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_HOST\"\
+        \n  },\n  \"mysqlDbServicePort\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_PORT\"\
+        \n  },\n  \"mysqlDbName\": {\n    \"value\": \"metadb\"\n  },\n  \"mysqlDbUser\"\
+        : {\n    \"value\": \"root\"\n  },\n  \"mysqlDbPassword\": {\n    \"value\"\
+        : \"\"\n  }\n}"
+      - --additional_pipeline_args
+      - '{}'
+      - --component_id
+      - CsvExampleGen
+      - --component_type
+      - tfx.components.example_gen.csv_example_gen.component.CsvExampleGen
+      - --driver_class_path
+      - tfx.components.example_gen.driver.Driver
+      - --executor_spec
+      - '{"__class__": "ExecutorClassSpec", "__module__": "tfx.components.base.executor_spec",
+        "__tfx_object_type__": "jsonable", "executor_class": {"__class__": "Executor",
+        "__module__": "tfx.components.example_gen.csv_example_gen.executor", "__tfx_object_type__":
+        "class"}}'
+      - --inputs
+      - '{"input_base": [{"artifact": {"uri": "/mnt/shared/data", "properties": {"type_name":
+        {"stringValue": "ExternalPath"}, "split": {"stringValue": ""}}}, "artifact_type":
+        {"name": "ExternalPath", "properties": {"name": "STRING", "type_name": "STRING",
+        "state": "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING", "split": "STRING"}}}]}'
+      - --outputs
+      - '{"examples": [{"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "train"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING", "name":
+        "STRING"}}}, {"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "eval"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"state": "STRING", "producer_component": "STRING", "span":
+        "INT", "pipeline_name": "STRING", "split": "STRING", "name": "STRING", "type_name":
+        "STRING"}}}]}'
+      - --exec_properties
+      - '{"input_config": "{\n  \"splits\": [\n    {\n      \"name\": \"single_split\",\n      \"pattern\":
+        \"*\"\n    }\n  ]\n}", "output_config": "{\n  \"splitConfig\": {\n    \"splits\":
+        [\n      {\n        \"hashBuckets\": 2,\n        \"name\": \"train\"\n      },\n      {\n        \"hashBuckets\":
+        1,\n        \"name\": \"eval\"\n      }\n    ]\n  }\n}", "custom_config":
+        null}'
+      command:
+      - python
+      - /tfx-src/tfx/orchestration/kubeflow/container_entrypoint.py
+      env:
+      - name: WORKFLOW_ID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['workflows.argoproj.io/workflow']
+      - name: S3_ENDPOINT
+        value: minio-service.kubeflow:9000
+      - name: S3_USE_HTTPS
+        value: '0'
+      - name: S3_VERIFY_SSL
+        value: '0'
+      - name: AWS_ACCESS_KEY_ID
+        value: minio
+      - name: AWS_SECRET_ACCESS_KEY
+        value: minio123
+      image: tensorflow/tfx:0.14.0
+      volumeMounts:
+      - mountPath: /mnt/shared
+        name: shared-volume
+    name: csvexamplegen
+    volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: tfx-volume
+  - container:
+      args:
+      - --pipeline_name
+      - chicago_taxi_pipeline_simple
+      - --pipeline_root
+      - /mnt/shared/tfx_taxi_simple
+      - --kubeflow_metadata_config
+      - "{\n  \"mysqlDbServiceHost\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_HOST\"\
+        \n  },\n  \"mysqlDbServicePort\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_PORT\"\
+        \n  },\n  \"mysqlDbName\": {\n    \"value\": \"metadb\"\n  },\n  \"mysqlDbUser\"\
+        : {\n    \"value\": \"root\"\n  },\n  \"mysqlDbPassword\": {\n    \"value\"\
+        : \"\"\n  }\n}"
+      - --additional_pipeline_args
+      - '{}'
+      - --component_id
+      - Evaluator
+      - --component_type
+      - tfx.components.evaluator.component.Evaluator
+      - --driver_class_path
+      - tfx.components.base.base_driver.BaseDriver
+      - --executor_spec
+      - '{"__class__": "ExecutorClassSpec", "__module__": "tfx.components.base.executor_spec",
+        "__tfx_object_type__": "jsonable", "executor_class": {"__class__": "Executor",
+        "__module__": "tfx.components.evaluator.executor", "__tfx_object_type__":
+        "class"}}'
+      - --inputs
+      - '{"examples": [{"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "train"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING", "name":
+        "STRING"}}}, {"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "eval"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"state": "STRING", "producer_component": "STRING", "span":
+        "INT", "pipeline_name": "STRING", "split": "STRING", "name": "STRING", "type_name":
+        "STRING"}}}], "model_exports": [{"artifact": {"properties": {"split": {"stringValue":
+        ""}, "producer_component": {"stringValue": "Trainer"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}, "name": {"stringValue": "output"}, "type_name":
+        {"stringValue": "ModelExportPath"}}}, "artifact_type": {"name": "ModelExportPath",
+        "properties": {"split": "STRING", "name": "STRING", "type_name": "STRING",
+        "state": "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING"}}}]}'
+      - --outputs
+      - '{"output": [{"artifact": {"properties": {"type_name": {"stringValue": "ModelEvalPath"},
+        "split": {"stringValue": ""}, "producer_component": {"stringValue": "Evaluator"},
+        "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"}, "name":
+        {"stringValue": "output"}}}, "artifact_type": {"name": "ModelEvalPath", "properties":
+        {"name": "STRING", "type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING"}}}]}'
+      - --exec_properties
+      - '{"feature_slicing_spec": "{\n  \"specs\": [\n    {\n      \"columnForSlicing\":
+        [\n        \"trip_start_hour\"\n      ]\n    }\n  ]\n}"}'
+      command:
+      - python
+      - /tfx-src/tfx/orchestration/kubeflow/container_entrypoint.py
+      env:
+      - name: WORKFLOW_ID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['workflows.argoproj.io/workflow']
+      - name: S3_ENDPOINT
+        value: minio-service.kubeflow:9000
+      - name: S3_USE_HTTPS
+        value: '0'
+      - name: S3_VERIFY_SSL
+        value: '0'
+      - name: AWS_ACCESS_KEY_ID
+        value: minio
+      - name: AWS_SECRET_ACCESS_KEY
+        value: minio123
+      image: tensorflow/tfx:0.14.0
+      volumeMounts:
+      - mountPath: /mnt/shared
+        name: shared-volume
+    name: evaluator
+    volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: tfx-volume
+  - container:
+      args:
+      - --pipeline_name
+      - chicago_taxi_pipeline_simple
+      - --pipeline_root
+      - /mnt/shared/tfx_taxi_simple
+      - --kubeflow_metadata_config
+      - "{\n  \"mysqlDbServiceHost\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_HOST\"\
+        \n  },\n  \"mysqlDbServicePort\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_PORT\"\
+        \n  },\n  \"mysqlDbName\": {\n    \"value\": \"metadb\"\n  },\n  \"mysqlDbUser\"\
+        : {\n    \"value\": \"root\"\n  },\n  \"mysqlDbPassword\": {\n    \"value\"\
+        : \"\"\n  }\n}"
+      - --additional_pipeline_args
+      - '{}'
+      - --component_id
+      - ExampleValidator
+      - --component_type
+      - tfx.components.example_validator.component.ExampleValidator
+      - --driver_class_path
+      - tfx.components.base.base_driver.BaseDriver
+      - --executor_spec
+      - '{"__class__": "ExecutorClassSpec", "__module__": "tfx.components.base.executor_spec",
+        "__tfx_object_type__": "jsonable", "executor_class": {"__class__": "Executor",
+        "__module__": "tfx.components.example_validator.executor", "__tfx_object_type__":
+        "class"}}'
+      - --inputs
+      - '{"stats": [{"artifact": {"properties": {"split": {"stringValue": "train"},
+        "producer_component": {"stringValue": "StatisticsGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}, "name": {"stringValue": "output"}, "type_name":
+        {"stringValue": "ExampleStatisticsPath"}}}, "artifact_type": {"name": "ExampleStatisticsPath",
+        "properties": {"type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING", "name":
+        "STRING"}}}, {"artifact": {"properties": {"name": {"stringValue": "output"},
+        "type_name": {"stringValue": "ExampleStatisticsPath"}, "split": {"stringValue":
+        "eval"}, "producer_component": {"stringValue": "StatisticsGen"}, "pipeline_name":
+        {"stringValue": "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name":
+        "ExampleStatisticsPath", "properties": {"name": "STRING", "type_name": "STRING",
+        "state": "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING", "split": "STRING"}}}], "schema": [{"artifact": {"properties": {"producer_component":
+        {"stringValue": "SchemaGen"}, "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"},
+        "name": {"stringValue": "output"}, "type_name": {"stringValue": "SchemaPath"},
+        "split": {"stringValue": ""}}}, "artifact_type": {"name": "SchemaPath", "properties":
+        {"name": "STRING", "type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING"}}}]}'
+      - --outputs
+      - '{"output": [{"artifact": {"properties": {"producer_component": {"stringValue":
+        "ExampleValidator"}, "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"},
+        "name": {"stringValue": "output"}, "type_name": {"stringValue": "ExampleValidationPath"},
+        "split": {"stringValue": ""}}}, "artifact_type": {"name": "ExampleValidationPath",
+        "properties": {"split": "STRING", "name": "STRING", "type_name": "STRING",
+        "state": "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING"}}}]}'
+      - --exec_properties
+      - '{}'
+      command:
+      - python
+      - /tfx-src/tfx/orchestration/kubeflow/container_entrypoint.py
+      env:
+      - name: WORKFLOW_ID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['workflows.argoproj.io/workflow']
+      - name: S3_ENDPOINT
+        value: minio-service.kubeflow:9000
+      - name: S3_USE_HTTPS
+        value: '0'
+      - name: S3_VERIFY_SSL
+        value: '0'
+      - name: AWS_ACCESS_KEY_ID
+        value: minio
+      - name: AWS_SECRET_ACCESS_KEY
+        value: minio123
+      image: tensorflow/tfx:0.14.0
+      volumeMounts:
+      - mountPath: /mnt/shared
+        name: shared-volume
+    name: examplevalidator
+    volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: tfx-volume
+  - container:
+      args:
+      - --pipeline_name
+      - chicago_taxi_pipeline_simple
+      - --pipeline_root
+      - /mnt/shared/tfx_taxi_simple
+      - --kubeflow_metadata_config
+      - "{\n  \"mysqlDbServiceHost\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_HOST\"\
+        \n  },\n  \"mysqlDbServicePort\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_PORT\"\
+        \n  },\n  \"mysqlDbName\": {\n    \"value\": \"metadb\"\n  },\n  \"mysqlDbUser\"\
+        : {\n    \"value\": \"root\"\n  },\n  \"mysqlDbPassword\": {\n    \"value\"\
+        : \"\"\n  }\n}"
+      - --additional_pipeline_args
+      - '{}'
+      - --component_id
+      - ModelValidator
+      - --component_type
+      - tfx.components.model_validator.component.ModelValidator
+      - --driver_class_path
+      - tfx.components.model_validator.driver.Driver
+      - --executor_spec
+      - '{"__class__": "ExecutorClassSpec", "__module__": "tfx.components.base.executor_spec",
+        "__tfx_object_type__": "jsonable", "executor_class": {"__class__": "Executor",
+        "__module__": "tfx.components.model_validator.executor", "__tfx_object_type__":
+        "class"}}'
+      - --inputs
+      - '{"examples": [{"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "train"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING", "name":
+        "STRING"}}}, {"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "eval"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"state": "STRING", "producer_component": "STRING", "span":
+        "INT", "pipeline_name": "STRING", "split": "STRING", "name": "STRING", "type_name":
+        "STRING"}}}], "model": [{"artifact": {"properties": {"split": {"stringValue":
+        ""}, "producer_component": {"stringValue": "Trainer"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}, "name": {"stringValue": "output"}, "type_name":
+        {"stringValue": "ModelExportPath"}}}, "artifact_type": {"name": "ModelExportPath",
+        "properties": {"split": "STRING", "name": "STRING", "type_name": "STRING",
+        "state": "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING"}}}]}'
+      - --outputs
+      - '{"blessing": [{"artifact": {"properties": {"name": {"stringValue": "blessing"},
+        "type_name": {"stringValue": "ModelBlessingPath"}, "split": {"stringValue":
+        ""}, "producer_component": {"stringValue": "ModelValidator"}, "pipeline_name":
+        {"stringValue": "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name":
+        "ModelBlessingPath", "properties": {"type_name": "STRING", "state": "STRING",
+        "producer_component": "STRING", "span": "INT", "pipeline_name": "STRING",
+        "split": "STRING", "name": "STRING"}}}]}'
+      - --exec_properties
+      - '{}'
+      command:
+      - python
+      - /tfx-src/tfx/orchestration/kubeflow/container_entrypoint.py
+      env:
+      - name: WORKFLOW_ID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['workflows.argoproj.io/workflow']
+      - name: S3_ENDPOINT
+        value: minio-service.kubeflow:9000
+      - name: S3_USE_HTTPS
+        value: '0'
+      - name: S3_VERIFY_SSL
+        value: '0'
+      - name: AWS_ACCESS_KEY_ID
+        value: minio
+      - name: AWS_SECRET_ACCESS_KEY
+        value: minio123
+      image: tensorflow/tfx:0.14.0
+      volumeMounts:
+      - mountPath: /mnt/shared
+        name: shared-volume
+    name: modelvalidator
+    volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: tfx-volume
+  - container:
+      args:
+      - --pipeline_name
+      - chicago_taxi_pipeline_simple
+      - --pipeline_root
+      - /mnt/shared/tfx_taxi_simple
+      - --kubeflow_metadata_config
+      - "{\n  \"mysqlDbServiceHost\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_HOST\"\
+        \n  },\n  \"mysqlDbServicePort\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_PORT\"\
+        \n  },\n  \"mysqlDbName\": {\n    \"value\": \"metadb\"\n  },\n  \"mysqlDbUser\"\
+        : {\n    \"value\": \"root\"\n  },\n  \"mysqlDbPassword\": {\n    \"value\"\
+        : \"\"\n  }\n}"
+      - --additional_pipeline_args
+      - '{}'
+      - --component_id
+      - Pusher
+      - --component_type
+      - tfx.components.pusher.component.Pusher
+      - --driver_class_path
+      - tfx.components.base.base_driver.BaseDriver
+      - --executor_spec
+      - '{"__class__": "ExecutorClassSpec", "__module__": "tfx.components.base.executor_spec",
+        "__tfx_object_type__": "jsonable", "executor_class": {"__class__": "Executor",
+        "__module__": "tfx.components.pusher.executor", "__tfx_object_type__": "class"}}'
+      - --inputs
+      - '{"model_export": [{"artifact": {"properties": {"split": {"stringValue": ""},
+        "producer_component": {"stringValue": "Trainer"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}, "name": {"stringValue": "output"}, "type_name":
+        {"stringValue": "ModelExportPath"}}}, "artifact_type": {"name": "ModelExportPath",
+        "properties": {"split": "STRING", "name": "STRING", "type_name": "STRING",
+        "state": "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING"}}}], "model_blessing": [{"artifact": {"properties": {"name": {"stringValue":
+        "blessing"}, "type_name": {"stringValue": "ModelBlessingPath"}, "split": {"stringValue":
+        ""}, "producer_component": {"stringValue": "ModelValidator"}, "pipeline_name":
+        {"stringValue": "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name":
+        "ModelBlessingPath", "properties": {"type_name": "STRING", "state": "STRING",
+        "producer_component": "STRING", "span": "INT", "pipeline_name": "STRING",
+        "split": "STRING", "name": "STRING"}}}]}'
+      - --outputs
+      - '{"model_push": [{"artifact": {"properties": {"split": {"stringValue": ""},
+        "producer_component": {"stringValue": "Pusher"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}, "name": {"stringValue": "model_push"}, "type_name":
+        {"stringValue": "ModelPushPath"}}}, "artifact_type": {"name": "ModelPushPath",
+        "properties": {"split": "STRING", "name": "STRING", "type_name": "STRING",
+        "state": "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING"}}}]}'
+      - --exec_properties
+      - '{"push_destination": "{\n  \"filesystem\": {\n    \"baseDirectory\": \"s3://tfx-taxi/model_serving\"\n  }\n}",
+        "custom_config": null}'
+      command:
+      - python
+      - /tfx-src/tfx/orchestration/kubeflow/container_entrypoint.py
+      env:
+      - name: WORKFLOW_ID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['workflows.argoproj.io/workflow']
+      - name: S3_ENDPOINT
+        value: minio-service.kubeflow:9000
+      - name: S3_USE_HTTPS
+        value: '0'
+      - name: S3_VERIFY_SSL
+        value: '0'
+      - name: AWS_ACCESS_KEY_ID
+        value: minio
+      - name: AWS_SECRET_ACCESS_KEY
+        value: minio123
+      image: tensorflow/tfx:0.14.0
+      volumeMounts:
+      - mountPath: /mnt/shared
+        name: shared-volume
+    name: pusher
+    volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: tfx-volume
+  - container:
+      args:
+      - --pipeline_name
+      - chicago_taxi_pipeline_simple
+      - --pipeline_root
+      - /mnt/shared/tfx_taxi_simple
+      - --kubeflow_metadata_config
+      - "{\n  \"mysqlDbServiceHost\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_HOST\"\
+        \n  },\n  \"mysqlDbServicePort\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_PORT\"\
+        \n  },\n  \"mysqlDbName\": {\n    \"value\": \"metadb\"\n  },\n  \"mysqlDbUser\"\
+        : {\n    \"value\": \"root\"\n  },\n  \"mysqlDbPassword\": {\n    \"value\"\
+        : \"\"\n  }\n}"
+      - --additional_pipeline_args
+      - '{}'
+      - --component_id
+      - SchemaGen
+      - --component_type
+      - tfx.components.schema_gen.component.SchemaGen
+      - --driver_class_path
+      - tfx.components.base.base_driver.BaseDriver
+      - --executor_spec
+      - '{"__class__": "ExecutorClassSpec", "__module__": "tfx.components.base.executor_spec",
+        "__tfx_object_type__": "jsonable", "executor_class": {"__class__": "Executor",
+        "__module__": "tfx.components.schema_gen.executor", "__tfx_object_type__":
+        "class"}}'
+      - --inputs
+      - '{"stats": [{"artifact": {"properties": {"split": {"stringValue": "train"},
+        "producer_component": {"stringValue": "StatisticsGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}, "name": {"stringValue": "output"}, "type_name":
+        {"stringValue": "ExampleStatisticsPath"}}}, "artifact_type": {"name": "ExampleStatisticsPath",
+        "properties": {"type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING", "name":
+        "STRING"}}}, {"artifact": {"properties": {"name": {"stringValue": "output"},
+        "type_name": {"stringValue": "ExampleStatisticsPath"}, "split": {"stringValue":
+        "eval"}, "producer_component": {"stringValue": "StatisticsGen"}, "pipeline_name":
+        {"stringValue": "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name":
+        "ExampleStatisticsPath", "properties": {"name": "STRING", "type_name": "STRING",
+        "state": "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING", "split": "STRING"}}}]}'
+      - --outputs
+      - '{"output": [{"artifact": {"properties": {"producer_component": {"stringValue":
+        "SchemaGen"}, "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"},
+        "name": {"stringValue": "output"}, "type_name": {"stringValue": "SchemaPath"},
+        "split": {"stringValue": ""}}}, "artifact_type": {"name": "SchemaPath", "properties":
+        {"name": "STRING", "type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING"}}}]}'
+      - --exec_properties
+      - '{"infer_feature_shape": false}'
+      command:
+      - python
+      - /tfx-src/tfx/orchestration/kubeflow/container_entrypoint.py
+      env:
+      - name: WORKFLOW_ID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['workflows.argoproj.io/workflow']
+      - name: S3_ENDPOINT
+        value: minio-service.kubeflow:9000
+      - name: S3_USE_HTTPS
+        value: '0'
+      - name: S3_VERIFY_SSL
+        value: '0'
+      - name: AWS_ACCESS_KEY_ID
+        value: minio
+      - name: AWS_SECRET_ACCESS_KEY
+        value: minio123
+      image: tensorflow/tfx:0.14.0
+      volumeMounts:
+      - mountPath: /mnt/shared
+        name: shared-volume
+    name: schemagen
+    volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: tfx-volume
+  - container:
+      args:
+      - --pipeline_name
+      - chicago_taxi_pipeline_simple
+      - --pipeline_root
+      - /mnt/shared/tfx_taxi_simple
+      - --kubeflow_metadata_config
+      - "{\n  \"mysqlDbServiceHost\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_HOST\"\
+        \n  },\n  \"mysqlDbServicePort\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_PORT\"\
+        \n  },\n  \"mysqlDbName\": {\n    \"value\": \"metadb\"\n  },\n  \"mysqlDbUser\"\
+        : {\n    \"value\": \"root\"\n  },\n  \"mysqlDbPassword\": {\n    \"value\"\
+        : \"\"\n  }\n}"
+      - --additional_pipeline_args
+      - '{}'
+      - --component_id
+      - StatisticsGen
+      - --component_type
+      - tfx.components.statistics_gen.component.StatisticsGen
+      - --driver_class_path
+      - tfx.components.base.base_driver.BaseDriver
+      - --executor_spec
+      - '{"__class__": "ExecutorClassSpec", "__module__": "tfx.components.base.executor_spec",
+        "__tfx_object_type__": "jsonable", "executor_class": {"__class__": "Executor",
+        "__module__": "tfx.components.statistics_gen.executor", "__tfx_object_type__":
+        "class"}}'
+      - --inputs
+      - '{"input_data": [{"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "train"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING", "name":
+        "STRING"}}}, {"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "eval"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"state": "STRING", "producer_component": "STRING", "span":
+        "INT", "pipeline_name": "STRING", "split": "STRING", "name": "STRING", "type_name":
+        "STRING"}}}]}'
+      - --outputs
+      - '{"output": [{"artifact": {"properties": {"split": {"stringValue": "train"},
+        "producer_component": {"stringValue": "StatisticsGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}, "name": {"stringValue": "output"}, "type_name":
+        {"stringValue": "ExampleStatisticsPath"}}}, "artifact_type": {"name": "ExampleStatisticsPath",
+        "properties": {"type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING", "name":
+        "STRING"}}}, {"artifact": {"properties": {"name": {"stringValue": "output"},
+        "type_name": {"stringValue": "ExampleStatisticsPath"}, "split": {"stringValue":
+        "eval"}, "producer_component": {"stringValue": "StatisticsGen"}, "pipeline_name":
+        {"stringValue": "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name":
+        "ExampleStatisticsPath", "properties": {"name": "STRING", "type_name": "STRING",
+        "state": "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING", "split": "STRING"}}}]}'
+      - --exec_properties
+      - '{}'
+      command:
+      - python
+      - /tfx-src/tfx/orchestration/kubeflow/container_entrypoint.py
+      env:
+      - name: WORKFLOW_ID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['workflows.argoproj.io/workflow']
+      - name: S3_ENDPOINT
+        value: minio-service.kubeflow:9000
+      - name: S3_USE_HTTPS
+        value: '0'
+      - name: S3_VERIFY_SSL
+        value: '0'
+      - name: AWS_ACCESS_KEY_ID
+        value: minio
+      - name: AWS_SECRET_ACCESS_KEY
+        value: minio123
+      image: tensorflow/tfx:0.14.0
+      volumeMounts:
+      - mountPath: /mnt/shared
+        name: shared-volume
+    name: statisticsgen
+    volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: tfx-volume
+  - container:
+      args:
+      - --pipeline_name
+      - chicago_taxi_pipeline_simple
+      - --pipeline_root
+      - /mnt/shared/tfx_taxi_simple
+      - --kubeflow_metadata_config
+      - "{\n  \"mysqlDbServiceHost\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_HOST\"\
+        \n  },\n  \"mysqlDbServicePort\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_PORT\"\
+        \n  },\n  \"mysqlDbName\": {\n    \"value\": \"metadb\"\n  },\n  \"mysqlDbUser\"\
+        : {\n    \"value\": \"root\"\n  },\n  \"mysqlDbPassword\": {\n    \"value\"\
+        : \"\"\n  }\n}"
+      - --additional_pipeline_args
+      - '{}'
+      - --component_id
+      - Trainer
+      - --component_type
+      - tfx.components.trainer.component.Trainer
+      - --driver_class_path
+      - tfx.components.trainer.driver.Driver
+      - --executor_spec
+      - '{"__class__": "ExecutorClassSpec", "__module__": "tfx.components.base.executor_spec",
+        "__tfx_object_type__": "jsonable", "executor_class": {"__class__": "Executor",
+        "__module__": "tfx.components.trainer.executor", "__tfx_object_type__": "class"}}'
+      - --inputs
+      - '{"examples": [{"artifact": {"properties": {"name": {"stringValue": "transformed_examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "train"},
+        "producer_component": {"stringValue": "Transform"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"name": "STRING", "type_name": "STRING", "state": "STRING",
+        "producer_component": "STRING", "span": "INT", "pipeline_name": "STRING",
+        "split": "STRING"}}}, {"artifact": {"properties": {"producer_component": {"stringValue":
+        "Transform"}, "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"},
+        "name": {"stringValue": "transformed_examples"}, "type_name": {"stringValue":
+        "ExamplesPath"}, "split": {"stringValue": "eval"}}}, "artifact_type": {"name":
+        "ExamplesPath", "properties": {"state": "STRING", "producer_component": "STRING",
+        "span": "INT", "pipeline_name": "STRING", "split": "STRING", "name": "STRING",
+        "type_name": "STRING"}}}], "transform_output": [{"artifact": {"properties":
+        {"name": {"stringValue": "transform_output"}, "type_name": {"stringValue":
+        "TransformPath"}, "split": {"stringValue": ""}, "producer_component": {"stringValue":
+        "Transform"}, "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"}}},
+        "artifact_type": {"name": "TransformPath", "properties": {"name": "STRING",
+        "type_name": "STRING", "state": "STRING", "producer_component": "STRING",
+        "span": "INT", "pipeline_name": "STRING", "split": "STRING"}}}], "schema":
+        [{"artifact": {"properties": {"producer_component": {"stringValue": "SchemaGen"},
+        "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"}, "name":
+        {"stringValue": "output"}, "type_name": {"stringValue": "SchemaPath"}, "split":
+        {"stringValue": ""}}}, "artifact_type": {"name": "SchemaPath", "properties":
+        {"name": "STRING", "type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING"}}}]}'
+      - --outputs
+      - '{"output": [{"artifact": {"properties": {"split": {"stringValue": ""}, "producer_component":
+        {"stringValue": "Trainer"}, "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"},
+        "name": {"stringValue": "output"}, "type_name": {"stringValue": "ModelExportPath"}}},
+        "artifact_type": {"name": "ModelExportPath", "properties": {"split": "STRING",
+        "name": "STRING", "type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING"}}}]}'
+      - --exec_properties
+      - '{"train_args": "{\n  \"numSteps\": 10000\n}", "eval_args": "{\n  \"numSteps\":
+        5000\n}", "module_file": "/mnt/shared/modules/taxi_utils.py", "trainer_fn":
+        null, "custom_config": null}'
+      command:
+      - python
+      - /tfx-src/tfx/orchestration/kubeflow/container_entrypoint.py
+      env:
+      - name: WORKFLOW_ID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['workflows.argoproj.io/workflow']
+      - name: S3_ENDPOINT
+        value: minio-service.kubeflow:9000
+      - name: S3_USE_HTTPS
+        value: '0'
+      - name: S3_VERIFY_SSL
+        value: '0'
+      - name: AWS_ACCESS_KEY_ID
+        value: minio
+      - name: AWS_SECRET_ACCESS_KEY
+        value: minio123
+      image: tensorflow/tfx:0.14.0
+      volumeMounts:
+      - mountPath: /mnt/shared
+        name: shared-volume
+    name: trainer
+    volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: tfx-volume
+  - container:
+      args:
+      - --pipeline_name
+      - chicago_taxi_pipeline_simple
+      - --pipeline_root
+      - /mnt/shared/tfx_taxi_simple
+      - --kubeflow_metadata_config
+      - "{\n  \"mysqlDbServiceHost\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_HOST\"\
+        \n  },\n  \"mysqlDbServicePort\": {\n    \"environmentVariable\": \"MYSQL_SERVICE_PORT\"\
+        \n  },\n  \"mysqlDbName\": {\n    \"value\": \"metadb\"\n  },\n  \"mysqlDbUser\"\
+        : {\n    \"value\": \"root\"\n  },\n  \"mysqlDbPassword\": {\n    \"value\"\
+        : \"\"\n  }\n}"
+      - --additional_pipeline_args
+      - '{}'
+      - --component_id
+      - Transform
+      - --component_type
+      - tfx.components.transform.component.Transform
+      - --driver_class_path
+      - tfx.components.base.base_driver.BaseDriver
+      - --executor_spec
+      - '{"__class__": "ExecutorClassSpec", "__module__": "tfx.components.base.executor_spec",
+        "__tfx_object_type__": "jsonable", "executor_class": {"__class__": "Executor",
+        "__module__": "tfx.components.transform.executor", "__tfx_object_type__":
+        "class"}}'
+      - --inputs
+      - '{"input_data": [{"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "train"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING", "name":
+        "STRING"}}}, {"artifact": {"properties": {"name": {"stringValue": "examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "eval"},
+        "producer_component": {"stringValue": "CsvExampleGen"}, "pipeline_name": {"stringValue":
+        "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name": "ExamplesPath",
+        "properties": {"state": "STRING", "producer_component": "STRING", "span":
+        "INT", "pipeline_name": "STRING", "split": "STRING", "name": "STRING", "type_name":
+        "STRING"}}}], "schema": [{"artifact": {"properties": {"producer_component":
+        {"stringValue": "SchemaGen"}, "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"},
+        "name": {"stringValue": "output"}, "type_name": {"stringValue": "SchemaPath"},
+        "split": {"stringValue": ""}}}, "artifact_type": {"name": "SchemaPath", "properties":
+        {"name": "STRING", "type_name": "STRING", "state": "STRING", "producer_component":
+        "STRING", "span": "INT", "pipeline_name": "STRING", "split": "STRING"}}}]}'
+      - --outputs
+      - '{"transform_output": [{"artifact": {"properties": {"name": {"stringValue":
+        "transform_output"}, "type_name": {"stringValue": "TransformPath"}, "split":
+        {"stringValue": ""}, "producer_component": {"stringValue": "Transform"}, "pipeline_name":
+        {"stringValue": "chicago_taxi_pipeline_simple"}}}, "artifact_type": {"name":
+        "TransformPath", "properties": {"name": "STRING", "type_name": "STRING", "state":
+        "STRING", "producer_component": "STRING", "span": "INT", "pipeline_name":
+        "STRING", "split": "STRING"}}}], "transformed_examples": [{"artifact": {"properties":
+        {"name": {"stringValue": "transformed_examples"}, "type_name": {"stringValue":
+        "ExamplesPath"}, "split": {"stringValue": "train"}, "producer_component":
+        {"stringValue": "Transform"}, "pipeline_name": {"stringValue": "chicago_taxi_pipeline_simple"}}},
+        "artifact_type": {"name": "ExamplesPath", "properties": {"name": "STRING",
+        "type_name": "STRING", "state": "STRING", "producer_component": "STRING",
+        "span": "INT", "pipeline_name": "STRING", "split": "STRING"}}}, {"artifact":
+        {"properties": {"producer_component": {"stringValue": "Transform"}, "pipeline_name":
+        {"stringValue": "chicago_taxi_pipeline_simple"}, "name": {"stringValue": "transformed_examples"},
+        "type_name": {"stringValue": "ExamplesPath"}, "split": {"stringValue": "eval"}}},
+        "artifact_type": {"name": "ExamplesPath", "properties": {"state": "STRING",
+        "producer_component": "STRING", "span": "INT", "pipeline_name": "STRING",
+        "split": "STRING", "name": "STRING", "type_name": "STRING"}}}]}'
+      - --exec_properties
+      - '{"module_file": "/mnt/shared/modules/taxi_utils.py", "preprocessing_fn":
+        null}'
+      command:
+      - python
+      - /tfx-src/tfx/orchestration/kubeflow/container_entrypoint.py
+      env:
+      - name: WORKFLOW_ID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['workflows.argoproj.io/workflow']
+      - name: S3_ENDPOINT
+        value: minio-service.kubeflow:9000
+      - name: S3_USE_HTTPS
+        value: '0'
+      - name: S3_VERIFY_SSL
+        value: '0'
+      - name: AWS_ACCESS_KEY_ID
+        value: minio
+      - name: AWS_SECRET_ACCESS_KEY
+        value: minio123
+      image: tensorflow/tfx:0.14.0
+      volumeMounts:
+      - mountPath: /mnt/shared
+        name: shared-volume
+    name: transform
+    volumes:
+    - name: shared-volume
+      persistentVolumeClaim:
+        claimName: tfx-volume
+  - container:
+      args:
+      - -u
+      - kfservingdeployer.py
+      - --action
+      - '{{inputs.parameters.action}}'
+      - --model-name
+      - '{{inputs.parameters.model-name}}'
+      - --default-model-uri
+      - '{{inputs.parameters.default-model-uri}}'
+      - --canary-model-uri
+      - '{{inputs.parameters.canary-model-uri}}'
+      - --canary-model-traffic
+      - '{{inputs.parameters.canary-model-traffic-percentage}}'
+      - --namespace
+      - '{{inputs.parameters.namespace}}'
+      - --framework
+      - '{{inputs.parameters.framework}}'
+      - --default-custom-model-spec
+      - '{{inputs.parameters.default-custom-model-spec}}'
+      - --canary-custom-model-spec
+      - '{{inputs.parameters.canary-custom-model-spec}}'
+      - --kfserving-endpoint
+      - '{{inputs.parameters.kfserving-endpoint}}'
+      - --autoscaling-target
+      - '{{inputs.parameters.autoscaling-target}}'
+      - --output_path
+      - /tmp/outputs/Service_Endpoint_URI/data
+      command:
+      - python
+      image: aipipeline/kfserving-component:v0.2.1
+      imagePullPolicy: Always
+    inputs:
+      parameters:
+      - name: action
+      - name: autoscaling-target
+      - name: canary-custom-model-spec
+      - name: canary-model-traffic-percentage
+      - name: canary-model-uri
+      - name: default-custom-model-spec
+      - name: default-model-uri
+      - name: framework
+      - name: kfserving-endpoint
+      - name: model-name
+      - name: namespace
+    metadata:
+      annotations:
+        pipelines.kubeflow.org/component_spec: '{"description": "Serve Models using
+          Kubeflow KFServing", "inputs": [{"default": "create", "description": "Action
+          to execute on KFServing", "name": "Action", "type": "String"}, {"default":
+          "", "description": "Name to give to the deployed model", "name": "Model
+          Name", "type": "String"}, {"default": "", "description": "Path of the S3
+          or GCS compatible directory containing default model.", "name": "Default
+          Model URI", "type": "String"}, {"default": "", "description": "Optional
+          Path of the S3 or GCS compatible directory containing canary model.", "name":
+          "Canary Model URI", "type": "String"}, {"default": "0", "description": "Optional
+          Traffic to be sent to default model", "name": "Canary Model Traffic Percentage",
+          "type": "String"}, {"default": "kubeflow", "description": "Kubernetes namespace
+          where the KFServing service is deployed.", "name": "Namespace", "type":
+          "String"}, {"default": "tensorflow", "description": "Machine Learning Framework
+          for Model Serving.", "name": "Framework", "type": "String"}, {"default":
+          "{}", "description": "Custom runtime default custom model container spec.",
+          "name": "Default Custom Model Spec", "type": "String"}, {"default": "{}",
+          "description": "Custom runtime canary custom model container spec.", "name":
+          "Canary Custom Model Spec", "type": "String"}, {"default": "0", "description":
+          "Autoscaling Target Number", "name": "Autoscaling Target", "type": "String"},
+          {"default": "", "description": "KFServing remote deployer API endpoint",
+          "name": "KFServing Endpoint", "type": "String"}], "name": "Kubeflow - Serve
+          Model using KFServing", "outputs": [{"description": "URI of the deployed
+          prediction service..", "name": "Service Endpoint URI", "type": "String"}]}'
+    name: kubeflow-serve-model-using-kfserving
+    outputs:
+      artifacts:
+      - name: kubeflow-serve-model-using-kfserving-service-endpoint-uri
+        path: /tmp/outputs/Service_Endpoint_URI/data
