@@ -1,5 +1,4 @@
 # Kubeflow Pipelines Examples
 
-This repository holds kfp example pipelines compiled to both
-the Argo YAML as well as the Tekton YAML.
+This repository holds sample pipelines in Argo YAML (compiled from KFP DSL) as well as one in the equivalent Tekton YAML format
 
