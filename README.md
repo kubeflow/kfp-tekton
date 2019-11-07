@@ -1,6 +1,5 @@
 # Kubeflow Pipelines and Tekton
-Experimental project exploring Tekton and KFP integration.
-
+Experimental project exploring Tekton and KFP together, as well as curating Kubeflow samples in TFX, JenkinsX etc
 
 ## Tekton
 The Tekton Pipelines project provides Kubernetes-style resources for declaring CI/CD-style pipelines.
@@ -19,3 +18,7 @@ Since the work here will evolve from experimental towards a mature solution, we 
 The work here is going to be tracked under the CD Foundation MLOps Sig. If you are interested in joining, please join the group here
 https://lists.cd.foundation/g/sig-mlops
 
+## Samples
+
+1. [Kubeflow Pipelines-TFX Pipelines] (/samples/kfp-tfx)
+2. [Argo-Tekton Yaml for Flip Coin] (/samples/kfp-tekton)
