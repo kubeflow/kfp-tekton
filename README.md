@@ -24,6 +24,6 @@ https://lists.cd.foundation/g/sig-mlops
 2. [Argo-Tekton Yaml for Flip Coin](/samples/kfp-tekton)
 
 ## Evaluation Assets
-1. [Argo and Tekton](https://docs.google.com/document/d/12sBWo2h-cqNTKqgfFt8ria5thJDbx7U-qjV5odDhfJw/edit?usp=sharing)
-2. [Kubeflow Pipelines-TFX Pipelines](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
-3. [KFP-TFC RFC](https://docs.google.com/document/d/1_n3q0mNOr7gUSM04yaA0e5BO9RrS0Vkh1cNCyrB07WM/edit)
+1. [Argo and Tekton Comparision](https://docs.google.com/document/d/12sBWo2h-cqNTKqgfFt8ria5thJDbx7U-qjV5odDhfJw/edit?usp=sharing)
+2. [Kubeflow Pipelines-TFX Pipelines Talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
+3. [Kubeflow Pipelines-TFX Pipelines RFC](https://docs.google.com/document/d/1_n3q0mNOr7gUSM04yaA0e5BO9RrS0Vkh1cNCyrB07WM/edit)
