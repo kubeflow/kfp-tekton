@@ -20,5 +20,5 @@ https://lists.cd.foundation/g/sig-mlops
 
 ## Samples
 
-1. [Kubeflow Pipelines-TFX Pipelines] (/samples/kfp-tfx)
-2. [Argo-Tekton Yaml for Flip Coin] (/samples/kfp-tekton)
+1. [Kubeflow Pipelines-TFX Pipelines](/samples/kfp-tfx)
+2. [Argo-Tekton Yaml for Flip Coin](/samples/kfp-tekton)
