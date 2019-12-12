@@ -1,10 +1,10 @@
 # Kubeflow Pipelines and Tekton
-Experimental project exploring Tekton and KFP together, as well as curating Kubeflow samples in TFX, JenkinsX etc
+Experimental project to bring KFP and Tekton together, as well as curating Kubeflow samples in TFX, JenkinsX etc
 
 ## Tekton
 The Tekton Pipelines project provides Kubernetes-style resources for declaring CI/CD-style pipelines.
 
-Some tasks here wil invariably require contributions back to Tekton. Please follow the community giuidelines there
+Some tasks here wil invariably require contributions back to Tekton. Please follow the community guidelines there
 https://github.com/tektoncd/pipeline
 
 ## Kubeflow Pipeline
