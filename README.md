@@ -22,6 +22,7 @@ https://lists.cd.foundation/g/sig-mlops
 
 1. [Kubeflow Pipelines-TFX Pipelines](/samples/kfp-tfx)
 2. [Argo-Tekton Yaml for Flip Coin](/samples/kfp-tekton)
+3. [KFP Compiler for basic sequential pipeline in Tekton](sdk/README.md)
 
 ## Evaluation Assets
 1. [Argo and Tekton Comparision](https://docs.google.com/document/d/12sBWo2h-cqNTKqgfFt8ria5thJDbx7U-qjV5odDhfJw/edit?usp=sharing)

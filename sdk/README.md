@@ -26,7 +26,7 @@ Here we update the `Compiler` of SDK to generate `Tekton` yaml for a basic seque
     - `./build.sh`  
     - `pip install kfp.tar.gz`  
 
-5. Comppile the sample pipeline
+5. Compile the sample pipeline
 
     - `cd sdk/samples`  
     - `dsl-compile --py ./sequential.py --output sequential.tar.gz`
