@@ -319,7 +319,7 @@ def _op_to_step_tekton(op: BaseOp):
             processed_op.container
         )
 
-        step = {}
+        step = {'name': processed_op.name}
         step.update(container)
 
         # template.update(container)
