@@ -307,9 +307,9 @@ def _op_to_step_tekton(op: BaseOp):
         # output_artifacts = [
         #      convert_k8s_obj_to_json(
         #          ArtifactLocation.create_artifact_for_s3(
-        #              op.artifact_location, 
-        #              name=name, 
-        #              path=path, 
+        #              op.artifact_location,
+        #              name=name,
+        #              path=path,
         #              key='runs/{{workflow.uid}}/{{pod.name}}/' + name + '.tgz'))
         #     for name, path in output_artifact_paths.items()
         # ]

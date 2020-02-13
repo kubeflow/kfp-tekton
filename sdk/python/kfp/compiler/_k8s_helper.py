@@ -17,11 +17,22 @@ import re
 from .. import dsl
 
 
-def sanitize_k8s_name(name):
+def sanitize_k8s_name(name, allow_capital_underscore=False):
     """From _make_kubernetes_name
       sanitize_k8s_name cleans and converts the names in the workflow.
+
+    Args:
+      name: original name,
+      allow_capital_underscore: whether to allow capital letter and underscore
+        in this name.
+
+    Returns:
+      sanitized name.
     """
-    return re.sub('-+', '-', re.sub('[^-0-9a-z]+', '-', name.lower())).lstrip('-').rstrip('-')
+    if allow_capital_underscore:
+      return re.sub('-+', '-', re.sub('[^-_0-9A-Za-z]+', '-', name)).lstrip('-').rstrip('-')
+    else:
+      return re.sub('-+', '-', re.sub('[^-0-9a-z]+', '-', name.lower())).lstrip('-').rstrip('-')
 
 
 def convert_k8s_obj_to_json(k8s_obj):
@@ -40,6 +51,7 @@ def convert_k8s_obj_to_json(k8s_obj):
       obj: The data to serialize.
     Returns: The serialized form of data.
     """
+
     from six import text_type, integer_types, iteritems
     PRIMITIVE_TYPES = (float, bool, bytes, text_type) + integer_types
     from datetime import date, datetime
