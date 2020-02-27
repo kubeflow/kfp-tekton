@@ -1,4 +1,4 @@
-# Copyright 2019 kubeflow.org.
+# Copyright 2019-2020 kubeflow.org.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,27 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-
-from .. import dsl
-
-
-def sanitize_k8s_name(name, allow_capital_underscore=False):
-    """From _make_kubernetes_name
-      sanitize_k8s_name cleans and converts the names in the workflow.
-
-    Args:
-      name: original name,
-      allow_capital_underscore: whether to allow capital letter and underscore
-        in this name.
-
-    Returns:
-      sanitized name.
-    """
-    if allow_capital_underscore:
-      return re.sub('-+', '-', re.sub('[^-_0-9A-Za-z]+', '-', name)).lstrip('-').rstrip('-')
-    else:
-      return re.sub('-+', '-', re.sub('[^-0-9a-z]+', '-', name.lower())).lstrip('-').rstrip('-')
+from kfp import dsl
 
 
 def convert_k8s_obj_to_json(k8s_obj):
@@ -55,6 +35,7 @@ def convert_k8s_obj_to_json(k8s_obj):
     from six import text_type, integer_types, iteritems
     PRIMITIVE_TYPES = (float, bool, bytes, text_type) + integer_types
     from datetime import date, datetime
+
     if k8s_obj is None:
       return None
     elif isinstance(k8s_obj, PRIMITIVE_TYPES):
@@ -73,7 +54,7 @@ def convert_k8s_obj_to_json(k8s_obj):
     elif isinstance(k8s_obj, dsl.PipelineParam): 
       if isinstance(k8s_obj.value, str):
         return k8s_obj.value
-      return '$(inputs.params.%s)' % k8s_obj.full_name
+      return '$(inputs.params.%s)' % k8s_obj.full_name  # change for Tekton
     
     if isinstance(k8s_obj, dict):
       obj_dict = k8s_obj

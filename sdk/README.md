@@ -1,9 +1,11 @@
 # Compiler for Tekton
 
-There is an [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/) for `Kubeflow Pipeline` for end users to
-define pipelines for AI and ML. The output of the KFP SDK compiler is YAML for [Argo](https://github.com/argoproj/argo).
+There is an [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/) 
+for `Kubeflow Pipeline` for end users to define pipelines for AI and ML. 
+The output of the KFP SDK compiler is YAML for [Argo](https://github.com/argoproj/argo).
 
-Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a basic sequential pipeline. 
+Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for 
+a basic sequential pipeline. 
 
 
 ## Development Prerequisites
@@ -21,30 +23,20 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
     - `python3 -m venv .venv`
     - `source .venv/bin/activate`
 
-2. Clone the [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) 
-   repository version `0.2.2` to local `build` directory:
+2. Build the compiler:
 
-    - `git clone --single-branch -b 0.2.2 --depth 1 https://github.com/kubeflow/pipelines build/kubeflow/pipelines`
+    - `pip install sdk/python`
 
-3. Copy the KFP-Tekton compiler files from `sdk/...` to overwrite the related
-   KFP SDK path in the local `build` directory:
+3. Run the compiler tests (optional):
 
-    - `cp -rf sdk/python build/kubeflow/pipelines/sdk`
+    - `./sdk/python/tests/run_tests.sh`
 
-4. Build the SDK:
-
-    - `cd build/kubeflow/pipelines/sdk/python`
-    - `./build.sh`
-    - `pip install kfp.tar.gz`
-    - `cd -`
-
-5. Compile the sample pipeline:
+4. Compile the sample pipeline:
 
     - `cd sdk/samples/sequential`  
-    - `dsl-compile --py ./sequential.py --output sequential.tar.gz`
-    - `tar -xzvf sequential.tar.gz`
+    - `dsl-compile-tekton --py ./sequential.py --output pipeline.yaml`
     
-6. Run the sample pipeline on a Tekton cluster:
+5. Run the sample pipeline on a Tekton cluster:
 
     - `kubectl apply -f pipeline.yaml`
     - `tkn task start sequential-pipeline`
