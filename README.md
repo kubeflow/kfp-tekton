@@ -15,10 +15,9 @@ Since the work here will evolve from experimental towards a mature solution, we 
 
 ## CD Foundation
 
-The work here is going to be tracked under the CD Foundation MLOps Sig. If you are interested in joining, please join the group here
-https://lists.cd.foundation/g/sig-mlops
+The work here is going to be tracked under the [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/). If you are interested in joining, please see the [instructions here](https://github.com/cdfoundation/sig-mlops)
 
-The work is going to be following these [design specification and decisions](http://bit.ly/kfp-tekton)
+The work is going to be in accordance with these [design specification and decisions](http://bit.ly/kfp-tekton)
 
 ## Samples
 
