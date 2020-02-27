@@ -27,10 +27,11 @@ bin
 # Python dev
 .mypy_cache
 .venv/
+*.egg-info/
 
 # Ignore files for MacOS
 **/.DS_Store
 
 # Local or temporary build files
-build/kubeflow/pipelines/
+build/
 sdk/samples/sequential/pipeline.yaml
