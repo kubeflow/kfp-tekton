@@ -78,6 +78,8 @@ def _op_to_template(op: BaseOp):
         step = {'name': processed_op.name}
         step.update(container)
 
+        # Note: the functionalities are commented out while we are working to implement them as the project evolves
+        
         # template.update(container)
         # task = {
         #     'apiVersion': 'tekton.dev/v1alpha1',
