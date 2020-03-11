@@ -40,7 +40,10 @@ def monkey_patch():
     kfp.compiler._op_to_template._op_to_template = tekton_op_to_template
     kfp.compiler._op_to_template._process_base_ops = tekton_process_base_ops
     KFPCompiler._create_dag_templates = TektonCompiler._create_dag_templates
+    KFPCompiler._create_and_write_workflow = TektonCompiler._create_and_write_workflow
     KFPCompiler._create_pipeline_workflow = TektonCompiler._create_pipeline_workflow
+    KFPCompiler._create_workflow = TektonCompiler._create_workflow
+    KFPCompiler._write_workflow = TektonCompiler._write_workflow
 
 
 try:

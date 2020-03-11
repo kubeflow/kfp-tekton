@@ -27,36 +27,34 @@ from kfp_tekton import compiler
 
 from . import testdata
 
+# after code changes that change the YAML output, temporarily set this flag to True
+# in order to generate new "golden" YAML files
+GENERATE_GOLDEN_YAML = False
+
 
 class TestTektonCompiler(unittest.TestCase):
-
-  def _get_yaml_from_zip(self, zip_file):
-    with zipfile.ZipFile(zip_file, 'r') as zip:
-      return yaml.safe_load(zip.read(zip.namelist()[0]))
-
-  def _get_yaml_from_tar(self, tar_file):
-    with tarfile.open(tar_file, 'r:gz') as tar:
-      return yaml.safe_load(tar.extractfile(tar.getmembers()[0]))
 
   def test_sequential_workflow(self):
     """
     Test compiling a sequential workflow.
     """
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
-    sys.path.append(test_data_dir)
+    golden_yaml_file = os.path.join(test_data_dir, 'sequential.yaml')
+    temp_dir = tempfile.mkdtemp()
+    compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
 
-    from .testdata import sequential
-    tmpdir = tempfile.mkdtemp()
-    package_path = os.path.join(tmpdir, 'workflow.zip')
     try:
-      compiler.TektonCompiler().compile(sequential.sequential_pipeline, package_path)
-      with open(os.path.join(test_data_dir, 'sequential.yaml'), 'r') as f:
-        golden = yaml.safe_load(f)
-      compiled = self._get_yaml_from_zip(package_path)
-      self.maxDiff = None
-      # Comment next line for generating golden yaml.
-      self.assertEqual(golden, compiled)
+      from .testdata.sequential import sequential_pipeline
+      compiler.TektonCompiler().compile(sequential_pipeline, compiled_yaml_file)
+      with open(compiled_yaml_file, 'r') as f:
+        compiled = list(yaml.safe_load_all(f))
+      if GENERATE_GOLDEN_YAML:
+        with open(golden_yaml_file, 'w') as f:
+          yaml.dump_all(compiled, f, default_flow_style=False)
+      else:
+        with open(golden_yaml_file, 'r') as f:
+          golden = list(yaml.safe_load_all(f))
+        self.maxDiff = None
+        self.assertEqual(golden, compiled)
     finally:
-      # Replace next line with commented line for gathering golden yaml.
-      shutil.rmtree(tmpdir)
-      # print(tmpdir)
+      shutil.rmtree(temp_dir)
