@@ -46,6 +46,8 @@ def sequential_pipeline(url='gs://ml-pipeline-playground/shakespeare1.txt', path
     download_task = gcs_download_op(url)
     echo_task = echo_op(path)
 
+    echo_task.after(download_task)
+
 
 if __name__ == '__main__':
     kfp.compiler.Compiler().compile(sequential_pipeline, __file__ + '.zip')

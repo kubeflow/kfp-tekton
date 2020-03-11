@@ -14,19 +14,11 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with two sequential
-      steps.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
-      "name": "url", "optional": true}, {"default": "/tmp/results.txt", "name": "path",
-      "optional": true}], "name": "Sequential pipeline"}'
-  name: sequential-pipeline
+  name: gcs-download
 spec:
   inputs:
     params:
-    - default: gs://ml-pipeline-playground/shakespeare1.txt
-      name: url
-    - default: /tmp/results.txt
-      name: path
+    - name: url
   steps:
   - args:
     - gsutil cat $0 | tee $1
@@ -37,6 +29,16 @@ spec:
     - -c
     image: google/cloud-sdk:216.0.0
     name: gcs-download
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: echo
+spec:
+  inputs:
+    params:
+    - name: path
+  steps:
   - args:
     - echo "$0"
     - $(inputs.params.path)
@@ -45,3 +47,34 @@ spec:
     - -c
     image: library/bash:4.4.23
     name: echo
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with two sequential
+      steps.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
+      "name": "url", "optional": true}, {"default": "/tmp/results.txt", "name": "path",
+      "optional": true}], "name": "Sequential pipeline"}'
+  name: sequential-pipeline
+spec:
+  params:
+  - default: gs://ml-pipeline-playground/shakespeare1.txt
+    name: url
+  - default: /tmp/results.txt
+    name: path
+  tasks:
+  - name: gcs-download
+    params:
+    - name: url
+      value: $(params.url)
+    taskRef:
+      name: gcs-download
+  - name: echo
+    params:
+    - name: path
+      value: $(params.path)
+    runAfter:
+    - gcs-download
+    taskRef:
+      name: echo
