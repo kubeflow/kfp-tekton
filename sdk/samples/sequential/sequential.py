@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2019 Google LLC
+
+# Copyright 2019-2020 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import kfp
+from kfp_tekton.compiler import TektonCompiler
 from kfp import dsl
 
 
@@ -35,6 +35,7 @@ def echo_op(text):
         arguments=['echo "$0"', text]
     )
 
+
 @dsl.pipeline(
     name='Sequential pipeline',
     description='A pipeline with two sequential steps.'
@@ -45,5 +46,8 @@ def sequential_pipeline(url='gs://ml-pipeline-playground/shakespeare1.txt', path
     download_task = gcs_download_op(url)
     echo_task = echo_op(path)
 
+    echo_task.after(download_task)
+
+
 if __name__ == '__main__':
-    kfp.compiler.Compiler().compile(sequential_pipeline, __file__ + '.zip')
+    TektonCompiler().compile(sequential_pipeline, 'sequential.yaml')

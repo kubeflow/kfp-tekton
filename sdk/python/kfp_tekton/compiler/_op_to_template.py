@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
-from kfp.compiler._op_to_template import _process_obj
+from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
 from kfp import dsl
 from kfp.dsl._container_op import BaseOp
 
@@ -50,9 +50,11 @@ def _process_base_ops(op: BaseOp):
 
 def _op_to_template(op: BaseOp):
     """Generate template given an operator inherited from BaseOp."""
+
     # NOTE in-place update to BaseOp
     # replace all PipelineParams with template var strings
     processed_op = _process_base_ops(op)
+
     if isinstance(op, dsl.ContainerOp):
         # default output artifacts
         # output_artifact_paths = OrderedDict(op.output_artifact_paths)
@@ -75,64 +77,53 @@ def _op_to_template(op: BaseOp):
             processed_op.container
         )
 
-        step = {'name': processed_op.name}
-        step.update(container)
+        template = {
+            'apiVersion': 'tekton.dev/v1alpha1',
+            'kind': 'Task',
+            'metadata': {'name': processed_op.name},
+            'spec': {
+                'steps': [{
+                    'name': processed_op.name,
+                    'image': container['image'],
+                    'command': container['command'],
+                    'args': container['args']
+                }]
+            }
+        }
 
-        # NOTE: the following lines are commented out while we are working on supporting parallel tasks
-        #       execution and parameter handling
-
-        # template.update(container)
-        # task = {
-        #     'apiVersion': 'tekton.dev/v1alpha1',
-        #     'kind': 'Task',
-        #     'metadata': {'name': processed_op.name},
-        #     'spec': {
-        #         'inputs': {'params': params},
-        #         'steps': [template]
-        #     }
-        # }
-        # task_templates['task'] = task
-
-        # task_ref = {
+    elif isinstance(op, dsl.ResourceOp):
+        # # no output artifacts
+        # output_artifacts = []
+        #
+        # # workflow template
+        # processed_op.resource["manifest"] = yaml.dump(
+        #     convert_k8s_obj_to_json(processed_op.k8s_resource),
+        #     default_flow_style=False
+        # )
+        # template = {
         #     'name': processed_op.name,
-        #     'taskRef': {'name': processed_op.name},
+        #     'resource': convert_k8s_obj_to_json(
+        #         processed_op.resource
+        #     )
         # }
-        # param_refs = []
-        # for param in params:
-        #     param_ref = {'name': param['name'], 'value': '$(params.' + param['name'] + ')'}
-        #     param_refs.append(param_ref)
-        # task_ref['params'] = param_refs
-        # task_templates['task_ref'] = task_ref
-
-    # elif isinstance(op, dsl.ResourceOp):
-    #     # no output artifacts
-    #     output_artifacts = []
-
-    #     # workflow template
-    #     processed_op.resource["manifest"] = yaml.dump(
-    #         convert_k8s_obj_to_json(processed_op.k8s_resource),
-    #         default_flow_style=False
-    #     )
-    #     template = {
-    #         'name': processed_op.name,
-    #         'resource': convert_k8s_obj_to_json(
-    #             processed_op.resource
-    #         )
-    #     }
+        raise NotImplementedError("dsl.ResourceOp is not yet implemented")
 
     # inputs
-    # input_artifact_paths = processed_op.input_artifact_paths if isinstance(processed_op, dsl.ContainerOp) else None
-    # artifact_arguments = processed_op.artifact_arguments if isinstance(processed_op, dsl.ContainerOp) else None
-    # inputs = _inputs_to_json(processed_op.inputs, input_artifact_paths, artifact_arguments)
-    # if inputs:
-    #     template['inputs'] = params
+    input_artifact_paths = processed_op.input_artifact_paths if isinstance(processed_op, dsl.ContainerOp) else None
+    artifact_arguments = processed_op.artifact_arguments if isinstance(processed_op, dsl.ContainerOp) else None
+    inputs = _inputs_to_json(processed_op.inputs, input_artifact_paths, artifact_arguments)
+    if inputs:
+        template['spec']['inputs'] = {'params': inputs['parameters']}
+
+    # NOTE: the following lines are commented out while we are working on supporting parallel tasks
+    #       execution and parameter handling
 
     # # outputs
     # if isinstance(op, dsl.ContainerOp):
     #     param_outputs = processed_op.file_outputs
     # elif isinstance(op, dsl.ResourceOp):
     #     param_outputs = processed_op.attribute_outputs
-    # outputs_dict = pvc(op, processed_op.outputs, param_outputs, output_artifacts)
+    # outputs_dict = _outputs_to_json(op, processed_op.outputs, param_outputs, output_artifacts)
     # if outputs_dict:
     #     template['outputs'] = outputs_dict
 
@@ -155,6 +146,7 @@ def _op_to_template(op: BaseOp):
     #         template['metadata']['annotations'] = processed_op.pod_annotations
     #     if processed_op.pod_labels:
     #         template['metadata']['labels'] = processed_op.pod_labels
+
     # # retries
     # if processed_op.num_retries:
     #     template['retryStrategy'] = {'limit': processed_op.num_retries}
@@ -183,4 +175,5 @@ def _op_to_template(op: BaseOp):
     # if isinstance(op, dsl.ContainerOp) and op._metadata:
     #     import json
     #     template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec'] = json.dumps(op._metadata.to_dict(), sort_keys=True)
-    return step
+
+    return template

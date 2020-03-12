@@ -11,10 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import inspect
 import json
+import tarfile
+import yaml
+import zipfile
+from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
 from ._op_to_template import _op_to_template
+
+from kfp import dsl
+from kfp.compiler._default_transformers import add_pod_env
+from kfp.compiler._k8s_helper import sanitize_k8s_name
 from kfp.compiler.compiler import Compiler
+from kfp.components.structures import InputSpec
+from kfp.dsl._metadata import _extract_pipeline_metadata
 
 
 class TektonCompiler(Compiler) :
@@ -41,7 +52,7 @@ class TektonCompiler(Compiler) :
       op_transformers: A list of functions that are applied to all ContainerOp instances that are being processed.
       op_to_templates_handler: Handler which converts a base op into a list of argo templates.
     """
-    op_to_steps_handler = op_to_templates_handler or (lambda op : [_op_to_template(op)])
+    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise
@@ -50,13 +61,14 @@ class TektonCompiler(Compiler) :
     for op in pipeline.ops.values():
       for transformer in op_transformers or []:
         transformer(op)
-    steps = []
+    tasks = []
     for op in pipeline.ops.values():
-      steps.extend(op_to_steps_handler(op))
+      tasks.extend(op_to_steps_handler(op))
 
-    return steps
+    return tasks
 
-  def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None):
+  def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
+          -> List[Dict[Text, Any]]:  # Tekton change, signature/return type
     """Create workflow for the pipeline."""
     # Input Parameters
     params = []
@@ -69,21 +81,197 @@ class TektonCompiler(Compiler) :
           param['default'] = str(arg.value)
       params.append(param)
 
-    # Steps
-    steps = self._create_dag_templates(pipeline, op_transformers, params)
-    # The whole pipeline workflow
-    pipeline_name = pipeline.name or 'Pipeline'
+    # generate Tekton tasks from pipeline ops
+    tasks = self._create_dag_templates(pipeline, op_transformers, params)
 
-    workflow = {
-      'apiVersion': 'tekton.dev/v1alpha1',
-      'kind': 'Task',
-      'metadata': {'name': pipeline_name},
-      'spec': {
-        'inputs': {
-          'params': params
+    # generate task reference list for Tekton pipeline
+    task_refs = [
+      {
+        'name': t['metadata']['name'],
+        'taskRef': {
+          'name': t['metadata']['name']
         },
-        'steps': steps
+        'params': [{
+            'name': p['name'],
+            'value': '$(params.%s)' % p['name']
+          } for p in t['spec'].get('inputs', {}).get('params', [])
+        ]
+      }
+      for t in tasks
+    ]
+
+    # add task dependencies
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.dependent_names:
+        task['runAfter'] = op.dependent_names
+
+    # generate the Tekton Pipeline document
+    pipeline = {
+      'apiVersion': 'tekton.dev/v1alpha1',
+      'kind': 'Pipeline',
+      'metadata': {
+        'name': pipeline.name or 'Pipeline'
+      },
+      'spec': {
+        'params': params,
+        'tasks': task_refs
       }
     }
 
+    # append Task and Pipeline documents
+    workflow = tasks + [pipeline]
+
+    return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
+
+  # NOTE: the methods below are "copied" from KFP with changes in the method signatures (only)
+  #       to accommodate multiple documents in the YAML output file:
+  #         KFP Argo -> Dict[Text, Any]
+  #         KFP Tekton -> List[Dict[Text, Any]]
+
+  def _create_workflow(self,
+      pipeline_func: Callable,
+      pipeline_name: Text=None,
+      pipeline_description: Text=None,
+      params_list: List[dsl.PipelineParam]=None,
+      pipeline_conf: dsl.PipelineConf = None,
+      ) -> List[Dict[Text, Any]]:  # Tekton change, signature
+    """ Internal implementation of create_workflow."""
+    params_list = params_list or []
+    argspec = inspect.getfullargspec(pipeline_func)
+
+    # Create the arg list with no default values and call pipeline function.
+    # Assign type information to the PipelineParam
+    pipeline_meta = _extract_pipeline_metadata(pipeline_func)
+    pipeline_meta.name = pipeline_name or pipeline_meta.name
+    pipeline_meta.description = pipeline_description or pipeline_meta.description
+    pipeline_name = sanitize_k8s_name(pipeline_meta.name)
+
+    # Need to first clear the default value of dsl.PipelineParams. Otherwise, it
+    # will be resolved immediately in place when being to each component.
+    default_param_values = {}
+    for param in params_list:
+      default_param_values[param.name] = param.value
+      param.value = None
+
+    # Currently only allow specifying pipeline params at one place.
+    if params_list and pipeline_meta.inputs:
+      raise ValueError('Either specify pipeline params in the pipeline function, or in "params_list", but not both.')
+
+    args_list = []
+    for arg_name in argspec.args:
+      arg_type = None
+      for input in pipeline_meta.inputs or []:
+        if arg_name == input.name:
+          arg_type = input.type
+          break
+      args_list.append(dsl.PipelineParam(sanitize_k8s_name(arg_name, True), param_type=arg_type))
+
+    with dsl.Pipeline(pipeline_name) as dsl_pipeline:
+      pipeline_func(*args_list)
+
+    pipeline_conf = pipeline_conf or dsl_pipeline.conf # Configuration passed to the compiler is overriding. Unfortunately, it's not trivial to detect whether the dsl_pipeline.conf was ever modified.
+
+    self._validate_exit_handler(dsl_pipeline)
+    self._sanitize_and_inject_artifact(dsl_pipeline, pipeline_conf)
+
+    # Fill in the default values.
+    args_list_with_defaults = []
+    if pipeline_meta.inputs:
+      args_list_with_defaults = [dsl.PipelineParam(sanitize_k8s_name(arg_name, True))
+                                 for arg_name in argspec.args]
+      if argspec.defaults:
+        for arg, default in zip(reversed(args_list_with_defaults), reversed(argspec.defaults)):
+          arg.value = default.value if isinstance(default, dsl.PipelineParam) else default
+    elif params_list:
+      # Or, if args are provided by params_list, fill in pipeline_meta.
+      for param in params_list:
+        param.value = default_param_values[param.name]
+
+      args_list_with_defaults = params_list
+      pipeline_meta.inputs = [
+        InputSpec(
+            name=param.name,
+            type=param.param_type,
+            default=param.value) for param in params_list]
+
+    op_transformers = [add_pod_env]
+    op_transformers.extend(pipeline_conf.op_transformers)
+
+    workflow = self._create_pipeline_workflow(
+        args_list_with_defaults,
+        dsl_pipeline,
+        op_transformers,
+        pipeline_conf,
+    )
+
+    from ._data_passing_rewriter import fix_big_data_passing
+    workflow = fix_big_data_passing(workflow)
+
+    import json
+    pipeline = [item for item in workflow if item["kind"] == "Pipeline"][0]  # Tekton change
+    pipeline.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = json.dumps(pipeline_meta.to_dict(), sort_keys=True)
+
     return workflow
+
+  @staticmethod
+  def _write_workflow(workflow: List[Dict[Text, Any]],  # Tekton change, signature
+                      package_path: Text = None):
+    """Dump pipeline workflow into yaml spec and write out in the format specified by the user.
+
+    Args:
+      workflow: Workflow spec of the pipline, dict.
+      package_path: file path to be written. If not specified, a yaml_text string
+        will be returned.
+    """
+    yaml.Dumper.ignore_aliases = lambda *args : True
+    yaml_text = yaml.dump_all(workflow, default_flow_style=False)  # Tekton change
+
+    if '{{pipelineparam' in yaml_text:
+      raise RuntimeError(
+          'Internal compiler error: Found unresolved PipelineParam. '
+          'Please create a new issue at https://github.com/kubeflow/pipelines/issues '
+          'attaching the pipeline code and the pipeline package.' )
+
+    if package_path is None:
+      return yaml_text
+
+    if package_path.endswith('.tar.gz') or package_path.endswith('.tgz'):
+      from contextlib import closing
+      from io import BytesIO
+      with tarfile.open(package_path, "w:gz") as tar:
+          with closing(BytesIO(yaml_text.encode())) as yaml_file:
+            tarinfo = tarfile.TarInfo('pipeline.yaml')
+            tarinfo.size = len(yaml_file.getvalue())
+            tar.addfile(tarinfo, fileobj=yaml_file)
+    elif package_path.endswith('.zip'):
+      with zipfile.ZipFile(package_path, "w") as zip:
+        zipinfo = zipfile.ZipInfo('pipeline.yaml')
+        zipinfo.compress_type = zipfile.ZIP_DEFLATED
+        zip.writestr(zipinfo, yaml_text)
+    elif package_path.endswith('.yaml') or package_path.endswith('.yml'):
+      with open(package_path, 'w') as yaml_file:
+        yaml_file.write(yaml_text)
+    else:
+      raise ValueError(
+          'The output path '+ package_path +
+          ' should ends with one of the following formats: '
+          '[.tar.gz, .tgz, .zip, .yaml, .yml]')
+
+  def _create_and_write_workflow(
+      self,
+      pipeline_func: Callable,
+      pipeline_name: Text=None,
+      pipeline_description: Text=None,
+      params_list: List[dsl.PipelineParam]=None,
+      pipeline_conf: dsl.PipelineConf=None,
+      package_path: Text=None
+  ) -> None:
+    """Compile the given pipeline function and dump it to specified file format."""
+    workflow = self._create_workflow(
+        pipeline_func,
+        pipeline_name,
+        pipeline_description,
+        params_list,
+        pipeline_conf)
+    TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change

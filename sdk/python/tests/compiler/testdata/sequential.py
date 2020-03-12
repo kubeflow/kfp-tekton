@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp
+from kfp_tekton.compiler import TektonCompiler
 from kfp import dsl
 
 
@@ -46,6 +46,8 @@ def sequential_pipeline(url='gs://ml-pipeline-playground/shakespeare1.txt', path
     download_task = gcs_download_op(url)
     echo_task = echo_op(path)
 
+    echo_task.after(download_task)
+
 
 if __name__ == '__main__':
-    kfp.compiler.Compiler().compile(sequential_pipeline, __file__ + '.zip')
+    TektonCompiler().compile(sequential_pipeline, 'sequential.yaml')
