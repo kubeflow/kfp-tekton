@@ -15,7 +15,7 @@ Please note that all these deliverables are work in progress, and at an early st
 
 The work here is being tracked under the [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/). If you are interested in joining, please see the [instructions here](https://github.com/cdfoundation/sig-mlops)
 
-## KFP and TFX: Reference Materials
+## Additional Reference Materials: KFP and TFX
 1. [Kubeflow Pipelines-TFX Pipelines](/samples/kfp-tfx)
 2. [Kubeflow Pipelines-TFX Pipelines Talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
 3. [Kubeflow Pipelines-TFX Pipelines RFC](https://docs.google.com/document/d/1_n3q0mNOr7gUSM04yaA0e5BO9RrS0Vkh1cNCyrB07WM/edit)
