@@ -38,14 +38,25 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test compiling a sequential workflow.
     """
+    from .testdata.sequential import sequential_pipeline
+    self._test_pipeline_workflow(sequential_pipeline, 'sequential.yaml')
+
+
+  def test_parallel_join_workflow(self):
+    """
+    Test compiling a parallel join workflow.
+    """
+    from .testdata.parallel_join import parallel_and_sequential_pipeline
+    self._test_pipeline_workflow(parallel_and_sequential_pipeline, 'parallel_join.yaml')
+
+
+  def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
-    golden_yaml_file = os.path.join(test_data_dir, 'sequential.yaml')
+    golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
-
     try:
-      from .testdata.sequential import sequential_pipeline
-      compiler.TektonCompiler().compile(sequential_pipeline, compiled_yaml_file)
+      compiler.TektonCompiler().compile(pipeline_function, compiled_yaml_file)
       with open(compiled_yaml_file, 'r') as f:
         compiled = list(yaml.safe_load_all(f))
       if GENERATE_GOLDEN_YAML:
