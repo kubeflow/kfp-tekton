@@ -33,13 +33,13 @@ a basic sequential pipeline.
 
 4. Compile the sample pipeline:
 
-    - `cd sdk/samples/sequential`  
-    - `dsl-compile-tekton --py ./sequential.py --output pipeline.yaml`
+    - `cd sdk/samples/parallel_and_sequential`  
+    - `dsl-compile-tekton --py ./parallel_and_sequential.py --output pipeline.yaml`
     
 5. Run the sample pipeline on a Tekton cluster:
 
     - `kubectl apply -f pipeline.yaml`
-    - `tkn pipeline start sequential-pipeline`
+    - `tkn pipeline start parallel-and-sequential-pipeline`
 
 
 ## Tested Versions
