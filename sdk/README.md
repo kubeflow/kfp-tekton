@@ -39,7 +39,7 @@ a basic sequential pipeline.
 5. Run the sample pipeline on a Tekton cluster:
 
     - `kubectl apply -f pipeline.yaml`
-    - `tkn pipeline start parallel-and-sequential-pipeline`
+    - `tkn pipeline start parallel-pipeline`
 
 
 ## Tested Versions

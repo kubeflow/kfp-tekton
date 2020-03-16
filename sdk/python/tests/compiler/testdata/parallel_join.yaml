@@ -14,7 +14,7 @@ spec:
     command:
     - sh
     - -c
-    image: google/cloud-sdk:216.0.0
+    image: google/cloud-sdk:279.0.0
     name: gcs-download
 ---
 apiVersion: tekton.dev/v1alpha1
@@ -33,7 +33,7 @@ spec:
     command:
     - sh
     - -c
-    image: google/cloud-sdk:216.0.0
+    image: google/cloud-sdk:279.0.0
     name: gcs-download-2
 ---
 apiVersion: tekton.dev/v1alpha1
@@ -43,11 +43,13 @@ metadata:
 spec:
   inputs:
     params:
-    - name: path
+    - name: url1
+    - name: url2
   steps:
   - args:
-    - echo "$0"
-    - $(inputs.params.path)
+    - 'echo "Text 1: $0"; echo "Text 2: $1"'
+    - $(inputs.params.url1)
+    - $(inputs.params.url2)
     command:
     - sh
     - -c
@@ -58,20 +60,17 @@ apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with two parallel
-      tasks followed by a sequential task.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Download two messages
+      in parallel and prints the concatenated result.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
       "name": "url1", "optional": true}, {"default": "gs://ml-pipeline-playground/shakespeare2.txt",
-      "name": "url2", "optional": true}, {"default": "/tmp/results.txt", "name": "path",
-      "optional": true}], "name": "Parallel and Sequential pipeline"}'
-  name: parallel-and-sequential-pipeline
+      "name": "url2", "optional": true}], "name": "Parallel pipeline"}'
+  name: parallel-pipeline
 spec:
   params:
   - default: gs://ml-pipeline-playground/shakespeare1.txt
     name: url1
   - default: gs://ml-pipeline-playground/shakespeare2.txt
     name: url2
-  - default: /tmp/results.txt
-    name: path
   tasks:
   - name: gcs-download
     params:
@@ -87,8 +86,10 @@ spec:
       name: gcs-download-2
   - name: echo
     params:
-    - name: path
-      value: $(params.path)
+    - name: url1
+      value: $(params.url1)
+    - name: url2
+      value: $(params.url2)
     runAfter:
     - gcs-download
     - gcs-download-2

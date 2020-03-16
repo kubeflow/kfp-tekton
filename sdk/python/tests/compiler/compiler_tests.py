@@ -46,8 +46,8 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test compiling a parallel join workflow.
     """
-    from .testdata.parallel_join import parallel_and_sequential_pipeline
-    self._test_pipeline_workflow(parallel_and_sequential_pipeline, 'parallel_join.yaml')
+    from .testdata.parallel_join import download_and_join
+    self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
 
 
   def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml):
