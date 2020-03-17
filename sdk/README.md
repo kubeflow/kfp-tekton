@@ -25,7 +25,7 @@ a basic sequential pipeline.
 
 2. Build the compiler:
 
-    - `pip install sdk/python`
+    - `pip install -e sdk/python`
 
 3. Run the compiler tests (optional):
 
@@ -34,7 +34,7 @@ a basic sequential pipeline.
 4. Compile the sample pipeline:
 
     - `cd sdk/samples`  
-    - `dsl-compile-tekton --py ./parallel_join.py --output pipeline.yaml`
+    - `dsl-compile-tekton --py parallel_join.py --output pipeline.yaml`
     
 5. Run the sample pipeline on a Tekton cluster:
 
@@ -46,5 +46,5 @@ a basic sequential pipeline.
 
  - Python: `3.7.5`
  - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
- - Tekton: [`0.10.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.10.0)
+ - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
  
