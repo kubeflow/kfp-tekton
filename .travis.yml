@@ -1,0 +1,20 @@
+matrix:
+  include:
+    - language: python
+      python: "3.6"
+      env: TOXENV=py36
+      install:
+        - python3 -m pip install $TRAVIS_BUILD_DIR/sdk/python
+      script:
+        # KFP Tekton SDK unit tests
+        - cd $TRAVIS_BUILD_DIR/sdk/python/tests
+        - ./run_tests.sh
+    - language: python
+      python: "3.7"
+      env: TOXENV=py37
+      install:
+        - python3 -m pip install $TRAVIS_BUILD_DIR/sdk/python
+      script:
+        # KFP Tekton SDK unit tests
+        - cd $TRAVIS_BUILD_DIR/sdk/python/tests
+        - ./run_tests.sh
