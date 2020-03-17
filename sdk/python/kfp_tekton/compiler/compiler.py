@@ -27,6 +27,8 @@ from kfp.compiler.compiler import Compiler
 from kfp.components.structures import InputSpec
 from kfp.dsl._metadata import _extract_pipeline_metadata
 
+from .. import tekton_api_version
+
 
 class TektonCompiler(Compiler) :
   """DSL Compiler to generate Tekton YAML.
@@ -93,8 +95,8 @@ class TektonCompiler(Compiler) :
         },
         'params': [{
             'name': p['name'],
-            'value': '$(params.%s)' % p['name']
-          } for p in t['spec'].get('inputs', {}).get('params', [])
+            'value': p.get('default', '')
+          } for p in t['spec'].get('params', [])
         ]
       }
       for t in tasks
@@ -106,9 +108,23 @@ class TektonCompiler(Compiler) :
       if op.dependent_names:
         task['runAfter'] = op.dependent_names
 
+    # process input parameters from upstream tasks
+    pipeline_param_names = [p['name'] for p in params]
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      for tp in task.get('params', []):
+        if tp['name'] in pipeline_param_names:
+          tp['value'] = '$(params.%s)' % tp['name']
+          break
+        else:
+          for pp in op.inputs:
+            if tp['name'] == pp.full_name:
+              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
+              break
+
     # generate the Tekton Pipeline document
     pipeline = {
-      'apiVersion': 'tekton.dev/v1alpha1',
+      'apiVersion': tekton_api_version,
       'kind': 'Pipeline',
       'metadata': {
         'name': pipeline.name or 'Pipeline'

@@ -25,7 +25,7 @@ a basic sequential pipeline.
 
 2. Build the compiler:
 
-    - `pip install sdk/python`
+    - `pip install -e sdk/python`
 
 3. Run the compiler tests (optional):
 
@@ -34,7 +34,7 @@ a basic sequential pipeline.
 4. Compile the sample pipeline:
 
     - `cd sdk/samples`  
-    - `dsl-compile-tekton --py ./parallel_join.py --output pipeline.yaml`
+    - `dsl-compile-tekton --py parallel_join.py --output pipeline.yaml`
     
 5. Run the sample pipeline on a Tekton cluster:
 

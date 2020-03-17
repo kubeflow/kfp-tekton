@@ -47,9 +47,13 @@ def monkey_patch():
 
 
 try:
-    # print("Applying monkey patch")
+    print("Applying KFP-Tekton compiler patch")
     monkey_patch()
+    # uncomment the following lines to trace what triggers this code
+    # for line in traceback.format_stack():
+    #     print(line.strip())
+    # raise ValueError("how did we get here")
 except Exception as error:
     traceback.print_exc()
-    print("Failed to apply monkey patch")
+    print("Failed to apply KFP-Tekton compiler patch")
     sys.exit(1)
