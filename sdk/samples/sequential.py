@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp_tekton.compiler import TektonCompiler
 from kfp import dsl
 
 
@@ -40,7 +39,10 @@ def echo_op(text):
     name='Sequential pipeline',
     description='A pipeline with two sequential steps.'
 )
-def sequential_pipeline(url='gs://ml-pipeline-playground/shakespeare1.txt', path='/tmp/results.txt'):
+def sequential_pipeline(
+        url='gs://ml-pipeline-playground/shakespeare1.txt',
+        path='/tmp/results.txt'
+):
     """A pipeline with two sequential steps."""
 
     download_task = gcs_download_op(url)
@@ -50,4 +52,7 @@ def sequential_pipeline(url='gs://ml-pipeline-playground/shakespeare1.txt', path
 
 
 if __name__ == '__main__':
-    TektonCompiler().compile(sequential_pipeline, 'sequential.yaml')
+    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(sequential_pipeline, __file__.replace('.py', '.yaml'))
+

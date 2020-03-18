@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: tekton.dev/v1alpha1
+
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: gcs-download
 spec:
-  inputs:
-    params:
-    - name: url
+  params:
+  - name: url
   steps:
   - args:
     - gsutil cat $0 | tee $1
@@ -30,14 +30,13 @@ spec:
     image: google/cloud-sdk:216.0.0
     name: gcs-download
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: echo
 spec:
-  inputs:
-    params:
-    - name: path
+  params:
+  - name: path
   steps:
   - args:
     - echo "$0"
@@ -48,7 +47,7 @@ spec:
     image: library/bash:4.4.23
     name: echo
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   annotations:

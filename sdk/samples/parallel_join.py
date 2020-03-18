@@ -1,4 +1,19 @@
-from kfp_tekton.compiler import TektonCompiler
+#!/usr/bin/env python3
+
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from kfp import dsl
 
 
@@ -31,14 +46,15 @@ def download_and_join(
     url1='gs://ml-pipeline-playground/shakespeare1.txt',
     url2='gs://ml-pipeline-playground/shakespeare2.txt'
 ):
-    """A three-step pipeline with first two running in parallel."""
+    """A three-step pipeline with the first two steps running in parallel."""
 
     download1_task = gcs_download_op(url1)
     download2_task = gcs_download_op(url2)
 
-    # TODO: convert this task to pass parameters
-    echo_task = echo2_op(url1, url2).after(download1_task).after(download2_task)
+    echo_task = echo2_op(download1_task.output, download2_task.output)
 
 
 if __name__ == '__main__':
-    TektonCompiler().compile(download_and_join, 'parallel_join.yaml')
+    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(download_and_join, __file__.replace('.py', '.yaml'))

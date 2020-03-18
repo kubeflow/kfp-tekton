@@ -41,14 +41,12 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.sequential import sequential_pipeline
     self._test_pipeline_workflow(sequential_pipeline, 'sequential.yaml')
 
-
   def test_parallel_join_workflow(self):
     """
     Test compiling a parallel join workflow.
     """
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
-
 
   def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')

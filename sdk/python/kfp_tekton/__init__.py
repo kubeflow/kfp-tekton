@@ -13,3 +13,5 @@
 # limitations under the License.
 
 __version__ = '0.0.1'
+
+tekton_api_version = 'tekton.dev/v1beta1'
