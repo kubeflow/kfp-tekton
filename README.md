@@ -4,6 +4,12 @@ Experimental project to bring Kubeflow Pipelines and Tekton together. The work i
 ## Tekton
 The Tekton Pipelines project provides Kubernetes-style resources for declaring CI/CD-style pipelines. Tekton introduces several new CRDs including Task, Pipeline, TaskRun, and PipelineRun. A PipelineRun represents a single running instance of a Pipeline and is responsible for creating a Pod for each of its Tasks and as many containers within each Pod as it has Steps.  Some tasks here will invariably require contributions back to Tekton. Please follow the community guidelines in [Tekton repo](https://github.com/tektoncd/pipeline).
 
+## Development
+
+The current work is being split in four areas, namely Compiler, API (with corresponding backend), SDK (functionalties beyond the compilation, like uploading and launching a pipeline etc.) and UI which will be tackled in the same order. To get more details about what these different areas entail, please dive into the [design doc](http://bit.ly/kfp-tekton). Currently we are progressing with first one in the list, namely Compiler to compile from KFP DSL to Tekton Yaml. We would love to have teams pick up other major areas like API/UI etc. and/or contribute to make the Tekton Compiler functions and feature complete.
+
+To get started with contributing to KFP Tekton Compiler, please [follow these instructions](sdk/README.md)
+
 ## KFP and Tekton: Deliverables
 Please note that all these deliverables are work in progress, and at an early stage of exploration and execution. We are using Kubeflow Pipelines  v0.2.2 and Tekton v0.10.0 for these experiments currently.
 
