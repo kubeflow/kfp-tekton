@@ -9,10 +9,10 @@ is used to demonstrate the use of conditions.
 
 ```
 # Install tasks, conditions and pipeline
-kubectl apply -f samples/flip-coin/tekton/flip-coin-tekton.yaml
+kubectl apply -f samples/kfp-tekton/flip-coin/tekton/flip-coin-tekton.yaml
 
 # Prepare the resources and apply them
-kubectl apply -f samples/flip-coin/tekton/flip-coin-tekton-resources.yaml
+kubectl apply -f samples/kfp-tekton/flip-coin/tekton/flip-coin-tekton-resources.yaml
 
 # Run the pipeline from the tekton folder
 tkn pipeline start flip-coin-condition-demo --resource=coin=coin-bucket --resource=random=random-bucket
