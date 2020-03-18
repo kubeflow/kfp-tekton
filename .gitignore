@@ -34,4 +34,5 @@ bin
 
 # Local or temporary build files
 build/
-sdk/samples/sequential/pipeline.yaml
+sdk/samples/*.yaml
+temp/

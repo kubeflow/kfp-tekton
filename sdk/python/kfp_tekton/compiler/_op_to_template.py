@@ -81,17 +81,15 @@ def _op_to_template(op: BaseOp):
             processed_op.container
         )
 
+        step = {'name': processed_op.name}
+        step.update(container)
+
         template = {
             'apiVersion': tekton_api_version,
             'kind': 'Task',
             'metadata': {'name': processed_op.name},
             'spec': {
-                'steps': [{
-                    'name': processed_op.name,
-                    'image': container['image'],
-                    'command': container['command'],
-                    'args': container['args']
-                }]
+                'steps': [step]
             }
         }
 
@@ -116,8 +114,10 @@ def _op_to_template(op: BaseOp):
     input_artifact_paths = processed_op.input_artifact_paths if isinstance(processed_op, dsl.ContainerOp) else None
     artifact_arguments = processed_op.artifact_arguments if isinstance(processed_op, dsl.ContainerOp) else None
     inputs = _inputs_to_json(processed_op.inputs, input_artifact_paths, artifact_arguments)
-    if inputs:
+    if 'parameters' in inputs:
         template['spec']['params'] = inputs['parameters']
+    elif 'artifacts' in inputs:
+        raise NotImplementedError("input artifacts are not yet implemented")
 
     # outputs
     if isinstance(op, dsl.ContainerOp):
@@ -134,62 +134,72 @@ def _op_to_template(op: BaseOp):
             })
             # replace all occurrences of the output file path with the Tekton output parameter expression
             for s in template['spec']['steps']:
-                s['command'] = [c.replace(path, '$(results.%s.path)' % name)
-                                for c in s['command']]
-                s['args'] = [a.replace(path, '$(results.%s.path)' % name)
-                             for a in s['args']]
+                if 'command' in s:
+                    s['command'] = [c.replace(path, '$(results.%s.path)' % name)
+                                    for c in s['command']]
+                if 'args' in s:
+                    s['args'] = [a.replace(path, '$(results.%s.path)' % name)
+                                 for a in s['args']]
 
-    # ****************************************************************************************************
-    #  NOTE: the following lines are commented out while the corresponding features are being implemented
-    # ****************************************************************************************************
+    # **********************************************************
+    #  NOTE: the following features are still under development
+    # **********************************************************
 
-    # # node selector
-    # if processed_op.node_selector:
-    #     template['nodeSelector'] = processed_op.node_selector
+    # node selector
+    if processed_op.node_selector:
+        raise NotImplementedError("'nodeSelector' is not (yet) implemented")
+        template['nodeSelector'] = processed_op.node_selector
 
-    # # tolerations
-    # if processed_op.tolerations:
-    #     template['tolerations'] = processed_op.tolerations
+    # tolerations
+    if processed_op.tolerations:
+        raise NotImplementedError("'tolerations' is not (yet) implemented")
+        template['tolerations'] = processed_op.tolerations
 
-    # # affinity
-    # if processed_op.affinity:
-    #     template['affinity'] = convert_k8s_obj_to_json(processed_op.affinity)
+    # affinity
+    if processed_op.affinity:
+        raise NotImplementedError("'affinity' is not (yet) implemented")
+        template['affinity'] = convert_k8s_obj_to_json(processed_op.affinity)
 
-    # # metadata
-    # if processed_op.pod_annotations or processed_op.pod_labels:
-    #     template['metadata'] = {}
-    #     if processed_op.pod_annotations:
-    #         template['metadata']['annotations'] = processed_op.pod_annotations
-    #     if processed_op.pod_labels:
-    #         template['metadata']['labels'] = processed_op.pod_labels
+    # metadata
+    if processed_op.pod_annotations or processed_op.pod_labels:
+        template.setdefault('metadata', {})  # Tekton change, don't wipe out existing metadata
+        if processed_op.pod_annotations:
+            template['metadata']['annotations'] = processed_op.pod_annotations
+        if processed_op.pod_labels:
+            template['metadata']['labels'] = processed_op.pod_labels
 
-    # # retries
-    # if processed_op.num_retries:
-    #     template['retryStrategy'] = {'limit': processed_op.num_retries}
+    # retries
+    if processed_op.num_retries:
+        raise NotImplementedError("'retries' is not (yet) implemented")
+        template['retryStrategy'] = {'limit': processed_op.num_retries}
 
-    # # timeout
-    # if processed_op.timeout:
-    #     template['activeDeadlineSeconds'] = processed_op.timeout
+    # timeout
+    if processed_op.timeout:
+        raise NotImplementedError("'timeout' is not (yet) implemented")
+        template['activeDeadlineSeconds'] = processed_op.timeout
 
-    # # initContainers
-    # if processed_op.init_containers:
-    #     template['initContainers'] = processed_op.init_containers
+    # initContainers
+    if processed_op.init_containers:
+        raise NotImplementedError("'initContainers' is not (yet) implemented")
+        template['initContainers'] = processed_op.init_containers
 
-    # # sidecars
-    # if processed_op.sidecars:
-    #     template['sidecars'] = processed_op.sidecars
+    # sidecars
+    if processed_op.sidecars:
+        raise NotImplementedError("'sidecars' are not (yet) implemented")
+        template['sidecars'] = processed_op.sidecars
 
-    # # volumes
-    # if processed_op.volumes:
-    #     template['volumes'] = [convert_k8s_obj_to_json(volume) for volume in processed_op.volumes]
-    #     template['volumes'].sort(key=lambda x: x['name'])
+    # volumes
+    if processed_op.volumes:
+        raise NotImplementedError("'volumes' are not (yet) implemented")
+        template['volumes'] = [convert_k8s_obj_to_json(volume) for volume in processed_op.volumes]
+        template['volumes'].sort(key=lambda x: x['name'])
 
-    # # Display name
-    # if processed_op.display_name:
-    #     template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/task_display_name'] = processed_op.display_name
+    # Display name
+    if processed_op.display_name:
+        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/task_display_name'] = processed_op.display_name
 
-    # if isinstance(op, dsl.ContainerOp) and op._metadata:
-    #     import json
-    #     template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec'] = json.dumps(op._metadata.to_dict(), sort_keys=True)
+    if isinstance(op, dsl.ContainerOp) and op._metadata:
+        import json
+        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec'] = json.dumps(op._metadata.to_dict(), sort_keys=True)
 
     return template
