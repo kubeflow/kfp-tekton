@@ -18,6 +18,11 @@ a basic sequential pipeline.
 
 ## Steps
 
+1. Clone the KFP-Tekton repo:
+    - `git clone https://github.com/kubeflow/kfp-tekton.git`
+    - `cd kfp-tekton`
+
+
 1. Setup Python environment with Conda or a Python virtual environment:
 
     - `python3 -m venv .venv`
