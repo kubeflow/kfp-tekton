@@ -47,7 +47,7 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
 6. Run the sample pipeline on a Tekton cluster:
 
     - `kubectl apply -f pipeline.yaml`
-    - `tkn pipeline start parallel-pipeline`
+    - `tkn pipeline start parallel-pipeline --showlog`
 
    You should see messages asking for default URLs like below. Press `enter` and take the defaults
     ```bash
@@ -58,19 +58,14 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
       is  `gs://ml-pipeline-playground/shakespeare2.txt`) gs://ml-pipeline-playground/shakespeare2.txt
  
       Pipelinerun started: parallel-pipeline-run-th4x6
-      
-      In order to track the pipelinerun progress run:
-      tkn pipelinerun logs parallel-pipeline-run-th4x6 -f -n default
-    ```
- 7.  Run the command output in previous step to track the logs of the running Tekton Pipeline.
 
-      ```bash
-      tkn pipelinerun logs parallel-pipeline-run-th4x6 -f -n default
-      ```
+    ```
    
-      You should see an output similar to the one below
+   We will see the logs of the running Tekton Pipeline streamed, similar to the one below
       
       ```bash
+      Waiting for logs to be available...
+
       [gcs-download-2 : gcs-download-2] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my    
       presumption not provoke thy wrath
       [gcs-download : gcs-download] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment         makes them desolate
