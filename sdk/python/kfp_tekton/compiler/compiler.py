@@ -115,11 +115,11 @@ class TektonCompiler(Compiler) :
       for tp in task.get('params', []):
         if tp['name'] in pipeline_param_names:
           tp['value'] = '$(params.%s)' % tp['name']
-          break
         else:
           for pp in op.inputs:
             if tp['name'] == pp.full_name:
-              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
+              # replace '_' to '-' since tekton results doesn't support underscore
+              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
               break
 
     # generate the Tekton Pipeline document

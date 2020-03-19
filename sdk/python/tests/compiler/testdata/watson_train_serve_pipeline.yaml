@@ -1,0 +1,352 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"description": "Create secret to store
+      pipeline credentials on Kubernetes Cluster\n", "inputs": [{"description": "Required.
+      GitHub token for accessing private repository", "name": "token"}, {"description":
+      "Required. GitHub raw path for accessing the credential file", "name": "url"},
+      {"description": "Required. Secret Name to be stored in Kubernetes", "name":
+      "name"}], "name": "Create Secret - Kubernetes Cluster", "outputs": [{"description":
+      "Kubernetes secret name", "name": "secret_name"}]}'
+  name: create-secret-kubernetes-cluster
+spec:
+  params:
+  - name: CONFIG_FILE_URL
+  - name: GITHUB_TOKEN
+  results:
+  - description: /tmp/outputs/secret_name/data
+    name: secret-name
+  steps:
+  - args:
+    - /app/config.py
+    - --token
+    - $(inputs.params.GITHUB_TOKEN)
+    - --url
+    - $(inputs.params.CONFIG_FILE_URL)
+    - --name
+    - kfp-creds
+    - --output-secret-name-file
+    - $(results.secret-name.path)
+    command:
+    - python3
+    image: docker.io/aipipeline/wml-config:latest
+    name: create-secret-kubernetes-cluster
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"description": "Train Machine Learning
+      and Deep Learning Models in the Cloud using Watson Machine Learning\n", "inputs":
+      [{"description": "Required. Code for training ML/DL models", "name": "train_code"},
+      {"description": "Required. Execution command to start the model training.",
+      "name": "execution_command"}, {"default": "secret_name", "description": "Credential
+      configfile is properly created.", "name": "config"}, {"default": "tensorflow",
+      "description": "ML/DL Model Framework", "name": "framework"}, {"default": "1.14",
+      "description": "Model Framework version", "name": "framework_version"}, {"default":
+      "python", "description": "Model Code runtime language", "name": "runtime"},
+      {"default": "3.6", "description": "Model Code runtime version", "name": "runtime_version"},
+      {"default": "python-tensorflow-definition", "description": "Name for the Watson
+      Machine Learning training definition", "name": "run_definition"}, {"default":
+      "python-tensorflow-run", "description": "Name for the Watson Machine Learning
+      training-runs", "name": "run_name"}, {"default": "default-author", "description":
+      "Name of this training job author", "name": "author_name"}, {"default": "k80",
+      "description": "Name of the compute tiers, in WML is the gpu count", "name":
+      "compute_name"}, {"default": "1", "description": "Number of compute machine",
+      "name": "compute_nodes"}], "metadata": {"annotations": {"platform": "IBM Watson
+      Machine Learning"}}, "name": "Train Model - Watson Machine Learning", "outputs":
+      [{"description": "UID for the Watson Machine Learning training-runs", "name":
+      "run_uid"}, {"description": "Training Location UID for the Watson Machine Learning
+      training-runs", "name": "training_uid"}]}'
+    platform: IBM Watson Machine Learning
+  name: train-model-watson-machine-learning
+spec:
+  params:
+  - name: compute_name
+  - name: compute_nodes
+  - name: create-secret-kubernetes-cluster-secret_name
+  - name: execution_command
+  - name: framework
+  - name: framework_version
+  - name: run_definition
+  - name: run_name
+  - name: runtime
+  - name: runtime_version
+  - name: train_code
+  results:
+  - description: /tmp/outputs/run_uid/data
+    name: run-uid
+  - description: /tmp/outputs/training_uid/data
+    name: training-uid
+  steps:
+  - args:
+    - -u
+    - /app/wml-train.py
+    - --config
+    - $(inputs.params.create-secret-kubernetes-cluster-secret_name)
+    - --train-code
+    - $(inputs.params.train_code)
+    - --execution-command
+    - $(inputs.params.execution_command)
+    - --framework
+    - $(inputs.params.framework)
+    - --framework-version
+    - $(inputs.params.framework_version)
+    - --runtime
+    - $(inputs.params.runtime)
+    - --runtime-version
+    - $(inputs.params.runtime_version)
+    - --run-definition
+    - $(inputs.params.run_definition)
+    - --run-name
+    - $(inputs.params.run_name)
+    - --author-name
+    - default-author
+    - --compute-name
+    - $(inputs.params.compute_name)
+    - --compute-nodes
+    - $(inputs.params.compute_nodes)
+    - --output-run-uid-path
+    - $(results.run-uid.path)
+    - --output-training-uid-path
+    - $(results.training-uid.path)
+    command:
+    - python3
+    image: docker.io/aipipeline/wml-train:latest
+    imagePullPolicy: Always
+    name: train-model-watson-machine-learning
+    volumeMounts:
+    - mountPath: /app/secrets
+      name: kfp-creds
+  volumes:
+  - name: kfp-creds
+    secret:
+      secretName: kfp-creds
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"description": "Store and persistent
+      trained model on Watson Machine Learning.\n", "inputs": [{"description": "Required.
+      UID for the Watson Machine Learning training-runs", "name": "run_uid"}, {"description":
+      "Required. Model Name to store on Watson Machine Learning", "name": "model_name"},
+      {"default": "tensorflow", "description": "ML/DL Model Framework", "name": "framework"},
+      {"default": "1.14", "description": "Model Framework version", "name": "framework_version"},
+      {"default": "3.6", "description": "Model Code runtime version", "name": "runtime_version"}],
+      "metadata": {"annotations": {"platform": "IBM Watson Machine Learning"}}, "name":
+      "Store model - Watson Machine Learning", "outputs": [{"description": "UID for
+      the stored model on Watson Machine Learning", "name": "model_uid"}]}'
+    platform: IBM Watson Machine Learning
+  name: store-model-watson-machine-learning
+spec:
+  params:
+  - name: framework
+  - name: framework_version
+  - name: model_name
+  - name: runtime_version
+  - name: train-model-watson-machine-learning-run_uid
+  results:
+  - description: /tmp/outputs/model_uid/data
+    name: model-uid
+  steps:
+  - args:
+    - -u
+    - /app/wml-store.py
+    - --run-uid
+    - $(inputs.params.train-model-watson-machine-learning-run_uid)
+    - --model-name
+    - $(inputs.params.model_name)
+    - --framework
+    - $(inputs.params.framework)
+    - --framework-version
+    - $(inputs.params.framework_version)
+    - --runtime-version
+    - $(inputs.params.runtime_version)
+    - --output-model-uid-path
+    - $(results.model-uid.path)
+    command:
+    - python3
+    image: docker.io/aipipeline/wml-store:latest
+    imagePullPolicy: Always
+    name: store-model-watson-machine-learning
+    volumeMounts:
+    - mountPath: /app/secrets
+      name: kfp-creds
+  volumes:
+  - name: kfp-creds
+    secret:
+      secretName: kfp-creds
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"description": "Deploy stored model on
+      Watson Machine Learning as a web service.\n", "inputs": [{"description": "Required.
+      UID for the stored model on Watson Machine Learning", "name": "model_uid"},
+      {"description": "Required. Model Name on Watson Machine Learning", "name": "model_name"},
+      {"default": "", "description": "Sample Payload file name in the object storage",
+      "name": "scoring_payload"}, {"default": "", "description": "Deployment Name
+      on Watson Machine Learning", "name": "deployment_name"}], "metadata": {"annotations":
+      {"platform": "IBM Watson Machine Learning"}}, "name": "Deploy Model - Watson
+      Machine Learning", "outputs": [{"description": "Link to the deployed model web
+      service", "name": "scoring_endpoint"}, {"description": "UID for the stored model
+      on Watson Machine Learning", "name": "model_uid"}]}'
+    platform: IBM Watson Machine Learning
+  name: deploy-model-watson-machine-learning
+spec:
+  params:
+  - name: model_name
+  - name: scoring_payload
+  - name: store-model-watson-machine-learning-model_uid
+  results:
+  - description: /tmp/outputs/scoring_endpoint/data
+    name: scoring-endpoint
+  - description: /tmp/outputs/model_uid/data
+    name: model-uid
+  steps:
+  - args:
+    - -u
+    - /app/wml-deploy.py
+    - --model-uid
+    - $(inputs.params.store-model-watson-machine-learning-model_uid)
+    - --model-name
+    - $(inputs.params.model_name)
+    - --scoring-payload
+    - $(inputs.params.scoring_payload)
+    - --deployment-name
+    - ''
+    - --output-scoring-endpoint-path
+    - $(results.scoring-endpoint.path)
+    - --output-model-uid-path
+    - $(results.model-uid.path)
+    command:
+    - python
+    image: docker.io/aipipeline/wml-deploy:latest
+    imagePullPolicy: Always
+    name: deploy-model-watson-machine-learning
+    volumeMounts:
+    - mountPath: /app/secrets
+      name: kfp-creds
+  volumes:
+  - name: kfp-creds
+    secret:
+      secretName: kfp-creds
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Kubeflow pipelines running
+      on WML performing tensorflow image recognition.", "inputs": [{"default": "",
+      "name": "GITHUB_TOKEN", "optional": true}, {"default": "https://raw.githubusercontent.com/user/repository/branch/creds.ini",
+      "name": "CONFIG_FILE_URL", "optional": true}, {"default": "tf-model.zip", "name":
+      "train_code", "optional": true}, {"default": "''python3 convolutional_network.py
+      --trainImagesFile ${DATA_DIR}/train-images-idx3-ubyte.gz --trainLabelsFile ${DATA_DIR}/train-labels-idx1-ubyte.gz
+      --testImagesFile ${DATA_DIR}/t10k-images-idx3-ubyte.gz --testLabelsFile ${DATA_DIR}/t10k-labels-idx1-ubyte.gz
+      --learningRate 0.001 --trainingIters 20000''", "name": "execution_command",
+      "optional": true}, {"default": "tensorflow", "name": "framework", "optional":
+      true}, {"default": "1.14", "name": "framework_version", "optional": true}, {"default":
+      "python", "name": "runtime", "optional": true}, {"default": "3.6", "name": "runtime_version",
+      "optional": true}, {"default": "wml-tensorflow-definition", "name": "run_definition",
+      "optional": true}, {"default": "wml-tensorflow-run", "name": "run_name", "optional":
+      true}, {"default": "wml-tensorflow-mnist", "name": "model_name", "optional":
+      true}, {"default": "tf-mnist-test-payload.json", "name": "scoring_payload",
+      "optional": true}, {"default": "k80", "name": "compute_name", "optional": true},
+      {"default": "1", "name": "compute_nodes", "optional": true}], "name": "KFP on
+      WML training"}'
+  name: kfp-on-wml-training
+spec:
+  params:
+  - default: ''
+    name: GITHUB_TOKEN
+  - default: https://raw.githubusercontent.com/user/repository/branch/creds.ini
+    name: CONFIG_FILE_URL
+  - default: tf-model.zip
+    name: train_code
+  - default: '''python3 convolutional_network.py --trainImagesFile ${DATA_DIR}/train-images-idx3-ubyte.gz
+      --trainLabelsFile ${DATA_DIR}/train-labels-idx1-ubyte.gz --testImagesFile ${DATA_DIR}/t10k-images-idx3-ubyte.gz
+      --testLabelsFile ${DATA_DIR}/t10k-labels-idx1-ubyte.gz --learningRate 0.001
+      --trainingIters 20000'''
+    name: execution_command
+  - default: tensorflow
+    name: framework
+  - default: '1.14'
+    name: framework_version
+  - default: python
+    name: runtime
+  - default: '3.6'
+    name: runtime_version
+  - default: wml-tensorflow-definition
+    name: run_definition
+  - default: wml-tensorflow-run
+    name: run_name
+  - default: wml-tensorflow-mnist
+    name: model_name
+  - default: tf-mnist-test-payload.json
+    name: scoring_payload
+  - default: k80
+    name: compute_name
+  - default: '1'
+    name: compute_nodes
+  tasks:
+  - name: create-secret-kubernetes-cluster
+    params:
+    - name: CONFIG_FILE_URL
+      value: $(params.CONFIG_FILE_URL)
+    - name: GITHUB_TOKEN
+      value: $(params.GITHUB_TOKEN)
+    taskRef:
+      name: create-secret-kubernetes-cluster
+  - name: train-model-watson-machine-learning
+    params:
+    - name: compute_name
+      value: $(params.compute_name)
+    - name: compute_nodes
+      value: $(params.compute_nodes)
+    - name: create-secret-kubernetes-cluster-secret_name
+      value: $(tasks.create-secret-kubernetes-cluster.results.secret-name)
+    - name: execution_command
+      value: $(params.execution_command)
+    - name: framework
+      value: $(params.framework)
+    - name: framework_version
+      value: $(params.framework_version)
+    - name: run_definition
+      value: $(params.run_definition)
+    - name: run_name
+      value: $(params.run_name)
+    - name: runtime
+      value: $(params.runtime)
+    - name: runtime_version
+      value: $(params.runtime_version)
+    - name: train_code
+      value: $(params.train_code)
+    taskRef:
+      name: train-model-watson-machine-learning
+  - name: store-model-watson-machine-learning
+    params:
+    - name: framework
+      value: $(params.framework)
+    - name: framework_version
+      value: $(params.framework_version)
+    - name: model_name
+      value: $(params.model_name)
+    - name: runtime_version
+      value: $(params.runtime_version)
+    - name: train-model-watson-machine-learning-run_uid
+      value: $(tasks.train-model-watson-machine-learning.results.run-uid)
+    taskRef:
+      name: store-model-watson-machine-learning
+  - name: deploy-model-watson-machine-learning
+    params:
+    - name: model_name
+      value: $(params.model_name)
+    - name: scoring_payload
+      value: $(params.scoring_payload)
+    - name: store-model-watson-machine-learning-model_uid
+      value: $(tasks.store-model-watson-machine-learning.results.model-uid)
+    taskRef:
+      name: deploy-model-watson-machine-learning
