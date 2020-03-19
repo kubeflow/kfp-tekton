@@ -19,7 +19,13 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
  - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
  - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
-   
+
+## Tested Pipelines
+[Execution Order](https://github.com/kubeflow/pipelines/blob/master/samples/core/execution_order/execution_order.py)
+[Parallel Join](https://github.com/kubeflow/pipelines/blob/master/samples/core/parallel_join/parallel_join.py)
+[Watson ML](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/ibm-samples/watson/watson_train_serve_pipeline.py)
+    - Watson ML pipeline requires the default service account to have list, write, and delete secrets permission.
+
 ## Steps
 
 1. Clone the kfp-tekton repo:
@@ -41,7 +47,8 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
 
 5. Compile the sample pipeline:
 
-    - `cd sdk/samples`  
+    - `mkdir temp && cd temp`
+    - `curl -L https://raw.githubusercontent.com/kubeflow/pipelines/master/samples/core/parallel_join/parallel_join.py > parallel_join.py`  
     - `dsl-compile-tekton --py parallel_join.py --output pipeline.yaml`
     
 6. Run the sample pipeline on a Tekton cluster:
