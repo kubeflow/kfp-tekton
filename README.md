@@ -6,7 +6,7 @@ The Tekton Pipelines project provides Kubernetes-style resources for declaring C
 
 ## Development
 
-The current work is being split in four areas, namely Compiler, API (with corresponding backend), SDK (functionalities beyond the compilation, like uploading and launching a pipeline etc.) and UI they will be tackled in same order. To get more details about what these different areas entail, please dive into the [design doc](http://bit.ly/kfp-tekton). Currently we are progressing with first one in the list, namely Compiler to compile from KFP DSL to Tekton Yaml. We would love to have teams pick up other major areas like API/UI etc. and/or contribute to make the Tekton Compiler functions and feature complete.
+The current work is being split in four areas, namely Compiler, API (with corresponding backend), SDK (functionalities beyond the compilation, like uploading and launching a pipeline etc.) and UI. To get more details about what these different areas entail, please dive into the [design doc](http://bit.ly/kfp-tekton). Currently we are progressing with first one in the list, namely Compiler to compile from KFP DSL to Tekton Yaml. We would love to have teams pick up other major areas like API/UI etc. and/or contribute to make the Tekton Compiler functions and feature complete.
 
 To get started with contributing to KFP Tekton Compiler, please [follow these instructions](sdk/README.md), as well as look at [open issues on the repo](https://github.com/kubeflow/kfp-tekton/issues)
 
