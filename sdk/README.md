@@ -6,7 +6,6 @@ The output of the KFP SDK compiler is YAML for [Argo](https://github.com/argopro
 
 Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a basic pipeline with parallal and sequential steps. Please go through these steps to ensure you are setup properly to use the compiler.
 
-
 ## Development Prerequisites
 
 1. [`Python`](https://www.python.org/downloads/): Python 3.5 or later  
@@ -14,13 +13,18 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
    [virtual environment](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/): 
    Package, dependency and environment management for Python
 
+## Tested Versions
 
+ - Python: `3.7.5`
+ - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
+ - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
+ - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
+   
 ## Steps
 
 1. Clone the kfp-tekton repo:
     - `git clone https://github.com/kubeflow/kfp-tekton.git`
     - `cd kfp-tekton`
-
 
 2. Setup Python environment with Conda or a Python virtual environment:
 
@@ -74,10 +78,3 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
       [echo : echo] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not 
       provoke thy wrath
       ```
-
-## Tested Versions
-
- - Python: `3.7.5`
- - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
- - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
- 
