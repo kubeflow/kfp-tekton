@@ -21,9 +21,9 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
 
 ## Tested Pipelines
-[Execution Order](https://github.com/kubeflow/pipelines/blob/master/samples/core/execution_order/execution_order.py)
-[Parallel Join](https://github.com/kubeflow/pipelines/blob/master/samples/core/parallel_join/parallel_join.py)
-[Watson ML](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/ibm-samples/watson/watson_train_serve_pipeline.py)
+- [Execution Order](https://github.com/kubeflow/pipelines/blob/master/samples/core/execution_order/execution_order.py)
+- [Parallel Join](https://github.com/kubeflow/pipelines/blob/master/samples/core/parallel_join/parallel_join.py)
+- [Watson ML](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/ibm-samples/watson/watson_train_serve_pipeline.py)
     - Watson ML pipeline requires the default service account to have list, write, and delete secrets permission.
 
 ## Steps
