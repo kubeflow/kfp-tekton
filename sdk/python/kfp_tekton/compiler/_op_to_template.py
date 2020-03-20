@@ -185,8 +185,7 @@ def _op_to_template(op: BaseOp):
 
     # sidecars
     if processed_op.sidecars:
-        raise NotImplementedError("'sidecars' are not (yet) implemented")
-        template['sidecars'] = processed_op.sidecars
+        template['spec']['sidecars'] = processed_op.sidecars
 
     # volumes
     if processed_op.volumes:
