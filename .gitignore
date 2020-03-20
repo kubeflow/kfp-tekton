@@ -29,6 +29,9 @@ bin
 .venv/
 *.egg-info/
 
+# VSCode
+.vscode
+
 # Ignore files for MacOS
 **/.DS_Store
 

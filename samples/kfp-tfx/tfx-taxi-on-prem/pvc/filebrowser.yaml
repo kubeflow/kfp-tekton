@@ -14,7 +14,7 @@ spec:
     app: filebrowser
   type: NodePort
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: filebrowser
@@ -22,6 +22,9 @@ metadata:
   labels:
     app: filebrowser
 spec:
+  selector:
+    matchLabels:
+      app: filebrowser
   template:
     metadata:
       labels:
