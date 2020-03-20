@@ -46,10 +46,8 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
     - `./sdk/python/tests/run_tests.sh`
 
 5. Compile the sample pipeline:
-
-    - `mkdir temp && cd temp`
-    - `curl -L https://raw.githubusercontent.com/kubeflow/pipelines/master/samples/core/parallel_join/parallel_join.py > parallel_join.py`  
-    - `dsl-compile-tekton --py parallel_join.py --output pipeline.yaml`
+ 
+    - `dsl-compile-tekton --py sdk/python/tests/compiler/testdata/parallel_join.py --output pipeline.yaml`
     
 6. Run the sample pipeline on a Tekton cluster:
 
