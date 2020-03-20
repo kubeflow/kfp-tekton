@@ -128,6 +128,7 @@ def _op_to_template(op: BaseOp):
     if outputs_dict:
         template['spec']['results'] = []
         for name, path in processed_op.file_outputs.items():
+            name = name.replace('_', '-')  # replace '_' to '-' since tekton results doesn't support underscore
             template['spec']['results'].append({
                 'name': name,
                 'description': path
@@ -190,9 +191,8 @@ def _op_to_template(op: BaseOp):
 
     # volumes
     if processed_op.volumes:
-        raise NotImplementedError("'volumes' are not (yet) implemented")
-        template['volumes'] = [convert_k8s_obj_to_json(volume) for volume in processed_op.volumes]
-        template['volumes'].sort(key=lambda x: x['name'])
+        template['spec']['volumes'] = [convert_k8s_obj_to_json(volume) for volume in processed_op.volumes]
+        template['spec']['volumes'].sort(key=lambda x: x['name'])
 
     # Display name
     if processed_op.display_name:

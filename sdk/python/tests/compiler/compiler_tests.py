@@ -48,6 +48,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
 
+  def test_volume_workflow(self):
+    """
+    Test compiling a Waston ML workflow.
+    """
+    from .testdata.volume import volume_pipeline
+    self._test_pipeline_workflow(volume_pipeline, 'volume.yaml')
+
   def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
