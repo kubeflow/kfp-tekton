@@ -12,20 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp.dsl as dsl
-import json
 import os
 import shutil
-import sys
-import tarfile
 import tempfile
 import unittest
 import yaml
-import zipfile
 
 from kfp_tekton import compiler
 
-from . import testdata
 
 # after code changes that change the YAML output, temporarily set this flag to True
 # in order to generate new "golden" YAML files
@@ -47,6 +41,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
+
+  def test_sidecar_workflow(self):
+    """
+    Test compiling a sidecar workflow.
+    """
+    from .testdata.sidecar import sidecar_pipeline
+    self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
 
   def test_volume_workflow(self):
     """
