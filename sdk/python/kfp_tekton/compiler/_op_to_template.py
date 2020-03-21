@@ -176,8 +176,7 @@ def _op_to_template(op: BaseOp):
 
     # timeout
     if processed_op.timeout:
-        raise NotImplementedError("'timeout' is not (yet) implemented")
-        template['activeDeadlineSeconds'] = processed_op.timeout
+        template['timeout'] = '%ds' % processed_op.timeout
 
     # initContainers
     if processed_op.init_containers:
