@@ -428,7 +428,7 @@ metadata:
 spec:
   params:
   - name: GITHUB_TOKEN
-    value: 175fd289e7919180af7a437d424f692604ab9499
+    value: ''
   - name: train_code
     value: tf-model.zip
   - name: runtime_version
@@ -449,7 +449,7 @@ spec:
   - name: compute_nodes
     value: "1"
   - name: CONFIG_FILE_URL
-    value: https://raw.githubusercontent.com/Tomcli/kfp-secrets/master/wml.ini
+    value: https://raw.githubusercontent.com/user/repository/branch/creds.ini
   - name: framework
     value: tensorflow
   - name: framework_version
