@@ -87,24 +87,20 @@ class TektonCompiler(Compiler) :
     tasks = self._create_dag_templates(pipeline, op_transformers, params)
 
     # generate task reference list for Tekton pipeline
-    task_refs = []
-    for t in tasks:
-      task_json = {
-          'name': t['metadata']['name'],
-          'taskRef': {
-            'name': t['metadata']['name']
-          },
-          'params': [{
-              'name': p['name'],
-              'value': p.get('default', '')
-            } for p in t['spec'].get('params', [])
-          ]
-        }
-      # add timeout params to task_refs, instead of task.
-      if 'timeout' in t:
-        task_json['timeout'] = t['timeout']
-        del t['timeout']
-      task_refs.append(task_json)
+    task_refs = [
+      {
+        'name': t['metadata']['name'],
+        'taskRef': {
+          'name': t['metadata']['name']
+        },
+        'params': [{
+            'name': p['name'],
+            'value': p.get('default', '')
+          } for p in t['spec'].get('params', [])
+        ]
+      }
+      for t in tasks
+    ]
 
     # add task dependencies
     for task in task_refs:
@@ -125,6 +121,12 @@ class TektonCompiler(Compiler) :
               # replace '_' to '-' since tekton results doesn't support underscore
               tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
               break
+
+    # add timeout params to task_refs, instead of task.
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.timeout:
+        task['timeout'] = '%ds' % op.timeout
 
     # generate the Tekton Pipeline document
     pipeline = {

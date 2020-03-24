@@ -174,10 +174,6 @@ def _op_to_template(op: BaseOp):
         raise NotImplementedError("'retries' is not (yet) implemented")
         template['retryStrategy'] = {'limit': processed_op.num_retries}
 
-    # timeout
-    if processed_op.timeout:
-        template['timeout'] = '%ds' % processed_op.timeout
-
     # initContainers
     if processed_op.init_containers:
         raise NotImplementedError("'initContainers' is not (yet) implemented")
