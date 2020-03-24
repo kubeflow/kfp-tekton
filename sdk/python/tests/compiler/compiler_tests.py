@@ -56,6 +56,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.sidecar import sidecar_pipeline
     self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
 
+  def test_pipelineparams_workflow(self):
+    """
+    Test compiling a pipelineparams workflow.
+    """
+    from .testdata.pipelineparams import pipelineparams_pipeline
+    self._test_pipeline_workflow(pipelineparams_pipeline, 'pipelineparams.yaml')
+
   def test_volume_workflow(self):
     """
     Test compiling a volume workflow.
