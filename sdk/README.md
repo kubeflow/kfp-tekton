@@ -78,3 +78,6 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
       [echo : echo] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not 
       provoke thy wrath
       ```
+## Test Kubeflow Pipelines with Tekton
+
+Please [refer to the instructions here](/python/tests/README.md) as you work on a PR test sample Kubeflow Pipelines in their test data folder to ensure your PR is improving the number of successful samples
