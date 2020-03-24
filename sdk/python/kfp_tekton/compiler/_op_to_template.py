@@ -175,11 +175,6 @@ def _op_to_template(op: BaseOp):
         if processed_op.pod_labels:
             template['metadata']['labels'] = processed_op.pod_labels
 
-    # retries
-    if processed_op.num_retries:
-        raise NotImplementedError("'retries' is not (yet) implemented")
-        template['retryStrategy'] = {'limit': processed_op.num_retries}
-
     # timeout
     if processed_op.timeout:
         raise NotImplementedError("'timeout' is not (yet) implemented")
