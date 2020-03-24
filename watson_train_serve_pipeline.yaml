@@ -39,6 +39,9 @@ spec:
     - /bin/bash
     image: ubuntu
     name: outfile-step
+  workspaces:
+  - mountPath: /tmp/outputs/secret_name
+    name: secret-name
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -138,6 +141,11 @@ spec:
   - name: kfp-creds
     secret:
       secretName: kfp-creds
+  workspaces:
+  - mountPath: /tmp/outputs/run_uid
+    name: run-uid
+  - mountPath: /tmp/outputs/training_uid
+    name: training-uid
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -200,6 +208,9 @@ spec:
   - name: kfp-creds
     secret:
       secretName: kfp-creds
+  workspaces:
+  - mountPath: /tmp/outputs/model_uid
+    name: model-uid
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -264,6 +275,11 @@ spec:
   - name: kfp-creds
     secret:
       secretName: kfp-creds
+  workspaces:
+  - mountPath: /tmp/outputs/scoring_endpoint
+    name: scoring-endpoint
+  - mountPath: /tmp/outputs/model_uid
+    name: model-uid
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -330,6 +346,9 @@ spec:
       value: $(params.GITHUB_TOKEN)
     taskRef:
       name: create-secret-kubernetes-cluster
+    workspaces:
+    - name: secret-name
+      workspace: secret-name
   - name: train-model-watson-machine-learning
     params:
     - name: compute_name
@@ -356,6 +375,11 @@ spec:
       value: $(params.train_code)
     taskRef:
       name: train-model-watson-machine-learning
+    workspaces:
+    - name: run-uid
+      workspace: run-uid
+    - name: training-uid
+      workspace: training-uid
   - name: store-model-watson-machine-learning
     params:
     - name: framework
@@ -370,6 +394,9 @@ spec:
       value: $(tasks.train-model-watson-machine-learning.results.run-uid)
     taskRef:
       name: store-model-watson-machine-learning
+    workspaces:
+    - name: model-uid
+      workspace: model-uid
   - name: deploy-model-watson-machine-learning
     params:
     - name: model_name
@@ -380,3 +407,8 @@ spec:
       value: $(tasks.store-model-watson-machine-learning.results.model-uid)
     taskRef:
       name: deploy-model-watson-machine-learning
+    workspaces:
+    - name: scoring-endpoint
+      workspace: scoring-endpoint
+    - name: model-uid
+      workspace: model-uid

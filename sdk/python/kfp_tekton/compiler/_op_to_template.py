@@ -128,6 +128,8 @@ def _op_to_template(op: BaseOp):
     if outputs_dict:
         template['spec']['results'] = []
         outfile_step = {'command': ['/bin/bash'], 'image': 'ubuntu', 'name': 'outfile-step', 'args': ['-c', 'echo Copying files to Tekton dir...;']}
+        workspaces = []
+        mounted_paths = []
         for name, path in processed_op.file_outputs.items():
             name = name.replace('_', '-')  # replace '_' to '-' since tekton results doesn't support underscore
             template['spec']['results'].append({
@@ -135,6 +137,10 @@ def _op_to_template(op: BaseOp):
                 'description': path
             })
             outfile_step['args'][1] = outfile_step['args'][1] + 'cp ' + path + ' $(results.%s.path);' % name
+            mountPath = path.rsplit("/", 1)[0]
+            if mountPath not in mounted_paths:
+                workspaces.append({'name': name, 'mountPath': path.rsplit("/", 1)[0]})
+                mounted_paths.append(mountPath)
             # replace all occurrences of the output file path with the Tekton output parameter expression
             # for s in template['spec']['steps']:
             #     if 'command' in s:
@@ -144,6 +150,7 @@ def _op_to_template(op: BaseOp):
             #         s['args'] = [a.replace(path, '$(results.%s.path)' % name)
             #                      for a in s['args']]
         template['spec']['steps'].append(outfile_step)
+        template['spec']['workspaces'] = workspaces
 
     # **********************************************************
     #  NOTE: the following features are still under development

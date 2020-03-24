@@ -91,12 +91,18 @@ class TektonCompiler(Compiler) :
       {
         'name': t['metadata']['name'],
         'taskRef': {
-          'name': t['metadata']['name']
+            'name': t['metadata']['name']
         },
         'params': [{
             'name': p['name'],
             'value': p.get('default', '')
-          } for p in t['spec'].get('params', [])
+        } for p in t['spec'].get('params', [])
+        ],
+        'workspaces': [{
+            'name': w['name'],
+            # TODO: Set flags for workspace mapping if we are going to generate pipelinerun in this compiler. 
+            'workspace': w['name']
+        } for w in t['spec'].get('workspaces', [])
         ]
       }
       for t in tasks
@@ -121,7 +127,7 @@ class TektonCompiler(Compiler) :
               # replace '_' to '-' since tekton results doesn't support underscore
               tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
               break
-
+    
     # generate the Tekton Pipeline document
     pipeline = {
       'apiVersion': tekton_api_version,
