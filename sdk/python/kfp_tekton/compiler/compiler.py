@@ -122,6 +122,12 @@ class TektonCompiler(Compiler) :
               tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
               break
 
+    # add timeout params to task_refs, instead of task.
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.timeout:
+        task['timeout'] = '%ds' % op.timeout
+
     # generate the Tekton Pipeline document
     pipeline = {
       'apiVersion': tekton_api_version,

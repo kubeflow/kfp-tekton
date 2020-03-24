@@ -70,6 +70,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.volume import volume_pipeline
     self._test_pipeline_workflow(volume_pipeline, 'volume.yaml')
 
+  def test_timeout_workflow(self):
+    """
+    Test compiling a timeout workflow.
+    """
+    from .testdata.timeout import timeout_sample_pipeline
+    self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
+
   def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
