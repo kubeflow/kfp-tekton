@@ -28,6 +28,13 @@ GENERATE_GOLDEN_YAML = False
 
 class TestTektonCompiler(unittest.TestCase):
 
+  def test_init_container_workflow(self):
+    """
+    Test compiling a initial container workflow.
+    """
+    from .testdata.init_container import init_container_pipeline
+    self._test_pipeline_workflow(init_container_pipeline, 'init_container.yaml')
+
   def test_sequential_workflow(self):
     """
     Test compiling a sequential workflow.
@@ -49,9 +56,16 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.sidecar import sidecar_pipeline
     self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
 
+  def test_pipelineparams_workflow(self):
+    """
+    Test compiling a pipelineparams workflow.
+    """
+    from .testdata.pipelineparams import pipelineparams_pipeline
+    self._test_pipeline_workflow(pipelineparams_pipeline, 'pipelineparams.yaml')
+
   def test_volume_workflow(self):
     """
-    Test compiling a Waston ML workflow.
+    Test compiling a volume workflow.
     """
     from .testdata.volume import volume_pipeline
     self._test_pipeline_workflow(volume_pipeline, 'volume.yaml')

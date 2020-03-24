@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: hello
+spec:
+  steps:
+  - command:
+    - echo
+    - bye
+    image: alpine:latest
+    name: echo
+  - command:
+    - echo
+    - hello
+    image: alpine:latest
+    name: hello
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with init container.",
+      "name": "InitContainer"}'
+  name: initcontainer
+spec:
+  params: []
+  tasks:
+  - name: hello
+    params: []
+    taskRef:
+      name: hello
