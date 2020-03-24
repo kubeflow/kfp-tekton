@@ -128,6 +128,15 @@ class TektonCompiler(Compiler) :
               tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
               break
     
+    # add possible workspaces
+    pipeline_workspaces = []
+    for task in task_refs:
+      workspaces = task.get('workspaces', [])
+      for w in workspaces:
+        if w['name'] not in pipeline_workspaces:
+          pipeline_workspaces.append(w['name'])
+
+
     # generate the Tekton Pipeline document
     pipeline = {
       'apiVersion': tekton_api_version,
@@ -137,7 +146,11 @@ class TektonCompiler(Compiler) :
       },
       'spec': {
         'params': params,
-        'tasks': task_refs
+        'tasks': task_refs,
+        'workspaces': [{
+            'name': w
+          } for w in pipeline_workspaces
+        ]
       }
     }
 

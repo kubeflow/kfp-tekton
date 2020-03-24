@@ -412,3 +412,62 @@ spec:
       workspace: scoring-endpoint
     - name: model-uid
       workspace: model-uid
+  workspaces:
+  - name: secret-name
+  - name: run-uid
+  - name: training-uid
+  - name: model-uid
+  - name: scoring-endpoint
+---
+# TODO: generate pipelinerun file
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: kfp-on-wml-training-run-22222
+  namespace: default
+spec:
+  params:
+  - name: GITHUB_TOKEN
+    value: 175fd289e7919180af7a437d424f692604ab9499
+  - name: train_code
+    value: tf-model.zip
+  - name: runtime_version
+    value: "3.6"
+  - name: run_name
+    value: wml-tensorflow-run
+  - name: scoring_payload
+    value: tf-mnist-test-payload.json
+  - name: execution_command
+    value: '''python3 convolutional_network.py --trainImagesFile ${DATA_DIR}/train-images-idx3-ubyte.gz
+      --trainLabelsFile ${DATA_DIR}/train-labels-idx1-ubyte.gz --testImagesFile ${DATA_DIR}/t10k-images-idx3-ubyte.gz
+      --testLabelsFile ${DATA_DIR}/t10k-labels-idx1-ubyte.gz --learningRate 0.001
+      --trainingIters 20000'''
+  - name: runtime
+    value: python
+  - name: model_name
+    value: wml-tensorflow-mnist
+  - name: compute_nodes
+    value: "1"
+  - name: CONFIG_FILE_URL
+    value: https://raw.githubusercontent.com/Tomcli/kfp-secrets/master/wml.ini
+  - name: framework
+    value: tensorflow
+  - name: framework_version
+    value: "1.14"
+  - name: run_definition
+    value: wml-tensorflow-definition
+  - name: compute_name
+    value: k80
+  pipelineRef:
+    name: kfp-on-wml-training
+  workspaces:
+  - name: secret-name
+    emptyDir: {}
+  - name: run-uid
+    emptyDir: {}
+  - name: training-uid
+    emptyDir: {}
+  - name: model-uid
+    emptyDir: {}
+  - name: scoring-endpoint
+    emptyDir: {}
