@@ -110,6 +110,12 @@ def _op_to_template(op: BaseOp):
         # }
         raise NotImplementedError("dsl.ResourceOp is not yet implemented")
 
+    # initContainers
+    if processed_op.init_containers:
+        steps = processed_op.init_containers.copy()
+        steps.extend(template['spec']['steps'])
+        template['spec']['steps'] = steps
+
     # inputs
     input_artifact_paths = processed_op.input_artifact_paths if isinstance(processed_op, dsl.ContainerOp) else None
     artifact_arguments = processed_op.artifact_arguments if isinstance(processed_op, dsl.ContainerOp) else None
@@ -178,11 +184,6 @@ def _op_to_template(op: BaseOp):
     if processed_op.timeout:
         raise NotImplementedError("'timeout' is not (yet) implemented")
         template['activeDeadlineSeconds'] = processed_op.timeout
-
-    # initContainers
-    if processed_op.init_containers:
-        raise NotImplementedError("'initContainers' is not (yet) implemented")
-        template['initContainers'] = processed_op.init_containers
 
     # sidecars
     if processed_op.sidecars:
