@@ -127,20 +127,23 @@ def _op_to_template(op: BaseOp):
     outputs_dict = _outputs_to_json(op, processed_op.outputs, param_outputs, output_artifacts)
     if outputs_dict:
         template['spec']['results'] = []
+        outfile_step = {'command': ['/bin/bash'], 'image': 'ubuntu', 'name': 'outfile-step', 'args': ['-c', 'echo Copying files to Tekton dir...;']}
         for name, path in processed_op.file_outputs.items():
             name = name.replace('_', '-')  # replace '_' to '-' since tekton results doesn't support underscore
             template['spec']['results'].append({
                 'name': name,
                 'description': path
             })
+            outfile_step['args'][1] = outfile_step['args'][1] + 'cp ' + path + ' $(results.%s.path);' % name
             # replace all occurrences of the output file path with the Tekton output parameter expression
-            for s in template['spec']['steps']:
-                if 'command' in s:
-                    s['command'] = [c.replace(path, '$(results.%s.path)' % name)
-                                    for c in s['command']]
-                if 'args' in s:
-                    s['args'] = [a.replace(path, '$(results.%s.path)' % name)
-                                 for a in s['args']]
+            # for s in template['spec']['steps']:
+            #     if 'command' in s:
+            #         s['command'] = [c.replace(path, '$(results.%s.path)' % name)
+            #                         for c in s['command']]
+            #     if 'args' in s:
+            #         s['args'] = [a.replace(path, '$(results.%s.path)' % name)
+            #                      for a in s['args']]
+        template['spec']['steps'].append(outfile_step)
 
     # **********************************************************
     #  NOTE: the following features are still under development
