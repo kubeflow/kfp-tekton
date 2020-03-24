@@ -122,6 +122,12 @@ class TektonCompiler(Compiler) :
               tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
               break
 
+    # add retries params
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.num_retries:
+        task['retries'] = op.num_retries
+
     # generate the Tekton Pipeline document
     pipeline = {
       'apiVersion': tekton_api_version,
