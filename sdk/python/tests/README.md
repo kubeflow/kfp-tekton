@@ -1,7 +1,7 @@
 ## Tests for the Compiler
 
 
-The test listed here can be used to compile all Python DSL pipelines in the KFP compiler testdata folder and generate a report card. Please note that as you are doing a PR to address a functionality gap in compiler, please run this test to ensure that it has been addressed. Please note that even if a Kubeflow Pipeline Python DSL script may pass the compilation with the KFP-Tekton compiler successfully, yet the produced Tekton YAML might not be valid or contain all of the intended functionality as the equivalent Argo YAML produced by the KFP compiler. For that, best way is to take the compiled YAML and run it on Tekton
+The test listed here can be used to compile all Python DSL pipelines in the KFP compiler testdata folder and generate a report card. As you are doing a PR to address functionality gaps in compiler, please run this test to ensure that they have been addressed. Please note that even if a Kubeflow Pipeline Python DSL script may pass the compilation with the KFP-Tekton compiler successfully, the produced Tekton YAML might not be valid or contain all of the intended functionality as the equivalent Argo YAML produced by the KFP compiler. For that, best way is to take the compiled YAML and run it on Tekton directly.
 
 ### Running the test
 
@@ -49,5 +49,5 @@ The compilation status report was stored in /kfp-tekton/sdk/python/tests/test_kf
 The accumulated console logs can be found in /kfp-tekton/temp/test_kfp_samples_output.txt
 ```
 
-Goal should be to have all the 30 tests pass before we have a fair degress of confidence that the compile can handle a fair number of pipelines.
+Goal should be to have all the 30 tests pass before we have a fair degree of confidence that the compile can handle a fair number of pipelines.
 
