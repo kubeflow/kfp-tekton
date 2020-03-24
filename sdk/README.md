@@ -80,4 +80,4 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
       ```
 ## Test Kubeflow Pipelines with Tekton
 
-Please [refer to the instructions here](/python/tests/README.md) as you work on a PR test sample Kubeflow Pipelines in their test data folder to ensure your PR is improving the number of successful samples
+Please [refer to the instructions here](./python/tests/README.md) as you work on a PR test sample Kubeflow Pipelines in their test data folder to ensure your PR is improving the number of successful samples
