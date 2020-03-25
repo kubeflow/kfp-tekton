@@ -53,6 +53,7 @@ class TektonCompiler(Compiler) :
       package_path: the output workflow tar.gz file path. for example, "~/a.tar.gz"
       type_check: whether to enable the type check or not, default: False.
       pipeline_conf: PipelineConf instance. Can specify op transforms, image pull secrets and other pipeline-level configuration options. Overrides any configuration that may be set by the pipeline.
+      generate_pipelinerun: Generate pipelinerun yaml for Tekton pipeline compilation. 
     """
     self.generate_pipelinerun = generate_pipelinerun
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
