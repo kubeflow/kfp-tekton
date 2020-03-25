@@ -175,11 +175,6 @@ def _op_to_template(op: BaseOp):
         if processed_op.pod_labels:
             template['metadata']['labels'] = processed_op.pod_labels
 
-    # retries
-    if processed_op.num_retries:
-        raise NotImplementedError("'retries' is not (yet) implemented")
-        template['retryStrategy'] = {'limit': processed_op.num_retries}
-
     # sidecars
     if processed_op.sidecars:
         template['spec']['sidecars'] = processed_op.sidecars

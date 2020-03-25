@@ -63,6 +63,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.pipelineparams import pipelineparams_pipeline
     self._test_pipeline_workflow(pipelineparams_pipeline, 'pipelineparams.yaml')
 
+  def test_retry_workflow(self):
+    """
+    Test compiling a retry task in workflow.
+    """
+    from .testdata.retry import retry_sample_pipeline
+    self._test_pipeline_workflow(retry_sample_pipeline, 'retry.yaml')
+
   def test_volume_workflow(self):
     """
     Test compiling a volume workflow.
