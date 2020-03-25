@@ -175,11 +175,6 @@ def _op_to_template(op: BaseOp):
         if processed_op.pod_labels:
             template['metadata']['labels'] = processed_op.pod_labels
 
-    # timeout
-    if processed_op.timeout:
-        raise NotImplementedError("'timeout' is not (yet) implemented")
-        template['activeDeadlineSeconds'] = processed_op.timeout
-
     # sidecars
     if processed_op.sidecars:
         template['spec']['sidecars'] = processed_op.sidecars

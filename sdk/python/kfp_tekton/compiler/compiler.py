@@ -128,6 +128,12 @@ class TektonCompiler(Compiler) :
       if op.num_retries:
         task['retries'] = op.num_retries
 
+    # add timeout params to task_refs, instead of task.
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.timeout:
+        task['timeout'] = '%ds' % op.timeout
+
     # generate the Tekton Pipeline document
     pipeline = {
       'apiVersion': tekton_api_version,

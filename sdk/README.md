@@ -24,7 +24,7 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
 - [Execution Order](https://github.com/kubeflow/pipelines/blob/master/samples/core/execution_order/execution_order.py)
 - [Parallel Join](https://github.com/kubeflow/pipelines/blob/master/samples/core/parallel_join/parallel_join.py)
 - [Watson ML](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/ibm-samples/watson/watson_train_serve_pipeline.py)
-    - Watson ML pipeline requires the default service account to have list, write, and delete secrets permission.
+    - Watson ML pipeline requires the default service account to have list, write, and delete secrets permission. Additionally, please follow the [instructions here to address the requirements and setup your Watson environments](https://github.com/kubeflow/pipelines/tree/master/samples/contrib/ibm-samples/watson) before executing the pipeline.
 
 ## Steps
 
@@ -78,3 +78,6 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
       [echo : echo] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not 
       provoke thy wrath
       ```
+## Test Kubeflow Pipelines with Tekton
+
+Please [refer to the instructions here](./python/tests/README.md) as you work on a PR test sample Kubeflow Pipelines in their test data folder to ensure your PR is improving the number of successful samples
