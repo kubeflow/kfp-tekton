@@ -46,6 +46,17 @@ class TektonCompiler(Compiler) :
   ```
   """
 
+  def compile(self, pipeline_func, package_path, type_check=True, pipeline_conf: dsl.PipelineConf = None, generate_pipelinerun=False):
+    """Compile the given pipeline function into workflow yaml.
+    Args:
+      pipeline_func: pipeline functions with @dsl.pipeline decorator.
+      package_path: the output workflow tar.gz file path. for example, "~/a.tar.gz"
+      type_check: whether to enable the type check or not, default: False.
+      pipeline_conf: PipelineConf instance. Can specify op transforms, image pull secrets and other pipeline-level configuration options. Overrides any configuration that may be set by the pipeline.
+    """
+    self.generate_pipelinerun = generate_pipelinerun
+    super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
+
   def _create_dag_templates(self, pipeline, op_transformers=None, params=None, op_to_templates_handler=None):
     """Create all groups and ops templates in the pipeline.
 
@@ -143,6 +154,28 @@ class TektonCompiler(Compiler) :
 
     # append Task and Pipeline documents
     workflow = tasks + [pipeline]
+
+    # Generate pipelinerun if generate-pipelinerun flag is enabled
+    if self.generate_pipelinerun:
+      pipelinerun = {
+        'apiVersion': tekton_api_version,
+        'kind': 'PipelineRun',
+        'metadata': {
+          'name': pipeline['metadata']['name'] + '-run'
+        },
+        'spec': {
+          'params': [{
+            'name': p['name'],
+            'value': p['default']
+          } for p in pipeline['spec']['params']
+          ],
+          'pipelineRef': {
+            'name': pipeline['metadata']['name']
+          }
+        }
+      }
+
+      workflow = workflow + [pipelinerun]
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 
