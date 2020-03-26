@@ -129,12 +129,16 @@ class TektonCompiler(Compiler) :
               break
     
     # add possible workspaces
+    # pop out workspaces field if it's empty
     pipeline_workspaces = []
     for task in task_refs:
       workspaces = task.get('workspaces', [])
-      for w in workspaces:
-        if w['name'] not in pipeline_workspaces:
-          pipeline_workspaces.append(w['name'])
+      if workspaces:
+        for w in workspaces:
+          if w['name'] not in pipeline_workspaces:
+            pipeline_workspaces.append(w['name'])
+      else:
+        task.pop('workspaces')
 
 
     # generate the Tekton Pipeline document
@@ -146,13 +150,13 @@ class TektonCompiler(Compiler) :
       },
       'spec': {
         'params': params,
-        'tasks': task_refs,
-        'workspaces': [{
-            'name': w
-          } for w in pipeline_workspaces
-        ]
+        'tasks': task_refs
       }
     }
+
+    # Add workspaces field if there are any defined workspace.
+    if pipeline_workspaces:
+      pipeline['spec']['workspaces'] = [{'name': w} for w in pipeline_workspaces]
 
     # append Task and Pipeline documents
     workflow = tasks + [pipeline]

@@ -136,21 +136,26 @@ def _op_to_template(op: BaseOp):
                 'name': name,
                 'description': path
             })
-            outfile_step['args'][1] = outfile_step['args'][1] + 'cp ' + path + ' $(results.%s.path);' % name
-            mountPath = path.rsplit("/", 1)[0]
-            if mountPath not in mounted_paths:
-                workspaces.append({'name': name, 'mountPath': path.rsplit("/", 1)[0]})
-                mounted_paths.append(mountPath)
             # replace all occurrences of the output file path with the Tekton output parameter expression
-            # for s in template['spec']['steps']:
-            #     if 'command' in s:
-            #         s['command'] = [c.replace(path, '$(results.%s.path)' % name)
-            #                         for c in s['command']]
-            #     if 'args' in s:
-            #         s['args'] = [a.replace(path, '$(results.%s.path)' % name)
-            #                      for a in s['args']]
-        template['spec']['steps'].append(outfile_step)
-        template['spec']['workspaces'] = workspaces
+            need_copy_step = True
+            for s in template['spec']['steps']:
+                if 'command' in s:
+                    s['command'] = [c.replace(path, '$(results.%s.path)' % name)
+                                    for c in s['command']]
+                    need_copy_step = False
+                if 'args' in s:
+                    s['args'] = [a.replace(path, '$(results.%s.path)' % name)
+                                 for a in s['args']]
+                    need_copy_step = False
+            if need_copy_step:
+                outfile_step['args'][1] = outfile_step['args'][1] + 'cp ' + path + ' $(results.%s.path);' % name
+                mountPath = path.rsplit("/", 1)[0]
+                if mountPath not in mounted_paths:
+                    workspaces.append({'name': name, 'mountPath': path.rsplit("/", 1)[0]})
+                    mounted_paths.append(mountPath)
+        if mounted_paths:
+            template['spec']['steps'].append(outfile_step)
+            template['spec']['workspaces'] = workspaces
 
     # **********************************************************
     #  NOTE: the following features are still under development
