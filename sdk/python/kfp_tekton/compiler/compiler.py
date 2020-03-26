@@ -46,18 +46,6 @@ class TektonCompiler(Compiler) :
   ```
   """
 
-  def compile(self, pipeline_func, package_path, type_check=True, pipeline_conf: dsl.PipelineConf = None, generate_pipelinerun=False):
-    """Compile the given pipeline function into workflow yaml.
-    Args:
-      pipeline_func: pipeline functions with @dsl.pipeline decorator.
-      package_path: the output workflow tar.gz file path. for example, "~/a.tar.gz"
-      type_check: whether to enable the type check or not, default: False.
-      pipeline_conf: PipelineConf instance. Can specify op transforms, image pull secrets and other pipeline-level configuration options. Overrides any configuration that may be set by the pipeline.
-      generate_pipelinerun: Generate pipelinerun yaml for Tekton pipeline compilation. 
-    """
-    self.generate_pipelinerun = generate_pipelinerun
-    super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
-
   def _create_dag_templates(self, pipeline, op_transformers=None, params=None, op_to_templates_handler=None):
     """Create all groups and ops templates in the pipeline.
 
@@ -269,6 +257,25 @@ class TektonCompiler(Compiler) :
     pipeline.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = json.dumps(pipeline_meta.to_dict(), sort_keys=True)
 
     return workflow
+
+  def compile(self,
+              pipeline_func,
+              package_path,
+              type_check=True,
+              pipeline_conf: dsl.PipelineConf = None,
+              generate_pipelinerun=False):
+    """Compile the given pipeline function into workflow yaml.
+    Args:
+      pipeline_func: pipeline functions with @dsl.pipeline decorator.
+      package_path: the output workflow tar.gz file path. for example, "~/a.tar.gz"
+      type_check: whether to enable the type check or not, default: False.
+      pipeline_conf: PipelineConf instance. Can specify op transforms,
+                     image pull secrets and other pipeline-level configuration options.
+                     Overrides any configuration that may be set by the pipeline.
+      generate_pipelinerun: Generate pipelinerun yaml for Tekton pipeline compilation.
+    """
+    self.generate_pipelinerun = generate_pipelinerun
+    super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
   def _write_workflow(workflow: List[Dict[Text, Any]],  # Tekton change, signature
