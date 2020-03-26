@@ -49,6 +49,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
 
+  def test_pipelinerun_workflow(self):
+    """
+    Test compiling a parallel join workflow with pipelinerun.
+    """
+    from .testdata.parallel_join import download_and_join
+    self._test_pipeline_workflow(download_and_join, 'parallel_join_pipelinerun.yaml', generate_pipelinerun=True)
+
   def test_sidecar_workflow(self):
     """
     Test compiling a sidecar workflow.
@@ -84,13 +91,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
 
-  def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml):
+  def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml, generate_pipelinerun=False):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
     try:
-      compiler.TektonCompiler().compile(pipeline_function, compiled_yaml_file)
+      compiler.TektonCompiler().compile(pipeline_function, compiled_yaml_file, generate_pipelinerun=generate_pipelinerun)
       with open(compiled_yaml_file, 'r') as f:
         compiled = list(yaml.safe_load_all(f))
       if GENERATE_GOLDEN_YAML:
