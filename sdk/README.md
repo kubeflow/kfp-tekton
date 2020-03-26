@@ -81,3 +81,16 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
 ## Test Kubeflow Pipelines with Tekton
 
 Please [refer to the instructions here](./python/tests/README.md) as you work on a PR test sample Kubeflow Pipelines in their test data folder to ensure your PR is improving the number of successful samples
+
+## Compile Kubeflow Pipelines as Tekton pipelineRun
+
+Compiling Kubeflow Pipelines into Tekton pipelineRun is currently under the experimental stage. Below are the features that only supported within pipelineRun
+- Affinity
+- Node Selector
+- Tolerations
+
+To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--generate-pipelinerun` as part of your `dsl-compile-tekton`commands. e.g.
+- `dsl-compile-tekton --py sdk/python/tests/compiler/testdata/tolerations.py --output pipeline.yaml --generate-pipelinerun`
+
+## Troubleshooting
+- Please be aware that defined Affinity, Node Selector, and Tolerations are applied to all the tasks in the same pipeline because there's only one podTemplate allowed in each pipeline.
