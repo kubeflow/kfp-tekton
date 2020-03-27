@@ -18,7 +18,7 @@ from kfp import dsl
 def write_text_op():
     return dsl.ContainerOp(
         name='Download file',
-        image='tomcli/echo-text:latest',
+        image='aipipeline/echo-text:latest',
         command=['/bin/bash'],
         arguments=['-c', '/echo.sh'],
         file_outputs={
