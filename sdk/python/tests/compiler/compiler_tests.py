@@ -17,6 +17,7 @@ import shutil
 import tempfile
 import unittest
 import yaml
+import re
 
 from kfp_tekton import compiler
 
@@ -77,6 +78,20 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.retry import retry_sample_pipeline
     self._test_pipeline_workflow(retry_sample_pipeline, 'retry.yaml')
 
+  def test_loop_static_workflow(self):
+    """
+    Test compiling a loop static params in workflow.
+    """
+    from .testdata.loop_static import pipeline
+    self._test_pipeline_workflow(pipeline, 'loop_static.yaml')
+
+  def test_withitem_nested_workflow(self):
+    """
+    Test compiling a withitem nested in workflow.
+    """
+    from .testdata.withitem_nested import pipeline
+    self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
+
   def test_volume_workflow(self):
     """
     Test compiling a volume workflow.
@@ -99,6 +114,9 @@ class TestTektonCompiler(unittest.TestCase):
     try:
       compiler.TektonCompiler().compile(pipeline_function, compiled_yaml_file, generate_pipelinerun=generate_pipelinerun)
       with open(compiled_yaml_file, 'r') as f:
+        if 'loop' in pipeline_yaml:
+          s = f.read()
+          f = re.sub("loop-item-param-.*-subvar", "loop-item-param-subvar", s)
         compiled = list(yaml.safe_load_all(f))
       if GENERATE_GOLDEN_YAML:
         with open(golden_yaml_file, 'w') as f:
