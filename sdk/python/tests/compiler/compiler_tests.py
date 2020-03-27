@@ -91,6 +91,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
 
+  def test_hidden_output_file_workflow(self):
+    """
+    Test compiling a workflow with non configurable output file.
+    """
+    from .testdata.hidden_output_file import hidden_output_file_pipeline
+    self._test_pipeline_workflow(hidden_output_file_pipeline, 'hidden_output_file.yaml', generate_pipelinerun=True)
+
   def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml, generate_pipelinerun=False):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)

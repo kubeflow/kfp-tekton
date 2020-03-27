@@ -193,6 +193,10 @@ class TektonCompiler(Compiler) :
         }
       }
 
+      # Mount workspaces to emptyDir if exist
+      if pipeline_workspaces:
+        pipelinerun['spec']['workspaces'] = [{'name': w, 'emptyDir': {}} for w in pipeline_workspaces]
+
       workflow = workflow + [pipelinerun]
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]

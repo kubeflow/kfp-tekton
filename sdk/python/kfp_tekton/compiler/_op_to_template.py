@@ -146,13 +146,22 @@ def _op_to_template(op: BaseOp):
             need_copy_step = True
             for s in template['spec']['steps']:
                 if 'command' in s:
-                    s['command'] = [c.replace(path, '$(results.%s.path)' % name)
-                                    for c in s['command']]
-                    need_copy_step = False
+                    commands = []
+                    for c in s['command']:
+                        if path in c:
+                            c = c.replace(path, '$(results.%s.path)' % name)
+                            need_copy_step = False
+                        commands.append(c)
+                    s['command'] = commands
                 if 'args' in s:
-                    s['args'] = [a.replace(path, '$(results.%s.path)' % name)
-                                 for a in s['args']]
-                    need_copy_step = False
+                    args = []
+                    for a in s['args']:
+                        if path in a:
+                            a = a.replace(path, '$(results.%s.path)' % name)
+                            need_copy_step = False
+                        args.append(a)
+                    s['args'] = args
+            # If file output path cannot be configure, use workspace to copy it to the tekton/results path.
             if need_copy_step:
                 outfile_step['args'][1] = outfile_step['args'][1] + 'cp ' + path + ' $(results.%s.path);' % name
                 mountPath = path.rsplit("/", 1)[0]
