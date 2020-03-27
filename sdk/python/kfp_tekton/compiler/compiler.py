@@ -100,7 +100,6 @@ class TektonCompiler(Compiler) :
         ],
         'workspaces': [{
             'name': w['name'],
-            # TODO: Set flags for workspace mapping if we are going to generate pipelinerun in this compiler. 
             'workspace': w['name']
         } for w in t['spec'].get('workspaces', [])
         ]
