@@ -6,7 +6,7 @@ SUCCESS: coin.py
 FAILURE: compose.py
 SUCCESS: default_value.py
 FAILURE: input_artifact_raw_value.py
-SUCCESS: loop_over_lightweight_output.py
+FAILURE: loop_over_lightweight_output.py
 SUCCESS: param_op_transform.py
 FAILURE: param_substitutions.py
 SUCCESS: pipelineparams.py
@@ -24,11 +24,11 @@ FAILURE: volumeop_parallel.py
 FAILURE: volumeop_sequential.py
 SUCCESS: withitem_basic.py
 SUCCESS: withitem_nested.py
-SUCCESS: withparam_global.py
-SUCCESS: withparam_global_dict.py
-SUCCESS: withparam_output.py
-SUCCESS: withparam_output_dict.py
+FAILURE: withparam_global.py
+FAILURE: withparam_global_dict.py
+FAILURE: withparam_output.py
+FAILURE: withparam_output_dict.py
 
-Success: 18
-Failure: 12
+Success: 13
+Failure: 17
 Total:   30
