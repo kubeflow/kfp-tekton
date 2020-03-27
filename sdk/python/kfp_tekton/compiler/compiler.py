@@ -15,6 +15,7 @@ import inspect
 import json
 import tarfile
 import yaml
+import copy
 import zipfile
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
@@ -45,6 +46,20 @@ class TektonCompiler(Compiler) :
   TektonCompiler().compile(my_pipeline, 'path/to/workflow.yaml')
   ```
   """
+  def _get_for_loop_ops(self, new_root) -> Dict[Text, dsl.ParallelFor]:
+    to_visit = self._get_all_subgroups_and_ops(new_root)
+    op_name_to_op = {}
+    already_visited = set()
+
+    while len(to_visit):
+      next_op = self._get_next_group_or_op(to_visit, already_visited)
+      if next_op is None:
+        break
+      to_visit.extend(self._get_all_subgroups_and_ops(next_op))
+      if isinstance(next_op, dsl.ParallelFor):
+        op_name_to_op[next_op.name] = next_op
+
+    return op_name_to_op
 
   def _create_dag_templates(self, pipeline, op_transformers=None, params=None, op_to_templates_handler=None):
     """Create all groups and ops templates in the pipeline.
@@ -63,11 +78,12 @@ class TektonCompiler(Compiler) :
     for op in pipeline.ops.values():
       for transformer in op_transformers or []:
         transformer(op)
+
     tasks = []
     for op in pipeline.ops.values():
       tasks.extend(op_to_steps_handler(op))
 
-    return tasks
+    return tasks, root_group
 
   def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
           -> List[Dict[Text, Any]]:  # Tekton change, signature/return type
@@ -84,7 +100,7 @@ class TektonCompiler(Compiler) :
       params.append(param)
 
     # generate Tekton tasks from pipeline ops
-    tasks = self._create_dag_templates(pipeline, op_transformers, params)
+    tasks, root_group = self._create_dag_templates(pipeline, op_transformers, params)
 
     # generate task reference list for Tekton pipeline
     task_refs = [
@@ -133,6 +149,29 @@ class TektonCompiler(Compiler) :
       op = pipeline.ops.get(task['name'])
       if op.timeout:
         task['timeout'] = '%ds' % op.timeout
+
+    # process loop parameters, keep this section in the behind of other processes
+    op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
+    include_loop_task_refs = []
+    for task in task_refs:
+      task_loop_flag = False
+      task_name = task['name']
+      i = 0
+      for tp in task.get('params', []):
+        i += 1
+        for loop_params in op_name_to_for_loop_op.values():
+          loop_args = loop_params.loop_args
+          if loop_args.name in tp['name']:
+            if loop_params.items_is_pipeline_param is not True:
+              for j in range(len(loop_args.items_or_pipeline_param)):
+                lpn = tp['name'].replace('%s-subvar-' % (loop_args.name), '')
+                tp['value'] = str(loop_args.items_or_pipeline_param[j][lpn])
+                task['name'] = '%s-loop-item-%d-%d' % (task_name, i, j)
+                include_loop_task_refs.append(copy.deepcopy(task))
+                task_loop_flag = True
+      if task_loop_flag is not True:
+        include_loop_task_refs.append(task)
+    task_refs = include_loop_task_refs
 
     # generate the Tekton Pipeline document
     pipeline = {
