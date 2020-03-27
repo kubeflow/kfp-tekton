@@ -84,9 +84,16 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.volume import volume_pipeline
     self._test_pipeline_workflow(volume_pipeline, 'volume.yaml')
 
+  def test_timeout_pipelinerun(self):
+    """
+    Test compiling a timeout for a whole workflow.
+    """
+    from .testdata.timeout import timeout_sample_pipeline
+    self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout_pipelinerun.yaml', generate_pipelinerun=True)
+
   def test_timeout_workflow(self):
     """
-    Test compiling a timeout workflow.
+    Test compiling a step level timeout workflow.
     """
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
