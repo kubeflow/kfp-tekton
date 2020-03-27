@@ -17,6 +17,7 @@ import shutil
 import tempfile
 import unittest
 import yaml
+import re
 
 from kfp_tekton import compiler
 
@@ -62,6 +63,24 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.sidecar import sidecar_pipeline
     self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
+  
+  def test_loop_static_workflow(self):
+    """
+    Test compiling a loop static params in workflow.
+    """
+    from .testdata.loop_static import pipeline
+    self._test_pipeline_workflow(
+      pipeline,
+      'loop_static.yaml',
+      normalize_compiler_output_function=lambda f: re.sub(
+          "loop-item-param-.*-subvar", "loop-item-param-subvar", f))
+
+  def test_withitem_nested_workflow(self):
+    """
+    Test compiling a withitem nested in workflow.
+    """
+    from .testdata.withitem_nested import pipeline
+    self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
 
   def test_pipelineparams_workflow(self):
     """
@@ -84,14 +103,53 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.volume import volume_pipeline
     self._test_pipeline_workflow(volume_pipeline, 'volume.yaml')
 
+  def test_timeout_pipelinerun(self):
+    """
+    Test compiling a timeout for a whole workflow.
+    """
+    from .testdata.timeout import timeout_sample_pipeline
+    self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout_pipelinerun.yaml', generate_pipelinerun=True)
+
   def test_timeout_workflow(self):
     """
-    Test compiling a timeout workflow.
+    Test compiling a step level timeout workflow.
     """
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
 
-  def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml, generate_pipelinerun=False):
+  def test_tolerations_workflow(self):
+    """
+    Test compiling a tolerations workflow.
+    """
+    from .testdata.tolerations import tolerations
+    self._test_pipeline_workflow(tolerations, 'tolerations.yaml', generate_pipelinerun=True)
+
+  def test_affinity_workflow(self):
+    """
+    Test compiling a affinity workflow.
+    """
+    from .testdata.affinity import affinity_pipeline
+    self._test_pipeline_workflow(affinity_pipeline, 'affinity.yaml', generate_pipelinerun=True)
+
+  def test_node_selector_workflow(self):
+    """
+    Test compiling a node selector workflow.
+    """
+    from .testdata.node_selector import node_selector_pipeline
+    self._test_pipeline_workflow(node_selector_pipeline, 'node_selector.yaml', generate_pipelinerun=True)
+
+  def test_pipeline_transformers_workflow(self):
+    """
+    Test compiling a pipeline_transformers workflow with pod annotations and labels.
+    """
+    from .testdata.pipeline_transformers import transform_pipeline
+    self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
+
+  def _test_pipeline_workflow(self, 
+                              pipeline_function,
+                              pipeline_yaml,
+                              generate_pipelinerun=False,
+                              normalize_compiler_output_function=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
@@ -99,6 +157,8 @@ class TestTektonCompiler(unittest.TestCase):
     try:
       compiler.TektonCompiler().compile(pipeline_function, compiled_yaml_file, generate_pipelinerun=generate_pipelinerun)
       with open(compiled_yaml_file, 'r') as f:
+        f = normalize_compiler_output_function(
+          f.read()) if normalize_compiler_output_function else f
         compiled = list(yaml.safe_load_all(f))
       if GENERATE_GOLDEN_YAML:
         with open(golden_yaml_file, 'w') as f:
