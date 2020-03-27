@@ -34,3 +34,8 @@ def random_failure_op(exit_codes):
 def retry_sample_pipeline():
     op1 = random_failure_op('0,1,2,3').set_retry(10)
     op2 = random_failure_op('0,1').set_retry(5)
+
+if __name__ == '__main__':
+    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(retry_sample_pipeline, __file__.replace('.py', '.yaml'))
