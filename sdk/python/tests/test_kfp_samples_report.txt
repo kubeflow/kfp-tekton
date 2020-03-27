@@ -9,13 +9,13 @@ FAILURE: input_artifact_raw_value.py
 SUCCESS: loop_over_lightweight_output.py
 SUCCESS: param_op_transform.py
 FAILURE: param_substitutions.py
-FAILURE: pipelineparams.py
+SUCCESS: pipelineparams.py
 SUCCESS: recursive_do_while.py
 SUCCESS: recursive_while.py
 FAILURE: resourceop_basic.py
-FAILURE: sidecar.py
-FAILURE: timeout.py
-FAILURE: volume.py
+SUCCESS: sidecar.py
+SUCCESS: timeout.py
+SUCCESS: volume.py
 FAILURE: volume_snapshotop_rokurl.py
 FAILURE: volume_snapshotop_sequential.py
 FAILURE: volumeop_basic.py
@@ -29,6 +29,6 @@ SUCCESS: withparam_global_dict.py
 SUCCESS: withparam_output.py
 SUCCESS: withparam_output_dict.py
 
-Success: 14
-Failure: 16
+Success: 18
+Failure: 12
 Total:   30

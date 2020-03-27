@@ -1,20 +1,35 @@
 matrix:
   include:
-    - language: python
+    - name: "Unit tests, Python 3.6"
+      language: python
       python: "3.6"
       env: TOXENV=py36
       install:
         - python3 -m pip install $TRAVIS_BUILD_DIR/sdk/python
       script:
-        # KFP Tekton SDK unit tests
         - cd $TRAVIS_BUILD_DIR/sdk/python/tests
         - ./run_tests.sh
-    - language: python
+    - name: "Unit tests, Python 3.7"
+      language: python
       python: "3.7"
       env: TOXENV=py37
       install:
         - python3 -m pip install $TRAVIS_BUILD_DIR/sdk/python
       script:
-        # KFP Tekton SDK unit tests
         - cd $TRAVIS_BUILD_DIR/sdk/python/tests
         - ./run_tests.sh
+    - name: "Progress report on compiling KFP DSL test scripts"
+      language: python
+      python: "3.7"
+      install:
+        - python3 -m pip install -e $TRAVIS_BUILD_DIR/sdk/python
+      script:
+        - cd $TRAVIS_BUILD_DIR/sdk/python/tests
+        - ./test_kfp_samples.sh
+    - name: "Lint Python code with flake8"
+      language: python
+      python: "3.7"
+      install:
+        - pip install flake8
+      script:
+        - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
