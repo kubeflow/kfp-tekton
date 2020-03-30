@@ -23,10 +23,10 @@ from .. import tekton_api_version
 
 
 class literal_str(str):
-  """
-  Yaml literal dumper for pyyaml
-  """
-  pass
+    """
+    Literal dumper for pyyaml
+    """
+    pass
 
 
 def _process_base_ops(op: BaseOp):
@@ -139,6 +139,18 @@ def _op_to_template(op: BaseOp):
         param_outputs = processed_op.attribute_outputs
     outputs_dict = _outputs_to_json(op, processed_op.outputs, param_outputs, output_artifacts)
     if outputs_dict:
+        """
+        Since Tekton results need to be under /tekton/results. If file output paths cannot be
+        configured to /tekton/results, we need to create the below copy step for moving
+        file outputs to the Tekton destination.
+
+        - image: busybox
+          name: copy-results
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            cp $LOCALPATH $(results.data.path);
+        """
         template['spec']['results'] = []
         copy_results_step = {
             'image': 'busybox',
