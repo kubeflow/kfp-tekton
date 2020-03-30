@@ -26,7 +26,7 @@ SUCCESS: recursive_do_while.py
 SUCCESS: recursive_while.py
 FAILURE: resourceop_basic.py
 SUCCESS: sidecar.py
-FAILURE: timeout.py
+SUCCESS: timeout.py
 SUCCESS: volume.py
 FAILURE: volume_snapshotop_rokurl.py
 FAILURE: volume_snapshotop_sequential.py
@@ -41,8 +41,8 @@ SUCCESS: withparam_global_dict.py
 SUCCESS: withparam_output.py
 SUCCESS: withparam_output_dict.py
 
-Success: 17
-Failure: 13
+Success: 18
+Failure: 12
 Total:   30
 
 The compilation status report was stored in /kfp-tekton/sdk/python/tests/test_kfp_samples_report.txt

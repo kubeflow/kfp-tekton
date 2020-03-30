@@ -98,12 +98,35 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
 
+
   def test_hidden_output_file_workflow(self):
     """
     Test compiling a workflow with non configurable output file.
     """
     from .testdata.hidden_output_file import hidden_output_file_pipeline
     self._test_pipeline_workflow(hidden_output_file_pipeline, 'hidden_output_file.yaml')
+
+  def test_tolerations_workflow(self):
+    """
+    Test compiling a tolerations workflow.
+    """
+    from .testdata.tolerations import tolerations
+    self._test_pipeline_workflow(tolerations, 'tolerations.yaml', generate_pipelinerun=True)
+
+  def test_affinity_workflow(self):
+    """
+    Test compiling a affinity workflow.
+    """
+    from .testdata.affinity import affinity_pipeline
+    self._test_pipeline_workflow(affinity_pipeline, 'affinity.yaml', generate_pipelinerun=True)
+
+  def test_node_selector_workflow(self):
+    """
+    Test compiling a node selector workflow.
+    """
+    from .testdata.node_selector import node_selector_pipeline
+    self._test_pipeline_workflow(node_selector_pipeline, 'node_selector.yaml', generate_pipelinerun=True)
+
 
   def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml, generate_pipelinerun=False):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
