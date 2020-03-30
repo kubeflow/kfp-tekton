@@ -1,0 +1,60 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: download
+spec:
+  results:
+  - description: /tmp/results.txt
+    name: downloaded
+  steps:
+  - args:
+    - sleep 10; wget localhost:5678 -O $(results.downloaded.path)
+    command:
+    - sh
+    - -c
+    image: busybox
+    name: download
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with tolerations",
+      "name": "tolerations"}'
+  name: tolerations
+spec:
+  params: []
+  tasks:
+  - name: download
+    params: []
+    taskRef:
+      name: download
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: tolerations-run
+spec:
+  params: []
+  pipelineRef:
+    name: tolerations
+  podtemplate:
+    tolerations:
+    - effect: NoSchedule
+      key: gpu
+      operator: Equal
+      value: run

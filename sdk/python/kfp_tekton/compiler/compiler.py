@@ -26,6 +26,7 @@ from kfp.compiler._k8s_helper import sanitize_k8s_name
 from kfp.compiler.compiler import Compiler
 from kfp.components.structures import InputSpec
 from kfp.dsl._metadata import _extract_pipeline_metadata
+from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 
 from .. import tekton_api_version
 
@@ -136,7 +137,7 @@ class TektonCompiler(Compiler) :
         task['timeout'] = '%ds' % op.timeout
 
     # generate the Tekton Pipeline document
-    pipeline = {
+    pipeline_template = {
       'apiVersion': tekton_api_version,
       'kind': 'Pipeline',
       'metadata': {
@@ -149,31 +150,47 @@ class TektonCompiler(Compiler) :
     }
 
     # append Task and Pipeline documents
-    workflow = tasks + [pipeline]
+    workflow = tasks + [pipeline_template]
 
     # Generate pipelinerun if generate-pipelinerun flag is enabled
+    # The base templete is generated first and then insert optional parameters.
     if self.generate_pipelinerun:
       pipelinerun = {
         'apiVersion': tekton_api_version,
         'kind': 'PipelineRun',
         'metadata': {
-          'name': pipeline['metadata']['name'] + '-run'
+          'name': pipeline_template['metadata']['name'] + '-run'
         },
         'spec': {
           'params': [{
             'name': p['name'],
             'value': p['default']
-          } for p in pipeline['spec']['params']
+          } for p in pipeline_template['spec']['params']
           ],
           'pipelineRef': {
-            'name': pipeline['metadata']['name']
+            'name': pipeline_template['metadata']['name']
           }
         }
       }
 
+
+      pod_template = {}
+      for task in task_refs:
+        op = pipeline.ops.get(task['name'])
+        if op.affinity:
+          pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
+        if op.tolerations:
+          pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
+        if op.node_selector:
+          pod_template['nodeSelector'] = op.node_selector
+
+      if pod_template:
+        pipelinerun['spec']['podtemplate'] = pod_template
+
       # add workflow level timeout to pipeline run
       if pipeline_conf.timeout:
         pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
+
 
       workflow = workflow + [pipelinerun]
 
