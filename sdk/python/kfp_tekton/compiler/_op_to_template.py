@@ -157,7 +157,8 @@ def _op_to_template(op: BaseOp):
             'name': 'copy-results',
             'script': '#!/bin/sh\nset -exo pipefail\n'
         }
-        workspaces = []
+        volume_mount_step_template = []
+        volume_template = []
         mounted_paths = []
         for name, path in processed_op.file_outputs.items():
             name = name.replace('_', '-')  # replace '_' to '-' since tekton results doesn't support underscore
@@ -184,17 +185,20 @@ def _op_to_template(op: BaseOp):
                             need_copy_step = False
                         args.append(a)
                     s['args'] = args
-            # If file output path cannot be configure, use workspace to copy it to the tekton/results path.
+            # If file output path cannot be configure, use emptyDir to copy it to the tekton/results path.
             if need_copy_step:
                 copy_results_step['script'] = copy_results_step['script'] + 'cp ' + path + ' $(results.%s.path);' % name + '\n'
                 mountPath = path.rsplit("/", 1)[0]
                 if mountPath not in mounted_paths:
-                    workspaces.append({'name': name, 'mountPath': path.rsplit("/", 1)[0]})
+                    volume_mount_step_template.append({'name': name, 'mountPath': path.rsplit("/", 1)[0]})
+                    volume_template.append({'name': name, 'emptyDir': {}})
                     mounted_paths.append(mountPath)
         if mounted_paths:
             copy_results_step['script'] = literal_str(copy_results_step['script'])
             template['spec']['steps'].append(copy_results_step)
-            template['spec']['workspaces'] = workspaces
+            template['spec']['stepTemplate'] = {}
+            template['spec']['stepTemplate']['volumeMounts'] = volume_mount_step_template
+            template['spec']['volumes'] = volume_template
 
     # **********************************************************
     #  NOTE: the following features are still under development

@@ -20,6 +20,10 @@ spec:
   results:
   - description: /tmp/results.txt
     name: data
+  stepTemplate:
+    volumeMounts:
+    - mountPath: /tmp
+      name: data
   steps:
   - args:
     - -c
@@ -34,8 +38,8 @@ spec:
       #!/bin/sh
       set -exo pipefail
       cp /tmp/results.txt $(results.data.path);
-  workspaces:
-  - mountPath: /tmp
+  volumes:
+  - emptyDir: {}
     name: data
 ---
 apiVersion: tekton.dev/v1beta1
@@ -69,26 +73,9 @@ spec:
     params: []
     taskRef:
       name: download-file
-    workspaces:
-    - name: data
-      workspace: data
   - name: echo
     params:
     - name: download-file-data
       value: $(tasks.download-file.results.data)
     taskRef:
       name: echo
-  workspaces:
-  - name: data
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  name: hidden-output-file-pipeline-run
-spec:
-  params: []
-  pipelineRef:
-    name: hidden-output-file-pipeline
-  workspaces:
-  - emptyDir: {}
-    name: data

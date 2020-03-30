@@ -105,11 +105,6 @@ class TektonCompiler(Compiler) :
             'name': p['name'],
             'value': p.get('default', '')
           } for p in t['spec'].get('params', [])
-        ],
-        'workspaces': [{
-            'name': w['name'],
-            'workspace': w['name']
-          } for w in t['spec'].get('workspaces', [])
         ]
       }
       for t in tasks
@@ -134,19 +129,6 @@ class TektonCompiler(Compiler) :
               # replace '_' to '-' since tekton results doesn't support underscore
               tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
               break
-    
-    # add possible workspaces
-    # pop out workspaces field if it's empty
-    pipeline_workspaces = []
-    for task in task_refs:
-      workspaces = task.get('workspaces', [])
-      if workspaces:
-        for w in workspaces:
-          if w['name'] not in pipeline_workspaces:
-            pipeline_workspaces.append(w['name'])
-      else:
-        task.pop('workspaces')
-
 
     # add retries params
     for task in task_refs:
@@ -174,10 +156,6 @@ class TektonCompiler(Compiler) :
       }
     }
 
-    # Add workspaces field if there are any defined workspace.
-    if pipeline_workspaces:
-      pipeline['spec']['workspaces'] = [{'name': w} for w in pipeline_workspaces]
-
     # append Task and Pipeline documents
     workflow = tasks + [pipeline]
 
@@ -200,10 +178,6 @@ class TektonCompiler(Compiler) :
           }
         }
       }
-
-      # Mount workspaces to emptyDir if exist
-      if pipeline_workspaces:
-        pipelinerun['spec']['workspaces'] = [{'name': w, 'emptyDir': {}} for w in pipeline_workspaces]
 
       # add workflow level timeout to pipeline run
       if pipeline_conf.timeout:
