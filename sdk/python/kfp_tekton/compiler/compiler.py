@@ -99,7 +99,7 @@ class TektonCompiler(Compiler) :
       {
         'name': t['metadata']['name'],
         'taskRef': {
-            'name': t['metadata']['name']
+          'name': t['metadata']['name']
         },
         'params': [{
             'name': p['name'],
