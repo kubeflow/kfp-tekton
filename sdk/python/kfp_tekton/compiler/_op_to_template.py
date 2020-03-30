@@ -22,6 +22,13 @@ from kfp.dsl._container_op import BaseOp
 from .. import tekton_api_version
 
 
+class literal_str(str):
+  """
+  Yaml literal dumper for pyyaml
+  """
+  pass
+
+
 def _process_base_ops(op: BaseOp):
     """Recursively go through the attrs listed in `attrs_with_pipelineparams`
     and sanitize and replace pipeline params with template var string.
@@ -133,7 +140,11 @@ def _op_to_template(op: BaseOp):
     outputs_dict = _outputs_to_json(op, processed_op.outputs, param_outputs, output_artifacts)
     if outputs_dict:
         template['spec']['results'] = []
-        outfile_step = {'command': ['/bin/bash'], 'image': 'ubuntu', 'name': 'outfile-step', 'args': ['-c', 'echo Copying files to Tekton dir...;']}
+        copy_results_step = {
+            'image': 'busybox',
+            'name': 'copy-results',
+            'script': '#!/bin/sh\nset -exo pipefail\n'
+        }
         workspaces = []
         mounted_paths = []
         for name, path in processed_op.file_outputs.items():
@@ -163,13 +174,14 @@ def _op_to_template(op: BaseOp):
                     s['args'] = args
             # If file output path cannot be configure, use workspace to copy it to the tekton/results path.
             if need_copy_step:
-                outfile_step['args'][1] = outfile_step['args'][1] + 'cp ' + path + ' $(results.%s.path);' % name
+                copy_results_step['script'] = copy_results_step['script'] + 'cp ' + path + ' $(results.%s.path);' % name + '\n'
                 mountPath = path.rsplit("/", 1)[0]
                 if mountPath not in mounted_paths:
                     workspaces.append({'name': name, 'mountPath': path.rsplit("/", 1)[0]})
                     mounted_paths.append(mountPath)
         if mounted_paths:
-            template['spec']['steps'].append(outfile_step)
+            copy_results_step['script'] = literal_str(copy_results_step['script'])
+            template['spec']['steps'].append(copy_results_step)
             template['spec']['workspaces'] = workspaces
 
     # **********************************************************

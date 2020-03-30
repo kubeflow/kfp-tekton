@@ -18,7 +18,7 @@ import yaml
 import zipfile
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
-from ._op_to_template import _op_to_template
+from ._op_to_template import _op_to_template, literal_str
 
 from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env
@@ -28,6 +28,14 @@ from kfp.components.structures import InputSpec
 from kfp.dsl._metadata import _extract_pipeline_metadata
 
 from .. import tekton_api_version
+
+
+# pyyaml representer for literal yaml string dumper
+def _literal_str_representer(dumper, data):
+    return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
+
+
+yaml.add_representer(literal_str, _literal_str_representer)
 
 
 class TektonCompiler(Compiler) :
@@ -96,12 +104,12 @@ class TektonCompiler(Compiler) :
         'params': [{
             'name': p['name'],
             'value': p.get('default', '')
-        } for p in t['spec'].get('params', [])
+          } for p in t['spec'].get('params', [])
         ],
         'workspaces': [{
             'name': w['name'],
             'workspace': w['name']
-        } for w in t['spec'].get('workspaces', [])
+          } for w in t['spec'].get('workspaces', [])
         ]
       }
       for t in tasks

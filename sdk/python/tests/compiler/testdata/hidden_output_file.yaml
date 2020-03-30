@@ -28,13 +28,12 @@ spec:
     - /bin/bash
     image: aipipeline/echo-text:latest
     name: download-file
-  - args:
-    - -c
-    - echo Copying files to Tekton dir...;cp /tmp/results.txt $(results.data.path);
-    command:
-    - /bin/bash
-    image: ubuntu
-    name: outfile-step
+  - image: busybox
+    name: copy-results
+    script: |
+      #!/bin/sh
+      set -exo pipefail
+      cp /tmp/results.txt $(results.data.path);
   workspaces:
   - mountPath: /tmp
     name: data
