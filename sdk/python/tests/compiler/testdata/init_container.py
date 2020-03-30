@@ -27,3 +27,8 @@ def init_container_pipeline():
         image='alpine:latest',
         command=['echo', 'hello'],
         init_containers=[echo])
+
+if __name__ == '__main__':
+    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(init_container_pipeline, __file__.replace('.py', '.yaml'))

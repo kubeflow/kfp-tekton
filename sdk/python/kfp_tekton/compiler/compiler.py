@@ -130,6 +130,7 @@ class TektonCompiler(Compiler) :
         task['retries'] = op.num_retries
 
     # add timeout params to task_refs, instead of task.
+    pipeline_conf = pipeline.conf
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       if op.timeout:
@@ -172,6 +173,7 @@ class TektonCompiler(Compiler) :
         }
       }
 
+
       pod_template = {}
       for task in task_refs:
         op = pipeline.ops.get(task['name'])
@@ -184,6 +186,11 @@ class TektonCompiler(Compiler) :
 
       if pod_template:
         pipelinerun['spec']['podtemplate'] = pod_template
+
+      # add workflow level timeout to pipeline run
+      if pipeline_conf.timeout:
+        pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
+
 
       workflow = workflow + [pipelinerun]
 
