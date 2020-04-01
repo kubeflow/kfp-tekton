@@ -119,6 +119,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.node_selector import node_selector_pipeline
     self._test_pipeline_workflow(node_selector_pipeline, 'node_selector.yaml', generate_pipelinerun=True)
 
+  def test_pipeline_transformers_workflow(self):
+    """
+    Test compiling a pipeline_transformers workflow with pod annotations and labels.
+    """
+    from .testdata.pipeline_transformers import transform_pipeline
+    self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
+
   def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml, generate_pipelinerun=False):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
