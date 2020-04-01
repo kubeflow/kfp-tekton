@@ -21,6 +21,6 @@ about: Tell us about a problem you are experiencing
 
 * Python Version:
 * SDK Version: 
-* Tekton Version:
-* Kubernetes Version: (use `kubectl version`):
+* Tekton Version (use `tkn version`):
+* Kubernetes Version (use `kubectl version`):
 * OS (e.g. from `/etc/os-release`):

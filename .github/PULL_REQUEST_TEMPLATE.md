@@ -3,8 +3,8 @@ Resolves #
 
 **Description of your changes:**
 
-**Environment:**
+**Environment tested:**
 
-* Tekton Version:
-* Kubernetes Version: (use `kubectl version`):
+* Tekton Version (use `tkn version`):
+* Kubernetes Version (use `kubectl version`):
 * OS (e.g. from `/etc/os-release`):
