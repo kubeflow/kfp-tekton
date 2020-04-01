@@ -1,6 +1,6 @@
 ---
-name: Questions about this project
-about: Ask anything you want to know or confusion about this project
+name: Question
+about: Ask a question about this project
 
 ---
 

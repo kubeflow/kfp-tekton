@@ -13,13 +13,13 @@ about: Tell us about a problem you are experiencing
 **What did you expect to happen:**
 
 
-**Anything else you would like to add:**
+**Additional information:**
 [Miscellaneous information that will assist in solving the issue.]
 
 
 **Environment:**
 
-* Python Version:
+* Python Version (use `python --version`):
 * SDK Version: 
 * Tekton Version (use `tkn version`):
 * Kubernetes Version (use `kubectl version`):
