@@ -99,12 +99,47 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.volume import volume_pipeline
     self._test_pipeline_workflow(volume_pipeline, 'volume.yaml')
 
+  def test_timeout_pipelinerun(self):
+    """
+    Test compiling a timeout for a whole workflow.
+    """
+    from .testdata.timeout import timeout_sample_pipeline
+    self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout_pipelinerun.yaml', generate_pipelinerun=True)
+
   def test_timeout_workflow(self):
     """
-    Test compiling a timeout workflow.
+    Test compiling a step level timeout workflow.
     """
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
+
+  def test_tolerations_workflow(self):
+    """
+    Test compiling a tolerations workflow.
+    """
+    from .testdata.tolerations import tolerations
+    self._test_pipeline_workflow(tolerations, 'tolerations.yaml', generate_pipelinerun=True)
+
+  def test_affinity_workflow(self):
+    """
+    Test compiling a affinity workflow.
+    """
+    from .testdata.affinity import affinity_pipeline
+    self._test_pipeline_workflow(affinity_pipeline, 'affinity.yaml', generate_pipelinerun=True)
+
+  def test_node_selector_workflow(self):
+    """
+    Test compiling a node selector workflow.
+    """
+    from .testdata.node_selector import node_selector_pipeline
+    self._test_pipeline_workflow(node_selector_pipeline, 'node_selector.yaml', generate_pipelinerun=True)
+
+  def test_pipeline_transformers_workflow(self):
+    """
+    Test compiling a pipeline_transformers workflow with pod annotations and labels.
+    """
+    from .testdata.pipeline_transformers import transform_pipeline
+    self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
 
   def _test_pipeline_workflow(self, pipeline_function, pipeline_yaml, generate_pipelinerun=False, normalize_compiler_output=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')

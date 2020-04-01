@@ -12,33 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp.dsl as dsl
-from kubernetes import client as k8s_client
+from kfp.dsl import ContainerOp
+from kfp import dsl
 
 
-@dsl.pipeline(name='Sidecar', description='A pipeline with sidecars.')
-def sidecar_pipeline():
-
-    echo = dsl.Sidecar(
-        name='echo',
-        image='hashicorp/http-echo',
-        args=['-text="hello world"'])
-
-    op1 = dsl.ContainerOp(
-        name='download',
+def some_op():
+    return dsl.ContainerOp(
+        name='sleep',
         image='busybox',
-        command=['sh', '-c'],
-        arguments=['sleep 10; wget localhost:5678 -O /tmp/results.txt'],
-        sidecars=[echo],
-        file_outputs={'downloaded': '/tmp/results.txt'})
+        command=['sleep 1'],
+    )
 
-    op2 = dsl.ContainerOp(
-        name='echo',
-        image='library/bash',
-        command=['sh', '-c'],
-        arguments=['echo %s' % op1.output])
+@dsl.pipeline(
+    name='node_selector',
+    description='A pipeline with Node Selector'
+)
+def node_selector_pipeline(
+):
+    """A pipeline with Node Selector"""
+    some_op().add_node_selector_constraint('accelerator', 'nvidia-tesla-k80')
 
 if __name__ == '__main__':
     # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(sidecar_pipeline, __file__.replace('.py', '.yaml'))
+    TektonCompiler().compile(node_selector_pipeline, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)
