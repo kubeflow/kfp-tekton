@@ -31,11 +31,15 @@ from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 from .. import tekton_api_version
 
 
-# pyyaml representer for literal yaml string dumper
 def _literal_str_representer(dumper, data):
-    return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
+  """pyyaml representer for literal yaml string dumper
 
+  Create a representer for the literal string class that converts the string
+  object with newline into yaml's literal string '|' style.
+  """
+  return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
 
+# Add the _literal_str_representer as part of the yaml dumper.
 yaml.add_representer(literal_str, _literal_str_representer)
 
 

@@ -23,8 +23,13 @@ from .. import tekton_api_version
 
 
 class literal_str(str):
-    """
-    Literal dumper for pyyaml
+    """Literal string class for pyyaml
+
+    Literal string class is used for converting string with newline into
+    yaml's literal string format with '|'. In pyyaml, literal string
+    conversion is not natively supported in the default dumper.
+    Therefore, we need to define this class as part of the dumper
+    before compiling it into yaml.
     """
     pass
 
@@ -142,7 +147,9 @@ def _op_to_template(op: BaseOp):
         """
         Since Tekton results need to be under /tekton/results. If file output paths cannot be
         configured to /tekton/results, we need to create the below copy step for moving
-        file outputs to the Tekton destination.
+        file outputs to the Tekton destination. BusyBox is recommended to be used on
+        small tasks because it's relatively lightweight and small compared to the ubuntu and
+        bash images.
 
         - image: busybox
           name: copy-results
@@ -185,7 +192,7 @@ def _op_to_template(op: BaseOp):
                             need_copy_step = False
                         args.append(a)
                     s['args'] = args
-            # If file output path cannot be configure, use emptyDir to copy it to the tekton/results path.
+            # If file output path cannot be found/replaced, use emptyDir to copy it to the tekton/results path
             if need_copy_step:
                 copy_results_step['script'] = copy_results_step['script'] + 'cp ' + path + ' $(results.%s.path);' % name + '\n'
                 mountPath = path.rsplit("/", 1)[0]
