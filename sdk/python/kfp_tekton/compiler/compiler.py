@@ -196,8 +196,8 @@ class TektonCompiler(Compiler) :
       workflow = workflow + [pipelinerun]
 
     # Use regex to replace all the Argo variables to Tekton variables.
-    # For variables that are unique to Argo, we pop a warning to warn the users to avoid critical errors.
-    # Since Argo variables can be used in anywhere of the yaml, we need to dump and parse the whole yaml
+    # For variables that are unique to Argo, we prompt a warning to warn users on the non-supported variables.
+    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
     # using regular expression.
     workflow_dump = json.dumps(workflow)
     tekton_var_regex_rules = [
