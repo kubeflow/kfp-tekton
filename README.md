@@ -11,7 +11,7 @@ The current work is being split in four areas, namely Compiler, API (with corres
 To get started with contributing to KFP Tekton Compiler, please [follow these instructions](sdk/README.md), as well as look at [open issues on the repo](https://github.com/kubeflow/kfp-tekton/issues)
 
 ## KFP and Tekton: Deliverables
-Please note that all these deliverables are work in progress, and at an early stage of exploration and execution. We are using Kubeflow Pipelines  v0.2.2 and Tekton v0.10.0 for these experiments currently.
+Please note that all these deliverables are work in progress, and at an early stage of exploration and execution. We are using Kubeflow Pipelines  v0.2.2 and Tekton v0.11.0 for these experiments currently.
 
 1. [KFP, Argo and Tekton Comparision](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
 2. [Equivalent Argo and Tekton Yaml for Flip Coin Sample from Kubeflow Pipeline](/samples/kfp-tekton)

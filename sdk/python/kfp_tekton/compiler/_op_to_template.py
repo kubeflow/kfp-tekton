@@ -204,21 +204,6 @@ def _op_to_template(op: BaseOp):
     #  NOTE: the following features are still under development
     # **********************************************************
 
-    # node selector
-    if processed_op.node_selector:
-        raise NotImplementedError("'nodeSelector' is not (yet) implemented")
-        template['nodeSelector'] = processed_op.node_selector
-
-    # tolerations
-    if processed_op.tolerations:
-        raise NotImplementedError("'tolerations' is not (yet) implemented")
-        template['tolerations'] = processed_op.tolerations
-
-    # affinity
-    if processed_op.affinity:
-        raise NotImplementedError("'affinity' is not (yet) implemented")
-        template['affinity'] = convert_k8s_obj_to_json(processed_op.affinity)
-
     # metadata
     if processed_op.pod_annotations or processed_op.pod_labels:
         template.setdefault('metadata', {})  # Tekton change, don't wipe out existing metadata
