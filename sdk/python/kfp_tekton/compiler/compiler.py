@@ -197,6 +197,8 @@ class TektonCompiler(Compiler) :
 
     # Use regex to replace all the Argo variables to Tekton variables.
     # For variables that are unique to Argo, we pop a warning to warn the users to avoid critical errors.
+    # Since Argo variables can be used in anywhere of the yaml, we need to dump and parse the whole yaml
+    # using regular expression.
     workflow_dump = json.dumps(workflow)
     tekton_var_regex_rules = [
         {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
@@ -209,7 +211,6 @@ class TektonCompiler(Compiler) :
     if unsupported_vars:
       logging.warning('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
     workflow = json.loads(workflow_dump)
-
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 

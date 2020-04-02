@@ -21,13 +21,6 @@ from kfp.dsl._container_op import BaseOp
 
 from .. import tekton_api_version
 
-var_mapping = {
-    'pod.name': {'env_name': 'POD_NAME', 'fieldref_name': 'metadata.name'},
-    'workflow.name': {'env_name': 'PIPELINERUN_NAME', 'fieldref_name': "metadata.labels['tekton.dev/pipelineRun']"},
-    'workflow.namespace': {'env_name': 'PIPELINERUN_NAMESPACE', 'fieldref_name': "metadata.namespace"},
-}
-
-
 def _process_base_ops(op: BaseOp):
     """Recursively go through the attrs listed in `attrs_with_pipelineparams`
     and sanitize and replace pipeline params with template var string.
