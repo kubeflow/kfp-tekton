@@ -1,6 +1,6 @@
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_location.py
-FAILURE: basic.py
+SUCCESS: basic.py
 FAILURE: basic_no_decorator.py
 SUCCESS: coin.py
 FAILURE: compose.py
@@ -29,6 +29,6 @@ SUCCESS: withparam_global_dict.py
 SUCCESS: withparam_output.py
 SUCCESS: withparam_output_dict.py
 
-Success: 18
-Failure: 12
+Success: 19
+Failure: 11
 Total:   30

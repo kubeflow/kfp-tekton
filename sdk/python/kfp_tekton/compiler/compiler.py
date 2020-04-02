@@ -18,7 +18,7 @@ import yaml
 import zipfile
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
-from ._op_to_template import _op_to_template
+from ._op_to_template import _op_to_template, literal_str
 
 from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env
@@ -29,6 +29,18 @@ from kfp.dsl._metadata import _extract_pipeline_metadata
 from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 
 from .. import tekton_api_version
+
+
+def _literal_str_representer(dumper, data):
+  """pyyaml representer for literal yaml string dumper
+
+  Create a representer for the literal string class that converts the string
+  object with newline into yaml's literal string '|' style.
+  """
+  return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
+
+# Add the _literal_str_representer as part of the yaml dumper.
+yaml.add_representer(literal_str, _literal_str_representer)
 
 
 class TektonCompiler(Compiler) :
