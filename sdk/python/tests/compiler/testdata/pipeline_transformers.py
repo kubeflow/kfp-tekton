@@ -12,30 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import kfp
 from kfp import dsl
 
+def print_op(msg):
+  """Print a message."""
+  return dsl.ContainerOp(
+      name='Print',
+      image='alpine:3.6',
+      command=['echo', msg],
+  )
 
-def random_failure_op(exit_codes):
-    """A component that fails randomly."""
-    return dsl.ContainerOp(
-        name='random_failure',
-        image='python:alpine3.6',
-        command=['python', '-c'],
-        arguments=['import random; import sys; exit_code = random.choice([int(i) for i in sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)', exit_codes]
-    )
-
+def add_annotation_and_label(op):
+  op.add_pod_annotation(name='hobby', value='football')
+  op.add_pod_label(name='hobby', value='football')
+  return op
 
 @dsl.pipeline(
-    name='Retry random failures',
-    description='The pipeline includes two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).'
+    name='Pipeline transformer',
+    description='The pipeline shows how to apply functions to all ops in the pipeline by pipeline transformers'
 )
-def retry_sample_pipeline():
-    op1 = random_failure_op('0,1,2,3').set_retry(10)
-    op2 = random_failure_op('0,1').set_retry(5)
+def transform_pipeline():
+  op1 = print_op('hey, what are you up to?')
+  op2 = print_op('train my model.')
+  dsl.get_pipeline_conf().add_op_transformer(add_annotation_and_label)
 
 if __name__ == '__main__':
     # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(retry_sample_pipeline, __file__.replace('.py', '.yaml'))
+    TektonCompiler().compile(transform_pipeline, __file__.replace('.py', '.yaml'))

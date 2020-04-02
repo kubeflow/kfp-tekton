@@ -15,7 +15,6 @@
 
 import kfp.dsl as dsl
 
-
 class RandomFailure1Op(dsl.ContainerOp):
   """A component that fails randomly."""
 
@@ -34,4 +33,9 @@ class RandomFailure1Op(dsl.ContainerOp):
 def timeout_sample_pipeline():
   op1 = RandomFailure1Op('0,1,2,3').set_timeout(20)
   op2 = RandomFailure1Op('0,1')
-  dsl.get_pipeline_conf()
+  dsl.get_pipeline_conf().set_timeout(40)
+
+if __name__ == '__main__':
+    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(timeout_sample_pipeline, __file__.replace('.py', '.yaml'))
