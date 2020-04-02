@@ -21,6 +21,7 @@ from kfp.dsl._container_op import BaseOp
 
 from .. import tekton_api_version
 
+
 def _process_base_ops(op: BaseOp):
     """Recursively go through the attrs listed in `attrs_with_pipelineparams`
     and sanitize and replace pipeline params with template var string.

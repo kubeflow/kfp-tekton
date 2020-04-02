@@ -166,7 +166,7 @@ class TektonCompiler(Compiler) :
         'spec': {
           'params': [{
             'name': p['name'],
-            'value': p.get('default', '')
+            'value': p['default']
           } for p in pipeline_template['spec']['params']
           ],
           'pipelineRef': {
