@@ -22,6 +22,18 @@ from kfp.dsl._container_op import BaseOp
 from .. import tekton_api_version
 
 
+class literal_str(str):
+    """Literal string class for pyyaml
+
+    Literal string class is used for converting string with newline into
+    yaml's literal string format with '|'. In pyyaml, literal string
+    conversion is not natively supported in the default dumper.
+    Therefore, we need to define this class as part of the dumper
+    before compiling it into yaml.
+    """
+    pass
+
+
 def _process_base_ops(op: BaseOp):
     """Recursively go through the attrs listed in `attrs_with_pipelineparams`
     and sanitize and replace pipeline params with template var string.
@@ -132,7 +144,29 @@ def _op_to_template(op: BaseOp):
         param_outputs = processed_op.attribute_outputs
     outputs_dict = _outputs_to_json(op, processed_op.outputs, param_outputs, output_artifacts)
     if outputs_dict:
+        """
+        Since Tekton results need to be under /tekton/results. If file output paths cannot be
+        configured to /tekton/results, we need to create the below copy step for moving
+        file outputs to the Tekton destination. BusyBox is recommended to be used on
+        small tasks because it's relatively lightweight and small compared to the ubuntu and
+        bash images.
+
+        - image: busybox
+          name: copy-results
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            cp $LOCALPATH $(results.data.path);
+        """
         template['spec']['results'] = []
+        copy_results_step = {
+            'image': 'busybox',
+            'name': 'copy-results',
+            'script': '#!/bin/sh\nset -exo pipefail\n'
+        }
+        volume_mount_step_template = []
+        volume_template = []
+        mounted_paths = []
         for name, path in processed_op.file_outputs.items():
             name = name.replace('_', '-')  # replace '_' to '-' since tekton results doesn't support underscore
             template['spec']['results'].append({
@@ -140,13 +174,38 @@ def _op_to_template(op: BaseOp):
                 'description': path
             })
             # replace all occurrences of the output file path with the Tekton output parameter expression
+            need_copy_step = True
             for s in template['spec']['steps']:
                 if 'command' in s:
-                    s['command'] = [c.replace(path, '$(results.%s.path)' % name)
-                                    for c in s['command']]
+                    commands = []
+                    for c in s['command']:
+                        if path in c:
+                            c = c.replace(path, '$(results.%s.path)' % name)
+                            need_copy_step = False
+                        commands.append(c)
+                    s['command'] = commands
                 if 'args' in s:
-                    s['args'] = [a.replace(path, '$(results.%s.path)' % name)
-                                 for a in s['args']]
+                    args = []
+                    for a in s['args']:
+                        if path in a:
+                            a = a.replace(path, '$(results.%s.path)' % name)
+                            need_copy_step = False
+                        args.append(a)
+                    s['args'] = args
+            # If file output path cannot be found/replaced, use emptyDir to copy it to the tekton/results path
+            if need_copy_step:
+                copy_results_step['script'] = copy_results_step['script'] + 'cp ' + path + ' $(results.%s.path);' % name + '\n'
+                mountPath = path.rsplit("/", 1)[0]
+                if mountPath not in mounted_paths:
+                    volume_mount_step_template.append({'name': name, 'mountPath': path.rsplit("/", 1)[0]})
+                    volume_template.append({'name': name, 'emptyDir': {}})
+                    mounted_paths.append(mountPath)
+        if mounted_paths:
+            copy_results_step['script'] = literal_str(copy_results_step['script'])
+            template['spec']['steps'].append(copy_results_step)
+            template['spec']['stepTemplate'] = {}
+            template['spec']['stepTemplate']['volumeMounts'] = volume_mount_step_template
+            template['spec']['volumes'] = volume_template
 
     # **********************************************************
     #  NOTE: the following features are still under development
@@ -166,7 +225,7 @@ def _op_to_template(op: BaseOp):
 
     # volumes
     if processed_op.volumes:
-        template['spec']['volumes'] = [convert_k8s_obj_to_json(volume) for volume in processed_op.volumes]
+        template['spec']['volumes'] = template['spec'].get('volume', []) + [convert_k8s_obj_to_json(volume) for volume in processed_op.volumes]
         template['spec']['volumes'].sort(key=lambda x: x['name'])
 
     # Display name

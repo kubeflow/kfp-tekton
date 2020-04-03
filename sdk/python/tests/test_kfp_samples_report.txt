@@ -1,6 +1,6 @@
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_location.py
-FAILURE: basic.py
+SUCCESS: basic.py
 FAILURE: basic_no_decorator.py
 SUCCESS: coin.py
 FAILURE: compose.py
