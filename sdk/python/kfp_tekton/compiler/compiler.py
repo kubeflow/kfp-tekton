@@ -18,6 +18,7 @@ import yaml
 import copy
 import itertools
 import zipfile
+import re
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
 from ._op_to_template import _op_to_template, literal_str
@@ -272,8 +273,25 @@ class TektonCompiler(Compiler) :
       if pipeline_conf.timeout:
         pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
 
-
       workflow = workflow + [pipelinerun]
+
+    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
+    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
+    # https://github.com/argoproj/argo/blob/master/docs/variables.md
+    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
+    # using regular expression.
+    workflow_dump = json.dumps(workflow)
+    tekton_var_regex_rules = [
+        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
+        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
+    ]
+    for regex_rule in tekton_var_regex_rules:
+      workflow_dump = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], workflow_dump)
+
+    unsupported_vars = re.findall(r"{{[^ \t\n:,;{}]+}}", workflow_dump)
+    if unsupported_vars:
+      raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
+    workflow = json.loads(workflow_dump)
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 

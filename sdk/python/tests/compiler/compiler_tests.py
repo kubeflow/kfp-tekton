@@ -50,6 +50,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
 
+  def test_parallel_join_with_argo_vars_workflow(self):
+    """
+    Test compiling a parallel join workflow.
+    """
+    from .testdata.parallel_join_with_argo_vars import download_and_join_with_argo_vars
+    self._test_pipeline_workflow(download_and_join_with_argo_vars, 'parallel_join_with_argo_vars.yaml')
+
   def test_pipelinerun_workflow(self):
     """
     Test compiling a parallel join workflow with pipelinerun.
