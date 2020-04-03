@@ -15,6 +15,8 @@ import inspect
 import json
 import tarfile
 import yaml
+import copy
+import itertools
 import zipfile
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
@@ -59,6 +61,59 @@ class TektonCompiler(Compiler) :
   ```
   """
 
+  def _get_loop_task(self, task: Dict, op_name_to_for_loop_op):
+    """Get the list of task references which will flatten the loop parameters defined in pipeline.
+
+    Args:
+      task: ops template in pipeline.
+      op_name_to_for_loop_op: a dictionary of ospgroup
+    """
+    # Get all the params in the task
+    task_parms_list = []
+    for tp in task.get('params', []):
+      task_parms_list.append(tp)
+    # Get the loop values for each params
+    for tp in task_parms_list:
+      for loop_param in op_name_to_for_loop_op.values():
+        loop_args = loop_param.loop_args
+        if loop_args.name in tp['name']:
+          lpn = tp['name'].replace(loop_args.name, '').replace('-subvar-', '')
+          if lpn:
+            tp['loopvalue'] = [value[lpn] for value in loop_args.items_or_pipeline_param]
+          else:
+            tp['loopvalue'] = loop_args.items_or_pipeline_param
+    # Get the task params list
+    ## Get the task_params list without loop first
+    loop_value = [p['loopvalue'] for p in task_parms_list if p.get('loopvalue')]
+    task_params_without_loop = [p for p in task_parms_list if not p.get('loopvalue')]
+    ## Get the task_params list with loop
+    loop_params = [p for p in task_parms_list if p.get('loopvalue')]
+    for parm in loop_params:
+      del parm['loopvalue']
+      del parm['value']
+    value_iter = list(itertools.product(*loop_value))
+    value_iter_list = []
+    for values in value_iter:
+      opt = []
+      for value in values:
+        opt.append({"value": str(value)})
+      value_iter_list.append(opt)
+    {value[i].update(loop_params[i]) for i in range(len(loop_params)) for value in value_iter_list}
+    task_params_with_loop = value_iter_list
+    ## combine task params
+    list(a.extend(task_params_without_loop) for a in task_params_with_loop)
+    task_parms_all = task_params_with_loop
+    # Get the task list based on parmas list
+    task_list = []
+    del task['params']
+    task_old_name = task['name']
+    for i in range(len(task_parms_all)):
+      task['params'] = task_parms_all[i]
+      task['name'] = '%s-loop-items-%d' % (task_old_name, i)
+      task_list.append(copy.deepcopy(task))
+      del task['params']
+    return task_list
+
   def _create_dag_templates(self, pipeline, op_transformers=None, params=None, op_to_templates_handler=None):
     """Create all groups and ops templates in the pipeline.
 
@@ -76,6 +131,7 @@ class TektonCompiler(Compiler) :
     for op in pipeline.ops.values():
       for transformer in op_transformers or []:
         transformer(op)
+
     tasks = []
     for op in pipeline.ops.values():
       tasks.extend(op_to_steps_handler(op))
@@ -147,6 +203,19 @@ class TektonCompiler(Compiler) :
       op = pipeline.ops.get(task['name'])
       if op.timeout:
         task['timeout'] = '%ds' % op.timeout
+
+    # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
+    root_group = pipeline.groups[0]
+    op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
+    if op_name_to_for_loop_op:
+      for loop_param in op_name_to_for_loop_op.values():
+        if loop_param.items_is_pipeline_param is True:
+          raise NotImplementedError("dynamic params are not yet implemented")
+      include_loop_task_refs = []
+      for task in task_refs:
+        with_loop_task = self._get_loop_task(task, op_name_to_for_loop_op)
+        include_loop_task_refs.extend(with_loop_task)
+      task_refs = include_loop_task_refs
 
     # generate the Tekton Pipeline document
     pipeline_template = {
