@@ -90,7 +90,7 @@ TOTAL=$(grep -c . "${COMPILE_REPORT_FILE}")
   echo "Success: ${SUCCESS}"
   echo "Failure: ${FAILURE}"
   echo "Total:   ${TOTAL}"
-) | tee -a "${COMPILE_REPORT_FILE}"
+) # | tee -a "${COMPILE_REPORT_FILE}"  # do not include totals in report file to avoid constant merge conflicts
 echo
 echo "Compilation status report:   ${COMPILE_REPORT_FILE#${PROJECT_DIR}/}"
 echo "Accumulated compiler logs:   ${COMPILER_OUTPUTS_FILE#${PROJECT_DIR}/}"
@@ -104,12 +104,8 @@ if ! diff -q -a -w -B <(sort "${COMPILE_REPORT_FILE}") <(sort "${COMPILE_REPORT_
   echo "This compilation report (left) differs from the previous report (right):"
   echo
   diff -y -W 80 --suppress-common-lines -d \
-      <(grep -E "(SUCCESS|FAILURE):" "${COMPILE_REPORT_FILE}" | sort -k2) \
-      <(grep -E "(SUCCESS|FAILURE):" "${COMPILE_REPORT_FILE_OLD}" | sort -k2)
-  echo
-  diff -y -W 80 --suppress-common-lines -d \
-      <(grep -vE "(SUCCESS|FAILURE):" "${COMPILE_REPORT_FILE}" | sort) \
-      <(grep -vE "(SUCCESS|FAILURE):" "${COMPILE_REPORT_FILE_OLD}" | sort)
+      <(sort -k2 "${COMPILE_REPORT_FILE}") \
+      <(sort -k2 "${COMPILE_REPORT_FILE_OLD}")
   echo
   rm -f "${COMPILE_REPORT_FILE_OLD}"
   exit 1
