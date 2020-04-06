@@ -12,33 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp.dsl as dsl
-from kubernetes import client as k8s_client
+from kubernetes.client import V1Toleration
+from kfp.dsl import ContainerOp
+from kfp import dsl
 
-
-@dsl.pipeline(name='Sidecar', description='A pipeline with sidecars.')
-def sidecar_pipeline():
-
-    echo = dsl.Sidecar(
-        name='echo',
-        image='hashicorp/http-echo',
-        args=['-text="hello world"'])
-
+@dsl.pipeline(
+    name='tolerations',
+    description='A pipeline with tolerations'
+)
+def tolerations(
+):
+    """A pipeline with tolerations"""
     op1 = dsl.ContainerOp(
         name='download',
         image='busybox',
         command=['sh', '-c'],
         arguments=['sleep 10; wget localhost:5678 -O /tmp/results.txt'],
-        sidecars=[echo],
-        file_outputs={'downloaded': '/tmp/results.txt'})
-
-    op2 = dsl.ContainerOp(
-        name='echo',
-        image='library/bash',
-        command=['sh', '-c'],
-        arguments=['echo %s' % op1.output])
+        file_outputs={'downloaded': '/tmp/results.txt'})\
+        .add_toleration(V1Toleration(effect='NoSchedule',
+                                     key='gpu',
+                                     operator='Equal',
+                                     value='run'))
 
 if __name__ == '__main__':
     # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(sidecar_pipeline, __file__.replace('.py', '.yaml'))
+    TektonCompiler().compile(tolerations, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)

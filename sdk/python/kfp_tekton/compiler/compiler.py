@@ -15,10 +15,13 @@ import inspect
 import json
 import tarfile
 import yaml
+import copy
+import itertools
 import zipfile
+import re
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
-from ._op_to_template import _op_to_template
+from ._op_to_template import _op_to_template, literal_str
 
 from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env
@@ -26,8 +29,21 @@ from kfp.compiler._k8s_helper import sanitize_k8s_name
 from kfp.compiler.compiler import Compiler
 from kfp.components.structures import InputSpec
 from kfp.dsl._metadata import _extract_pipeline_metadata
+from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 
 from .. import tekton_api_version
+
+
+def _literal_str_representer(dumper, data):
+  """pyyaml representer for literal yaml string dumper
+
+  Create a representer for the literal string class that converts the string
+  object with newline into yaml's literal string '|' style.
+  """
+  return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
+
+# Add the _literal_str_representer as part of the yaml dumper.
+yaml.add_representer(literal_str, _literal_str_representer)
 
 
 class TektonCompiler(Compiler) :
@@ -46,6 +62,59 @@ class TektonCompiler(Compiler) :
   ```
   """
 
+  def _get_loop_task(self, task: Dict, op_name_to_for_loop_op):
+    """Get the list of task references which will flatten the loop parameters defined in pipeline.
+
+    Args:
+      task: ops template in pipeline.
+      op_name_to_for_loop_op: a dictionary of ospgroup
+    """
+    # Get all the params in the task
+    task_parms_list = []
+    for tp in task.get('params', []):
+      task_parms_list.append(tp)
+    # Get the loop values for each params
+    for tp in task_parms_list:
+      for loop_param in op_name_to_for_loop_op.values():
+        loop_args = loop_param.loop_args
+        if loop_args.name in tp['name']:
+          lpn = tp['name'].replace(loop_args.name, '').replace('-subvar-', '')
+          if lpn:
+            tp['loopvalue'] = [value[lpn] for value in loop_args.items_or_pipeline_param]
+          else:
+            tp['loopvalue'] = loop_args.items_or_pipeline_param
+    # Get the task params list
+    ## Get the task_params list without loop first
+    loop_value = [p['loopvalue'] for p in task_parms_list if p.get('loopvalue')]
+    task_params_without_loop = [p for p in task_parms_list if not p.get('loopvalue')]
+    ## Get the task_params list with loop
+    loop_params = [p for p in task_parms_list if p.get('loopvalue')]
+    for parm in loop_params:
+      del parm['loopvalue']
+      del parm['value']
+    value_iter = list(itertools.product(*loop_value))
+    value_iter_list = []
+    for values in value_iter:
+      opt = []
+      for value in values:
+        opt.append({"value": str(value)})
+      value_iter_list.append(opt)
+    {value[i].update(loop_params[i]) for i in range(len(loop_params)) for value in value_iter_list}
+    task_params_with_loop = value_iter_list
+    ## combine task params
+    list(a.extend(task_params_without_loop) for a in task_params_with_loop)
+    task_parms_all = task_params_with_loop
+    # Get the task list based on parmas list
+    task_list = []
+    del task['params']
+    task_old_name = task['name']
+    for i in range(len(task_parms_all)):
+      task['params'] = task_parms_all[i]
+      task['name'] = '%s-loop-items-%d' % (task_old_name, i)
+      task_list.append(copy.deepcopy(task))
+      del task['params']
+    return task_list
+
   def _create_dag_templates(self, pipeline, op_transformers=None, params=None, op_to_templates_handler=None):
     """Create all groups and ops templates in the pipeline.
 
@@ -63,6 +132,7 @@ class TektonCompiler(Compiler) :
     for op in pipeline.ops.values():
       for transformer in op_transformers or []:
         transformer(op)
+
     tasks = []
     for op in pipeline.ops.values():
       tasks.extend(op_to_steps_handler(op))
@@ -122,8 +192,34 @@ class TektonCompiler(Compiler) :
               tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
               break
 
+    # add retries params
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.num_retries:
+        task['retries'] = op.num_retries
+
+    # add timeout params to task_refs, instead of task.
+    pipeline_conf = pipeline.conf
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.timeout:
+        task['timeout'] = '%ds' % op.timeout
+
+    # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
+    root_group = pipeline.groups[0]
+    op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
+    if op_name_to_for_loop_op:
+      for loop_param in op_name_to_for_loop_op.values():
+        if loop_param.items_is_pipeline_param is True:
+          raise NotImplementedError("dynamic params are not yet implemented")
+      include_loop_task_refs = []
+      for task in task_refs:
+        with_loop_task = self._get_loop_task(task, op_name_to_for_loop_op)
+        include_loop_task_refs.extend(with_loop_task)
+      task_refs = include_loop_task_refs
+
     # generate the Tekton Pipeline document
-    pipeline = {
+    pipeline_template = {
       'apiVersion': tekton_api_version,
       'kind': 'Pipeline',
       'metadata': {
@@ -136,7 +232,66 @@ class TektonCompiler(Compiler) :
     }
 
     # append Task and Pipeline documents
-    workflow = tasks + [pipeline]
+    workflow = tasks + [pipeline_template]
+
+    # Generate pipelinerun if generate-pipelinerun flag is enabled
+    # The base templete is generated first and then insert optional parameters.
+    if self.generate_pipelinerun:
+      pipelinerun = {
+        'apiVersion': tekton_api_version,
+        'kind': 'PipelineRun',
+        'metadata': {
+          'name': pipeline_template['metadata']['name'] + '-run'
+        },
+        'spec': {
+          'params': [{
+            'name': p['name'],
+            'value': p.get('default', '')
+          } for p in pipeline_template['spec']['params']
+          ],
+          'pipelineRef': {
+            'name': pipeline_template['metadata']['name']
+          }
+        }
+      }
+
+
+      pod_template = {}
+      for task in task_refs:
+        op = pipeline.ops.get(task['name'])
+        if op.affinity:
+          pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
+        if op.tolerations:
+          pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
+        if op.node_selector:
+          pod_template['nodeSelector'] = op.node_selector
+
+      if pod_template:
+        pipelinerun['spec']['podtemplate'] = pod_template
+
+      # add workflow level timeout to pipeline run
+      if pipeline_conf.timeout:
+        pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
+
+      workflow = workflow + [pipelinerun]
+
+    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
+    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
+    # https://github.com/argoproj/argo/blob/master/docs/variables.md
+    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
+    # using regular expression.
+    workflow_dump = json.dumps(workflow)
+    tekton_var_regex_rules = [
+        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
+        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
+    ]
+    for regex_rule in tekton_var_regex_rules:
+      workflow_dump = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], workflow_dump)
+
+    unsupported_vars = re.findall(r"{{[^ \t\n:,;{}]+}}", workflow_dump)
+    if unsupported_vars:
+      raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
+    workflow = json.loads(workflow_dump)
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 
@@ -229,6 +384,25 @@ class TektonCompiler(Compiler) :
     pipeline.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = json.dumps(pipeline_meta.to_dict(), sort_keys=True)
 
     return workflow
+
+  def compile(self,
+              pipeline_func,
+              package_path,
+              type_check=True,
+              pipeline_conf: dsl.PipelineConf = None,
+              generate_pipelinerun=False):
+    """Compile the given pipeline function into workflow yaml.
+    Args:
+      pipeline_func: pipeline functions with @dsl.pipeline decorator.
+      package_path: the output workflow tar.gz file path. for example, "~/a.tar.gz"
+      type_check: whether to enable the type check or not, default: False.
+      pipeline_conf: PipelineConf instance. Can specify op transforms,
+                     image pull secrets and other pipeline-level configuration options.
+                     Overrides any configuration that may be set by the pipeline.
+      generate_pipelinerun: Generate pipelinerun yaml for Tekton pipeline compilation.
+    """
+    self.generate_pipelinerun = generate_pipelinerun
+    super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
   def _write_workflow(workflow: List[Dict[Text, Any]],  # Tekton change, signature

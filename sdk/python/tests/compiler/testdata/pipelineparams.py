@@ -13,22 +13,23 @@
 # limitations under the License.
 
 import kfp.dsl as dsl
-from kubernetes import client as k8s_client
+from kubernetes.client.models import V1EnvVar
 
 
-@dsl.pipeline(name='Sidecar', description='A pipeline with sidecars.')
-def sidecar_pipeline():
+@dsl.pipeline(name='PipelineParams', description='A pipeline with multiple pipeline params.')
+def pipelineparams_pipeline(tag: str = 'latest', sleep_ms: int = 10):
 
     echo = dsl.Sidecar(
         name='echo',
-        image='hashicorp/http-echo',
-        args=['-text="hello world"'])
+        image='hashicorp/http-echo:%s' % tag,
+        args=['-text="hello world"'],
+    )
 
     op1 = dsl.ContainerOp(
         name='download',
-        image='busybox',
+        image='busybox:%s' % tag,
         command=['sh', '-c'],
-        arguments=['sleep 10; wget localhost:5678 -O /tmp/results.txt'],
+        arguments=['sleep %s; wget localhost:5678 -O /tmp/results.txt' % sleep_ms],
         sidecars=[echo],
         file_outputs={'downloaded': '/tmp/results.txt'})
 
@@ -36,9 +37,11 @@ def sidecar_pipeline():
         name='echo',
         image='library/bash',
         command=['sh', '-c'],
-        arguments=['echo %s' % op1.output])
+        arguments=['echo $MSG %s' % op1.output])
+    
+    op2.container.add_env_variable(V1EnvVar(name='MSG', value='pipelineParams: '))
 
 if __name__ == '__main__':
     # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(sidecar_pipeline, __file__.replace('.py', '.yaml'))
+    TektonCompiler().compile(pipelineparams_pipeline, __file__.replace('.py', '.yaml'))

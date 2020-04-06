@@ -1,0 +1,81 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: download-file
+spec:
+  results:
+  - description: /tmp/results.txt
+    name: data
+  stepTemplate:
+    volumeMounts:
+    - mountPath: /tmp
+      name: data
+  steps:
+  - args:
+    - -c
+    - /echo.sh
+    command:
+    - /bin/bash
+    image: aipipeline/echo-text:latest
+    name: download-file
+  - image: busybox
+    name: copy-results
+    script: |
+      #!/bin/sh
+      set -exo pipefail
+      cp /tmp/results.txt $(results.data.path);
+  volumes:
+  - emptyDir: {}
+    name: data
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: echo
+spec:
+  params:
+  - name: download-file-data
+  steps:
+  - args:
+    - 'echo "Text 1: $0";'
+    - $(inputs.params.download-file-data)
+    command:
+    - sh
+    - -c
+    image: library/bash:4.4.23
+    name: echo
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Run a script that passes
+      file to a non configurable path", "name": "Hidden output file pipeline"}'
+  name: hidden-output-file-pipeline
+spec:
+  params: []
+  tasks:
+  - name: download-file
+    params: []
+    taskRef:
+      name: download-file
+  - name: echo
+    params:
+    - name: download-file-data
+      value: $(tasks.download-file.results.data)
+    taskRef:
+      name: echo
