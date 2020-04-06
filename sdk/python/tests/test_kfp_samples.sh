@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 # Copyright 2020 kubeflow.org
 #
@@ -63,14 +63,14 @@ fi
 
 echo  # just adding some separation for console output
 
-# keep a record of the previous compilation status
-SUCCESS_BEFORE=$(grep -c "SUCCESS" "${COMPILE_REPORT_FILE}")
-FAILURE_BEFORE=$(grep -c "FAILURE" "${COMPILE_REPORT_FILE}")
-TOTAL_BEFORE=$(grep -c . "${COMPILE_REPORT_FILE}")
+# create a temporary copy of the previous compilation report
+COMPILE_REPORT_FILE_OLD="${COMPILE_REPORT_FILE/%.txt/_before.txt}"
+cp "${COMPILE_REPORT_FILE}" "${COMPILE_REPORT_FILE_OLD}"
 
 # delete the previous compiler output file
 rm -f "${COMPILER_OUTPUTS_FILE}"
 
+# compile each of the Python scripts in the KFP testdata folder
 for f in "${KFP_TESTDATA_DIR}"/*.py; do
   echo -e "\nCompiling ${f##*/}:" >> "${COMPILER_OUTPUTS_FILE}"
   if dsl-compile-tekton --py "${f}" --output "${TEKTON_COMPILED_YAML_DIR}/${f##*/}.yaml" >> "${COMPILER_OUTPUTS_FILE}" 2>&1;
@@ -90,21 +90,29 @@ TOTAL=$(grep -c . "${COMPILE_REPORT_FILE}")
   echo "Success: ${SUCCESS}"
   echo "Failure: ${FAILURE}"
   echo "Total:   ${TOTAL}"
-) | tee -a "${COMPILE_REPORT_FILE}"
+) # | tee -a "${COMPILE_REPORT_FILE}"  # do not include totals in report file to avoid constant merge conflicts
 echo
 echo "Compilation status report:   ${COMPILE_REPORT_FILE#${PROJECT_DIR}/}"
 echo "Accumulated compiler logs:   ${COMPILER_OUTPUTS_FILE#${PROJECT_DIR}/}"
 echo "Compiled Tekton YAML files:  ${TEKTON_COMPILED_YAML_DIR#${PROJECT_DIR}/}/"
 echo
 
-# for Travis/CI integration return exit code 1 if success rate declined
-if [ ${SUCCESS} -lt "${SUCCESS_BEFORE}" ]; then
-  echo "It appears that fewer KFP test scripts are compiling than before!"
+# for Travis/CI integration return exit code 1 if this report is different from the previous report
+# sort the list of files since we cannot ensure same sort order on MacOS (local) and Linux (build machine)
+if ! diff -q -a -w -B <(sort "${COMPILE_REPORT_FILE}") <(sort "${COMPILE_REPORT_FILE_OLD}") >/dev/null 2>&1 ; then
   echo
-  echo "Success before: ${SUCCESS_BEFORE}"
-  echo "Failure before: ${FAILURE_BEFORE}"
-  echo "Total before:   ${TOTAL_BEFORE}"
+  echo "This compilation report (left) differs from the previous report (right):"
+  echo
+  diff -y -W 80 --suppress-common-lines -d \
+      <(sort -k2 "${COMPILE_REPORT_FILE}") \
+      <(sort -k2 "${COMPILE_REPORT_FILE_OLD}")
+  echo
+  rm -f "${COMPILE_REPORT_FILE_OLD}"
   exit 1
 else
+  echo
+  echo "This compilation report did not change from the previous report."
+  echo
+  rm -f "${COMPILE_REPORT_FILE_OLD}"
   exit 0
 fi

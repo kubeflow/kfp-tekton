@@ -28,7 +28,3 @@ FAILURE: withparam_global.py
 FAILURE: withparam_global_dict.py
 FAILURE: withparam_output.py
 FAILURE: withparam_output_dict.py
-
-Success: 13
-Failure: 17
-Total:   30
