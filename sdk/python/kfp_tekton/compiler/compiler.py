@@ -288,7 +288,7 @@ class TektonCompiler(Compiler) :
     for regex_rule in tekton_var_regex_rules:
       workflow_dump = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], workflow_dump)
 
-    unsupported_vars = re.findall(r"{{[^ \t\n:,;{}]+}}", workflow_dump)
+    unsupported_vars = re.findall(r"{{[^ \t\n.:,;{}]+\.[^ \t\n:,;{}]+}}", workflow_dump)
     if unsupported_vars:
       raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
     workflow = json.loads(workflow_dump)

@@ -1,0 +1,141 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mnist-hpo
+spec:
+  params:
+  - name: deleteAfterDone
+  - name: experimentTimeoutMinutes
+  - name: goal
+  - name: maxTrialCount
+  - name: name
+  - name: namespace
+  - name: parallelTrialCount
+  results:
+  - description: /output.txt
+    name: bestHyperParameter
+  steps:
+  - args:
+    - --name
+    - $(inputs.params.name)
+    - --namespace
+    - $(inputs.params.namespace)
+    - --maxTrialCount
+    - $(inputs.params.maxTrialCount)
+    - --maxFailedTrialCount
+    - '3'
+    - --parallelTrialCount
+    - $(inputs.params.parallelTrialCount)
+    - --objectiveConfig
+    - '{''type'': ''maximize'', ''goal'': $(inputs.params.goal), ''objectiveMetricName'':
+      ''Validation-accuracy'', ''additionalMetricNames'': [''accuracy'']}'
+    - --algorithmConfig
+    - '{''algorithmName'': ''random''}'
+    - --metricsCollector
+    - '{}'
+    - --trialTemplate
+    - '{''goTemplate'': {''rawTemplate'': ''{"apiVersion": "batch/v1", "kind": "Job",
+      "metadata": {"name": "{{.Trial}}", "namespace": "{{.NameSpace}}"}, "spec": {"template":
+      {"spec": {"restartPolicy": "Never", "containers": [{"name": "{{.Trial}}", "image":
+      "docker.io/katib/mxnet-mnist-example", "command": ["python /mxnet/example/image-classification/train_mnist.py
+      --batch-size=64 {{- with .HyperParameters}} {{- range .}} {{.Name}}={{.Value}}
+      {{- end}} {{- end}}"]}]}}}}''}}'
+    - --parameters
+    - '[{''name'': ''--lr'', ''parameterType'': ''double'', ''feasibleSpace'': {''min'':
+      ''0.01'', ''max'': ''0.03''}}, {''name'': ''--num-layers'', ''parameterType'':
+      ''int'', ''feasibleSpace'': {''min'': ''2'', ''max'': ''5''}}, {''name'': ''--optimizer'',
+      ''parameterType'': ''categorical'', ''feasibleSpace'': {''list'': [''sgd'',
+      ''adam'', ''ftrl'']}}]'
+    - --outputFile
+    - $(results.bestHyperParameter.path)
+    - --deleteAfterDone
+    - $(inputs.params.deleteAfterDone)
+    - --experimentTimeoutMinutes
+    - $(inputs.params.experimentTimeoutMinutes)
+    image: liuhougangxa/katib-experiment-launcher:latest
+    name: mnist-hpo
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: my-out-cop
+spec:
+  params:
+  - name: mnist-hpo-bestHyperParameter
+  steps:
+  - args:
+    - 'echo hyperparameter: $(inputs.params.mnist-hpo-bestHyperParameter)'
+    command:
+    - sh
+    - -c
+    image: library/bash:4.4.23
+    name: my-out-cop
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "An example to launch katib
+      experiment.", "inputs": [{"default": "mnist", "name": "name", "optional": true},
+      {"default": "kubeflow", "name": "namespace", "optional": true}, {"default":
+      "0.99", "name": "goal", "optional": true}, {"default": "3", "name": "parallelTrialCount",
+      "optional": true}, {"default": "12", "name": "maxTrialCount", "optional": true},
+      {"default": "60", "name": "experimentTimeoutMinutes", "optional": true}, {"default":
+      "True", "name": "deleteAfterDone", "optional": true}], "name": "Launch katib
+      experiment"}'
+  name: launch-katib-experiment
+spec:
+  params:
+  - default: mnist
+    name: name
+  - default: kubeflow
+    name: namespace
+  - default: '0.99'
+    name: goal
+  - default: '3'
+    name: parallelTrialCount
+  - default: '12'
+    name: maxTrialCount
+  - default: '60'
+    name: experimentTimeoutMinutes
+  - default: 'True'
+    name: deleteAfterDone
+  tasks:
+  - name: mnist-hpo
+    params:
+    - name: deleteAfterDone
+      value: $(params.deleteAfterDone)
+    - name: experimentTimeoutMinutes
+      value: $(params.experimentTimeoutMinutes)
+    - name: goal
+      value: $(params.goal)
+    - name: maxTrialCount
+      value: $(params.maxTrialCount)
+    - name: name
+      value: $(params.name)
+    - name: namespace
+      value: $(params.namespace)
+    - name: parallelTrialCount
+      value: $(params.parallelTrialCount)
+    taskRef:
+      name: mnist-hpo
+  - name: my-out-cop
+    params:
+    - name: mnist-hpo-bestHyperParameter
+      value: $(tasks.mnist-hpo.results.bestHyperParameter)
+    taskRef:
+      name: my-out-cop
