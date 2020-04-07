@@ -120,12 +120,8 @@ class TektonCompiler(Compiler) :
     inputs, outputs, dependencies are all helper dicts.
     """
 
-    template = {}
-    template_params = []
-    template_results = []
-    sub_group = group
-
     # Generate GroupOp template
+    sub_group = group
     template = {
       'apiVersion': tekton_api_version,
       'metadata': {
@@ -138,12 +134,6 @@ class TektonCompiler(Compiler) :
     if inputs.get(group.name, None):
       template_params = [{'name': x[1] if x[1] else x[0]} for x in inputs[group.name]]
       template['spec']['params'] = template_params
-
-    # Generate outputs section.
-    if outputs.get(group.name, None):
-      for param_name, dependent_name in outputs[group.name]:
-        template_results.append({"name": param_name})
-      template['spec']['results'] = template_results
       
     # Generates template sections unique to conditions
     if isinstance(sub_group, dsl.OpsGroup) and sub_group.type == 'condition':
