@@ -286,8 +286,10 @@ class TektonCompiler(Compiler) :
     op_name_to_parent_groups = self._get_groups_for_ops(pipeline.groups[0])
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if condition_refs.get(op_name_to_parent_groups[task['name']][-2],[]):
-        task['conditions'] = [condition_refs.get(op_name_to_parent_groups[task['name']][-2],[])]
+      parent_group = op_name_to_parent_groups.get(task['name'], [])
+      if parent_group:
+        if condition_refs.get(parent_group[-2],[]):
+          task['conditions'] = [condition_refs.get(op_name_to_parent_groups[task['name']][-2],[])]
       if op.dependent_names:
         task['runAfter'] = op.dependent_names
 
