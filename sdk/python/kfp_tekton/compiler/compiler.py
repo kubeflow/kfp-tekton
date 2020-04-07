@@ -134,7 +134,6 @@ class TektonCompiler(Compiler) :
       'spec': {}
     }
   
-    print("  INPUTS: ", inputs)
     # Generate inputs section.
     if inputs.get(group.name, None):
       template_params = [{'name': x[1] if x[1] else x[0]} for x in inputs[group.name]]
@@ -159,9 +158,7 @@ class TektonCompiler(Compiler) :
       # the _resolve_value_or_reference method from kfp.Compiler can be used instead
       if isinstance(condition.operand1, dsl.PipelineParam):
         parameter_name = self._pipelineparam_full_name(condition.operand1)
-        print("PARM NAME: ", parameter_name)
         task_names = [task_name for param_name, task_name in subgroup_inputs if param_name == parameter_name]
-        print("TASK NAME: ",task_names)
         if task_names[0]:
           raise TypeError("Conditions do not currently support parameter passing from task outputs")
         operand1_value =  '$(params.'+parameter_name+')'
@@ -294,30 +291,6 @@ class TektonCompiler(Compiler) :
             ]
           }
         )
-    
-    # TODO Should be added when Conditions support parameter passing from task outputs
-    """
-    # process input parameters from upstream tasks for conditions
-    opsgroup_stack = [pipeline.groups[0]]
-    while opsgroup_stack:
-      cur_opsgroup = opsgroup_stack.pop()
-
-      if cur_opsgroup.type == 'condition':
-        condition_ref = condition_refs[cur_opsgroup.name]
-        condition = cur_opsgroup.condition
-        input_params = []
-        if isinstance(condition.operand1, dsl.PipelineParam):
-          operand_value = '$(tasks.'+condition.operand1.op_name+'.results.'+condition.operand1.name+')'
-          input_params.append(operand_value)
-        if isinstance(condition.operand2, dsl.PipelineParam):
-          operand_value = '$(tasks.'+condition.operand2.op_name+'.results.'+condition.operand2.name+')'
-          input_params.append(operand_value)
-        for param_iter in range(len(input_params)):
-          condition_ref['params'][param_iter]['value'] = input_params[param_iter]
-
-      opsgroup_stack.extend(cur_opsgroup.groups)
-    """
-
 
     # add task dependencies and add condition refs to the task ref that depends on the condition
     op_name_to_parent_groups = self._get_groups_for_ops(pipeline.groups[0])
