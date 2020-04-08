@@ -43,6 +43,7 @@ def monkey_patch():
     KFPCompiler._create_and_write_workflow = TektonCompiler._create_and_write_workflow
     KFPCompiler._create_pipeline_workflow = TektonCompiler._create_pipeline_workflow
     KFPCompiler._create_workflow = TektonCompiler._create_workflow
+    KFPCompiler._group_to_dag_template = TektonCompiler._group_to_dag_template
     KFPCompiler._write_workflow = TektonCompiler._write_workflow
 
 
