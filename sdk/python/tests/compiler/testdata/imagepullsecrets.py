@@ -1,4 +1,4 @@
-# Copyright 2018 Google LLC
+# Copyright 2020 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,4 +56,6 @@ def save_most_frequent_word(message="This is testing"):
     .set_image_pull_secrets([k8s_client.V1ObjectReference(name="secretA")])
 
 if __name__ == '__main__':
-  kfp.compiler.Compiler().compile(save_most_frequent_word, __file__ + '.yaml')
+  # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+  from kfp_tekton.compiler import TektonCompiler
+  TektonCompiler().compile(save_most_frequent_word, __file__.replace('.py', '.yaml'))

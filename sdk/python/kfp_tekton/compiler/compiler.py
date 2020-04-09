@@ -396,10 +396,9 @@ class TektonCompiler(Compiler) :
           'kind': 'ServiceAccount',
           'metadata': {'name': 'secrets'}
         }
-        service_template['imagePullSecrets'] = []
-        image_pull_secrets = []
-        for image_pull_secret in pipeline_conf.image_pull_secrets:
-          image_pull_secrets.append(convert_k8s_obj_to_json(image_pull_secret))
+      image_pull_secrets = []
+      for image_pull_secret in pipeline_conf.image_pull_secrets:
+        image_pull_secrets.append(convert_k8s_obj_to_json(image_pull_secret))
         service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
 
       if service_template:
