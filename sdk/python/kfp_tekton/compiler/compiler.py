@@ -388,6 +388,24 @@ class TektonCompiler(Compiler) :
       if pipeline_conf.timeout:
         pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
 
+      # generate the Tekton service account template
+      service_template = {}
+      if len(pipeline_conf.image_pull_secrets) > 0:
+        service_template = {
+          'apiVersion': 'v1',
+          'kind': 'ServiceAccount',
+          'metadata': {'name': 'secrets'}
+        }
+        service_template['imagePullSecrets'] = []
+        image_pull_secrets = []
+        for image_pull_secret in pipeline_conf.image_pull_secrets:
+          image_pull_secrets.append(convert_k8s_obj_to_json(image_pull_secret))
+        service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
+
+      if service_template:
+        workflow = workflow + [service_template]
+        pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
+
       workflow = workflow + [pipelinerun]
 
     # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
