@@ -45,7 +45,7 @@ class GetFrequentWordOp(dsl.ContainerOp):
   description='Get Most Frequent Word and Save to GCS'
 )
 # def save_most_frequent_word(message: str):
-def save_most_frequent_word(message="This is testing"):
+def imagepullsecrets_pipeline(message="This is testing"):
   """A pipeline function describing the orchestration of the workflow."""
 
   counter = GetFrequentWordOp(
@@ -58,4 +58,4 @@ def save_most_frequent_word(message="This is testing"):
 if __name__ == '__main__':
   # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
   from kfp_tekton.compiler import TektonCompiler
-  TektonCompiler().compile(save_most_frequent_word, __file__.replace('.py', '.yaml'))
+  TektonCompiler().compile(imagepullsecrets_pipeline, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)
