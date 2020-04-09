@@ -159,6 +159,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.pipeline_transformers import transform_pipeline
     self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
 
+  def test_katib_workflow(self):
+    """
+    Test compiling a katib workflow.
+    """
+    from .testdata.katib import mnist_hpo
+    self._test_pipeline_workflow(mnist_hpo, 'katib.yaml')
+
   def _test_pipeline_workflow(self, 
                               pipeline_function,
                               pipeline_yaml,
