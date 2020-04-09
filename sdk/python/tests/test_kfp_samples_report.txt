@@ -12,7 +12,7 @@ FAILURE: param_substitutions.py
 SUCCESS: pipelineparams.py
 FAILURE: recursive_do_while.py
 SUCCESS: recursive_while.py
-FAILURE: resourceop_basic.py
+SUCCESS: resourceop_basic.py
 SUCCESS: sidecar.py
 SUCCESS: timeout.py
 SUCCESS: volume.py
