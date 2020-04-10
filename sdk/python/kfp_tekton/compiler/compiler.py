@@ -394,7 +394,7 @@ class TektonCompiler(Compiler) :
         service_template = {
           'apiVersion': 'v1',
           'kind': 'ServiceAccount',
-          'metadata': {'name': 'secrets'}
+          'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
         }
       for image_pull_secret in pipeline_conf.image_pull_secrets:
         service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
