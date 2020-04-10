@@ -351,44 +351,48 @@ class TektonCompiler(Compiler) :
 
     # Generate pipelinerun if generate-pipelinerun flag is enabled
     # The base templete is generated first and then insert optional parameters.
-    if self.generate_pipelinerun:
-      pipelinerun = {
-        'apiVersion': tekton_api_version,
-        'kind': 'PipelineRun',
-        'metadata': {
-          'name': pipeline_template['metadata']['name'] + '-run'
-        },
-        'spec': {
-          'params': [{
-            'name': p['name'],
-            'value': p.get('default', '')
-          } for p in pipeline_template['spec']['params']
-          ],
-          'pipelineRef': {
-            'name': pipeline_template['metadata']['name']
+    # Wrapped in a try catch for when this method is called directly (e.g. there is no pipeline decorator)
+    try:
+      if self.generate_pipelinerun:
+        pipelinerun = {
+          'apiVersion': tekton_api_version,
+          'kind': 'PipelineRun',
+          'metadata': {
+            'name': pipeline_template['metadata']['name'] + '-run'
+          },
+          'spec': {
+            'params': [{
+              'name': p['name'],
+              'value': p.get('default', '')
+            } for p in pipeline_template['spec']['params']
+            ],
+            'pipelineRef': {
+              'name': pipeline_template['metadata']['name']
+            }
           }
         }
-      }
 
 
-      pod_template = {}
-      for task in task_refs:
-        op = pipeline.ops.get(task['name'])
-        if op.affinity:
-          pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
-        if op.tolerations:
-          pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
-        if op.node_selector:
-          pod_template['nodeSelector'] = op.node_selector
+        pod_template = {}
+        for task in task_refs:
+          op = pipeline.ops.get(task['name'])
+          if op.affinity:
+            pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
+          if op.tolerations:
+            pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
+          if op.node_selector:
+            pod_template['nodeSelector'] = op.node_selector
 
-      if pod_template:
-        pipelinerun['spec']['podtemplate'] = pod_template
+        if pod_template:
+          pipelinerun['spec']['podtemplate'] = pod_template
 
-      # add workflow level timeout to pipeline run
-      if pipeline_conf.timeout:
-        pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
+        # add workflow level timeout to pipeline run
+        if pipeline_conf.timeout:
+          pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
 
-      workflow = workflow + [pipelinerun]
+        workflow = workflow + [pipelinerun]
+    except:
+      pass # Intentionally do nothing
 
     # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
     # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.

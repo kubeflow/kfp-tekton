@@ -73,11 +73,15 @@ rm -f "${COMPILER_OUTPUTS_FILE}"
 # compile each of the Python scripts in the KFP testdata folder
 for f in "${KFP_TESTDATA_DIR}"/*.py; do
   echo -e "\nCompiling ${f##*/}:" >> "${COMPILER_OUTPUTS_FILE}"
-  if dsl-compile-tekton --py "${f}" --output "${TEKTON_COMPILED_YAML_DIR}/${f##*/}.yaml" >> "${COMPILER_OUTPUTS_FILE}" 2>&1;
-  then
-    echo "SUCCESS: ${f##*/}" | tee -a "${COMPILER_OUTPUTS_FILE}"
+  if [ ${f##*/} == "compose.py" ] || [ ${f##*/} == "basic_no_decorator.py" ]; then
+    python3 -m compiler_tests ${f##*/} ${KFP_TESTDATA_DIR} | grep -E 'SUCCESS:|FAILURE:'
   else
-    echo "FAILURE: ${f##*/}" | tee -a "${COMPILER_OUTPUTS_FILE}"
+    if dsl-compile-tekton --py "${f}" --output "${TEKTON_COMPILED_YAML_DIR}/${f##*/}.yaml" >> "${COMPILER_OUTPUTS_FILE}" 2>&1;
+    then
+      echo "SUCCESS: ${f##*/}" | tee -a "${COMPILER_OUTPUTS_FILE}"
+    else
+      echo "FAILURE: ${f##*/}" | tee -a "${COMPILER_OUTPUTS_FILE}"
+    fi
   fi
 done | tee "${COMPILE_REPORT_FILE}"
 
