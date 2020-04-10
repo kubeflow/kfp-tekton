@@ -74,7 +74,7 @@ rm -f "${COMPILER_OUTPUTS_FILE}"
 for f in "${KFP_TESTDATA_DIR}"/*.py; do
   echo -e "\nCompiling ${f##*/}:" >> "${COMPILER_OUTPUTS_FILE}"
   if [ ${f##*/} == "compose.py" ] || [ ${f##*/} == "basic_no_decorator.py" ]; then
-    python3 -m compiler_tests ${f##*/} ${KFP_TESTDATA_DIR} | grep -E 'SUCCESS:|FAILURE:'
+    python3 -m test_util ${f##*/} ${KFP_TESTDATA_DIR} | grep -E 'SUCCESS:|FAILURE:'
   else
     if dsl-compile-tekton --py "${f}" --output "${TEKTON_COMPILED_YAML_DIR}/${f##*/}.yaml" >> "${COMPILER_OUTPUTS_FILE}" 2>&1;
     then
