@@ -184,7 +184,7 @@ class TektonCompiler(Compiler) :
       op_transformers: A list of functions that are applied to all ContainerOp instances that are being processed.
       op_to_templates_handler: Handler which converts a base op into a list of argo templates.
     """
-    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op)])
+    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op, self.enable_artifacts)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise
@@ -390,24 +390,6 @@ class TektonCompiler(Compiler) :
 
       workflow = workflow + [pipelinerun]
 
-    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
-    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
-    # https://github.com/argoproj/argo/blob/master/docs/variables.md
-    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
-    # using regular expression.
-    workflow_dump = json.dumps(workflow)
-    tekton_var_regex_rules = [
-        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
-        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
-    ]
-    for regex_rule in tekton_var_regex_rules:
-      workflow_dump = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], workflow_dump)
-
-    unsupported_vars = re.findall(r"{{[^ \t\n:,;{}]+}}", workflow_dump)
-    if unsupported_vars:
-      raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
-    workflow = json.loads(workflow_dump)
-
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 
   # NOTE: the methods below are "copied" from KFP with changes in the method signatures (only)
@@ -505,7 +487,8 @@ class TektonCompiler(Compiler) :
               package_path,
               type_check=True,
               pipeline_conf: dsl.PipelineConf = None,
-              generate_pipelinerun=False):
+              generate_pipelinerun=False,
+              enable_artifacts=False):
     """Compile the given pipeline function into workflow yaml.
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.
@@ -517,6 +500,7 @@ class TektonCompiler(Compiler) :
       generate_pipelinerun: Generate pipelinerun yaml for Tekton pipeline compilation.
     """
     self.generate_pipelinerun = generate_pipelinerun
+    self.enable_artifacts = enable_artifacts
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
@@ -531,6 +515,22 @@ class TektonCompiler(Compiler) :
     """
     yaml.Dumper.ignore_aliases = lambda *args : True
     yaml_text = yaml.dump_all(workflow, default_flow_style=False)  # Tekton change
+
+    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
+    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
+    # https://github.com/argoproj/argo/blob/master/docs/variables.md
+    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
+    # using regular expression.
+    tekton_var_regex_rules = [
+        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
+        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
+    ]
+    for regex_rule in tekton_var_regex_rules:
+      yaml_text = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], yaml_text)
+
+    unsupported_vars = re.findall(r"{{[^ \t\n:,;{}]+}}", yaml_text)
+    if unsupported_vars:
+      raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
 
     if '{{pipelineparam' in yaml_text:
       raise RuntimeError(
