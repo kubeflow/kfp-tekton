@@ -165,6 +165,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.katib import mnist_hpo
     self._test_pipeline_workflow(mnist_hpo, 'katib.yaml')
+    
+  def test_imagepullsecrets_workflow(self):
+    """ 
+    Test compiling a imagepullsecrets workflow.
+    """
+    from .testdata.imagepullsecrets import imagepullsecrets_pipeline
+    self._test_pipeline_workflow(imagepullsecrets_pipeline, 'imagepullsecrets.yaml', generate_pipelinerun=True)
 
   def _test_pipeline_workflow(self, 
                               pipeline_function,
