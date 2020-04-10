@@ -164,11 +164,11 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
             bash images.
 
             - image: busybox
-            name: copy-results
-            script: |
-                #!/bin/sh
-                set -exo pipefail
-                cp $LOCALPATH $(results.data.path);
+              name: copy-results
+              script: |
+                  #!/bin/sh
+                  set -exo pipefail
+                  cp $LOCALPATH $(results.data.path);
             """
             template['spec']['results'] = []
             copy_results_step = {
@@ -214,6 +214,18 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                 replaced_param_list.append(parameter_name)
         copy_artifacts_step = {}
         if outputs_dict.get('artifacts'):
+            """
+            For storing artifacts, we will be using the minio/mc image because we need to upload artifacts to any type of
+            object storage and endpoint. The minio/mc is the best image suited for this task because the default KFP
+            is using minio and it also works well with other s3/gcs type of storage. 
+
+            - image: minio/mc
+              name: copy-artifacts
+              script: |
+                  #!/usr/bin/env sh
+                  mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+                  mc cp /tmp/file.txt storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/file.txt
+            """
             # TODO: Pull default values from KFP configmap when integrated with KFP.
             storage_location = outputs_dict['artifacts'][0].get('s3', {})
             insecure = storage_location.get("insecure", True)
