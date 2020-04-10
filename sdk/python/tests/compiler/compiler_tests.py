@@ -159,17 +159,29 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.pipeline_transformers import transform_pipeline
     self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
 
+  def test_artifact_location_workflow(self):
+    """
+    Test compiling a artifact location workflow.
+    """
+    from .testdata.artifact_location import foo_pipeline
+    self._test_pipeline_workflow(foo_pipeline, 'artifact_location.yaml', enable_artifacts=True)
+
+
   def _test_pipeline_workflow(self, 
                               pipeline_function,
                               pipeline_yaml,
                               generate_pipelinerun=False,
+                              enable_artifacts=False,
                               normalize_compiler_output_function=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
     try:
-      compiler.TektonCompiler().compile(pipeline_function, compiled_yaml_file, generate_pipelinerun=generate_pipelinerun)
+      compiler.TektonCompiler().compile(pipeline_function,
+                                        compiled_yaml_file,
+                                        generate_pipelinerun=generate_pipelinerun,
+                                        enable_artifacts=enable_artifacts)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f

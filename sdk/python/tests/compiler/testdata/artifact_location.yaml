@@ -1,0 +1,86 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: foo
+spec:
+  params:
+  - name: bucket
+  - name: namespace
+  - name: tag
+  stepTemplate:
+    volumeMounts:
+    - mountPath: /tmp
+      name: out_art
+  steps:
+  - image: busybox:$(inputs.params.tag)
+    name: foo
+  - env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    - name: PODNAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          key: accesskey
+          name: minio
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          key: secretkey
+          name: minio
+    image: minio/mc
+    name: copy-artifacts
+    script: |-
+      #!/usr/bin/env sh
+      mc config host add storage http://minio-service.$(inputs.params.namespace):9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+      mc cp /tmp/out_art.txt storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/out_art.txt
+  volumes:
+  - emptyDir: {}
+    name: out_art
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "hello world", "inputs":
+      [{"name": "tag", "type": "String"}, {"default": "kubeflow", "name": "namespace",
+      "optional": true, "type": "String"}, {"default": "foobar", "name": "bucket",
+      "optional": true, "type": "String"}], "name": "artifact-location-pipeine"}'
+  name: artifact-location-pipeine
+spec:
+  params:
+  - name: tag
+  - default: kubeflow
+    name: namespace
+  - default: foobar
+    name: bucket
+  tasks:
+  - name: foo
+    params:
+    - name: bucket
+      value: $(params.bucket)
+    - name: namespace
+      value: $(params.namespace)
+    - name: tag
+      value: $(params.tag)
+    taskRef:
+      name: foo

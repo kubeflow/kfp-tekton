@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2020 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,3 +45,8 @@ def foo_pipeline(tag: str, namespace: str = "kubeflow", bucket: str = "foobar"):
             'out_art': '/tmp/out_art.txt',
         },
     )
+
+if __name__ == '__main__':
+    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(foo_pipeline, __file__.replace('.py', '.yaml'), enable_artifacts=True)
