@@ -166,6 +166,12 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.artifact_location import foo_pipeline
     self._test_pipeline_workflow(foo_pipeline, 'artifact_location.yaml', enable_artifacts=True)
 
+  def test_katib_workflow(self):
+    """
+    Test compiling a katib workflow.
+    """
+    from .testdata.katib import mnist_hpo
+    self._test_pipeline_workflow(mnist_hpo, 'katib.yaml')
 
   def _test_pipeline_workflow(self, 
                               pipeline_function,

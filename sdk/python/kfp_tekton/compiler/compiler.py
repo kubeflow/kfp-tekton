@@ -370,7 +370,6 @@ class TektonCompiler(Compiler) :
         }
       }
 
-
       pod_template = {}
       for task in task_refs:
         op = pipeline.ops.get(task['name'])
@@ -528,7 +527,7 @@ class TektonCompiler(Compiler) :
     for regex_rule in tekton_var_regex_rules:
       yaml_text = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], yaml_text)
 
-    unsupported_vars = re.findall(r"{{[^ \t\n:,;{}]+}}", yaml_text)
+    unsupported_vars = re.findall(r"{{[^ \t\n.:,;{}]+\.[^ \t\n:,;{}]+}}", yaml_text)
     if unsupported_vars:
       raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
 
