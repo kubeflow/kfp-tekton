@@ -217,7 +217,7 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
             # TODO: Pull default values from KFP configmap when integrated with KFP.
             storage_location = outputs_dict['artifacts'][0].get('s3', {})
             insecure = storage_location.get("insecure", True)
-            endpoint = storage_location.get("endpoint", "minio-service.kubeflow:9000")
+            endpoint = storage_location.get("endpoint", "minio-service.$NAMESPACE:9000")
             # We want to use the insecure flag to figure out whether to use http or https scheme
             endpoint = re.sub(r"https?://", "", endpoint)
             endpoint = 'http://' + endpoint if insecure else 'https://' + endpoint
@@ -234,6 +234,7 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                 'env': [
                     {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}},
                     {'name': 'PODNAME', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.name"}}},
+                    {'name': 'NAMESPACE', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.namespace"}}},
                     {'name': 'AWS_ACCESS_KEY_ID', 'valueFrom': {'secretKeyRef': {'name': access_key['name'], 'key': access_key['key']}}},
                     {'name': 'AWS_SECRET_ACCESS_KEY', 'valueFrom': {'secretKeyRef': {'name': secret_access_key['name'], 'key': secret_access_key['key']}}}
                 ]
