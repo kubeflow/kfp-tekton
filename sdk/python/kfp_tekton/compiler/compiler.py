@@ -320,6 +320,37 @@ class TektonCompiler(Compiler) :
       if op.timeout:
         task['timeout'] = '%ds' % op.timeout
 
+    # handle resourceOp cases in pipeline
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if isinstance(op, dsl.ResourceOp):
+        action = op.resource.get('action')
+        merge_strategy = op.resource.get('merge_strategy')
+        success_condition = op.resource.get('success_condition')
+        failure_condition = op.resource.get('failure_condition')
+        task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
+        if not merge_strategy:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
+        if not success_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'success-condition']
+        if not failure_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "failure-condition"]
+        for tp in task.get('params', []):
+          if tp.get('name') == "action" and action:
+            tp['value'] = action
+          if tp.get('name') == "merge-strategy" and merge_strategy:
+            tp['value'] = merge_strategy
+          if tp.get('name') == "success-condition" and success_condition:
+            tp['value'] = success_condition
+          if tp.get('name') == "failure-condition" and failure_condition:
+            tp['value'] = failure_condition
+          if tp.get('name') == "manifest":
+            manifest = yaml.dump(convert_k8s_obj_to_json(op.k8s_resource), default_flow_style=False)
+            tp['value'] = manifest
+          if tp.get('name') == "output":
+            output_values = ','.join(set(list(op.attribute_outputs.values())))
+            tp['value'] = output_values
+
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
     op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
