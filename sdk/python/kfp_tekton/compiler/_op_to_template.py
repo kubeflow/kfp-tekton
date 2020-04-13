@@ -17,6 +17,7 @@ from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
 from kfp import dsl
 from kfp.dsl._container_op import BaseOp
+from kfp.dsl import ArtifactLocation
 from urllib.parse import urlparse
 import textwrap
 import re
