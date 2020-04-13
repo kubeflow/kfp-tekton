@@ -16,7 +16,6 @@ from collections import OrderedDict
 from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
 from kfp import dsl
-from kfp.dsl import ArtifactLocation
 from kfp.dsl._container_op import BaseOp
 from urllib.parse import urlparse
 import textwrap
@@ -113,21 +112,81 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
         }
 
     elif isinstance(op, dsl.ResourceOp):
-        # # no output artifacts
-        # output_artifacts = []
-        #
-        # # workflow template
-        # processed_op.resource["manifest"] = yaml.dump(
-        #     convert_k8s_obj_to_json(processed_op.k8s_resource),
-        #     default_flow_style=False
-        # )
-        # template = {
-        #     'name': processed_op.name,
-        #     'resource': convert_k8s_obj_to_json(
-        #         processed_op.resource
-        #     )
-        # }
-        raise NotImplementedError("dsl.ResourceOp is not yet implemented")
+        # no output artifacts
+        output_artifacts = []
+
+        # task template
+        template = {
+            'apiVersion': tekton_api_version,
+            'kind': 'Task',
+            'metadata': {'name': processed_op.name},
+            'spec': {
+                "params": [
+                    {
+                        "description": "Action on the resource",
+                        "name": "action",
+                        "type": "string"
+                    },
+                    {
+                        "default": "strategic",
+                        "description": "Merge strategy when using action patch",
+                        "name": "merge-strategy",
+                        "type": "string"
+                    },
+                    {
+                        "description": "Content of the resource to deploy",
+                        "name": "manifest",
+                        "type": "string"
+                    },
+                    {
+                        "default": "",
+                        "description": "An express to retrieval data from resource.",
+                        "name": "output",
+                        "type": "string"
+                    },
+                    {
+                        "default": "",
+                        "description": "A label selector express to decide if the action on resource is success.",
+                        "name": "success-condition",
+                        "type": "string"
+                    },
+                    {
+                        "default": "",
+                        "description": "A label selector express to decide if the action on resource is failure.",
+                        "name": "failure-condition",
+                        "type": "string"
+                    },
+                    {
+                        "default": "index.docker.io/fenglixa/kubeclient:v0.0.1",  # Todo: The image need to be replaced, once there are official images from tekton
+                        "description": "Kubectl wrapper image",
+                        "name": "image",
+                        "type": "string"
+                    },
+                    {
+                        "default": "false",
+                        "description": "Enable set owner reference for created resource.",
+                        "name": "set-ownerreference",
+                        "type": "string"
+                    }
+                ],
+                'steps': [
+                    {
+                        "args": [
+                            "--action=$(params.action)",
+                            "--merge-strategy=$(params.merge-strategy)",
+                            "--manifest=$(params.manifest)",
+                            "--output=$(params.output)",
+                            "--success-condition=$(params.success-condition)",
+                            "--failure-condition=$(params.failure-condition)",
+                            "--set-ownerreference=$(params.set-ownerreference)"
+                        ],
+                        "image": "$(params.image)",
+                        "name": processed_op.name,
+                        "resources": {}
+                    }
+                ]
+            }
+        }
 
     # initContainers
     if processed_op.init_containers:
@@ -140,16 +199,21 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
     artifact_arguments = processed_op.artifact_arguments if isinstance(processed_op, dsl.ContainerOp) else None
     inputs = _inputs_to_json(processed_op.inputs, input_artifact_paths, artifact_arguments)
     if 'parameters' in inputs:
-        template['spec']['params'] = inputs['parameters']
+        if isinstance(processed_op, dsl.ContainerOp):
+            template['spec']['params'] = inputs['parameters']
+        elif isinstance(op, dsl.ResourceOp):
+            template['spec']['params'].extend(inputs['parameters'])
     elif 'artifacts' in inputs:
         raise NotImplementedError("input artifacts are not yet implemented")
 
     # outputs
     if isinstance(op, dsl.ContainerOp):
+        op_outputs = processed_op.outputs
         param_outputs = processed_op.file_outputs
     elif isinstance(op, dsl.ResourceOp):
-        param_outputs = processed_op.attribute_outputs
-    outputs_dict = _outputs_to_json(op, processed_op.outputs, param_outputs, output_artifacts)
+        op_outputs = {}
+        param_outputs = {}
+    outputs_dict = _outputs_to_json(op, op_outputs, param_outputs, output_artifacts)
     if outputs_dict:
         volume_mount_step_template = []
         volume_template = []
