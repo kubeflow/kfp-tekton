@@ -124,6 +124,14 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
 
+  def test_resourceOp_workflow(self):
+    """
+    Test compiling a resourceOp basic workflow.
+    """
+    from .testdata.resourceop_basic import resourceop_basic
+    nf = lambda f: re.sub("{},{.metadata.name}", "{.metadata.name},{}", f)
+    self._test_pipeline_workflow(resourceop_basic, 'resourceop_basic.yaml', normalize_compiler_output_function=nf)
+
   def test_hidden_output_file_workflow(self):
     """
     Test compiling a workflow with non configurable output file.
@@ -158,6 +166,20 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.pipeline_transformers import transform_pipeline
     self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
+
+  def test_katib_workflow(self):
+    """
+    Test compiling a katib workflow.
+    """
+    from .testdata.katib import mnist_hpo
+    self._test_pipeline_workflow(mnist_hpo, 'katib.yaml')
+    
+  def test_imagepullsecrets_workflow(self):
+    """ 
+    Test compiling a imagepullsecrets workflow.
+    """
+    from .testdata.imagepullsecrets import imagepullsecrets_pipeline
+    self._test_pipeline_workflow(imagepullsecrets_pipeline, 'imagepullsecrets.yaml', generate_pipelinerun=True)
 
   def _test_pipeline_workflow(self, 
                               pipeline_function,

@@ -320,6 +320,37 @@ class TektonCompiler(Compiler) :
       if op.timeout:
         task['timeout'] = '%ds' % op.timeout
 
+    # handle resourceOp cases in pipeline
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if isinstance(op, dsl.ResourceOp):
+        action = op.resource.get('action')
+        merge_strategy = op.resource.get('merge_strategy')
+        success_condition = op.resource.get('success_condition')
+        failure_condition = op.resource.get('failure_condition')
+        task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
+        if not merge_strategy:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
+        if not success_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'success-condition']
+        if not failure_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "failure-condition"]
+        for tp in task.get('params', []):
+          if tp.get('name') == "action" and action:
+            tp['value'] = action
+          if tp.get('name') == "merge-strategy" and merge_strategy:
+            tp['value'] = merge_strategy
+          if tp.get('name') == "success-condition" and success_condition:
+            tp['value'] = success_condition
+          if tp.get('name') == "failure-condition" and failure_condition:
+            tp['value'] = failure_condition
+          if tp.get('name') == "manifest":
+            manifest = yaml.dump(convert_k8s_obj_to_json(op.k8s_resource), default_flow_style=False)
+            tp['value'] = manifest
+          if tp.get('name') == "output":
+            output_values = ','.join(set(list(op.attribute_outputs.values())))
+            tp['value'] = output_values
+
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
     op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
@@ -372,7 +403,6 @@ class TektonCompiler(Compiler) :
           }
         }
 
-
         pod_template = {}
         for task in task_refs:
           op = pipeline.ops.get(task['name'])
@@ -389,6 +419,21 @@ class TektonCompiler(Compiler) :
         # add workflow level timeout to pipeline run
         if pipeline_conf.timeout:
           pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
+
+        # generate the Tekton service account template
+        service_template = {}
+        if len(pipeline_conf.image_pull_secrets) > 0:
+          service_template = {
+            'apiVersion': 'v1',
+            'kind': 'ServiceAccount',
+            'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
+          }
+        for image_pull_secret in pipeline_conf.image_pull_secrets:
+          service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
+
+        if service_template:
+          workflow = workflow + [service_template]
+          pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
 
         workflow = workflow + [pipelinerun]
     except:
@@ -407,7 +452,7 @@ class TektonCompiler(Compiler) :
     for regex_rule in tekton_var_regex_rules:
       workflow_dump = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], workflow_dump)
 
-    unsupported_vars = re.findall(r"{{[^ \t\n:,;{}]+}}", workflow_dump)
+    unsupported_vars = re.findall(r"{{[^ \t\n.:,;{}]+\.[^ \t\n:,;{}]+}}", workflow_dump)
     if unsupported_vars:
       raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
     workflow = json.loads(workflow_dump)
