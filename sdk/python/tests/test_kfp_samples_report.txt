@@ -1,9 +1,9 @@
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_location.py
 SUCCESS: basic.py
-SUCCESS: basic_no_decorator.py
+SUCCESS:  basic_no_decorator.py
 FAILURE: coin.py
-SUCCESS: compose.py
+SUCCESS:  compose.py
 SUCCESS: default_value.py
 FAILURE: input_artifact_raw_value.py
 FAILURE: loop_over_lightweight_output.py
