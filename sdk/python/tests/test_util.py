@@ -85,6 +85,8 @@ if __name__ == '__main__':
 
     # Get the pipeline specific parameters from the config file
     params = get_params_from_config(test_data_file, config_path)
+    if params == None:
+        raise ValueError('No pipeline matches available in the config file')
     test_type = params['type']
 
     if test_type == 'nested':
@@ -92,9 +94,9 @@ if __name__ == '__main__':
     elif test_type == 'no_decorator':
         did_compile = test_workflow_without_decorator(pipeline_mod, params['components'])
     else:
-        raise ValueError('No pipeline matches available')
+        raise ValueError('Pipeline type \''+test_type+'\' is not recognized')
 
     if did_compile:
-        print("SUCCESS: ", test_data_file)
+        print("SUCCESS:", test_data_file)
     else:
-        print("FAILURE: ", test_data_file)
+        print("FAILURE:", test_data_file)
