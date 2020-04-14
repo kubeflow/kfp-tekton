@@ -437,7 +437,9 @@ class TektonCompiler(Compiler) :
 
         workflow = workflow + [pipelinerun]
     except:
-      pass # Intentionally do nothing
+      # Intentionally do nothing for when _create_pipeline_workflow is called directly (e.g. in the case of there
+      # being no pipeline decorator) and self.generate_pipeline is not set
+      pass
 
     # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
     # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
