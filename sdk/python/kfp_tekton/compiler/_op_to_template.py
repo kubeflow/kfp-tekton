@@ -17,6 +17,10 @@ from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
 from kfp import dsl
 from kfp.dsl._container_op import BaseOp
+import yaml
+import textwrap
+from kfp.components._yaml_utils import load_yaml
+import re
 
 from .. import tekton_api_version
 
@@ -108,6 +112,16 @@ def _op_to_template(op: BaseOp):
         # no output artifacts
         output_artifacts = []
 
+        # Flatten manifest because it needs to replace Argo variables
+        manifest = yaml.dump(convert_k8s_obj_to_json(processed_op.k8s_resource), default_flow_style=False)
+        argo_var = False
+        if manifest.find('{{workflow.name}}') != -1:
+            # Kubernetes Pod arguments only take $() as environment variables
+            manifest = manifest.replace('{{workflow.name}}', "$(PIPELINERUN)")
+            # Remove yaml quote in order to read bash variables
+            manifest = re.sub('name: \'([^\']+)\'', 'name: \g<1>', manifest)
+            argo_var = True
+
         # task template
         template = {
             'apiVersion': tekton_api_version,
@@ -124,11 +138,6 @@ def _op_to_template(op: BaseOp):
                         "default": "strategic",
                         "description": "Merge strategy when using action patch",
                         "name": "merge-strategy",
-                        "type": "string"
-                    },
-                    {
-                        "description": "Content of the resource to deploy",
-                        "name": "manifest",
                         "type": "string"
                     },
                     {
@@ -167,7 +176,7 @@ def _op_to_template(op: BaseOp):
                         "args": [
                             "--action=$(params.action)",
                             "--merge-strategy=$(params.merge-strategy)",
-                            "--manifest=$(params.manifest)",
+                            "--manifest=" + manifest,
                             "--output=$(params.output)",
                             "--success-condition=$(params.success-condition)",
                             "--failure-condition=$(params.failure-condition)",
@@ -180,6 +189,38 @@ def _op_to_template(op: BaseOp):
                 ]
             }
         }
+
+        # Inject Argo variable replacement as env variables.
+        if argo_var:
+            template['spec']['steps'][0]['env'] = [
+                {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}}
+            ]
+        # Since there's only one output avalible in ResourceOp, add an ending step for producing VolumeOp outputs as a current workaround.
+        if isinstance(op, dsl.VolumeOp):
+            k8s_resource = load_yaml(manifest)
+            template['spec']['steps'].append(
+                {
+                    "image": "busybox",
+                    "name": "volumeop-results",
+                    "script": literal_str(textwrap.dedent('''\
+                                #!/bin/sh
+                                set -exo pipefail
+                                echo -n %s > /tekton/results/name
+                                echo -n %s > /tekton/results/size
+                                ''' % (re.sub('\$\(([^$()]+)\)', '${\g<1>}', k8s_resource['metadata']['name']),  # Replace $() to ${} in script mode
+                                       k8s_resource['spec']['resources']['requests']['storage']))),
+                    "env": [
+                        {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}}
+                    ]
+                }
+            )
+            template['spec']['results'] = [
+                {'name': 'name', 'description': 'Volume resource name'},
+                {'name': 'size', 'description': 'Volume size'}
+            ]
+
+        if isinstance(op, dsl.VolumeSnapshotOp):
+            raise NotImplementedError("VolumeSnapshotOp is not yet implemented")
 
     # initContainers
     if processed_op.init_containers:

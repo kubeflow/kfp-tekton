@@ -132,6 +132,14 @@ class TestTektonCompiler(unittest.TestCase):
     nf = lambda f: re.sub("{},{.metadata.name}", "{.metadata.name},{}", f)
     self._test_pipeline_workflow(resourceop_basic, 'resourceop_basic.yaml', normalize_compiler_output_function=nf)
 
+  def test_resourceOp_workflow(self):
+    """
+    Test compiling a volumeOp basic workflow.
+    """
+    from .testdata.volume_ops import volumeop_basic
+    nf = lambda f: re.sub("{[^{}]*},{[^{}]*},{[^{}]*}", "{},{.metadata.name},{.status.capacity.storage}", f)
+    self._test_pipeline_workflow(volumeop_basic, 'volume_ops.yaml', normalize_compiler_output_function=nf)
+
   def test_hidden_output_file_workflow(self):
     """
     Test compiling a workflow with non configurable output file.

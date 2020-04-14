@@ -344,9 +344,6 @@ class TektonCompiler(Compiler) :
             tp['value'] = success_condition
           if tp.get('name') == "failure-condition" and failure_condition:
             tp['value'] = failure_condition
-          if tp.get('name') == "manifest":
-            manifest = yaml.dump(convert_k8s_obj_to_json(op.k8s_resource), default_flow_style=False)
-            tp['value'] = manifest
           if tp.get('name') == "output":
             output_values = ','.join(set(list(op.attribute_outputs.values())))
             tp['value'] = output_values
