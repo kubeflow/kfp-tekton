@@ -67,7 +67,7 @@ kind: Pipeline
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline to demonstrate
-      how to configure the artifact \n    location for all the ops in the pipeline.",
+      how to configure the artifact\n    location for all the ops in the pipeline.",
       "inputs": [{"default": "mlpipeline-minio-artifact", "name": "secret_name", "optional":
       true, "type": "String"}, {"default": "1.31.0", "name": "tag", "optional": true,
       "type": "String"}, {"default": "kubeflow", "name": "namespace", "optional":
