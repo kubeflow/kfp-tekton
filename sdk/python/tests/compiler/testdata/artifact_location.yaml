@@ -20,13 +20,17 @@ spec:
   params:
   - name: bucket
   - name: namespace
+  - name: secret_name
   - name: tag
-  stepTemplate:
-    volumeMounts:
-    - mountPath: /tmp
-      name: out_art
+  results:
+  - description: /tmp/output.txt
+    name: output
   steps:
-  - image: busybox:$(inputs.params.tag)
+  - command:
+    - sh
+    - -c
+    - echo hello > $(results.output.path)
+    image: busybox:$(inputs.params.tag)
     name: foo
   - env:
     - name: PIPELINERUN
@@ -45,37 +49,40 @@ spec:
       valueFrom:
         secretKeyRef:
           key: accesskey
-          name: minio
+          name: $(inputs.params.secret_name)
     - name: AWS_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
           key: secretkey
-          name: minio
+          name: $(inputs.params.secret_name)
     image: minio/mc
     name: copy-artifacts
     script: |-
       #!/usr/bin/env sh
       mc config host add storage http://minio-service.$(inputs.params.namespace):9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
-      mc cp /tmp/out_art.txt storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/out_art.txt
-  volumes:
-  - emptyDir: {}
-    name: out_art
+      mc cp $(results.output.path) storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/output.txt
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "hello world", "inputs":
-      [{"name": "tag", "type": "String"}, {"default": "kubeflow", "name": "namespace",
-      "optional": true, "type": "String"}, {"default": "foobar", "name": "bucket",
-      "optional": true, "type": "String"}], "name": "artifact-location-pipeine"}'
-  name: artifact-location-pipeine
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline to demonstrate
+      how to configure the artifact \n    location for all the ops in the pipeline.",
+      "inputs": [{"default": "mlpipeline-minio-artifact", "name": "secret_name", "optional":
+      true, "type": "String"}, {"default": "1.31.0", "name": "tag", "optional": true,
+      "type": "String"}, {"default": "kubeflow", "name": "namespace", "optional":
+      true, "type": "String"}, {"default": "mlpipeline", "name": "bucket", "optional":
+      true, "type": "String"}], "name": "custom_artifact_location_pipeline"}'
+  name: custom-artifact-location-pipeline
 spec:
   params:
-  - name: tag
+  - default: mlpipeline-minio-artifact
+    name: secret_name
+  - default: 1.31.0
+    name: tag
   - default: kubeflow
     name: namespace
-  - default: foobar
+  - default: mlpipeline
     name: bucket
   tasks:
   - name: foo
@@ -84,6 +91,8 @@ spec:
       value: $(params.bucket)
     - name: namespace
       value: $(params.namespace)
+    - name: secret_name
+      value: $(params.secret_name)
     - name: tag
       value: $(params.tag)
     taskRef:

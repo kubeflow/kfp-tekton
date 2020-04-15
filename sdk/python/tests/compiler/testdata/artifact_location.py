@@ -12,41 +12,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import kfp
 from kfp import dsl
-from kubernetes.client.models import V1SecretKeySelector
+from kubernetes.client import V1SecretKeySelector
 
 
-@dsl.pipeline(name='artifact-location-pipeine', description='hello world')
-def foo_pipeline(tag: str, namespace: str = "kubeflow", bucket: str = "foobar"):
+@dsl.pipeline(
+    name="custom_artifact_location_pipeline",
+    description="""A pipeline to demonstrate how to configure the artifact
+    location for all the ops in the pipeline.""",
+)
+def custom_artifact_location(
+    secret_name: str = "mlpipeline-minio-artifact",
+    tag: str = '1.31.0',
+    namespace: str = "kubeflow",
+    bucket: str = "mlpipeline"
+):
 
     # configures artifact location
     pipeline_artifact_location = dsl.ArtifactLocation.s3(
-                            bucket=bucket,
-                            endpoint="minio-service.%s:9000" % namespace,
-                            insecure=True,
-                            access_key_secret={"name": "minio", "key": "accesskey"},
-                            secret_key_secret=V1SecretKeySelector(name="minio", key="secretkey"))
-
-    # configures artifact location using AWS IAM role (no access key provided)
-    aws_artifact_location = dsl.ArtifactLocation.s3(
-                            bucket=bucket,
-                            endpoint="s3.amazonaws.com",
-                            region="ap-southeast-1",
-                            insecure=False)
+        bucket=bucket,
+        endpoint="minio-service.%s:9000" % namespace,  # parameterize minio-service endpoint
+        insecure=True,
+        access_key_secret=V1SecretKeySelector(name=secret_name, key="accesskey"),
+        secret_key_secret={"name": secret_name, "key": "secretkey"},  # accepts dict also
+    )
 
     # set pipeline level artifact location
     dsl.get_pipeline_conf().set_artifact_location(pipeline_artifact_location)
 
-    # pipeline level artifact location (to minio)
-    op1 = dsl.ContainerOp(
-        name='foo', 
-        image='busybox:%s' % tag,
-        output_artifact_paths={
-            'out_art': '/tmp/out_art.txt',
-        },
-    )
+    # artifacts in this op are stored to endpoint `minio-service.<namespace>:9000`
+    op = dsl.ContainerOp(name="foo", image="busybox:%s" % tag,
+                         command=['sh', '-c', 'echo hello > /tmp/output.txt'],
+                         file_outputs={'output': '/tmp/output.txt'})
 
 if __name__ == '__main__':
     # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(foo_pipeline, __file__.replace('.py', '.yaml'), enable_artifacts=True)
+    TektonCompiler().compile(custom_artifact_location, __file__.replace('.py', '.yaml'), enable_artifacts=True)

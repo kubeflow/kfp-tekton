@@ -171,8 +171,8 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test compiling a artifact location workflow.
     """
-    from .testdata.artifact_location import foo_pipeline
-    self._test_pipeline_workflow(foo_pipeline, 'artifact_location.yaml', enable_artifacts=True)
+    from .testdata.artifact_location import custom_artifact_location
+    self._test_pipeline_workflow(custom_artifact_location, 'artifact_location.yaml', enable_artifacts=True)
 
   def test_katib_workflow(self):
     """
