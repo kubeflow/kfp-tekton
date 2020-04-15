@@ -105,7 +105,7 @@ Prerequisite: Install [Kubeflow Pipeline](https://www.kubeflow.org/docs/pipeline
 By default, artifacts are disabled because it's depended on Kubeflow Pipeline's minio setup. When artifacts are enabled, all the output parameters are also treated as artifacts and persist to the default object storage. Enabling artifacts also allow files to be downloaded or stored as artifact inputs/outputs. Since artifacts are depending on the Kubeflow Pipeline's setup by default, the generated Tekton pipeline must be deployed to the same namespace as Kubeflow Pipeline.
 
 To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--enable-artifacts` as part of your `dsl-compile-tekton` commands. e.g.
-- `dsl-compile-tekton --py sdk/python/tests/compiler/testdata/artifact_location. --output pipeline.yaml --enable-artifacts`
+- `dsl-compile-tekton --py sdk/python/tests/compiler/testdata/artifact_location.py --output pipeline.yaml --enable-artifacts`
 
 ## Troubleshooting
 - Please be aware that defined Affinity, Node Selector, and Tolerations are applied to all the tasks in the same pipeline because there's only one podTemplate allowed in each pipeline.
