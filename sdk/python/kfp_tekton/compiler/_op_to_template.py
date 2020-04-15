@@ -195,9 +195,15 @@ def _op_to_template(op: BaseOp):
             template['spec']['steps'][0]['env'] = [
                 {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}}
             ]
-        # Since there's only one output avalible in ResourceOp, add an ending step for producing VolumeOp outputs as a current workaround.
-        if isinstance(op, dsl.VolumeOp):
-            k8s_resource = load_yaml(manifest)
+        # Since there's only one output avalible in ResourceOp, add an ending step for producing VolumeOp
+        # and VolumeSnapshotOp outputs as a current workaround.
+        if isinstance(op, dsl.VolumeOp) or isinstance(op, dsl.VolumeSnapshotOp):
+            if isinstance(op, dsl.VolumeOp):
+                size = processed_op.k8s_resource['spec']['resources']['requests']['storage']
+            else:
+                # TODO: Fix the VolumeSnapshotOp size once resourceOp can pass multiple output results
+                # https://github.com/kubeflow/kfp-tekton/issues/94
+                size = "20Gi"
             template['spec']['steps'].append(
                 {
                     "image": "busybox",
@@ -207,8 +213,8 @@ def _op_to_template(op: BaseOp):
                                 set -exo pipefail
                                 echo -n %s > /tekton/results/name
                                 echo -n %s > /tekton/results/size
-                                ''' % (re.sub('\$\(([^$()]+)\)', '${\g<1>}', k8s_resource['metadata']['name']),  # Replace $() to ${} in script mode
-                                       k8s_resource['spec']['resources']['requests']['storage']))),
+                                ''' % (processed_op.k8s_resource['metadata']['name'].replace('{{workflow.name}}', "${PIPELINERUN}"),  # Replace $() to ${} in script mode
+                                       size))),
                     "env": [
                         {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}}
                     ]
@@ -218,9 +224,6 @@ def _op_to_template(op: BaseOp):
                 {'name': 'name', 'description': 'Volume resource name'},
                 {'name': 'size', 'description': 'Volume size'}
             ]
-
-        if isinstance(op, dsl.VolumeSnapshotOp):
-            raise NotImplementedError("VolumeSnapshotOp is not yet implemented")
 
     # initContainers
     if processed_op.init_containers:

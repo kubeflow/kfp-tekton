@@ -1,0 +1,545 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-volume-1
+spec:
+  params:
+  - description: Action on the resource
+    name: action
+    type: string
+  - default: strategic
+    description: Merge strategy when using action patch
+    name: merge-strategy
+    type: string
+  - default: ''
+    description: An express to retrieval data from resource.
+    name: output
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is success.
+    name: success-condition
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is failure.
+    name: failure-condition
+    type: string
+  - default: index.docker.io/fenglixa/kubeclient:v0.0.1
+    description: Kubectl wrapper image
+    name: image
+    type: string
+  - default: 'false'
+    description: Enable set owner reference for created resource.
+    name: set-ownerreference
+    type: string
+  - name: rok_url
+  results:
+  - description: Volume resource name
+    name: name
+  - description: Volume size
+    name: size
+  steps:
+  - args:
+    - --action=$(params.action)
+    - --merge-strategy=$(params.merge-strategy)
+    - "--manifest=apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  annotations:\n\
+      \    rok/origin: $(inputs.params.rok_url)\n  name: $(PIPELINERUN)-vol1\nspec:\n\
+      \  accessModes:\n  - ReadWriteMany\n  resources:\n    requests:\n      storage:\
+      \ 1Gi\n"
+    - --output=$(params.output)
+    - --success-condition=$(params.success-condition)
+    - --failure-condition=$(params.failure-condition)
+    - --set-ownerreference=$(params.set-ownerreference)
+    env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: $(params.image)
+    name: create-volume-1
+    resources: {}
+  - env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: busybox
+    name: volumeop-results
+    script: '#!/bin/sh
+
+      set -exo pipefail
+
+      echo -n ${PIPELINERUN}-vol1 > /tekton/results/name
+
+      echo -n 1Gi > /tekton/results/size
+
+      '
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: step1-concat
+spec:
+  params:
+  - name: create-volume-1-name
+  steps:
+  - args:
+    - cat /data/file*| gzip -c >/data/full.gz
+    command:
+    - sh
+    - -c
+    image: library/bash:4.4.23
+    name: step1-concat
+    volumeMounts:
+    - mountPath: /data
+      name: create-volume-1
+  volumes:
+  - name: create-volume-1
+    persistentVolumeClaim:
+      claimName: $(inputs.params.create-volume-1-name)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-snapshot-1
+spec:
+  params:
+  - description: Action on the resource
+    name: action
+    type: string
+  - default: strategic
+    description: Merge strategy when using action patch
+    name: merge-strategy
+    type: string
+  - default: ''
+    description: An express to retrieval data from resource.
+    name: output
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is success.
+    name: success-condition
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is failure.
+    name: failure-condition
+    type: string
+  - default: index.docker.io/fenglixa/kubeclient:v0.0.1
+    description: Kubectl wrapper image
+    name: image
+    type: string
+  - default: 'false'
+    description: Enable set owner reference for created resource.
+    name: set-ownerreference
+    type: string
+  - name: create-volume-1-name
+  results:
+  - description: Volume resource name
+    name: name
+  - description: Volume size
+    name: size
+  steps:
+  - args:
+    - --action=$(params.action)
+    - --merge-strategy=$(params.merge-strategy)
+    - "--manifest=apiVersion: snapshot.storage.k8s.io/v1alpha1\nkind: VolumeSnapshot\n\
+      metadata:\n  name: $(PIPELINERUN)-snap1\nspec:\n  source:\n    kind: PersistentVolumeClaim\n\
+      \    name: $(inputs.params.create-volume-1-name)\n"
+    - --output=$(params.output)
+    - --success-condition=$(params.success-condition)
+    - --failure-condition=$(params.failure-condition)
+    - --set-ownerreference=$(params.set-ownerreference)
+    env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: $(params.image)
+    name: create-snapshot-1
+    resources: {}
+  - env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: busybox
+    name: volumeop-results
+    script: '#!/bin/sh
+
+      set -exo pipefail
+
+      echo -n ${PIPELINERUN}-snap1 > /tekton/results/name
+
+      echo -n 20Gi > /tekton/results/size
+
+      '
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-volume-2
+spec:
+  params:
+  - description: Action on the resource
+    name: action
+    type: string
+  - default: strategic
+    description: Merge strategy when using action patch
+    name: merge-strategy
+    type: string
+  - default: ''
+    description: An express to retrieval data from resource.
+    name: output
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is success.
+    name: success-condition
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is failure.
+    name: failure-condition
+    type: string
+  - default: index.docker.io/fenglixa/kubeclient:v0.0.1
+    description: Kubectl wrapper image
+    name: image
+    type: string
+  - default: 'false'
+    description: Enable set owner reference for created resource.
+    name: set-ownerreference
+    type: string
+  - name: create-snapshot-1-name
+  - name: create-snapshot-1-size
+  results:
+  - description: Volume resource name
+    name: name
+  - description: Volume size
+    name: size
+  steps:
+  - args:
+    - --action=$(params.action)
+    - --merge-strategy=$(params.merge-strategy)
+    - "--manifest=apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name:\
+      \ $(PIPELINERUN)-vol2\nspec:\n  accessModes:\n  - ReadWriteMany\n  dataSource:\n\
+      \    apiGroup: snapshot.storage.k8s.io\n    kind: VolumeSnapshot\n    name:\
+      \ $(inputs.params.create-snapshot-1-name)\n  resources:\n    requests:\n   \
+      \   storage: '$(inputs.params.create-snapshot-1-size)'\n"
+    - --output=$(params.output)
+    - --success-condition=$(params.success-condition)
+    - --failure-condition=$(params.failure-condition)
+    - --set-ownerreference=$(params.set-ownerreference)
+    env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: $(params.image)
+    name: create-volume-2
+    resources: {}
+  - env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: busybox
+    name: volumeop-results
+    script: '#!/bin/sh
+
+      set -exo pipefail
+
+      echo -n ${PIPELINERUN}-vol2 > /tekton/results/name
+
+      echo -n $(inputs.params.create-snapshot-1-size) > /tekton/results/size
+
+      '
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: step2-gunzip
+spec:
+  params:
+  - name: create-volume-2-name
+  steps:
+  - command:
+    - gunzip
+    - -k
+    - /data/full.gz
+    image: library/bash:4.4.23
+    name: step2-gunzip
+    volumeMounts:
+    - mountPath: /data
+      name: create-volume-2
+  volumes:
+  - name: create-volume-2
+    persistentVolumeClaim:
+      claimName: $(inputs.params.create-volume-2-name)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-snapshot-2
+spec:
+  params:
+  - description: Action on the resource
+    name: action
+    type: string
+  - default: strategic
+    description: Merge strategy when using action patch
+    name: merge-strategy
+    type: string
+  - default: ''
+    description: An express to retrieval data from resource.
+    name: output
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is success.
+    name: success-condition
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is failure.
+    name: failure-condition
+    type: string
+  - default: index.docker.io/fenglixa/kubeclient:v0.0.1
+    description: Kubectl wrapper image
+    name: image
+    type: string
+  - default: 'false'
+    description: Enable set owner reference for created resource.
+    name: set-ownerreference
+    type: string
+  - name: create-volume-2-name
+  results:
+  - description: Volume resource name
+    name: name
+  - description: Volume size
+    name: size
+  steps:
+  - args:
+    - --action=$(params.action)
+    - --merge-strategy=$(params.merge-strategy)
+    - "--manifest=apiVersion: snapshot.storage.k8s.io/v1alpha1\nkind: VolumeSnapshot\n\
+      metadata:\n  name: $(PIPELINERUN)-snap2\nspec:\n  source:\n    kind: PersistentVolumeClaim\n\
+      \    name: $(inputs.params.create-volume-2-name)\n"
+    - --output=$(params.output)
+    - --success-condition=$(params.success-condition)
+    - --failure-condition=$(params.failure-condition)
+    - --set-ownerreference=$(params.set-ownerreference)
+    env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: $(params.image)
+    name: create-snapshot-2
+    resources: {}
+  - env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: busybox
+    name: volumeop-results
+    script: '#!/bin/sh
+
+      set -exo pipefail
+
+      echo -n ${PIPELINERUN}-snap2 > /tekton/results/name
+
+      echo -n 20Gi > /tekton/results/size
+
+      '
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-volume-3
+spec:
+  params:
+  - description: Action on the resource
+    name: action
+    type: string
+  - default: strategic
+    description: Merge strategy when using action patch
+    name: merge-strategy
+    type: string
+  - default: ''
+    description: An express to retrieval data from resource.
+    name: output
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is success.
+    name: success-condition
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is failure.
+    name: failure-condition
+    type: string
+  - default: index.docker.io/fenglixa/kubeclient:v0.0.1
+    description: Kubectl wrapper image
+    name: image
+    type: string
+  - default: 'false'
+    description: Enable set owner reference for created resource.
+    name: set-ownerreference
+    type: string
+  - name: create-snapshot-2-name
+  - name: create-snapshot-2-size
+  results:
+  - description: Volume resource name
+    name: name
+  - description: Volume size
+    name: size
+  steps:
+  - args:
+    - --action=$(params.action)
+    - --merge-strategy=$(params.merge-strategy)
+    - "--manifest=apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name:\
+      \ $(PIPELINERUN)-vol3\nspec:\n  accessModes:\n  - ReadWriteMany\n  dataSource:\n\
+      \    apiGroup: snapshot.storage.k8s.io\n    kind: VolumeSnapshot\n    name:\
+      \ $(inputs.params.create-snapshot-2-name)\n  resources:\n    requests:\n   \
+      \   storage: '$(inputs.params.create-snapshot-2-size)'\n"
+    - --output=$(params.output)
+    - --success-condition=$(params.success-condition)
+    - --failure-condition=$(params.failure-condition)
+    - --set-ownerreference=$(params.set-ownerreference)
+    env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: $(params.image)
+    name: create-volume-3
+    resources: {}
+  - env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    image: busybox
+    name: volumeop-results
+    script: '#!/bin/sh
+
+      set -exo pipefail
+
+      echo -n ${PIPELINERUN}-vol3 > /tekton/results/name
+
+      echo -n $(inputs.params.create-snapshot-2-size) > /tekton/results/size
+
+      '
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: step3-output
+spec:
+  params:
+  - name: create-volume-3-name
+  steps:
+  - command:
+    - cat
+    - /data/full
+    image: library/bash:4.4.23
+    name: step3-output
+    volumeMounts:
+    - mountPath: /data
+      name: create-volume-3
+  volumes:
+  - name: create-volume-3
+    persistentVolumeClaim:
+      claimName: $(inputs.params.create-volume-3-name)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "The fifth example of the
+      design doc.", "inputs": [{"name": "rok_url"}], "name": "VolumeSnapshotOp RokURL"}'
+  name: volumesnapshotop-rokurl
+spec:
+  params:
+  - name: rok_url
+  tasks:
+  - name: create-volume-1
+    params:
+    - name: action
+      value: create
+    - name: output
+      value: '{.metadata.name},{},{.status.capacity.storage}'
+    - name: set-ownerreference
+      value: 'false'
+    - name: rok_url
+      value: $(params.rok_url)
+    taskRef:
+      name: create-volume-1
+  - name: step1-concat
+    params:
+    - name: create-volume-1-name
+      value: $(tasks.create-volume-1.results.name)
+    taskRef:
+      name: step1-concat
+  - name: create-snapshot-1
+    params:
+    - name: action
+      value: create
+    - name: output
+      value: '{.status.restoreSize},{.metadata.name},{}'
+    - name: set-ownerreference
+      value: 'false'
+    - name: create-volume-1-name
+      value: $(tasks.create-volume-1.results.name)
+    runAfter:
+    - step1-concat
+    taskRef:
+      name: create-snapshot-1
+  - name: create-volume-2
+    params:
+    - name: action
+      value: create
+    - name: output
+      value: '{.metadata.name},{},{.status.capacity.storage}'
+    - name: set-ownerreference
+      value: 'false'
+    - name: create-snapshot-1-name
+      value: $(tasks.create-snapshot-1.results.name)
+    - name: create-snapshot-1-size
+      value: $(tasks.create-snapshot-1.results.size)
+    taskRef:
+      name: create-volume-2
+  - name: step2-gunzip
+    params:
+    - name: create-volume-2-name
+      value: $(tasks.create-volume-2.results.name)
+    taskRef:
+      name: step2-gunzip
+  - name: create-snapshot-2
+    params:
+    - name: action
+      value: create
+    - name: output
+      value: '{.status.restoreSize},{.metadata.name},{}'
+    - name: set-ownerreference
+      value: 'false'
+    - name: create-volume-2-name
+      value: $(tasks.create-volume-2.results.name)
+    runAfter:
+    - step2-gunzip
+    taskRef:
+      name: create-snapshot-2
+  - name: create-volume-3
+    params:
+    - name: action
+      value: create
+    - name: output
+      value: '{.metadata.name},{},{.status.capacity.storage}'
+    - name: set-ownerreference
+      value: 'false'
+    - name: create-snapshot-2-name
+      value: $(tasks.create-snapshot-2.results.name)
+    - name: create-snapshot-2-size
+      value: $(tasks.create-snapshot-2.results.size)
+    taskRef:
+      name: create-volume-3
+  - name: step3-output
+    params:
+    - name: create-volume-3-name
+      value: $(tasks.create-volume-3.results.name)
+    taskRef:
+      name: step3-output

@@ -16,8 +16,8 @@ SUCCESS: resourceop_basic.py
 SUCCESS: sidecar.py
 SUCCESS: timeout.py
 SUCCESS: volume.py
-FAILURE: volume_snapshotop_rokurl.py
-FAILURE: volume_snapshotop_sequential.py
+SUCCESS: volume_snapshotop_rokurl.py
+SUCCESS: volume_snapshotop_sequential.py
 SUCCESS: volumeop_basic.py
 SUCCESS: volumeop_dag.py
 SUCCESS: volumeop_parallel.py
