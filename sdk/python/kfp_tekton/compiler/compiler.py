@@ -347,7 +347,9 @@ class TektonCompiler(Compiler) :
             tp['value'] = failure_condition
           if tp.get('name') == "output":
             output_values = ''
-            for value in set(list(op.attribute_outputs.items())):
+            attribute_outputs_list = list(op.attribute_outputs.items())
+            attribute_outputs_list.sort(key=lambda x: x[0])
+            for value in attribute_outputs_list:
               output_value = textwrap.dedent("""\
                     - name: %s
                       valueFrom: '%s'

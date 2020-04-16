@@ -129,16 +129,21 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a resourceOp basic workflow.
     """
     from .testdata.resourceop_basic import resourceop_basic
-    nf = lambda f: re.sub("{},{.metadata.name}", "{.metadata.name},{}", f)
-    self._test_pipeline_workflow(resourceop_basic, 'resourceop_basic.yaml', normalize_compiler_output_function=nf)
+    self._test_pipeline_workflow(resourceop_basic, 'resourceop_basic.yaml')
 
-  def test_resourceOp_workflow(self):
+  def test_volumeOp_workflow(self):
     """
     Test compiling a volumeOp basic workflow.
     """
-    from .testdata.volume_ops import volumeop_basic
-    nf = lambda f: re.sub("{[^{}]*},{[^{}]*},{[^{}]*}", "{},{.metadata.name},{.status.capacity.storage}", f)
-    self._test_pipeline_workflow(volumeop_basic, 'volume_ops.yaml', normalize_compiler_output_function=nf)
+    from .testdata.volume_op import volumeop_basic
+    self._test_pipeline_workflow(volumeop_basic, 'volume_op.yaml')
+
+  def test_volumeSnapshotOp_workflow(self):
+    """
+    Test compiling a volumeSnapshotOp basic workflow.
+    """
+    from .testdata.volume_snapshot_op import volume_snapshotop_rokurl
+    self._test_pipeline_workflow(volume_snapshotop_rokurl, 'volume_snapshot_op.yaml')
 
   def test_hidden_output_file_workflow(self):
     """

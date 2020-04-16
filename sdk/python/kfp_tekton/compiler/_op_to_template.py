@@ -199,7 +199,9 @@ def _op_to_template(op: BaseOp):
         # Add results if exist.
         if op.attribute_outputs.items():
             template['spec']['results'] = []
-            for output_item in set(list(op.attribute_outputs.items())):
+            attribute_outputs_list = list(op.attribute_outputs.items())
+            attribute_outputs_list.sort(key=lambda x: x[0])
+            for output_item in attribute_outputs_list:
                 template['spec']['results'].append({'name': output_item[0], 'description': output_item[1]})
 
     # initContainers

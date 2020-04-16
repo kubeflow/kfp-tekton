@@ -25,9 +25,6 @@ spec:
     description: Merge strategy when using action patch
     name: merge-strategy
     type: string
-  - description: Content of the resource to deploy
-    name: manifest
-    type: string
   - default: ''
     description: An express to retrieval data from resource.
     name: output
@@ -40,7 +37,7 @@ spec:
     description: A label selector express to decide if the action on resource is failure.
     name: failure-condition
     type: string
-  - default: index.docker.io/fenglixa/kubeclient:v0.0.1
+  - default: index.docker.io/aipipeline/kubeclient:v0.0.1
     description: Kubectl wrapper image
     name: image
     type: string
@@ -48,11 +45,20 @@ spec:
     description: Enable set owner reference for created resource.
     name: set-ownerreference
     type: string
+  results:
+  - description: '{}'
+    name: manifest
+  - description: '{.metadata.name}'
+    name: name
   steps:
   - args:
     - --action=$(params.action)
     - --merge-strategy=$(params.merge-strategy)
-    - --manifest=$(params.manifest)
+    - "--manifest=apiVersion: batch/v1\nkind: Job\nmetadata:\n  generateName: resourceop-basic-job-\n\
+      spec:\n  backoffLimit: 4\n  template:\n    metadata:\n      name: resource-basic\n\
+      \    spec:\n      containers:\n      - command:\n        - /usr/bin/env\n  \
+      \      image: k8s.gcr.io/busybox\n        name: sample-container\n      restartPolicy:\
+      \ Never\n"
     - --output=$(params.output)
     - --success-condition=$(params.success-condition)
     - --failure-condition=$(params.failure-condition)
@@ -75,14 +81,8 @@ spec:
     params:
     - name: action
       value: create
-    - name: manifest
-      value: "apiVersion: batch/v1\nkind: Job\nmetadata:\n  generateName: resourceop-basic-job-\n\
-        spec:\n  backoffLimit: 4\n  template:\n    metadata:\n      name: resource-basic\n\
-        \    spec:\n      containers:\n      - command:\n        - /usr/bin/env\n\
-        \        image: k8s.gcr.io/busybox\n        name: sample-container\n     \
-        \ restartPolicy: Never\n"
     - name: output
-      value: '{.metadata.name},{}'
+      value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n"
     - name: set-ownerreference
       value: 'false'
     taskRef:

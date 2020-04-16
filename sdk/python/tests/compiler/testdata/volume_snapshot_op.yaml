@@ -47,12 +47,12 @@ spec:
     type: string
   - name: rok_url
   results:
-  - description: '{.status.capacity.storage}'
-    name: size
-  - description: '{.metadata.name}'
-    name: name
   - description: '{}'
     name: manifest
+  - description: '{.metadata.name}'
+    name: name
+  - description: '{.status.capacity.storage}'
+    name: size
   steps:
   - args:
     - --action=$(params.action)
@@ -132,12 +132,12 @@ spec:
     type: string
   - name: create-volume-1-name
   results:
-  - description: '{.status.restoreSize}'
-    name: size
-  - description: '{.metadata.name}'
-    name: name
   - description: '{}'
     name: manifest
+  - description: '{.metadata.name}'
+    name: name
+  - description: '{.status.restoreSize}'
+    name: size
   steps:
   - args:
     - --action=$(params.action)
@@ -194,12 +194,12 @@ spec:
   - name: create-snapshot-1-name
   - name: create-snapshot-1-size
   results:
-  - description: '{.status.capacity.storage}'
-    name: size
-  - description: '{.metadata.name}'
-    name: name
   - description: '{}'
     name: manifest
+  - description: '{.metadata.name}'
+    name: name
+  - description: '{.status.capacity.storage}'
+    name: size
   steps:
   - args:
     - --action=$(params.action)
@@ -279,12 +279,12 @@ spec:
     type: string
   - name: create-volume-2-name
   results:
-  - description: '{.status.restoreSize}'
-    name: size
-  - description: '{.metadata.name}'
-    name: name
   - description: '{}'
     name: manifest
+  - description: '{.metadata.name}'
+    name: name
+  - description: '{.status.restoreSize}'
+    name: size
   steps:
   - args:
     - --action=$(params.action)
@@ -341,12 +341,12 @@ spec:
   - name: create-snapshot-2-name
   - name: create-snapshot-2-size
   results:
-  - description: '{.status.capacity.storage}'
-    name: size
-  - description: '{.metadata.name}'
-    name: name
   - description: '{}'
     name: manifest
+  - description: '{.metadata.name}'
+    name: name
+  - description: '{.status.capacity.storage}'
+    name: size
   steps:
   - args:
     - --action=$(params.action)
@@ -406,8 +406,8 @@ spec:
     - name: action
       value: create
     - name: output
-      value: "- name: size\n  valueFrom: '{.status.capacity.storage}'\n- name: name\n\
-        \  valueFrom: '{.metadata.name}'\n- name: manifest\n  valueFrom: '{}'\n"
+      value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n\
+        - name: size\n  valueFrom: '{.status.capacity.storage}'\n"
     - name: set-ownerreference
       value: 'false'
     - name: rok_url
@@ -425,8 +425,8 @@ spec:
     - name: action
       value: create
     - name: output
-      value: "- name: size\n  valueFrom: '{.status.restoreSize}'\n- name: name\n \
-        \ valueFrom: '{.metadata.name}'\n- name: manifest\n  valueFrom: '{}'\n"
+      value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n\
+        - name: size\n  valueFrom: '{.status.restoreSize}'\n"
     - name: success-condition
       value: status.readyToUse == true
     - name: set-ownerreference
@@ -442,8 +442,8 @@ spec:
     - name: action
       value: create
     - name: output
-      value: "- name: size\n  valueFrom: '{.status.capacity.storage}'\n- name: name\n\
-        \  valueFrom: '{.metadata.name}'\n- name: manifest\n  valueFrom: '{}'\n"
+      value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n\
+        - name: size\n  valueFrom: '{.status.capacity.storage}'\n"
     - name: set-ownerreference
       value: 'false'
     - name: create-snapshot-1-name
@@ -463,8 +463,8 @@ spec:
     - name: action
       value: create
     - name: output
-      value: "- name: size\n  valueFrom: '{.status.restoreSize}'\n- name: name\n \
-        \ valueFrom: '{.metadata.name}'\n- name: manifest\n  valueFrom: '{}'\n"
+      value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n\
+        - name: size\n  valueFrom: '{.status.restoreSize}'\n"
     - name: success-condition
       value: status.readyToUse == true
     - name: set-ownerreference
@@ -480,8 +480,8 @@ spec:
     - name: action
       value: create
     - name: output
-      value: "- name: size\n  valueFrom: '{.status.capacity.storage}'\n- name: name\n\
-        \  valueFrom: '{.metadata.name}'\n- name: manifest\n  valueFrom: '{}'\n"
+      value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n\
+        - name: size\n  valueFrom: '{.status.capacity.storage}'\n"
     - name: set-ownerreference
       value: 'false'
     - name: create-snapshot-2-name

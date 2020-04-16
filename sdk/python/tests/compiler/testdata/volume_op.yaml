@@ -47,12 +47,12 @@ spec:
     type: string
   - name: size
   results:
+  - description: '{}'
+    name: manifest
   - description: '{.metadata.name}'
     name: name
   - description: '{.status.capacity.storage}'
     name: size
-  - description: '{}'
-    name: manifest
   steps:
   - args:
     - --action=$(params.action)
@@ -112,8 +112,8 @@ spec:
     - name: action
       value: create
     - name: output
-      value: "- name: name\n  valueFrom: '{.metadata.name}'\n- name: size\n  valueFrom:\
-        \ '{.status.capacity.storage}'\n- name: manifest\n  valueFrom: '{}'\n"
+      value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n\
+        - name: size\n  valueFrom: '{.status.capacity.storage}'\n"
     - name: set-ownerreference
       value: 'false'
     - name: size
