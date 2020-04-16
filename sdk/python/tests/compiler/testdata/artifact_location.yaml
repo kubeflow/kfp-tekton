@@ -15,7 +15,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: foo
+  name: generate-output
 spec:
   params:
   - name: bucket
@@ -31,7 +31,7 @@ spec:
     - -c
     - echo hello > $(results.output.path)
     image: busybox:$(inputs.params.tag)
-    name: foo
+    name: generate-output
   - env:
     - name: PIPELINERUN
       valueFrom:
@@ -67,10 +67,11 @@ kind: Pipeline
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline to demonstrate
-      how to configure the artifact\n    location for all the ops in the pipeline.",
-      "inputs": [{"default": "mlpipeline-minio-artifact", "name": "secret_name", "optional":
-      true, "type": "String"}, {"default": "1.31.0", "name": "tag", "optional": true,
-      "type": "String"}, {"default": "kubeflow", "name": "namespace", "optional":
+      how to configure the artifact\n    location for all the ops in the pipeline.
+      The default parameters are\n    set to run on the kubeflow namespace along with
+      kfp", "inputs": [{"default": "mlpipeline-minio-artifact", "name": "secret_name",
+      "optional": true, "type": "String"}, {"default": "1.31.0", "name": "tag", "optional":
+      true, "type": "String"}, {"default": "kubeflow", "name": "namespace", "optional":
       true, "type": "String"}, {"default": "mlpipeline", "name": "bucket", "optional":
       true, "type": "String"}], "name": "custom_artifact_location_pipeline"}'
   name: custom-artifact-location-pipeline
@@ -85,7 +86,7 @@ spec:
   - default: mlpipeline
     name: bucket
   tasks:
-  - name: foo
+  - name: generate-output
     params:
     - name: bucket
       value: $(params.bucket)
@@ -96,4 +97,4 @@ spec:
     - name: tag
       value: $(params.tag)
     taskRef:
-      name: foo
+      name: generate-output

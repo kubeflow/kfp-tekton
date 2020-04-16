@@ -20,7 +20,8 @@ from kubernetes.client import V1SecretKeySelector
 @dsl.pipeline(
     name="custom_artifact_location_pipeline",
     description="""A pipeline to demonstrate how to configure the artifact
-    location for all the ops in the pipeline.""",
+    location for all the ops in the pipeline. The default parameters are
+    set to run on the kubeflow namespace along with kfp""",
 )
 def custom_artifact_location(
     secret_name: str = "mlpipeline-minio-artifact",
@@ -42,7 +43,7 @@ def custom_artifact_location(
     dsl.get_pipeline_conf().set_artifact_location(pipeline_artifact_location)
 
     # artifacts in this op are stored to endpoint `minio-service.<namespace>:9000`
-    op = dsl.ContainerOp(name="foo", image="busybox:%s" % tag,
+    op = dsl.ContainerOp(name="generate-output", image="busybox:%s" % tag,
                          command=['sh', '-c', 'echo hello > /tmp/output.txt'],
                          file_outputs={'output': '/tmp/output.txt'})
 

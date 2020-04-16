@@ -104,8 +104,26 @@ Prerequisite: Install [Kubeflow Pipeline](https://www.kubeflow.org/docs/pipeline
 
 By default, artifacts are disabled because it's depended on Kubeflow Pipeline's minio setup. When artifacts are enabled, all the output parameters are also treated as artifacts and persist to the default object storage. Enabling artifacts also allow files to be downloaded or stored as artifact inputs/outputs. Since artifacts are depending on the Kubeflow Pipeline's setup by default, the generated Tekton pipeline must be deployed to the same namespace as Kubeflow Pipeline.
 
-To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--enable-artifacts` as part of your `dsl-compile-tekton` commands. e.g.
-- `dsl-compile-tekton --py sdk/python/tests/compiler/testdata/artifact_location.py --output pipeline.yaml --enable-artifacts`
+To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--enable-artifacts` as part of your `dsl-compile-tekton` commands. Then, run the pipeline on the same namespace as Kubeflow pipeline using the `-n` flag. e.g.
+```shell
+dsl-compile-tekton --py sdk/python/tests/compiler/testdata/artifact_location.py --output pipeline.yaml --enable-artifacts
+kubectl apply -f pipeline.yaml -n kubeflow
+tkn pipeline start custom-artifact-location-pipeline --showlog -n kubeflow
+```
+
+You should see the below outputs saying the artifacts are stored in the object storage you specify.
+```
+? Value for param `secret_name` of type `string`? (Default is `mlpipeline-minio-artifact`) mlpipeline-minio-artifact
+? Value for param `tag` of type `string`? (Default is `1.31.0`) 1.31.0
+? Value for param `namespace` of type `string`? (Default is `kubeflow`) kubeflow
+? Value for param `bucket` of type `string`? (Default is `mlpipeline`) mlpipeline
+Pipelinerun started: custom-artifact-location-pipeline-run-b87bq
+Waiting for logs to be available...
+
+[generate-output : copy-artifacts] Added `storage` successfully.
+[generate-output : copy-artifacts] `/tekton/results/output` -> `storage/mlpipeline/runs/custom-artifact-location-pipeline-run-b87bq/custom-artifact-location-pipeline-run-b87bq-generate-outp-7rnxv/output.txt`
+[generate-output : copy-artifacts] Total: 0 B, Transferred: 6 B, Speed: 504 B/s
+```
 
 ## Troubleshooting
 - Please be aware that defined Affinity, Node Selector, and Tolerations are applied to all the tasks in the same pipeline because there's only one podTemplate allowed in each pipeline.
