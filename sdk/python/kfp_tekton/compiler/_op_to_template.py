@@ -159,7 +159,7 @@ def _op_to_template(op: BaseOp):
                         "type": "string"
                     },
                     {
-                        "default": "index.docker.io/fenglixa/kubeclient:v0.0.1",  # Todo: The image need to be replaced, once there are official images from tekton
+                        "default": "index.docker.io/aipipeline/kubeclient:v0.0.1",  # Todo: The image need to be replaced, once there are official images from tekton
                         "description": "Kubectl wrapper image",
                         "name": "image",
                         "type": "string"
@@ -195,35 +195,12 @@ def _op_to_template(op: BaseOp):
             template['spec']['steps'][0]['env'] = [
                 {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}}
             ]
-        # Since there's only one output avalible in ResourceOp, add an ending step for producing VolumeOp
-        # and VolumeSnapshotOp outputs as a current workaround.
-        if isinstance(op, dsl.VolumeOp) or isinstance(op, dsl.VolumeSnapshotOp):
-            if isinstance(op, dsl.VolumeOp):
-                size = processed_op.k8s_resource['spec']['resources']['requests']['storage']
-            else:
-                # TODO: Fix the VolumeSnapshotOp size once resourceOp can pass multiple output results
-                # https://github.com/kubeflow/kfp-tekton/issues/94
-                size = "20Gi"
-            template['spec']['steps'].append(
-                {
-                    "image": "busybox",
-                    "name": "volumeop-results",
-                    "script": literal_str(textwrap.dedent('''\
-                                #!/bin/sh
-                                set -exo pipefail
-                                echo -n %s > /tekton/results/name
-                                echo -n %s > /tekton/results/size
-                                ''' % (processed_op.k8s_resource['metadata']['name'].replace('{{workflow.name}}', "${PIPELINERUN}"),  # Replace $() to ${} in script mode
-                                       size))),
-                    "env": [
-                        {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}}
-                    ]
-                }
-            )
-            template['spec']['results'] = [
-                {'name': 'name', 'description': 'Volume resource name'},
-                {'name': 'size', 'description': 'Volume size'}
-            ]
+
+        # Add results if exist.
+        if op.attribute_outputs.items():
+            template['spec']['results'] = []
+            for output_item in set(list(op.attribute_outputs.items())):
+                template['spec']['results'].append({'name': output_item[0], 'description': output_item[1]})
 
     # initContainers
     if processed_op.init_containers:

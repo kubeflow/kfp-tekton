@@ -37,7 +37,7 @@ spec:
     description: A label selector express to decide if the action on resource is failure.
     name: failure-condition
     type: string
-  - default: index.docker.io/fenglixa/kubeclient:v0.0.1
+  - default: index.docker.io/aipipeline/kubeclient:v0.0.1
     description: Kubectl wrapper image
     name: image
     type: string
@@ -47,10 +47,12 @@ spec:
     type: string
   - name: size
   results:
-  - description: Volume resource name
+  - description: '{.metadata.name}'
     name: name
-  - description: Volume size
+  - description: '{.status.capacity.storage}'
     name: size
+  - description: '{}'
+    name: manifest
   steps:
   - args:
     - --action=$(params.action)
@@ -70,18 +72,6 @@ spec:
     image: $(params.image)
     name: create-pvc
     resources: {}
-  - env:
-    - name: PIPELINERUN
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.labels['tekton.dev/pipelineRun']
-    image: busybox
-    name: volumeop-results
-    script: |
-      #!/bin/sh
-      set -exo pipefail
-      echo -n ${PIPELINERUN}-my-pvc > /tekton/results/name
-      echo -n $(inputs.params.size) > /tekton/results/size
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -122,7 +112,8 @@ spec:
     - name: action
       value: create
     - name: output
-      value: '{},{.metadata.name},{.status.capacity.storage}'
+      value: "- name: name\n  valueFrom: '{.metadata.name}'\n- name: size\n  valueFrom:\
+        \ '{.status.capacity.storage}'\n- name: manifest\n  valueFrom: '{}'\n"
     - name: set-ownerreference
       value: 'false'
     - name: size
