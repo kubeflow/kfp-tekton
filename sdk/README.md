@@ -97,6 +97,4 @@ To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--generate-
 - `dsl-compile-tekton --py sdk/python/tests/compiler/testdata/tolerations.py --output pipeline.yaml --generate-pipelinerun`
 
 ## Troubleshooting
-- Please be aware that defined Affinity, Node Selector, and Tolerations are applied to all the tasks in the same pipeline because there's only one podTemplate allowed in each pipeline.
-
-- When you add test cases to compiler_tests, the output of pipeline/pipelinerun yaml may has uncertain values or orders, then you can define a lambda function as normalize_compiler_output_function to pass the testing.
+- Here are [some known limitations](kfp-tekton-limitation.md) on the kfp-tekton.
