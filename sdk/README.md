@@ -127,3 +127,5 @@ Waiting for logs to be available...
 
 ## Troubleshooting
 - Please be aware that defined Affinity, Node Selector, and Tolerations are applied to all the tasks in the same pipeline because there's only one podTemplate allowed in each pipeline.
+
+- When you encounter permission issues related to ServiceAccount, refer to [sa-and-rbac](sa-and-rbac.md)
