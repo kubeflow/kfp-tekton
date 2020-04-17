@@ -347,14 +347,12 @@ class TektonCompiler(Compiler) :
             tp['value'] = failure_condition
           if tp.get('name') == "output":
             output_values = ''
-            attribute_outputs_list = list(op.attribute_outputs.items())
-            attribute_outputs_list.sort(key=lambda x: x[0])
-            for value in attribute_outputs_list:
+            for value in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
               output_value = textwrap.dedent("""\
                     - name: %s
                       valueFrom: '%s'
               """ % (value[0], value[1]))
-              output_values = output_values + output_value
+              output_values += output_value
             tp['value'] = literal_str(output_values)
 
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline

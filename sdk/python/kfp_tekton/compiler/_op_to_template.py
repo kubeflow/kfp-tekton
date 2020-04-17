@@ -174,7 +174,7 @@ def _op_to_template(op: BaseOp):
                         "args": [
                             "--action=$(params.action)",
                             "--merge-strategy=$(params.merge-strategy)",
-                            "--manifest=" + manifest,
+                            "--manifest=%s" % manifest,
                             "--output=$(params.output)",
                             "--success-condition=$(params.success-condition)",
                             "--failure-condition=$(params.failure-condition)",
@@ -197,9 +197,7 @@ def _op_to_template(op: BaseOp):
         # Add results if exist.
         if op.attribute_outputs.items():
             template['spec']['results'] = []
-            attribute_outputs_list = list(op.attribute_outputs.items())
-            attribute_outputs_list.sort(key=lambda x: x[0])
-            for output_item in attribute_outputs_list:
+            for output_item in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
                 template['spec']['results'].append({'name': output_item[0], 'description': output_item[1]})
 
     # initContainers
