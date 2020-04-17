@@ -18,8 +18,6 @@ from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs
 from kfp import dsl
 from kfp.dsl._container_op import BaseOp
 import yaml
-import textwrap
-from kfp.components._yaml_utils import load_yaml
 import re
 
 from .. import tekton_api_version
@@ -159,7 +157,7 @@ def _op_to_template(op: BaseOp):
                         "type": "string"
                     },
                     {
-                        "default": "index.docker.io/aipipeline/kubeclient:v0.0.1",  # Todo: The image need to be replaced, once there are official images from tekton
+                        "default": "index.docker.io/aipipeline/kubeclient:v0.0.2",  # Todo: The image need to be replaced, once there are official images from tekton
                         "description": "Kubectl wrapper image",
                         "name": "image",
                         "type": "string"

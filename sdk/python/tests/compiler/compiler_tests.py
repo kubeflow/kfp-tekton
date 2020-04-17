@@ -142,8 +142,8 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test compiling a volumeSnapshotOp basic workflow.
     """
-    from .testdata.volume_snapshot_op import volume_snapshotop_rokurl
-    self._test_pipeline_workflow(volume_snapshotop_rokurl, 'volume_snapshot_op.yaml')
+    from .testdata.volume_snapshot_op import volume_snapshotop_sequential
+    self._test_pipeline_workflow(volume_snapshotop_sequential, 'volume_snapshot_op.yaml')
 
   def test_hidden_output_file_workflow(self):
     """
