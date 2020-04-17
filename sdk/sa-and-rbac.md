@@ -15,13 +15,14 @@ Waiting for logs to be available...
 failed to get logs for task test-step : container step-test-step has failed  : [{"key":"StartedAt","value":"2020-04-15T22:32:50Z","resourceRef":{}}]
 ```
 
-In the above case, `tekton-pipelines` is using `default` serviceAccount which doesn't have `RBAC` setup, or the `RBAC` doesn't have enough permission for the pod to create resouce.
+In the above case, `tekton-pipelines` is using `default` ServiceAccount which doesn't have [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) setup, or the `RBAC` doesn't have enough permission for the pod to create resouce.
 
 There are two ways to solve this. We list the details here.
 
 ## setup RBAC with default serviceAccount 
+Create a ClusterRoleBinding with `cluster-admin` to the default service account. In this case, the default service account is `default` and we are deploying it to the `tekton-pipelines` namespace.
 
-Create `RBAC permission as below:
+Create `RBAC` permission as below:
 
 ```bash
 cat <<EOF |kubectl apply -f -
@@ -64,7 +65,7 @@ Waiting for logs to be available...
 
 If you want to use customized ServiceAccount, you can bind your customized ServiceAccount with RBAC.
 
-For example, if you have a ServiceAccount name: `test-sa-rbac`, create `RBAC permission as below for that ServiceAccount:
+For example, if you have a ServiceAccount name: `test-sa-rbac` in the `tekton-pipelines` namespace, create `RBAC` permission as below for that ServiceAccount:
 
 ```bash
 cat <<EOF |kubectl apply -f -
