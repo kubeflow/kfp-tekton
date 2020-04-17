@@ -5,7 +5,7 @@
 
 sdk_dev_install:
 	pip install -e sdk/python
-	sdk_unittest:
+sdk_unittest:
 	sdk/python/tests/run_tests.sh
 sdk_kfp_sample_test:
 	sdk/python/tests/test_kfp_samples.sh	
