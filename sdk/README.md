@@ -128,6 +128,8 @@ Waiting for logs to be available...
 ```
 
 ## Troubleshooting
-- Please be aware that defined Affinity, Node Selector, and Tolerations are applied to all the tasks in the same pipeline because there's only one podTemplate allowed in each pipeline.
+
+- Here are [some known limitations](kfp-tekton-limitation.md) on the kfp-tekton.
 
 - When you encounter permission issues related to ServiceAccount, refer to [sa-and-rbac](sa-and-rbac.md)
+
