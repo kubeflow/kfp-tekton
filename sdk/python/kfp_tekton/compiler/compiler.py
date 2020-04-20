@@ -382,58 +382,64 @@ class TektonCompiler(Compiler) :
 
     # Generate pipelinerun if generate-pipelinerun flag is enabled
     # The base templete is generated first and then insert optional parameters.
-    if self.generate_pipelinerun:
-      pipelinerun = {
-        'apiVersion': tekton_api_version,
-        'kind': 'PipelineRun',
-        'metadata': {
-          'name': pipeline_template['metadata']['name'] + '-run'
-        },
-        'spec': {
-          'params': [{
-            'name': p['name'],
-            'value': p.get('default', '')
-          } for p in pipeline_template['spec']['params']
-          ],
-          'pipelineRef': {
-            'name': pipeline_template['metadata']['name']
+    # Wrapped in a try catch for when this method is called directly (e.g. there is no pipeline decorator)
+    try:
+      if self.generate_pipelinerun:
+        pipelinerun = {
+          'apiVersion': tekton_api_version,
+          'kind': 'PipelineRun',
+          'metadata': {
+            'name': pipeline_template['metadata']['name'] + '-run'
+          },
+          'spec': {
+            'params': [{
+              'name': p['name'],
+              'value': p.get('default', '')
+            } for p in pipeline_template['spec']['params']
+            ],
+            'pipelineRef': {
+              'name': pipeline_template['metadata']['name']
+            }
           }
         }
-      }
 
-      pod_template = {}
-      for task in task_refs:
-        op = pipeline.ops.get(task['name'])
-        if op.affinity:
-          pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
-        if op.tolerations:
-          pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
-        if op.node_selector:
-          pod_template['nodeSelector'] = op.node_selector
+        pod_template = {}
+        for task in task_refs:
+          op = pipeline.ops.get(task['name'])
+          if op.affinity:
+            pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
+          if op.tolerations:
+            pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
+          if op.node_selector:
+            pod_template['nodeSelector'] = op.node_selector
 
-      if pod_template:
-        pipelinerun['spec']['podtemplate'] = pod_template
+        if pod_template:
+          pipelinerun['spec']['podtemplate'] = pod_template
 
-      # add workflow level timeout to pipeline run
-      if pipeline_conf.timeout:
-        pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
+        # add workflow level timeout to pipeline run
+        if pipeline_conf.timeout:
+          pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
 
-      # generate the Tekton service account template
-      service_template = {}
-      if len(pipeline_conf.image_pull_secrets) > 0:
-        service_template = {
-          'apiVersion': 'v1',
-          'kind': 'ServiceAccount',
-          'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
-        }
-      for image_pull_secret in pipeline_conf.image_pull_secrets:
-        service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
+        # generate the Tekton service account template
+        service_template = {}
+        if len(pipeline_conf.image_pull_secrets) > 0:
+          service_template = {
+            'apiVersion': 'v1',
+            'kind': 'ServiceAccount',
+            'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
+          }
+        for image_pull_secret in pipeline_conf.image_pull_secrets:
+          service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
 
-      if service_template:
-        workflow = workflow + [service_template]
-        pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
+        if service_template:
+          workflow = workflow + [service_template]
+          pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
 
-      workflow = workflow + [pipelinerun]
+        workflow = workflow + [pipelinerun]
+    except:
+      # Intentionally do nothing for when _create_pipeline_workflow is called directly (e.g. in the case of there
+      # being no pipeline decorator) and self.generate_pipeline is not set
+      pass
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 
