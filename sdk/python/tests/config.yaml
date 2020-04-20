@@ -1,0 +1,13 @@
+pipeline: compose.py
+type: nested
+components:
+- name: save_most_frequent_word
+- name: download_save_most_frequent_word
+---
+pipeline: basic_no_decorator.py
+type: no_decorator
+components:
+    function: save_most_frequent_word
+    name: 'Save Most Frequent'
+    description: 'Get Most Frequent Word and Save to GCS'
+    paramsList: ["message_param", "output_path_param"]
