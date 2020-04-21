@@ -8,7 +8,7 @@ SUCCESS: default_value.py
 FAILURE: input_artifact_raw_value.py
 FAILURE: loop_over_lightweight_output.py
 SUCCESS: param_op_transform.py
-FAILURE: param_substitutions.py
+SUCCESS: param_substitutions.py
 SUCCESS: pipelineparams.py
 FAILURE: recursive_do_while.py
 SUCCESS: recursive_while.py
@@ -16,12 +16,12 @@ SUCCESS: resourceop_basic.py
 SUCCESS: sidecar.py
 SUCCESS: timeout.py
 SUCCESS: volume.py
-FAILURE: volume_snapshotop_rokurl.py
-FAILURE: volume_snapshotop_sequential.py
-FAILURE: volumeop_basic.py
-FAILURE: volumeop_dag.py
-FAILURE: volumeop_parallel.py
-FAILURE: volumeop_sequential.py
+SUCCESS: volume_snapshotop_rokurl.py
+SUCCESS: volume_snapshotop_sequential.py
+SUCCESS: volumeop_basic.py
+SUCCESS: volumeop_dag.py
+SUCCESS: volumeop_parallel.py
+SUCCESS: volumeop_sequential.py
 SUCCESS: withitem_basic.py
 SUCCESS: withitem_nested.py
 FAILURE: withparam_global.py

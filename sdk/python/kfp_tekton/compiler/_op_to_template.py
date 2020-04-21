@@ -20,6 +20,7 @@ from kfp.dsl._container_op import BaseOp
 from kfp.dsl import ArtifactLocation
 from urllib.parse import urlparse
 import textwrap
+import yaml
 import re
 import os
 
@@ -116,6 +117,16 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
         # no output artifacts
         output_artifacts = []
 
+        # Flatten manifest because it needs to replace Argo variables
+        manifest = yaml.dump(convert_k8s_obj_to_json(processed_op.k8s_resource), default_flow_style=False)
+        argo_var = False
+        if manifest.find('{{workflow.name}}') != -1:
+            # Kubernetes Pod arguments only take $() as environment variables
+            manifest = manifest.replace('{{workflow.name}}', "$(PIPELINERUN)")
+            # Remove yaml quote in order to read bash variables
+            manifest = re.sub('name: \'([^\']+)\'', 'name: \g<1>', manifest)
+            argo_var = True
+
         # task template
         template = {
             'apiVersion': tekton_api_version,
@@ -132,11 +143,6 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                         "default": "strategic",
                         "description": "Merge strategy when using action patch",
                         "name": "merge-strategy",
-                        "type": "string"
-                    },
-                    {
-                        "description": "Content of the resource to deploy",
-                        "name": "manifest",
                         "type": "string"
                     },
                     {
@@ -158,7 +164,7 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                         "type": "string"
                     },
                     {
-                        "default": "index.docker.io/fenglixa/kubeclient:v0.0.1",  # Todo: The image need to be replaced, once there are official images from tekton
+                        "default": "index.docker.io/aipipeline/kubeclient:v0.0.2",  # Todo: The image need to be replaced, once there are official images from tekton
                         "description": "Kubectl wrapper image",
                         "name": "image",
                         "type": "string"
@@ -175,7 +181,7 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                         "args": [
                             "--action=$(params.action)",
                             "--merge-strategy=$(params.merge-strategy)",
-                            "--manifest=$(params.manifest)",
+                            "--manifest=%s" % manifest,
                             "--output=$(params.output)",
                             "--success-condition=$(params.success-condition)",
                             "--failure-condition=$(params.failure-condition)",
@@ -188,6 +194,18 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                 ]
             }
         }
+
+        # Inject Argo variable replacement as env variables.
+        if argo_var:
+            template['spec']['steps'][0]['env'] = [
+                {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}}
+            ]
+
+        # Add results if exist.
+        if op.attribute_outputs.items():
+            template['spec']['results'] = []
+            for output_item in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
+                template['spec']['results'].append({'name': output_item[0], 'description': output_item[1]})
 
     # initContainers
     if processed_op.init_containers:
