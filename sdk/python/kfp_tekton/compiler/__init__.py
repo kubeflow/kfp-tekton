@@ -39,6 +39,7 @@ def monkey_patch():
     kfp.compiler._k8s_helper.convert_k8s_obj_to_json = tekton_convert_k8s_obj_to_json
     kfp.compiler._op_to_template._op_to_template = tekton_op_to_template
     kfp.compiler._op_to_template._process_base_ops = tekton_process_base_ops
+    KFPCompiler._resolve_value_or_reference = TektonCompiler._resolve_value_or_reference
     KFPCompiler._create_dag_templates = TektonCompiler._create_dag_templates
     KFPCompiler._create_and_write_workflow = TektonCompiler._create_and_write_workflow
     KFPCompiler._create_pipeline_workflow = TektonCompiler._create_pipeline_workflow
