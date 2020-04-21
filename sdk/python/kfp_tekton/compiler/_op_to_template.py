@@ -234,6 +234,7 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
             template['spec']['params'] = inputs['parameters']
         elif isinstance(op, dsl.ResourceOp):
             template['spec']['params'].extend(inputs['parameters'])
+<<<<<<< HEAD
     if 'artifacts' in inputs:
         # The input artifacts in KFP is not pulling from s3, it will always be passed as a raw input.
         # Visit https://github.com/kubeflow/pipelines/issues/336 for more details on the implementation.
@@ -255,6 +256,10 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
             template['spec']['stepTemplate'] = {}
             template['spec']['stepTemplate']['volumeMounts'] = volume_mount_step_template
             template['spec']['volumes'] = volume_template
+=======
+    elif 'artifacts' in inputs:
+        raise NotImplementedError("input artifacts are not yet implemented")
+>>>>>>> upstream/master
 
     # outputs
     if isinstance(op, dsl.ContainerOp):
@@ -266,11 +271,17 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
     outputs_dict = _outputs_to_json(op, op_outputs, param_outputs, output_artifacts)
     if outputs_dict:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> upstream/master
         volume_mount_step_template = []
         volume_template = []
         mounted_param_paths = []
         replaced_param_list = []
+<<<<<<< HEAD
+>>>>>>> upstream/master
+=======
 >>>>>>> upstream/master
         if outputs_dict.get('parameters'):
             """
@@ -289,13 +300,19 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
             """
             template['spec']['results'] = []
 <<<<<<< HEAD
+<<<<<<< HEAD
             copy_results_step = copy.deepcopy(base_step)
 =======
+=======
+>>>>>>> upstream/master
             copy_results_step = {
                 'image': 'busybox',
                 'name': 'copy-results',
                 'script': '#!/bin/sh\nset -exo pipefail\n'
             }
+<<<<<<< HEAD
+>>>>>>> upstream/master
+=======
 >>>>>>> upstream/master
             for name, path in processed_op.file_outputs.items():
                 name = name.replace('_', '-')  # replace '_' to '-' since tekton results doesn't support underscore
