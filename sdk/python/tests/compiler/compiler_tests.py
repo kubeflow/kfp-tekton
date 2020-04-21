@@ -124,6 +124,27 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
 
+  def test_resourceOp_workflow(self):
+    """
+    Test compiling a resourceOp basic workflow.
+    """
+    from .testdata.resourceop_basic import resourceop_basic
+    self._test_pipeline_workflow(resourceop_basic, 'resourceop_basic.yaml')
+
+  def test_volumeOp_workflow(self):
+    """
+    Test compiling a volumeOp basic workflow.
+    """
+    from .testdata.volume_op import volumeop_basic
+    self._test_pipeline_workflow(volumeop_basic, 'volume_op.yaml')
+
+  def test_volumeSnapshotOp_workflow(self):
+    """
+    Test compiling a volumeSnapshotOp basic workflow.
+    """
+    from .testdata.volume_snapshot_op import volume_snapshotop_sequential
+    self._test_pipeline_workflow(volume_snapshotop_sequential, 'volume_snapshot_op.yaml')
+
   def test_hidden_output_file_workflow(self):
     """
     Test compiling a workflow with non configurable output file.
@@ -159,17 +180,42 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.pipeline_transformers import transform_pipeline
     self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
 
+  def test_artifact_location_workflow(self):
+    """
+    Test compiling a artifact location workflow.
+    """
+    from .testdata.artifact_location import custom_artifact_location
+    self._test_pipeline_workflow(custom_artifact_location, 'artifact_location.yaml', enable_artifacts=True)
+
+  def test_katib_workflow(self):
+    """
+    Test compiling a katib workflow.
+    """
+    from .testdata.katib import mnist_hpo
+    self._test_pipeline_workflow(mnist_hpo, 'katib.yaml')
+    
+  def test_imagepullsecrets_workflow(self):
+    """ 
+    Test compiling a imagepullsecrets workflow.
+    """
+    from .testdata.imagepullsecrets import imagepullsecrets_pipeline
+    self._test_pipeline_workflow(imagepullsecrets_pipeline, 'imagepullsecrets.yaml', generate_pipelinerun=True)
+
   def _test_pipeline_workflow(self, 
                               pipeline_function,
                               pipeline_yaml,
                               generate_pipelinerun=False,
+                              enable_artifacts=False,
                               normalize_compiler_output_function=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
     try:
-      compiler.TektonCompiler().compile(pipeline_function, compiled_yaml_file, generate_pipelinerun=generate_pipelinerun)
+      compiler.TektonCompiler().compile(pipeline_function,
+                                        compiled_yaml_file,
+                                        generate_pipelinerun=generate_pipelinerun,
+                                        enable_artifacts=enable_artifacts)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f
