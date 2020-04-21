@@ -1,0 +1,89 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Condition
+metadata:
+  name: condition-1
+spec:
+  check:
+    args:
+    - "EXITCODE=$(python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+      try:\n  input1=int(input1)\n  input2=int(input2)\nexcept Error:\n  input1=str(input1)\n\
+      print(0) if (input1 == input2) else print(1)' $(params.num) 5); exit $EXITCODE"
+    command:
+    - sh
+    - -c
+    image: python:alpine3.6
+  params:
+  - name: num
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Condition
+metadata:
+  name: condition-2
+spec:
+  check:
+    args:
+    - "EXITCODE=$(python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+      try:\n  input1=int(input1)\n  input2=int(input2)\nexcept Error:\n  input1=str(input1)\n\
+      print(0) if (input1 != input2) else print(1)' $(params.num) 5); exit $EXITCODE"
+    command:
+    - sh
+    - -c
+    image: python:alpine3.6
+  params:
+  - name: num
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: print
+spec:
+  steps:
+  - command:
+    - echo
+    - Number is equal to 5
+    image: alpine:3.6
+    name: print
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: print-2
+spec:
+  steps:
+  - command:
+    - echo
+    - Number is not equal to 5
+    image: alpine:3.6
+    name: print-2
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition().",
+      "inputs": [{"default": "5", "name": "num", "optional": true, "type": "Integer"}],
+      "name": "Conditional Example Pipeline"}'
+  name: conditional-example-pipeline
+spec:
+  params:
+  - default: '5'
+    name: num
+  tasks:
+  - conditions:
+    - conditionRef: condition-1
+      params:
+      - name: num
+        value: $(params.num)
+    name: print
+    params: []
+    taskRef:
+      name: print
+  - conditions:
+    - conditionRef: condition-2
+      params:
+      - name: num
+        value: $(params.num)
+    name: print-2
+    params: []
+    taskRef:
+      name: print-2

@@ -19,6 +19,7 @@ import copy
 import itertools
 import zipfile
 import re
+import textwrap
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
 from ._op_to_template import _op_to_template, literal_str
@@ -61,6 +62,13 @@ class TektonCompiler(Compiler) :
   TektonCompiler().compile(my_pipeline, 'path/to/workflow.yaml')
   ```
   """
+
+  def __init__(self, **kwargs):
+    # Intentionally set self.generate_pipeline and self.enable_artifacts to None because when _create_pipeline_workflow is called directly 
+    # (e.g. in the case of there being no pipeline decorator), self.generate_pipeline and self.enable_artifacts is not set
+    self.generate_pipelinerun = None
+    self.enable_artifacts = None
+    super().__init__(**kwargs)
 
   def _get_loop_task(self, task: Dict, op_name_to_for_loop_op):
     """Get the list of task references which will flatten the loop parameters defined in pipeline.
@@ -115,6 +123,67 @@ class TektonCompiler(Compiler) :
       del task['params']
     return task_list
 
+  def _group_to_dag_template(self, group, inputs, outputs, dependencies):
+    """Generate template given an OpsGroup.
+    inputs, outputs, dependencies are all helper dicts.
+    """
+
+    # Generate GroupOp template
+    sub_group = group
+    template = {
+      'apiVersion': tekton_api_version,
+      'metadata': {
+        'name': sub_group.name,
+      },
+      'spec': {}
+    }
+  
+    # Generate inputs section.
+    if inputs.get(group.name, None):
+      template_params = [{'name': x[1] if x[1] else x[0]} for x in inputs[group.name]]
+      template['spec']['params'] = template_params
+      
+    # Generates template sections unique to conditions
+    if isinstance(sub_group, dsl.OpsGroup) and sub_group.type == 'condition':
+      subgroup_inputs = inputs.get(sub_group.name, [])
+      condition = sub_group.condition
+
+      operand1_value = str(condition.operand1)
+      operand2_value = str(condition.operand2) 
+
+      # Generates the operand values and exits gracefully if task outputs are trying to be used
+      # TODO this can be removed when Conditions support parameter passing from task outputs at which point
+      # the _resolve_value_or_reference method from kfp.Compiler can be used instead
+      if isinstance(condition.operand1, dsl.PipelineParam):
+        parameter_name = self._pipelineparam_full_name(condition.operand1)
+        task_names = [task_name for param_name, task_name in subgroup_inputs if param_name == parameter_name]
+        if task_names[0]:
+          raise TypeError("Conditions do not currently support parameter passing from task outputs")
+        operand1_value =  '$(params.'+parameter_name+')'
+      if isinstance(condition.operand2, dsl.PipelineParam):
+        parameter_name = self._pipelineparam_full_name(condition.operand2)
+        task_names = [task_name for param_name, task_name in subgroup_inputs if param_name == parameter_name]
+        if task_names[0]:
+          raise TypeError("Conditions do not currently support parameter passing from task outputs")
+        operand1_value =  '$(params.'+parameter_name+')'
+
+      input_grab = 'EXITCODE=$(python -c \'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n'
+      try_catch = 'try:\n  input1=int(input1)\n  input2=int(input2)\nexcept Error:\n  input1=str(input1)\n'
+      if_else = 'print(0) if (input1 ' + condition.operator + ' input2) else print(1)\' ' + operand1_value + ' ' + operand2_value + '); '
+      exit_code = 'exit $EXITCODE'
+      shell_script = input_grab + try_catch + if_else + exit_code
+      
+      template['apiVersion'] = 'tekton.dev/v1alpha1'   # TODO Change to tekton_api_version once Conditions are out of v1alpha1
+      template['kind'] = 'Condition'
+      template['spec']['check'] = {
+        'args': [shell_script],
+        'command': ['sh','-c'],
+        'image': 'python:alpine3.6',
+      }
+
+    return template
+
+
   def _create_dag_templates(self, pipeline, op_transformers=None, params=None, op_to_templates_handler=None):
     """Create all groups and ops templates in the pipeline.
 
@@ -123,7 +192,8 @@ class TektonCompiler(Compiler) :
       op_transformers: A list of functions that are applied to all ContainerOp instances that are being processed.
       op_to_templates_handler: Handler which converts a base op into a list of argo templates.
     """
-    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op)])
+
+    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op, self.enable_artifacts)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise
@@ -133,11 +203,48 @@ class TektonCompiler(Compiler) :
       for transformer in op_transformers or []:
         transformer(op)
 
-    tasks = []
-    for op in pipeline.ops.values():
-      tasks.extend(op_to_steps_handler(op))
+    # Generate core data structures to prepare for argo yaml generation
+    #   op_name_to_parent_groups: op name -> list of ancestor groups including the current op
+    #   opsgroups: a dictionary of ospgroup.name -> opsgroup
+    #   inputs, outputs: group/op names -> list of tuples (full_param_name, producing_op_name)
+    #   condition_params: recursive_group/op names -> list of pipelineparam
+    #   dependencies: group/op name -> list of dependent groups/ops.
+    # Special Handling for the recursive opsgroup
+    #   op_name_to_parent_groups also contains the recursive opsgroups
+    #   condition_params from _get_condition_params_for_ops also contains the recursive opsgroups
+    #   groups does not include the recursive opsgroups
+    opsgroups = self._get_groups(root_group)
+    op_name_to_parent_groups = self._get_groups_for_ops(root_group)
+    opgroup_name_to_parent_groups = self._get_groups_for_opsgroups(root_group)
+    condition_params = self._get_condition_params_for_ops(root_group)
+    inputs, outputs = self._get_inputs_outputs(
+      pipeline,
+      root_group,
+      op_name_to_parent_groups,
+      opgroup_name_to_parent_groups,
+      condition_params,
+      {}
+    )
+    dependencies = self._get_dependencies(
+      pipeline,
+      root_group,
+      op_name_to_parent_groups,
+      opgroup_name_to_parent_groups,
+      opsgroups,
+      condition_params,
+    )
 
-    return tasks
+    templates = []
+    for opsgroup in opsgroups.keys():
+      # Only Conditions get templates in Tekton
+      if opsgroups[opsgroup].type == 'condition':
+        template = self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies)
+        templates.append(template)
+
+    for op in pipeline.ops.values():
+      templates.extend(op_to_steps_handler(op))
+
+    return templates
 
   def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
           -> List[Dict[Text, Any]]:  # Tekton change, signature/return type
@@ -154,27 +261,44 @@ class TektonCompiler(Compiler) :
       params.append(param)
 
     # generate Tekton tasks from pipeline ops
-    tasks = self._create_dag_templates(pipeline, op_transformers, params)
+    templates = self._create_dag_templates(pipeline, op_transformers, params)
 
-    # generate task reference list for Tekton pipeline
-    task_refs = [
-      {
-        'name': t['metadata']['name'],
-        'taskRef': {
-          'name': t['metadata']['name']
-        },
-        'params': [{
-            'name': p['name'],
-            'value': p.get('default', '')
-          } for p in t['spec'].get('params', [])
-        ]
-      }
-      for t in tasks
-    ]
+    # generate task and condition reference list for the Tekton Pipeline
+    condition_refs = {}
+    task_refs = []
+    for template in templates:
+      if template['kind'] == 'Condition':
+        condition_refs[template['metadata']['name']] = {
+          'conditionRef': template['metadata']['name'],
+          'params': [{
+              'name': param['name'],
+              'value': '$(params.'+param['name']+')'
+            } for param in template['spec'].get('params',[])
+          ]
+        }
+      else:
+        task_refs.append(
+          {
+            'name': template['metadata']['name'],
+            'taskRef': {
+              'name': template['metadata']['name']
+            },
+            'params': [{
+                'name': p['name'],
+                'value': p.get('default', '')
+              } for p in template['spec'].get('params', [])
+            ]
+          }
+        )
 
-    # add task dependencies
+    # add task dependencies and add condition refs to the task ref that depends on the condition
+    op_name_to_parent_groups = self._get_groups_for_ops(pipeline.groups[0])
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
+      parent_group = op_name_to_parent_groups.get(task['name'], [])
+      if parent_group:
+        if condition_refs.get(parent_group[-2],[]):
+          task['conditions'] = [condition_refs.get(op_name_to_parent_groups[task['name']][-2],[])]
       if op.dependent_names:
         task['runAfter'] = op.dependent_names
 
@@ -205,6 +329,40 @@ class TektonCompiler(Compiler) :
       if op.timeout:
         task['timeout'] = '%ds' % op.timeout
 
+    # handle resourceOp cases in pipeline
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if isinstance(op, dsl.ResourceOp):
+        action = op.resource.get('action')
+        merge_strategy = op.resource.get('merge_strategy')
+        success_condition = op.resource.get('successCondition')
+        failure_condition = op.resource.get('failureCondition')
+        task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
+        if not merge_strategy:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
+        if not success_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'success-condition']
+        if not failure_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "failure-condition"]
+        for tp in task.get('params', []):
+          if tp.get('name') == "action" and action:
+            tp['value'] = action
+          if tp.get('name') == "merge-strategy" and merge_strategy:
+            tp['value'] = merge_strategy
+          if tp.get('name') == "success-condition" and success_condition:
+            tp['value'] = success_condition
+          if tp.get('name') == "failure-condition" and failure_condition:
+            tp['value'] = failure_condition
+          if tp.get('name') == "output":
+            output_values = ''
+            for value in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
+              output_value = textwrap.dedent("""\
+                    - name: %s
+                      valueFrom: '%s'
+              """ % (value[0], value[1]))
+              output_values += output_value
+            tp['value'] = literal_str(output_values)
+
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
     op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
@@ -232,10 +390,11 @@ class TektonCompiler(Compiler) :
     }
 
     # append Task and Pipeline documents
-    workflow = tasks + [pipeline_template]
+    workflow = templates + [pipeline_template]
 
     # Generate pipelinerun if generate-pipelinerun flag is enabled
     # The base templete is generated first and then insert optional parameters.
+    # Wrapped in a try catch for when this method is called directly (e.g. there is no pipeline decorator)
     if self.generate_pipelinerun:
       pipelinerun = {
         'apiVersion': tekton_api_version,
@@ -255,7 +414,6 @@ class TektonCompiler(Compiler) :
         }
       }
 
-
       pod_template = {}
       for task in task_refs:
         op = pipeline.ops.get(task['name'])
@@ -273,25 +431,22 @@ class TektonCompiler(Compiler) :
       if pipeline_conf.timeout:
         pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
 
+      # generate the Tekton service account template
+      service_template = {}
+      if len(pipeline_conf.image_pull_secrets) > 0:
+        service_template = {
+          'apiVersion': 'v1',
+          'kind': 'ServiceAccount',
+          'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
+        }
+      for image_pull_secret in pipeline_conf.image_pull_secrets:
+        service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
+
+      if service_template:
+        workflow = workflow + [service_template]
+        pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
+
       workflow = workflow + [pipelinerun]
-
-    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
-    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
-    # https://github.com/argoproj/argo/blob/master/docs/variables.md
-    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
-    # using regular expression.
-    workflow_dump = json.dumps(workflow)
-    tekton_var_regex_rules = [
-        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
-        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
-    ]
-    for regex_rule in tekton_var_regex_rules:
-      workflow_dump = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], workflow_dump)
-
-    unsupported_vars = re.findall(r"{{[^ \t\n:,;{}]+}}", workflow_dump)
-    if unsupported_vars:
-      raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
-    workflow = json.loads(workflow_dump)
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 
@@ -390,7 +545,8 @@ class TektonCompiler(Compiler) :
               package_path,
               type_check=True,
               pipeline_conf: dsl.PipelineConf = None,
-              generate_pipelinerun=False):
+              generate_pipelinerun=False,
+              enable_artifacts=False):
     """Compile the given pipeline function into workflow yaml.
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.
@@ -402,6 +558,7 @@ class TektonCompiler(Compiler) :
       generate_pipelinerun: Generate pipelinerun yaml for Tekton pipeline compilation.
     """
     self.generate_pipelinerun = generate_pipelinerun
+    self.enable_artifacts = enable_artifacts
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
@@ -416,6 +573,22 @@ class TektonCompiler(Compiler) :
     """
     yaml.Dumper.ignore_aliases = lambda *args : True
     yaml_text = yaml.dump_all(workflow, default_flow_style=False)  # Tekton change
+
+    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
+    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
+    # https://github.com/argoproj/argo/blob/master/docs/variables.md
+    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
+    # using regular expression.
+    tekton_var_regex_rules = [
+        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
+        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
+    ]
+    for regex_rule in tekton_var_regex_rules:
+      yaml_text = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], yaml_text)
+
+    unsupported_vars = re.findall(r"{{[^ \t\n.:,;{}]+\.[^ \t\n:,;{}]+}}", yaml_text)
+    if unsupported_vars:
+      raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
 
     if '{{pipelineparam' in yaml_text:
       raise RuntimeError(
