@@ -1,0 +1,89 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: test-step
+spec:
+  params:
+  - description: Action on the resource
+    name: action
+    type: string
+  - default: strategic
+    description: Merge strategy when using action patch
+    name: merge-strategy
+    type: string
+  - description: Content of the resource to deploy
+    name: manifest
+    type: string
+  - default: ''
+    description: An express to retrieval data from resource.
+    name: output
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is success.
+    name: success-condition
+    type: string
+  - default: ''
+    description: A label selector express to decide if the action on resource is failure.
+    name: failure-condition
+    type: string
+  - default: index.docker.io/fenglixa/kubeclient:v0.0.1
+    description: Kubectl wrapper image
+    name: image
+    type: string
+  - default: 'false'
+    description: Enable set owner reference for created resource.
+    name: set-ownerreference
+    type: string
+  steps:
+  - args:
+    - --action=$(params.action)
+    - --merge-strategy=$(params.merge-strategy)
+    - --manifest=$(params.manifest)
+    - --output=$(params.output)
+    - --success-condition=$(params.success-condition)
+    - --failure-condition=$(params.failure-condition)
+    - --set-ownerreference=$(params.set-ownerreference)
+    image: $(params.image)
+    name: test-step
+    resources: {}
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on ResourceOp
+      Usage.", "name": "ResourceOp Basic"}'
+  name: resourceop-basic
+spec:
+  params: []
+  tasks:
+  - name: test-step
+    params:
+    - name: action
+      value: create
+    - name: manifest
+      value: "apiVersion: batch/v1\nkind: Job\nmetadata:\n  generateName: resourceop-basic-job-\n\
+        spec:\n  backoffLimit: 4\n  template:\n    metadata:\n      name: resource-basic\n\
+        \    spec:\n      containers:\n      - command:\n        - /usr/bin/env\n\
+        \        image: k8s.gcr.io/busybox\n        name: sample-container\n     \
+        \ restartPolicy: Never\n"
+    - name: output
+      value: '{.metadata.name},{}'
+    - name: set-ownerreference
+      value: 'false'
+    taskRef:
+      name: test-step
