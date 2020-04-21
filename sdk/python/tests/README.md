@@ -12,7 +12,7 @@ on Tekton directly.
 
 ### Running the tests
 
-    - `./sdk/python/tests/test_kfp_samples.sh`
+`./sdk/python/tests/test_kfp_samples.sh`
 
 You should see an output similar to the one below, outlining which test scripts have passed and which are failing:
 
