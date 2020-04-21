@@ -307,6 +307,8 @@ class TektonCompiler(Compiler) :
         condition_ref = condition_refs[cur_opsgroup.name][0]
         condition = cur_opsgroup.condition
         input_params = []
+
+        # Process input parameters if needed
         if isinstance(condition.operand1, dsl.PipelineParam):
           if condition.operand1.op_name:
             operand_value = '$(tasks.'+condition.operand1.op_name+'.results.'+condition.operand1.name+')'
@@ -322,6 +324,7 @@ class TektonCompiler(Compiler) :
         for param_iter in range(len(input_params)):
           condition_ref['params'][param_iter]['value'] = input_params[param_iter]
 
+        # Add ancestor conditions to the current condition ref
         if most_recent_condition:
           condition_refs[cur_opsgroup.name].extend(condition_refs[most_recent_condition])
         most_recent_condition = cur_opsgroup.name
