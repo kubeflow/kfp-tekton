@@ -336,9 +336,9 @@ class TektonCompiler(Compiler) :
     # add task dependencies and add condition refs to the task ref that depends on the condition
     op_name_to_parent_groups = self._get_groups_for_ops(pipeline.groups[0])
     for task in task_refs:
-      op = pipeline.ops.get(task['name'])    
-      parent_group = op_name_to_parent_groups.get(task['name'], [])	
-      if parent_group:	
+      op = pipeline.ops.get(task['name'])
+      parent_group = op_name_to_parent_groups.get(task['name'], [])
+      if parent_group:
         if condition_refs.get(parent_group[-2],[]):
           task['conditions'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2],[])
       if op.dependent_names:
