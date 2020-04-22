@@ -265,10 +265,6 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
         param_outputs = {}
     outputs_dict = _outputs_to_json(op, op_outputs, param_outputs, output_artifacts)
     if outputs_dict:
-        volume_mount_step_template = []
-        volume_template = []
-        mounted_param_paths = []
-        replaced_param_list = []
         if outputs_dict.get('parameters'):
             """
             Since Tekton results need to be under /tekton/results. If file output paths cannot be
