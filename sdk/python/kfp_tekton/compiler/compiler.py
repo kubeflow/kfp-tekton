@@ -248,7 +248,7 @@ class TektonCompiler(Compiler) :
 
 
   def _process_resourceOp(self, task_refs, pipeline):
-    # handle resourceOp cases in pipeline
+    """ handle resourceOp cases in pipeline """
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       if isinstance(op, dsl.ResourceOp):
@@ -281,6 +281,64 @@ class TektonCompiler(Compiler) :
               """ % (value[0], value[1]))
               output_values += output_value
             tp['value'] = literal_str(output_values)
+
+
+  def _workflow_with_pipelinerun(self, task_refs, pipeline, pipeline_template, workflow):
+    """ Generate pipelinerun template """
+    pipelinerun = {
+      'apiVersion': tekton_api_version,
+      'kind': 'PipelineRun',
+      'metadata': {
+        'name': pipeline_template['metadata']['name'] + '-run'
+      },
+      'spec': {
+        'params': [{
+          'name': p['name'],
+          'value': p.get('default', '')
+        } for p in pipeline_template['spec']['params']
+        ],
+        'pipelineRef': {
+          'name': pipeline_template['metadata']['name']
+        }
+      }
+    }
+
+    # Generate PodTemplate
+    pod_template = {}
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.affinity:
+        pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
+      if op.tolerations:
+        pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
+      if op.node_selector:
+        pod_template['nodeSelector'] = op.node_selector
+
+    if pod_template:
+      pipelinerun['spec']['podtemplate'] = pod_template
+
+    # add workflow level timeout to pipeline run
+    if pipeline.conf.timeout:
+      pipelinerun['spec']['timeout'] = '%ds' % pipeline.conf.timeout
+
+    # generate the Tekton service account template for image pull secret
+    service_template = {}
+    if len(pipeline.conf.image_pull_secrets) > 0:
+      service_template = {
+        'apiVersion': 'v1',
+        'kind': 'ServiceAccount',
+        'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
+      }
+    for image_pull_secret in pipeline.conf.image_pull_secrets:
+      service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
+
+    if service_template:
+      workflow = workflow + [service_template]
+      pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
+
+    workflow = workflow + [pipelinerun]
+
+    return workflow
 
 
   def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
@@ -360,7 +418,6 @@ class TektonCompiler(Compiler) :
         task['retries'] = op.num_retries
 
     # add timeout params to task_refs, instead of task.
-    pipeline_conf = pipeline.conf
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       if op.timeout:
@@ -400,58 +457,7 @@ class TektonCompiler(Compiler) :
 
     # Generate pipelinerun if generate-pipelinerun flag is enabled
     if self.generate_pipelinerun:
-      pipelinerun = {
-        'apiVersion': tekton_api_version,
-        'kind': 'PipelineRun',
-        'metadata': {
-          'name': pipeline_template['metadata']['name'] + '-run'
-        },
-        'spec': {
-          'params': [{
-            'name': p['name'],
-            'value': p.get('default', '')
-          } for p in pipeline_template['spec']['params']
-          ],
-          'pipelineRef': {
-            'name': pipeline_template['metadata']['name']
-          }
-        }
-      }
-
-      # Generate PodTemplate
-      pod_template = {}
-      for task in task_refs:
-        op = pipeline.ops.get(task['name'])
-        if op.affinity:
-          pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
-        if op.tolerations:
-          pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
-        if op.node_selector:
-          pod_template['nodeSelector'] = op.node_selector
-
-      if pod_template:
-        pipelinerun['spec']['podtemplate'] = pod_template
-
-      # add workflow level timeout to pipeline run
-      if pipeline_conf.timeout:
-        pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
-
-      # generate the Tekton service account template for image pull secret
-      service_template = {}
-      if len(pipeline_conf.image_pull_secrets) > 0:
-        service_template = {
-          'apiVersion': 'v1',
-          'kind': 'ServiceAccount',
-          'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
-        }
-      for image_pull_secret in pipeline_conf.image_pull_secrets:
-        service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
-
-      if service_template:
-        workflow = workflow + [service_template]
-        pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
-
-      workflow = workflow + [pipelinerun]
+      workflow = self._workflow_with_pipelinerun(task_refs, pipeline, pipeline_template, workflow)
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 
