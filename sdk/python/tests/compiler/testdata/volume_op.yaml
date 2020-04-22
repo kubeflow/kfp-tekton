@@ -15,7 +15,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-step
+  name: create-pvc
 spec:
   params:
   - description: Action on the resource
@@ -45,45 +45,84 @@ spec:
     description: Enable set owner reference for created resource.
     name: set-ownerreference
     type: string
+  - name: size
   results:
   - description: '{}'
     name: manifest
   - description: '{.metadata.name}'
     name: name
+  - description: '{.status.capacity.storage}'
+    name: size
   steps:
   - args:
     - --action=$(params.action)
     - --merge-strategy=$(params.merge-strategy)
-    - "--manifest=apiVersion: batch/v1\nkind: Job\nmetadata:\n  generateName: resourceop-basic-job-\n\
-      spec:\n  backoffLimit: 4\n  template:\n    metadata:\n      name: resource-basic\n\
-      \    spec:\n      containers:\n      - command:\n        - /usr/bin/env\n  \
-      \      image: k8s.gcr.io/busybox\n        name: sample-container\n      restartPolicy:\
-      \ Never\n"
+    - "--manifest=apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name:\
+      \ $(PIPELINERUN)-my-pvc\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n\
+      \    requests:\n      storage: $(inputs.params.size)\n"
     - --output=$(params.output)
     - --success-condition=$(params.success-condition)
     - --failure-condition=$(params.failure-condition)
     - --set-ownerreference=$(params.set-ownerreference)
+    env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
     image: $(params.image)
-    name: test-step
+    name: create-pvc
     resources: {}
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cop
+spec:
+  params:
+  - name: create-pvc-name
+  steps:
+  - args:
+    - echo foo > /mnt/file1
+    command:
+    - sh
+    - -c
+    image: library/bash:4.4.23
+    name: cop
+    volumeMounts:
+    - mountPath: /mnt
+      name: create-pvc
+  volumes:
+  - name: create-pvc
+    persistentVolumeClaim:
+      claimName: $(inputs.params.create-pvc-name)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on ResourceOp
-      Usage.", "name": "ResourceOp Basic"}'
-  name: resourceop-basic
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on VolumeOp
+      Usage.", "inputs": [{"name": "size"}], "name": "VolumeOp Basic"}'
+  name: volumeop-basic
 spec:
-  params: []
+  params:
+  - name: size
   tasks:
-  - name: test-step
+  - name: create-pvc
     params:
     - name: action
       value: create
     - name: output
-      value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n"
+      value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n\
+        - name: size\n  valueFrom: '{.status.capacity.storage}'\n"
     - name: set-ownerreference
       value: 'false'
+    - name: size
+      value: $(params.size)
     taskRef:
-      name: test-step
+      name: create-pvc
+  - name: cop
+    params:
+    - name: create-pvc-name
+      value: $(tasks.create-pvc.results.name)
+    taskRef:
+      name: cop

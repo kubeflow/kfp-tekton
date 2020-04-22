@@ -20,6 +20,7 @@ import itertools
 import zipfile
 import re
 import logging
+import textwrap
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
 from ._op_to_template import _op_to_template, literal_str
@@ -387,8 +388,8 @@ class TektonCompiler(Compiler) :
       if isinstance(op, dsl.ResourceOp):
         action = op.resource.get('action')
         merge_strategy = op.resource.get('merge_strategy')
-        success_condition = op.resource.get('success_condition')
-        failure_condition = op.resource.get('failure_condition')
+        success_condition = op.resource.get('successCondition')
+        failure_condition = op.resource.get('failureCondition')
         task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
         if not merge_strategy:
           task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
@@ -405,12 +406,15 @@ class TektonCompiler(Compiler) :
             tp['value'] = success_condition
           if tp.get('name') == "failure-condition" and failure_condition:
             tp['value'] = failure_condition
-          if tp.get('name') == "manifest":
-            manifest = yaml.dump(convert_k8s_obj_to_json(op.k8s_resource), default_flow_style=False)
-            tp['value'] = manifest
           if tp.get('name') == "output":
-            output_values = ','.join(set(list(op.attribute_outputs.values())))
-            tp['value'] = output_values
+            output_values = ''
+            for value in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
+              output_value = textwrap.dedent("""\
+                    - name: %s
+                      valueFrom: '%s'
+              """ % (value[0], value[1]))
+              output_values += output_value
+            tp['value'] = literal_str(output_values)
 
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
