@@ -16,7 +16,7 @@
 # Configuration variables
 #
 VENV = .venv
-export VIRTUAL_ENV := ${VENV}
+export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
 # Use the command from https://stackoverflow.com/a/35730328/5601796
