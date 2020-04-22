@@ -41,7 +41,7 @@ test: ## Run sdk/python unit test
 	sdk/python/tests/run_tests.sh
 
 .PHONY: report
-report: venv sdk_dev_install ## Run sdk/python kfp sample testing report
+report: ## Run sdk/python kfp sample testing report
 	sdk/python/tests/test_kfp_samples.sh
 
 .PHONY: venv-activate
