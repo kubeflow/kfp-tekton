@@ -17,13 +17,11 @@ from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
 from kfp import dsl
 from kfp.dsl._container_op import BaseOp
+from typing import List, Text, Dict, Any
 from kfp.dsl import ArtifactLocation
-from urllib.parse import urlparse
 import textwrap
 import yaml
 import re
-import os
-import copy
 
 from .. import tekton_api_version
 
@@ -44,6 +42,12 @@ def _get_base_step(name: str):
     """Base image step for running bash commands.
 
     Return a busybox base step for running bash commands.
+
+    Args:
+        name {str}: step name
+
+    Returns:
+        Dict[Text, Any]
     """
     return {
         'image': 'busybox',
@@ -52,10 +56,24 @@ def _get_base_step(name: str):
     }
 
 
-def _get_resourceOp_template(op: BaseOp, name, tekton_api_version, resource_manifest, argo_var=None):
+def _get_resourceOp_template(op: BaseOp,
+                             name: str,
+                             tekton_api_version: str,
+                             resource_manifest: str,
+                             argo_var: bool = False):
     """Tekton task template for running resourceOp
 
     Return a Tekton task template for interacting Kubernetes resources.
+
+    Args:
+        op {BaseOp}: class that inherits from BaseOp
+        name {str}: resourceOp name
+        tekton_api_version {str}: Tekton API Version
+        resource_manifest {str}: Kubernetes manifest file for deploying resources.
+        argo_var {bool}: Check whether Argo variable replacement is necessary.
+
+    Returns:
+        Dict[Text, Any]
     """
     template = {
         'apiVersion': tekton_api_version,
@@ -140,45 +158,78 @@ def _get_resourceOp_template(op: BaseOp, name, tekton_api_version, resource_mani
     return template
 
 
-def _add_mount_path(name, path, mount_path, volume_mount_step_template, volume_template, mounted_param_paths):
-    """Tekton task template for running resourceOp
-
-    Return a Tekton task template for interacting Kubernetes resources.
+def _add_mount_path(name: str,
+                    path: str,
+                    mount_path: str,
+                    volume_mount_step_template: List[Dict[Text, Any]],
+                    volume_template: List[Dict[Text, Any]],
+                    mounted_param_paths: List[Text]):
+    """
+    Add emptyDir to the given mount_path for persisting files within the same tasks
     """
     volume_mount_step_template.append({'name': name, 'mountPath': path.rsplit("/", 1)[0]})
     volume_template.append({'name': name, 'emptyDir': {}})
     mounted_param_paths.append(mount_path)
 
 
-def _update_volumes(template, volume_mount_step_template, volume_template):
+def _update_volumes(template: Dict[Text, Any],
+                    volume_mount_step_template: List[Dict[Text, Any]],
+                    volume_template: List[Dict[Text, Any]]):
+    """
+    Update the list of volumes and volumeMounts on a given template
+    """
     if volume_mount_step_template:
         template['spec']['stepTemplate'] = {}
         template['spec']['stepTemplate']['volumeMounts'] = volume_mount_step_template
         template['spec']['volumes'] = volume_template
 
 
-def _prepend_steps(prep_steps, original_steps):
+def _prepend_steps(prep_steps: List[Dict[Text, Any]], original_steps: List[Dict[Text, Any]]):
+    """
+    Prepend steps to the original step list.
+    """
     steps = prep_steps.copy()
     steps.extend(original_steps)
     return steps
 
 
-def _process_parameters(processed_op, template,outputs_dict, volume_mount_step_template, volume_template, replaced_param_list, artifact_to_result_mapping, mounted_param_paths):
-    if outputs_dict.get('parameters'):
-        """
-        Since Tekton results need to be under /tekton/results. If file output paths cannot be
-        configured to /tekton/results, we need to create the below copy step for moving
-        file outputs to the Tekton destination. BusyBox is recommended to be used on
-        small tasks because it's relatively lightweight and small compared to the ubuntu and
-        bash images.
+def _process_parameters(processed_op: BaseOp,
+                        template: Dict[Text, Any],
+                        outputs_dict: Dict[Text, Any],
+                        volume_mount_step_template: List[Dict[Text, Any]],
+                        volume_template: List[Dict[Text, Any]],
+                        replaced_param_list: List[Text],
+                        artifact_to_result_mapping: Dict[Text, Any],
+                        mounted_param_paths: List[Text]):
+    """Process output parameters to replicate the same behavior as Argo.
 
-        - image: busybox
-            name: copy-results
-            script: |
-                #!/bin/sh
-                set -exo pipefail
-                cp $LOCALPATH $(results.data.path);
-        """
+    Since Tekton results need to be under /tekton/results. If file output paths cannot be
+    configured to /tekton/results, we need to create the below copy step for moving
+    file outputs to the Tekton destination. BusyBox is recommended to be used on
+    small tasks because it's relatively lightweight and small compared to the ubuntu and
+    bash images.
+
+    - image: busybox
+        name: copy-results
+        script: |
+            #!/bin/sh
+            set -exo pipefail
+            cp $LOCALPATH $(results.data.path);
+
+    Args:
+        processed_op {BaseOp}: class that inherits from BaseOp
+        template {Dict[Text, Any]}: Task template
+        outputs_dict {Dict[Text, Any]}: Dictionary of the possible parameters/artifacts in this task
+        volume_mount_step_template {List[Dict[Text, Any]]}: Step template for the list of volume mounts
+        volume_template {List[Dict[Text, Any]]}: Task template for the list of volumes
+        replaced_param_list {List[Text]}: List of parameters that already set up as results
+        artifact_to_result_mapping {Dict[Text, Any]}: Mapping between parameter and artifact results
+        mounted_param_paths {List[Text]}: List of paths that already mounted to a volume.
+
+    Returns:
+        Dict[Text, Any]
+    """
+    if outputs_dict.get('parameters'):
         template['spec']['results'] = []
         copy_results_step = _get_base_step('copy-results')
         for name, path in processed_op.file_outputs.items():
@@ -221,8 +272,13 @@ def _process_parameters(processed_op, template,outputs_dict, volume_mount_step_t
         return {}
 
 
-def _process_artifacts(outputs_dict, volume_mount_step_template, volume_template, replaced_param_list, artifact_to_result_mapping):
-    """
+def _process_output_artifacts(outputs_dict: Dict[Text, Any],
+                              volume_mount_step_template: List[Dict[Text, Any]],
+                              volume_template: List[Dict[Text, Any]],
+                              replaced_param_list: List[Text],
+                              artifact_to_result_mapping: Dict[Text, Any]):
+    """Process output artifacts to replicate the same behavior as Argo.
+
     For storing artifacts, we will be using the minio/mc image because we need to upload artifacts to any type of
     object storage and endpoint. The minio/mc is the best image suited for this task because the default KFP
     is using minio and it also works well with other s3/gcs type of storage. 
@@ -233,6 +289,16 @@ def _process_artifacts(outputs_dict, volume_mount_step_template, volume_template
             #!/usr/bin/env sh
             mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
             mc cp /tmp/file.txt storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/file.txt
+
+    Args:
+        outputs_dict {Dict[Text, Any]}: Dictionary of the possible parameters/artifacts in this task
+        volume_mount_step_template {List[Dict[Text, Any]]}: Step template for the list of volume mounts
+        volume_template {List[Dict[Text, Any]]}: Task template for the list of volumes
+        replaced_param_list {List[Text]}: List of parameters that already set up as results
+        artifact_to_result_mapping {Dict[Text, Any]}: Mapping between parameter and artifact results
+
+    Returns:
+        Dict[Text, Any]
     """
     if outputs_dict.get('artifacts'):
         # TODO: Pull default values from KFP configmap when integrated with KFP.
@@ -311,6 +377,13 @@ def _process_base_ops(op: BaseOp):
 def _op_to_template(op: BaseOp, enable_artifacts=False):
     """Generate template given an operator inherited from BaseOp."""
 
+    # initial local variables for tracking volumes and artifacts
+    volume_mount_step_template = []
+    volume_template = []
+    mounted_param_paths = []
+    replaced_param_list = []
+    artifact_to_result_mapping = {}
+
     # NOTE in-place update to BaseOp
     # replace all PipelineParams with template var strings
     processed_op = _process_base_ops(op)
@@ -372,13 +445,6 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
     if processed_op.init_containers:
         template['spec']['steps'] = _prepend_steps(processed_op.init_containers, template['spec']['steps'])
 
-    # initial volume setup
-    volume_mount_step_template = []
-    volume_template = []
-    mounted_param_paths = []
-    replaced_param_list = []
-    artifact_to_result_mapping = {}
-
     # inputs
     input_artifact_paths = processed_op.input_artifact_paths if isinstance(processed_op, dsl.ContainerOp) else None
     artifact_arguments = processed_op.artifact_arguments if isinstance(processed_op, dsl.ContainerOp) else None
@@ -419,11 +485,11 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                                                 replaced_param_list,
                                                 artifact_to_result_mapping,
                                                 mounted_param_paths)
-        copy_artifacts_step = _process_artifacts(outputs_dict,
-                                                 volume_mount_step_template,
-                                                 volume_template,
-                                                 replaced_param_list,
-                                                 artifact_to_result_mapping)
+        copy_artifacts_step = _process_output_artifacts(outputs_dict,
+                                                        volume_mount_step_template,
+                                                        volume_template,
+                                                        replaced_param_list,
+                                                        artifact_to_result_mapping)
         if mounted_param_paths:
             copy_results_step['script'] = literal_str(copy_results_step['script'])
             template['spec']['steps'].append(copy_results_step)

@@ -414,6 +414,7 @@ class TektonCompiler(Compiler) :
         }
       }
 
+      # Generate PodTemplate
       pod_template = {}
       for task in task_refs:
         op = pipeline.ops.get(task['name'])
@@ -431,7 +432,7 @@ class TektonCompiler(Compiler) :
       if pipeline_conf.timeout:
         pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
 
-      # generate the Tekton service account template
+      # generate the Tekton service account template for image pull secret
       service_template = {}
       if len(pipeline_conf.image_pull_secrets) > 0:
         service_template = {
