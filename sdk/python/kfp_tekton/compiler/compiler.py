@@ -19,6 +19,7 @@ import copy
 import itertools
 import zipfile
 import re
+import logging
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
 from ._op_to_template import _op_to_template, literal_str
@@ -131,6 +132,7 @@ class TektonCompiler(Compiler) :
         if task_name is None:
           return '$(params.%s)' % parameter_name
         else:
+          logging.warning("Warning: Using parameter passing from task outputs to condition parameters requires running the pipeline on Tekton built from the master branch")
           return '$(params.%s)' % task_name
       else:
         return '$(params.%s)' % parameter_name

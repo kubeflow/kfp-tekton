@@ -20,6 +20,8 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
  - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
 
+In order to use parameter passing from task outputs into condition parameters Tekton must be built from master. 
+
 ## Tested Pipelines
 - [Execution Order](https://github.com/kubeflow/pipelines/blob/master/samples/core/execution_order/execution_order.py)
 - [Parallel Join](https://github.com/kubeflow/pipelines/blob/master/samples/core/parallel_join/parallel_join.py)
