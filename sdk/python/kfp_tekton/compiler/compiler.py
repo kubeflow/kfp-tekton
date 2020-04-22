@@ -63,6 +63,13 @@ class TektonCompiler(Compiler) :
   ```
   """
 
+  def __init__(self, **kwargs):
+    # Intentionally set self.generate_pipeline and self.enable_artifacts to None because when _create_pipeline_workflow is called directly 
+    # (e.g. in the case of there being no pipeline decorator), self.generate_pipeline and self.enable_artifacts is not set
+    self.generate_pipelinerun = None
+    self.enable_artifacts = None
+    super().__init__(**kwargs)
+
   def _get_loop_task(self, task: Dict, op_name_to_for_loop_op):
     """Get the list of task references which will flatten the loop parameters defined in pipeline.
 
@@ -200,7 +207,8 @@ class TektonCompiler(Compiler) :
       op_transformers: A list of functions that are applied to all ContainerOp instances that are being processed.
       op_to_templates_handler: Handler which converts a base op into a list of argo templates.
     """
-    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op)])
+
+    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op, self.enable_artifacts)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise
@@ -373,6 +381,37 @@ class TektonCompiler(Compiler) :
       if op.timeout:
         task['timeout'] = '%ds' % op.timeout
 
+    # handle resourceOp cases in pipeline
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if isinstance(op, dsl.ResourceOp):
+        action = op.resource.get('action')
+        merge_strategy = op.resource.get('merge_strategy')
+        success_condition = op.resource.get('success_condition')
+        failure_condition = op.resource.get('failure_condition')
+        task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
+        if not merge_strategy:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
+        if not success_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'success-condition']
+        if not failure_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "failure-condition"]
+        for tp in task.get('params', []):
+          if tp.get('name') == "action" and action:
+            tp['value'] = action
+          if tp.get('name') == "merge-strategy" and merge_strategy:
+            tp['value'] = merge_strategy
+          if tp.get('name') == "success-condition" and success_condition:
+            tp['value'] = success_condition
+          if tp.get('name') == "failure-condition" and failure_condition:
+            tp['value'] = failure_condition
+          if tp.get('name') == "manifest":
+            manifest = yaml.dump(convert_k8s_obj_to_json(op.k8s_resource), default_flow_style=False)
+            tp['value'] = manifest
+          if tp.get('name') == "output":
+            output_values = ','.join(set(list(op.attribute_outputs.values())))
+            tp['value'] = output_values
+
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
     op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
@@ -404,6 +443,7 @@ class TektonCompiler(Compiler) :
 
     # Generate pipelinerun if generate-pipelinerun flag is enabled
     # The base templete is generated first and then insert optional parameters.
+    # Wrapped in a try catch for when this method is called directly (e.g. there is no pipeline decorator)
     if self.generate_pipelinerun:
       pipelinerun = {
         'apiVersion': tekton_api_version,
@@ -423,7 +463,6 @@ class TektonCompiler(Compiler) :
         }
       }
 
-
       pod_template = {}
       for task in task_refs:
         op = pipeline.ops.get(task['name'])
@@ -441,25 +480,22 @@ class TektonCompiler(Compiler) :
       if pipeline_conf.timeout:
         pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
 
+      # generate the Tekton service account template
+      service_template = {}
+      if len(pipeline_conf.image_pull_secrets) > 0:
+        service_template = {
+          'apiVersion': 'v1',
+          'kind': 'ServiceAccount',
+          'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
+        }
+      for image_pull_secret in pipeline_conf.image_pull_secrets:
+        service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
+
+      if service_template:
+        workflow = workflow + [service_template]
+        pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
+
       workflow = workflow + [pipelinerun]
-
-    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
-    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
-    # https://github.com/argoproj/argo/blob/master/docs/variables.md
-    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
-    # using regular expression.
-    workflow_dump = json.dumps(workflow)
-    tekton_var_regex_rules = [
-        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
-        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
-    ]
-    for regex_rule in tekton_var_regex_rules:
-      workflow_dump = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], workflow_dump)
-
-    unsupported_vars = re.findall(r"{{[^ \t\n:,;{}]+}}", workflow_dump)
-    if unsupported_vars:
-      raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
-    workflow = json.loads(workflow_dump)
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 
@@ -558,7 +594,8 @@ class TektonCompiler(Compiler) :
               package_path,
               type_check=True,
               pipeline_conf: dsl.PipelineConf = None,
-              generate_pipelinerun=False):
+              generate_pipelinerun=False,
+              enable_artifacts=False):
     """Compile the given pipeline function into workflow yaml.
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.
@@ -570,6 +607,7 @@ class TektonCompiler(Compiler) :
       generate_pipelinerun: Generate pipelinerun yaml for Tekton pipeline compilation.
     """
     self.generate_pipelinerun = generate_pipelinerun
+    self.enable_artifacts = enable_artifacts
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
@@ -584,6 +622,22 @@ class TektonCompiler(Compiler) :
     """
     yaml.Dumper.ignore_aliases = lambda *args : True
     yaml_text = yaml.dump_all(workflow, default_flow_style=False)  # Tekton change
+
+    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
+    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
+    # https://github.com/argoproj/argo/blob/master/docs/variables.md
+    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
+    # using regular expression.
+    tekton_var_regex_rules = [
+        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
+        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
+    ]
+    for regex_rule in tekton_var_regex_rules:
+      yaml_text = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], yaml_text)
+
+    unsupported_vars = re.findall(r"{{[^ \t\n.:,;{}]+\.[^ \t\n:,;{}]+}}", yaml_text)
+    if unsupported_vars:
+      raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
 
     if '{{pipelineparam' in yaml_text:
       raise RuntimeError(

@@ -47,12 +47,15 @@ def parse_arguments():
   parser.add_argument('--generate-pipelinerun',
                       action='store_true',
                       help='enable pipelinerun yaml generation')
+  parser.add_argument('--enable-artifacts',
+                      action='store_true',
+                      help='enable artifact inputs and outputs')
 
   args = parser.parse_args()
   return args
 
 
-def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, generate_pipelinerun=False):
+def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, generate_pipelinerun=False, enable_artifacts=False):
   if len(pipeline_funcs) == 0:
     raise ValueError('A function with @dsl.pipeline decorator is required in the py file.')
 
@@ -68,16 +71,16 @@ def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_
   else:
     pipeline_func = pipeline_funcs[0]
 
-  TektonCompiler().compile(pipeline_func, output_path, type_check, generate_pipelinerun=generate_pipelinerun)
+  TektonCompiler().compile(pipeline_func, output_path, type_check, generate_pipelinerun=generate_pipelinerun, enable_artifacts=enable_artifacts)
 
 
-def compile_pyfile(pyfile, function_name, output_path, type_check, generate_pipelinerun=False):
+def compile_pyfile(pyfile, function_name, output_path, type_check, generate_pipelinerun=False, enable_artifacts=False):
   sys.path.insert(0, os.path.dirname(pyfile))
   try:
     filename = os.path.basename(pyfile)
     with kfp_compiler_main.PipelineCollectorContext() as pipeline_funcs:
       __import__(os.path.splitext(filename)[0])
-    _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, generate_pipelinerun)
+    _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, generate_pipelinerun, enable_artifacts)
   finally:
     del sys.path[0]
 
@@ -89,7 +92,7 @@ def main():
         (args.py is not None and args.package is not None)):
         raise ValueError('Either --py or --package is needed but not both.')
     if args.py:
-        compile_pyfile(args.py, args.function, args.output, not args.disable_type_check, args.generate_pipelinerun)
+        compile_pyfile(args.py, args.function, args.output, not args.disable_type_check, args.generate_pipelinerun, args.enable_artifacts)
     else:
         if args.namespace is None:
             raise ValueError('--namespace is required for compiling packages.')
