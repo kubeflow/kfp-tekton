@@ -36,6 +36,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.init_container import init_container_pipeline
     self._test_pipeline_workflow(init_container_pipeline, 'init_container.yaml')
 
+  def test_condition_workflow(self):
+    """
+    Test compiling a conditional workflow
+    """
+    from .testdata.condition import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'condition.yaml')
+
   def test_sequential_workflow(self):
     """
     Test compiling a sequential workflow.

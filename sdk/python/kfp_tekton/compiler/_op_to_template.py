@@ -445,6 +445,17 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
     if processed_op.init_containers:
         template['spec']['steps'] = _prepend_steps(processed_op.init_containers, template['spec']['steps'])
 
+    # initial base_step and volume setup
+    base_step = {
+        'image': 'busybox',
+        'name': 'copy-results',
+        'script': '#!/bin/sh\nset -exo pipefail\n'
+    }
+    volume_mount_step_template = []
+    volume_template = []
+    mounted_param_paths = []
+    replaced_param_list = []
+
     # inputs
     input_artifact_paths = processed_op.input_artifact_paths if isinstance(processed_op, dsl.ContainerOp) else None
     artifact_arguments = processed_op.artifact_arguments if isinstance(processed_op, dsl.ContainerOp) else None

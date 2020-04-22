@@ -12,7 +12,7 @@ on Tekton directly.
 
 ### Running the tests
 
-    - `./sdk/python/tests/test_kfp_samples.sh`
+`./sdk/python/tests/test_kfp_samples.sh`
 
 You should see an output similar to the one below, outlining which test scripts have passed and which are failing:
 
@@ -20,27 +20,27 @@ You should see an output similar to the one below, outlining which test scripts 
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_location.py
 SUCCESS: basic.py
-FAILURE: basic_no_decorator.py
-SUCCESS: coin.py
-FAILURE: compose.py
+/Users/animeshsingh/go/src/github.com/kubeflow/kfp-tekton/.venv/bin/python3: No module named test_util
+FAILURE: coin.py
+/Users/animeshsingh/go/src/github.com/kubeflow/kfp-tekton/.venv/bin/python3: No module named test_util
 SUCCESS: default_value.py
 FAILURE: input_artifact_raw_value.py
 FAILURE: loop_over_lightweight_output.py
 SUCCESS: param_op_transform.py
-FAILURE: param_substitutions.py
+SUCCESS: param_substitutions.py
 SUCCESS: pipelineparams.py
-SUCCESS: recursive_do_while.py
+FAILURE: recursive_do_while.py
 SUCCESS: recursive_while.py
-FAILURE: resourceop_basic.py
+SUCCESS: resourceop_basic.py
 SUCCESS: sidecar.py
 SUCCESS: timeout.py
 SUCCESS: volume.py
-FAILURE: volume_snapshotop_rokurl.py
-FAILURE: volume_snapshotop_sequential.py
-FAILURE: volumeop_basic.py
-FAILURE: volumeop_dag.py
-FAILURE: volumeop_parallel.py
-FAILURE: volumeop_sequential.py
+SUCCESS: volume_snapshotop_rokurl.py
+SUCCESS: volume_snapshotop_sequential.py
+SUCCESS: volumeop_basic.py
+SUCCESS: volumeop_dag.py
+SUCCESS: volumeop_parallel.py
+SUCCESS: volumeop_sequential.py
 SUCCESS: withitem_basic.py
 SUCCESS: withitem_nested.py
 FAILURE: withparam_global.py
@@ -48,9 +48,9 @@ FAILURE: withparam_global_dict.py
 FAILURE: withparam_output.py
 FAILURE: withparam_output_dict.py
 
-Success: 14
-Failure: 16
-Total:   30
+Success: 20
+Failure: 8
+Total:   28
 
 Compilation status report:   sdk/python/tests/test_kfp_samples_report.txt
 Accumulated compiler logs:   temp/test_kfp_samples_output.txt
