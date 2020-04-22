@@ -1,4 +1,4 @@
-# Copyright 2018 Google LLC
+# Copyright 2020 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 
 
 import kfp.dsl as dsl
+import kfp
+from kfp import dsl
 
 
 class FlipCoinOp(dsl.ContainerOp):
@@ -52,3 +54,6 @@ def flipcoin():
 
   with dsl.Condition(flip.output=='tails'):
       PrintOp('print2', flip2.output)
+
+if __name__ == '__main__':
+    kfp.compiler.Compiler().compile(flipcoin, __file__ + '.yaml')
