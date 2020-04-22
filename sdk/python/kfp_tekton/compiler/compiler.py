@@ -246,6 +246,43 @@ class TektonCompiler(Compiler) :
 
     return templates
 
+
+  def _process_resourceOp(self, task_refs, pipeline):
+    # handle resourceOp cases in pipeline
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if isinstance(op, dsl.ResourceOp):
+        action = op.resource.get('action')
+        merge_strategy = op.resource.get('merge_strategy')
+        success_condition = op.resource.get('successCondition')
+        failure_condition = op.resource.get('failureCondition')
+        task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
+        if not merge_strategy:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
+        if not success_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'success-condition']
+        if not failure_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "failure-condition"]
+        for tp in task.get('params', []):
+          if tp.get('name') == "action" and action:
+            tp['value'] = action
+          if tp.get('name') == "merge-strategy" and merge_strategy:
+            tp['value'] = merge_strategy
+          if tp.get('name') == "success-condition" and success_condition:
+            tp['value'] = success_condition
+          if tp.get('name') == "failure-condition" and failure_condition:
+            tp['value'] = failure_condition
+          if tp.get('name') == "output":
+            output_values = ''
+            for value in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
+              output_value = textwrap.dedent("""\
+                    - name: %s
+                      valueFrom: '%s'
+              """ % (value[0], value[1]))
+              output_values += output_value
+            tp['value'] = literal_str(output_values)
+
+
   def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
           -> List[Dict[Text, Any]]:  # Tekton change, signature/return type
     """Create workflow for the pipeline."""
@@ -330,38 +367,7 @@ class TektonCompiler(Compiler) :
         task['timeout'] = '%ds' % op.timeout
 
     # handle resourceOp cases in pipeline
-    for task in task_refs:
-      op = pipeline.ops.get(task['name'])
-      if isinstance(op, dsl.ResourceOp):
-        action = op.resource.get('action')
-        merge_strategy = op.resource.get('merge_strategy')
-        success_condition = op.resource.get('successCondition')
-        failure_condition = op.resource.get('failureCondition')
-        task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
-        if not merge_strategy:
-          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
-        if not success_condition:
-          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'success-condition']
-        if not failure_condition:
-          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "failure-condition"]
-        for tp in task.get('params', []):
-          if tp.get('name') == "action" and action:
-            tp['value'] = action
-          if tp.get('name') == "merge-strategy" and merge_strategy:
-            tp['value'] = merge_strategy
-          if tp.get('name') == "success-condition" and success_condition:
-            tp['value'] = success_condition
-          if tp.get('name') == "failure-condition" and failure_condition:
-            tp['value'] = failure_condition
-          if tp.get('name') == "output":
-            output_values = ''
-            for value in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
-              output_value = textwrap.dedent("""\
-                    - name: %s
-                      valueFrom: '%s'
-              """ % (value[0], value[1]))
-              output_values += output_value
-            tp['value'] = literal_str(output_values)
+    self._process_resourceOp(task_refs, pipeline)
 
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
@@ -393,8 +399,6 @@ class TektonCompiler(Compiler) :
     workflow = templates + [pipeline_template]
 
     # Generate pipelinerun if generate-pipelinerun flag is enabled
-    # The base templete is generated first and then insert optional parameters.
-    # Wrapped in a try catch for when this method is called directly (e.g. there is no pipeline decorator)
     if self.generate_pipelinerun:
       pipelinerun = {
         'apiVersion': tekton_api_version,
