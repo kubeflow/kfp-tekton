@@ -15,7 +15,7 @@
 #
 # Configuration variables
 #
-VENV = .venv
+VENV ?= .venv
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
@@ -34,4 +34,4 @@ test: venv ## run kfp/tekton unit test
 	@sdk/python/tests/run_tests.sh
 
 report: ## report kfp sample stats
-	@cd sdk/python/tests; ./test_kfp_samples.sh
+	@cd sdk/python/tests && ./test_kfp_samples.sh
