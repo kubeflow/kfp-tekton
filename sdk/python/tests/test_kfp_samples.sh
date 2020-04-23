@@ -88,7 +88,7 @@ for f in "${KFP_TESTDATA_DIR}"/*.py; do
     fi
   else
     export PYTHONPATH="${PROJECT_DIR}/sdk/python/tests"
-    python3 -m test_util "${f}" "${CONFIG_FILE}" | grep 'SUCCESS:\|FAILURE:'
+    python3 -m test_util "${f##*/}" | grep 'SUCCESS:\|FAILURE:'
   fi
 done | tee "${COMPILE_REPORT_FILE}"
 
