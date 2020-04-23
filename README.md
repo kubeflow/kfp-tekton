@@ -12,7 +12,7 @@ The work will be split in three phases. While the details of the phases are list
 
 To get started with contributing to KFP Tekton Compiler, please [follow these instructions](sdk/README.md), as well as look at [open issues on the repo](https://github.com/kubeflow/kfp-tekton/issues)
 
-We are using Kubeflow Pipelines v0.2.2 and Tekton v0.11.0 for the project currently. You may also be interested in [KFP, Argo and Tekton Features Comparision](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121) which the team has compiled, and it goes in fine-grained details.
+We are using Kubeflow Pipelines v0.2.2 and Tekton v0.11.0 for the project currently. You may also be interested in [KFP, Argo and Tekton Features Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121) which the team has compiled, and it goes in fine-grained details.
 
 ## CD Foundation
 
