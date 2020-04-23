@@ -4,7 +4,7 @@ There is an [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/)
 for `Kubeflow Pipeline` for end users to define end to end machine learning and data pipelines.
 The output of the KFP SDK compiler is YAML for [Argo](https://github.com/argoproj/argo).
 
-Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a basic pipeline with parallel and sequential steps. Please go through these steps to ensure you are setup properly to use the compiler.
+We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please go through these steps to ensure you are setup properly to use the updated compiler.
 
 ## Development Prerequisites
 
@@ -20,13 +20,11 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
  - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
 
-In order to use parameter passing from task outputs into condition parameters Tekton must be built from master. 
+In order to utilize the latest features and functions team has been driving in Tekton, we suggest that Tekton must be built from [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline). 
 
 ## Tested Pipelines
-- [Execution Order](https://github.com/kubeflow/pipelines/blob/master/samples/core/execution_order/execution_order.py)
-- [Parallel Join](https://github.com/kubeflow/pipelines/blob/master/samples/core/parallel_join/parallel_join.py)
-- [Watson ML](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/ibm-samples/watson/watson_train_serve_pipeline.py)
-    - Watson ML pipeline requires the default service account to have list, write, and delete secrets permission. Additionally, please follow the [instructions here to address the requirements and setup your Watson environments](https://github.com/kubeflow/pipelines/tree/master/samples/contrib/ibm-samples/watson) before executing the pipeline.
+
+We are running the tests over approximately 80+ Pipelines spread across different Kubeflow Pipelines repository, specifically pipelines in KFP compiler test data, KFP core samples and 3rd-party contributed pipelines folders. 
 
 ## Steps
 
