@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# Copyright 2019 Google LLC
+# Copyright 2020 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,29 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import kfp
 from kfp import dsl
 
-def print_op(msg):
-    """Print a message."""
-    return dsl.ContainerOp(
-        name='Print',
-        image='alpine:3.6',
-        command=['echo', msg],
-    )
+
+class FlipCoinOp(dsl.ContainerOp):
+
+  def __init__(self, name):
+    super(FlipCoinOp, self).__init__(
+      name=name,
+      image='python:alpine3.6',
+      command=['sh', '-c'],
+      arguments=['python -c "import random; result = \'heads\' if random.randint(0,1) == 0 '
+                 'else \'tails\'; print(result)" | tee /tmp/output'],
+      file_outputs={'output': '/tmp/output'})
+
+
+class PrintOp(dsl.ContainerOp):
+  
+  def __init__(self, name, msg):
+    super(PrintOp, self).__init__(
+      name=name,
+      image='alpine:3.6',
+      command=['echo', msg])
     
 
 @dsl.pipeline(
-    name='Conditional Example Pipeline',
-    description='Shows how to use dsl.Condition().'
+  name='Flip Coin Example Pipeline',
+  description='Shows how to use dsl.Condition().'
 )
-def conditional_pipeline(num: int = 5):
+def flipcoin():
+  flip = FlipCoinOp('flip')
 
-    with dsl.Condition(num == 5):
-        print_op('Number is equal to 5')
-    with dsl.Condition(num != 5):
-        print_op('Number is not equal to 5')
+  with dsl.Condition(flip.output=='heads'):
+    flip2 = FlipCoinOp('flip-again')
 
+    with dsl.Condition(flip2.output=='tails'):
+      PrintOp('print1', flip2.output)
+
+  with dsl.Condition(flip.output=='tails'):
+      PrintOp('print2', flip2.output)
 
 if __name__ == '__main__':
-    kfp.compiler.Compiler().compile(conditional_pipeline, __file__ + '.yaml')
+    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(flipcoin, __file__ + '.yaml')

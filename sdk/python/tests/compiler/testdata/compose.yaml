@@ -1,0 +1,90 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: download
+spec:
+  params:
+  - name: url
+  results:
+  - description: /tmp/results.txt
+    name: downloaded
+  steps:
+  - args:
+    - gsutil cat $(inputs.params.url) | tee $(results.downloaded.path)
+    command:
+    - sh
+    - -c
+    image: google/cloud-sdk
+    name: download
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-frequent
+spec:
+  params:
+  - name: download-downloaded
+  results:
+  - description: /tmp/message.txt
+    name: word
+  steps:
+  - args:
+    - python -c "from collections import Counter; words = Counter('$(inputs.params.download-downloaded)'.split());
+      print(max(words, key=words.get))" | tee $(results.word.path)
+    command:
+    - sh
+    - -c
+    image: python:3.5-jessie
+    name: get-frequent
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: save
+spec:
+  params:
+  - name: get-frequent-word
+  - name: outputpath
+  steps:
+  - args:
+    - echo $(inputs.params.get-frequent-word) | tee /tmp/results.txt | gsutil cp /tmp/results.txt
+      $(inputs.params.outputpath)
+    command:
+    - sh
+    - -c
+    image: google/cloud-sdk
+    name: save
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Download and Get Most
+      Frequent Word and Save to GCS", "inputs": [{"name": "url", "type": "String"},
+      {"name": "outputpath", "type": "String"}], "name": "Download and Save Most Frequent"}'
+  name: download-and-save-most-frequent
+spec:
+  params:
+  - name: url
+  - name: outputpath
+  tasks:
+  - name: download
+    params:
+    - name: url
+      value: $(params.url)
+    taskRef:
+      name: download
+  - name: get-frequent
+    params:
+    - name: download-downloaded
+      value: $(tasks.download.results.downloaded)
+    taskRef:
+      name: get-frequent
+  - name: save
+    params:
+    - name: get-frequent-word
+      value: $(tasks.get-frequent.results.word)
+    - name: outputpath
+      value: $(params.outputpath)
+    taskRef:
+      name: save
