@@ -102,7 +102,7 @@ To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--generate-
 
 Prerequisite: Install [Kubeflow Pipeline](https://www.kubeflow.org/docs/pipelines/installation/).
 
-By default, artifacts are disabled because it's depended on Kubeflow Pipeline's minio setup. When artifacts are enabled, all the output parameters are also treated as artifacts and persist to the default object storage. Enabling artifacts also allow files to be downloaded or stored as artifact inputs/outputs. Since artifacts are depending on the Kubeflow Pipeline's setup by default, the generated Tekton pipeline must be deployed to the same namespace as Kubeflow Pipeline.
+By default, artifacts are disabled because it's dependent on Kubeflow Pipeline's minio setup. When artifacts are enabled, all the output parameters are also treated as artifacts and persist to the default object storage. Enabling artifacts also allow files to be downloaded or stored as artifact inputs/outputs. Since artifacts are depending on the Kubeflow Pipeline's setup by default, the generated Tekton pipeline must be deployed to the same namespace as Kubeflow Pipeline.
 
 To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--enable-artifacts` as part of your `dsl-compile-tekton` commands. Then, run the pipeline on the same namespace as Kubeflow pipeline using the `-n` flag. e.g.
 ```shell
@@ -128,4 +128,4 @@ Waiting for logs to be available...
 ## Troubleshooting
 - Please be aware that defined Affinity, Node Selector, and Tolerations are applied to all the tasks in the same pipeline because there's only one podTemplate allowed in each pipeline.
 
-- When you encounter permission issues related to ServiceAccount, refer to [sa-and-rbac](sa-and-rbac.md)
+- When you encounter permission issues related to ServiceAccount, refer to [Servince Account and RBAC doc](sa-and-rbac.md)
