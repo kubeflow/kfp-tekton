@@ -1,8 +1,8 @@
 approvers:
  - animeshsingh
+ - ckadner
+ - Tomcli
 reviewers:
  - afrittoli
  - jinchihe
- - Tomcli
- - ckadner
  - fenglixa

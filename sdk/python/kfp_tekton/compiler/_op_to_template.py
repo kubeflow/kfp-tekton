@@ -23,6 +23,7 @@ import textwrap
 import yaml
 import re
 import os
+import copy
 
 from .. import tekton_api_version
 
@@ -213,6 +214,17 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
         steps.extend(template['spec']['steps'])
         template['spec']['steps'] = steps
 
+    # initial base_step and volume setup
+    base_step = {
+        'image': 'busybox',
+        'name': 'copy-results',
+        'script': '#!/bin/sh\nset -exo pipefail\n'
+    }
+    volume_mount_step_template = []
+    volume_template = []
+    mounted_param_paths = []
+    replaced_param_list = []
+
     # inputs
     input_artifact_paths = processed_op.input_artifact_paths if isinstance(processed_op, dsl.ContainerOp) else None
     artifact_arguments = processed_op.artifact_arguments if isinstance(processed_op, dsl.ContainerOp) else None
@@ -222,8 +234,27 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
             template['spec']['params'] = inputs['parameters']
         elif isinstance(op, dsl.ResourceOp):
             template['spec']['params'].extend(inputs['parameters'])
-    elif 'artifacts' in inputs:
-        raise NotImplementedError("input artifacts are not yet implemented")
+    if 'artifacts' in inputs:
+        # The input artifacts in KFP is not pulling from s3, it will always be passed as a raw input.
+        # Visit https://github.com/kubeflow/pipelines/issues/336 for more details on the implementation.
+        copy_inputs_step = copy.deepcopy(base_step)
+        copy_inputs_step['name'] = 'copy-inputs'
+        for artifact in inputs['artifacts']:
+            if 'raw' in artifact:
+                copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (artifact['raw']['data'], artifact['path'])
+            mountPath = artifact['path'].rsplit("/", 1)[0]
+            if mountPath not in mounted_param_paths:
+                volume_mount_step_template.append({'name': artifact['name'], 'mountPath': artifact['path'].rsplit("/", 1)[0]})
+                volume_template.append({'name': artifact['name'], 'emptyDir': {}})
+                mounted_param_paths.append(mountPath)
+        copy_inputs_step['script'] = literal_str(copy_inputs_step['script'])
+        with_inputs_step = [copy_inputs_step]
+        with_inputs_step.extend(template['spec']['steps'])
+        template['spec']['steps'] = with_inputs_step
+        if volume_mount_step_template:
+            template['spec']['stepTemplate'] = {}
+            template['spec']['stepTemplate']['volumeMounts'] = volume_mount_step_template
+            template['spec']['volumes'] = volume_template
 
     # outputs
     if isinstance(op, dsl.ContainerOp):
@@ -234,10 +265,6 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
         param_outputs = {}
     outputs_dict = _outputs_to_json(op, op_outputs, param_outputs, output_artifacts)
     if outputs_dict:
-        volume_mount_step_template = []
-        volume_template = []
-        mounted_param_paths = []
-        replaced_param_list = []
         if outputs_dict.get('parameters'):
             """
             Since Tekton results need to be under /tekton/results. If file output paths cannot be
@@ -254,11 +281,7 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                   cp $LOCALPATH $(results.data.path);
             """
             template['spec']['results'] = []
-            copy_results_step = {
-                'image': 'busybox',
-                'name': 'copy-results',
-                'script': '#!/bin/sh\nset -exo pipefail\n'
-            }
+            copy_results_step = copy.deepcopy(base_step)
             for name, path in processed_op.file_outputs.items():
                 name = name.replace('_', '-')  # replace '_' to '-' since tekton results doesn't support underscore
                 template['spec']['results'].append({
