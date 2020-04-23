@@ -50,16 +50,17 @@ echo "KFP version: $(git --git-dir "${KFP_CLONE_DIR}"/.git tag --points-at HEAD)
 
 # check if we are running in a Python virtual environment, if not create one
 if [ ! -d "${VENV_DIR}" ]; then
-  echo "Creating Python virtual environment..."
+  echo "Creating Python virtual environment ..."
   python3 -m venv "${VENV_DIR}"
   source "${VENV_DIR}/bin/activate"
-  pip install --upgrade pip
+  pip install -q --upgrade pip
 fi
 source "${VENV_DIR}/bin/activate"
 
-# install KFP-Tekton compiler, unless already installed
+# install KFP and KFP-Tekton compiler, unless already installed
 if ! (pip show "kfp-tekton" | grep Location | grep -q "${PROJECT_DIR}"); then
-  pip install -e "${PROJECT_DIR}/sdk/python"
+  pip install -q -e "${KFP_CLONE_DIR}/sdk/python"
+  pip install -q -e "${PROJECT_DIR}/sdk/python"
 fi
 
 echo  # just adding some separation for console output
@@ -86,14 +87,15 @@ for f in "${KFP_TESTDATA_DIR}"/*.py; do
       echo "FAILURE: ${f##*/}" | tee -a "${COMPILER_OUTPUTS_FILE}"
     fi
   else
-    python3 -m test_util ${f} ${CONFIG_FILE} | grep -E 'SUCCESS:|FAILURE:'
+    export PYTHONPATH="${PROJECT_DIR}/sdk/python/tests"
+    python3 -m test_util "${f}" "${CONFIG_FILE}" | grep 'SUCCESS:\|FAILURE:'
   fi
 done | tee "${COMPILE_REPORT_FILE}"
 
 # compile the report
 SUCCESS=$(grep -c "SUCCESS" "${COMPILE_REPORT_FILE}")
 FAILURE=$(grep -c "FAILURE" "${COMPILE_REPORT_FILE}")
-TOTAL=$(grep -c . "${COMPILE_REPORT_FILE}")
+TOTAL=$(grep -c "SUCCESS\|FAILURE" "${COMPILE_REPORT_FILE}")
 (
   echo
   echo "Success: ${SUCCESS}"
