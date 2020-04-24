@@ -129,9 +129,4 @@ Waiting for logs to be available...
 
 - Here are [some known limitations](kfp-tekton-limitation.md) on the kfp-tekton.
 
-<<<<<<< HEAD
 - When you encounter permission issues related to ServiceAccount, refer to [Servince Account and RBAC doc](sa-and-rbac.md)
-=======
-- When you encounter permission issues related to ServiceAccount, refer to [sa-and-rbac](sa-and-rbac.md)
-
->>>>>>> initial draft
