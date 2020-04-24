@@ -19,6 +19,7 @@ import copy
 import itertools
 import zipfile
 import re
+import logging
 import textwrap
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
@@ -123,6 +124,29 @@ class TektonCompiler(Compiler) :
       del task['params']
     return task_list
 
+  def _resolve_value_or_reference(self, value_or_reference, potential_references):
+    """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
+    Args:
+      value_or_reference: value or reference to be resolved. It could be basic python types or PipelineParam
+      potential_references(dict{str->str}): a dictionary of parameter names to task names
+      """
+    if isinstance(value_or_reference, dsl.PipelineParam):
+      parameter_name = self._pipelineparam_full_name(value_or_reference)
+      task_names = [task_name for param_name, task_name in potential_references if param_name == parameter_name]
+      if task_names:
+        task_name = task_names[0]
+        # When the task_name is None, the parameter comes directly from ancient ancesters
+        # instead of parents. Thus, it is resolved as the input parameter in the current group.
+        if task_name is None:
+          return '$(params.%s)' % parameter_name
+        else:
+          logging.warning("Warning: Using parameter passing from task outputs to condition parameters requires running the pipeline on Tekton built from the master branch")
+          return '$(params.%s)' % task_name
+      else:
+        return '$(params.%s)' % parameter_name
+    else:
+      return str(value_or_reference)
+
   def _group_to_dag_template(self, group, inputs, outputs, dependencies):
     """Generate template given an OpsGroup.
     inputs, outputs, dependencies are all helper dicts.
@@ -137,38 +161,30 @@ class TektonCompiler(Compiler) :
       },
       'spec': {}
     }
-  
-    # Generate inputs section.
-    if inputs.get(group.name, None):
-      template_params = [{'name': x[1] if x[1] else x[0]} for x in inputs[group.name]]
-      template['spec']['params'] = template_params
       
     # Generates template sections unique to conditions
     if isinstance(sub_group, dsl.OpsGroup) and sub_group.type == 'condition':
       subgroup_inputs = inputs.get(sub_group.name, [])
       condition = sub_group.condition
 
-      operand1_value = str(condition.operand1)
-      operand2_value = str(condition.operand2) 
+      operand1_value = self._resolve_value_or_reference(condition.operand1, subgroup_inputs)
+      operand2_value = self._resolve_value_or_reference(condition.operand2, subgroup_inputs)
 
-      # Generates the operand values and exits gracefully if task outputs are trying to be used
-      # TODO this can be removed when Conditions support parameter passing from task outputs at which point
-      # the _resolve_value_or_reference method from kfp.Compiler can be used instead
+      # Adds params to condition template
+      params = []
       if isinstance(condition.operand1, dsl.PipelineParam):
-        parameter_name = self._pipelineparam_full_name(condition.operand1)
-        task_names = [task_name for param_name, task_name in subgroup_inputs if param_name == parameter_name]
-        if task_names[0]:
-          raise TypeError("Conditions do not currently support parameter passing from task outputs")
-        operand1_value =  '$(params.'+parameter_name+')'
+        params.append({'name': operand1_value[9: len(operand1_value) - 1]}) # Substring to remove parameter reference wrapping
       if isinstance(condition.operand2, dsl.PipelineParam):
-        parameter_name = self._pipelineparam_full_name(condition.operand2)
-        task_names = [task_name for param_name, task_name in subgroup_inputs if param_name == parameter_name]
-        if task_names[0]:
-          raise TypeError("Conditions do not currently support parameter passing from task outputs")
-        operand1_value =  '$(params.'+parameter_name+')'
+        params.append({'name': operand2_value[9: len(operand1_value) - 1]}) # Substring to remove parameter reference wrapping
+      if params:
+        template['spec']['params'] = params
+
+      # Surround the operands by quotes to ensure proper parsing on script execution
+      operand1_value = '\'' + operand1_value + '\''
+      operand2_value = '\'' + operand2_value + '\''
 
       input_grab = 'EXITCODE=$(python -c \'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n'
-      try_catch = 'try:\n  input1=int(input1)\n  input2=int(input2)\nexcept Error:\n  input1=str(input1)\n'
+      try_catch = 'try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n'
       if_else = 'print(0) if (input1 ' + condition.operator + ' input2) else print(1)\' ' + operand1_value + ' ' + operand2_value + '); '
       exit_code = 'exit $EXITCODE'
       shell_script = input_grab + try_catch + if_else + exit_code
@@ -246,90 +262,9 @@ class TektonCompiler(Compiler) :
 
     return templates
 
-  def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
-          -> List[Dict[Text, Any]]:  # Tekton change, signature/return type
-    """Create workflow for the pipeline."""
-    # Input Parameters
-    params = []
-    for arg in args:
-      param = {'name': arg.name}
-      if arg.value is not None:
-        if isinstance(arg.value, (list, tuple)):
-          param['default'] = json.dumps(arg.value, sort_keys=True)
-        else:
-          param['default'] = str(arg.value)
-      params.append(param)
 
-    # generate Tekton tasks from pipeline ops
-    templates = self._create_dag_templates(pipeline, op_transformers, params)
-
-    # generate task and condition reference list for the Tekton Pipeline
-    condition_refs = {}
-    task_refs = []
-    for template in templates:
-      if template['kind'] == 'Condition':
-        condition_refs[template['metadata']['name']] = {
-          'conditionRef': template['metadata']['name'],
-          'params': [{
-              'name': param['name'],
-              'value': '$(params.'+param['name']+')'
-            } for param in template['spec'].get('params',[])
-          ]
-        }
-      else:
-        task_refs.append(
-          {
-            'name': template['metadata']['name'],
-            'taskRef': {
-              'name': template['metadata']['name']
-            },
-            'params': [{
-                'name': p['name'],
-                'value': p.get('default', '')
-              } for p in template['spec'].get('params', [])
-            ]
-          }
-        )
-
-    # add task dependencies and add condition refs to the task ref that depends on the condition
-    op_name_to_parent_groups = self._get_groups_for_ops(pipeline.groups[0])
-    for task in task_refs:
-      op = pipeline.ops.get(task['name'])
-      parent_group = op_name_to_parent_groups.get(task['name'], [])
-      if parent_group:
-        if condition_refs.get(parent_group[-2],[]):
-          task['conditions'] = [condition_refs.get(op_name_to_parent_groups[task['name']][-2],[])]
-      if op.dependent_names:
-        task['runAfter'] = op.dependent_names
-
-    # process input parameters from upstream tasks
-    pipeline_param_names = [p['name'] for p in params]
-    for task in task_refs:
-      op = pipeline.ops.get(task['name'])
-      for tp in task.get('params', []):
-        if tp['name'] in pipeline_param_names:
-          tp['value'] = '$(params.%s)' % tp['name']
-        else:
-          for pp in op.inputs:
-            if tp['name'] == pp.full_name:
-              # replace '_' to '-' since tekton results doesn't support underscore
-              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
-              break
-
-    # add retries params
-    for task in task_refs:
-      op = pipeline.ops.get(task['name'])
-      if op.num_retries:
-        task['retries'] = op.num_retries
-
-    # add timeout params to task_refs, instead of task.
-    pipeline_conf = pipeline.conf
-    for task in task_refs:
-      op = pipeline.ops.get(task['name'])
-      if op.timeout:
-        task['timeout'] = '%ds' % op.timeout
-
-    # handle resourceOp cases in pipeline
+  def _process_resourceOp(self, task_refs, pipeline):
+    """ handle resourceOp cases in pipeline """
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       if isinstance(op, dsl.ResourceOp):
@@ -363,6 +298,187 @@ class TektonCompiler(Compiler) :
               output_values += output_value
             tp['value'] = literal_str(output_values)
 
+
+  def _workflow_with_pipelinerun(self, task_refs, pipeline, pipeline_template, workflow):
+    """ Generate pipelinerun template """
+    pipelinerun = {
+      'apiVersion': tekton_api_version,
+      'kind': 'PipelineRun',
+      'metadata': {
+        'name': pipeline_template['metadata']['name'] + '-run'
+      },
+      'spec': {
+        'params': [{
+          'name': p['name'],
+          'value': p.get('default', '')
+        } for p in pipeline_template['spec']['params']
+        ],
+        'pipelineRef': {
+          'name': pipeline_template['metadata']['name']
+        }
+      }
+    }
+
+    # Generate PodTemplate
+    pod_template = {}
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.affinity:
+        pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
+      if op.tolerations:
+        pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
+      if op.node_selector:
+        pod_template['nodeSelector'] = op.node_selector
+
+    if pod_template:
+      pipelinerun['spec']['podtemplate'] = pod_template
+
+    # add workflow level timeout to pipeline run
+    if pipeline.conf.timeout:
+      pipelinerun['spec']['timeout'] = '%ds' % pipeline.conf.timeout
+
+    # generate the Tekton service account template for image pull secret
+    service_template = {}
+    if len(pipeline.conf.image_pull_secrets) > 0:
+      service_template = {
+        'apiVersion': 'v1',
+        'kind': 'ServiceAccount',
+        'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
+      }
+    for image_pull_secret in pipeline.conf.image_pull_secrets:
+      service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
+
+    if service_template:
+      workflow = workflow + [service_template]
+      pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
+
+    workflow = workflow + [pipelinerun]
+
+    return workflow
+
+
+  def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
+          -> List[Dict[Text, Any]]:  # Tekton change, signature/return type
+    """Create workflow for the pipeline."""
+    # Input Parameters
+    params = []
+    for arg in args:
+      param = {'name': arg.name}
+      if arg.value is not None:
+        if isinstance(arg.value, (list, tuple)):
+          param['default'] = json.dumps(arg.value, sort_keys=True)
+        else:
+          param['default'] = str(arg.value)
+      params.append(param)
+
+    # generate Tekton tasks from pipeline ops
+    templates = self._create_dag_templates(pipeline, op_transformers, params)
+
+    # generate task and condition reference list for the Tekton Pipeline
+    condition_refs = {}
+    task_refs = []
+    for template in templates:
+      if template['kind'] == 'Condition':
+        condition_refs[template['metadata']['name']] = [{
+          'conditionRef': template['metadata']['name'],
+          'params': [{
+              'name': param['name'],
+              'value': '$(params.'+param['name']+')'
+            } for param in template['spec'].get('params',[])
+          ]
+        }]
+      else:
+        task_refs.append(
+          {
+            'name': template['metadata']['name'],
+            'taskRef': {
+              'name': template['metadata']['name']
+            },
+            'params': [{
+                'name': p['name'],
+                'value': p.get('default', '')
+              } for p in template['spec'].get('params', [])
+            ]
+          }
+        )
+    
+    # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
+    opsgroup_stack = [pipeline.groups[0]]
+    condition_stack = [None]
+    while opsgroup_stack:
+      cur_opsgroup = opsgroup_stack.pop()
+      most_recent_condition = condition_stack.pop()
+
+      if cur_opsgroup.type == 'condition':
+        condition_ref = condition_refs[cur_opsgroup.name][0]
+        condition = cur_opsgroup.condition
+        input_params = []
+
+        # Process input parameters if needed
+        if isinstance(condition.operand1, dsl.PipelineParam):
+          if condition.operand1.op_name:
+            operand_value = '$(tasks.'+condition.operand1.op_name+'.results.'+condition.operand1.name+')'
+          else:
+            operand_value = '$(params.'+condition.operand1.name+')'
+          input_params.append(operand_value)
+        if isinstance(condition.operand2, dsl.PipelineParam):
+          if condition.operand2.op_name:
+            operand_value = '$(tasks.'+condition.operand2.op_name+'.results.'+condition.operand2.name+')'
+          else:
+            operand_value = '$(params.'+condition.operand2.name+')'
+          input_params.append(operand_value)
+        for param_iter in range(len(input_params)):
+          condition_ref['params'][param_iter]['value'] = input_params[param_iter]
+
+        # Add ancestor conditions to the current condition ref
+        if most_recent_condition:
+          condition_refs[cur_opsgroup.name].extend(condition_refs[most_recent_condition])
+        most_recent_condition = cur_opsgroup.name
+
+      opsgroup_stack.extend(cur_opsgroup.groups)
+      condition_stack.extend([most_recent_condition for x in range(len(cur_opsgroup.groups))])
+
+
+    # add task dependencies and add condition refs to the task ref that depends on the condition
+    op_name_to_parent_groups = self._get_groups_for_ops(pipeline.groups[0])
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      parent_group = op_name_to_parent_groups.get(task['name'], [])
+      if parent_group:
+        if condition_refs.get(parent_group[-2],[]):
+          task['conditions'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2],[])
+      if op.dependent_names:
+        task['runAfter'] = op.dependent_names
+
+    # process input parameters from upstream tasks
+    pipeline_param_names = [p['name'] for p in params]
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      for tp in task.get('params', []):
+        if tp['name'] in pipeline_param_names:
+          tp['value'] = '$(params.%s)' % tp['name']
+        else:
+          for pp in op.inputs:
+            if tp['name'] == pp.full_name:
+              # replace '_' to '-' since tekton results doesn't support underscore
+              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
+              break
+
+    # add retries params
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.num_retries:
+        task['retries'] = op.num_retries
+
+    # add timeout params to task_refs, instead of task.
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.timeout:
+        task['timeout'] = '%ds' % op.timeout
+
+    # handle resourceOp cases in pipeline
+    self._process_resourceOp(task_refs, pipeline)
+
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
     op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
@@ -393,60 +509,8 @@ class TektonCompiler(Compiler) :
     workflow = templates + [pipeline_template]
 
     # Generate pipelinerun if generate-pipelinerun flag is enabled
-    # The base templete is generated first and then insert optional parameters.
-    # Wrapped in a try catch for when this method is called directly (e.g. there is no pipeline decorator)
     if self.generate_pipelinerun:
-      pipelinerun = {
-        'apiVersion': tekton_api_version,
-        'kind': 'PipelineRun',
-        'metadata': {
-          'name': pipeline_template['metadata']['name'] + '-run'
-        },
-        'spec': {
-          'params': [{
-            'name': p['name'],
-            'value': p.get('default', '')
-          } for p in pipeline_template['spec']['params']
-          ],
-          'pipelineRef': {
-            'name': pipeline_template['metadata']['name']
-          }
-        }
-      }
-
-      pod_template = {}
-      for task in task_refs:
-        op = pipeline.ops.get(task['name'])
-        if op.affinity:
-          pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
-        if op.tolerations:
-          pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
-        if op.node_selector:
-          pod_template['nodeSelector'] = op.node_selector
-
-      if pod_template:
-        pipelinerun['spec']['podtemplate'] = pod_template
-
-      # add workflow level timeout to pipeline run
-      if pipeline_conf.timeout:
-        pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
-
-      # generate the Tekton service account template
-      service_template = {}
-      if len(pipeline_conf.image_pull_secrets) > 0:
-        service_template = {
-          'apiVersion': 'v1',
-          'kind': 'ServiceAccount',
-          'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
-        }
-      for image_pull_secret in pipeline_conf.image_pull_secrets:
-        service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
-
-      if service_template:
-        workflow = workflow + [service_template]
-        pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
-
-      workflow = workflow + [pipelinerun]
+      workflow = self._workflow_with_pipelinerun(task_refs, pipeline, pipeline_template, workflow)
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 
