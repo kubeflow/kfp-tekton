@@ -17,10 +17,8 @@ We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please 
 
  - Python: `3.7.5`
  - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
- - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
+ - Tekton: [`0.11.3`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3)
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
-
-In order to utilize the latest features and functions team has been driving in Tekton, we suggest that Tekton must be built from [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline). 
 
 ## Tested Pipelines
 
@@ -78,6 +76,11 @@ We are running the tests over approximately 80+ Pipelines spread across differen
       [echo : echo] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not 
       provoke thy wrath
       ```
+      
+## Build Tekton from Master
+
+In order to utilize the latest features and functions the team has been driving in Tekton, we suggest that Tekton must be built from [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline). Features that require special builds different from the 'Tested Version' will be listed below.
+      
 ## Test Kubeflow Pipelines with Tekton
 
 Please [refer to the instructions here](./python/tests/README.md) as you work on a PR test sample Kubeflow Pipelines in their test data folder to ensure your PR is improving the number of successful samples
