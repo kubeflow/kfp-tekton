@@ -7,9 +7,7 @@ is used to demonstrate the use of conditions.
 
 * [Installing Tekton Pipelines on OpenShift](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-openshift)
 
-* [Configuring artifact storage](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#configuring-artifact-storage): When using S3 bucket, make sure to update your bucket name.
-
-There are two ways to generate `Tekton` YAML. One is using `DSL-COMPILE-TEKTON` command line tool, another way is using `TektonCompiler` inside your pipeline script. Both will generate the same `Tekton` YAML file. Then apply the YAML to your cluster by using the `tkn` command.
+There are two ways to generate `Tekton` YAML. One is using `dsl-compile-tekton` command line tool, another way is using `TektonCompiler` inside your pipeline script. Both will generate the same `Tekton` YAML file. Then apply the YAML to your cluster by using the `tkn` command.
 
 * Using command line to generate YAML
 
@@ -33,14 +31,14 @@ There are two ways to generate `Tekton` YAML. One is using `DSL-COMPILE-TEKTON` 
 # Install tasks, conditions and pipeline
 kubectl apply -f condition.yaml
 
-# Check the pipeline is running in your cluster, should see somethig like `conditional-execution-pipeline` is running
+# Check the pipeline is running in your cluster, should see something like `conditional-execution-pipeline` is running
 kubectl get pipeline
 
 # Start the pipeline
 tkn pipeline start conditional-execution-pipeline --showlog
 ```
 
-If it is success, you will see something like this:
+If it runs successfully, you should see something like this:
 ```
 Pipelinerun started: conditional-execution-pipeline-run-vjkhz
 Waiting for logs to be available...
