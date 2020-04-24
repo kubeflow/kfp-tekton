@@ -17,7 +17,7 @@ We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please 
 
  - Python: `3.7.5`
  - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
- - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
+ - Tekton: [`0.11.3`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3)
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
 
 ## Tested Pipelines
@@ -80,10 +80,6 @@ We are running the tests over approximately 80+ Pipelines spread across differen
 ## Build Tekton from Master
 
 In order to utilize the latest features and functions the team has been driving in Tekton, we suggest that Tekton must be built from [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline). Features that require special builds different from the 'Tested Version' will be listed below.
-
-### Parameter passing from Task outputs to Condition inputs
-
-Parameter passing from Task outputs to Condition inputs was introduced in Tekton master due to this [PR](https://github.com/tektoncd/pipeline/pull/2354) and is [planned on being cherry picked](https://github.com/tektoncd/pipeline/pull/2477) for the next release (v0.11.3). This functionality allows pipelines to have tasks run conditional on the results of other tasks. A pipeline which demonstrates this functionality is the [condition.py](https://github.com/drewbutlerbb4/kfp-tekton/blob/tekton-master-build/sdk/python/tests/compiler/testdata/condition.py) pipeline. In order to run pipelines with this functionality Tekton should be built from v0.11.3 or master.
       
 ## Test Kubeflow Pipelines with Tekton
 
