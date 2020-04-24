@@ -20,8 +20,6 @@ We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please 
  - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
 
-In order to utilize the latest features and functions team has been driving in Tekton, we suggest that Tekton must be built from [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline). 
-
 ## Tested Pipelines
 
 We are running the tests over approximately 80+ Pipelines spread across different Kubeflow Pipelines repository, specifically pipelines in KFP compiler test data, KFP core samples and 3rd-party contributed pipelines folders. 
@@ -78,6 +76,15 @@ We are running the tests over approximately 80+ Pipelines spread across differen
       [echo : echo] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not 
       provoke thy wrath
       ```
+      
+## Build Tekton from Master
+
+In order to utilize the latest features and functions the team has been driving in Tekton, we suggest that Tekton must be built from [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline). Features that require special builds different from the 'Tested Version' will be listed below.
+
+### Parameter passing from Task outputs to Condition inputs
+
+Parameter passing from Task outputs to Condition inputs was introduced in Tekton master due to this [PR](https://github.com/tektoncd/pipeline/pull/2354) and is [planned on being cherry picked](https://github.com/tektoncd/pipeline/pull/2477) for the next release (v0.11.3). This functionality allows pipelines to have tasks run conditional on the results of other tasks. A pipeline which demonstrates this functionality is the [condition.py](https://github.com/drewbutlerbb4/kfp-tekton/blob/tekton-master-build/sdk/python/tests/compiler/testdata/condition.py) pipeline. In order to run pipelines with this functionality Tekton should be built from v0.11.3 or master.
+      
 ## Test Kubeflow Pipelines with Tekton
 
 Please [refer to the instructions here](./python/tests/README.md) as you work on a PR test sample Kubeflow Pipelines in their test data folder to ensure your PR is improving the number of successful samples
