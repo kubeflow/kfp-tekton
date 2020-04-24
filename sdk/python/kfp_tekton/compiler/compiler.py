@@ -23,7 +23,7 @@ import logging
 import textwrap
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
-from ._op_to_template import _op_to_template, literal_str
+from ._op_to_template import _op_to_template
 
 from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env
@@ -34,18 +34,6 @@ from kfp.dsl._metadata import _extract_pipeline_metadata
 from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 
 from .. import tekton_api_version
-
-
-def _literal_str_representer(dumper, data):
-  """pyyaml representer for literal yaml string dumper
-
-  Create a representer for the literal string class that converts the string
-  object with newline into yaml's literal string '|' style.
-  """
-  return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
-
-# Add the _literal_str_representer as part of the yaml dumper.
-yaml.add_representer(literal_str, _literal_str_representer)
 
 
 class TektonCompiler(Compiler) :
@@ -296,7 +284,7 @@ class TektonCompiler(Compiler) :
                       valueFrom: '%s'
               """ % (value[0], value[1]))
               output_values += output_value
-            tp['value'] = literal_str(output_values)
+            tp['value'] = output_values
 
 
   def _workflow_with_pipelinerun(self, task_refs, pipeline, pipeline_template, workflow):
@@ -497,7 +485,11 @@ class TektonCompiler(Compiler) :
       'apiVersion': tekton_api_version,
       'kind': 'Pipeline',
       'metadata': {
-        'name': pipeline.name or 'Pipeline'
+        'name': pipeline.name or 'Pipeline',
+        'annotations': {
+          # Disable Istio inject since Tekton cannot run with Istio sidecar
+          'sidecar.istio.io/inject': 'false'
+        }
       },
       'spec': {
         'params': params,

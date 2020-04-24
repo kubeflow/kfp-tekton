@@ -24,10 +24,13 @@ spec:
   steps:
   - image: busybox
     name: copy-inputs
-    script: |
-      #!/bin/sh
+    script: '#!/bin/sh
+
       set -exo pipefail
+
       echo -n "Constant artifact value" > /tmp/inputs/text/data
+
+      '
   - command:
     - cat
     - /tmp/inputs/text/data
@@ -49,10 +52,13 @@ spec:
   steps:
   - image: busybox
     name: copy-inputs
-    script: |
-      #!/bin/sh
+    script: '#!/bin/sh
+
       set -exo pipefail
+
       echo -n "Constant artifact value" > /tmp/inputs/text/data
+
+      '
   - command:
     - cat
     - /tmp/inputs/text/data
@@ -74,10 +80,13 @@ spec:
   steps:
   - image: busybox
     name: copy-inputs
-    script: |
-      #!/bin/sh
+    script: '#!/bin/sh
+
       set -exo pipefail
+
       echo -n "hard-coded artifact value" > /tmp/inputs/text/data
+
+      '
   - command:
     - cat
     - /tmp/inputs/text/data
@@ -99,11 +108,15 @@ spec:
   steps:
   - image: busybox
     name: copy-inputs
-    script: |
-      #!/bin/sh
+    script: '#!/bin/sh
+
       set -exo pipefail
+
       echo -n "Text from a file with hard-coded artifact value
+
       " > /tmp/inputs/text/data
+
+      '
   - command:
     - cat
     - /tmp/inputs/text/data
@@ -120,6 +133,7 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Pipeline shows how to
       define artifact inputs and pass raw artifacts to them.", "name": "Pipeline with
       artifact input raw argument value."}'
+    sidecar.istio.io/inject: 'false'
   name: pipeline-with-artifact-input-raw-argument-value
 spec:
   params: []

@@ -102,6 +102,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on VolumeOp
       Usage.", "inputs": [{"name": "size"}], "name": "VolumeOp Basic"}'
+    sidecar.istio.io/inject: 'false'
   name: volumeop-basic
 spec:
   params:

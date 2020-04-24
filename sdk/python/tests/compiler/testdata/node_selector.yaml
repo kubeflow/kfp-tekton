@@ -29,6 +29,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with Node Selector",
       "name": "node_selector"}'
+    sidecar.istio.io/inject: 'false'
   name: node-selector
 spec:
   params: []

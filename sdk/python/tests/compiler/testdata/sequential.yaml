@@ -55,6 +55,7 @@ metadata:
       steps.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
       "name": "url", "optional": true}, {"default": "/tmp/results.txt", "name": "path",
       "optional": true}], "name": "Sequential pipeline"}'
+    sidecar.istio.io/inject: 'false'
   name: sequential-pipeline
 spec:
   params:

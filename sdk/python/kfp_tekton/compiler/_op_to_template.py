@@ -26,18 +26,6 @@ import re
 from .. import tekton_api_version
 
 
-class literal_str(str):
-    """Literal string class for pyyaml
-
-    Literal string class is used for converting string with newline into
-    yaml's literal string format with '|'. In pyyaml, literal string
-    conversion is not natively supported in the default dumper.
-    Therefore, we need to define this class as part of the dumper
-    before compiling it into yaml.
-    """
-    pass
-
-
 def _get_base_step(name: str):
     """Base image step for running bash commands.
 
@@ -329,12 +317,11 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
             if artifact['name'] in replaced_param_list:
-                print(replaced_param_list)
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'mc cp $(results.%s.path) storage/%s/runs/$PIPELINERUN/$PODNAME/%s' % (artifact_to_result_mapping[artifact['name']], bucket, artifact['path'].rsplit("/", 1)[1])
+                    'mc cp $(results.%s.path) storage/%s/runs/$PIPELINERUN/$PODNAME/%s\n' % (artifact_to_result_mapping[artifact['name']], bucket, artifact['path'].rsplit("/", 1)[1])
             else:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'mc cp %s storage/%s/runs/$PIPELINERUN/$PODNAME/%s' % (artifact['path'], bucket, artifact['path'].rsplit("/", 1)[1])
+                    'mc cp %s storage/%s/runs/$PIPELINERUN/$PODNAME/%s\n' % (artifact['path'], bucket, artifact['path'].rsplit("/", 1)[1])
                 if artifact['path'].rsplit("/", 1)[0] not in mounted_artifact_paths:
                     volume_mount_step_template.append({'name': artifact['name'], 'mountPath': artifact['path'].rsplit("/", 1)[0]})
                     volume_template.append({'name': artifact['name'], 'emptyDir': {}})
@@ -445,17 +432,6 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
     if processed_op.init_containers:
         template['spec']['steps'] = _prepend_steps(processed_op.init_containers, template['spec']['steps'])
 
-    # initial base_step and volume setup
-    base_step = {
-        'image': 'busybox',
-        'name': 'copy-results',
-        'script': '#!/bin/sh\nset -exo pipefail\n'
-    }
-    volume_mount_step_template = []
-    volume_template = []
-    mounted_param_paths = []
-    replaced_param_list = []
-
     # inputs
     input_artifact_paths = processed_op.input_artifact_paths if isinstance(processed_op, dsl.ContainerOp) else None
     artifact_arguments = processed_op.artifact_arguments if isinstance(processed_op, dsl.ContainerOp) else None
@@ -475,7 +451,6 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
             mount_path = artifact['path'].rsplit("/", 1)[0]
             if mount_path not in mounted_param_paths:
                 _add_mount_path(artifact['name'], artifact['path'], mount_path, volume_mount_step_template, volume_template, mounted_param_paths)
-        copy_inputs_step['script'] = literal_str(copy_inputs_step['script'])
         template['spec']['steps'] = _prepend_steps([copy_inputs_step], template['spec']['steps'])
         _update_volumes(template, volume_mount_step_template, volume_template)
 
@@ -502,11 +477,9 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                                                         replaced_param_list,
                                                         artifact_to_result_mapping)
         if mounted_param_paths:
-            copy_results_step['script'] = literal_str(copy_results_step['script'])
             template['spec']['steps'].append(copy_results_step)
         _update_volumes(template, volume_mount_step_template, volume_template)
         if copy_artifacts_step:
-            copy_artifacts_step['script'] = literal_str(copy_artifacts_step['script'])
             template['spec']['steps'].append(copy_artifacts_step)
 
     # **********************************************************
