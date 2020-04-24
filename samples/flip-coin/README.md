@@ -9,12 +9,12 @@ is used to demonstrate the use of conditions.
 
 * [Configuring artifact storage](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#configuring-artifact-storage): When using S3 bucket, make sure to update your bucket name.
 
-There are two ways to generate `Tekton` YAML. One is using `DSL-COMPILE-TEKTON` command line tool, another way is using `TektonCompiler` inside your pipeline script. Both will generate a same `Tekton` YAML file. Then apply the YAML to your cluster by using `tkn` command.
+There are two ways to generate `Tekton` YAML. One is using `DSL-COMPILE-TEKTON` command line tool, another way is using `TektonCompiler` inside your pipeline script. Both will generate the same `Tekton` YAML file. Then apply the YAML to your cluster by using the `tkn` command.
 
 * Using command line to generate YAML
 
     ```
-    # Using kfp-tekton commnad line tool to generate `Tekton` YAML
+    # Using kfp-tekton command line tool to generate `Tekton` YAML
     dsl-compile-tekton --py condition.py --output condition.yaml
     ```
 
