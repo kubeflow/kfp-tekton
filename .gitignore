@@ -8,6 +8,7 @@
 *.pyc
 bin
 *.tar.gz
+*.ipynb_checkpoints
 
 # Test binary, build with `go test -c`
 *.test
