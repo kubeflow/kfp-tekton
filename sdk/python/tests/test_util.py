@@ -15,21 +15,22 @@
 # limitations under the License.
 
 import sys
+import os
 import unittest
+from shutil import copyfile
 from compiler.compiler_tests import TestTektonCompiler
 
 if __name__ == '__main__':
-    test_name = sys.argv[1]
+    test_name = os.path.splitext(os.path.split(sys.argv[1])[1])[0]
+    save_path = sys.argv[2]
+    golden_path = os.path.join(os.path.dirname(__file__), 'compiler/testdata', test_name+'.yaml')
 
-    if test_name == "compose.py":
+    if test_name == "compose":
         test = TestTektonCompiler().test_compose
-    elif test_name == "basic_no_decorator.py":
+    elif test_name == "basic_no_decorator":
         test = TestTektonCompiler().test_basic_no_decorator
     else:
         raise ValueError('Pipeline named \''+test_name+'\' is not recognized')
 
-    try:
-        test()
-        print("SUCCESS:", test_name)
-    except:
-        print("FAILURE:", test_name)
+    test()
+    copyfile(golden_path, save_path)
