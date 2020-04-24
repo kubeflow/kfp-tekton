@@ -20,7 +20,7 @@ Please be aware that defined Affinity, Node Selector, and Tolerations are applie
 
 ### Sidecars
 
-When you run kfp-tekton pipeline with sidecars, you may notice a completed pod and a sidercar pod with Error. There are known issues with the existing implementation of sidecars:
+When you run kfp-tekton pipeline with sidecars, you may notice a completed pod and a sidecar pod with error. There are known issues with the existing implementation of sidecars:
 
 When the nop image does provide the sidecar's command, the sidecar will continue to run even after nop has been swapped into the sidecar container's image field. See the issue tracking this bug for the issue tracking this bug. Until this issue is resolved the best way to avoid it is to avoid overriding the nop image when deploying the tekton controller, or ensuring that the overridden nop image contains as few commands as possible.
 
@@ -32,5 +32,5 @@ kubectl get pods will show a Completed pod when a sidecar exits successfully but
 
 ### Store the *secrets* which need to pull images
 
-If your tetkon pipeline needs `secrets` to pull images from the private repository, currently the kfp-tekton compiler will generate a `ServiceAccount` and store the `secrets` in the `ServiceAccount`. But this approach is not ideal way to solve this problem, because it adds extra work to the server to maintain the `ServiceAccount`, the better approach will be using `podTemplate` to store the image pull `secrets`. The Tekton pipeline doesn't support this feature yet. Here is the [tracking issue](https://github.com/tektoncd/pipeline/issues/2339) in the tekton pipeline.
+If your tetkon pipeline needs `secrets` to pull images from the private repository, currently the kfp-tekton compiler will generate a `ServiceAccount` and store the `secrets` in the `ServiceAccount`. But this approach is not an ideal way to solve this problem, because it adds extra work to the server to maintain the `ServiceAccount`, the better approach will be using `podTemplate` to store the image pull `secrets`. The Tekton pipeline doesn't support this feature yet. Here is the [tracking issue](https://github.com/tektoncd/pipeline/issues/2339) in the tekton pipeline.
 
