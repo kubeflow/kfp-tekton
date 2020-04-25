@@ -355,6 +355,7 @@ metadata:
       the design doc. Please enable the\n    volume snapshot feature gate in order
       to run this pipeline.", "inputs": [{"name": "url"}], "name": "VolumeSnapshotOp
       Sequential"}'
+    sidecar.istio.io/inject: 'false'
   name: volumesnapshotop-sequential
 spec:
   params:

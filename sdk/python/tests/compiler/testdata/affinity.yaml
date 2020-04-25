@@ -29,6 +29,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with affinity",
       "name": "affinity"}'
+    sidecar.istio.io/inject: 'false'
   name: affinity
 spec:
   params: []

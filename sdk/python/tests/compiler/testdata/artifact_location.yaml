@@ -57,10 +57,14 @@ spec:
           name: $(inputs.params.secret_name)
     image: minio/mc
     name: copy-artifacts
-    script: |-
-      #!/usr/bin/env sh
-      mc config host add storage http://minio-service.$(inputs.params.namespace):9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+    script: '#!/usr/bin/env sh
+
+      mc config host add storage http://minio-service.$(inputs.params.namespace):9000
+      $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+
       mc cp $(results.output.path) storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/output.txt
+
+      '
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -74,6 +78,7 @@ metadata:
       true, "type": "String"}, {"default": "kubeflow", "name": "namespace", "optional":
       true, "type": "String"}, {"default": "mlpipeline", "name": "bucket", "optional":
       true, "type": "String"}], "name": "custom_artifact_location_pipeline"}'
+    sidecar.istio.io/inject: 'false'
   name: custom-artifact-location-pipeline
 spec:
   params:

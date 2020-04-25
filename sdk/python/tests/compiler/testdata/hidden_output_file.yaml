@@ -34,10 +34,13 @@ spec:
     name: download-file
   - image: busybox
     name: copy-results
-    script: |
-      #!/bin/sh
+    script: '#!/bin/sh
+
       set -exo pipefail
+
       cp /tmp/results.txt $(results.data.path);
+
+      '
   volumes:
   - emptyDir: {}
     name: data
@@ -65,6 +68,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Run a script that passes
       file to a non configurable path", "name": "Hidden output file pipeline"}'
+    sidecar.istio.io/inject: 'false'
   name: hidden-output-file-pipeline
 spec:
   params: []

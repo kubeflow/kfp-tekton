@@ -51,6 +51,7 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline shows how
       to apply functions to all ops in the pipeline by pipeline transformers", "name":
       "Pipeline transformer"}'
+    sidecar.istio.io/inject: 'false'
   name: pipeline-transformer
 spec:
   params: []

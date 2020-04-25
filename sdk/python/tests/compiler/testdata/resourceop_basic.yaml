@@ -73,6 +73,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on ResourceOp
       Usage.", "name": "ResourceOp Basic"}'
+    sidecar.istio.io/inject: 'false'
   name: resourceop-basic
 spec:
   params: []
