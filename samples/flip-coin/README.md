@@ -18,12 +18,7 @@ There are two ways to generate `Tekton` YAML. One is using `dsl-compile-tekton` 
 
 * Using `TektonCompiler` to generate YAML
     ```
-    # Replace the kfp compile code in the condition.py's `main`: 
-    # From
-    #   `kfp.compiler.Compiler().compile(flipcoin_pipeline, __file__ + '.yaml')`
-    # To
-    #   `from kfp_tekton.compiler import TektonCompiler`
-    #   `TektonCompiler().compile(flipcoin_pipeline, __file__.replace('.py', '.yaml'))`
+    # Compile the python code
     python condition.py
     ```
 
