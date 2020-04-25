@@ -226,18 +226,7 @@ class TestTektonCompiler(unittest.TestCase):
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
-    try:
-      compiler.TektonCompiler().compile(pipeline_function,
-                                        compiled_yaml_file,
-                                        generate_pipelinerun=generate_pipelinerun,
-                                        enable_artifacts=enable_artifacts)
-      with open(compiled_yaml_file, 'r') as f:
-        f = normalize_compiler_output_function(
-          f.read()) if normalize_compiler_output_function else f
-        compiled = list(yaml.safe_load_all(f))
-      if GENERATE_GOLDEN_YAML:
-        with open(golden_yaml_file, 'w') as f:
-          f.write(textwrap.dedent("""\
+    license_header = textwrap.dedent("""\
                                   # Copyright 2020 kubeflow.org
                                   #
                                   # Licensed under the Apache License, Version 2.0 (the "License");
@@ -252,7 +241,19 @@ class TestTektonCompiler(unittest.TestCase):
                                   # See the License for the specific language governing permissions and
                                   # limitations under the License.
 
-                                  """))
+                                  """)
+    try:
+      compiler.TektonCompiler().compile(pipeline_function,
+                                        compiled_yaml_file,
+                                        generate_pipelinerun=generate_pipelinerun,
+                                        enable_artifacts=enable_artifacts)
+      with open(compiled_yaml_file, 'r') as f:
+        f = normalize_compiler_output_function(
+          f.read()) if normalize_compiler_output_function else f
+        compiled = list(yaml.safe_load_all(f))
+      if GENERATE_GOLDEN_YAML:
+        with open(golden_yaml_file, 'w') as f:
+          f.write(license_header)
         with open(golden_yaml_file, 'a+') as f:
           yaml.dump_all(compiled, f, default_flow_style=False)
       else:
