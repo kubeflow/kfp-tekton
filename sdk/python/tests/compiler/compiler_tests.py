@@ -254,14 +254,7 @@ class TestTektonCompiler(unittest.TestCase):
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f
         compiled = list(yaml.safe_load_all(f))
-      if GENERATE_GOLDEN_YAML:
-        with open(golden_yaml_file, 'w') as f:
-          yaml.dump_all(compiled, f, default_flow_style=False)
-      else:
-        with open(golden_yaml_file, 'r') as f:
-          golden = list(yaml.safe_load_all(f))
-        self.maxDiff = None
-        self.assertEqual(golden, compiled)
+      self._verify_compiled_workflow(golden_yaml_file, compiled)
     finally:
       shutil.rmtree(temp_dir)
 
@@ -278,14 +271,7 @@ class TestTektonCompiler(unittest.TestCase):
           params_dict.get('description', None),
           params_dict.get('paramsList', None),
           params_dict.get('conf', None))
-      if GENERATE_GOLDEN_YAML:
-        with open(golden_yaml_file, 'w') as f:
-          yaml.dump_all(compiled_workflow, f, default_flow_style=False)
-      else:
-        with open(golden_yaml_file, 'r') as f:
-          golden = list(yaml.safe_load_all(f))
-        self.maxDiff = None
-        self.assertEqual(golden, compiled_workflow)
+      self._verify_compiled_workflow(golden_yaml_file, compiled_workflow)
     finally:
       shutil.rmtree(temp_dir)
 
@@ -312,13 +298,17 @@ class TestTektonCompiler(unittest.TestCase):
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f
         compiled = list(yaml.safe_load_all(f))
-      if GENERATE_GOLDEN_YAML:
-        with open(golden_yaml_file, 'w') as f:
-          yaml.dump_all(compiled, f, default_flow_style=False)
-      else:
-        with open(golden_yaml_file, 'r') as f:
-          golden = list(yaml.safe_load_all(f))
-        self.maxDiff = None
-        self.assertEqual(golden, compiled)
+      self._verify_compiled_workflow(golden_yaml_file, compiled)
     finally:
       shutil.rmtree(temp_dir)
+
+  def _verify_compiled_workflow(self, golden_yaml_file, compiled_workflow):
+
+    if GENERATE_GOLDEN_YAML:
+      with open(golden_yaml_file, 'w') as f:
+        yaml.dump_all(compiled_workflow, f, default_flow_style=False)
+    else:
+      with open(golden_yaml_file, 'r') as f:
+        golden = list(yaml.safe_load_all(f))
+      self.maxDiff = None
+      self.assertEqual(golden, compiled_workflow)

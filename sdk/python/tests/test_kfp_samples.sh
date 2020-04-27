@@ -73,10 +73,10 @@ cp "${COMPILE_REPORT_FILE}" "${COMPILE_REPORT_FILE_OLD}"
 rm -f "${COMPILER_OUTPUTS_FILE}"
 
 # check which pipelines have special configurations
-PIPELINES=$(awk '/pipeline:/{print $NF}' ${CONFIG_FILE})
+PIPELINES=$(awk '/pipeline:/{print $NF}' "${CONFIG_FILE}")
 
 function compile_dsl {
-  IS_SPECIAL=$(grep -E ${f##*/} <<< ${PIPELINES})
+  IS_SPECIAL=$(grep -E "${1##*/}" <<< "${PIPELINES}")
   if [ -z "${IS_SPECIAL}" ]; then
     dsl-compile-tekton --py "$1" --output "$2"
   else
