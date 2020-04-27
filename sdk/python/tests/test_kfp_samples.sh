@@ -73,22 +73,26 @@ cp "${COMPILE_REPORT_FILE}" "${COMPILE_REPORT_FILE_OLD}"
 rm -f "${COMPILER_OUTPUTS_FILE}"
 
 # check which pipelines have special configurations
-PIPELINES=$(awk '/pipeline:/{print $NF}' ${CONFIG_FILE})
+PIPELINES=$(awk '/pipeline:/{print $NF}' "${CONFIG_FILE}")
+
+function compile_dsl {
+  IS_SPECIAL=$(grep -E "${1##*/}" <<< "${PIPELINES}")
+  if [ -z "${IS_SPECIAL}" ]; then
+    dsl-compile-tekton --py "$1" --output "$2"
+  else
+    export PYTHONPATH="${PROJECT_DIR}/sdk/python/tests"
+    python3 -m test_util "$1" "$2"
+  fi
+}
 
 # compile each of the Python scripts in the KFP testdata folder
 for f in "${KFP_TESTDATA_DIR}"/*.py; do
   echo -e "\nCompiling ${f##*/}:" >> "${COMPILER_OUTPUTS_FILE}"
-  IS_SPECIAL=$(grep -E ${f##*/} <<< ${PIPELINES})
-  if [ -z "${IS_SPECIAL}" ]; then
-    if dsl-compile-tekton --py "${f}" --output "${TEKTON_COMPILED_YAML_DIR}/${f##*/}.yaml" >> "${COMPILER_OUTPUTS_FILE}" 2>&1;
-    then
-      echo "SUCCESS: ${f##*/}" | tee -a "${COMPILER_OUTPUTS_FILE}"
-    else
-      echo "FAILURE: ${f##*/}" | tee -a "${COMPILER_OUTPUTS_FILE}"
-    fi
+  if compile_dsl "${f}" "${TEKTON_COMPILED_YAML_DIR}/${f##*/}.yaml" >> "${COMPILER_OUTPUTS_FILE}" 2>&1;
+  then
+    echo "SUCCESS: ${f##*/}" | tee -a "${COMPILER_OUTPUTS_FILE}"
   else
-    export PYTHONPATH="${PROJECT_DIR}/sdk/python/tests"
-    python3 -m test_util "${f}" "${CONFIG_FILE}" | grep 'SUCCESS:\|FAILURE:'
+    echo "FAILURE: ${f##*/}" | tee -a "${COMPILER_OUTPUTS_FILE}"
   fi
 done | tee "${COMPILE_REPORT_FILE}"
 

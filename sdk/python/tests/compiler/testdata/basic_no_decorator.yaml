@@ -1,0 +1,108 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: exiting
+spec:
+  steps:
+  - args:
+    - echo exit!
+    command:
+    - sh
+    - -c
+    image: python:3.5-jessie
+    name: exiting
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-frequent
+spec:
+  params:
+  - name: message
+  results:
+  - description: /tmp/message.txt
+    name: word
+  steps:
+  - args:
+    - python -c "from collections import Counter; words = Counter('$(inputs.params.message)'.split());
+      print(max(words, key=words.get))" | tee $(results.word.path)
+    command:
+    - sh
+    - -c
+    image: python:3.5-jessie
+    name: get-frequent
+    resources:
+      requests:
+        memory: 200M
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    tf-version.cloud-tpus.google.com: '1.12'
+  name: save
+spec:
+  params:
+  - name: get-frequent-word
+  - name: outputpath
+  steps:
+  - args:
+    - echo $(inputs.params.get-frequent-word) | tee /tmp/results.txt | gsutil cp /tmp/results.txt
+      $(inputs.params.outputpath)
+    command:
+    - sh
+    - -c
+    image: google/cloud-sdk
+    name: save
+    resources:
+      limits:
+        cloud-tpus.google.com/v2: '8'
+        cpu: '0.5'
+        nvidia.com/gpu: '2'
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Get Most Frequent Word
+      and Save to GCS", "inputs": [{"name": "message"}, {"default": "default_output",
+      "name": "outputpath"}], "name": "Save Most Frequent"}'
+    sidecar.istio.io/inject: 'false'
+  name: save-most-frequent
+spec:
+  params:
+  - name: message
+  - default: default_output
+    name: outputpath
+  tasks:
+  - name: exiting
+    params: []
+    taskRef:
+      name: exiting
+  - name: get-frequent
+    params:
+    - name: message
+      value: $(params.message)
+    taskRef:
+      name: get-frequent
+  - name: save
+    params:
+    - name: get-frequent-word
+      value: $(tasks.get-frequent.results.word)
+    - name: outputpath
+      value: $(params.outputpath)
+    taskRef:
+      name: save

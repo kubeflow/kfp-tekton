@@ -39,8 +39,8 @@ class PrintOp(dsl.ContainerOp):
     
 
 @dsl.pipeline(
-  name='pipeline flip coin',
-  description='shows how to use dsl.Condition.'
+  name='Flip Coin Example Pipeline',
+  description='Shows how to use dsl.Condition.'
 )
 def flipcoin():
   flip = FlipCoinOp('flip')
@@ -55,4 +55,6 @@ def flipcoin():
       PrintOp('print2', flip2.output)
 
 if __name__ == '__main__':
-    kfp.compiler.Compiler().compile(flipcoin, __file__ + '.yaml')
+    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(flipcoin, __file__.replace('.py', '.yaml'))

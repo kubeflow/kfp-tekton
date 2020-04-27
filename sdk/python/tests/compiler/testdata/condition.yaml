@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: tekton.dev/v1alpha1
 kind: Condition
 metadata:
@@ -134,10 +133,10 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use dsl.Condition.",
-      "name": "pipeline flip coin"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
+      "name": "Flip Coin Example Pipeline"}'
     sidecar.istio.io/inject: 'false'
-  name: pipeline-flip-coin
+  name: flip-coin-example-pipeline
 spec:
   params: []
   tasks:
