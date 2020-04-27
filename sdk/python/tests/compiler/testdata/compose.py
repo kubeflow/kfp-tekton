@@ -95,3 +95,10 @@ class DownloadMessageOp(dsl.ContainerOp):
 def download_save_most_frequent_word(url: str, outputpath: str):
   downloader = DownloadMessageOp('download', url)
   save_most_frequent_word(downloader.output, outputpath)
+
+if __name__ == '__main__':
+  # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+  from kfp_tekton.compiler import TektonCompiler
+  tkc = TektonCompiler()
+  tkc.compile(save_most_frequent_word, __file__.replace('.py', '.yaml'))  # Check if simple pipeline can be compiled
+  tkc.compile(download_save_most_frequent_word, __file__.replace('.py', '.yaml'))

@@ -87,3 +87,15 @@ def save_most_frequent_word():
         'nvidia-tesla-k80')
     saver.apply(
         gcp.use_tpu(tpu_cores = 8, tpu_resource = 'v2', tf_version = '1.12'))
+
+if __name__ == '__main__':
+  # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
+  from kfp_tekton.compiler import TektonCompiler
+  tkc = TektonCompiler()
+  compiled_workflow = tkc._create_workflow(
+    save_most_frequent_word,
+    'Save Most Frequent',
+    'Get Most Frequent Word and Save to GCS',
+    [message_param, output_path_param],
+    None)
+  tkc._write_workflow(compiled_workflow, __file__.replace('.py', '.yaml'))
