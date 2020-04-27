@@ -23,7 +23,7 @@ import logging
 import textwrap
 from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
 
-from ._op_to_template import _op_to_template, literal_str
+from ._op_to_template import _op_to_template
 
 from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env
@@ -34,18 +34,6 @@ from kfp.dsl._metadata import _extract_pipeline_metadata
 from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 
 from .. import tekton_api_version
-
-
-def _literal_str_representer(dumper, data):
-  """pyyaml representer for literal yaml string dumper
-
-  Create a representer for the literal string class that converts the string
-  object with newline into yaml's literal string '|' style.
-  """
-  return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
-
-# Add the _literal_str_representer as part of the yaml dumper.
-yaml.add_representer(literal_str, _literal_str_representer)
 
 
 class TektonCompiler(Compiler) :
@@ -262,6 +250,101 @@ class TektonCompiler(Compiler) :
 
     return templates
 
+
+  def _process_resourceOp(self, task_refs, pipeline):
+    """ handle resourceOp cases in pipeline """
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if isinstance(op, dsl.ResourceOp):
+        action = op.resource.get('action')
+        merge_strategy = op.resource.get('merge_strategy')
+        success_condition = op.resource.get('successCondition')
+        failure_condition = op.resource.get('failureCondition')
+        task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
+        if not merge_strategy:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
+        if not success_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'success-condition']
+        if not failure_condition:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "failure-condition"]
+        for tp in task.get('params', []):
+          if tp.get('name') == "action" and action:
+            tp['value'] = action
+          if tp.get('name') == "merge-strategy" and merge_strategy:
+            tp['value'] = merge_strategy
+          if tp.get('name') == "success-condition" and success_condition:
+            tp['value'] = success_condition
+          if tp.get('name') == "failure-condition" and failure_condition:
+            tp['value'] = failure_condition
+          if tp.get('name') == "output":
+            output_values = ''
+            for value in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
+              output_value = textwrap.dedent("""\
+                    - name: %s
+                      valueFrom: '%s'
+              """ % (value[0], value[1]))
+              output_values += output_value
+            tp['value'] = output_values
+
+
+  def _workflow_with_pipelinerun(self, task_refs, pipeline, pipeline_template, workflow):
+    """ Generate pipelinerun template """
+    pipelinerun = {
+      'apiVersion': tekton_api_version,
+      'kind': 'PipelineRun',
+      'metadata': {
+        'name': pipeline_template['metadata']['name'] + '-run'
+      },
+      'spec': {
+        'params': [{
+          'name': p['name'],
+          'value': p.get('default', '')
+        } for p in pipeline_template['spec']['params']
+        ],
+        'pipelineRef': {
+          'name': pipeline_template['metadata']['name']
+        }
+      }
+    }
+
+    # Generate PodTemplate
+    pod_template = {}
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.affinity:
+        pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
+      if op.tolerations:
+        pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
+      if op.node_selector:
+        pod_template['nodeSelector'] = op.node_selector
+
+    if pod_template:
+      pipelinerun['spec']['podtemplate'] = pod_template
+
+    # add workflow level timeout to pipeline run
+    if pipeline.conf.timeout:
+      pipelinerun['spec']['timeout'] = '%ds' % pipeline.conf.timeout
+
+    # generate the Tekton service account template for image pull secret
+    service_template = {}
+    if len(pipeline.conf.image_pull_secrets) > 0:
+      service_template = {
+        'apiVersion': 'v1',
+        'kind': 'ServiceAccount',
+        'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
+      }
+    for image_pull_secret in pipeline.conf.image_pull_secrets:
+      service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
+
+    if service_template:
+      workflow = workflow + [service_template]
+      pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
+
+    workflow = workflow + [pipelinerun]
+
+    return workflow
+
+
   def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
           -> List[Dict[Text, Any]]:  # Tekton change, signature/return type
     """Create workflow for the pipeline."""
@@ -376,45 +459,13 @@ class TektonCompiler(Compiler) :
         task['retries'] = op.num_retries
 
     # add timeout params to task_refs, instead of task.
-    pipeline_conf = pipeline.conf
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       if op.timeout:
         task['timeout'] = '%ds' % op.timeout
 
     # handle resourceOp cases in pipeline
-    for task in task_refs:
-      op = pipeline.ops.get(task['name'])
-      if isinstance(op, dsl.ResourceOp):
-        action = op.resource.get('action')
-        merge_strategy = op.resource.get('merge_strategy')
-        success_condition = op.resource.get('successCondition')
-        failure_condition = op.resource.get('failureCondition')
-        task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
-        if not merge_strategy:
-          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
-        if not success_condition:
-          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'success-condition']
-        if not failure_condition:
-          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "failure-condition"]
-        for tp in task.get('params', []):
-          if tp.get('name') == "action" and action:
-            tp['value'] = action
-          if tp.get('name') == "merge-strategy" and merge_strategy:
-            tp['value'] = merge_strategy
-          if tp.get('name') == "success-condition" and success_condition:
-            tp['value'] = success_condition
-          if tp.get('name') == "failure-condition" and failure_condition:
-            tp['value'] = failure_condition
-          if tp.get('name') == "output":
-            output_values = ''
-            for value in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
-              output_value = textwrap.dedent("""\
-                    - name: %s
-                      valueFrom: '%s'
-              """ % (value[0], value[1]))
-              output_values += output_value
-            tp['value'] = literal_str(output_values)
+    self._process_resourceOp(task_refs, pipeline)
 
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
@@ -434,7 +485,11 @@ class TektonCompiler(Compiler) :
       'apiVersion': tekton_api_version,
       'kind': 'Pipeline',
       'metadata': {
-        'name': pipeline.name or 'Pipeline'
+        'name': pipeline.name or 'Pipeline',
+        'annotations': {
+          # Disable Istio inject since Tekton cannot run with Istio sidecar
+          'sidecar.istio.io/inject': 'false'
+        }
       },
       'spec': {
         'params': params,
@@ -446,60 +501,8 @@ class TektonCompiler(Compiler) :
     workflow = templates + [pipeline_template]
 
     # Generate pipelinerun if generate-pipelinerun flag is enabled
-    # The base templete is generated first and then insert optional parameters.
-    # Wrapped in a try catch for when this method is called directly (e.g. there is no pipeline decorator)
     if self.generate_pipelinerun:
-      pipelinerun = {
-        'apiVersion': tekton_api_version,
-        'kind': 'PipelineRun',
-        'metadata': {
-          'name': pipeline_template['metadata']['name'] + '-run'
-        },
-        'spec': {
-          'params': [{
-            'name': p['name'],
-            'value': p.get('default', '')
-          } for p in pipeline_template['spec']['params']
-          ],
-          'pipelineRef': {
-            'name': pipeline_template['metadata']['name']
-          }
-        }
-      }
-
-      pod_template = {}
-      for task in task_refs:
-        op = pipeline.ops.get(task['name'])
-        if op.affinity:
-          pod_template['affinity'] = convert_k8s_obj_to_json(op.affinity)
-        if op.tolerations:
-          pod_template['tolerations'] = pod_template.get('tolerations', []) + op.tolerations
-        if op.node_selector:
-          pod_template['nodeSelector'] = op.node_selector
-
-      if pod_template:
-        pipelinerun['spec']['podtemplate'] = pod_template
-
-      # add workflow level timeout to pipeline run
-      if pipeline_conf.timeout:
-        pipelinerun['spec']['timeout'] = '%ds' % pipeline_conf.timeout
-
-      # generate the Tekton service account template
-      service_template = {}
-      if len(pipeline_conf.image_pull_secrets) > 0:
-        service_template = {
-          'apiVersion': 'v1',
-          'kind': 'ServiceAccount',
-          'metadata': {'name': pipelinerun['metadata']['name'] + '-sa'}
-        }
-      for image_pull_secret in pipeline_conf.image_pull_secrets:
-        service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
-
-      if service_template:
-        workflow = workflow + [service_template]
-        pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
-
-      workflow = workflow + [pipelinerun]
+      workflow = self._workflow_with_pipelinerun(task_refs, pipeline, pipeline_template, workflow)
 
     return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
 

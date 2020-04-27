@@ -35,6 +35,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with init container.",
       "name": "InitContainer"}'
+    sidecar.istio.io/inject: 'false'
   name: initcontainer
 spec:
   params: []

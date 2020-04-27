@@ -97,6 +97,7 @@ metadata:
       {"default": "60", "name": "experimentTimeoutMinutes", "optional": true}, {"default":
       "True", "name": "deleteAfterDone", "optional": true}], "name": "Launch katib
       experiment"}'
+    sidecar.istio.io/inject: 'false'
   name: launch-katib-experiment
 spec:
   params:

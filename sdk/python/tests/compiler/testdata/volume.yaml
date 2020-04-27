@@ -63,6 +63,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with volume.",
       "name": "Volume"}'
+    sidecar.istio.io/inject: 'false'
   name: volume
 spec:
   params: []

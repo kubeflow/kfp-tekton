@@ -4,7 +4,7 @@ There is an [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/)
 for `Kubeflow Pipeline` for end users to define end to end machine learning and data pipelines.
 The output of the KFP SDK compiler is YAML for [Argo](https://github.com/argoproj/argo).
 
-Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a basic pipeline with parallel and sequential steps. Please go through these steps to ensure you are setup properly to use the compiler.
+We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please go through these steps to ensure you are setup properly to use the updated compiler.
 
 ## Development Prerequisites
 
@@ -17,16 +17,12 @@ Here we update the `Compiler` of the KFP SDK to generate `Tekton` YAML for a bas
 
  - Python: `3.7.5`
  - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
- - Tekton: [`0.11.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.0-rc1)
+ - Tekton: [`0.11.3`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3)
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
 
-In order to use parameter passing from task outputs into condition parameters Tekton must be built from master. 
-
 ## Tested Pipelines
-- [Execution Order](https://github.com/kubeflow/pipelines/blob/master/samples/core/execution_order/execution_order.py)
-- [Parallel Join](https://github.com/kubeflow/pipelines/blob/master/samples/core/parallel_join/parallel_join.py)
-- [Watson ML](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/ibm-samples/watson/watson_train_serve_pipeline.py)
-    - Watson ML pipeline requires the default service account to have list, write, and delete secrets permission. Additionally, please follow the [instructions here to address the requirements and setup your Watson environments](https://github.com/kubeflow/pipelines/tree/master/samples/contrib/ibm-samples/watson) before executing the pipeline.
+
+We are running the tests over approximately 80+ Pipelines spread across different Kubeflow Pipelines repository, specifically pipelines in KFP compiler test data, KFP core samples and 3rd-party contributed pipelines folders. 
 
 ## Steps
 
@@ -80,6 +76,11 @@ In order to use parameter passing from task outputs into condition parameters Te
       [echo : echo] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not 
       provoke thy wrath
       ```
+      
+## Build Tekton from Master
+
+In order to utilize the latest features and functions the team has been driving in Tekton, we suggest that Tekton must be built from [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline). Features that require special builds different from the 'Tested Version' will be listed below.
+      
 ## Test Kubeflow Pipelines with Tekton
 
 Please [refer to the instructions here](./python/tests/README.md) as you work on a PR test sample Kubeflow Pipelines in their test data folder to ensure your PR is improving the number of successful samples
@@ -104,7 +105,7 @@ To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--generate-
 
 Prerequisite: Install [Kubeflow Pipeline](https://www.kubeflow.org/docs/pipelines/installation/).
 
-By default, artifacts are disabled because it's depended on Kubeflow Pipeline's minio setup. When artifacts are enabled, all the output parameters are also treated as artifacts and persist to the default object storage. Enabling artifacts also allow files to be downloaded or stored as artifact inputs/outputs. Since artifacts are depending on the Kubeflow Pipeline's setup by default, the generated Tekton pipeline must be deployed to the same namespace as Kubeflow Pipeline.
+By default, artifacts are disabled because it's dependent on Kubeflow Pipeline's minio setup. When artifacts are enabled, all the output parameters are also treated as artifacts and persist to the default object storage. Enabling artifacts also allow files to be downloaded or stored as artifact inputs/outputs. Since artifacts are depending on the Kubeflow Pipeline's setup by default, the generated Tekton pipeline must be deployed to the same namespace as Kubeflow Pipeline.
 
 To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--enable-artifacts` as part of your `dsl-compile-tekton` commands. Then, run the pipeline on the same namespace as Kubeflow pipeline using the `-n` flag. e.g.
 ```shell
@@ -128,6 +129,7 @@ Waiting for logs to be available...
 ```
 
 ## Troubleshooting
-- Please be aware that defined Affinity, Node Selector, and Tolerations are applied to all the tasks in the same pipeline because there's only one podTemplate allowed in each pipeline.
 
-- When you encounter permission issues related to ServiceAccount, refer to [sa-and-rbac](sa-and-rbac.md)
+- Here are [some known limitations](kfp-tekton-limitation.md) on the kfp-tekton.
+
+- When you encounter permission issues related to ServiceAccount, refer to [Servince Account and RBAC doc](sa-and-rbac.md)
