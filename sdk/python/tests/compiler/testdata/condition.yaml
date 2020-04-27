@@ -135,6 +135,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition().",
       "name": "Flip Coin Example Pipeline"}'
+    sidecar.istio.io/inject: 'false'
   name: flip-coin-example-pipeline
 spec:
   params: []

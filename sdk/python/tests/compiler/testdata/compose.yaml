@@ -75,6 +75,7 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Download and Get Most
       Frequent Word and Save to GCS", "inputs": [{"name": "url", "type": "String"},
       {"name": "outputpath", "type": "String"}], "name": "Download and Save Most Frequent"}'
+    sidecar.istio.io/inject: 'false'
   name: download-and-save-most-frequent
 spec:
   params:
