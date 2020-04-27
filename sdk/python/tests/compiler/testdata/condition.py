@@ -40,7 +40,7 @@ class PrintOp(dsl.ContainerOp):
 
 @dsl.pipeline(
   name='Flip Coin Example Pipeline',
-  description='Shows how to use dsl.Condition().'
+  description='Shows how to use dsl.Condition.'
 )
 def flipcoin():
   flip = FlipCoinOp('flip')

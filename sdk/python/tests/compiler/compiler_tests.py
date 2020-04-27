@@ -278,8 +278,9 @@ class TestTektonCompiler(unittest.TestCase):
       shutil.rmtree(temp_dir)
 
   def _test_workflow_without_decorator(self, pipeline_yaml, params_dict):
-    """Test compiling a workflow and appending pipeline params."""
-
+    """
+    Test compiling a workflow and appending pipeline params.
+    """
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
@@ -300,8 +301,9 @@ class TestTektonCompiler(unittest.TestCase):
                             generate_pipelinerun=False,
                             enable_artifacts=False,
                             normalize_compiler_output_function=None):
-    """Test compiling a simple workflow, and a bigger one composed from the simple one."""
-
+    """
+    Test compiling a simple workflow, and a bigger one composed from the simple one.
+    """
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
@@ -322,7 +324,9 @@ class TestTektonCompiler(unittest.TestCase):
       shutil.rmtree(temp_dir)
 
   def _verify_compiled_workflow(self, golden_yaml_file, compiled_workflow):
-
+    """
+    Tests if the compiled workflow matches the golden yaml.
+    """
     if GENERATE_GOLDEN_YAML:
       with open(golden_yaml_file, 'w') as f:
         yaml.dump_all(compiled_workflow, f, default_flow_style=False)

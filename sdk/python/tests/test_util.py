@@ -30,7 +30,7 @@ if __name__ == '__main__':
     elif test_name == "basic_no_decorator":
         test = TestTektonCompiler().test_basic_no_decorator
     else:
-        raise ValueError('Pipeline named \''+test_name+'\' is not recognized')
+        raise ValueError("Pipeline named '%s' is not recognized" % test_name)
 
     test()
     copyfile(golden_path, save_path)
