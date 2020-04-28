@@ -106,7 +106,7 @@ is an example of how to use this feature.
 ### **Input Artifacts**
 Input Artifacts in Kubeflow pipeline are used for passing raw text or local files as files placed in the component pod. Since Input Artifacts
 can only be raw or compressed format as strings, we created a
-custom step](https://github.com/kubeflow/kfp-tekton/blob/master/sdk/python/kfp_tekton/compiler/_op_to_template.py#L435) for passing those strings
+[custom step](https://github.com/kubeflow/kfp-tekton/blob/master/sdk/python/kfp_tekton/compiler/_op_to_template.py#L435) for passing those strings
 as files before the main task is executed. The [input_artifact_raw_value](/sdk/python/kfp_tekton/tests/compiler/testdata/input_artifact_raw_value.py)
 python test is an example of how to use this feature.
 
