@@ -128,8 +128,9 @@ Waiting for logs to be available...
 [generate-output : copy-artifacts] Total: 0 B, Transferred: 6 B, Speed: 504 B/s
 ```
 
-## Troubleshooting
+## List of available features
+If you want to understand how each feature is implemented and its current status, please visit the [FEATURES](FEATURES.md) docs.
 
-- Here are [some known limitations](kfp-tekton-limitation.md) on the kfp-tekton.
+## Troubleshooting
 
 - When you encounter permission issues related to ServiceAccount, refer to [Servince Account and RBAC doc](sa-and-rbac.md)
