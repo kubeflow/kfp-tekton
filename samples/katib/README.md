@@ -1,6 +1,6 @@
 # Hyperparameter tuning using Katib
 
-Katib is a Kubernetes-based system for Hyperparameter Tuning and Neural Architecture Search. This pipeline demonstrates how to use the Katib component to find the hyperparameter tuning results. 
+[Katib](https://github.com/kubeflow/katib) is a Kubernetes-based system for Hyperparameter Tuning and Neural Architecture Search. This pipeline demonstrates how to use the Katib component to find the hyperparameter tuning results. 
 
 This pipeline uses the [MNIST dataset](http://yann.lecun.com/exdb/mnist/) to train the model and try to find the best hyperparameters using random search. Learning rate, number of convolutional layers, and the optimizer are the training parameters we want to search. Once the pipeline is completed, the ending step will print out the best hyperparameters in this pipeline experiment and clean up the workspace.
 
