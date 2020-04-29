@@ -5,27 +5,24 @@ matrix:
       python: "3.6"
       env: TOXENV=py36
       install:
-        - python3 -m pip install $TRAVIS_BUILD_DIR/sdk/python
+        - python3 -m pip install -e sdk/python
       script:
-        - cd $TRAVIS_BUILD_DIR/sdk/python/tests
-        - ./run_tests.sh
+        - make test
     - name: "Unit tests, Python 3.7"
       language: python
       python: "3.7"
       env: TOXENV=py37
       install:
-        - python3 -m pip install $TRAVIS_BUILD_DIR/sdk/python
+        - python3 -m pip install -e sdk/python
       script:
-        - cd $TRAVIS_BUILD_DIR/sdk/python/tests
-        - ./run_tests.sh
+        - make test
     - name: "Progress report on compiling KFP DSL test scripts"
       language: python
       python: "3.7"
       install:
-        - python3 -m pip install -e $TRAVIS_BUILD_DIR/sdk/python
+        - python3 -m pip install -e sdk/python
       script:
-        - cd $TRAVIS_BUILD_DIR/sdk/python/tests
-        - ./test_kfp_samples.sh
+        - make report
     - name: "Lint Python code with flake8"
       language: python
       python: "3.7"
