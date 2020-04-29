@@ -3,6 +3,8 @@ approvers:
  - ckadner
  - Tomcli
 reviewers:
+ - ckadner
+ - Tomcli
  - afrittoli
  - jinchihe
  - fenglixa
