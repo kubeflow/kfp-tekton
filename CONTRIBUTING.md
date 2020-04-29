@@ -4,6 +4,7 @@
 
 - [How to Contribute](#how-to-contribute)
   - [Contributor License Agreement](#contributor-license-agreement)
+  - [Development Guidelines](#development-guidelines)
   - [Code reviews](#code-reviews)
   - [Get involved](#get-involved)
 
@@ -25,6 +26,11 @@ your current agreements on file or to sign a new one.
 You generally only need to submit a CLA once, so if you've already submitted one
 (even if it was for a different project), you probably don't need to do it
 again.
+
+## Development Guidelines
+
+Please take a look at the [KFP-Tekton Developer Guide](sdk/python/README.md) for details about how to make code 
+contributions to the KFP-Tekton project.
 
 ## Code reviews
 
