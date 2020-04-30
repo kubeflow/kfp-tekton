@@ -34,7 +34,7 @@ We are running the tests over approximately 80+ Pipelines spread across differen
 
 4. Run the compiler tests (optional):
 
-    - `./sdk/python/tests/run_tests.sh`
+    - `make test`
 
 5. Compile the sample pipeline:
  

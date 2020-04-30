@@ -1,18 +1,25 @@
-## Tests for the Compiler
+# Compiler Status Report
 
+This report shows the compilation status for all Python DSL pipeline scripts in the KFP compiler
+[`testdata`](https://github.com/kubeflow/pipelines/tree/master/sdk/python/tests/compiler/testdata) folder. 
 
-The test listed here can be used to compile all Python DSL pipelines in the KFP compiler `testdata` folder and 
-generate a report card. As you are working a PR to address functionality gaps in the compiler, please run this
-test to update the `FAILURE`s which have been addressed.
+As you are working on a PR to address functionality gaps in the compiler, please run this report to update the
+compile `FAILURE`s which have been addressed by your code changes.
 
-Please note that even if a Kubeflow Pipeline Python DSL script may pass the compilation with the KFP-Tekton compiler
-successfully, the produced Tekton YAML might not be valid or not contain all of the intended functionality as the 
-equivalent Argo YAML produced by the KFP compiler. For that, the best way is to take the compiled YAML and run it
-on Tekton directly.
+Please note that even if a Kubeflow Pipeline Python DSL script passes the compilation with the KFP-Tekton compiler
+successfully, the produced Tekton YAML might not be valid or may not contain all of the intended functionality as the 
+equivalent Argo YAML produced by the KFP compiler. To verify that the compiled YAML is valid and that the pipeline can
+be executed successfully it needs to be deployed and run on a Tekton cluster.
 
-### Running the tests
+## Generating the Compiler Status Report
 
-`./sdk/python/tests/test_kfp_samples.sh`
+To update this document, regenerate the report by running this script:
+
+    ./test_kfp_samples.sh
+
+or run this command from the project root directory:
+
+    make report
 
 You should see an output similar to the one below, outlining which test scripts have passed and which are failing:
 
@@ -59,4 +66,3 @@ Compiled Tekton YAML files:  temp/tekton_compiler_output/
 
 The goal is to have all the 30 tests pass before we can have a degree of confidence that the compiler can handle
 a fair number of pipelines.
-
