@@ -3,7 +3,7 @@
 Below are the list of features that are currently avaliable in the KFP Tekton compiler along with its implementation.
 
 - [Pipeline features with Tekton native features](#pipeline-features-with-tekton-native-features)
-    + [pod_annotations and pod_labels](#pod-annotations-and-pod-labels)
+    + [pod_annotations and pod_labels](#pod_annotations-and-pod_labels)
     + [Retries](#retries)
     + [Volumes](#volumes)
     + [Timeout for Tasks and Pipelines](#timeout-for-tasks-and-pipelines)
