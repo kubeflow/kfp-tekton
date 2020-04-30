@@ -10,15 +10,15 @@ Below are the list of features that are currently avaliable in the KFP Tekton co
     + [RunAfter](#runafter)
     + [Input Parameters](#input-parameters)
 - [Pipeline features with custom Tekton implementation](#pipeline-features-with-custom-tekton-implementation)
-  * [Features with the same behaviors](#features-with-the-same-behaviors)
+  * [DSL features with the same behaviour as Argo](#dsl-features-with-the-same-behaviour-as-argo)
     + [InitContainers](#initcontainers)
     + [Conditions](#conditions)
     + [ResourceOp, VolumeOp, and VolumeSnapshotOp](#resourceop-volumeop-and-volumesnapshotop)
     + [Output Parameters](#output-parameters)
     + [Input Artifacts](#input-artifacts)
-  * [Features with the same user experience but with different system implementation](#features-with-the-same-user-experience-but-with-different-system-implementation)
+  * [DSL features with different system implementation](#dsl-features-with-different-system-implementation)
     + [Output Artifacts](#output-artifacts)
-  * [Features with limitations or behave differently than Argo](#features-with-limitations-or-behave-differently-than-argo)
+  * [DSL Features with limitations or with different behaviour than Argo](#dsl-features-with-limitations-or-with-different-behaviour-than-argo)
     + [Sidecars](#sidecars)
     + [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations)
     + [ImagePullSecrets](#imagepullsecrets)
@@ -67,7 +67,7 @@ task. The [parallel_join](/sdk/python/kfp_tekton/tests/compiler/testdata/paralle
 feature.
 
 # **Pipeline features with custom Tekton implementation**
-## **DSL Features with the same behavior as Argo at System level**
+## **DSL features with the same behaviour as Argo**
 
 Below are the features that don't have one to one mapping to native Tekton features, but are implemented with extra custom processing code or logic within the compiler
 
@@ -100,7 +100,7 @@ Output parameters are a dictionary of string files that users can define as the 
 Input Artifacts in Kubeflow pipelines are used for passing raw text or local files as files placed in the component pod. Since Input Artifacts can only be raw or compressed format as strings, we created a
 [custom step](https://github.com/kubeflow/kfp-tekton/blob/master/sdk/python/kfp_tekton/compiler/_op_to_template.py#L435) for passing those strings as files before the main task is executed. The [input_artifact_raw_value](/sdk/python/kfp_tekton/tests/compiler/testdata/input_artifact_raw_value.py) python test is an example of how to use this feature.
 
-## **Features with the same user experience but with different system implementation**
+## **DSL features with different system implementation**
 Below are the features that behave the same from the Kubeflow pipeline DSL level, but have a slightly different implementation from Argo in the system level.
 
 ### **Output Artifacts**
@@ -110,7 +110,7 @@ However, both ArtifactLocation and explicit output artifacts are deprecated and 
 
 The current implementation is relying on the existing KFP's minio setup for getting the default credentials. This feature probably needs to deprecate and merge with the output parameters once KFP finalizes the artifact management for the multi-user scenario. 
 
-## **DSL Features with limitations or different behavior than Argo at System level**
+## **DSL Features with limitations or with different behaviour than Argo**
 Below are the features that have certain limitations in the current Tekton release or have slightly different behavior than Argo.
 
 ### **Sidecars**
