@@ -6,14 +6,7 @@ The output of the KFP SDK compiler is YAML for [Argo](https://github.com/argopro
 
 We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please go through these steps to ensure you are setup properly to use the updated compiler.
 
-## Development Prerequisites
-
-1. [`Python`](https://www.python.org/downloads/): Python 3.5 or later  
-2. [`Conda`](https://docs.conda.io/en/latest/) or Python 
-   [virtual environment](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/): 
-   Package, dependency and environment management for Python
-
-## Tested Versions
+## Project Prerequisites
 
  - Python: `3.7.5`
  - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
