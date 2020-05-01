@@ -24,6 +24,8 @@ or run this command from the project root directory:
 You should see an output similar to the one below, outlining which test scripts have passed and which are failing:
 
 ```YAML
+KFP version: 0.2.2
+
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_location.py
 SUCCESS: basic.py
@@ -66,3 +68,66 @@ Compiled Tekton YAML files:  temp/tekton_compiler_output/
 
 The goal is to have all the 30 tests pass before we can have a degree of confidence that the compiler can handle
 a fair number of pipelines.
+
+
+## Summary Report for all KFP Sample DSL Scripts
+
+For a more comprehensive report about the compilation status for all of the Python DSL scripts found in the
+[`kubeflow/pipelines`](https://github.com/kubeflow/pipelines/) repository you may run this report:
+
+    ./test_kfp_samples.sh \
+        --include-all-samples \
+        --dont-list-files
+
+This will include all `core/samples`, 3rd-party contributed samples, tutorials, as well as the compiler `testdata`.
+
+```YAML
+Compilation status for testdata DSL scripts:
+
+  Success: 25
+  Failure: 5
+  Total:   30
+
+Compilation status for core samples:
+
+  Success: 18
+  Failure: 5
+  Total:   23
+
+Compilation status for 3rd-party contributed samples:
+
+  Success: 23
+  Failure: 5
+  Total:   28
+
+Overall success rate: 69/84 = 82%
+```
+
+When the `--print-error-details` flag is used, a summary of all the compilation errors is appended to the console
+output -- sorted by their respective number of occurrences:
+
+    ./test_kfp_samples.sh -a -s --print-error-details
+
+```YAML
+...
+
+Overall success rate: 69/84 = 82%
+
+Occurences of NotImplementedError:
+   7: dynamic params are not yet implemented
+
+Occurences of other Errors:
+   2 ValueError: These Argo variables are not supported in Tekton Pipeline: {{workflow.uid}}
+   2 ValueError: These Argo variables are not supported in Tekton Pipeline: {{pod.name}}, {{workflow.name}}
+   1 ValueError: These Argo variables are not supported in Tekton Pipeline: {{workflow.uid}}, {{pod.name}}
+   1 ValueError: These Argo variables are not supported in Tekton Pipeline: {{workflow.name}}
+   1 ValueError: There are multiple pipelines: ['flipcoin_pipeline', 'flipcoin_exit_pipeline']. Please specify --function.
+   1 ValueError: A function with @dsl.pipeline decorator is required in the py file.
+```
+
+## Disclaimer
+
+**Note:** The reports above were created for the pipeline scripts found in KFP version `0.2.2` since the
+`kfp_tekton` compiler code is still based on the `kfp` SDK compiler version `0.2.2`. We are working on 
+upgrading the `kfp_tekton` compiler code to be based on `kfp` version `0.5.0`
+([issue #133](https://github.com/kubeflow/kfp-tekton/issues/133)).
