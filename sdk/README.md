@@ -11,6 +11,10 @@ We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please 
  - Python: `3.7.5`
  - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
  - Tekton: [`0.11.3`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3)
+    - For KFP, we shouldn't modify the default work directory for any component. Therefore, please run the below command to disable the home and work directory overwrite from Tekton default.
+        ```shell
+        kubectl patch cm feature-flags -n tekton-pipelines -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true"}}'
+        ```
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
 
 ## Tested Pipelines
