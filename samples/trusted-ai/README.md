@@ -7,6 +7,10 @@ This pipeline uses the [UTKface's aligned & cropped faces dataset](https://susan
 ## Prerequisites 
 - Install [Kubeflow 1.0.2+](https://www.kubeflow.org/docs/started/getting-started/) and connect the cluster to the current shell with `kubectl`
 - Install [Tekton 0.11.3](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3) and [Tekton CLI](https://github.com/tektoncd/cli)
+    - For KFP, we shouldn't modify the default work directory for any component. Therefore, please run the below command to disable the [home and work directory overwrite](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#customizing-the-pipelines-controller-behavior) from Tekton default.
+        ```shell
+        kubectl patch cm feature-flags -n tekton-pipelines -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true"}}'
+        ```
 - Install [kfp-tekton](/sdk/README.md#steps) SDK
 
 ## Instructions
