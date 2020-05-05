@@ -26,7 +26,7 @@ To get started experimenting with the KFP Tekton Compiler, please [follow these 
 If you would like to make code contributions take a look at the [Developer Guide](sdk/python/README.md) and go through
 the list of [open issues](https://github.com/kubeflow/kfp-tekton/issues).
 
-We are currently using [Kubeflow Pipelines 0.2.2](https://github.com/kubeflow/pipelines/releases/tag/0.2.2) and
+We are currently using [Kubeflow Pipelines 0.5.0](https://github.com/kubeflow/pipelines/releases/tag/0.5.0) and
 [Tekton 0.11.3](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3) for this project. 
 
 The [KFP, Argo and Tekton Feature Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)

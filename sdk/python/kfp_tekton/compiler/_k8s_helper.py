@@ -39,9 +39,6 @@ def convert_k8s_obj_to_json(k8s_obj):
     if k8s_obj is None:
       return None
     elif isinstance(k8s_obj, PRIMITIVE_TYPES):
-      # if re.search(r'^{{.*}}$', k8s_obj):
-      #   k8s_obj = k8s_obj.replace('{{', '$(')
-      #   k8s_obj = k8s_obj.replace('}}', ')')
       return k8s_obj
     elif isinstance(k8s_obj, list):
       return [convert_k8s_obj_to_json(sub_obj)
@@ -64,10 +61,8 @@ def convert_k8s_obj_to_json(k8s_obj):
       # and attributes which value is not None.
       # Convert attribute name to json key in
       # model definition for request.
-      attr_types = (k8s_obj.swagger_types if hasattr(k8s_obj, "swagger_types") 
-                    else k8s_obj.openapi_types)
       obj_dict = {k8s_obj.attribute_map[attr]: getattr(k8s_obj, attr)
-                  for attr, _ in iteritems(attr_types)
+                  for attr in k8s_obj.attribute_map
                   if getattr(k8s_obj, attr) is not None}
 
     return {key: convert_k8s_obj_to_json(val)
