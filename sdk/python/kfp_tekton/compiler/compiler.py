@@ -29,6 +29,7 @@ from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env
 from kfp.compiler._k8s_helper import sanitize_k8s_name
 from kfp.compiler.compiler import Compiler
+# from kfp.components._yaml_utils import dump_yaml
 from kfp.components.structures import InputSpec
 from kfp.dsl._metadata import _extract_pipeline_metadata
 from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
@@ -627,6 +628,7 @@ class TektonCompiler(Compiler) :
       package_path: file path to be written. If not specified, a yaml_text string
         will be returned.
     """
+    # yaml_text = dump_yaml(workflow)
     yaml.Dumper.ignore_aliases = lambda *args : True
     yaml_text = yaml.dump_all(workflow, default_flow_style=False)  # Tekton change
 
@@ -694,3 +696,35 @@ class TektonCompiler(Compiler) :
         params_list,
         pipeline_conf)
     TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
+    _validate_workflow(workflow)
+
+
+def _validate_workflow(workflow: List[Dict[Text, Any]]):  # Tekton change, signature
+  # TODO: Tekton pipeline parameter validation
+#   workflow = workflow.copy()
+#   # Working around Argo lint issue
+#   for argument in workflow['spec'].get('arguments', {}).get('parameters', []):
+#     if 'value' not in argument:
+#       argument['value'] = ''
+#
+#   yaml_text = dump_yaml(workflow)
+#   if '{{pipelineparam' in yaml_text:
+#     raise RuntimeError(
+#         '''Internal compiler error: Found unresolved PipelineParam.
+# Please create a new issue at https://github.com/kubeflow/pipelines/issues attaching the pipeline code and the pipeline package.'''
+#     )
+
+  # TODO: Tekton lint, if a tool exists for it
+#   # Running Argo lint if available
+#   import shutil
+#   import subprocess
+#   argo_path = shutil.which('argo')
+#   if argo_path:
+#     result = subprocess.run([argo_path, 'lint', '/dev/stdin'], input=yaml_text.encode('utf-8'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#     if result.returncode:
+#       raise RuntimeError(
+#         '''Internal compiler error: Compiler has produced Argo-incompatible workflow.
+# Please create a new issue at https://github.com/kubeflow/pipelines/issues attaching the pipeline code and the pipeline package.
+# Error: {}'''.format(result.stderr.decode('utf-8'))
+#       )
+  pass

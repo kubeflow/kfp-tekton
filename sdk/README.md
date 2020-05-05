@@ -4,22 +4,23 @@ There is an [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/)
 for `Kubeflow Pipeline` for end users to define end to end machine learning and data pipelines.
 The output of the KFP SDK compiler is YAML for [Argo](https://github.com/argoproj/argo).
 
-We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please go through these steps to ensure you are setup properly to use the updated compiler.
+We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please go through the steps below
+to ensure you are set up properly to use the updated compiler.
 
 ## Project Prerequisites
 
  - Python: `3.7.5`
- - Kubeflow Pipelines: [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2)
+ - Kubeflow Pipelines: [`0.5.0`](https://github.com/kubeflow/pipelines/releases/tag/0.5.0)
  - Tekton: [`0.11.3`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3)
-    - For KFP, we shouldn't modify the default work directory for any component. Therefore, please run the below command to disable the [home and work directory overwrite](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#customizing-the-pipelines-controller-behavior) from Tekton default.
-        ```shell
-        kubectl patch cm feature-flags -n tekton-pipelines -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true"}}'
-        ```
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
+
+Follow the instructions for [installing project prerequisites](/sdk/python/README.md#development-prerequisites)
+and take note of some important caveats.
 
 ## Tested Pipelines
 
-We are running the tests over approximately 80+ Pipelines spread across different Kubeflow Pipelines repository, specifically pipelines in KFP compiler test data, KFP core samples and 3rd-party contributed pipelines folders. 
+We are running the tests over approximately 80+ Pipelines spread across different Kubeflow Pipelines repository,
+specifically pipelines in KFP compiler test data, KFP core samples and 3rd-party contributed pipelines folders. 
 
 ## Steps
 
