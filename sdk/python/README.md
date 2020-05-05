@@ -54,9 +54,16 @@ or simply run:
 **Note**, if your container runtime does not support image-reference:tag@digest (like cri-o used in OpenShift 4.x),
 use `release.notags.yaml` instead.
 
+**Note**, for KFP, we shouldn't modify the default work directory for any component. Therefore, please run the following
+command to disable the [home and work directory overwrite](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#customizing-the-pipelines-controller-behavior) from Tekton default.
+
+    kubectl patch cm feature-flags -n tekton-pipelines \
+        -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true"}}'
+
 Optionally, for convenience, set the default namespace to `tekton-pipelines`:
 
     kubectl config set-context --current --namespace=tekton-pipelines
+
 
 #### Tekton CLI
 
@@ -94,7 +101,7 @@ the Tekton YAML instead of Argo YAML. Since the KFP SDK was not designed and imp
 _monkey-patching_ was used to replace non-class methods and functions at runtime.
 
 In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a 
-specific version of the `kfp` SDK compiler. As of now that version is [`0.2.2`](https://github.com/kubeflow/pipelines/releases/tag/0.2.2). 
+specific version of the `kfp` SDK compiler. As of now that version is [`0.5.0`](https://github.com/kubeflow/pipelines/releases/tag/0.5.0). 
 
 
 ## Adding New Code

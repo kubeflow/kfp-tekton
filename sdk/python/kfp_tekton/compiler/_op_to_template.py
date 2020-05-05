@@ -11,17 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from collections import OrderedDict
 
-from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
-from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
-from kfp import dsl
-from kfp.dsl._container_op import BaseOp
-from typing import List, Text, Dict, Any
-from kfp.dsl import ArtifactLocation
+import json
+import re
 import textwrap
 import yaml
-import re
+
+from collections import OrderedDict
+from typing import List, Text, Dict, Any
+
+from kfp import dsl
+from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
+from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
+from kfp.dsl import ArtifactLocation
+from kfp.dsl._container_op import BaseOp
 
 from .. import tekton_api_version
 
@@ -482,10 +485,6 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
         if copy_artifacts_step:
             template['spec']['steps'].append(copy_artifacts_step)
 
-    # **********************************************************
-    #  NOTE: the following features are still under development
-    # **********************************************************
-
     # metadata
     if processed_op.pod_annotations or processed_op.pod_labels:
         template.setdefault('metadata', {})  # Tekton change, don't wipe out existing metadata
@@ -508,7 +507,10 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
         template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/task_display_name'] = processed_op.display_name
 
     if isinstance(op, dsl.ContainerOp) and op._metadata:
-        import json
         template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec'] = json.dumps(op._metadata.to_dict(), sort_keys=True)
+
+    if isinstance(op, dsl.ContainerOp) and op.execution_options:
+        if op.execution_options.caching_strategy.max_cache_staleness:
+            template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/max_cache_staleness'] = str(op.execution_options.caching_strategy.max_cache_staleness)
 
     return template

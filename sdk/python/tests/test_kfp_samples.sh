@@ -14,6 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# *************************************************************************************************
+#
+#  Usage, running this script directly vs running it with Make.
+#
+#  i.e. compile report for all KFP samples with error statistics and no file listing:
+#
+#  - running the script directly:
+#
+#      VIRTUAL_ENV=temp/.venv ./test_kfp_samples.sh -a -e -s
+#
+#  - with Make you can run:
+#
+#      make report VENV=temp/.venv ALL_SAMPLES="TRUE" PRINT_ERRORS="TRUE" SKIP_FILES="TRUE"
+#
+# *************************************************************************************************
+
 function help {
   bold=$(tput bold)
   normal=$(tput sgr0)
@@ -36,7 +52,7 @@ function help {
 # process command line parameters
 while (( $# > 0 )); do
   case "$1" in
-    -v|--kfp-version)          KFP_VERSION="$2";            shift 2 ;;  # KFP SDK version, default: 0.2.2
+    -v|--kfp-version)          KFP_VERSION="$2";            shift 2 ;;  # KFP SDK version, default: 0.5.0
     -a|--include-all-samples)  ALL_SAMPLES="TRUE";          shift 1 ;;  # Compile all DSL scripts in KFP repo
     -s|--dont-list-files)      SKIP_FILES="TRUE";           shift 1 ;;  # Suppress compile status for each DSL file
     -e|--print-error-details)  PRINT_ERRORS="TRUE";         shift 1 ;;  # Print summary of compilation errors
@@ -47,7 +63,7 @@ while (( $# > 0 )); do
 done
 
 # define global variables
-KFP_VERSION=${KFP_VERSION:-0.2.2}
+KFP_VERSION=${KFP_VERSION:-0.5.0}
 KFP_REPO_URL="https://github.com/kubeflow/pipelines.git"
 SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)"
 PROJECT_DIR="${TRAVIS_BUILD_DIR:-$(cd "${SCRIPT_DIR%/sdk/python/tests}"; pwd)}"
@@ -59,6 +75,12 @@ TEKTON_COMPILED_YAML_DIR="${TEMP_DIR}/tekton_compiler_output"
 COMPILER_OUTPUTS_FILE="${TEMP_DIR}/test_kfp_samples_output.txt"
 CONFIG_FILE="${PROJECT_DIR}/sdk/python/tests/config.yaml"
 REPLACE_EXCEPTIONS="FALSE" # "TRUE" | "FALSE"
+
+# show value of the _DIR variables, use set in POSIX mode in a sub-shell to supress functions definitions (https://stackoverflow.com/a/1305273/5601796)
+#(set -o posix ; set) | grep "_DIR" | sort
+
+# show which virtual environment being used
+#env | grep VIRTUAL_ENV
 
 mkdir -p "${TEMP_DIR}"
 mkdir -p "${TEKTON_COMPILED_YAML_DIR}"
@@ -113,9 +135,9 @@ if [[ "${ALL_SAMPLES}" == "TRUE" ]]; then
   pip show ai_pipeline_params   >/dev/null 2>&1 || pip install ai_pipeline_params
   pip show kfp-azure-databricks >/dev/null 2>&1 || pip install -e "${KFP_CLONE_DIR}/samples/contrib/azure-samples/kfp-azure-databricks"
   pip show kfp-arena            >/dev/null 2>&1 || pip install "http://kubeflow.oss-cn-beijing.aliyuncs.com/kfp-arena/kfp-arena-0.6.tar.gz"
-  pip show fire                 >/dev/null 2>&1 || pip install fire
-  pip show tfx                  >/dev/null 2>&1 || pip install tfx
+
   # reinstall KFP with the desired version to get all of its dependencies with their respective desired versions
+  # pip uninstall -q -y kfp
   pip install -q -e "${KFP_CLONE_DIR}/sdk/python"
 fi
 

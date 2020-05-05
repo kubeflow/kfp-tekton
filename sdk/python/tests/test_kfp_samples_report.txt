@@ -7,6 +7,7 @@ SUCCESS: compose.py
 SUCCESS: default_value.py
 SUCCESS: input_artifact_raw_value.py
 FAILURE: loop_over_lightweight_output.py
+FAILURE: parallelfor_item_argument_resolving.py
 SUCCESS: param_op_transform.py
 SUCCESS: param_substitutions.py
 SUCCESS: pipelineparams.py
