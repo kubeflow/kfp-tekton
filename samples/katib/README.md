@@ -13,9 +13,10 @@ This pipeline uses the [MNIST dataset](http://yann.lecun.com/exdb/mnist/) to tra
 
 1. First, go to the Kubeflow dashboard and create a user namespace. The Kubeflow dashboard is the endpoint to your istio-ingressgateway. We will be using the namespace `anonymous` for this example.
 
-2. Compile the Katib pipeline
+2. Compile and apply the Katib pipeline
 ```shell
 dsl-compile-tekton --py katib.py --output katib.yaml
+kubectl apply -f katib.yaml -n anonymous
 ```
 
 3. Run the Katib pipeline, click the `enter` key to use the default pipeline variables.
