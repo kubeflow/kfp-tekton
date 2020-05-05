@@ -24,7 +24,7 @@ LICENSE = "Apache 2.0"
 HOMEPAGE = "https://github.com/kubeflow/kfp-tekton/"
 
 REQUIRES = [
-    'kfp>=0.2.2',
+    'kfp==0.5.0',
 ]
 
 
@@ -47,8 +47,8 @@ def find_version(*file_path_parts):
 setup(
     name=NAME,
     version=find_version("kfp_tekton", "__init__.py"),
-    description="KubeFlow Pipelines compiler generating Tekton YAML (instead of Argo YAML).",
-    long_description="Extension of Kubeflow Pipelines compiler generating Tekton YAML (instead of Argo YAML).",
+    description="Kubeflow Pipelines DSL compiler generating Tekton YAML (instead of Argo YAML).",
+    long_description="Extension of the Kubeflow Pipelines compiler generating Tekton YAML (instead of Argo YAML).",
     author="kubeflow.org",
     license=LICENSE,
     url=HOMEPAGE,

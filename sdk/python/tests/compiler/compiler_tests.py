@@ -12,20 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
+import re
 import shutil
 import tempfile
+import textwrap
 import unittest
 import yaml
-import re
-import textwrap
+from os import environ as env
 
 from kfp_tekton import compiler
 
 
 # after code changes that change the YAML output, temporarily set this flag to True
 # in order to generate new "golden" YAML files
-GENERATE_GOLDEN_YAML = False
+GENERATE_GOLDEN_YAML = env.get("GENERATE_GOLDEN_YAML", "False") == "True"
+
+if GENERATE_GOLDEN_YAML:
+  logging.warning(
+    "The environment variable 'GENERATE_GOLDEN_YAML' was set to 'True'. Test cases will regenerate "
+    "the 'golden' YAML files instead of verifying the YAML produced by compiler.")
 
 # License header for Kubeflow project
 LICENSE_HEADER = textwrap.dedent("""\
@@ -329,6 +336,8 @@ class TestTektonCompiler(unittest.TestCase):
     """
     if GENERATE_GOLDEN_YAML:
       with open(golden_yaml_file, 'w') as f:
+        f.write(LICENSE_HEADER)
+      with open(golden_yaml_file, 'a+') as f:
         yaml.dump_all(compiled_workflow, f, default_flow_style=False)
     else:
       with open(golden_yaml_file, 'r') as f:

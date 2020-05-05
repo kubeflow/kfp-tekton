@@ -24,7 +24,7 @@ or run this command from the project root directory:
 You should see an output similar to the one below, outlining which test scripts have passed and which are failing:
 
 ```YAML
-KFP version: 0.2.2
+KFP version: 0.5.0
 
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_location.py
@@ -35,6 +35,7 @@ SUCCESS: compose.py
 SUCCESS: default_value.py
 SUCCESS: input_artifact_raw_value.py
 FAILURE: loop_over_lightweight_output.py
+FAILURE: parallelfor_item_argument_resolving.py
 SUCCESS: param_op_transform.py
 SUCCESS: param_substitutions.py
 SUCCESS: pipelineparams.py
@@ -57,16 +58,20 @@ FAILURE: withparam_global_dict.py
 FAILURE: withparam_output.py
 FAILURE: withparam_output_dict.py
 
-Success: 25
-Failure: 5
-Total:   30
+Compilation status for testdata DSL scripts:
+
+  Success: 25
+  Failure: 6
+  Total:   31
+
+Overall success rate: 25/31 = 81%
 
 Compilation status report:   sdk/python/tests/test_kfp_samples_report.txt
 Accumulated compiler logs:   temp/test_kfp_samples_output.txt
 Compiled Tekton YAML files:  temp/tekton_compiler_output/
 ```
 
-The goal is to have all the 30 tests pass before we can have a degree of confidence that the compiler can handle
+The goal is to have all the `31` tests pass before we can have a degree of confidence that the compiler can handle
 a fair number of pipelines.
 
 
@@ -85,22 +90,22 @@ This will include all `core/samples`, 3rd-party contributed samples, tutorials, 
 Compilation status for testdata DSL scripts:
 
   Success: 25
-  Failure: 5
-  Total:   30
+  Failure: 6
+  Total:   31
 
 Compilation status for core samples:
 
   Success: 18
-  Failure: 5
-  Total:   23
+  Failure: 4
+  Total:   22
 
 Compilation status for 3rd-party contributed samples:
 
-  Success: 23
-  Failure: 5
-  Total:   28
+  Success: 25
+  Failure: 7
+  Total:   32
 
-Overall success rate: 69/84 = 82%
+Overall success rate: 71/88 = 81%
 ```
 
 When the `--print-error-details` flag is used, a summary of all the compilation errors is appended to the console
@@ -111,23 +116,21 @@ output -- sorted by their respective number of occurrences:
 ```YAML
 ...
 
-Overall success rate: 69/84 = 82%
+Overall success rate: 71/88 = 81%
 
 Occurences of NotImplementedError:
-   7: dynamic params are not yet implemented
+   8 dynamic params are not yet implemented
 
 Occurences of other Errors:
    2 ValueError: These Argo variables are not supported in Tekton Pipeline: {{workflow.uid}}
-   2 ValueError: These Argo variables are not supported in Tekton Pipeline: {{pod.name}}, {{workflow.name}}
-   1 ValueError: These Argo variables are not supported in Tekton Pipeline: {{workflow.uid}}, {{pod.name}}
+   1 ValueError: These Argo variables are not supported in Tekton Pipeline: {{workflow.name}}, {{pod.name}}
    1 ValueError: These Argo variables are not supported in Tekton Pipeline: {{workflow.name}}
+   1 ValueError: These Argo variables are not supported in Tekton Pipeline: {{pod.name}}, {{workflow.uid}}
+   1 ValueError: These Argo variables are not supported in Tekton Pipeline: {{pod.name}}, {{workflow.name}}
    1 ValueError: There are multiple pipelines: ['flipcoin_pipeline', 'flipcoin_exit_pipeline']. Please specify --function.
-   1 ValueError: A function with @dsl.pipeline decorator is required in the py file.
 ```
 
 ## Disclaimer
 
-**Note:** The reports above were created for the pipeline scripts found in KFP version `0.2.2` since the
-`kfp_tekton` compiler code is still based on the `kfp` SDK compiler version `0.2.2`. We are working on 
-upgrading the `kfp_tekton` compiler code to be based on `kfp` version `0.5.0`
-([issue #133](https://github.com/kubeflow/kfp-tekton/issues/133)).
+**Note:** The reports above were created for the pipeline scripts found in KFP version `0.5.0` since the
+`kfp_tekton` compiler code is currently based on the `kfp` SDK compiler version `0.5.0`.
