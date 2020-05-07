@@ -1,4 +1,4 @@
-# MNIST End to End examples with Kubeflow compoenents
+# MNIST End to End example with Kubeflow compoenents
 
 This notebook demonstrates how to compile and execute an End to End Machine Learning workflow that uses Katib, TFJob, KFServing, and Tekton pipeline. This notebook is originated from the Kubeflow pipeline's [e2e-mnist](https://github.com/kubeflow/pipelines/tree/master/samples/contrib/e2e-mnist) example that's running on Kubeflow 0.7. We have modified this notebook to run with Kubeflow 1.x's user namespace separation with Tekton support. 
 
