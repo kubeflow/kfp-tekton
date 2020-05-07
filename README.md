@@ -1,6 +1,6 @@
 # Kubeflow Pipelines and Tekton
 
-Experimental project to bring Kubeflow Pipelines and Tekton together. The work is being driven in accordance with this
+Project to bring Kubeflow Pipelines and Tekton together. The work is being driven in accordance with this
 evolving [design doc specifications](http://bit.ly/kfp-tekton). Since this will evolve from experimental towards a more
 mature solution, we are keeping it currently separate from [Kubeflow Pipeline repo](https://github.com/kubeflow/pipelines).
 
@@ -12,7 +12,7 @@ of a Pipeline and is responsible for creating a Pod for each of its Tasks and as
 has Steps.  Some tasks here will invariably require contributions back to Tekton. Please follow the community guidelines
 in [Tekton repo](https://github.com/tektoncd/pipeline).
 
-## Development: Kubeflow Pipeline DSL to Tekton Compiler
+## Kubeflow Pipeline DSL to Tekton Compiler
 
 The work will be split in three phases. While the details of the phases are listed in the [design doc](http://bit.ly/kfp-tekton),
 the current effort in this repository is focused on creating a Kubeflow Pipeline compiler for Tekton, which can take
@@ -21,20 +21,33 @@ design decisions.
 
 ![kfp-tekton](images/kfp-tekton-phase-one.png)
 
-To get started experimenting with the KFP Tekton Compiler, please [follow these instructions](sdk/README.md).
-
-If you would like to make code contributions take a look at the [Developer Guide](sdk/python/README.md) and go through
-the list of [open issues](https://github.com/kubeflow/kfp-tekton/issues).
-
 We are currently using [Kubeflow Pipelines 0.5.0](https://github.com/kubeflow/pipelines/releases/tag/0.5.0) and
-[Tekton 0.11.3](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3) for this project. 
+[Tekton 0.11.3](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3) for this project.
 
-The [KFP, Argo and Tekton Feature Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
-provides a detailed analysis of the KFP features and a comparison of their respective implementations in Argo and Tekton.
- 
+### Getting Started
+[Getting started with KFP Tekton Compiler SDK](/sdk/README.md)
+
+### Developer Guide
+[Developer Guide](/sdk/python/README.md) 
+
+### Available Features and Implementation Details
+[Available Features and Implementation Details](/sdk/FEATURES.md)
+
+### Compiler Status Report
+[Compilation Status Test Report](/tests/README.md)
+
+### Samples
+[Samples being run end to end for verification](/samples/README.md)
+
+### KFP, Argo and Tekton Feature Comparison
+[KFP, Argo and Tekton Feature Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
+
+### Design Doc 
+[Design Doc](http://bit.ly/kfp-tekton)
+
 ## CD Foundation
 
-The work here is being tracked under the [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/). If you are interested in joining, please see the [instructions here](https://github.com/cdfoundation/sig-mlops)
+The project is being tracked under the [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/). If you are interested in joining, please see the [instructions here](https://github.com/cdfoundation/sig-mlops)
 
 ## Additional Reference Materials: KFP and TFX
 
