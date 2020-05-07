@@ -1,6 +1,6 @@
-# Watson Train and Server.
+# Training and Serving Models with Watson Machine Learning
 
-This pipeline runs training, storing and deploying a Tensorflow model with MNIST handwriting recognition using [IBM Watson Machine Learning](https://www.ibm.com/cloud/machine-learning) service.
+This pipeline runs training, storing and deploying a Tensorflow model with MNIST handwriting recognition using [IBM Watson Machine Learning](https://www.ibm.com/cloud/machine-learning) service. And it is coming from [ibm-samples/watson](https://github.com/kubeflow/pipelines/tree/master/samples/contrib/ibm-samples/watson).
 
 ## Prerequisites 
 - Install [Kubeflow 1.0.2+](https://www.kubeflow.org/docs/started/getting-started/) and connect the cluster to the current shell with `kubectl`
@@ -15,14 +15,14 @@ This pipeline runs training, storing and deploying a Tensorflow model with MNIST
 
 ## Instructions
 
-1. Compile and apply the trusted-ai pipeline
+1. Compile and apply the Watson ML pipeline
 ```shell
 dsl-compile-tekton --py watson_train_serve_pipeline.py --output watson-train-server.yaml
 kubectl apply -f watson-train-server.yaml 
 ```
-2. If your service account hasn't have RBAC, follow this [sa-and-rbac](/sdk/sa-and-rbac.md) to setup.
+2. If your default service account dosn't have edit permission, follow this [sa-and-rbac](/sdk/sa-and-rbac.md) to setup.
 
-3. Run the kfp-on-wml-training pipeline, click the `enter` key to use the default pipeline variables except these two variables,
+3. Run the kfp-on-wml-training pipeline, click the `enter` key to use the default pipeline variables except for these two variables,
 `GITHUB_TOKEN`: your github token
 `CONFIG_FILE_URL`: your configuration file which stores the credential information, here is the example of [creds.ini file](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/ibm-samples/watson/credentials/creds.ini) 
 
@@ -30,7 +30,7 @@ kubectl apply -f watson-train-server.yaml
 tkn pipeline start kfp-on-wml-training --showlog
 ```
 
-This pipeline will run for 5 to 10 minutes, then you should able to see the result at the end of the logs.
+This pipeline will run for 5 to 10 minutes, then you should be able to see the prediction result `{'values': [5, 4]}` at the end of the logs.
 ```
 [deploy-model-watson-machine-learning : deploy-model-watson-machine-learning] #######################################################################################
 [deploy-model-watson-machine-learning : deploy-model-watson-machine-learning] 

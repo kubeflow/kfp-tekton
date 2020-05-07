@@ -87,5 +87,5 @@ def kfp_wml_pipeline(
 if __name__ == '__main__':
     # compile the pipeline
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(flipcoin_pipeline, __file__.replace('.py', '.yaml'))
+    TektonCompiler().compile(kfp_wml_pipeline, __file__.replace('.py', '.yaml'))
 
