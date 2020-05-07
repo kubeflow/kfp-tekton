@@ -68,7 +68,7 @@ with Tekton's [parameters](https://github.com/tektoncd/pipeline/blob/master/docs
 task. The [parallel_join](/sdk/python/tests/compiler/testdata/parallel_join.py) python test is an example of how to use this
 feature.
 
-# Pipeline features with custom Tekton implementation
+# Pipeline DSL features with custom Tekton implementation
 ## Features with same behavior as Argo
 Below are the features that don't have one to one mapping to Tekton's native implementation, but the same behaviors can be replicated with
 extra custom processing code or workaround within the compiler.
