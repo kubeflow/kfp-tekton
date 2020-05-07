@@ -39,18 +39,18 @@ We are currently using [Kubeflow Pipelines 0.5.0](https://github.com/kubeflow/pi
 ### Samples
 [Samples being run end to end for verification](/samples/README.md)
 
-### KFP, Argo and Tekton Feature Comparison
-[KFP, Argo and Tekton Feature Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
+### KFP, Argo and Tekton Features Comparison
+[KFP, Argo and Tekton Features Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
 
 ### Design Doc 
 [Design Doc](http://bit.ly/kfp-tekton)
 
-## CD Foundation
+### CD Foundation
 
-The project is being tracked under the [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/). If you are interested in joining, please see the [instructions here](https://github.com/cdfoundation/sig-mlops)
++ [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/). 
++ [Instructions to join](https://github.com/cdfoundation/sig-mlops)
 
-## Additional Reference Materials: KFP and TFX
+### Additional Reference Materials: KFP and TFX
 
-1. [Kubeflow Pipelines-TFX Pipelines](/samples/kfp-tfx)
-2. [Kubeflow Pipelines-TFX Pipelines Talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
-3. [Kubeflow Pipelines-TFX Pipelines RFC](https://docs.google.com/document/d/1_n3q0mNOr7gUSM04yaA0e5BO9RrS0Vkh1cNCyrB07WM/edit)
++ [Kubeflow Pipelines-TFX Pipelines](/samples/kfp-tfx)
++ [Kubeflow Pipelines-TFX Pipelines Talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
