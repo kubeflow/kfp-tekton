@@ -5,7 +5,7 @@ If you are interested more in the larger list of pipelines samples we are testin
 
 + [MNIST End to End example with Kubeflow components](/samples/e2e-mnist)
 + [Hyperparameter tuning using Katib](/samples/katib)
-+ [Trusted AI Pipeline](/samples/trusted-ai)
++ [Trusted AI Pipeline with AI Fairness 360 and Adversarial Robustness 360 components](/samples/trusted-ai)
 + [Training and Serving Models with Watson Machine Learning](/samples/watson-train-serve#training-and-serving-models-with-watson-machine-learning)
 + [Lightweight python components example](/samples/lightweight-component)
 + [The flip-coin pipeline](/samples/flip-coin)
