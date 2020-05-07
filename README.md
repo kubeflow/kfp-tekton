@@ -33,7 +33,7 @@ We are currently using [Kubeflow Pipelines 0.5.0](https://github.com/kubeflow/pi
 [Available Features and Implementation Details](/sdk/FEATURES.md)
 
 ### Compiler Status Report
-[Compilation Status Test Report](/tests/README.md)
+[Compilation Tests Status Report](/tests/README.md)
 
 ### Samples
 [Samples being run end to end for verification](/samples/README.md)
