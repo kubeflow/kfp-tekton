@@ -17,12 +17,12 @@ in [Tekton repo](https://github.com/tektoncd/pipeline).
 The work will be split in three phases. While the details of the phases are listed in the [design doc](http://bit.ly/kfp-tekton),
 the current effort in this repository is focused on creating a Kubeflow Pipeline compiler for Tekton, which can take
 KFP DSL, and compile it to Tekton YAML. We will update the details as we move into other phases, in concurrence with
-design decisions.
-
-![kfp-tekton](images/kfp-tekton-phase-one.png)
+design decisions. 
 
 We are currently using [Kubeflow Pipelines 0.5.0](https://github.com/kubeflow/pipelines/releases/tag/0.5.0) and
 [Tekton 0.11.3](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3) for this project.
+
+![kfp-tekton](images/kfp-tekton-phase-one.png)
 
 ### Getting Started
 [Getting started with KFP Tekton Compiler SDK](/sdk/README.md)
@@ -52,5 +52,5 @@ We are currently using [Kubeflow Pipelines 0.5.0](https://github.com/kubeflow/pi
 
 ### Additional Reference Materials: KFP and TFX
 
-+ [Kubeflow Pipelines-TFX Pipelines](/samples/kfp-tfx)
-+ [Kubeflow Pipelines-TFX Pipelines Talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
++ [Kubeflow and TFX Pipelines](/samples/kfp-tfx)
++ [Kubeflow and TFX Pipelines talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
