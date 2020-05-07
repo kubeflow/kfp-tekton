@@ -9,14 +9,13 @@ mature solution, we are keeping it currently separate from [Kubeflow Pipeline re
 The Tekton Pipelines project provides Kubernetes-style resources for declaring CI/CD-style pipelines. Tekton introduces
 several new CRDs including Task, Pipeline, TaskRun, and PipelineRun. A PipelineRun represents a single running instance
 of a Pipeline and is responsible for creating a Pod for each of its Tasks and as many containers within each Pod as it
-has Steps.  Some tasks here will invariably require contributions back to Tekton. Please follow the community guidelines
-in [Tekton repo](https://github.com/tektoncd/pipeline).
+has Steps. Please look for more details in [Tekton repo](https://github.com/tektoncd/pipeline).
 
 ## Kubeflow Pipeline DSL to Tekton Compiler
 
-The work will be split in three phases. While the details of the phases are listed in the [design doc](http://bit.ly/kfp-tekton),
+The work will be split in phases. While the details of the phases are listed in the [design doc](http://bit.ly/kfp-tekton),
 the current effort in this repository is focused on creating a Kubeflow Pipeline compiler for Tekton, which can take
-KFP DSL, and compile it to Tekton YAML. We will update the details as we move into other phases, in concurrence with
+KFP DSL, and compile it to Tekton YAML. Details will be updated as we move into other phases, in concurrence with
 design decisions. 
 
 We are currently using [Kubeflow Pipelines 0.5.0](https://github.com/kubeflow/pipelines/releases/tag/0.5.0) and
