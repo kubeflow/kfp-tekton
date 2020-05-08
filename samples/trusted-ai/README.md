@@ -25,7 +25,7 @@ kubectl apply -f trusted-ai.yaml -n anonymous
 
 3. Run the trusted-ai pipeline, click the `enter` key to use the default pipeline variables.
 ```shell
-tkn pipeline start launch-katib-experiment -s default-editor -n anonymous --showlog
+tkn pipeline start launch-trusted-ai-pipeline -s default-editor -n anonymous --showlog
 ```
 
 This pipeline will run for 10 to 15 minutes, then you should able to see the best hyperparameter tuning result at the end of the logs.

@@ -23,8 +23,10 @@ kubectl apply -f watson-train-server.yaml
 2. If your default service account dosn't have edit permission, follow this [sa-and-rbac](/sdk/sa-and-rbac.md) to setup.
 
 3. Run the kfp-on-wml-training pipeline, click the `enter` key to use the default pipeline variables except for these two variables,
-`GITHUB_TOKEN`: your github token
-`CONFIG_FILE_URL`: your configuration file which stores the credential information, here is the example of [creds.ini file](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/ibm-samples/watson/credentials/creds.ini) 
+
+    `GITHUB_TOKEN`: your github token
+
+    `CONFIG_FILE_URL`: your configuration file which stores the credential information, here is the example of [creds.ini file](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/ibm-samples/watson/credentials/creds.ini) 
 
 ```shell
 tkn pipeline start kfp-on-wml-training --showlog
