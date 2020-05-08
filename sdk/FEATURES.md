@@ -1,6 +1,6 @@
 # KFP Tekton compiler features
 
-Below are the list of features that are currently avaliable in the KFP Tekton compiler along with its implementation. With the current implementation, we are getting a greater than [80% success rate for compilation tests we are running over approximately 90 pipelines](/sdk//python/tests/README.md) spread across different parts of the Kubeflow Pipeline samples and tests. 
+Below are the list of features that are currently avaliable in the KFP Tekton compiler along with its implementation. With the current implementation, we are getting a greater than [80% success rate for compilation tests we are running over approximately 90 pipelines](/sdk/python/tests/README.md) spread across different parts of the Kubeflow Pipeline samples and tests. 
 
 - [Pipeline DSL features with native Tekton implementation](#pipeline-dsl-features-with-native-tekton-implementation)
     + [pod_annotations and pod_labels](#pod_annotations-and-pod_labels)

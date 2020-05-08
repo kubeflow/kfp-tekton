@@ -129,7 +129,6 @@ class TektonCompiler(Compiler) :
         if task_name is None:
           return '$(params.%s)' % parameter_name
         else:
-          logging.warning("Warning: Using parameter passing from task outputs to condition parameters requires running the pipeline on Tekton built from the master branch")
           return '$(params.%s)' % task_name
       else:
         return '$(params.%s)' % parameter_name
