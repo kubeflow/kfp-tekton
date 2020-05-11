@@ -1,4 +1,4 @@
-# Copyright 2018 Google LLC
+# Copyright 2020 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -59,7 +59,9 @@ class SaveMessageOp(dsl.ContainerOp):
   name='Save Most Frequent',
   description='Get Most Frequent Word and Save to GCS'
 )
-def save_most_frequent_word(message: dsl.PipelineParam, outputpath: dsl.PipelineParam):
+def save_most_frequent_word(
+              message="hello world hello", 
+              outputpath="result.txt"):
   """A pipeline function describing the orchestration of the workflow."""
 
   counter = GetFrequentWordOp(
@@ -95,6 +97,12 @@ class DownloadMessageOp(dsl.ContainerOp):
   name='Download and Save Most Frequent',
   description='Download and Get Most Frequent Word and Save to GCS'
 )
-def download_save_most_frequent_word(url: str, outputpath: str):
+def download_save_most_frequent_word(
+                                url="gs://ml-pipeline-playground/shakespeare1.txt", 
+                                outputpath="res.txt"):
   downloader = DownloadMessageOp('download', url)
   save_most_frequent_word(downloader.output, outputpath)
+
+if __name__ == '__main__':
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(download_save_most_frequent_word, __file__.replace('.py', '.yaml'))
