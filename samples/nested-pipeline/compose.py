@@ -60,8 +60,8 @@ class SaveMessageOp(dsl.ContainerOp):
   description='Get Most Frequent Word and Save to GCS'
 )
 def save_most_frequent_word(
-              message="hello world hello", 
-              outputpath="result.txt"):
+              message: str = "hello world hello",
+              outputpath: str = "result.txt"):
   """A pipeline function describing the orchestration of the workflow."""
 
   counter = GetFrequentWordOp(
@@ -98,8 +98,8 @@ class DownloadMessageOp(dsl.ContainerOp):
   description='Download and Get Most Frequent Word and Save to GCS'
 )
 def download_save_most_frequent_word(
-                                url="gs://ml-pipeline-playground/shakespeare1.txt", 
-                                outputpath="res.txt"):
+                                url: str= "gs://ml-pipeline-playground/shakespeare1.txt",
+                                outputpath: str= "res.txt"):
   downloader = DownloadMessageOp('download', url)
   save_most_frequent_word(downloader.output, outputpath)
 
