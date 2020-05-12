@@ -9,3 +9,4 @@ If you are interested more in the larger list of pipelines samples we are testin
 + [Training and Serving Models with Watson Machine Learning](/samples/watson-train-serve#training-and-serving-models-with-watson-machine-learning)
 + [Lightweight python components example](/samples/lightweight-component)
 + [The flip-coin pipeline](/samples/flip-coin)
++ [Nested pipeline example](/samples/nested-pipeline)
