@@ -19,42 +19,42 @@ from kfp import dsl
 
 class FlipCoinOp(dsl.ContainerOp):
 
-  def __init__(self, name):
-    super(FlipCoinOp, self).__init__(
-      name=name,
-      image='python:alpine3.6',
-      command=['sh', '-c'],
-      arguments=['python -c "import random; result = \'heads\' if random.randint(0,1) == 0 '
-                 'else \'tails\'; print(result)" | tee /tmp/output'],
-      file_outputs={'output': '/tmp/output'})
+    def __init__(self, name):
+        super(FlipCoinOp, self).__init__(
+            name=name,
+            image='python:alpine3.6',
+            command=['sh', '-c'],
+            arguments=['python -c "import random; result = \'heads\' if random.randint(0,1) == 0 '
+                       'else \'tails\'; print(result)" | tee /tmp/output'],
+            file_outputs={'output': '/tmp/output'})
 
 
 class PrintOp(dsl.ContainerOp):
-  
-  def __init__(self, name, msg):
-    super(PrintOp, self).__init__(
-      name=name,
-      image='alpine:3.6',
-      command=['echo', msg])
-    
+
+    def __init__(self, name, msg):
+        super(PrintOp, self).__init__(
+            name=name,
+            image='alpine:3.6',
+            command=['echo', msg])
+
 
 @dsl.pipeline(
-  name='Flip Coin Example Pipeline',
-  description='Shows how to use dsl.Condition.'
+    name='Flip Coin Example Pipeline',
+    description='Shows how to use dsl.Condition.'
 )
 def flipcoin():
-  flip = FlipCoinOp('flip')
+    flip = FlipCoinOp('flip')
 
-  with dsl.Condition(flip.output=='heads'):
-    flip2 = FlipCoinOp('flip-again')
+    with dsl.Condition(flip.output == 'heads'):
+        flip2 = FlipCoinOp('flip-again')
 
-    with dsl.Condition(flip2.output=='tails'):
-      PrintOp('print1', flip2.output)
+        with dsl.Condition(flip2.output == 'tails'):
+            PrintOp('print1', flip2.output)
 
-  with dsl.Condition(flip.output=='tails'):
-      PrintOp('print2', flip2.output)
+    with dsl.Condition(flip.output == 'tails'):
+        PrintOp('print2', flip2.output)
+
 
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(flipcoin, __file__.replace('.py', '.yaml'))
