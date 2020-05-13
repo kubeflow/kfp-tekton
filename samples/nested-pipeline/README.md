@@ -12,7 +12,7 @@ This example contains two pipelines, `save-most-frequent` and `download-and-save
 Once you have completed all the prerequisites for this example, you can first try out the `save-most-frequent` pipeline
 ```
 dsl-compile-tekton --py compose.py --output pipeline.yaml --function save_most_frequent_word
-
+kubectl apply -f pipeline.yaml
 tkn pipeline start save-most-frequent --showlog
 ```
 You will see the following params, specify the string and outputpath, both are required params, even you don't have GCS setup.
@@ -32,6 +32,7 @@ Waiting for logs to be available...
 To tryout the nested pipeline `download-and-save-most-frequent`:
 ```
 dsl-compile-tekton --py compose.py --output pipeline.yaml --function download_save_most_frequent_word
+kubectl apply -f pipeline.yaml
 tkn pipeline start download-and-save-most-frequent --showlog
 ```
 To give the input string and path
