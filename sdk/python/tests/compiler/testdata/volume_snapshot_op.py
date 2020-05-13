@@ -91,6 +91,5 @@ def volume_snapshotop_sequential(url):
 
 
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(volume_snapshotop_sequential, __file__.replace('.py', '.yaml'))

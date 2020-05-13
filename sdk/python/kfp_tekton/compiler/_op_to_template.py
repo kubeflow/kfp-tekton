@@ -21,7 +21,7 @@ from collections import OrderedDict
 from typing import List, Text, Dict, Any
 
 from kfp import dsl
-from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
+from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json
 from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
 from kfp.dsl import ArtifactLocation
 from kfp.dsl._container_op import BaseOp

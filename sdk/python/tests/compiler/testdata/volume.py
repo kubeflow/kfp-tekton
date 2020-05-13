@@ -14,7 +14,7 @@
 
 
 import kfp.dsl as dsl
-from kubernetes import client as k8s_client
+from kubernetes.client import V1Volume, V1SecretVolumeSource, V1VolumeMount, V1EnvVar
 
 
 @dsl.pipeline(
@@ -22,28 +22,25 @@ from kubernetes import client as k8s_client
     description='A pipeline with volume.'
 )
 def volume_pipeline():
-  op1 = dsl.ContainerOp(
-      name='download',
-      image='google/cloud-sdk',
-      command=['sh', '-c'],
-      arguments=['ls | tee /tmp/results.txt'],
-      file_outputs={'downloaded': '/tmp/results.txt'}) \
-    .add_volume(k8s_client.V1Volume(name='gcp-credentials',
-                                   secret=k8s_client.V1SecretVolumeSource(
-                                       secret_name='user-gcp-sa'))) \
-    .add_volume_mount(k8s_client.V1VolumeMount(
-      mount_path='/secret/gcp-credentials', name='gcp-credentials')) \
-    .add_env_variable(k8s_client.V1EnvVar(
-      name='GOOGLE_APPLICATION_CREDENTIALS',
-      value='/secret/gcp-credentials/user-gcp-sa.json')) \
-    .add_env_variable(k8s_client.V1EnvVar(name='Foo', value='bar'))
-  op2 = dsl.ContainerOp(
-      name='echo',
-      image='library/bash',
-      command=['sh', '-c'],
-      arguments=['echo %s' % op1.output])
+    op1 = dsl.ContainerOp(name='download',
+                          image='google/cloud-sdk',
+                          command=['sh', '-c'],
+                          arguments=['ls | tee /tmp/results.txt'],
+                          file_outputs={'downloaded': '/tmp/results.txt'}) \
+        .add_volume(V1Volume(name='gcp-credentials',
+                             secret=V1SecretVolumeSource(secret_name='user-gcp-sa'))) \
+        .add_volume_mount(V1VolumeMount(mount_path='/secret/gcp-credentials',
+                                        name='gcp-credentials')) \
+        .add_env_variable(V1EnvVar(name='GOOGLE_APPLICATION_CREDENTIALS',
+                                   value='/secret/gcp-credentials/user-gcp-sa.json')) \
+        .add_env_variable(V1EnvVar(name='Foo', value='bar'))
+
+    op2 = dsl.ContainerOp(name='echo',
+                          image='library/bash',
+                          command=['sh', '-c'],
+                          arguments=['echo %s' % op1.output])
+
 
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(volume_pipeline, __file__.replace('.py', '.yaml'))

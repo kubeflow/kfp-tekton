@@ -129,6 +129,11 @@ When code changes are required to static helper methods in `kfp.compiler` the "o
 their respective modules in `kfp_tekton.compiler` and added to the _monkey patch_ which dynamically replaces the code in
 the `kfp` at runtime.
 
+**Note**: As of May 2020, the _monkey patch_ was no longer needed and removed since all of the _patched_ methods were
+now invoked directly (and only) by other code implemented in the `kfp_tekton` compiler. However it may become necessary
+again in the future to reintroduce the _monkey patch_ for any methods we need to "override" which are not (only) directly
+called by other methods we already implemented in the `kfp_tekton` compiler.
+
 `sdk/python/kfp_tekton/compiler/__init__.py`:
 ```Python
 def monkey_patch():
@@ -179,7 +184,7 @@ pipeline DSL script using KFP's `dsl-compile --py <DSL script>` command.
 if __name__ == '__main__':
     # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(pipeline, __file__.replace('.py', '.yaml'))
+    TektonCompiler().compile(pipeline_func, __file__.replace('.py', '.yaml'))
 ```
 
 

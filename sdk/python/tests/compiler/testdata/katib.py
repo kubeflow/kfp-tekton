@@ -123,7 +123,7 @@ def katib_experiment_launcher_op(
         file_outputs = {'bestHyperParameter': outputFile}
     )
 
+
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(mnist_hpo, __file__.replace('.py', '.yaml'))

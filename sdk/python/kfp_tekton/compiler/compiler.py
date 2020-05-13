@@ -32,9 +32,10 @@ from kfp.compiler.compiler import Compiler
 # from kfp.components._yaml_utils import dump_yaml
 from kfp.components.structures import InputSpec
 from kfp.dsl._metadata import _extract_pipeline_metadata
-from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 
-from .. import tekton_api_version
+from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json
+
+from kfp_tekton import tekton_api_version
 
 
 class TektonCompiler(Compiler) :
@@ -587,7 +588,7 @@ class TektonCompiler(Compiler) :
         pipeline_conf,
     )
 
-    from ._data_passing_rewriter import fix_big_data_passing
+    from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
     workflow = fix_big_data_passing(workflow)
 
     import json
@@ -637,8 +638,14 @@ class TektonCompiler(Compiler) :
     # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
     # using regular expression.
     tekton_var_regex_rules = [
-        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
-        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
+        {
+          'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}',
+          'tekton_rule': '$(inputs.params.\g<1>)'
+        },
+        {
+          'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}',
+          'tekton_rule': '$(results.\g<1>.path)'
+        }
     ]
     for regex_rule in tekton_var_regex_rules:
       yaml_text = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], yaml_text)

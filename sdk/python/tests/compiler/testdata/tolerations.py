@@ -16,6 +16,7 @@ from kubernetes.client import V1Toleration
 from kfp.dsl import ContainerOp
 from kfp import dsl
 
+
 @dsl.pipeline(
     name='tolerations',
     description='A pipeline with tolerations'
@@ -34,7 +35,7 @@ def tolerations(
                                      operator='Equal',
                                      value='run'))
 
+
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(tolerations, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)

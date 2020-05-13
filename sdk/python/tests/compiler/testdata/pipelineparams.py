@@ -41,7 +41,7 @@ def pipelineparams_pipeline(tag: str = 'latest', sleep_ms: int = 10):
     
     op2.container.add_env_variable(V1EnvVar(name='MSG', value='pipelineParams: '))
 
+
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(pipelineparams_pipeline, __file__.replace('.py', '.yaml'))
