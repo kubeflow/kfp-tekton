@@ -42,6 +42,5 @@ def pipeline(my_pipe_param='10'):
 
 
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(pipeline, __file__.replace('.py', '.yaml'))

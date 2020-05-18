@@ -36,7 +36,7 @@ def volumeop_basic(size):
         pvolumes={"/mnt": vop.volume}
     )
 
+
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(volumeop_basic, __file__.replace('.py', '.yaml'))
