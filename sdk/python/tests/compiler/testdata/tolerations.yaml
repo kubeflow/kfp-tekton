@@ -53,9 +53,11 @@ spec:
   params: []
   pipelineRef:
     name: tolerations
-  podtemplate:
-    tolerations:
-    - effect: NoSchedule
-      key: gpu
-      operator: Equal
-      value: run
+  taskRunSpec:
+  - pipelineTaskName: download
+    taskPodTemplate:
+      tolerations:
+      - effect: NoSchedule
+        key: gpu
+        operator: Equal
+        value: run

@@ -313,13 +313,15 @@ class TektonCompiler(Compiler) :
       op = pipeline.ops.get(task['name'])
       task_spec = {"pipelineTaskName":task['name'], "taskPodTemplate": {}}
       if op.affinity:
-        task_spec["taskPodTemplate"]["affinity"] = op.affinity
+        task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
       if op.tolerations:
         task_spec["taskPodTemplate"]['tolerations'] = op.tolerations
       if op.node_selector:
         task_spec["taskPodTemplate"]['nodeSelector'] = op.node_selector
-      task_run_spec.append(task_spec)
-    pipelinerun['spec']['taskRunSpec'] = task_run_spec
+      if bool(task_spec["taskPodTemplate"]):
+        task_run_spec.append(task_spec)
+    if len(task_run_spec) > 0:
+      pipelinerun['spec']['taskRunSpec'] = task_run_spec
 
     # add workflow level timeout to pipeline run
     if pipeline.conf.timeout:

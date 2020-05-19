@@ -47,6 +47,8 @@ spec:
   params: []
   pipelineRef:
     name: node-selector
-  podtemplate:
-    nodeSelector:
-      accelerator: nvidia-tesla-k80
+  taskRunSpec:
+  - pipelineTaskName: sleep
+    taskPodTemplate:
+      nodeSelector:
+        accelerator: nvidia-tesla-k80
