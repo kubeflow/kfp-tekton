@@ -64,7 +64,7 @@ spec:
     - --failure-condition=$(params.failure-condition)
     - --set-ownerreference=$(params.set-ownerreference)
     image: $(params.image)
-    name: test-step
+    name: main
     resources: {}
 ---
 apiVersion: tekton.dev/v1beta1

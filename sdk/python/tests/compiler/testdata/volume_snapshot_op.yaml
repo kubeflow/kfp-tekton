@@ -69,7 +69,7 @@ spec:
         fieldRef:
           fieldPath: metadata.labels['tekton.dev/pipelineRun']
     image: $(params.image)
-    name: create-volume
+    name: main
     resources: {}
 ---
 apiVersion: tekton.dev/v1beta1
@@ -154,7 +154,7 @@ spec:
         fieldRef:
           fieldPath: metadata.labels['tekton.dev/pipelineRun']
     image: $(params.image)
-    name: step1-snap
+    name: main
     resources: {}
 ---
 apiVersion: tekton.dev/v1beta1
@@ -238,7 +238,7 @@ spec:
         fieldRef:
           fieldPath: metadata.labels['tekton.dev/pipelineRun']
     image: $(params.image)
-    name: step2-snap
+    name: main
     resources: {}
 ---
 apiVersion: tekton.dev/v1beta1
@@ -322,7 +322,7 @@ spec:
         fieldRef:
           fieldPath: metadata.labels['tekton.dev/pipelineRun']
     image: $(params.image)
-    name: step3-snap
+    name: main
     resources: {}
 ---
 apiVersion: tekton.dev/v1beta1

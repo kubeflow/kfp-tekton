@@ -127,7 +127,7 @@ def _get_resourceOp_template(op: BaseOp,
                         "--set-ownerreference=$(params.set-ownerreference)"
                     ],
                     "image": "$(params.image)",
-                    "name": name,
+                    "name": "main",
                     "resources": {}
                 }
             ]
