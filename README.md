@@ -1,8 +1,8 @@
-# Kubeflow Pipelines and Tekton
+# Kubeflow Pipelines DSL Compiler for Tekton
 
-Project to bring Kubeflow Pipelines and Tekton together. The work is being driven in accordance with this
-evolving [design doc specifications](http://bit.ly/kfp-tekton). Since this will evolve from experimental towards a more
-mature solution, we are keeping it currently separate from [Kubeflow Pipeline repo](https://github.com/kubeflow/pipelines).
+Project to bring Kubeflow Pipelines DSL and Tekton together. The work is being driven in accordance with this evolving [design doc specifications](http://bit.ly/kfp-tekton). The work is split in phases. While the details of the phases are listed in the [design doc](http://bit.ly/kfp-tekton), the current effort in this repository is focused on creating a Kubeflow Pipeline compiler for Tekton, which can take KFP DSL, and compile it to Tekton YAML. You can then run those Pipelines on Tekton directly.
+
+If you would like to take the compiled output to Kubeflow Pipelines (KFP) engine and run it through KFP SDK and UI, please follow [the evolving code in the backend repository](https://github.com/kubeflow/kfp-tekton-backend)
 
 ## Tekton
 
@@ -12,11 +12,6 @@ of a Pipeline and is responsible for creating a Pod for each of its Tasks and as
 has Steps. Please look for more details in [Tekton repo](https://github.com/tektoncd/pipeline).
 
 ## Kubeflow Pipeline DSL to Tekton Compiler
-
-The work will be split in phases. While the details of the phases are listed in the [design doc](http://bit.ly/kfp-tekton),
-the current effort in this repository is focused on creating a Kubeflow Pipeline compiler for Tekton, which can take
-KFP DSL, and compile it to Tekton YAML. Details will be updated as we move into other phases, in concurrence with
-design decisions. 
 
 We are currently using [Kubeflow Pipelines 0.5.0](https://github.com/kubeflow/pipelines/releases/tag/0.5.0) and
 [Tekton 0.11.3](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3) for this project.
