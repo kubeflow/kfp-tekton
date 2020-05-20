@@ -312,7 +312,8 @@ class TektonCompiler(Compiler) :
     task_run_spec = []
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      task_spec = {"pipelineTaskName":task['name'], "taskPodTemplate": {}}
+      task_spec = {"pipelineTaskName": task['name'], 
+                   "taskPodTemplate": {}}
       if op.affinity:
         task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
       if op.tolerations:
