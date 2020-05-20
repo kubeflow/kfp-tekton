@@ -175,4 +175,5 @@ To understand how each feature is implemented and its current status, please vis
 
 ## Troubleshooting
 
-When you encounter permission issues related to ServiceAccount, refer to [Servince Account and RBAC doc](sa-and-rbac.md)
+- When you encounter permission issues related to ServiceAccount, refer to [Servince Account and RBAC doc](sa-and-rbac.md)
+- If you run into `bad interpreter: No such file or director` when trying to use python's venv, remove the current virtual environment in the .venv directory and create a new one using `virtualenv .venv`
