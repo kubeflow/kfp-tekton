@@ -18,7 +18,8 @@
 #
 #  1. Find the paragraph headings with grep (2nd and 3rd level heading starting with "##" and "###")
 #  2. Extract the heading's text with sed and transform into '|' separated records of the form '###|Full Text|Full Text'
-#  3. Generate the TcC lines with awk by replacing '#' with '  ', converting spaces to dashes '-' and lower-casing caps
+#  3. Generate the ToC lines with awk by replacing '#' with '  ', converting spaces to dashes '-',
+#     removing special chars from the hyperlink, and lower-casing all capital letters
 #  4. Replace leading 2 spaces since our ToC does not include 1st level headings
 #
 # Inspired by https://medium.com/@acrodriguez/one-liner-to-generate-a-markdown-toc-f5292112fd14
@@ -29,5 +30,5 @@ SEP="|"
 
 grep -E "^#{2,3}" "${1}" | grep -v "Table of Contents" | \
 sed -E "s/(#+) (.+)/\1${SEP}\2${SEP}\2/g" | \
-awk -F "${SEP}" '{ gsub(/#/,"  ",$1); gsub(/[ ]/,"-",$3); print $1 "- [" $2 "](#" tolower($3) ")" }' | \
+awk -F "${SEP}" '{ gsub(/#/,"  ",$1); gsub(/[ ]/,"-",$3); gsub(/[`.()]/,"",$3); print $1 "- [" $2 "](#" tolower($3) ")" }' | \
 sed -e 's/^  //g'

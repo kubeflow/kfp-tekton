@@ -39,7 +39,7 @@ def affinity_pipeline(
                         key='beta.kubernetes.io/instance-type', operator='In', values=['p2.xlarge'])])])))
     some_op().add_affinity(affinity)
 
+
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(affinity_pipeline, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)

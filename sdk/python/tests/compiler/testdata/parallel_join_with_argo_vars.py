@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright 2020 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,6 +53,5 @@ def download_and_join_with_argo_vars(
 
 
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(download_and_join_with_argo_vars, __file__.replace('.py', '.yaml'))

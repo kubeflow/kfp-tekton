@@ -29,11 +29,13 @@ from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env
 from kfp.compiler._k8s_helper import sanitize_k8s_name
 from kfp.compiler.compiler import Compiler
+# from kfp.components._yaml_utils import dump_yaml
 from kfp.components.structures import InputSpec
 from kfp.dsl._metadata import _extract_pipeline_metadata
-from kfp.compiler._k8s_helper import convert_k8s_obj_to_json
 
-from .. import tekton_api_version
+from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json
+
+from kfp_tekton import tekton_api_version
 
 
 class TektonCompiler(Compiler) :
@@ -128,7 +130,6 @@ class TektonCompiler(Compiler) :
         if task_name is None:
           return '$(params.%s)' % parameter_name
         else:
-          logging.warning("Warning: Using parameter passing from task outputs to condition parameters requires running the pipeline on Tekton built from the master branch")
           return '$(params.%s)' % task_name
       else:
         return '$(params.%s)' % parameter_name
@@ -587,7 +588,7 @@ class TektonCompiler(Compiler) :
         pipeline_conf,
     )
 
-    from ._data_passing_rewriter import fix_big_data_passing
+    from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
     workflow = fix_big_data_passing(workflow)
 
     import json
@@ -627,6 +628,7 @@ class TektonCompiler(Compiler) :
       package_path: file path to be written. If not specified, a yaml_text string
         will be returned.
     """
+    # yaml_text = dump_yaml(workflow)
     yaml.Dumper.ignore_aliases = lambda *args : True
     yaml_text = yaml.dump_all(workflow, default_flow_style=False)  # Tekton change
 
@@ -636,8 +638,14 @@ class TektonCompiler(Compiler) :
     # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
     # using regular expression.
     tekton_var_regex_rules = [
-        {'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}', 'tekton_rule': '$(inputs.params.\g<1>)'},
-        {'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}', 'tekton_rule': '$(results.\g<1>.path)'}
+        {
+          'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}',
+          'tekton_rule': '$(inputs.params.\g<1>)'
+        },
+        {
+          'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}',
+          'tekton_rule': '$(results.\g<1>.path)'
+        }
     ]
     for regex_rule in tekton_var_regex_rules:
       yaml_text = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], yaml_text)
@@ -694,3 +702,35 @@ class TektonCompiler(Compiler) :
         params_list,
         pipeline_conf)
     TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
+    _validate_workflow(workflow)
+
+
+def _validate_workflow(workflow: List[Dict[Text, Any]]):  # Tekton change, signature
+  # TODO: Tekton pipeline parameter validation
+#   workflow = workflow.copy()
+#   # Working around Argo lint issue
+#   for argument in workflow['spec'].get('arguments', {}).get('parameters', []):
+#     if 'value' not in argument:
+#       argument['value'] = ''
+#
+#   yaml_text = dump_yaml(workflow)
+#   if '{{pipelineparam' in yaml_text:
+#     raise RuntimeError(
+#         '''Internal compiler error: Found unresolved PipelineParam.
+# Please create a new issue at https://github.com/kubeflow/pipelines/issues attaching the pipeline code and the pipeline package.'''
+#     )
+
+  # TODO: Tekton lint, if a tool exists for it
+#   # Running Argo lint if available
+#   import shutil
+#   import subprocess
+#   argo_path = shutil.which('argo')
+#   if argo_path:
+#     result = subprocess.run([argo_path, 'lint', '/dev/stdin'], input=yaml_text.encode('utf-8'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#     if result.returncode:
+#       raise RuntimeError(
+#         '''Internal compiler error: Compiler has produced Argo-incompatible workflow.
+# Please create a new issue at https://github.com/kubeflow/pipelines/issues attaching the pipeline code and the pipeline package.
+# Error: {}'''.format(result.stderr.decode('utf-8'))
+#       )
+  pass

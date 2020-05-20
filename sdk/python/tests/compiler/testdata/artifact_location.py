@@ -47,7 +47,7 @@ def custom_artifact_location(
                          command=['sh', '-c', 'echo hello > /tmp/output.txt'],
                          file_outputs={'output': '/tmp/output.txt'})
 
+
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(custom_artifact_location, __file__.replace('.py', '.yaml'), enable_artifacts=True)

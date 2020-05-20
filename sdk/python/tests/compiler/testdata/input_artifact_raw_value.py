@@ -64,7 +64,7 @@ def input_artifact_pipeline():
     file_path = str(Path(__file__).parent.joinpath('input_artifact_raw_value.txt'))
     component_with_input_artifact_value_from_file(file_path)
 
+
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(input_artifact_pipeline, __file__.replace('.py', '.yaml'))

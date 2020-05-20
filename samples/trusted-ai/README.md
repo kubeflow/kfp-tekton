@@ -1,4 +1,4 @@
-# Trusted AI framework integration
+# Trusted AI pipeline with AI Fairness 360 and Adversarial Robustness 360 components
 
 Artificial intelligence is becoming a crucial component of enterprises’ operations and strategy. In order to responsibly take advantage of AI today, we must figure out ways to instill transparency, explainability, fairness, and robustness into AI. In this example, we will be going over how to produce fairness and robustness metrics using the Trusted AI libraries from [AI Fairness 360](https://github.com/IBM/AIF360) and [Adversarial Robustness Toolbox](https://github.com/IBM/adversarial-robustness-toolbox).
 
@@ -25,7 +25,7 @@ kubectl apply -f trusted-ai.yaml -n anonymous
 
 3. Run the trusted-ai pipeline, click the `enter` key to use the default pipeline variables.
 ```shell
-tkn pipeline start launch-katib-experiment -s default-editor -n anonymous --showlog
+tkn pipeline start launch-trusted-ai-pipeline -s default-editor -n anonymous --showlog
 ```
 
 This pipeline will run for 10 to 15 minutes, then you should able to see the best hyperparameter tuning result at the end of the logs.
