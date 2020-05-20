@@ -25,7 +25,7 @@ spec:
     - python
     - -c
     image: python:alpine3.6
-    name: random-failure
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -40,7 +40,7 @@ spec:
     - python
     - -c
     image: python:alpine3.6
-    name: random-failure-2
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline

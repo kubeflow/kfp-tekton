@@ -67,7 +67,7 @@ spec:
     - --experimentTimeoutMinutes
     - $(inputs.params.experimentTimeoutMinutes)
     image: liuhougangxa/katib-experiment-launcher:latest
-    name: mnist-hpo
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -83,7 +83,7 @@ spec:
     - sh
     - -c
     image: library/bash:4.4.23
-    name: my-out-cop
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline

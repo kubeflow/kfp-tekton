@@ -26,7 +26,7 @@ spec:
     - echo
     - hey, what are you up to?
     image: alpine:3.6
-    name: print
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -42,7 +42,7 @@ spec:
     - echo
     - train my model.
     image: alpine:3.6
-    name: print-2
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
