@@ -21,7 +21,7 @@ spec:
   - command:
     - sleep 1
     image: busybox
-    name: sleep
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline

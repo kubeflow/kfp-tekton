@@ -82,7 +82,7 @@ spec:
     - sh
     - -c
     image: python:alpine3.6
-    name: flip
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -100,7 +100,7 @@ spec:
     - sh
     - -c
     image: python:alpine3.6
-    name: flip-again
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -114,7 +114,7 @@ spec:
     - echo
     - $(inputs.params.flip-again-output)
     image: alpine:3.6
-    name: print1
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -128,7 +128,7 @@ spec:
     - echo
     - $(inputs.params.flip-again-output)
     image: alpine:3.6
-    name: print2
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline

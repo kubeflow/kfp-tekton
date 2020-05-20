@@ -27,7 +27,7 @@ spec:
     - sh
     - -c
     image: busybox
-    name: download
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline

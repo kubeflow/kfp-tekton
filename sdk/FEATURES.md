@@ -9,6 +9,7 @@ Below are the list of features that are currently available in the KFP Tekton co
     + [Timeout for Tasks and Pipelines](#timeout-for-tasks-and-pipelines)
     + [RunAfter](#runafter)
     + [Input Parameters](#input-parameters)
+    + [ContainerOp](#containerop)
 - [Pipeline DSL features with custom Tekton implementation](#pipeline-dsl-features-with-custom-tekton-implementation)
   * [Features with same behavior as Argo](#features-with-same-behavior-as-argo)
     + [InitContainers](#initcontainers)
@@ -67,6 +68,12 @@ Input Parameters are for passing pipeline parameters or other component outputs 
 with Tekton's [parameters](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#specifying-parameters) features under Tekton
 task. The [parallel_join](/sdk/python/tests/compiler/testdata/parallel_join.py) python test is an example of how to use this
 feature.
+
+### ContainerOp
+ContainerOp defines the container spec for a pipeline component. It is implemented with Tekton's
+[steps](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#defining-steps) features under Tekton task. The generated 
+Tekton task name is the same as the containerOp name whereas the step name is always called "main". The
+[sequential](/sdk/python/tests/compiler/testdata/sequential.py) python test is an example of how to use this feature.
 
 # Pipeline DSL features with custom Tekton implementation
 ## Features with same behavior as Argo

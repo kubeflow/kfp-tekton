@@ -31,7 +31,7 @@ spec:
     - -c
     - echo hello > $(results.output.path)
     image: busybox:$(inputs.params.tag)
-    name: generate-output
+    name: main
   - env:
     - name: PIPELINERUN
       valueFrom:

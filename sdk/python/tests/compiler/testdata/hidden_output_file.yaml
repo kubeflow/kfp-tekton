@@ -31,7 +31,7 @@ spec:
     command:
     - /bin/bash
     image: aipipeline/echo-text:latest
-    name: download-file
+    name: main
   - image: busybox
     name: copy-results
     script: '#!/bin/sh
@@ -60,7 +60,7 @@ spec:
     - sh
     - -c
     image: library/bash:4.4.23
-    name: echo
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline

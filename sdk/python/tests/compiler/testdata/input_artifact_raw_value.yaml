@@ -35,7 +35,7 @@ spec:
     - cat
     - /tmp/inputs/text/data
     image: alpine
-    name: component-with-inline-input-artifact
+    name: main
   volumes:
   - emptyDir: {}
     name: text
@@ -63,7 +63,7 @@ spec:
     - cat
     - /tmp/inputs/text/data
     image: alpine
-    name: component-with-input-artifact
+    name: main
   volumes:
   - emptyDir: {}
     name: text
@@ -91,7 +91,7 @@ spec:
     - cat
     - /tmp/inputs/text/data
     image: alpine
-    name: component-with-input-artifact-2
+    name: main
   volumes:
   - emptyDir: {}
     name: text
@@ -121,7 +121,7 @@ spec:
     - cat
     - /tmp/inputs/text/data
     image: alpine
-    name: component-with-input-artifact-3
+    name: main
   volumes:
   - emptyDir: {}
     name: text

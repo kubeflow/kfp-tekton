@@ -27,7 +27,7 @@ spec:
     - sh
     - -c
     image: library/bash:4.4.23
-    name: my-in-coop1
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -46,7 +46,7 @@ spec:
     - sh
     - -c
     image: library/bash:4.4.23
-    name: my-inner-inner-coop
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -62,7 +62,7 @@ spec:
     - sh
     - -c
     image: library/bash:4.4.23
-    name: my-in-coop2
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -78,7 +78,7 @@ spec:
     - sh
     - -c
     image: library/bash:4.4.23
-    name: my-out-cop
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline

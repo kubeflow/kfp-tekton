@@ -127,7 +127,7 @@ def _get_resourceOp_template(op: BaseOp,
                         "--set-ownerreference=$(params.set-ownerreference)"
                     ],
                     "image": "$(params.image)",
-                    "name": name,
+                    "name": "main",
                     "resources": {}
                 }
             ]
@@ -402,7 +402,8 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
             processed_op.container
         )
 
-        step = {'name': processed_op.name}
+        # Calling containerOp step as "main" to align with Argo
+        step = {'name': "main"}
         step.update(container)
 
         template = {

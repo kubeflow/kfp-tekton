@@ -70,7 +70,7 @@ spec:
         fieldRef:
           fieldPath: metadata.labels['tekton.dev/pipelineRun']
     image: $(params.image)
-    name: create-pvc
+    name: main
     resources: {}
 ---
 apiVersion: tekton.dev/v1beta1
@@ -87,7 +87,7 @@ spec:
     - sh
     - -c
     image: library/bash:4.4.23
-    name: cop
+    name: main
     volumeMounts:
     - mountPath: /mnt
       name: create-pvc

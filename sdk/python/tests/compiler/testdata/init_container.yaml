@@ -27,7 +27,7 @@ spec:
     - echo
     - hello
     image: alpine:latest
-    name: hello
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline

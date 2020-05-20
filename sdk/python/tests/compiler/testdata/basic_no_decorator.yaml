@@ -24,7 +24,7 @@ spec:
     - sh
     - -c
     image: python:3.5-jessie
-    name: exiting
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -44,7 +44,7 @@ spec:
     - sh
     - -c
     image: python:3.5-jessie
-    name: get-frequent
+    name: main
     resources:
       requests:
         memory: 200M
@@ -67,7 +67,7 @@ spec:
     - sh
     - -c
     image: google/cloud-sdk
-    name: save
+    name: main
     resources:
       limits:
         cloud-tpus.google.com/v2: '8'

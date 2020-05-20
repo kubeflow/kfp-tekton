@@ -32,7 +32,7 @@ spec:
     - name: Foo
       value: bar
     image: google/cloud-sdk
-    name: download
+    name: main
     volumeMounts:
     - mountPath: /secret/gcp-credentials
       name: gcp-credentials
@@ -55,7 +55,7 @@ spec:
     - sh
     - -c
     image: library/bash
-    name: echo
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline

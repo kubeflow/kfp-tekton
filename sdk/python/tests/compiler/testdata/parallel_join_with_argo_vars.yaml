@@ -31,7 +31,7 @@ spec:
     - sh
     - -c
     image: google/cloud-sdk:279.0.0
-    name: gcs-download
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -52,7 +52,7 @@ spec:
     - sh
     - -c
     image: google/cloud-sdk:279.0.0
-    name: gcs-download-2
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -71,7 +71,7 @@ spec:
     - sh
     - -c
     image: library/bash:4.4.23
-    name: echo
+    name: main
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
