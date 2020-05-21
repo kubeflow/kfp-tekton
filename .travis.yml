@@ -23,6 +23,10 @@ matrix:
         - python3 -m pip install -e sdk/python
       script:
         - make report
+    - name: "Verify source files contain the license header"
+      language: bash
+      script:
+        - make check_license
     - name: "Lint Python code with flake8"
       language: python
       python: "3.7"
