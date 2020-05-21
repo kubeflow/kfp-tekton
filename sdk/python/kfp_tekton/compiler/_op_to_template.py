@@ -21,7 +21,7 @@ from collections import OrderedDict
 from typing import List, Text, Dict, Any
 
 from kfp import dsl
-from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json
+from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name
 from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
 from kfp.dsl import ArtifactLocation
 from kfp.dsl._container_op import BaseOp
@@ -490,9 +490,19 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
     if processed_op.pod_annotations or processed_op.pod_labels:
         template.setdefault('metadata', {})  # Tekton change, don't wipe out existing metadata
         if processed_op.pod_annotations:
-            template['metadata']['annotations'] = processed_op.pod_annotations
+            template['metadata']['annotations'] = {
+                sanitize_k8s_name(key, allow_capital_underscore=True, allow_dot=True,
+                                  allow_slash=True, max_length=253):
+                    value
+                for key, value in processed_op.pod_annotations.items()
+            }
         if processed_op.pod_labels:
-            template['metadata']['labels'] = processed_op.pod_labels
+            template['metadata']['labels'] = {
+                sanitize_k8s_name(key, allow_capital_underscore=True, allow_dot=True,
+                                  allow_slash=True, max_length=253):
+                    sanitize_k8s_name(value, allow_capital_underscore=True, allow_dot=True)
+                for key, value in processed_op.pod_labels.items()
+            }
 
     # sidecars
     if processed_op.sidecars:

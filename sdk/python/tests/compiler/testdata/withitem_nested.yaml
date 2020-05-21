@@ -93,7 +93,7 @@ spec:
   - default: '10'
     name: my_pipe_param
   tasks:
-  - name: my-in-coop1-loop-items-0
+  - name: my-in-coop1-loop-item-0
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '1'
@@ -101,7 +101,7 @@ spec:
       value: $(params.my_pipe_param)
     taskRef:
       name: my-in-coop1
-  - name: my-in-coop1-loop-items-1
+  - name: my-in-coop1-loop-item-1
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '10'
@@ -109,7 +109,7 @@ spec:
       value: $(params.my_pipe_param)
     taskRef:
       name: my-in-coop1
-  - name: my-inner-inner-coop-loop-items-0
+  - name: my-inner-inner-coop-loop-item-0
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '1'
@@ -119,7 +119,7 @@ spec:
       value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
-  - name: my-inner-inner-coop-loop-items-1
+  - name: my-inner-inner-coop-loop-item-1
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '1'
@@ -129,7 +129,7 @@ spec:
       value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
-  - name: my-inner-inner-coop-loop-items-2
+  - name: my-inner-inner-coop-loop-item-2
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '1'
@@ -139,7 +139,7 @@ spec:
       value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
-  - name: my-inner-inner-coop-loop-items-3
+  - name: my-inner-inner-coop-loop-item-3
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '10'
@@ -149,7 +149,7 @@ spec:
       value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
-  - name: my-inner-inner-coop-loop-items-4
+  - name: my-inner-inner-coop-loop-item-4
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '10'
@@ -159,7 +159,7 @@ spec:
       value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
-  - name: my-inner-inner-coop-loop-items-5
+  - name: my-inner-inner-coop-loop-item-5
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '10'
@@ -169,19 +169,19 @@ spec:
       value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
-  - name: my-in-coop2-loop-items-0
+  - name: my-in-coop2-loop-item-0
     params:
     - name: loop-item-param-00000001-subvar-b
       value: '2'
     taskRef:
       name: my-in-coop2
-  - name: my-in-coop2-loop-items-1
+  - name: my-in-coop2-loop-item-1
     params:
     - name: loop-item-param-00000001-subvar-b
       value: '20'
     taskRef:
       name: my-in-coop2
-  - name: my-out-cop-loop-items-0
+  - name: my-out-cop-loop-item-0
     params:
     - name: my_pipe_param
       value: $(params.my_pipe_param)

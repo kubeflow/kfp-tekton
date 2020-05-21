@@ -16,5 +16,5 @@
 
 cd "$(dirname "$0")"
 #python3 -m unittest discover --verbose --start-dir tests --top-level-directory=.
-python3 -m unittest compiler.compiler_tests --verbose
+python3 -m unittest compiler.compiler_tests compiler.k8s_helper_tests --verbose
 cd -
