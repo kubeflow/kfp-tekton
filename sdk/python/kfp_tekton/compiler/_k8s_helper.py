@@ -12,7 +12,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 from kfp import dsl
+
+
+def sanitize_k8s_name(name,
+                      allow_capital_underscore=False,
+                      allow_dot=False,
+                      allow_slash=False,
+                      max_length=63,
+                      suffix_space=0):
+    """From _make_kubernetes_name
+      sanitize_k8s_name cleans and converts the names in the workflow.
+
+    https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
+    https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
+    https://github.com/kubernetes/kubernetes/blob/c369cf18/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L89
+
+    Args:
+      name: original name
+      allow_capital_underscore: whether to allow capital letter and underscore
+        in this name (i.e. for parameters)
+      allow_dot: whether to allow dots in this name (i.e. for labels)
+      allow_slash: whether to allow slash in this name (i.e. for label and annotation keys)
+      max_length: maximum length of K8s name, default: 63
+      suffix_space: number of characters reserved for a suffix to be appended
+
+    Returns:
+      sanitized name.
+    """
+    k8s_name = re.sub('[^-_./0-9A-Za-z]+', '-', name)
+
+    if not allow_capital_underscore:
+      k8s_name = re.sub('_', '-', k8s_name.lower())
+
+    if not allow_dot:
+      k8s_name = re.sub('[.]', '-', k8s_name)
+
+    if not allow_slash:
+      k8s_name = re.sub('[/]', '-', k8s_name)
+
+    # replace duplicate dashes, strip enclosing dashes
+    k8s_name = re.sub('-+', '-', k8s_name).strip('-')
+
+    # truncate if length exceeds max_length
+    max_length = max_length - suffix_space
+    k8s_name = k8s_name[:max_length].rstrip('-') if len(k8s_name) > max_length else k8s_name
+
+    return k8s_name
 
 
 def convert_k8s_obj_to_json(k8s_obj):
