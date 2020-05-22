@@ -47,13 +47,15 @@ spec:
   params: []
   pipelineRef:
     name: affinity
-  podtemplate:
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: beta.kubernetes.io/instance-type
-              operator: In
-              values:
-              - p2.xlarge
+  taskRunSpec:
+  - pipelineTaskName: sleep
+    taskPodTemplate:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: beta.kubernetes.io/instance-type
+                operator: In
+                values:
+                - p2.xlarge
