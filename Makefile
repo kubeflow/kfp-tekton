@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Acknowledgements:
+#  - the help target was derived from https://stackoverflow.com/a/35730328/5601796
+
 #
 # Configuration variables
 #
@@ -19,8 +22,7 @@ VENV ?= .venv
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
-# Use the command from https://stackoverflow.com/a/35730328/5601796
-.PHONY: help 
+.PHONY: help
 help: ## Display the Make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
@@ -32,9 +34,16 @@ $(VENV)/bin/activate: sdk/python/setup.py
 	@touch $(VENV)/bin/activate
 
 .PHONY: test
-test: venv ## Run kfp/tekton unit test
+test: venv ## Run compiler unit tests
 	@sdk/python/tests/run_tests.sh
 
 .PHONY: report
-report: ## Report kfp sample stats
+report: ## Report compilation status of KFP testdata DSL scripts
 	@cd sdk/python/tests && ./test_kfp_samples.sh
+
+.PHONY: check_license
+check_license: ## Check for license header in source files
+	@find ./sdk/python -type f \( -name '*.py' -o -name '*.yaml' \) -exec \
+		grep -H -E -o -c  'Copyright 20.* kubeflow.org'  {} \; | \
+		grep -E ':0$$' | sed 's/..$$//' | \
+		grep . && echo "The files listed above are missing the license header" && exit 1 || echo "OK"
