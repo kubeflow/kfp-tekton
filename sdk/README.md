@@ -103,6 +103,7 @@ In order to utilize the latest features and functions of the `kfp-tekton` compil
 nightly built or build it from the [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline) branch. 
 Features that require special builds different from the 'Tested Version' will be listed below.
 
+- [Affinity, Node Selector, and Tolerations](/sdk/FEATURES.md#affinity-node-selector-and-tolerations)
 
 ## Additional Features
 
