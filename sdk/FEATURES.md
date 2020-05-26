@@ -99,8 +99,8 @@ is an example of how to use this feature.
 Conditions are for determining whether to execute certain components based on the output of the condition checks. Since Tekton required users to define an image for doing the [condition check](https://github.com/tektoncd/pipeline/blob/master/docs/conditions.md), we created a custom python image to replicate the same condition checks from Argo and made it as the default in our compiler. The
 [flip-coin](/samples/flip-coin) example demonstrates how to use multiple conditions within the same pipeline.
 
-Please aware that the current Condition feature is using Tekton V1alpha1 API because the Tekton community is still designing the V1beta1 API.
-We will be migrating to the V1beta1 API once it's available in Tekton.
+Please be aware that the current Condition feature is using Tekton V1alpha1 API because the Tekton community is still designing the V1beta1 API.
+We will be migrating to the V1beta1 API once it's available in Tekton. Please refer to the [design proposal](https://docs.google.com/document/d/1kESrgmFHnirKNS4oDq3mucuB_OycBm6dSCSwRUHccZg/edit?usp=sharing) for more details.
 
 ### ResourceOp, VolumeOp, and VolumeSnapshotOp
 [ResourceOp, VolumeOp, and VolumeSnapshotOp](https://www.kubeflow.org/docs/pipelines/sdk/manipulate-resources/) are special operations for
