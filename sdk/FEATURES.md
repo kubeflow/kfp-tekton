@@ -10,6 +10,7 @@ Below are the list of features that are currently available in the KFP Tekton co
     + [RunAfter](#runafter)
     + [Input Parameters](#input-parameters)
     + [ContainerOp](#containerop)
+    + [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations)
 - [Pipeline DSL features with custom Tekton implementation](#pipeline-dsl-features-with-custom-tekton-implementation)
   * [Features with same behavior as Argo](#features-with-same-behavior-as-argo)
     + [InitContainers](#initcontainers)
@@ -24,7 +25,6 @@ Below are the list of features that are currently available in the KFP Tekton co
     + [ImagePullSecrets](#imagepullsecrets) - [Tracking issue][ImagePullSecrets]
   * [Features with different behavior than Argo](#features-with-different-behavior-than-argo)
     + [Sidecars](#sidecars) - [Tracking issue][Sidecars]
-    + [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations) - [Tracking PR][podTemplate]
 - [Pipeline features that are unavailable on Tekton](#pipeline-features-that-are-unavailable-on-tekton)
     + [Exit Handler](#exit-handler) - [Tracking PR][exitHandler]
 
@@ -71,9 +71,18 @@ feature.
 
 ### ContainerOp
 ContainerOp defines the container spec for a pipeline component. It is implemented with Tekton's
-[steps](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#defining-steps) features under Tekton task. The generated 
+[steps](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#defining-steps) features under Tekton task. The generated
 Tekton task name is the same as the containerOp name whereas the step name is always called "main". The
 [sequential](/sdk/python/tests/compiler/testdata/sequential.py) python test is an example of how to use this feature.
+
+### Affinity, Node Selector, and Tolerations
+
+Affinity, Node Selector, and Tolerations are Kubernetes spec for selecting which node should run the component based on user-defined constraints. They are implemented with Tekton's [PipelineRunTaskSpec](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#specifying-task-run-specs) features under Tekton PipelineRun.
+The [affinity](/sdk/python/tests/compiler/testdata/affinity.py),
+[node_selector](/sdk/python/tests/compiler/testdata/node_selector.py), and
+[tolerations](/sdk/python/tests/compiler/testdata/tolerations.py) python tests are examples of how to use these features.
+
+This feature is recently implemented in Tekton and is available on the Tekton master branch and Tekton 0.13.0+.
 
 # Pipeline DSL features with custom Tekton implementation
 ## Features with same behavior as Argo
@@ -89,6 +98,9 @@ is an example of how to use this feature.
 ### Conditions
 Conditions are for determining whether to execute certain components based on the output of the condition checks. Since Tekton required users to define an image for doing the [condition check](https://github.com/tektoncd/pipeline/blob/master/docs/conditions.md), we created a custom python image to replicate the same condition checks from Argo and made it as the default in our compiler. The
 [flip-coin](/samples/flip-coin) example demonstrates how to use multiple conditions within the same pipeline.
+
+Please be aware that the current Condition feature is using Tekton V1alpha1 API because the Tekton community is still designing the V1beta1 API.
+We will be migrating to the V1beta1 API once it's available in Tekton. Please refer to the [design proposal](https://docs.google.com/document/d/1kESrgmFHnirKNS4oDq3mucuB_OycBm6dSCSwRUHccZg/edit?usp=sharing) for more details.
 
 ### ResourceOp, VolumeOp, and VolumeSnapshotOp
 [ResourceOp, VolumeOp, and VolumeSnapshotOp](https://www.kubeflow.org/docs/pipelines/sdk/manipulate-resources/) are special operations for
@@ -112,7 +124,7 @@ python test is an example of how to use this feature.
 ### Output Artifacts
 Output Artifacts are files that need to be persisted to the default/destination object storage. Additionally, by default, all Kubeflow pipeline 'Output Parameters' are also stored as output artifacts. Since Tekton deprecated pipelineResource and the recommended gsutil task is not capable of moving files to the minio object storage without proper DNS address, we decided to create a step based on the [minio mc](https://github.com/minio/mc) image for moving output artifacts. This feature also includes the ArtifactLocation support where users can set their own object storage credentials during execution. The [artifact_location](/sdk/python/tests/compiler/testdata/artifact_location.py) python test is an example of how to use this feature.
 
-However, both ArtifactLocation and explicit output artifacts are deprecated and going to be removed in the KFP 0.6 release. This is probably due to a more mature multi-user support because ArtifactLocation required users to pre-define the object storage credentials as Kubernetes secret within the same namespace. 
+However, both ArtifactLocation and explicit output artifacts are deprecated and removed in the KFP 0.5.1 release. This is probably due to a more mature multi-user support because ArtifactLocation required users to pre-define the object storage credentials as Kubernetes secret within the same namespace. 
 
 The current implementation is relying on the existing KFP's minio setup for getting the default credentials. This feature probably needs to be deprecated and merged with the output parameters once KFP finalizes the artifact management for the multi-user scenario. 
 
@@ -172,20 +184,6 @@ When the nop image does provide the sidecar's command, the sidecar will continue
 kubectl get pods will show a 'Completed' pod when a sidecar exits successfully but an Error when the sidecar exits with an error. This is only apparent when using kubectl to get the pods of a TaskRun, not when describing the Pod using kubectl describe pod ... nor when looking at the TaskRun, but can be quite confusing. However, it has no functional impact. 
 [Tekton pipeline readme](https://github.com/tektoncd/pipeline/blob/master/docs/developers/README.md#handling-of-injected-sidecars) has documented this limitation. 
 
-### Affinity, Node Selector, and Tolerations
-
-[Tracking pull request #2389][podTemplate]
-
-Affinity, Node Selector, and Tolerations are Kubernetes spec for selecting which node should run the component based on user-defined constraints. They are implemented with Tekton's [podTemplate](https://github.com/tektoncd/pipeline/blob/master/docs/podtemplates.md) features under Tekton PipelineRun.
-The [affinity](/sdk/python/tests/compiler/testdata/affinity.py),
-[node_selector](/sdk/python/tests/compiler/testdata/node_selector.py), and
-[tolerations](/sdk/python/tests/compiler/testdata/tolerations.py) python tests are examples of how to use these features.
-
-In Tekton, Affinity, Node Selector, and Tolerations are applied to all the tasks in the same Tekton pipeline because there's only
-one podTemplate allowed in each pipeline. However, in Argo these features are applied to one particular task. 
-
-There is a pull request in Tekton to define podTemplate for individule task. Once that feature is available, then we need to revisit and  reimplement this feature to replicate the same Argo behaviors.
-
 # Pipeline features that are unavailable on Tekton
 
 ### Exit Handler
@@ -201,5 +199,4 @@ An exit handler is a component that always executes, irrespective of success or 
 [VarSub]: https://github.com/tektoncd/pipeline/issues/2322
 [ImagePullSecrets]: https://github.com/tektoncd/pipeline/issues/1779
 [Sidecars]: https://github.com/tektoncd/pipeline/issues/1347
-[podTemplate]: https://github.com/tektoncd/pipeline/pull/2389
 [exitHandler]: https://github.com/tektoncd/pipeline/pull/2437
