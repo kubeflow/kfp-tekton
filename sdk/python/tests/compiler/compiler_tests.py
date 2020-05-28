@@ -25,8 +25,12 @@ from os import environ as env
 from kfp_tekton import compiler
 
 
-# after code changes that change the YAML output, temporarily set this flag to True
-# in order to generate new "golden" YAML files
+# temporarily set this flag to True in order to (re)generate new "golden" YAML
+# files after making code changes that modify the expected YAML output.
+# to (re)generate all "golden" YAML files from the command line run:
+#   GENERATE_GOLDEN_YAML=True sdk/python/tests/run_tests.sh
+# or:
+#   make test GENERATE_GOLDEN_YAML=True
 GENERATE_GOLDEN_YAML = env.get("GENERATE_GOLDEN_YAML", "False") == "True"
 
 if GENERATE_GOLDEN_YAML:
