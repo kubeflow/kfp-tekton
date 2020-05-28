@@ -272,7 +272,7 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
 
     For storing artifacts, we will be using the minio/mc image because we need to upload artifacts to any type of
     object storage and endpoint. The minio/mc is the best image suited for this task because the default KFP
-    is using minio and it also works well with other s3/gcs type of storage. 
+    is using minio and it also works well with other s3/gcs type of storage.
 
     - image: minio/mc
         name: copy-artifacts
@@ -314,14 +314,16 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
                 {'name': 'PODNAME', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.name"}}},
                 {'name': 'NAMESPACE', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.namespace"}}},
                 {'name': 'AWS_ACCESS_KEY_ID', 'valueFrom': {'secretKeyRef': {'name': access_key['name'], 'key': access_key['key']}}},
-                {'name': 'AWS_SECRET_ACCESS_KEY', 'valueFrom': {'secretKeyRef': {'name': secret_access_key['name'], 'key': secret_access_key['key']}}}
+                {'name': 'AWS_SECRET_ACCESS_KEY', 'valueFrom': {'secretKeyRef': {'name': secret_access_key['name'],
+                                                                                 'key': secret_access_key['key']}}}
             ]
         }
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
             if artifact['name'] in replaced_param_list:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'mc cp $(results.%s.path) storage/%s/runs/$PIPELINERUN/$PODNAME/%s\n' % (artifact_to_result_mapping[artifact['name']], bucket, artifact['path'].rsplit("/", 1)[1])
+                    'mc cp $(results.%s.path) storage/%s/runs/$PIPELINERUN/$PODNAME/%s\n' % (artifact_to_result_mapping[artifact['name']],
+                                                                                             bucket, artifact['path'].rsplit("/", 1)[1])
             else:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
                     'mc cp %s storage/%s/runs/$PIPELINERUN/$PODNAME/%s\n' % (artifact['path'], bucket, artifact['path'].rsplit("/", 1)[1])
@@ -385,7 +387,8 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
         # This should have been as easy as output_artifact_paths.update(op.file_outputs),
         # but the _outputs_to_json function changes the output names and we must do the same here,
         # so that the names are the same
-        output_artifact_paths.update(sorted(((param.full_name, processed_op.file_outputs[param.name]) for param in processed_op.outputs.values()), key=lambda x: x[0]))
+        output_artifact_paths.update(sorted(((param.full_name, processed_op.file_outputs[param.name])
+                                             for param in processed_op.outputs.values()), key=lambda x: x[0]))
 
         output_artifacts = [
             convert_k8s_obj_to_json(
@@ -454,7 +457,8 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                 copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (artifact['raw']['data'], artifact['path'])
             mount_path = artifact['path'].rsplit("/", 1)[0]
             if mount_path not in mounted_param_paths:
-                _add_mount_path(artifact['name'], artifact['path'], mount_path, volume_mount_step_template, volume_template, mounted_param_paths)
+                _add_mount_path(artifact['name'], artifact['path'], mount_path,
+                                volume_mount_step_template, volume_template, mounted_param_paths)
         template['spec']['steps'] = _prepend_steps([copy_inputs_step], template['spec']['steps'])
         _update_volumes(template, volume_mount_step_template, volume_template)
 
@@ -510,18 +514,22 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
 
     # volumes
     if processed_op.volumes:
-        template['spec']['volumes'] = template['spec'].get('volume', []) + [convert_k8s_obj_to_json(volume) for volume in processed_op.volumes]
+        template['spec']['volumes'] = template['spec'].get('volume', []) + [convert_k8s_obj_to_json(volume)
+                                                                            for volume in processed_op.volumes]
         template['spec']['volumes'].sort(key=lambda x: x['name'])
 
     # Display name
     if processed_op.display_name:
-        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/task_display_name'] = processed_op.display_name
+        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/task_display_name'] = \
+            processed_op.display_name
 
     if isinstance(op, dsl.ContainerOp) and op._metadata:
-        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec'] = json.dumps(op._metadata.to_dict(), sort_keys=True)
+        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec'] = \
+            json.dumps(op._metadata.to_dict(), sort_keys=True)
 
     if isinstance(op, dsl.ContainerOp) and op.execution_options:
         if op.execution_options.caching_strategy.max_cache_staleness:
-            template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/max_cache_staleness'] = str(op.execution_options.caching_strategy.max_cache_staleness)
+            template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/max_cache_staleness'] = \
+                str(op.execution_options.caching_strategy.max_cache_staleness)
 
     return template

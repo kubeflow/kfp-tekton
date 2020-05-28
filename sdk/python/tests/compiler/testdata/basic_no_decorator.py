@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import kfp.dsl as dsl
 import kfp.gcp as gcp
 
@@ -20,15 +19,17 @@ import kfp.gcp as gcp
 message_param = dsl.PipelineParam(name='message')
 output_path_param = dsl.PipelineParam(name='outputpath', value='default_output')
 
+
 class GetFrequentWordOp(dsl.ContainerOp):
   """A get frequent word class representing a component in ML Pipelines.
   The class provides a nice interface to users by hiding details such as container,
   command, arguments.
   """
   def __init__(self, name, message):
-    """Args:
-         name: An identifier of the step which needs to be unique within a pipeline.
-         message: a dsl.PipelineParam object representing an input message.
+    """__init__
+    Args:
+      name: An identifier of the step which needs to be unique within a pipeline.
+      message: a dsl.PipelineParam object representing an input message.
     """
     super(GetFrequentWordOp, self).__init__(
         name=name,
@@ -59,14 +60,14 @@ class SaveMessageOp(dsl.ContainerOp):
 
 
 class ExitHandlerOp(dsl.ContainerOp):
-  """A class representing a component in ML Pipelines.
-  """
+  """A class representing a component in ML Pipelines."""
   def __init__(self, name):
     super(ExitHandlerOp, self).__init__(
         name=name,
         image='python:3.5-jessie',
         command=['sh', '-c'],
         arguments=['echo exit!'])
+
 
 def save_most_frequent_word():
   exit_op = ExitHandlerOp('exiting')
@@ -86,7 +87,7 @@ def save_most_frequent_word():
         'cloud.google.com/gke-accelerator',
         'nvidia-tesla-k80')
     saver.apply(
-        gcp.use_tpu(tpu_cores = 8, tpu_resource = 'v2', tf_version = '1.12'))
+        gcp.use_tpu(tpu_cores=8, tpu_resource='v2', tf_version='1.12'))
 
 
 if __name__ == '__main__':

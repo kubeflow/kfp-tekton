@@ -145,7 +145,20 @@ The Python code in this project follows the [Google Python style guide](http://g
 You can make use of a [yapf](https://github.com/google/yapf) configuration file to auto-format Python code and adopt the
 Google Python style. We encouraged to lint Python docstrings using [docformatter](https://github.com/myint/docformatter).
 Our CI/CD integration with Travis uses [Flake8](https://pypi.org/project/flake8/) and the current set of enforced rules
-can be found in [.travis.yml](/.travis.yml).
+can be found in [Makefile](/Makefile):
+
+```Makefile
+.PHONY: lint
+lint: venv ## Check Python code style compliance
+	@which flake8 > /dev/null || pip install flake8
+	flake8 sdk/python --count --show-source --statistics \
+		--select=E9,E2,E3,E5,F63,F7,F82,F4,F841,W291,W292 \
+		--per-file-ignores sdk/python/tests/compiler/testdata/*:F841 \
+ 		--max-line-length=140  && echo OK
+```
+
+Make sure to run `make lint` before you create a pull request (PR) that includes changes to Python source files.
+
 
 ## Testing
 

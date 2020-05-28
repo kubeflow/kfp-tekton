@@ -55,7 +55,8 @@ def parse_arguments():
   return args
 
 
-def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, generate_pipelinerun=False, enable_artifacts=False):
+def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check,
+                               generate_pipelinerun=False, enable_artifacts=False):
   if len(pipeline_funcs) == 0:
     raise ValueError('A function with @dsl.pipeline decorator is required in the py file.')
 
@@ -71,7 +72,9 @@ def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_
   else:
     pipeline_func = pipeline_funcs[0]
 
-  TektonCompiler().compile(pipeline_func, output_path, type_check, generate_pipelinerun=generate_pipelinerun, enable_artifacts=enable_artifacts)
+  TektonCompiler().compile(pipeline_func, output_path, type_check,
+                           generate_pipelinerun=generate_pipelinerun,
+                           enable_artifacts=enable_artifacts)
 
 
 def compile_pyfile(pyfile, function_name, output_path, type_check, generate_pipelinerun=False, enable_artifacts=False):

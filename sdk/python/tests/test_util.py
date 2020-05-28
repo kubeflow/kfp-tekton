@@ -14,14 +14,13 @@
 
 import sys
 import os
-import unittest
 from shutil import copyfile
 from compiler.compiler_tests import TestTektonCompiler
 
 if __name__ == '__main__':
     test_name = os.path.splitext(os.path.split(sys.argv[1])[1])[0]
     save_path = sys.argv[2]
-    golden_path = os.path.join(os.path.dirname(__file__), 'compiler/testdata', test_name+'.yaml')
+    golden_path = os.path.join(os.path.dirname(__file__), 'compiler/testdata', test_name + '.yaml')
 
     if test_name == "compose":
         test = TestTektonCompiler().test_compose

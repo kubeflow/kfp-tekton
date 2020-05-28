@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from kubernetes.client import V1Toleration
-from kfp.dsl import ContainerOp
 from kfp import dsl
 
 

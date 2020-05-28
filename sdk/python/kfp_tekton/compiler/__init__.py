@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .compiler import TektonCompiler
+from .compiler import TektonCompiler  # noqa F401

@@ -239,7 +239,7 @@ class TestTektonCompiler(unittest.TestCase):
     self._test_pipeline_workflow(mnist_hpo, 'katib.yaml')
     
   def test_imagepullsecrets_workflow(self):
-    """ 
+    """
     Test compiling a imagepullsecrets workflow.
     """
     from .testdata.imagepullsecrets import imagepullsecrets_pipeline
@@ -265,7 +265,7 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata import compose
     self._test_nested_workflow('compose.yaml', [compose.save_most_frequent_word, compose.download_save_most_frequent_word])
     
-  def _test_pipeline_workflow(self, 
+  def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
                               generate_pipelinerun=False,
@@ -306,7 +306,7 @@ class TestTektonCompiler(unittest.TestCase):
     finally:
       shutil.rmtree(temp_dir)
 
-  def _test_nested_workflow(self, 
+  def _test_nested_workflow(self,
                             pipeline_yaml,
                             pipeline_list,
                             generate_pipelinerun=False,

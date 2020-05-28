@@ -25,7 +25,8 @@ class RandomFailure1Op(dsl.ContainerOp):
             image='python:alpine3.6',
             command=['python', '-c'],
             arguments=[
-                "import random; import sys; exit_code = random.choice([%s]); print(exit_code); import time; time.sleep(30); sys.exit(exit_code)" % exit_codes])
+                "import random; import sys; exit_code = random.choice([%s]); print(exit_code); "
+                "import time; time.sleep(30); sys.exit(exit_code)" % exit_codes])
 
 
 @dsl.pipeline(
