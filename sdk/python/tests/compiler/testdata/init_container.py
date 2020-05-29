@@ -20,6 +20,7 @@ echo = dsl.UserContainer(
     image='alpine:latest',
     command=['echo', 'bye'])
 
+
 @dsl.pipeline(name='InitContainer', description='A pipeline with init container.')
 def init_container_pipeline():
     dsl.ContainerOp(

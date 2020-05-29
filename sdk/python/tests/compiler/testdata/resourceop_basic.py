@@ -41,7 +41,7 @@ _CONTAINER_MANIFEST = """
                 "restartPolicy": "Never"
             }
         },
-        "backoffLimit": 4      
+        "backoffLimit": 4
     }
 }
 """

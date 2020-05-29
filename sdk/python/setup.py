@@ -19,7 +19,7 @@ from setuptools import setup
 
 
 NAME = "kfp-tekton"
-#VERSION = .... Change the version in kfp_tekton/__init__.py
+# VERSION = .... Change the version in kfp_tekton/__init__.py
 LICENSE = "Apache 2.0"
 HOMEPAGE = "https://github.com/kubeflow/kfp-tekton/"
 

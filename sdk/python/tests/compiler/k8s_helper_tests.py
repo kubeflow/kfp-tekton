@@ -82,5 +82,6 @@ class TestK8sHelper(unittest.TestCase):
             "sidecar.istio.io/inject",
         }
         self.assertEqual(
-            [sanitize_k8s_name(key, allow_capital_underscore=True, allow_dot=True, allow_slash=True, max_length=253) for key in annotation_keys],
+            [sanitize_k8s_name(key, allow_capital_underscore=True, allow_dot=True, allow_slash=True,
+                               max_length=253) for key in annotation_keys],
             [key[:253] for key in expected_k8s_annotation_keys])

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp.dsl import ContainerOp
 from kfp import dsl
 
 
@@ -22,6 +21,7 @@ def some_op():
         image='busybox',
         command=['sleep 1'],
     )
+
 
 @dsl.pipeline(
     name='node_selector',

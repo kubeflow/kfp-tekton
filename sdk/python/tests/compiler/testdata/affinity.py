@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from kubernetes.client import V1Affinity, V1NodeSelector, V1NodeSelectorRequirement, V1NodeSelectorTerm, V1NodeAffinity
-from kfp.dsl import ContainerOp
 from kfp import dsl
 
 
@@ -23,6 +22,7 @@ def some_op():
         image='busybox',
         command=['sleep 1'],
     )
+
 
 @dsl.pipeline(
     name='affinity',

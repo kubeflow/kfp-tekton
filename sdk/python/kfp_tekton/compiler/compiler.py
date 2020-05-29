@@ -20,9 +20,8 @@ import copy
 import itertools
 import zipfile
 import re
-import logging
 import textwrap
-from typing import Callable, Set, List, Text, Dict, Tuple, Any, Union, Optional
+from typing import Callable, List, Text, Dict, Any
 
 from ._op_to_template import _op_to_template
 
@@ -39,7 +38,7 @@ from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8
 from kfp_tekton import tekton_api_version
 
 
-class TektonCompiler(Compiler) :
+class TektonCompiler(Compiler):
   """DSL Compiler to generate Tekton YAML.
 
   It compiles DSL pipeline functions into workflow yaml. Example usage:
@@ -70,11 +69,11 @@ class TektonCompiler(Compiler) :
       op_name_to_for_loop_op: a dictionary of ospgroup
     """
     # Get all the params in the task
-    task_parms_list = []
+    task_params_list = []
     for tp in task.get('params', []):
-      task_parms_list.append(tp)
-    # Get the loop values for each params
-    for tp in task_parms_list:
+      task_params_list.append(tp)
+    # Get the loop values for each param
+    for tp in task_params_list:
       for loop_param in op_name_to_for_loop_op.values():
         loop_args = loop_param.loop_args
         if loop_args.name in tp['name']:
@@ -84,14 +83,15 @@ class TektonCompiler(Compiler) :
           else:
             tp['loop-value'] = loop_args.items_or_pipeline_param
     # Get the task params list
-    ## Get the task_params list without loop first
-    loop_value = [p['loop-value'] for p in task_parms_list if p.get('loop-value')]
-    task_params_without_loop = [p for p in task_parms_list if not p.get('loop-value')]
-    ## Get the task_params list with loop
-    loop_params = [p for p in task_parms_list if p.get('loop-value')]
+    # 1. Get the task_params list without loop first
+    loop_value = [p['loop-value'] for p in task_params_list if p.get('loop-value')]
+    task_params_without_loop = [p for p in task_params_list if not p.get('loop-value')]
+    # 2. Get the task_params list with loop
+    loop_params = [p for p in task_params_list if p.get('loop-value')]
     for param in loop_params:
       del param['loop-value']
       del param['value']
+
     value_iter = list(itertools.product(*loop_value))
     value_iter_list = []
     for values in value_iter:
@@ -101,16 +101,16 @@ class TektonCompiler(Compiler) :
       value_iter_list.append(opt)
     {value[i].update(loop_params[i]) for i in range(len(loop_params)) for value in value_iter_list}
     task_params_with_loop = value_iter_list
-    ## combine task params
+    # 3. combine task params
     list(a.extend(task_params_without_loop) for a in task_params_with_loop)
-    task_parms_all = task_params_with_loop
-    # Get the task list based on parmas list
+    task_params_all = task_params_with_loop
+    # Get the task list based on params list
     task_list = []
     del task['params']
     task_name_suffix_length = len(LoopArguments.LOOP_ITEM_NAME_BASE) + LoopArguments.NUM_CODE_CHARS + 2
     task_old_name = sanitize_k8s_name(task['name'], suffix_space=task_name_suffix_length)
-    for i in range(len(task_parms_all)):
-      task['params'] = task_parms_all[i]
+    for i in range(len(task_params_all)):
+      task['params'] = task_params_all[i]
       task['name'] = '%s-%s-%d' % (task_old_name, LoopArguments.LOOP_ITEM_NAME_BASE, i)
       task_list.append(copy.deepcopy(task))
       del task['params']
@@ -164,15 +164,15 @@ class TektonCompiler(Compiler) :
       # Adds params to condition template
       params = []
       if isinstance(condition.operand1, dsl.PipelineParam):
-        params.append({'name': operand1_value[9: len(operand1_value) - 1]})  # Substring to remove parameter reference wrapping
+        params.append({'name': operand1_value[9: len(operand1_value) - 1]})  # substring to unwrap parameter reference
       if isinstance(condition.operand2, dsl.PipelineParam):
-        params.append({'name': operand2_value[9: len(operand1_value) - 1]})  # Substring to remove parameter reference wrapping
+        params.append({'name': operand2_value[9: len(operand1_value) - 1]})  # substring to unwrap parameter reference
       if params:
         template['spec']['params'] = params
 
       # Surround the operands by quotes to ensure proper parsing on script execution
-      operand1_value = '\'' + operand1_value + '\''
-      operand2_value = '\'' + operand2_value + '\''
+      operand1_value = "'" + operand1_value + "'"
+      operand2_value = "'" + operand2_value + "'"
 
       input_grab = 'EXITCODE=$(python -c \'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n'
       try_catch = 'try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n'
@@ -180,11 +180,12 @@ class TektonCompiler(Compiler) :
       exit_code = 'exit $EXITCODE'
       shell_script = input_grab + try_catch + if_else + exit_code
 
-      template['apiVersion'] = 'tekton.dev/v1alpha1'  # TODO Change to tekton_api_version once Conditions are out of v1alpha1
+      # TODO Change to tekton_api_version once Conditions are out of v1alpha1
+      template['apiVersion'] = 'tekton.dev/v1alpha1'
       template['kind'] = 'Condition'
       template['spec']['check'] = {
         'args': [shell_script],
-        'command': ['sh','-c'],
+        'command': ['sh', '-c'],
         'image': 'python:alpine3.6',
       }
 
@@ -252,7 +253,6 @@ class TektonCompiler(Compiler) :
 
     return templates
 
-
   def _process_resourceOp(self, task_refs, pipeline):
     """ handle resourceOp cases in pipeline """
     for task in task_refs:
@@ -288,7 +288,6 @@ class TektonCompiler(Compiler) :
               output_values += output_value
             tp['value'] = output_values
 
-
   def _workflow_with_pipelinerun(self, task_refs, pipeline, pipeline_template, workflow):
     """ Generate pipelinerun template """
     pipelinerun = {
@@ -313,7 +312,7 @@ class TektonCompiler(Compiler) :
     task_run_spec = []
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      task_spec = {"pipelineTaskName": task['name'], 
+      task_spec = {"pipelineTaskName": task['name'],
                    "taskPodTemplate": {}}
       if op.affinity:
         task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
@@ -349,7 +348,6 @@ class TektonCompiler(Compiler) :
 
     return workflow
 
-
   def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
           -> List[Dict[Text, Any]]:  # Tekton change, signature/return type
     """Create workflow for the pipeline."""
@@ -376,8 +374,8 @@ class TektonCompiler(Compiler) :
           'conditionRef': template['metadata']['name'],
           'params': [{
               'name': param['name'],
-              'value': '$(params.'+param['name']+')'
-            } for param in template['spec'].get('params',[])
+              'value': '$(params.' + param['name'] + ')'
+            } for param in template['spec'].get('params', [])
           ]
         }]
       else:
@@ -410,15 +408,15 @@ class TektonCompiler(Compiler) :
         # Process input parameters if needed
         if isinstance(condition.operand1, dsl.PipelineParam):
           if condition.operand1.op_name:
-            operand_value = '$(tasks.'+condition.operand1.op_name+'.results.'+condition.operand1.name+')'
+            operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + condition.operand1.name + ')'
           else:
-            operand_value = '$(params.'+condition.operand1.name+')'
+            operand_value = '$(params.' + condition.operand1.name + ')'
           input_params.append(operand_value)
         if isinstance(condition.operand2, dsl.PipelineParam):
           if condition.operand2.op_name:
-            operand_value = '$(tasks.'+condition.operand2.op_name+'.results.'+condition.operand2.name+')'
+            operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + condition.operand2.name + ')'
           else:
-            operand_value = '$(params.'+condition.operand2.name+')'
+            operand_value = '$(params.' + condition.operand2.name + ')'
           input_params.append(operand_value)
         for param_iter in range(len(input_params)):
           condition_ref['params'][param_iter]['value'] = input_params[param_iter]
@@ -431,15 +429,14 @@ class TektonCompiler(Compiler) :
       opsgroup_stack.extend(cur_opsgroup.groups)
       condition_stack.extend([most_recent_condition for x in range(len(cur_opsgroup.groups))])
 
-
     # add task dependencies and add condition refs to the task ref that depends on the condition
     op_name_to_parent_groups = self._get_groups_for_ops(pipeline.groups[0])
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       parent_group = op_name_to_parent_groups.get(task['name'], [])
       if parent_group:
-        if condition_refs.get(parent_group[-2],[]):
-          task['conditions'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2],[])
+        if condition_refs.get(parent_group[-2], []):
+          task['conditions'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2], [])
       if op.dependent_names:
         task['runAfter'] = op.dependent_names
 
@@ -557,12 +554,12 @@ class TektonCompiler(Compiler) :
   #         KFP Tekton -> List[Dict[Text, Any]]
 
   def _create_workflow(self,
-      pipeline_func: Callable,
-      pipeline_name: Text=None,
-      pipeline_description: Text=None,
-      params_list: List[dsl.PipelineParam]=None,
-      pipeline_conf: dsl.PipelineConf = None,
-      ) -> List[Dict[Text, Any]]:  # Tekton change, signature
+                       pipeline_func: Callable,
+                       pipeline_name: Text = None,
+                       pipeline_description: Text = None,
+                       params_list: List[dsl.PipelineParam] = None,
+                       pipeline_conf: dsl.PipelineConf = None,
+                       ) -> List[Dict[Text, Any]]:  # Tekton change, signature
     """ Internal implementation of create_workflow."""
     params_list = params_list or []
     argspec = inspect.getfullargspec(pipeline_func)
@@ -597,7 +594,9 @@ class TektonCompiler(Compiler) :
     with dsl.Pipeline(pipeline_name) as dsl_pipeline:
       pipeline_func(*args_list)
 
-    pipeline_conf = pipeline_conf or dsl_pipeline.conf # Configuration passed to the compiler is overriding. Unfortunately, it's not trivial to detect whether the dsl_pipeline.conf was ever modified.
+    # Configuration passed to the compiler is overriding. Unfortunately, it is
+    # not trivial to detect whether the dsl_pipeline.conf was ever modified.
+    pipeline_conf = pipeline_conf or dsl_pipeline.conf
 
     self._validate_exit_handler(dsl_pipeline)
     self._sanitize_and_inject_artifact(dsl_pipeline, pipeline_conf)
@@ -637,7 +636,8 @@ class TektonCompiler(Compiler) :
 
     import json
     pipeline = [item for item in workflow if item["kind"] == "Pipeline"][0]  # Tekton change
-    pipeline.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = json.dumps(pipeline_meta.to_dict(), sort_keys=True)
+    pipeline.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = \
+      json.dumps(pipeline_meta.to_dict(), sort_keys=True)
 
     return workflow
 
@@ -673,7 +673,7 @@ class TektonCompiler(Compiler) :
         will be returned.
     """
     # yaml_text = dump_yaml(workflow)
-    yaml.Dumper.ignore_aliases = lambda *args : True
+    yaml.Dumper.ignore_aliases = lambda *args: True
     yaml_text = yaml.dump_all(workflow, default_flow_style=False)  # Tekton change
 
     # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
@@ -701,8 +701,8 @@ class TektonCompiler(Compiler) :
     if '{{pipelineparam' in yaml_text:
       raise RuntimeError(
           'Internal compiler error: Found unresolved PipelineParam. '
-          'Please create a new issue at https://github.com/kubeflow/pipelines/issues '
-          'attaching the pipeline code and the pipeline package.' )
+          'Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues '
+          'attaching the pipeline DSL code and the pipeline YAML.')
 
     if package_path is None:
       return yaml_text
@@ -725,19 +725,17 @@ class TektonCompiler(Compiler) :
         yaml_file.write(yaml_text)
     else:
       raise ValueError(
-          'The output path '+ package_path +
-          ' should ends with one of the following formats: '
-          '[.tar.gz, .tgz, .zip, .yaml, .yml]')
+          'The output path %s should end with one of the following formats: '
+          '[.tar.gz, .tgz, .zip, .yaml, .yml]' % package_path)
 
-  def _create_and_write_workflow(
-      self,
-      pipeline_func: Callable,
-      pipeline_name: Text=None,
-      pipeline_description: Text=None,
-      params_list: List[dsl.PipelineParam]=None,
-      pipeline_conf: dsl.PipelineConf=None,
-      package_path: Text=None
-  ) -> None:
+  def _create_and_write_workflow(self,
+                                 pipeline_func: Callable,
+                                 pipeline_name: Text = None,
+                                 pipeline_description: Text = None,
+                                 params_list: List[dsl.PipelineParam] = None,
+                                 pipeline_conf: dsl.PipelineConf = None,
+                                 package_path: Text = None
+                                 ) -> None:
     """Compile the given pipeline function and dump it to specified file format."""
     workflow = self._create_workflow(
         pipeline_func,
@@ -806,7 +804,8 @@ def _validate_workflow(workflow: List[Dict[Text, Any]]):  # Tekton change, signa
   #   if '{{pipelineparam' in yaml_text:
   #     raise RuntimeError(
   #         '''Internal compiler error: Found unresolved PipelineParam.
-  # Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues attaching the pipeline code and the pipeline package.'''
+  # Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues
+  # attaching the pipeline code and the pipeline package.'''
   #     )
 
   # TODO: Tekton lint, if a tool exists for it
@@ -815,11 +814,13 @@ def _validate_workflow(workflow: List[Dict[Text, Any]]):  # Tekton change, signa
   #   import subprocess
   #   argo_path = shutil.which('argo')
   #   if argo_path:
-  #     result = subprocess.run([argo_path, 'lint', '/dev/stdin'], input=yaml_text.encode('utf-8'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  #     result = subprocess.run([argo_path, 'lint', '/dev/stdin'], input=yaml_text.encode('utf-8'),
+  #                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   #     if result.returncode:
   #       raise RuntimeError(
   #         '''Internal compiler error: Compiler has produced Argo-incompatible workflow.
-  # Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues attaching the pipeline code and the pipeline package.
+  # Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues
+  # attaching the pipeline code and the pipeline package.
   # Error: {}'''.format(result.stderr.decode('utf-8'))
   #       )
   pass

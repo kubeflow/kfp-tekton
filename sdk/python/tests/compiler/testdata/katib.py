@@ -15,6 +15,7 @@
 import json
 import kfp.dsl as dsl
 
+
 @dsl.pipeline(
     name="Launch katib experiment",
     description="An example to launch katib experiment."
@@ -33,9 +34,9 @@ def mnist_hpo(
       "objectiveMetricName": "Validation-accuracy",
       "additionalMetricNames": ["accuracy"]
     }
-    algorithmConfig = {"algorithmName" : "random"}
+    algorithmConfig = {"algorithmName": "random"}
     parameters = [
-      {"name": "--lr", "parameterType": "double", "feasibleSpace": {"min": "0.01","max": "0.03"}},
+      {"name": "--lr", "parameterType": "double", "feasibleSpace": {"min": "0.01", "max": "0.03"}},
       {"name": "--num-layers", "parameterType": "int", "feasibleSpace": {"min": "2", "max": "5"}},
       {"name": "--optimizer", "parameterType": "categorical", "feasibleSpace": {"list": ["sgd", "adam", "ftrl"]}}
     ]
@@ -54,7 +55,7 @@ def mnist_hpo(
               {"name": "{{.Trial}}",
                "image": "docker.io/katib/mxnet-mnist-example",
                "command": [
-                   "python /mxnet/example/image-classification/train_mnist.py --batch-size=64 {{- with .HyperParameters}} {{- range .}} {{.Name}}={{.Value}} {{- end}} {{- end}}"
+                   "python /mxnet/example/image-classification/train_mnist.py --batch-size=64 {{- with .HyperParameters}} {{- range .}} {{.Name}}={{.Value}} {{- end}} {{- end}}"  # noqa E501
                ]
               }
             ]
@@ -103,9 +104,9 @@ def katib_experiment_launcher_op(
       deleteAfterDone=True,
       outputFile='/output.txt'):
     return dsl.ContainerOp(
-        name = "mnist-hpo",
-        image = 'liuhougangxa/katib-experiment-launcher:latest',
-        arguments = [
+        name="mnist-hpo",
+        image='liuhougangxa/katib-experiment-launcher:latest',
+        arguments=[
             '--name', name,
             '--namespace', namespace,
             '--maxTrialCount', maxTrialCount,
@@ -120,7 +121,7 @@ def katib_experiment_launcher_op(
             '--deleteAfterDone', deleteAfterDone,
             '--experimentTimeoutMinutes', experimentTimeoutMinutes,
         ],
-        file_outputs = {'bestHyperParameter': outputFile}
+        file_outputs={'bestHyperParameter': outputFile}
     )
 
 
