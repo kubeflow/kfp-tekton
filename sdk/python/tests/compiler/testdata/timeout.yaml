@@ -13,65 +13,41 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: random-failure
-spec:
-  steps:
-  - args:
-    - import random; import sys; exit_code = random.choice([0,1,2,3]); print(exit_code);
-      import time; time.sleep(30); sys.exit(exit_code)
-    command:
-    - python
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: random-failure-2
-spec:
-  steps:
-  - args:
-    - import random; import sys; exit_code = random.choice([0,1]); print(exit_code);
-      import time; time.sleep(30); sys.exit(exit_code)
-    command:
-    - python
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use ContainerOp
       set_timeout().", "name": "pipeline includes two steps which fail randomly."}'
     sidecar.istio.io/inject: 'false'
-  name: pipeline-includes-two-steps-which-fail-randomly
-spec:
-  tasks:
-  - name: random-failure
-    taskRef:
-      name: random-failure
-    timeout: 20s
-  - name: random-failure-2
-    taskRef:
-      name: random-failure-2
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: pipeline-includes-two-steps-which-fail-randomly-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: pipeline-includes-two-steps-which-fail-randomly
 spec:
-  pipelineRef:
-    name: pipeline-includes-two-steps-which-fail-randomly
+  pipelineSpec:
+    tasks:
+    - name: random-failure
+      taskSpec:
+        steps:
+        - args:
+          - import random; import sys; exit_code = random.choice([0,1,2,3]); print(exit_code);
+            import time; time.sleep(30); sys.exit(exit_code)
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+          name: main
+      timeout: 20s
+    - name: random-failure-2
+      taskSpec:
+        steps:
+        - args:
+          - import random; import sys; exit_code = random.choice([0,1]); print(exit_code);
+            import time; time.sleep(30); sys.exit(exit_code)
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+          name: main
   timeout: 40s

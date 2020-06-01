@@ -13,55 +13,7 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: download
-spec:
-  params:
-  - name: sleep_ms
-  - name: tag
-  results:
-  - description: /tmp/results.txt
-    name: downloaded-resultoutput
-  sidecars:
-  - args:
-    - -text="hello world"
-    image: hashicorp/http-echo:$(inputs.params.tag)
-    name: echo
-  steps:
-  - args:
-    - sleep $(inputs.params.sleep_ms); wget localhost:5678 -O $(results.downloaded-resultoutput.path)
-    command:
-    - sh
-    - -c
-    image: busybox:$(inputs.params.tag)
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: echo
-spec:
-  params:
-  - name: download-downloaded_resultOutput
-  steps:
-  - args:
-    - echo $MSG $(inputs.params.download-downloaded_resultOutput)
-    command:
-    - sh
-    - -c
-    env:
-    - name: MSG
-      value: 'pipelineParams: '
-    image: library/bash
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with multiple
@@ -69,41 +21,65 @@ metadata:
       true, "type": "String"}, {"default": "10", "name": "sleep_ms", "optional": true,
       "type": "Integer"}], "name": "PipelineParams"}'
     sidecar.istio.io/inject: 'false'
-  name: pipelineparams
-spec:
-  params:
-  - default: latest
-    name: tag
-  - default: '10'
-    name: sleep_ms
-  tasks:
-  - name: download
-    params:
-    - name: sleep_ms
-      value: $(params.sleep_ms)
-    - name: tag
-      value: $(params.tag)
-    taskRef:
-      name: download
-  - name: echo
-    params:
-    - name: download-downloaded_resultOutput
-      value: $(tasks.download.results.downloaded-resultoutput)
-    taskRef:
-      name: echo
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: pipelineparams-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: pipelineparams
 spec:
   params:
   - name: tag
     value: latest
   - name: sleep_ms
     value: '10'
-  pipelineRef:
-    name: pipelineparams
+  pipelineSpec:
+    params:
+    - default: latest
+      name: tag
+    - default: '10'
+      name: sleep_ms
+    tasks:
+    - name: download
+      params:
+      - name: sleep_ms
+        value: $(params.sleep_ms)
+      - name: tag
+        value: $(params.tag)
+      taskSpec:
+        params:
+        - name: sleep_ms
+        - name: tag
+        results:
+        - description: /tmp/results.txt
+          name: downloaded_resultOutput
+        sidecars:
+        - args:
+          - -text="hello world"
+          image: hashicorp/http-echo:$(inputs.params.tag)
+          name: echo
+        steps:
+        - args:
+          - sleep $(inputs.params.sleep_ms); wget localhost:5678 -O $(results.downloaded-resultoutput.path)
+          command:
+          - sh
+          - -c
+          image: busybox:$(inputs.params.tag)
+          name: main
+    - name: echo
+      params:
+      - name: download-downloaded_resultOutput
+        value: $(tasks.download.results.downloaded_resultOutput)
+      taskSpec:
+        params:
+        - name: download-downloaded_resultOutput
+        steps:
+        - args:
+          - echo $MSG $(inputs.params.download-downloaded_resultOutput)
+          command:
+          - sh
+          - -c
+          env:
+          - name: MSG
+            value: 'pipelineParams: '
+          image: library/bash
+          name: main

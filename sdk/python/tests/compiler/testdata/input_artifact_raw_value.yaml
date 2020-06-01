@@ -13,158 +13,72 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: component-with-inline-input-artifact
-spec:
-  stepTemplate:
-    volumeMounts:
-    - mountPath: /tmp/inputs/text
-      name: text
-  steps:
-  - image: busybox
-    name: copy-inputs
-    script: '#!/bin/sh
-
-      set -exo pipefail
-
-      echo -n "Constant artifact value" > /tmp/inputs/text/data
-
-      '
-  - command:
-    - cat
-    - /tmp/inputs/text/data
-    image: alpine
-    name: main
-  volumes:
-  - emptyDir: {}
-    name: text
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: component-with-input-artifact
-spec:
-  stepTemplate:
-    volumeMounts:
-    - mountPath: /tmp/inputs/text
-      name: text
-  steps:
-  - image: busybox
-    name: copy-inputs
-    script: '#!/bin/sh
-
-      set -exo pipefail
-
-      echo -n "Constant artifact value" > /tmp/inputs/text/data
-
-      '
-  - command:
-    - cat
-    - /tmp/inputs/text/data
-    image: alpine
-    name: main
-  volumes:
-  - emptyDir: {}
-    name: text
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: component-with-input-artifact-2
-spec:
-  stepTemplate:
-    volumeMounts:
-    - mountPath: /tmp/inputs/text
-      name: text
-  steps:
-  - image: busybox
-    name: copy-inputs
-    script: '#!/bin/sh
-
-      set -exo pipefail
-
-      echo -n "hard-coded artifact value" > /tmp/inputs/text/data
-
-      '
-  - command:
-    - cat
-    - /tmp/inputs/text/data
-    image: alpine
-    name: main
-  volumes:
-  - emptyDir: {}
-    name: text
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: component-with-input-artifact-3
-spec:
-  stepTemplate:
-    volumeMounts:
-    - mountPath: /tmp/inputs/text
-      name: text
-  steps:
-  - image: busybox
-    name: copy-inputs
-    script: '#!/bin/sh
-
-      set -exo pipefail
-
-      echo -n "Text from a file with hard-coded artifact value
-
-      " > /tmp/inputs/text/data
-
-      '
-  - command:
-    - cat
-    - /tmp/inputs/text/data
-    image: alpine
-    name: main
-  volumes:
-  - emptyDir: {}
-    name: text
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Pipeline shows how to
       define artifact inputs and pass raw artifacts to them.", "name": "Pipeline with
       artifact input raw argument value."}'
     sidecar.istio.io/inject: 'false'
-  name: pipeline-with-artifact-input-raw-argument-value
-spec:
-  tasks:
-  - name: component-with-inline-input-artifact
-    taskRef:
-      name: component-with-inline-input-artifact
-  - name: component-with-input-artifact
-    taskRef:
-      name: component-with-input-artifact
-  - name: component-with-input-artifact-2
-    taskRef:
-      name: component-with-input-artifact-2
-  - name: component-with-input-artifact-3
-    taskRef:
-      name: component-with-input-artifact-3
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: pipeline-with-artifact-input-raw-argument-value-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: pipeline-with-artifact-input-raw-argument-value
 spec:
-  pipelineRef:
-    name: pipeline-with-artifact-input-raw-argument-value
+  pipelineSpec:
+    tasks:
+    - name: component-with-inline-input-artifact
+      taskSpec:
+        artifacts:
+        - name: text
+          path: /tmp/inputs/text/data
+          raw:
+            data: Constant artifact value
+        steps:
+        - command:
+          - cat
+          - /tmp/inputs/text/data
+          image: alpine
+          name: main
+    - name: component-with-input-artifact
+      taskSpec:
+        artifacts:
+        - name: text
+          path: /tmp/inputs/text/data
+          raw:
+            data: Constant artifact value
+        steps:
+        - command:
+          - cat
+          - /tmp/inputs/text/data
+          image: alpine
+          name: main
+    - name: component-with-input-artifact-2
+      taskSpec:
+        artifacts:
+        - name: text
+          path: /tmp/inputs/text/data
+          raw:
+            data: hard-coded artifact value
+        steps:
+        - command:
+          - cat
+          - /tmp/inputs/text/data
+          image: alpine
+          name: main
+    - name: component-with-input-artifact-3
+      taskSpec:
+        artifacts:
+        - name: text
+          path: /tmp/inputs/text/data
+          raw:
+            data: 'Text from a file with hard-coded artifact value
+
+              '
+        steps:
+        - command:
+          - cat
+          - /tmp/inputs/text/data
+          image: alpine
+          name: main
