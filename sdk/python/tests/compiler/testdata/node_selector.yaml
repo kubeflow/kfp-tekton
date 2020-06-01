@@ -13,45 +13,30 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: echo
-spec:
-  steps:
-  - args:
-    - echo "Found my node"
-    command:
-    - sh
-    - -c
-    image: busybox
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with Node Selector",
       "name": "node_selector"}'
     sidecar.istio.io/inject: 'false'
-  name: node-selector
-spec:
-  tasks:
-  - name: echo
-    taskRef:
-      name: echo
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: node-selector-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: node-selector
 spec:
-  pipelineRef:
-    name: node-selector
+  pipelineSpec:
+    tasks:
+    - name: echo
+      taskSpec:
+        steps:
+        - args:
+          - echo "Found my node"
+          command:
+          - sh
+          - -c
+          image: busybox
+          name: main
   taskRunSpecs:
   - pipelineTaskName: echo
     taskPodTemplate:

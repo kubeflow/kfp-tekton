@@ -12,104 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: tekton.dev/v1alpha1
-kind: Condition
-metadata:
-  name: super-condition
-spec:
-  check:
-    image: python:alpine3.6
-    script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
-      try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
-      sys.exit(0) if (input1 $(params.operator) input2) else sys.exit(1)' '$(params.operand1)'\
-      \ '$(params.operand2)'"
-  params:
-  - name: operand1
-  - name: operand2
-  - name: operator
----
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: flip
-spec:
-  params:
-  - name: forced_result1
-  results:
-  - description: /tmp/output
-    name: output
-  steps:
-  - args:
-    - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result1)';
-      result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
-      if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
-      | tee $(results.output.path)
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: flip-again
-spec:
-  params:
-  - name: forced_result2
-  results:
-  - description: /tmp/output
-    name: output
-  steps:
-  - args:
-    - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result2)';
-      result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
-      if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
-      | tee $(results.output.path)
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: print1
-spec:
-  params:
-  - name: flip-again-output
-  steps:
-  - command:
-    - echo
-    - $(inputs.params.flip-again-output)
-    image: alpine:3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: print2
-spec:
-  params:
-  - name: flip-output
-  steps:
-  - command:
-    - echo
-    - $(inputs.params.flip-output)
-    image: alpine:3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
@@ -117,86 +21,124 @@ metadata:
       "type": "String"}, {"default": "tails", "name": "forced_result2", "optional":
       true, "type": "String"}], "name": "Flip Coin Example Pipeline"}'
     sidecar.istio.io/inject: 'false'
-  name: flip-coin-example-pipeline
-spec:
-  params:
-  - default: heads
-    name: forced_result1
-  - default: tails
-    name: forced_result2
-  tasks:
-  - name: flip
-    params:
-    - name: forced_result1
-      value: $(params.forced_result1)
-    taskRef:
-      name: flip
-  - conditions:
-    - conditionRef: super-condition
-      params:
-      - name: operand1
-        value: $(tasks.flip.results.output)
-      - name: operand2
-        value: heads
-      - name: operator
-        value: ==
-    name: flip-again
-    params:
-    - name: forced_result2
-      value: $(params.forced_result2)
-    taskRef:
-      name: flip-again
-  - conditions:
-    - conditionRef: super-condition
-      params:
-      - name: operand1
-        value: $(tasks.flip-again.results.output)
-      - name: operand2
-        value: tails
-      - name: operator
-        value: ==
-    - conditionRef: super-condition
-      params:
-      - name: operand1
-        value: $(tasks.flip.results.output)
-      - name: operand2
-        value: heads
-      - name: operator
-        value: ==
-    name: print1
-    params:
-    - name: flip-again-output
-      value: $(tasks.flip-again.results.output)
-    taskRef:
-      name: print1
-  - conditions:
-    - conditionRef: super-condition
-      params:
-      - name: operand1
-        value: $(tasks.flip.results.output)
-      - name: operand2
-        value: tails
-      - name: operator
-        value: ==
-    name: print2
-    params:
-    - name: flip-output
-      value: $(tasks.flip.results.output)
-    taskRef:
-      name: print2
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: flip-coin-example-pipeline-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: flip-coin-example-pipeline
 spec:
   params:
   - name: forced_result1
     value: heads
   - name: forced_result2
     value: tails
-  pipelineRef:
-    name: flip-coin-example-pipeline
+  pipelineSpec:
+    params:
+    - default: heads
+      name: forced_result1
+    - default: tails
+      name: forced_result2
+    tasks:
+    - name: flip
+      params:
+      - name: forced_result1
+        value: $(params.forced_result1)
+      taskSpec:
+        params:
+        - name: forced_result1
+        results:
+        - description: /tmp/output
+          name: output
+        steps:
+        - args:
+          - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result1)';
+            result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
+            if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
+            | tee $(results.output.path)
+          command:
+          - sh
+          - -c
+          image: python:alpine3.6
+          name: main
+    - conditions:
+      - conditionRef: super-condition
+        params:
+        - name: operand1
+          value: $(tasks.flip.results.output)
+        - name: operand2
+          value: heads
+        - name: operator
+          value: ==
+      name: flip-again
+      params:
+      - name: forced_result2
+        value: $(params.forced_result2)
+      taskSpec:
+        params:
+        - name: forced_result2
+        results:
+        - description: /tmp/output
+          name: output
+        steps:
+        - args:
+          - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result2)';
+            result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
+            if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
+            | tee $(results.output.path)
+          command:
+          - sh
+          - -c
+          image: python:alpine3.6
+          name: main
+    - conditions:
+      - conditionRef: super-condition
+        params:
+        - name: operand1
+          value: $(tasks.flip-again.results.output)
+        - name: operand2
+          value: tails
+        - name: operator
+          value: ==
+      - conditionRef: super-condition
+        params:
+        - name: operand1
+          value: $(tasks.flip.results.output)
+        - name: operand2
+          value: heads
+        - name: operator
+          value: ==
+      name: print1
+      params:
+      - name: flip-again-output
+        value: $(tasks.flip-again.results.output)
+      taskSpec:
+        params:
+        - name: flip-again-output
+        steps:
+        - command:
+          - echo
+          - $(inputs.params.flip-again-output)
+          image: alpine:3.6
+          name: main
+    - conditions:
+      - conditionRef: super-condition
+        params:
+        - name: operand1
+          value: $(tasks.flip.results.output)
+        - name: operand2
+          value: tails
+        - name: operator
+          value: ==
+      name: print2
+      params:
+      - name: flip-output
+        value: $(tasks.flip.results.output)
+      taskSpec:
+        params:
+        - name: flip-output
+        steps:
+        - command:
+          - echo
+          - $(inputs.params.flip-output)
+          image: alpine:3.6
+          name: main
