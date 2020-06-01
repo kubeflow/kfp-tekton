@@ -13,45 +13,30 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: hello
-spec:
-  steps:
-  - command:
-    - echo
-    - bye
-    image: alpine:latest
-    name: echo
-  - command:
-    - echo
-    - hello
-    image: alpine:latest
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with init container.",
       "name": "InitContainer"}'
     sidecar.istio.io/inject: 'false'
-  name: initcontainer
-spec:
-  tasks:
-  - name: hello
-    taskRef:
-      name: hello
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: initcontainer-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: initcontainer
 spec:
-  pipelineRef:
-    name: initcontainer
+  pipelineSpec:
+    tasks:
+    - name: hello
+      taskSpec:
+        steps:
+        - command:
+          - echo
+          - bye
+          image: alpine:latest
+          name: echo
+        - command:
+          - echo
+          - hello
+          image: alpine:latest
+          name: main

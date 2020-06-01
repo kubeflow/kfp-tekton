@@ -37,4 +37,4 @@ def tolerations(
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(tolerations, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)
+    TektonCompiler().compile(tolerations, __file__.replace('.py', '.yaml'))

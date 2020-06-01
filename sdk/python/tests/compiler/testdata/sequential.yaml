@@ -13,46 +13,7 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: gcs-download
-spec:
-  params:
-  - name: url
-  steps:
-  - args:
-    - gsutil cat $0 | tee $1
-    - $(inputs.params.url)
-    - /tmp/results.txt
-    command:
-    - sh
-    - -c
-    image: google/cloud-sdk:216.0.0
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: echo
-spec:
-  params:
-  - name: path
-  steps:
-  - args:
-    - echo "$0"
-    - $(inputs.params.path)
-    command:
-    - sh
-    - -c
-    image: library/bash:4.4.23
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with two sequential
@@ -60,41 +21,56 @@ metadata:
       "name": "url", "optional": true}, {"default": "/tmp/results.txt", "name": "path",
       "optional": true}], "name": "Sequential pipeline"}'
     sidecar.istio.io/inject: 'false'
-  name: sequential-pipeline
-spec:
-  params:
-  - default: gs://ml-pipeline-playground/shakespeare1.txt
-    name: url
-  - default: /tmp/results.txt
-    name: path
-  tasks:
-  - name: gcs-download
-    params:
-    - name: url
-      value: $(params.url)
-    taskRef:
-      name: gcs-download
-  - name: echo
-    params:
-    - name: path
-      value: $(params.path)
-    runAfter:
-    - gcs-download
-    taskRef:
-      name: echo
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: sequential-pipeline-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: sequential-pipeline
 spec:
   params:
   - name: url
     value: gs://ml-pipeline-playground/shakespeare1.txt
   - name: path
     value: /tmp/results.txt
-  pipelineRef:
-    name: sequential-pipeline
+  pipelineSpec:
+    params:
+    - default: gs://ml-pipeline-playground/shakespeare1.txt
+      name: url
+    - default: /tmp/results.txt
+      name: path
+    tasks:
+    - name: gcs-download
+      params:
+      - name: url
+        value: $(params.url)
+      taskSpec:
+        params:
+        - name: url
+        steps:
+        - args:
+          - gsutil cat $0 | tee $1
+          - $(inputs.params.url)
+          - /tmp/results.txt
+          command:
+          - sh
+          - -c
+          image: google/cloud-sdk:216.0.0
+          name: main
+    - name: echo
+      params:
+      - name: path
+        value: $(params.path)
+      runAfter:
+      - gcs-download
+      taskSpec:
+        params:
+        - name: path
+        steps:
+        - args:
+          - echo "$0"
+          - $(inputs.params.path)
+          command:
+          - sh
+          - -c
+          image: library/bash:4.4.23
+          name: main
