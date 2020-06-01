@@ -13,46 +13,33 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: download
-spec:
-  results:
-  - description: /tmp/results.txt
-    name: downloaded
-  steps:
-  - args:
-    - sleep 10; wget localhost:5678 -O $(results.downloaded.path)
-    command:
-    - sh
-    - -c
-    image: busybox
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with tolerations",
       "name": "tolerations"}'
     sidecar.istio.io/inject: 'false'
-  name: tolerations
-spec:
-  params: []
-  tasks:
-  - name: download
-    params: []
-    taskRef:
-      name: download
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
   name: tolerations-run
 spec:
   params: []
-  pipelineRef:
-    name: tolerations
+  pipelineSpec:
+    params: []
+    tasks:
+    - name: download
+      params: []
+      taskSpec:
+        params: []
+        results:
+        - description: /tmp/results.txt
+          name: downloaded
+        steps:
+        - args:
+          - sleep 10; wget localhost:5678 -O $(results.downloaded.path)
+          command:
+          - sh
+          - -c
+          image: busybox
+          name: main
   taskRunSpec:
   - pipelineTaskName: download
     taskPodTemplate:

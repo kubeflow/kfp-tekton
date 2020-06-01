@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Text, Dict, Any
+# from typing import List, Text, Dict, Any
 
 
-def fix_big_data_passing(workflow: List[Dict[Text, Any]]) -> List[Dict[Text, Any]]:  # Tekton change signature
+def fix_big_data_passing(workflow: dict) -> dict:
     """
     Currently this function does not do anything.
 

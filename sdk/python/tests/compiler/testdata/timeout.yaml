@@ -13,52 +13,45 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: random-failure
-spec:
-  steps:
-  - args:
-    - import random; import sys; exit_code = random.choice([0,1,2,3]); print(exit_code);
-      import time; time.sleep(30); sys.exit(exit_code)
-    command:
-    - python
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: random-failure-2
-spec:
-  steps:
-  - args:
-    - import random; import sys; exit_code = random.choice([0,1]); print(exit_code);
-      import time; time.sleep(30); sys.exit(exit_code)
-    command:
-    - python
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use ContainerOp
       set_timeout().", "name": "pipeline includes two steps which fail randomly."}'
     sidecar.istio.io/inject: 'false'
-  name: pipeline-includes-two-steps-which-fail-randomly
+  name: pipeline-includes-two-steps-which-fail-randomly-run
 spec:
   params: []
-  tasks:
-  - name: random-failure
+  pipelineSpec:
     params: []
-    taskRef:
-      name: random-failure
-    timeout: 20s
-  - name: random-failure-2
-    params: []
-    taskRef:
-      name: random-failure-2
+    tasks:
+    - name: random-failure
+      params: []
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - args:
+          - import random; import sys; exit_code = random.choice([0,1,2,3]); print(exit_code);
+            import time; time.sleep(30); sys.exit(exit_code)
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+          name: main
+      timeout: 20s
+    - name: random-failure-2
+      params: []
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - args:
+          - import random; import sys; exit_code = random.choice([0,1]); print(exit_code);
+            import time; time.sleep(30); sys.exit(exit_code)
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+          name: main
+  timeout: 40s

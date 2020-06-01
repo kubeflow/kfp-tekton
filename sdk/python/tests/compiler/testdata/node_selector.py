@@ -35,4 +35,4 @@ def node_selector_pipeline(
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(node_selector_pipeline, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)
+    TektonCompiler().compile(node_selector_pipeline, __file__.replace('.py', '.yaml'))

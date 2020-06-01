@@ -13,144 +13,98 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: component-with-inline-input-artifact
-spec:
-  stepTemplate:
-    volumeMounts:
-    - mountPath: /tmp/inputs/text
-      name: text
-  steps:
-  - image: busybox
-    name: copy-inputs
-    script: '#!/bin/sh
-
-      set -exo pipefail
-
-      echo -n "Constant artifact value" > /tmp/inputs/text/data
-
-      '
-  - command:
-    - cat
-    - /tmp/inputs/text/data
-    image: alpine
-    name: main
-  volumes:
-  - emptyDir: {}
-    name: text
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: component-with-input-artifact
-spec:
-  stepTemplate:
-    volumeMounts:
-    - mountPath: /tmp/inputs/text
-      name: text
-  steps:
-  - image: busybox
-    name: copy-inputs
-    script: '#!/bin/sh
-
-      set -exo pipefail
-
-      echo -n "Constant artifact value" > /tmp/inputs/text/data
-
-      '
-  - command:
-    - cat
-    - /tmp/inputs/text/data
-    image: alpine
-    name: main
-  volumes:
-  - emptyDir: {}
-    name: text
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: component-with-input-artifact-2
-spec:
-  stepTemplate:
-    volumeMounts:
-    - mountPath: /tmp/inputs/text
-      name: text
-  steps:
-  - image: busybox
-    name: copy-inputs
-    script: '#!/bin/sh
-
-      set -exo pipefail
-
-      echo -n "hard-coded artifact value" > /tmp/inputs/text/data
-
-      '
-  - command:
-    - cat
-    - /tmp/inputs/text/data
-    image: alpine
-    name: main
-  volumes:
-  - emptyDir: {}
-    name: text
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: component-with-input-artifact-3
-spec:
-  stepTemplate:
-    volumeMounts:
-    - mountPath: /tmp/inputs/text
-      name: text
-  steps:
-  - image: busybox
-    name: copy-inputs
-    script: '#!/bin/sh
-
-      set -exo pipefail
-
-      echo -n "Text from a file with hard-coded artifact value
-
-      " > /tmp/inputs/text/data
-
-      '
-  - command:
-    - cat
-    - /tmp/inputs/text/data
-    image: alpine
-    name: main
-  volumes:
-  - emptyDir: {}
-    name: text
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Pipeline shows how to
       define artifact inputs and pass raw artifacts to them.", "name": "Pipeline with
       artifact input raw argument value."}'
     sidecar.istio.io/inject: 'false'
-  name: pipeline-with-artifact-input-raw-argument-value
+  name: pipeline-with-artifact-input-raw-argument-value-run
 spec:
   params: []
-  tasks:
-  - name: component-with-inline-input-artifact
+  pipelineSpec:
     params: []
-    taskRef:
-      name: component-with-inline-input-artifact
-  - name: component-with-input-artifact
-    params: []
-    taskRef:
-      name: component-with-input-artifact
-  - name: component-with-input-artifact-2
-    params: []
-    taskRef:
-      name: component-with-input-artifact-2
-  - name: component-with-input-artifact-3
-    params: []
-    taskRef:
-      name: component-with-input-artifact-3
+    tasks:
+    - name: component-with-inline-input-artifact
+      params: []
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: '#!/bin/sh
+
+            set -exo pipefail
+
+            echo -n "Constant artifact value" > /tmp/inputs/text/data
+
+            '
+        - command:
+          - cat
+          - /tmp/inputs/text/data
+          image: alpine
+          name: main
+    - name: component-with-input-artifact
+      params: []
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: '#!/bin/sh
+
+            set -exo pipefail
+
+            echo -n "Constant artifact value" > /tmp/inputs/text/data
+
+            '
+        - command:
+          - cat
+          - /tmp/inputs/text/data
+          image: alpine
+          name: main
+    - name: component-with-input-artifact-2
+      params: []
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: '#!/bin/sh
+
+            set -exo pipefail
+
+            echo -n "hard-coded artifact value" > /tmp/inputs/text/data
+
+            '
+        - command:
+          - cat
+          - /tmp/inputs/text/data
+          image: alpine
+          name: main
+    - name: component-with-input-artifact-3
+      params: []
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: '#!/bin/sh
+
+            set -exo pipefail
+
+            echo -n "Text from a file with hard-coded artifact value
+
+            " > /tmp/inputs/text/data
+
+            '
+        - command:
+          - cat
+          - /tmp/inputs/text/data
+          image: alpine
+          name: main

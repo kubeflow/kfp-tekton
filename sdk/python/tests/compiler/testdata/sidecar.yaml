@@ -13,61 +13,46 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: download
-spec:
-  results:
-  - description: /tmp/results.txt
-    name: downloaded
-  sidecars:
-  - args:
-    - -text="hello world"
-    image: hashicorp/http-echo
-    name: echo
-  steps:
-  - args:
-    - sleep 10; wget localhost:5678 -O $(results.downloaded.path)
-    command:
-    - sh
-    - -c
-    image: busybox
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: echo
-spec:
-  params:
-  - name: download-downloaded
-  steps:
-  - args:
-    - echo $(inputs.params.download-downloaded)
-    command:
-    - sh
-    - -c
-    image: library/bash
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with sidecars.",
       "name": "Sidecar"}'
     sidecar.istio.io/inject: 'false'
-  name: sidecar
+  name: sidecar-run
 spec:
   params: []
-  tasks:
-  - name: download
+  pipelineSpec:
     params: []
-    taskRef:
-      name: download
-  - name: echo
-    params:
-    - name: download-downloaded
-      value: $(tasks.download.results.downloaded)
-    taskRef:
-      name: echo
+    tasks:
+    - name: download
+      params: []
+      taskSpec:
+        params: []
+        results:
+        - description: /tmp/results.txt
+          name: downloaded
+        steps:
+        - args:
+          - sleep 10; wget localhost:5678 -O $(results.downloaded.path)
+          command:
+          - sh
+          - -c
+          image: busybox
+          name: main
+    - name: echo
+      params:
+      - name: download-downloaded
+        value: $(tasks.download.results.downloaded)
+      taskSpec:
+        params:
+        - name: download-downloaded
+        results: []
+        steps:
+        - args:
+          - echo $(inputs.params.download-downloaded)
+          command:
+          - sh
+          - -c
+          image: library/bash
+          name: main

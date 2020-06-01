@@ -13,56 +13,48 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: random-failure
-spec:
-  steps:
-  - args:
-    - import random; import sys; exit_code = random.choice([int(i) for i in sys.argv[1].split(",")]);
-      print(exit_code); sys.exit(exit_code)
-    - 0,1,2,3
-    command:
-    - python
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: random-failure-2
-spec:
-  steps:
-  - args:
-    - import random; import sys; exit_code = random.choice([int(i) for i in sys.argv[1].split(",")]);
-      print(exit_code); sys.exit(exit_code)
-    - 0,1
-    command:
-    - python
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline includes
       two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).",
       "name": "Retry random failures"}'
     sidecar.istio.io/inject: 'false'
-  name: retry-random-failures
+  name: retry-random-failures-run
 spec:
   params: []
-  tasks:
-  - name: random-failure
+  pipelineSpec:
     params: []
-    retries: 10
-    taskRef:
-      name: random-failure
-  - name: random-failure-2
-    params: []
-    retries: 5
-    taskRef:
-      name: random-failure-2
+    tasks:
+    - name: random-failure
+      params: []
+      retries: 10
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - args:
+          - import random; import sys; exit_code = random.choice([int(i) for i in
+            sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
+          - 0,1,2,3
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+          name: main
+    - name: random-failure-2
+      params: []
+      retries: 5
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - args:
+          - import random; import sys; exit_code = random.choice([int(i) for i in
+            sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
+          - 0,1
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+          name: main

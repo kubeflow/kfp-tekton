@@ -13,40 +13,28 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: sleep
-spec:
-  steps:
-  - command:
-    - sleep 1
-    image: busybox
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with affinity",
       "name": "affinity"}'
     sidecar.istio.io/inject: 'false'
-  name: affinity
-spec:
-  params: []
-  tasks:
-  - name: sleep
-    params: []
-    taskRef:
-      name: sleep
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
   name: affinity-run
 spec:
   params: []
-  pipelineRef:
-    name: affinity
+  pipelineSpec:
+    params: []
+    tasks:
+    - name: sleep
+      params: []
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - command:
+          - sleep 1
+          image: busybox
+          name: main
   taskRunSpec:
   - pipelineTaskName: sleep
     taskPodTemplate:

@@ -13,61 +13,7 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: generate-output
-spec:
-  params:
-  - name: bucket
-  - name: namespace
-  - name: secret_name
-  - name: tag
-  results:
-  - description: /tmp/output.txt
-    name: output
-  steps:
-  - command:
-    - sh
-    - -c
-    - echo hello > $(results.output.path)
-    image: busybox:$(inputs.params.tag)
-    name: main
-  - env:
-    - name: PIPELINERUN
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.labels['tekton.dev/pipelineRun']
-    - name: PODNAME
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.name
-    - name: NAMESPACE
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.namespace
-    - name: AWS_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          key: accesskey
-          name: $(inputs.params.secret_name)
-    - name: AWS_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          key: secretkey
-          name: $(inputs.params.secret_name)
-    image: minio/mc
-    name: copy-artifacts
-    script: '#!/usr/bin/env sh
-
-      mc config host add storage http://minio-service.$(inputs.params.namespace):9000
-      $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
-
-      mc cp $(results.output.path) storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/output.txt
-
-      '
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline to demonstrate
@@ -79,27 +25,84 @@ metadata:
       true, "type": "String"}, {"default": "mlpipeline", "name": "bucket", "optional":
       true, "type": "String"}], "name": "custom_artifact_location_pipeline"}'
     sidecar.istio.io/inject: 'false'
-  name: custom-artifact-location-pipeline
+  name: custom-artifact-location-pipeline-run
 spec:
   params:
-  - default: mlpipeline-minio-artifact
-    name: secret_name
-  - default: 1.31.0
-    name: tag
-  - default: kubeflow
-    name: namespace
-  - default: mlpipeline
-    name: bucket
-  tasks:
-  - name: generate-output
+  - name: secret_name
+    value: mlpipeline-minio-artifact
+  - name: tag
+    value: 1.31.0
+  - name: namespace
+    value: kubeflow
+  - name: bucket
+    value: mlpipeline
+  pipelineSpec:
     params:
-    - name: bucket
-      value: $(params.bucket)
-    - name: namespace
-      value: $(params.namespace)
-    - name: secret_name
-      value: $(params.secret_name)
-    - name: tag
-      value: $(params.tag)
-    taskRef:
-      name: generate-output
+    - default: mlpipeline-minio-artifact
+      name: secret_name
+    - default: 1.31.0
+      name: tag
+    - default: kubeflow
+      name: namespace
+    - default: mlpipeline
+      name: bucket
+    tasks:
+    - name: generate-output
+      params:
+      - name: bucket
+        value: $(params.bucket)
+      - name: namespace
+        value: $(params.namespace)
+      - name: secret_name
+        value: $(params.secret_name)
+      - name: tag
+        value: $(params.tag)
+      taskSpec:
+        params:
+        - name: bucket
+        - name: namespace
+        - name: secret_name
+        - name: tag
+        results:
+        - description: /tmp/output.txt
+          name: output
+        steps:
+        - command:
+          - sh
+          - -c
+          - echo hello > $(results.output.path)
+          image: busybox:$(inputs.params.tag)
+          name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PODNAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: $(inputs.params.secret_name)
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: $(inputs.params.secret_name)
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$(inputs.params.namespace):9000
+            $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+
+            mc cp $(results.output.path) storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/output.txt
+
+            '

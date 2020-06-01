@@ -12,171 +12,95 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: tekton.dev/v1alpha1
-kind: Condition
-metadata:
-  name: condition-1
-spec:
-  check:
-    args:
-    - "EXITCODE=$(python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
-      try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
-      print(0) if (input1 == input2) else print(1)' '$(params.flip)' 'heads'); exit\
-      \ $EXITCODE"
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-  params:
-  - name: flip
----
-apiVersion: tekton.dev/v1alpha1
-kind: Condition
-metadata:
-  name: condition-2
-spec:
-  check:
-    args:
-    - "EXITCODE=$(python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
-      try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
-      print(0) if (input1 == input2) else print(1)' '$(params.flip-again)' 'tails');\
-      \ exit $EXITCODE"
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-  params:
-  - name: flip-again
----
-apiVersion: tekton.dev/v1alpha1
-kind: Condition
-metadata:
-  name: condition-3
-spec:
-  check:
-    args:
-    - "EXITCODE=$(python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
-      try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
-      print(0) if (input1 == input2) else print(1)' '$(params.flip)' 'tails'); exit\
-      \ $EXITCODE"
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-  params:
-  - name: flip
----
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: flip
-spec:
-  results:
-  - description: /tmp/output
-    name: output
-  steps:
-  - args:
-    - python -c "import random; result = 'heads' if random.randint(0,1) == 0 else
-      'tails'; print(result)" | tee $(results.output.path)
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: flip-again
-spec:
-  results:
-  - description: /tmp/output
-    name: output
-  steps:
-  - args:
-    - python -c "import random; result = 'heads' if random.randint(0,1) == 0 else
-      'tails'; print(result)" | tee $(results.output.path)
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: print1
-spec:
-  params:
-  - name: flip-again-output
-  steps:
-  - command:
-    - echo
-    - $(inputs.params.flip-again-output)
-    image: alpine:3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: print2
-spec:
-  params:
-  - name: flip-again-output
-  steps:
-  - command:
-    - echo
-    - $(inputs.params.flip-again-output)
-    image: alpine:3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
       "name": "Flip Coin Example Pipeline"}'
     sidecar.istio.io/inject: 'false'
-  name: flip-coin-example-pipeline
+  name: flip-coin-example-pipeline-run
 spec:
   params: []
-  tasks:
-  - name: flip
+  pipelineSpec:
     params: []
-    taskRef:
-      name: flip
-  - conditions:
-    - conditionRef: condition-1
-      params:
-      - name: flip
-        value: $(tasks.flip.results.output)
-    name: flip-again
-    params: []
-    taskRef:
+    tasks:
+    - name: flip
+      params: []
+      taskSpec:
+        params: []
+        results:
+        - description: /tmp/output
+          name: output
+        steps:
+        - args:
+          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
+            else 'tails'; print(result)" | tee $(results.output.path)
+          command:
+          - sh
+          - -c
+          image: python:alpine3.6
+          name: main
+    - conditions:
+      - conditionRef: condition-1
+        params:
+        - name: flip
+          value: $(tasks.flip.results.output)
       name: flip-again
-  - conditions:
-    - conditionRef: condition-2
-      params:
-      - name: flip-again
-        value: $(tasks.flip-again.results.output)
-    - conditionRef: condition-1
-      params:
-      - name: flip
-        value: $(tasks.flip.results.output)
-    name: print1
-    params:
-    - name: flip-again-output
-      value: $(tasks.flip-again.results.output)
-    taskRef:
+      params: []
+      taskSpec:
+        params: []
+        results:
+        - description: /tmp/output
+          name: output
+        steps:
+        - args:
+          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
+            else 'tails'; print(result)" | tee $(results.output.path)
+          command:
+          - sh
+          - -c
+          image: python:alpine3.6
+          name: main
+    - conditions:
+      - conditionRef: condition-2
+        params:
+        - name: flip-again
+          value: $(tasks.flip-again.results.output)
+      - conditionRef: condition-1
+        params:
+        - name: flip
+          value: $(tasks.flip.results.output)
       name: print1
-  - conditions:
-    - conditionRef: condition-3
       params:
-      - name: flip
-        value: $(tasks.flip.results.output)
-    name: print2
-    params:
-    - name: flip-again-output
-      value: $(tasks.flip-again.results.output)
-    taskRef:
+      - name: flip-again-output
+        value: $(tasks.flip-again.results.output)
+      taskSpec:
+        params:
+        - name: flip-again-output
+        results: []
+        steps:
+        - command:
+          - echo
+          - $(inputs.params.flip-again-output)
+          image: alpine:3.6
+          name: main
+    - conditions:
+      - conditionRef: condition-3
+        params:
+        - name: flip
+          value: $(tasks.flip.results.output)
       name: print2
+      params:
+      - name: flip-again-output
+        value: $(tasks.flip-again.results.output)
+      taskSpec:
+        params:
+        - name: flip-again-output
+        results: []
+        steps:
+        - command:
+          - echo
+          - $(inputs.params.flip-again-output)
+          image: alpine:3.6
+          name: main

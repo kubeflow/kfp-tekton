@@ -55,9 +55,8 @@ class TektonCompiler(Compiler):
   """
 
   def __init__(self, **kwargs):
-    # Intentionally set self.generate_pipeline and self.enable_artifacts to None because when _create_pipeline_workflow is called directly
-    # (e.g. in the case of there being no pipeline decorator), self.generate_pipeline and self.enable_artifacts is not set
-    self.generate_pipelinerun = None
+    # Intentionally set self.enable_artifacts to None because when _create_pipeline_workflow is called directly
+    # (e.g. in the case of there being no pipeline decorator), self.enable_artifacts is not set
     self.enable_artifacts = None
     super().__init__(**kwargs)
 
@@ -288,68 +287,7 @@ class TektonCompiler(Compiler):
               output_values += output_value
             tp['value'] = output_values
 
-  def _workflow_with_pipelinerun(self, task_refs, pipeline, pipeline_template, workflow):
-    """ Generate pipelinerun template """
-    pipelinerun = {
-      'apiVersion': tekton_api_version,
-      'kind': 'PipelineRun',
-      'metadata': {
-        'name': sanitize_k8s_name(pipeline_template['metadata']['name'], suffix_space=4) + '-run'
-      },
-      'spec': {
-        'params': [{
-          'name': p['name'],
-          'value': p.get('default', '')
-        } for p in pipeline_template['spec']['params']
-        ],
-        'pipelineRef': {
-          'name': pipeline_template['metadata']['name']
-        }
-      }
-    }
-    
-    # Generate TaskRunSpec PodTemplate:s
-    task_run_spec = []
-    for task in task_refs:
-      op = pipeline.ops.get(task['name'])
-      task_spec = {"pipelineTaskName": task['name'],
-                   "taskPodTemplate": {}}
-      if op.affinity:
-        task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
-      if op.tolerations:
-        task_spec["taskPodTemplate"]['tolerations'] = op.tolerations
-      if op.node_selector:
-        task_spec["taskPodTemplate"]['nodeSelector'] = op.node_selector
-      if bool(task_spec["taskPodTemplate"]):
-        task_run_spec.append(task_spec)
-    if len(task_run_spec) > 0:
-      pipelinerun['spec']['taskRunSpec'] = task_run_spec
-
-    # add workflow level timeout to pipeline run
-    if pipeline.conf.timeout:
-      pipelinerun['spec']['timeout'] = '%ds' % pipeline.conf.timeout
-
-    # generate the Tekton service account template for image pull secret
-    service_template = {}
-    if len(pipeline.conf.image_pull_secrets) > 0:
-      service_template = {
-        'apiVersion': 'v1',
-        'kind': 'ServiceAccount',
-        'metadata': {'name': sanitize_k8s_name(pipelinerun['metadata']['name'], suffix_space=3) + '-sa'}
-      }
-    for image_pull_secret in pipeline.conf.image_pull_secrets:
-      service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
-
-    if service_template:
-      workflow = workflow + [service_template]
-      pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
-
-    workflow = workflow + [pipelinerun]
-
-    return workflow
-
-  def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) \
-          -> List[Dict[Text, Any]]:  # Tekton change, signature/return type
+  def _create_pipeline_workflow(self, args, pipeline, op_transformers=None, pipeline_conf=None) -> Dict[Text, Any]:
     """Create workflow for the pipeline."""
     # Input Parameters
     params = []
@@ -363,12 +301,14 @@ class TektonCompiler(Compiler):
       params.append(param)
 
     # generate Tekton tasks from pipeline ops
-    templates = self._create_dag_templates(pipeline, op_transformers, params)
+    task_templates = self._create_dag_templates(pipeline, op_transformers, params)
 
     # generate task and condition reference list for the Tekton Pipeline
     condition_refs = {}
+
+    # TODO
     task_refs = []
-    for template in templates:
+    for template in task_templates:
       if template['kind'] == 'Condition':
         condition_refs[template['metadata']['name']] = [{
           'conditionRef': template['metadata']['name'],
@@ -382,14 +322,16 @@ class TektonCompiler(Compiler):
         task_refs.append(
           {
             'name': template['metadata']['name'],
-            'taskRef': {
-              'name': template['metadata']['name']
-            },
             'params': [{
                 'name': p['name'],
                 'value': p.get('default', '')
               } for p in template['spec'].get('params', [])
-            ]
+            ],
+            'taskSpec': {
+              'params': template['spec'].get('params', []),
+              'results': template['spec'].get('results', []),
+              'steps': template['spec'].get('steps', [])
+            },
           }
         )
 
@@ -482,31 +424,79 @@ class TektonCompiler(Compiler):
         include_loop_task_refs.extend(with_loop_task)
       task_refs = include_loop_task_refs
 
-    # generate the Tekton Pipeline document
-    pipeline_template = {
+    # TODO: generate the PipelineRun template
+    pipeline_run = {
       'apiVersion': tekton_api_version,
-      'kind': 'Pipeline',
+      'kind': 'PipelineRun',
       'metadata': {
-        'name': pipeline.name or 'Pipeline',
-        'annotations': {
+        'name': sanitize_k8s_name(pipeline.name or 'Pipeline', suffix_space=4) + '-run',
+        'annotations': {  # TODO: do annotations apply to PipelineRun?
           # Disable Istio inject since Tekton cannot run with Istio sidecar
           'sidecar.istio.io/inject': 'false'
         }
       },
       'spec': {
-        'params': params,
-        'tasks': task_refs
+        'params': [{
+            'name': p['name'],
+            'value': p.get('default', '')
+          } for p in params],
+        'pipelineSpec': {
+          'params': params,
+          'tasks': task_refs
+        }
       }
     }
 
-    # append Task and Pipeline documents
-    workflow = templates + [pipeline_template]
+    # TODO: pipelineRun additions
 
-    # Generate pipelinerun if generate-pipelinerun flag is enabled
-    if self.generate_pipelinerun:
-      workflow = self._workflow_with_pipelinerun(task_refs, pipeline, pipeline_template, workflow)
+    # Generate TaskRunSpec PodTemplate:s
+    task_run_spec = []
+    for task in task_refs:
+      # TODO: should loop-item tasks be included here?
+      if LoopArguments.LOOP_ITEM_NAME_BASE in task['name']:
+        task_name = re.sub(r'-%s-.+$' % LoopArguments.LOOP_ITEM_NAME_BASE, '', task['name'])
+      else:
+        task_name = task['name']
+      op = pipeline.ops.get(task_name)
+      if not op:
+        raise RuntimeError("unable to find op with name '%s'" % task["name"])
+      task_spec = {"pipelineTaskName": task['name'],
+                   "taskPodTemplate": {}}
+      if op.affinity:
+        task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
+      if op.tolerations:
+        task_spec["taskPodTemplate"]['tolerations'] = op.tolerations
+      if op.node_selector:
+        task_spec["taskPodTemplate"]['nodeSelector'] = op.node_selector
+      if bool(task_spec["taskPodTemplate"]):
+        task_run_spec.append(task_spec)
+    if len(task_run_spec) > 0:
+      pipeline_run['spec']['taskRunSpec'] = task_run_spec
 
-    return workflow  # Tekton change, from return type Dict[Text, Any] to List[Dict[Text, Any]]
+    # add workflow level timeout to pipeline run
+    if pipeline.conf.timeout:
+      pipeline_run['spec']['timeout'] = '%ds' % pipeline.conf.timeout
+
+    # generate the Tekton service account template for image pull secret
+    service_template = {}
+    if len(pipeline.conf.image_pull_secrets) > 0:
+      service_template = {
+        'apiVersion': 'v1',
+        'kind': 'ServiceAccount',
+        'metadata': {'name': sanitize_k8s_name(pipeline_run['metadata']['name'], suffix_space=3) + '-sa'}
+      }
+    for image_pull_secret in pipeline.conf.image_pull_secrets:
+      service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
+
+    # TODO: service_template
+    if service_template:
+      # workflow = workflow + [service_template]
+      pipeline_run['spec']['serviceAccountName'] = service_template['metadata']['name']
+      # raise NotImplementedError("service_template not yet implemented")
+
+    workflow = pipeline_run
+
+    return workflow
 
   def _sanitize_and_inject_artifact(self, pipeline: dsl.Pipeline, pipeline_conf=None):
     """Sanitize operator/param names and inject pipeline artifact location."""
@@ -559,7 +549,7 @@ class TektonCompiler(Compiler):
                        pipeline_description: Text = None,
                        params_list: List[dsl.PipelineParam] = None,
                        pipeline_conf: dsl.PipelineConf = None,
-                       ) -> List[Dict[Text, Any]]:  # Tekton change, signature
+                       ) -> Dict[Text, Any]:
     """ Internal implementation of create_workflow."""
     params_list = params_list or []
     argspec = inspect.getfullargspec(pipeline_func)
@@ -635,8 +625,8 @@ class TektonCompiler(Compiler):
     workflow = fix_big_data_passing(workflow)
 
     import json
-    pipeline = [item for item in workflow if item["kind"] == "Pipeline"][0]  # Tekton change
-    pipeline.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = \
+    # TODO: get pipeline from pipelinerun pipelineSpec
+    workflow.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = \
       json.dumps(pipeline_meta.to_dict(), sort_keys=True)
 
     return workflow
@@ -646,7 +636,6 @@ class TektonCompiler(Compiler):
               package_path,
               type_check=True,
               pipeline_conf: dsl.PipelineConf = None,
-              generate_pipelinerun=False,
               enable_artifacts=False):
     """Compile the given pipeline function into workflow yaml.
     Args:
@@ -656,14 +645,13 @@ class TektonCompiler(Compiler):
       pipeline_conf: PipelineConf instance. Can specify op transforms,
                      image pull secrets and other pipeline-level configuration options.
                      Overrides any configuration that may be set by the pipeline.
-      generate_pipelinerun: Generate pipelinerun yaml for Tekton pipeline compilation.
+      enable_artifacts: enable artifacts, requires Kubeflow Pipelines with Minio.
     """
-    self.generate_pipelinerun = generate_pipelinerun
     self.enable_artifacts = enable_artifacts
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
-  def _write_workflow(workflow: List[Dict[Text, Any]],  # Tekton change, signature
+  def _write_workflow(workflow: Dict[Text, Any],
                       package_path: Text = None):
     """Dump pipeline workflow into yaml spec and write out in the format specified by the user.
 
@@ -674,7 +662,7 @@ class TektonCompiler(Compiler):
     """
     # yaml_text = dump_yaml(workflow)
     yaml.Dumper.ignore_aliases = lambda *args: True
-    yaml_text = yaml.dump_all(workflow, default_flow_style=False)  # Tekton change
+    yaml_text = yaml.dump(workflow, default_flow_style=False)  # Tekton change
 
     # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
     # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
@@ -747,7 +735,7 @@ class TektonCompiler(Compiler):
     _validate_workflow(workflow)
 
 
-def _validate_workflow(workflow: List[Dict[Text, Any]]):  # Tekton change, signature
+def _validate_workflow(workflow: Dict[Text, Any]):
 
   # verify that all names and labels conform to kubernetes naming standards
   #   https://kubernetes.io/docs/concepts/overview/working-with-objects/names/

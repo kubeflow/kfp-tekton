@@ -13,54 +13,38 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  annotations:
-    hobby: football
-  labels:
-    hobby: football
-  name: print
-spec:
-  steps:
-  - command:
-    - echo
-    - hey, what are you up to?
-    image: alpine:3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  annotations:
-    hobby: football
-  labels:
-    hobby: football
-  name: print-2
-spec:
-  steps:
-  - command:
-    - echo
-    - train my model.
-    image: alpine:3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline shows how
       to apply functions to all ops in the pipeline by pipeline transformers", "name":
       "Pipeline transformer"}'
     sidecar.istio.io/inject: 'false'
-  name: pipeline-transformer
+  name: pipeline-transformer-run
 spec:
   params: []
-  tasks:
-  - name: print
+  pipelineSpec:
     params: []
-    taskRef:
-      name: print
-  - name: print-2
-    params: []
-    taskRef:
-      name: print-2
+    tasks:
+    - name: print
+      params: []
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - command:
+          - echo
+          - hey, what are you up to?
+          image: alpine:3.6
+          name: main
+    - name: print-2
+      params: []
+      taskSpec:
+        params: []
+        results: []
+        steps:
+        - command:
+          - echo
+          - train my model.
+          image: alpine:3.6
+          name: main

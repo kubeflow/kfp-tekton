@@ -13,51 +13,7 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: download
-spec:
-  params:
-  - name: sleep_ms
-  - name: tag
-  results:
-  - description: /tmp/results.txt
-    name: downloaded
-  sidecars:
-  - args:
-    - -text="hello world"
-    image: hashicorp/http-echo:$(inputs.params.tag)
-    name: echo
-  steps:
-  - args:
-    - sleep $(inputs.params.sleep_ms); wget localhost:5678 -O $(results.downloaded.path)
-    command:
-    - sh
-    - -c
-    image: busybox:$(inputs.params.tag)
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: echo
-spec:
-  params:
-  - name: download-downloaded
-  steps:
-  - args:
-    - echo $MSG $(inputs.params.download-downloaded)
-    command:
-    - sh
-    - -c
-    env:
-    - name: MSG
-      value: 'pipelineParams: '
-    image: library/bash
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with multiple
@@ -65,25 +21,57 @@ metadata:
       true, "type": "String"}, {"default": "10", "name": "sleep_ms", "optional": true,
       "type": "Integer"}], "name": "PipelineParams"}'
     sidecar.istio.io/inject: 'false'
-  name: pipelineparams
+  name: pipelineparams-run
 spec:
   params:
-  - default: latest
-    name: tag
-  - default: '10'
-    name: sleep_ms
-  tasks:
-  - name: download
+  - name: tag
+    value: latest
+  - name: sleep_ms
+    value: '10'
+  pipelineSpec:
     params:
-    - name: sleep_ms
-      value: $(params.sleep_ms)
-    - name: tag
-      value: $(params.tag)
-    taskRef:
-      name: download
-  - name: echo
-    params:
-    - name: download-downloaded
-      value: $(tasks.download.results.downloaded)
-    taskRef:
-      name: echo
+    - default: latest
+      name: tag
+    - default: '10'
+      name: sleep_ms
+    tasks:
+    - name: download
+      params:
+      - name: sleep_ms
+        value: $(params.sleep_ms)
+      - name: tag
+        value: $(params.tag)
+      taskSpec:
+        params:
+        - name: sleep_ms
+        - name: tag
+        results:
+        - description: /tmp/results.txt
+          name: downloaded
+        steps:
+        - args:
+          - sleep $(inputs.params.sleep_ms); wget localhost:5678 -O $(results.downloaded.path)
+          command:
+          - sh
+          - -c
+          image: busybox:$(inputs.params.tag)
+          name: main
+    - name: echo
+      params:
+      - name: download-downloaded
+        value: $(tasks.download.results.downloaded)
+      taskSpec:
+        params:
+        - name: download-downloaded
+        results: []
+        steps:
+        - args:
+          - echo $MSG $(inputs.params.download-downloaded)
+          command:
+          - sh
+          - -c
+          env:
+          - name: MSG
+            value: 'pipelineParams: '
+          image: library/bash
+          name: main

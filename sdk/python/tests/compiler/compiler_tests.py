@@ -99,7 +99,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a parallel join workflow with pipelinerun.
     """
     from .testdata.parallel_join import download_and_join
-    self._test_pipeline_workflow(download_and_join, 'parallel_join_pipelinerun.yaml', generate_pipelinerun=True)
+    self._test_pipeline_workflow(download_and_join, 'parallel_join_pipelinerun.yaml')
 
   def test_sidecar_workflow(self):
     """
@@ -152,7 +152,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a timeout for a whole workflow.
     """
     from .testdata.timeout import timeout_sample_pipeline
-    self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout_pipelinerun.yaml', generate_pipelinerun=True)
+    self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout_pipelinerun.yaml')
 
   def test_timeout_workflow(self):
     """
@@ -194,21 +194,21 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a tolerations workflow.
     """
     from .testdata.tolerations import tolerations
-    self._test_pipeline_workflow(tolerations, 'tolerations.yaml', generate_pipelinerun=True)
+    self._test_pipeline_workflow(tolerations, 'tolerations.yaml')
 
   def test_affinity_workflow(self):
     """
     Test compiling a affinity workflow.
     """
     from .testdata.affinity import affinity_pipeline
-    self._test_pipeline_workflow(affinity_pipeline, 'affinity.yaml', generate_pipelinerun=True)
+    self._test_pipeline_workflow(affinity_pipeline, 'affinity.yaml')
 
   def test_node_selector_workflow(self):
     """
     Test compiling a node selector workflow.
     """
     from .testdata.node_selector import node_selector_pipeline
-    self._test_pipeline_workflow(node_selector_pipeline, 'node_selector.yaml', generate_pipelinerun=True)
+    self._test_pipeline_workflow(node_selector_pipeline, 'node_selector.yaml')
 
   def test_pipeline_transformers_workflow(self):
     """
@@ -243,7 +243,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a imagepullsecrets workflow.
     """
     from .testdata.imagepullsecrets import imagepullsecrets_pipeline
-    self._test_pipeline_workflow(imagepullsecrets_pipeline, 'imagepullsecrets.yaml', generate_pipelinerun=True)
+    self._test_pipeline_workflow(imagepullsecrets_pipeline, 'imagepullsecrets.yaml')
 
   def test_basic_no_decorator(self):
     """
@@ -268,7 +268,6 @@ class TestTektonCompiler(unittest.TestCase):
   def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
-                              generate_pipelinerun=False,
                               enable_artifacts=False,
                               normalize_compiler_output_function=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
@@ -278,12 +277,11 @@ class TestTektonCompiler(unittest.TestCase):
     try:
       compiler.TektonCompiler().compile(pipeline_function,
                                         compiled_yaml_file,
-                                        generate_pipelinerun=generate_pipelinerun,
                                         enable_artifacts=enable_artifacts)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f
-        compiled = list(yaml.safe_load_all(f))
+        compiled = yaml.safe_load(f)
       self._verify_compiled_workflow(golden_yaml_file, compiled)
     finally:
       shutil.rmtree(temp_dir)
@@ -309,7 +307,6 @@ class TestTektonCompiler(unittest.TestCase):
   def _test_nested_workflow(self,
                             pipeline_yaml,
                             pipeline_list,
-                            generate_pipelinerun=False,
                             enable_artifacts=False,
                             normalize_compiler_output_function=None):
     """
@@ -324,12 +321,11 @@ class TestTektonCompiler(unittest.TestCase):
           package_path = os.path.join(temp_dir, 'nested' + str(index) + '.yaml')
           compiler.TektonCompiler().compile(pipeline,
                                             package_path,
-                                            generate_pipelinerun=generate_pipelinerun,
                                             enable_artifacts=enable_artifacts)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f
-        compiled = list(yaml.safe_load_all(f))
+        compiled = yaml.safe_load(f)
       self._verify_compiled_workflow(golden_yaml_file, compiled)
     finally:
       shutil.rmtree(temp_dir)
@@ -342,9 +338,9 @@ class TestTektonCompiler(unittest.TestCase):
       with open(golden_yaml_file, 'w') as f:
         f.write(LICENSE_HEADER)
       with open(golden_yaml_file, 'a+') as f:
-        yaml.dump_all(compiled_workflow, f, default_flow_style=False)
+        yaml.dump(compiled_workflow, f, default_flow_style=False)
     else:
       with open(golden_yaml_file, 'r') as f:
-        golden = list(yaml.safe_load_all(f))
+        golden = yaml.safe_load(f)
       self.maxDiff = None
       self.assertEqual(golden, compiled_workflow)

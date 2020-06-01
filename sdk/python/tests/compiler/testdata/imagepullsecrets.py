@@ -60,4 +60,4 @@ def imagepullsecrets_pipeline(message="This is a test"):
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(imagepullsecrets_pipeline, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)
+    TektonCompiler().compile(imagepullsecrets_pipeline, __file__.replace('.py', '.yaml'))
