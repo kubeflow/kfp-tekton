@@ -77,10 +77,12 @@ Tekton task name is the same as the containerOp name whereas the step name is al
 
 ### Affinity, Node Selector, and Tolerations
 
-Affinity, Node Selector, and Tolerations are Kubernetes spec for selecting which node should run the component based on user-defined constraints. They are implemented with Tekton's [PipelineRunTaskSpec](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#specifying-task-run-specs) features under Tekton PipelineRun.
+Affinity, Node Selector, and Tolerations are Kubernetes spec for selecting which node should run the component based on
+user-defined constraints. They are implemented with Tekton's [PipelineRunTaskSpec](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#specifying-task-run-specs)
+features under Tekton PipelineRun.
 The [affinity](/sdk/python/tests/compiler/testdata/affinity.py),
 [node_selector](/sdk/python/tests/compiler/testdata/node_selector.py), and
-[tolerations](/sdk/python/tests/compiler/testdata/tolerations.py) python tests are examples of how to use these features.
+[tolerations](/sdk/python/tests/compiler/testdata/tolerations.py) Python tests are examples of how to use these features.
 
 This feature is recently implemented in Tekton and is available on Tekton v0.13.0 onwards.
 
@@ -94,6 +96,7 @@ feature.
 This feature is recently implemented in Tekton and is available on Tekton v0.13.0 onwards.
 
 # Pipeline DSL features with custom Tekton implementation
+
 ## Features with same behavior as Argo
 Below are the features that don't have one to one mapping to Tekton's native implementation, but the same behaviors can be replicated with
 extra custom processing code or workaround within the compiler.

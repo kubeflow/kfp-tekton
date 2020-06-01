@@ -12,19 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Text, Dict, Any
-# from kfp.compiler._data_passing_rewriter import fix_big_data_passing
 import copy
 import json
+import logging
 import re
-from typing import Optional, Set
-from . import _op_to_template
+
+from typing import List, Optional, Set
+
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
+from kfp_tekton.compiler._op_to_template import _op_to_template
 
 
-def fix_big_data_passing(
-    workflow: List[Dict[Text, Any]]
-) -> List[Dict[Text, Any]]:  # Tekton change signature
+def fix_big_data_passing(workflow: dict) -> dict:
     """
     fix_big_data_passing converts a workflow where some artifact data is passed
     as parameters and converts it to a workflow where this data is passed as
@@ -69,34 +68,42 @@ def fix_big_data_passing(
        https://kubernetes.io/docs/concepts/storage/dynamic-provisioning
     """
 
+    # TODO: @fenglixa
+    if True:
+        logging.error("Opting out of fix_big_data_passing. TODO @fenglixa")
+        return workflow
+
     workflow = copy.deepcopy(workflow)
+
+    tasks = workflow["spec"]["pipelineSpec"]["tasks"]
+
+    # TODO: resource templates
     resource_templates = []
-    for template in workflow:
+    for task in tasks:
         resource_params = [
             param.get('name')
-            for param in template.get('spec', {}).get('params', [])
+            for param in task["taskSpec"].get('params', [])
             if param.get('name') == 'action'
             or param.get('name') == 'success-condition'
         ]
         if 'action' in resource_params and 'success-condition' in resource_params:
-            resource_templates.append(template)
+            resource_templates.append(task)
 
+    # TODO: use split on condition
     resource_template_names = set(
-        template.get('metadata', {}).get('name')
-        for template in resource_templates)
+        task["name"]
+        for task in resource_templates)
 
     container_templates = [
-        template for template in workflow if template['kind'] == 'Task' and
-        template.get('metadata', {}).get('name') not in resource_template_names
+        task for task in tasks
+        if task["name"] not in resource_template_names
     ]
 
-    pipeline_templates = [
-        template for template in workflow if template['kind'] == 'Pipeline'
-    ]
+    # TODO: why multiple pipelines
+    pipeline_template = workflow["spec"]["pipelineSpec"]
 
-    pipelinerun_templates = [
-        template for template in workflow if template['kind'] == 'PipelineRun'
-    ]
+    # TODO: why multiple pipelineRuns
+    pipelinerun_template = workflow
 
     # 1. Index the pipelines to understand how data is being passed and which
     #  inputs/outputs are connected to each other.
@@ -109,67 +116,71 @@ def fix_big_data_passing(
     pipeline_output_to_parent_template_outputs = {
     }  # (pipeline_template_name, output_name) -> Set[(upstream_template_name, upstream_output_name)]
 
-    for template in pipeline_templates:
-        pipeline_template_name = template.get('metadata', {}).get('name')
-        # Indexing task arguments
-        pipeline_tasks = template.get('spec', {}).get('tasks', []) + template.get('spec', {}).get('finally', [])
-        task_name_to_template_name = {
-            task['name']: task['taskRef']['name']
-            for task in pipeline_tasks
-        }
-        for task in pipeline_tasks:
-            task_template_name = task['taskRef']['name']
-            parameter_arguments = task['params']
-            for parameter_argument in parameter_arguments:
-                task_input_name = parameter_argument['name']
-                argument_value = parameter_argument['value']
+    # pipeline has no name when embedded in pipelineRun
+    pipelinerun_name = workflow.get('metadata', {}).get('name')
 
-                argument_placeholder_parts = deconstruct_tekton_single_placeholder(
-                    argument_value)
-                if not argument_placeholder_parts:  # Argument is considered to be constant string
-                    template_input_to_parent_constant_arguments.setdefault(
-                        (task_template_name, task_input_name),
-                        set()).add(argument_value)
-                else:
-                    placeholder_type = argument_placeholder_parts[0]
-                    if placeholder_type not in ('params', 'outputs', 'tasks',
-                                                'steps', 'workflow', 'pod',
-                                                'item'):
-                        # Do not fail on Jinja or other double-curly-brace templates
-                        continue
-                    if placeholder_type == 'params':
-                        pipeline_input_name = argument_placeholder_parts[1]
-                        template_input_to_parent_pipeline_inputs.setdefault(
-                            (task_template_name, task_input_name), set()).add(
-                                (pipeline_template_name, pipeline_input_name))
-                    elif placeholder_type == 'tasks':
-                        upstream_task_name = argument_placeholder_parts[1]
-                        assert argument_placeholder_parts[2] == 'results'
-                        upstream_output_name = argument_placeholder_parts[3]
-                        upstream_template_name = task_name_to_template_name[
-                            upstream_task_name]
-                        template_input_to_parent_task_outputs.setdefault(
-                            (task_template_name, task_input_name), set()).add(
-                                (upstream_template_name, upstream_output_name))
-                    elif placeholder_type == 'item' or placeholder_type == 'workflow' or placeholder_type == 'pod':
-                        # workflow.parameters.* placeholders are not supported,
-                        # but the DSL compiler does not produce those.
-                        template_input_to_parent_constant_arguments.setdefault(
-                            (task_template_name, task_input_name),
-                            set()).add(argument_value)
-                    else:
-                        raise AssertionError
+    # Indexing task arguments
+    pipeline_tasks = workflow["spec"]["pipelineSpec"]["tasks"]\
+                     + workflow["spec"]["pipelineSpec"].get('finally', [])
 
-                pipeline_input_name = extract_tekton_input_parameter_name(
-                    argument_value)
-                if pipeline_input_name:
+    # no mapping required
+    # task_name_to_template_name = {
+    #     task['name']: task['taskRef']['name']
+    #     for task in pipeline_tasks
+    # }
+
+    for task in pipeline_tasks:
+        task_template_name = task['name']
+        parameter_arguments = task['params']
+        for parameter_argument in parameter_arguments:
+            task_input_name = parameter_argument['name']
+            argument_value = parameter_argument['value']
+
+            argument_placeholder_parts = deconstruct_tekton_single_placeholder(
+                argument_value)
+            if not argument_placeholder_parts:  # Argument is considered to be constant string
+                template_input_to_parent_constant_arguments.setdefault(
+                    (task_template_name, task_input_name),
+                    set()).add(argument_value)
+            else:
+                placeholder_type = argument_placeholder_parts[0]
+                if placeholder_type not in ('params', 'outputs', 'tasks',
+                                            'steps', 'workflow', 'pod',
+                                            'item'):
+                    # Do not fail on Jinja or other double-curly-brace templates
+                    continue
+                if placeholder_type == 'params':
+                    pipeline_input_name = argument_placeholder_parts[1]
                     template_input_to_parent_pipeline_inputs.setdefault(
                         (task_template_name, task_input_name), set()).add(
-                            (pipeline_template_name, pipeline_input_name))
-                else:
+                            (pipelinerun_name, pipeline_input_name))
+                elif placeholder_type == 'tasks':
+                    upstream_task_name = argument_placeholder_parts[1]
+                    assert argument_placeholder_parts[2] == 'results'
+                    upstream_output_name = argument_placeholder_parts[3]
+                    # upstream_template_name = upstream_task_name
+                    template_input_to_parent_task_outputs.setdefault(
+                        (task_template_name, task_input_name), set()).add(
+                            (upstream_task_name, upstream_output_name))
+                elif placeholder_type == 'item' or placeholder_type == 'workflow' or placeholder_type == 'pod':
+                    # workflow.parameters.* placeholders are not supported,
+                    # but the DSL compiler does not produce those.
                     template_input_to_parent_constant_arguments.setdefault(
                         (task_template_name, task_input_name),
                         set()).add(argument_value)
+                else:
+                    raise AssertionError
+
+            pipeline_input_name = extract_tekton_input_parameter_name(
+                argument_value)
+            if pipeline_input_name:
+                template_input_to_parent_pipeline_inputs.setdefault(
+                    (task_template_name, task_input_name), set()).add(
+                        (pipelinerun_name, pipeline_input_name))
+            else:
+                template_input_to_parent_constant_arguments.setdefault(
+                    (task_template_name, task_input_name),
+                    set()).add(argument_value)
     # Finshed indexing the pipelines
 
     # 2. Search for direct data consumers in container/resource templates and some pipeline task attributes
@@ -180,76 +191,74 @@ def fix_big_data_passing(
 
     # Searching for artifact input consumers in container template inputs
     for template in container_templates:
-        template_name = template.get('metadata', {}).get('name')
-        for input_artifact in template.get('spec', {}).get('artifacts', {}):
-            raw_data = input_artifact['raw'][
-                'data']  # The structure must exist
+        template_name = template['name']
+        for input_artifact in template['taskSpec'].get('artifacts', {}):
+            raw_data = input_artifact['raw']['data']  # The structure must exist
             # The raw data must be a single input parameter reference. Otherwise (e.g. it's a string
             #  or a string with multiple inputs) we should not do the conversion to artifact passing.
             input_name = extract_tekton_input_parameter_name(raw_data)
             if input_name:
-                inputs_directly_consumed_as_artifacts.add(
-                    (template_name, input_name))
-                del input_artifact[
-                    'raw']  # Deleting the "default value based" data passing hack
-                # so that it's replaced by the "argument based" way of data passing.
-                input_artifact[
-                    'name'] = input_name  # The input artifact name should be the same
-                # as the original input parameter name
+                inputs_directly_consumed_as_artifacts.add((template_name, input_name))
+                del input_artifact['raw']  # Deleting the "default value based" data passing hack
+                                           # so that it's replaced by the "argument based" way of data passing.
+                input_artifact['name'] = input_name  # The input artifact name should be the same
+                                                     # as the original input parameter name
 
     # Searching for parameter input consumers in pipeline templates
     # TODO: loop params is not support for tekton yet, refer to https://github.com/kubeflow/kfp-tekton/issues/82
-    for template in pipeline_templates:
-        template_name = template.get('metadata', {}).get('name')
-        pipeline_tasks = template.get('spec', {}).get('tasks', []) + template.get('spec', {}).get('finally', [])
-        task_name_to_template_name = {
-            task['name']: task['taskRef']['name']
-            for task in pipeline_tasks
-        }
-        for task in pipeline_tasks:
-            # We do not care about the inputs mentioned in task arguments
-            # since we will be free to switch them from parameters to artifacts
-            task_without_arguments = task.copy()  # Shallow copy
-            task_without_arguments.pop('params', None)
-            placeholders = extract_all_tekton_placeholders(
-                task_without_arguments)
-            for placeholder in placeholders:
-                parts = placeholder.split('.')
-                placeholder_type = parts[0]
-                if placeholder_type not in ('inputs', 'outputs', 'tasks',
-                                            'steps', 'workflow', 'pod',
-                                            'item'):
-                    # Do not fail on Jinja or other double-curly-brace templates
-                    continue
-                if placeholder_type == 'inputs':
-                    if parts[1] == 'parameters':
-                        input_name = parts[2]
-                        inputs_directly_consumed_as_parameters.add(
-                            (template_name, input_name))
-                    else:
-                        raise AssertionError
-                elif placeholder_type == 'tasks':
-                    upstream_task_name = parts[1]
-                    assert parts[2] == 'results'
-                    upstream_output_name = parts[3]
-                    upstream_template_name = task_name_to_template_name[
-                        upstream_task_name]
-                    outputs_directly_consumed_as_parameters.add(
-                        (upstream_template_name, upstream_output_name))
-                elif placeholder_type == 'workflow' or placeholder_type == 'pod':
-                    pass
-                elif placeholder_type == 'item':
-                    raise AssertionError(
-                        'The "{{item}}" placeholder is not expected outside task arguments.'
-                    )
+    template_name = workflow['metadata']['name']
+
+    pipeline_tasks = workflow["spec"]["pipelineSpec"]["tasks"]\
+                     + workflow["spec"]["pipelineSpec"].get('finally', [])
+
+    # task_name_to_template_name = {
+    #     task['name']: task['taskRef']['name']
+    #     for task in pipeline_tasks
+    # }
+
+    for task in pipeline_tasks:
+        # We do not care about the inputs mentioned in task arguments
+        # since we will be free to switch them from parameters to artifacts
+        task_without_arguments = task.copy()  # Shallow copy
+        task_without_arguments.pop('params', None)
+        placeholders = extract_all_tekton_placeholders(
+            task_without_arguments)
+        for placeholder in placeholders:
+            parts = placeholder.split('.')
+            placeholder_type = parts[0]
+            if placeholder_type not in ('inputs', 'outputs', 'tasks',
+                                        'steps', 'workflow', 'pod',
+                                        'item'):
+                # Do not fail on Jinja or other double-curly-brace templates
+                continue
+            if placeholder_type == 'inputs':
+                if parts[1] == 'parameters':
+                    input_name = parts[2]
+                    inputs_directly_consumed_as_parameters.add(
+                        (template_name, input_name))
                 else:
-                    raise AssertionError(
-                        'Unexpected placeholder type "{}".'.format(
-                            placeholder_type))
+                    logging.error("{}: parts[1] != 'parameters'".format(placeholder))
+            elif placeholder_type == 'tasks':
+                upstream_task_name = parts[1]
+                assert parts[2] == 'results'
+                upstream_output_name = parts[3]
+                upstream_template_name = upstream_task_name
+                outputs_directly_consumed_as_parameters.add(
+                    (upstream_template_name, upstream_output_name))
+            elif placeholder_type == 'workflow' or placeholder_type == 'pod':
+                pass
+            elif placeholder_type == 'item':
+                raise AssertionError(
+                    'The "{{item}}" placeholder is not expected outside task arguments.'
+                )
+            else:
+                raise AssertionError(
+                    'Unexpected placeholder type "{}".'.format(
+                        placeholder_type))
 
     # Searching for parameter input consumers in container and resource templates
     for template in container_templates + resource_templates:
-        template_name = template.get('metadata', {}).get('name')
+        template_name = template['name']
         placeholders = extract_all_tekton_placeholders(template)
         for placeholder in placeholders:
             parts = placeholder.split('.')
@@ -267,11 +276,13 @@ def fix_big_data_passing(
                     inputs_directly_consumed_as_parameters.add(
                         (template_name, input_name))
                 elif parts[1] == 'artifacts':
-                    raise AssertionError(
+                    # raise RuntimeError(
+                    logging.error(
                         'Found unexpected Tekton input artifact placeholder in container template: {}'
                         .format(placeholder))
                 else:
-                    raise AssertionError(
+                    # raise RuntimeError(
+                    logging.error(
                         'Found unexpected Tekton input placeholder in container template: {}'
                         .format(placeholder))
             elif placeholder_type == 'results':
@@ -279,7 +290,8 @@ def fix_big_data_passing(
                 outputs_directly_consumed_as_parameters.add(
                     (template_name, input_name))
             else:
-                raise AssertionError(
+                # raise RuntimeError(
+                logging.error(
                     'Found unexpected Tekton placeholder in container template: {}'
                     .format(placeholder))
 
@@ -343,22 +355,17 @@ def fix_big_data_passing(
         for output in outputs_consumed_as_artifacts
     }
     # task_workspaces = set()
-    for pipeline in pipeline_templates:
-        # Converting pipeline inputs
-        pipeline, pipeline_workspaces = big_data_passing_pipeline(
-            pipeline, inputs_consumed_as_artifacts,
-            output_tasks_consumed_as_artifacts)
+
+    # Converting pipeline inputs
+    pipeline, pipeline_workspaces = big_data_passing_pipeline(
+        pipeline_template, inputs_consumed_as_artifacts,
+        output_tasks_consumed_as_artifacts)
 
     # Add workspaces to pipelinerun if big data passing
-    # Check whether pipelinerun was generated, through error if not.
+    # Check whether pipelinerun was generated, throw error if not.
     if pipeline_workspaces:
-        if not pipelinerun_templates:
-            raise AssertionError(
-                'Found big data passing, please enable generate_pipelinerun for your complier'
-            )
-        for pipelinerun in pipelinerun_templates:
-            pipeline, pipelinerun_workspaces = big_data_passing_pipelinerun(
-                pipelinerun, pipeline_workspaces)
+        pipeline, pipelinerun_workspaces = big_data_passing_pipelinerun(
+            pipelinerun_template, pipeline_workspaces)
 
     # Use workspaces to tasks if big data passing instead of 'results', 'copy-inputs'
     for task_template in container_templates:
@@ -377,20 +384,20 @@ def fix_big_data_passing(
 
     # Remove input parameters unless they're used downstream.
     # This also removes unused container template inputs if any.
-    for template in container_templates + pipeline_templates:
-        spec = template.get('spec', {})
+    for template in container_templates + [pipeline_template]:
+        spec = template.get('taskSpec', {}) or template.get('pipelineSpec', {})
         spec['params'] = [
             input_parameter for input_parameter in spec.get('params', [])
-            if (template.get('metadata', {}).get('name'),
+            if (template.get('name'),  # TODO: pipeline has no name, use pipelineRun name?
                 input_parameter['name']) in inputs_consumed_as_parameters
         ]
 
     # Remove output parameters unless they're used downstream
-    for template in container_templates + pipeline_templates:
-        spec = template.get('spec', {})
+    for template in container_templates + [pipeline_template]:
+        spec = template.get('taskSpec', {}) or template.get('pipelineSpec', {})
         spec['results'] = [
             output_parameter for output_parameter in spec.get('results', [])
-            if (template.get('metadata', {}).get('name'),
+            if (template.get('name'),  # TODO: pipeline has no name, use pipelineRun name?
                 output_parameter['name']) in outputs_consumed_as_parameters
         ]
         # tekton results doesn't support underscore
@@ -409,30 +416,31 @@ def fix_big_data_passing(
                 'results.%s' % renamed_result[1])
 
     # Remove pipeline task parameters unless they're used downstream
-    for template in pipeline_templates:
-        tasks = template.get('spec', {}).get('tasks', []) + template.get('spec', {}).get('finally', [])
-        for task in tasks:
-            task['params'] = [
-                parameter_argument
-                for parameter_argument in task.get('params', [])
-                if (task['taskRef']['name'], parameter_argument['name']
-                    ) in inputs_consumed_as_parameters and
-                (task['taskRef']['name'], parameter_argument['name']
-                 ) not in inputs_consumed_as_artifacts
-                or task['taskRef']['name'] in resource_template_names
-            ]
+    pipeline_tasks = workflow["spec"]["pipelineSpec"]["tasks"]\
+                     + workflow["spec"]["pipelineSpec"].get('finally', [])
 
-            # tekton results doesn't support underscore
-            for argument in task['params']:
-                argument_value = argument.get('value')
-                argument_placeholder_parts = deconstruct_tekton_single_placeholder(
-                    argument_value)
-                if len(argument_placeholder_parts) == 4 \
-                        and argument_placeholder_parts[0] == 'tasks':
-                    argument['value'] = '$(tasks.%s.%s.%s)' % (
-                        argument_placeholder_parts[1],
-                        argument_placeholder_parts[2],
-                        sanitize_k8s_name(argument_placeholder_parts[3]))
+    for task in pipeline_tasks:
+        task['params'] = [
+            parameter_argument
+            for parameter_argument in task.get('params', [])
+            if (task['name'], parameter_argument['name']
+                ) in inputs_consumed_as_parameters and
+            (task['name'], parameter_argument['name']
+             ) not in inputs_consumed_as_artifacts
+            or task['name'] in resource_template_names
+        ]
+
+        # tekton results doesn't support underscore
+        for argument in task['params']:
+            argument_value = argument.get('value')
+            argument_placeholder_parts = deconstruct_tekton_single_placeholder(
+                argument_value)
+            if len(argument_placeholder_parts) == 4 \
+                    and argument_placeholder_parts[0] == 'tasks':
+                argument['value'] = '$(tasks.%s.%s.%s)' % (
+                    argument_placeholder_parts[1],
+                    argument_placeholder_parts[2],
+                    sanitize_k8s_name(argument_placeholder_parts[3]))
 
     # Need to confirm:
     # I didn't find the use cases to support workflow parameter consumed as artifacts downstream in tekton.
@@ -549,7 +557,7 @@ def big_data_passing_tasks(task: dict, inputs_tasks: set,
                 task['spec'], placeholder, workspaces_parameter)
 
     # Remove artifacts outputs from results
-    task['spec']['results'] = [
+    task['taskSpec']['results'] = [
         result for result in task_outputs
         if (task_name, result.get('name')) not in outputs_tasks
     ]
@@ -580,9 +588,9 @@ def big_data_passing_tasks(task: dict, inputs_tasks: set,
             task = input_artifacts_tasks(task, task_artifact)
 
     # Remove artifacts parameter from params
-    task['spec']['params'] = [
-        parma for parma in task_parmas
-        if (task_name, parma.get('name')) not in inputs_tasks
+    task['taskSpec']['params'] = [
+        param for param in task['params']
+        if (task_name, param.get('name')) not in inputs_tasks
     ]
 
     # Remove artifacts from task_spec
@@ -640,21 +648,20 @@ def input_artifacts_tasks(template: dict, artifact: dict) -> dict:
 
 
 def clean_up_empty_workflow_structures(workflow: list):
-    for template in workflow:
-        template_spec = template.setdefault('spec', {})
-        if not template_spec.setdefault('params', []):
-            del template_spec['params']
-        if not template_spec.setdefault('artifacts', []):
-            del template_spec['artifacts']
-        if not template_spec.setdefault('results', []):
-            del template_spec['results']
-        if not template_spec:
-            del template['spec']
-        if template['kind'] == 'Pipeline':
-            for task in template['spec'].get('tasks', []) + template['spec'].get('finally', []):
-                if not task.setdefault('params', []):
-                    del task['params']
-                if not task.setdefault('artifacts', []):
-                    del task['artifacts']
-            if not template.get('spec', {}).setdefault('finally', []):
-                del template.get('spec', {})['finally']
+    template_spec = workflow['spec']
+    if not template_spec.setdefault('params', []):
+        del template_spec['params']
+    if not template_spec.setdefault('artifacts', []):
+        del template_spec['artifacts']
+    if not template_spec.setdefault('results', []):
+        del template_spec['results']
+    if not template_spec:  # ?
+        del workflow['spec']
+    # if template['kind'] == 'Pipeline':
+    for task in workflow['spec']['pipelineSpec']['tasks'] + workflow['spec']['pipelineSpec'].get('finally', []):
+        if not task.setdefault('params', []):
+            del task['params']
+        if not task.setdefault('artifacts', []):
+            del task['artifacts']
+    if not workflow['spec']['pipelineSpec'].setdefault('finally', []):
+        del workflow['spec']['pipelineSpec']['finally']

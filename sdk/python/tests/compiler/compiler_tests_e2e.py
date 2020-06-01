@@ -142,19 +142,6 @@ class TestCompilerE2E(unittest.TestCase):
         logging.warning("The following pipelines were ignored: {}".format(
             ", ".join(ignored_yaml_files)))
 
-    def _get_task_names(self, yaml_file):
-        with open(yaml_file, 'r') as f:
-            workflow = list(yaml.safe_load_all(f))
-        tasks = filter(lambda d: d["kind"] == "Task", workflow)
-        if not tasks:
-            raise RuntimeError("Could not find a Task in " + yaml_file)
-        task_names = [t["metadata"]["name"] for t in tasks]
-        return task_names
-
-    def _delete_tasks(self, task_names: [str]):
-        del_cmd = "tkn task delete -n {} -f {}".format(namespace, " ".join(task_names))
-        run(del_cmd.split(), capture_output=True, timeout=10, check=False)
-
     def _delete_pipelinerun(self, name):
         del_cmd = "tkn pipelinerun delete -f {} -n {}".format(name, namespace)
         run(del_cmd.split(), capture_output=True, timeout=10, check=False)
@@ -241,7 +228,6 @@ class TestCompilerE2E(unittest.TestCase):
 
     def _run_test__validate_tekton_yaml(self, name, yaml_file):
         if not USE_LOGS_FROM_PREVIOUS_RUN:
-            self._delete_tasks(self._get_task_names(yaml_file))
             self._delete_pipelinerun(name)
             self._start_pipelinerun(yaml_file)
 
@@ -294,10 +280,7 @@ def _generate_test_list(file_name_expr="*.yaml") -> [dict]:
     pipeline_runs = []
     for yaml_file in yaml_files:
         with open(yaml_file, 'r') as f:
-            workflow = list(yaml.safe_load_all(f))
-        pipeline_run = next(filter(lambda d: d["kind"] == "PipelineRun", workflow), None)
-        if not pipeline_run:
-            raise RuntimeError("Could not find a PipelineRun in " + yaml_file)
+            pipeline_run = yaml.safe_load(f)
         pipeline_runs.append({
             "name": pipeline_run["metadata"]["name"],
             "yaml_file": yaml_file,

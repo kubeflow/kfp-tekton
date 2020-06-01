@@ -13,71 +13,7 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: download
-spec:
-  params:
-  - name: url
-  results:
-  - description: /tmp/results.txt
-    name: downloaded
-  steps:
-  - args:
-    - gsutil cat $(inputs.params.url) | tee $(results.downloaded.path)
-    command:
-    - sh
-    - -c
-    image: google/cloud-sdk
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: get-frequent
-spec:
-  params:
-  - name: download-downloaded
-  results:
-  - description: /tmp/message.txt
-    name: word
-  steps:
-  - args:
-    - python -c "import sys; from collections import Counter; input_text = sys.argv[1];
-      words = Counter(input_text.split()); print(max(words, key=words.get));" "$(inputs.params.download-downloaded)"
-      | tee $(results.word.path)
-    command:
-    - sh
-    - -c
-    image: python:3.5-jessie
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: save
-spec:
-  params:
-  - name: get-frequent-word
-  - name: outputpath
-  steps:
-  - args:
-    - echo "$(inputs.params.get-frequent-word)" | tee /tmp/results.txt | gsutil cp
-      /tmp/results.txt $(inputs.params.outputpath)
-    command:
-    - sh
-    - -c
-    image: google/cloud-sdk
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Download and Get Most
@@ -86,47 +22,78 @@ metadata:
       "name": "outputpath", "optional": true, "type": "String"}], "name": "Download
       and Save Most Frequent"}'
     sidecar.istio.io/inject: 'false'
-  name: download-and-save-most-frequent
-spec:
-  params:
-  - default: gs://ml-pipeline-playground/shakespeare1.txt
-    name: url
-  - default: /tmp/output.txt
-    name: outputpath
-  tasks:
-  - name: download
-    params:
-    - name: url
-      value: $(params.url)
-    taskRef:
-      name: download
-  - name: get-frequent
-    params:
-    - name: download-downloaded
-      value: $(tasks.download.results.downloaded)
-    taskRef:
-      name: get-frequent
-  - name: save
-    params:
-    - name: get-frequent-word
-      value: $(tasks.get-frequent.results.word)
-    - name: outputpath
-      value: $(params.outputpath)
-    taskRef:
-      name: save
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: download-and-save-most-frequent-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: download-and-save-most-frequent
 spec:
   params:
   - name: url
     value: gs://ml-pipeline-playground/shakespeare1.txt
   - name: outputpath
     value: /tmp/output.txt
-  pipelineRef:
-    name: download-and-save-most-frequent
+  pipelineSpec:
+    params:
+    - default: gs://ml-pipeline-playground/shakespeare1.txt
+      name: url
+    - default: /tmp/output.txt
+      name: outputpath
+    tasks:
+    - name: download
+      params:
+      - name: url
+        value: $(params.url)
+      taskSpec:
+        params:
+        - name: url
+        results:
+        - description: /tmp/results.txt
+          name: downloaded
+        steps:
+        - args:
+          - gsutil cat $(inputs.params.url) | tee $(results.downloaded.path)
+          command:
+          - sh
+          - -c
+          image: google/cloud-sdk
+          name: main
+    - name: get-frequent
+      params:
+      - name: download-downloaded
+        value: $(tasks.download.results.downloaded)
+      taskSpec:
+        params:
+        - name: download-downloaded
+        results:
+        - description: /tmp/message.txt
+          name: word
+        steps:
+        - args:
+          - python -c "import sys; from collections import Counter; input_text = sys.argv[1];
+            words = Counter(input_text.split()); print(max(words, key=words.get));"
+            "$(inputs.params.download-downloaded)" | tee $(results.word.path)
+          command:
+          - sh
+          - -c
+          image: python:3.5-jessie
+          name: main
+    - name: save
+      params:
+      - name: get-frequent-word
+        value: $(tasks.get-frequent.results.word)
+      - name: outputpath
+        value: $(params.outputpath)
+      taskSpec:
+        params:
+        - name: get-frequent-word
+        - name: outputpath
+        steps:
+        - args:
+          - echo "$(inputs.params.get-frequent-word)" | tee /tmp/results.txt | gsutil
+            cp /tmp/results.txt $(inputs.params.outputpath)
+          command:
+          - sh
+          - -c
+          image: google/cloud-sdk
+          name: main
