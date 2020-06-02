@@ -37,6 +37,34 @@ from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8
 
 from kfp_tekton import tekton_api_version
 
+def _get_super_condition_template():
+
+  python_string = 'python -c \'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n' \
+    + 'try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n' \
+    + 'sys.exit(0) if (input1 $(params.condition) input2) else sys.exit(1)\' \'$(params.operand1)\' \'$(params.operand2)\''
+
+  # TODO Change to tekton_api_version once Conditions are out of v1alpha1
+  template = {
+    'apiVersion': 'tekton.dev/v1alpha1',
+    'kind': 'Condition',
+    'metadata': {
+      'name': 'super-condition'
+    },
+    'spec': {
+      'params': [
+        { 'name': 'operand1' },
+        { 'name': 'operand2' },
+        { 'name': 'condition' }
+      ],
+      'check': {
+        'args': [python_string],
+        'command': ['sh', '-c'],
+        'image': 'python:alpine3.6',
+      }
+    }
+  }
+
+  return template
 
 class TektonCompiler(Compiler):
   """DSL Compiler to generate Tekton YAML.
@@ -132,7 +160,7 @@ class TektonCompiler(Compiler):
         if task_name is None:
           return '$(params.%s)' % parameter_name
         else:
-          return '$(params.%s)' % task_name
+          return '$(tasks.%s.results.%s)' % (task_name, parameter_name)
       else:
         return '$(params.%s)' % parameter_name
     else:
@@ -153,7 +181,8 @@ class TektonCompiler(Compiler):
       'spec': {}
     }
 
-    # Generates template sections unique to conditions
+    # Generates a pseudo-template unique to conditions due to the catalog condition approach
+    # where every condition is an extension of one super-condition
     if isinstance(sub_group, dsl.OpsGroup) and sub_group.type == 'condition':
       subgroup_inputs = inputs.get(sub_group.name, [])
       condition = sub_group.condition
@@ -161,33 +190,12 @@ class TektonCompiler(Compiler):
       operand1_value = self._resolve_value_or_reference(condition.operand1, subgroup_inputs)
       operand2_value = self._resolve_value_or_reference(condition.operand2, subgroup_inputs)
 
-      # Adds params to condition template
-      params = []
-      if isinstance(condition.operand1, dsl.PipelineParam):
-        params.append({'name': operand1_value[9: len(operand1_value) - 1]})  # substring to unwrap parameter reference
-      if isinstance(condition.operand2, dsl.PipelineParam):
-        params.append({'name': operand2_value[9: len(operand1_value) - 1]})  # substring to unwrap parameter reference
-      if params:
-        template['spec']['params'] = params
-
-      # Surround the operands by quotes to ensure proper parsing on script execution
-      operand1_value = "'" + operand1_value + "'"
-      operand2_value = "'" + operand2_value + "'"
-
-      input_grab = 'EXITCODE=$(python -c \'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n'
-      try_catch = 'try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n'
-      if_else = 'print(0) if (input1 ' + condition.operator + ' input2) else print(1)\' ' + operand1_value + ' ' + operand2_value + '); '
-      exit_code = 'exit $EXITCODE'
-      shell_script = input_grab + try_catch + if_else + exit_code
-
-      # TODO Change to tekton_api_version once Conditions are out of v1alpha1
-      template['apiVersion'] = 'tekton.dev/v1alpha1'
       template['kind'] = 'Condition'
-      template['spec']['check'] = {
-        'args': [shell_script],
-        'command': ['sh', '-c'],
-        'image': 'python:alpine3.6',
-      }
+      template['spec']['params'] = [
+        { 'name': 'operand1', 'value': operand1_value },
+        { 'name': 'operand2', 'value': operand2_value},
+        { 'name': 'condition', 'value': str(condition.operator) }
+      ]
 
     return template
 
@@ -307,7 +315,7 @@ class TektonCompiler(Compiler):
         }
       }
     }
-    
+
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []
     for task in task_refs:
@@ -363,22 +371,28 @@ class TektonCompiler(Compiler):
       params.append(param)
 
     # generate Tekton tasks from pipeline ops
-    templates = self._create_dag_templates(pipeline, op_transformers, params)
+    raw_templates = self._create_dag_templates(pipeline, op_transformers, params)
 
     # generate task and condition reference list for the Tekton Pipeline
     condition_refs = {}
     task_refs = []
-    for template in templates:
+    templates = []
+    condition_added = False
+    for template in raw_templates:
       if template['kind'] == 'Condition':
+        if not condition_added:
+          templates.append(_get_super_condition_template())
+          condition_added = True
         condition_refs[template['metadata']['name']] = [{
-          'conditionRef': template['metadata']['name'],
+          'conditionRef': 'super-condition',
           'params': [{
               'name': param['name'],
-              'value': '$(params.' + param['name'] + ')'
+              'value': param['value']
             } for param in template['spec'].get('params', [])
           ]
         }]
       else:
+        templates.append(template)
         task_refs.append(
           {
             'name': template['metadata']['name'],
