@@ -111,3 +111,19 @@ spec:
       value: $(tasks.gcs-download.results.data)
     taskRef:
       name: echo
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: parallel-pipeline-with-argo-vars-run
+spec:
+  params:
+  - name: url1
+    value: gs://ml-pipeline-playground/shakespeare1.txt
+  - name: url2
+    value: gs://ml-pipeline-playground/shakespeare2.txt
+  pipelineRef:
+    name: parallel-pipeline-with-argo-vars

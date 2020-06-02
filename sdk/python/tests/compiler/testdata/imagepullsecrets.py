@@ -47,7 +47,8 @@ class GetFrequentWordOp(dsl.ContainerOp):
     description='Get Most Frequent Word and Save to GCS'
 )
 # def save_most_frequent_word(message: str):
-def imagepullsecrets_pipeline(message="This is a test"):
+def imagepullsecrets_pipeline(
+        message="When flies fly behind flies, then flies are following flies."):
     """A pipeline function describing the orchestration of the workflow."""
 
     counter = GetFrequentWordOp(

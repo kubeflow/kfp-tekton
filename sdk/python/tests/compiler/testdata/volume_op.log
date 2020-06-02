@@ -1,0 +1,5 @@
+[create-pvc : main] time="2020-06-09T02:51:32Z" level=error msg="Initialize script failed: exit status 2:"
+[create-pvc : main] time="2020-06-09T02:51:32Z" level=info msg="kubectl create -f /tmp/manifest.yaml -o json"
+[create-pvc : main] time="2020-06-09T02:51:32Z" level=error msg="Run kubectl command failed with: exit status 1 and error: error validating \"/tmp/manifest.yaml\": error validating data: unknown object type \"nil\" in PersistentVolumeClaim.spec.resources.requests.storage; if you choose to ignore these errors, turn validation off with --validate=false"
+[create-pvc : main] time="2020-06-09T02:51:32Z" level=error msg="Execute resource failed: exit status 1:"
+

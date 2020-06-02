@@ -103,3 +103,19 @@ spec:
       value: $(params.outputpath)
     taskRef:
       name: save
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: download-and-save-most-frequent-run
+spec:
+  params:
+  - name: url
+    value: ''
+  - name: outputpath
+    value: ''
+  pipelineRef:
+    name: download-and-save-most-frequent

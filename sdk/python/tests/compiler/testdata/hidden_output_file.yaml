@@ -81,3 +81,14 @@ spec:
       value: $(tasks.download-file.results.data)
     taskRef:
       name: echo
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: hidden-output-file-pipeline-run
+spec:
+  pipelineRef:
+    name: hidden-output-file-pipeline

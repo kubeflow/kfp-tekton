@@ -69,3 +69,14 @@ spec:
       value: $(tasks.download.results.downloaded)
     taskRef:
       name: echo
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: sidecar-run
+spec:
+  pipelineRef:
+    name: sidecar

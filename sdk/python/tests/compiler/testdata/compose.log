@@ -1,0 +1,13 @@
+[download : main] CommandException: The cat command requires at least 1 argument. Usage:
+[download : main] 
+[download : main]   gsutil cat [-h] url...
+[save : main] CommandException: Wrong number of arguments for "cp" command.
+[download : main] 
+[download : main] For additional help run:
+[download : main]   gsutil help cat
+
+
+[get-frequent : main] Traceback (most recent call last):
+[get-frequent : main]   File "<string>", line 1, in <module>
+[get-frequent : main] ValueError: max() arg is an empty sequence
+

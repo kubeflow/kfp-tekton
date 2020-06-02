@@ -140,3 +140,29 @@ spec:
       value: $(tasks.mnist-hpo.results.bestHyperParameter)
     taskRef:
       name: my-out-cop
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: launch-katib-experiment-run
+spec:
+  params:
+  - name: name
+    value: mnist
+  - name: namespace
+    value: kubeflow
+  - name: goal
+    value: '0.99'
+  - name: parallelTrialCount
+    value: '3'
+  - name: maxTrialCount
+    value: '12'
+  - name: experimentTimeoutMinutes
+    value: '60'
+  - name: deleteAfterDone
+    value: 'True'
+  pipelineRef:
+    name: launch-katib-experiment

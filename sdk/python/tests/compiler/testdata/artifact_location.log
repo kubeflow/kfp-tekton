@@ -1,0 +1,5 @@
+
+[generate-output : copy-artifacts] Added `storage` successfully.
+[generate-output : copy-artifacts] `/tekton/results/output` -> `storage/mlpipeline/runs/custom-artifact-location-pipeline-run/custom-artifact-location-pipeline-run-generate-output-8ch-m72cd/output.txt`
+[generate-output : copy-artifacts] Total: 0 B, Transferred: 6 B, Speed: 764 B/s
+

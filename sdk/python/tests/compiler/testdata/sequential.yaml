@@ -78,3 +78,19 @@ spec:
     - gcs-download
     taskRef:
       name: echo
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: sequential-pipeline-run
+spec:
+  params:
+  - name: url
+    value: gs://ml-pipeline-playground/shakespeare1.txt
+  - name: path
+    value: /tmp/results.txt
+  pipelineRef:
+    name: sequential-pipeline

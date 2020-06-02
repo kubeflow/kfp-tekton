@@ -336,8 +336,20 @@ class TektonCompiler(Compiler):
     task_run_spec = []
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      task_spec = {"pipelineTaskName": task['name'],
-                   "taskPodTemplate": {}}
+
+      # TODO: should loop-item tasks be included here?
+      if LoopArguments.LOOP_ITEM_NAME_BASE in task['name']:
+        task_name = re.sub(r'-%s-.+$' % LoopArguments.LOOP_ITEM_NAME_BASE, '', task['name'])
+      else:
+        task_name = task['name']
+      op = pipeline.ops.get(task_name)
+      if not op:
+        raise RuntimeError("unable to find op with name '%s'" % task["name"])
+
+      task_spec = {
+        "pipelineTaskName": task['name'],
+        "taskPodTemplate": {}
+      }
       if op.affinity:
         task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
       if op.tolerations:

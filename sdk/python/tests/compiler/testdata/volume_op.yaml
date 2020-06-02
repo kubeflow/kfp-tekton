@@ -127,3 +127,17 @@ spec:
       value: $(tasks.create-pvc.results.name)
     taskRef:
       name: cop
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: volumeop-basic-run
+spec:
+  params:
+  - name: size
+    value: ''
+  pipelineRef:
+    name: volumeop-basic

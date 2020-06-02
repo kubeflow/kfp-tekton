@@ -16,7 +16,7 @@ import kfp.dsl as dsl
 import kfp.gcp as gcp
 
 
-message_param = dsl.PipelineParam(name='message')
+message_param = dsl.PipelineParam(name='message', value='When flies fly behind flies')
 output_path_param = dsl.PipelineParam(name='outputpath', value='default_output')
 
 
@@ -25,7 +25,8 @@ class GetFrequentWordOp(dsl.ContainerOp):
   The class provides a nice interface to users by hiding details such as container,
   command, arguments.
   """
-  def __init__(self, name, message):
+  def __init__(self, name, message="When flies fly behind flies,"
+                                   " then flies are following flies."):
     """__init__
     Args:
       name: An identifier of the step which needs to be unique within a pipeline.
@@ -95,7 +96,7 @@ if __name__ == '__main__':
   tkc = TektonCompiler()
   compiled_workflow = tkc._create_workflow(
     save_most_frequent_word,
-    'Save Most Frequent',
+    'Save Most Frequent Word',
     'Get Most Frequent Word and Save to GCS',
     [message_param, output_path_param],
     None)

@@ -87,3 +87,14 @@ spec:
       value: 'false'
     taskRef:
       name: test-step
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: resourceop-basic-run
+spec:
+  pipelineRef:
+    name: resourceop-basic

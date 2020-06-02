@@ -155,3 +155,14 @@ spec:
       value: $(tasks.flip-again.results.output)
     taskRef:
       name: print2
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: flip-coin-example-pipeline-run
+spec:
+  pipelineRef:
+    name: flip-coin-example-pipeline

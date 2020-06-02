@@ -7,7 +7,7 @@ matrix:
       install:
         - python3 -m pip install -e sdk/python
       script:
-        - make test
+        - make unit_test
     - name: "Unit tests, Python 3.7"
       language: python
       python: "3.7"
@@ -15,7 +15,7 @@ matrix:
       install:
         - python3 -m pip install -e sdk/python
       script:
-        - make test
+        - make unit_test
     - name: "Progress report on compiling KFP DSL test scripts"
       language: python
       python: "3.7"

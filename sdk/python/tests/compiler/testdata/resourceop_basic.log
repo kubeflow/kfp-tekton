@@ -1,0 +1,5 @@
+[test-step : main] time="2020-06-09T02:49:02Z" level=error msg="Initialize script failed: exit status 2:"
+[test-step : main] time="2020-06-09T02:49:02Z" level=info msg="kubectl create -f /tmp/manifest.yaml -o json"
+[test-step : main] time="2020-06-09T02:49:03Z" level=error msg="Run kubectl command failed with: exit status 1 and Error from server (Forbidden): error when creating \"/tmp/manifest.yaml\": jobs.batch is forbidden: User \"system:serviceaccount:kubeflow:default\" cannot create resource \"jobs\" in API group \"batch\" in the namespace \"kubeflow\""
+[test-step : main] time="2020-06-09T02:49:03Z" level=error msg="Execute resource failed: exit status 1:"
+

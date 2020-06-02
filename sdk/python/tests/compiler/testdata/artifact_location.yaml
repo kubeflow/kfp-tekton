@@ -105,3 +105,24 @@ spec:
       value: $(params.tag)
     taskRef:
       name: generate-output
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{"generate-output": [{"name": "generate-output-output",
+      "path": "/tmp/output.txt"}]}'
+  name: custom-artifact-location-pipeline-run
+spec:
+  params:
+  - name: secret-name
+    value: mlpipeline-minio-artifact
+  - name: tag
+    value: 1.31.0
+  - name: namespace
+    value: kubeflow
+  - name: bucket
+    value: mlpipeline
+  pipelineRef:
+    name: custom-artifact-location-pipeline

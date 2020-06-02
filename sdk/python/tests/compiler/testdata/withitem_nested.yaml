@@ -187,3 +187,17 @@ spec:
       value: $(params.my-pipe-param)
     taskRef:
       name: my-out-cop
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: my-pipeline-run
+spec:
+  params:
+  - name: my-pipe-param
+    value: '10'
+  pipelineRef:
+    name: my-pipeline
