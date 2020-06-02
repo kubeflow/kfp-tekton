@@ -1,0 +1,21 @@
+[gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+[gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+
+
+[echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+[echo : main] 
+[echo : main] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+[echo : main] 
+
+[gcs-download-2 : copy-artifacts] Added `storage` successfully.
+[gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
+[gcs-download-2 : copy-artifacts] tekton/results/data
+[gcs-download-2 : copy-artifacts] `gcs-download-2-data.tgz` -> `storage/mlpipeline/runs/parallel-pipeline-run/gcs-download-2/gcs-download-2-data.tgz`
+[gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 205 B, Speed: 21.09 KiB/s
+
+[gcs-download : copy-artifacts] Added `storage` successfully.
+[gcs-download : copy-artifacts] tar: removing leading '/' from member names
+[gcs-download : copy-artifacts] tekton/results/data
+[gcs-download : copy-artifacts] `gcs-download-data.tgz` -> `storage/mlpipeline/runs/parallel-pipeline-run/gcs-download/gcs-download-data.tgz`
+[gcs-download : copy-artifacts] Total: 0 B, Transferred: 196 B, Speed: 20.50 KiB/s
+

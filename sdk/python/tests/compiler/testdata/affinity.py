@@ -16,11 +16,12 @@ from kubernetes.client import V1Affinity, V1NodeSelector, V1NodeSelectorRequirem
 from kfp import dsl
 
 
-def some_op():
+def echo_op():
     return dsl.ContainerOp(
-        name='sleep',
+        name='echo',
         image='busybox',
-        command=['sleep 1'],
+        command=['sh', '-c'],
+        arguments=['echo "Got scheduled"']
     )
 
 
@@ -36,8 +37,10 @@ def affinity_pipeline(
             required_during_scheduling_ignored_during_execution=V1NodeSelector(
                 node_selector_terms=[V1NodeSelectorTerm(
                     match_expressions=[V1NodeSelectorRequirement(
-                        key='beta.kubernetes.io/instance-type', operator='In', values=['p2.xlarge'])])])))
-    some_op().add_affinity(affinity)
+                        key='beta.kubernetes.io/os',
+                        operator='In',
+                        values=['linux'])])])))
+    echo_op().add_affinity(affinity)
 
 
 if __name__ == '__main__':

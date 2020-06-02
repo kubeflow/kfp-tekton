@@ -1,0 +1,5 @@
+[create-volume : main] time="2020-06-11T03:39:38Z" level=error msg="Initialize script failed: exit status 2:"
+[create-volume : main] time="2020-06-11T03:39:38Z" level=info msg="kubectl create -f /tmp/manifest.yaml -o json"
+[create-volume : main] time="2020-06-11T03:39:38Z" level=error msg="Run kubectl command failed with: exit status 1 and Error from server (AlreadyExists): error when creating \"/tmp/manifest.yaml\": persistentvolumeclaims \"volumesnapshotop-sequential-run-vol1\" already exists"
+[create-volume : main] time="2020-06-11T03:39:38Z" level=error msg="Execute resource failed: exit status 1:"
+

@@ -23,11 +23,11 @@ import kfp.dsl as dsl
 def mnist_hpo(
         name="mnist",
         namespace="kubeflow",
-        goal=0.99,
-        parallelTrialCount=3,
-        maxTrialCount=12,
-        experimentTimeoutMinutes=60,
-        deleteAfterDone=True):
+        goal: float = 0.99,
+        parallelTrialCount: int = 3,
+        maxTrialCount: int = 12,
+        experimentTimeoutMinutes: int = 60,
+        deleteAfterDone: bool = True):
     objectiveConfig = {
       "type": "maximize",
       "goal": goal,

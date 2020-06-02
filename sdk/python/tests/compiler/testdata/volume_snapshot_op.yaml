@@ -471,3 +471,17 @@ spec:
     - step3-copy
     taskRef:
       name: step4-output
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: volumesnapshotop-sequential-run
+spec:
+  params:
+  - name: url
+    value: ''
+  pipelineRef:
+    name: volumesnapshotop-sequential

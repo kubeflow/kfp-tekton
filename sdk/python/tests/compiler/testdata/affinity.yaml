@@ -17,11 +17,14 @@ kind: Task
 metadata:
   labels:
     pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: sleep
+  name: echo
 spec:
   steps:
-  - command:
-    - sleep 1
+  - args:
+    - echo "Got scheduled"
+    command:
+    - sh
+    - -c
     image: busybox
     name: main
 ---
@@ -35,9 +38,9 @@ metadata:
   name: affinity
 spec:
   tasks:
-  - name: sleep
+  - name: echo
     taskRef:
-      name: sleep
+      name: echo
 ---
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
@@ -50,14 +53,14 @@ spec:
   pipelineRef:
     name: affinity
   taskRunSpecs:
-  - pipelineTaskName: sleep
+  - pipelineTaskName: echo
     taskPodTemplate:
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: beta.kubernetes.io/instance-type
+              - key: beta.kubernetes.io/os
                 operator: In
                 values:
-                - p2.xlarge
+                - linux

@@ -192,7 +192,6 @@ A manual E2E test can be performed in the following manner:
     kubectl apply -f <pipeline.yaml>
     tkn pipeline start <pipeline-name> --showlog
 
-
 Some E2E tests require a Kubernetes cluster with Kubeflow Pipelines installed in order to make use of the
 artifact storage provided by [Minio](https://docs.minio.io/) and need to run in the `kubeflow` namespace in order to
 access secrets:
@@ -200,6 +199,11 @@ access secrets:
     kubectl apply -f <pipeline.yaml> -n kubeflow
     tkn pipeline start <pipeline-name> --showlog -n kubeflow
 
+You can also run the dynamically generated end-to-end test suite which takes all of the "golden" YAML files from the
+compiler `testdata` directory and runs them on a Kubernetes cluster, prerequisite that the environment variable 
+`KUBECONFIG` is set and the K8s cluster has both Kubeflow Pipelines as well as Tekton Pipelines installed:
+
+    make e2e_test
 
 
 ### Compiler Test Report

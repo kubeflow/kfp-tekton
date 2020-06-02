@@ -32,8 +32,10 @@ class GetFrequentWordOp(dsl.ContainerOp):
             name=name,
             image='python:3.5-jessie',
             command=['sh', '-c'],
-            arguments=['python -c "from collections import Counter; '
-                       'words = Counter(\'%s\'.split()); print(max(words, key=words.get))" '
+            arguments=['python -c "import sys; from collections import Counter; '
+                       'input_text = sys.argv[1]; '
+                       'words = Counter(input_text.split()); '
+                       'print(max(words, key=words.get));" "%s" '
                        '| tee /tmp/message.txt' % message],
             file_outputs={'word': '/tmp/message.txt'})
 
@@ -54,7 +56,7 @@ class SaveMessageOp(dsl.ContainerOp):
             name=name,
             image='google/cloud-sdk',
             command=['sh', '-c'],
-            arguments=['echo %s | tee /tmp/results.txt | gsutil cp /tmp/results.txt %s'
+            arguments=['echo "%s" | tee /tmp/results.txt | gsutil cp /tmp/results.txt %s'
                        % (message, output_path)])
 
 
@@ -62,7 +64,8 @@ class SaveMessageOp(dsl.ContainerOp):
     name='Save Most Frequent',
     description='Get Most Frequent Word and Save to GCS'
 )
-def save_most_frequent_word(message: dsl.PipelineParam, outputpath: dsl.PipelineParam):
+def save_most_frequent_word(message: dsl.PipelineParam,
+                            outputpath: dsl.PipelineParam):
     """A pipeline function describing the orchestration of the workflow."""
 
     counter = GetFrequentWordOp(
@@ -99,7 +102,9 @@ class DownloadMessageOp(dsl.ContainerOp):
     name='Download and Save Most Frequent',
     description='Download and Get Most Frequent Word and Save to GCS'
 )
-def download_save_most_frequent_word(url: str, outputpath: str):
+def download_save_most_frequent_word(
+        url: str = 'gs://ml-pipeline-playground/shakespeare1.txt',
+        outputpath: str = '/tmp/output.txt'):
     downloader = DownloadMessageOp('download', url)
     save_most_frequent_word(downloader.output, outputpath)
 

@@ -17,11 +17,14 @@ kind: Task
 metadata:
   labels:
     pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: sleep
+  name: echo
 spec:
   steps:
-  - command:
-    - sleep 1
+  - args:
+    - echo "Found my node"
+    command:
+    - sh
+    - -c
     image: busybox
     name: main
 ---
@@ -35,9 +38,9 @@ metadata:
   name: node-selector
 spec:
   tasks:
-  - name: sleep
+  - name: echo
     taskRef:
-      name: sleep
+      name: echo
 ---
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
@@ -50,7 +53,7 @@ spec:
   pipelineRef:
     name: node-selector
   taskRunSpecs:
-  - pipelineTaskName: sleep
+  - pipelineTaskName: echo
     taskPodTemplate:
       nodeSelector:
-        accelerator: nvidia-tesla-k80
+        beta.kubernetes.io/instance-type: b3c.4x16.encrypted

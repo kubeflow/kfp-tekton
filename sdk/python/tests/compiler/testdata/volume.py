@@ -26,14 +26,14 @@ def volume_pipeline():
                           image='google/cloud-sdk',
                           command=['sh', '-c'],
                           arguments=['ls | tee /tmp/results.txt'],
-                          file_outputs={'downloaded': '/tmp/results.txt'}) \
-        .add_volume(V1Volume(name='gcp-credentials',
-                             secret=V1SecretVolumeSource(secret_name='user-gcp-sa'))) \
-        .add_volume_mount(V1VolumeMount(mount_path='/secret/gcp-credentials',
-                                        name='gcp-credentials')) \
-        .add_env_variable(V1EnvVar(name='GOOGLE_APPLICATION_CREDENTIALS',
-                                   value='/secret/gcp-credentials/user-gcp-sa.json')) \
-        .add_env_variable(V1EnvVar(name='Foo', value='bar'))
+                          file_outputs={'downloaded': '/tmp/results.txt'})
+    op1.add_volume(V1Volume(name='gcp-credentials',
+                            secret=V1SecretVolumeSource(secret_name='user-gcp-sa')))
+    op1.container.add_volume_mount(V1VolumeMount(mount_path='/secret/gcp-credentials',
+                                                 name='gcp-credentials'))
+    op1.container.add_env_variable(V1EnvVar(name='GOOGLE_APPLICATION_CREDENTIALS',
+                                            value='/secret/gcp-credentials/user-gcp-sa.json'))
+    op1.container.add_env_variable(V1EnvVar(name='Foo', value='bar'))
 
     op2 = dsl.ContainerOp(name='echo',
                           image='library/bash',

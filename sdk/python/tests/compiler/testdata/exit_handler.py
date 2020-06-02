@@ -40,7 +40,7 @@ def echo_op(text):
     name='Exit Handler',
     description='Downloads a message and prints it. The exit handler will run after the pipeline finishes (successfully or not).'
 )
-def download_and_print(url='gs://ml-pipeline/shakespeare/shakespeare1.txt'):
+def download_and_print(url='gs://ml-pipeline-playground/shakespeare1.txt'):
     """A sample pipeline showing exit handler."""
 
     exit_task = echo_op('exit!')
@@ -50,15 +50,7 @@ def download_and_print(url='gs://ml-pipeline/shakespeare/shakespeare1.txt'):
         echo_task = echo_op(download_task.output)
 
 
-# # General by kfp
-# if __name__ == '__main__':
-#     import kfp
-#     kfp.compiler.Compiler().compile(download_and_print, __file__ + '.yaml')
-
-
-# General by kfp-tekton
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(download_and_print,
                              __file__.replace('.py', '.yaml'))

@@ -63,3 +63,15 @@ spec:
   - name: random-failure-2
     taskRef:
       name: random-failure-2
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: pipeline-includes-two-steps-which-fail-randomly-run
+spec:
+  pipelineRef:
+    name: pipeline-includes-two-steps-which-fail-randomly
+  timeout: 40s
