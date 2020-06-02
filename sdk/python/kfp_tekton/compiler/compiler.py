@@ -196,7 +196,7 @@ class TektonCompiler(Compiler):
       template['spec']['params'] = [
         {'name': 'operand1', 'value': operand1_value},
         {'name': 'operand2', 'value': operand2_value},
-        {'name': 'condition', 'value': str(condition.operator)}
+        {'name': 'operator', 'value': str(condition.operator)}
       ]
 
     return template
