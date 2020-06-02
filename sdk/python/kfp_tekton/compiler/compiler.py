@@ -37,6 +37,7 @@ from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8
 
 from kfp_tekton import tekton_api_version
 
+
 def _get_super_condition_template():
 
   python_string = 'python -c \'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n' \
@@ -52,9 +53,9 @@ def _get_super_condition_template():
     },
     'spec': {
       'params': [
-        { 'name': 'operand1' },
-        { 'name': 'operand2' },
-        { 'name': 'condition' }
+        {'name': 'operand1'},
+        {'name': 'operand2'},
+        {'name': 'condition'}
       ],
       'check': {
         'args': [python_string],
@@ -65,6 +66,7 @@ def _get_super_condition_template():
   }
 
   return template
+
 
 class TektonCompiler(Compiler):
   """DSL Compiler to generate Tekton YAML.
@@ -192,9 +194,9 @@ class TektonCompiler(Compiler):
 
       template['kind'] = 'Condition'
       template['spec']['params'] = [
-        { 'name': 'operand1', 'value': operand1_value },
-        { 'name': 'operand2', 'value': operand2_value},
-        { 'name': 'condition', 'value': str(condition.operator) }
+        {'name': 'operand1', 'value': operand1_value},
+        {'name': 'operand2', 'value': operand2_value},
+        {'name': 'condition', 'value': str(condition.operator)}
       ]
 
     return template
