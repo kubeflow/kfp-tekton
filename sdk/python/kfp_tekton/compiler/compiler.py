@@ -42,7 +42,7 @@ def _get_super_condition_template():
 
   python_string = 'python -c \'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n' \
     + 'try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n' \
-    + 'sys.exit(0) if (input1 $(params.condition) input2) else sys.exit(1)\' \'$(params.operand1)\' \'$(params.operand2)\''
+    + 'sys.exit(0) if (input1 $(params.operator) input2) else sys.exit(1)\' \'$(params.operand1)\' \'$(params.operand2)\''
 
   # TODO Change to tekton_api_version once Conditions are out of v1alpha1
   template = {
@@ -55,7 +55,7 @@ def _get_super_condition_template():
       'params': [
         {'name': 'operand1'},
         {'name': 'operand2'},
-        {'name': 'condition'}
+        {'name': 'operator'}
       ],
       'check': {
         'args': [python_string],
