@@ -38,9 +38,7 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: initcontainer
 spec:
-  params: []
   tasks:
   - name: hello
-    params: []
     taskRef:
       name: hello

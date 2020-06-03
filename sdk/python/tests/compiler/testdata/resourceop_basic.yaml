@@ -76,7 +76,6 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: resourceop-basic
 spec:
-  params: []
   tasks:
   - name: test-step
     params:

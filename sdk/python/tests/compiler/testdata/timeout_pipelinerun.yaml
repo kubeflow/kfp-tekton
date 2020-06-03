@@ -51,15 +51,12 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: pipeline-includes-two-steps-which-fail-randomly
 spec:
-  params: []
   tasks:
   - name: random-failure
-    params: []
     taskRef:
       name: random-failure
     timeout: 20s
   - name: random-failure-2
-    params: []
     taskRef:
       name: random-failure-2
 ---
@@ -68,7 +65,6 @@ kind: PipelineRun
 metadata:
   name: pipeline-includes-two-steps-which-fail-randomly-run
 spec:
-  params: []
   pipelineRef:
     name: pipeline-includes-two-steps-which-fail-randomly
   timeout: 40s
