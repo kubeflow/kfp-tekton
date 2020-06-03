@@ -20,7 +20,7 @@ spec:
   params:
   - name: bucket
   - name: namespace
-  - name: secret_name
+  - name: secret-name
   - name: tag
   results:
   - description: /tmp/output.txt
@@ -49,12 +49,12 @@ spec:
       valueFrom:
         secretKeyRef:
           key: accesskey
-          name: $(inputs.params.secret_name)
+          name: $(inputs.params.secret-name)
     - name: AWS_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
           key: secretkey
-          name: $(inputs.params.secret_name)
+          name: $(inputs.params.secret-name)
     image: minio/mc
     name: copy-artifacts
     script: '#!/usr/bin/env sh
@@ -83,7 +83,7 @@ metadata:
 spec:
   params:
   - default: mlpipeline-minio-artifact
-    name: secret_name
+    name: secret-name
   - default: 1.31.0
     name: tag
   - default: kubeflow
@@ -97,8 +97,8 @@ spec:
       value: $(params.bucket)
     - name: namespace
       value: $(params.namespace)
-    - name: secret_name
-      value: $(params.secret_name)
+    - name: secret-name
+      value: $(params.secret-name)
     - name: tag
       value: $(params.tag)
     taskRef:

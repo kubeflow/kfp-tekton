@@ -18,7 +18,7 @@ metadata:
   name: download
 spec:
   params:
-  - name: sleep_ms
+  - name: sleep-ms
   - name: tag
   results:
   - description: /tmp/results.txt
@@ -30,7 +30,7 @@ spec:
     name: echo
   steps:
   - args:
-    - sleep $(inputs.params.sleep_ms); wget localhost:5678 -O $(results.downloaded.path)
+    - sleep $(inputs.params.sleep-ms); wget localhost:5678 -O $(results.downloaded.path)
     command:
     - sh
     - -c
@@ -71,12 +71,12 @@ spec:
   - default: latest
     name: tag
   - default: '10'
-    name: sleep_ms
+    name: sleep-ms
   tasks:
   - name: download
     params:
-    - name: sleep_ms
-      value: $(params.sleep_ms)
+    - name: sleep-ms
+      value: $(params.sleep-ms)
     - name: tag
       value: $(params.tag)
     taskRef:

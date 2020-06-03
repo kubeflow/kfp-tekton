@@ -54,15 +54,12 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: retry-random-failures
 spec:
-  params: []
   tasks:
   - name: random-failure
-    params: []
     retries: 10
     taskRef:
       name: random-failure
   - name: random-failure-2
-    params: []
     retries: 5
     taskRef:
       name: random-failure-2

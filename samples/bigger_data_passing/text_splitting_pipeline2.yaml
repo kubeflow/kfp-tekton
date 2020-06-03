@@ -1,0 +1,200 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"inputs": [{"name": "source", "type":
+      "String"}], "name": "Split text lines2", "outputs": [{"name": "odd_lines", "type":
+      "String"}, {"name": "even_lines", "type": "String"}]}'
+  name: split-text-lines2
+spec:
+  stepTemplate:
+    volumeMounts:
+    - mountPath: /tmp/inputs/source
+      name: source
+  steps:
+  - image: busybox
+    name: copy-inputs
+    script: '#!/bin/sh
+
+      set -exo pipefail
+
+      echo -n "one
+
+      two
+
+      three
+
+      four
+
+      five
+
+      six
+
+      seven
+
+      eight
+
+      nine
+
+      ten" > /tmp/inputs/source/data
+
+      '
+  - args:
+    - --source
+    - /tmp/inputs/source/data
+    - --odd-lines
+    - $(workspaces.split-text-lines2.path)/split-text-lines2-odd-lines
+    - --even-lines
+    - $(workspaces.split-text-lines2.path)/split-text-lines2-even-lines
+    command:
+    - python3
+    - -u
+    - -c
+    - "def _parent_dirs_maker_that_returns_open_file(mode: str, encoding: str = None):\n\
+      \    def make_parent_dirs_and_return_path(file_path: str):\n        import os\n\
+      \        os.makedirs(os.path.dirname(file_path), exist_ok=True)\n        return\
+      \ open(file_path, mode=mode, encoding=encoding)\n    return make_parent_dirs_and_return_path\n\
+      \ndef split_text_lines2(source_file , odd_lines_file , even_lines_file ):\n\
+      \    while True:\n        line = source_file.readline()\n        if line ==\
+      \ \"\":\n            break\n        odd_lines_file.write(line)\n        line\
+      \ = source_file.readline()\n        if line == \"\":\n            break\n  \
+      \      even_lines_file.write(line)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Split\
+      \ text lines2', description='')\n_parser.add_argument(\"--source\", dest=\"\
+      source_file\", type=argparse.FileType('rt'), required=True, default=argparse.SUPPRESS)\n\
+      _parser.add_argument(\"--odd-lines\", dest=\"odd_lines_file\", type=_parent_dirs_maker_that_returns_open_file('wt'),\
+      \ required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--even-lines\"\
+      , dest=\"even_lines_file\", type=_parent_dirs_maker_that_returns_open_file('wt'),\
+      \ required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\
+      _output_files = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = split_text_lines2(**_parsed_args)\n\
+      \n_output_serializers = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
+      \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except OSError:\n\
+      \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
+    image: tensorflow/tensorflow:1.13.2-py3
+    name: main
+  volumes:
+  - emptyDir: {}
+    name: source
+  workspaces:
+  - name: split-text-lines2
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"description": "Print text", "inputs":
+      [{"name": "text"}], "name": "Print text"}'
+    pipelines.kubeflow.org/task_display_name: Odd lines
+  name: print-text
+spec:
+  steps:
+  - args:
+    - --text
+    - $(workspaces.print-text.path)/split-text-lines2-odd-lines
+    command:
+    - python3
+    - -u
+    - -c
+    - "def print_text(text_path ): # The \"text\" input is untyped so that any data\
+      \ can be printed\n    '''Print text'''\n    with open(text_path, 'r') as reader:\n\
+      \        for line in reader:\n            print(line, end = '')\n\nimport argparse\n\
+      _parser = argparse.ArgumentParser(prog='Print text', description='Print text')\n\
+      _parser.add_argument(\"--text\", dest=\"text_path\", type=str, required=True,\
+      \ default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n_output_files\
+      \ = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = print_text(**_parsed_args)\n\
+      \n_output_serializers = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
+      \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except OSError:\n\
+      \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
+    image: tensorflow/tensorflow:1.13.2-py3
+    name: main
+  workspaces:
+  - name: print-text
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"description": "Print text", "inputs":
+      [{"name": "text"}], "name": "Print text"}'
+    pipelines.kubeflow.org/task_display_name: Even lines
+  name: print-text-2
+spec:
+  steps:
+  - args:
+    - --text
+    - $(workspaces.print-text-2.path)/split-text-lines2-even-lines
+    command:
+    - python3
+    - -u
+    - -c
+    - "def print_text(text_path ): # The \"text\" input is untyped so that any data\
+      \ can be printed\n    '''Print text'''\n    with open(text_path, 'r') as reader:\n\
+      \        for line in reader:\n            print(line, end = '')\n\nimport argparse\n\
+      _parser = argparse.ArgumentParser(prog='Print text', description='Print text')\n\
+      _parser.add_argument(\"--text\", dest=\"text_path\", type=str, required=True,\
+      \ default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n_output_files\
+      \ = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = print_text(**_parsed_args)\n\
+      \n_output_serializers = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
+      \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except OSError:\n\
+      \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
+    image: tensorflow/tensorflow:1.13.2-py3
+    name: main
+  workspaces:
+  - name: print-text-2
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "Text splitting pipeline2"}'
+    sidecar.istio.io/inject: 'false'
+  name: text-splitting-pipeline2
+spec:
+  tasks:
+  - name: split-text-lines2
+    taskRef:
+      name: split-text-lines2
+    workspaces:
+    - name: split-text-lines2
+      workspace: text-splitting-pipeline2
+  - name: print-text
+    runAfter:
+    - split-text-lines2
+    taskRef:
+      name: print-text
+    workspaces:
+    - name: print-text
+      workspace: text-splitting-pipeline2
+  - name: print-text-2
+    runAfter:
+    - split-text-lines2
+    taskRef:
+      name: print-text-2
+    workspaces:
+    - name: print-text-2
+      workspace: text-splitting-pipeline2
+  workspaces:
+  - name: text-splitting-pipeline2
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: text-splitting-pipeline2-run
+spec:
+  pipelineRef:
+    name: text-splitting-pipeline2
+  workspaces:
+  - name: text-splitting-pipeline2
+    persistentVolumeClaim:
+      claimName: text-splitting-pipeline2-run
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: text-splitting-pipeline2-run
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+  volumeMode: Filesystem

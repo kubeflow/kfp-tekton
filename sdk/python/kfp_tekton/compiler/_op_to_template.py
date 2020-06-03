@@ -69,7 +69,7 @@ def _get_resourceOp_template(op: BaseOp,
     template = {
         'apiVersion': tekton_api_version,
         'kind': 'Task',
-        'metadata': {'name': name},
+        'metadata': {'name': name, 'labels': {'app': 'resourceOp'}},
         'spec': {
             "params": [
                 {
@@ -355,7 +355,7 @@ def _process_base_ops(op: BaseOp):
 
     # map param's (unsanitized pattern or serialized str pattern) -> input param var str
     map_to_tmpl_var = {
-        (param.pattern or str(param)): '$(inputs.params.%s)' % param.full_name  # Tekton change
+        (param.pattern or str(param)): '$(inputs.params.%s)' % param.full_name.replace('_', '-')  # Tekton change
         for param in op.inputs
     }
 
@@ -449,18 +449,8 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
         elif isinstance(op, dsl.ResourceOp):
             template['spec']['params'].extend(inputs['parameters'])
     if 'artifacts' in inputs:
-        # The input artifacts in KFP is not pulling from s3, it will always be passed as a raw input.
-        # Visit https://github.com/kubeflow/pipelines/issues/336 for more details on the implementation.
-        copy_inputs_step = _get_base_step('copy-inputs')
-        for artifact in inputs['artifacts']:
-            if 'raw' in artifact:
-                copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (artifact['raw']['data'], artifact['path'])
-            mount_path = artifact['path'].rsplit("/", 1)[0]
-            if mount_path not in mounted_param_paths:
-                _add_mount_path(artifact['name'], artifact['path'], mount_path,
-                                volume_mount_step_template, volume_template, mounted_param_paths)
-        template['spec']['steps'] = _prepend_steps([copy_inputs_step], template['spec']['steps'])
-        _update_volumes(template, volume_mount_step_template, volume_template)
+        # Leave artifacts for big data passing
+        template['spec']['artifacts'] = inputs['artifacts']
 
     # outputs
     if isinstance(op, dsl.ContainerOp):

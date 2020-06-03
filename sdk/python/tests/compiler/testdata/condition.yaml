@@ -139,10 +139,8 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: flip-coin-example-pipeline
 spec:
-  params: []
   tasks:
   - name: flip
-    params: []
     taskRef:
       name: flip
   - conditions:
@@ -151,7 +149,6 @@ spec:
       - name: flip
         value: $(tasks.flip.results.output)
     name: flip-again
-    params: []
     taskRef:
       name: flip-again
   - conditions:

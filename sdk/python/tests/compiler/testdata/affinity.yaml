@@ -32,10 +32,8 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: affinity
 spec:
-  params: []
   tasks:
   - name: sleep
-    params: []
     taskRef:
       name: sleep
 ---
@@ -44,7 +42,6 @@ kind: PipelineRun
 metadata:
   name: affinity-run
 spec:
-  params: []
   pipelineRef:
     name: affinity
   taskRunSpec:
