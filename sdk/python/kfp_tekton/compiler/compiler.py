@@ -40,9 +40,9 @@ from kfp_tekton import tekton_api_version
 
 def _get_super_condition_template():
 
-  python_string = 'python -c \'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n' \
-    + 'try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n' \
-    + 'sys.exit(0) if (input1 $(params.operator) input2) else sys.exit(1)\' \'$(params.operand1)\' \'$(params.operand2)\''
+  python_string = "python -c 'import sys;input1=str.rstrip(sys.argv[1]);input2=str.rstrip(sys.argv[2]);" \
+    + "try:  input1=int(input1);  input2=int(input2);except:  input1=str(input1);" \
+    + "sys.exit(0) if (input1 $(params.operator) input2) else sys.exit(1)' '$(params.operand1)' '$(params.operand2)'"
 
   # TODO Change to tekton_api_version once Conditions are out of v1alpha1
   template = {
@@ -58,7 +58,7 @@ def _get_super_condition_template():
         {'name': 'operator'}
       ],
       'check': {
-        'args': [python_string],
+        'args': [python_string.replace(';','\n')],
         'command': ['sh', '-c'],
         'image': 'python:alpine3.6',
       }
@@ -381,6 +381,7 @@ class TektonCompiler(Compiler):
     templates = []
     condition_added = False
     for template in raw_templates:
+      # TODO Allow an opt-out for the condition_template
       if template['kind'] == 'Condition':
         if not condition_added:
           templates.append(_get_super_condition_template())
