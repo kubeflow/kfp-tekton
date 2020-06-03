@@ -40,9 +40,16 @@ from kfp_tekton import tekton_api_version
 
 def _get_super_condition_template():
 
-  python_string = "python -c 'import sys;input1=str.rstrip(sys.argv[1]);input2=str.rstrip(sys.argv[2]);" \
-    + "try:  input1=int(input1);  input2=int(input2);except:  input1=str(input1);" \
-    + "sys.exit(0) if (input1 $(params.operator) input2) else sys.exit(1)' '$(params.operand1)' '$(params.operand2)'"
+  python_string = textwrap.dedent('''\
+    'import sys
+    input1=str.rstrip(sys.argv[1])
+    input2=str.rstrip(sys.argv[2])
+    try:
+      input1=int(input1)
+      input2=int(input2)
+    except:
+      input1=str(input1)
+    sys.exit(0) if (input1 $(params.operator) input2) else sys.exit(1)' ''')
 
   # TODO Change to tekton_api_version once Conditions are out of v1alpha1
   template = {
@@ -58,8 +65,7 @@ def _get_super_condition_template():
         {'name': 'operator'}
       ],
       'check': {
-        'args': [python_string.replace(';','\n')],
-        'command': ['sh', '-c'],
+        'script': 'python -c ' + python_string + "'$(params.operand1)' '$(params.operand2)'",
         'image': 'python:alpine3.6',
       }
     }
