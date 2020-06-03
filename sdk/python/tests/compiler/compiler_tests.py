@@ -231,6 +231,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.input_artifact_raw_value import input_artifact_pipeline
     self._test_pipeline_workflow(input_artifact_pipeline, 'input_artifact_raw_value.yaml')
 
+  def test_bigger_data_workflow(self):
+    """
+    Test compiling a big data passing workflow.
+    """
+    from .testdata.bigger_data_passing import file_passing_pipelines
+    self._test_pipeline_workflow(file_passing_pipelines, 'bigger_data_passing.yaml', generate_pipelinerun=True)
+
   def test_katib_workflow(self):
     """
     Test compiling a katib workflow.

@@ -54,13 +54,10 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: pipeline-transformer
 spec:
-  params: []
   tasks:
   - name: print
-    params: []
     taskRef:
       name: print
   - name: print-2
-    params: []
     taskRef:
       name: print-2

@@ -90,7 +90,6 @@ spec:
     name: outputpath
   tasks:
   - name: exiting
-    params: []
     taskRef:
       name: exiting
   - name: get-frequent
