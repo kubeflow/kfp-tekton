@@ -40,7 +40,7 @@ from kfp_tekton import tekton_api_version
 
 def _get_super_condition_template():
 
-  python_string = textwrap.dedent('''\
+  python_script = textwrap.dedent('''\
     'import sys
     input1=str.rstrip(sys.argv[1])
     input2=str.rstrip(sys.argv[2])
@@ -65,7 +65,7 @@ def _get_super_condition_template():
         {'name': 'operator'}
       ],
       'check': {
-        'script': 'python -c ' + python_string + "'$(params.operand1)' '$(params.operand2)'",
+        'script': 'python -c ' + python_script + "'$(params.operand1)' '$(params.operand2)'",
         'image': 'python:alpine3.6',
       }
     }
