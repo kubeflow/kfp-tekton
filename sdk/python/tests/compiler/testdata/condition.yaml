@@ -15,56 +15,18 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Condition
 metadata:
-  name: condition-1
+  name: super-condition
 spec:
   check:
-    args:
-    - "EXITCODE=$(python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
-      try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
-      print(0) if (input1 == input2) else print(1)' '$(params.flip)' 'heads'); exit\
-      \ $EXITCODE"
-    command:
-    - sh
-    - -c
     image: python:alpine3.6
-  params:
-  - name: flip
----
-apiVersion: tekton.dev/v1alpha1
-kind: Condition
-metadata:
-  name: condition-2
-spec:
-  check:
-    args:
-    - "EXITCODE=$(python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+    script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
       try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
-      print(0) if (input1 == input2) else print(1)' '$(params.flip-again)' 'tails');\
-      \ exit $EXITCODE"
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
+      sys.exit(0) if (input1 $(params.operator) input2) else sys.exit(1)' '$(params.operand1)'\
+      \ '$(params.operand2)'"
   params:
-  - name: flip-again
----
-apiVersion: tekton.dev/v1alpha1
-kind: Condition
-metadata:
-  name: condition-3
-spec:
-  check:
-    args:
-    - "EXITCODE=$(python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
-      try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
-      print(0) if (input1 == input2) else print(1)' '$(params.flip)' 'tails'); exit\
-      \ $EXITCODE"
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-  params:
-  - name: flip
+  - name: operand1
+  - name: operand2
+  - name: operator
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -146,23 +108,35 @@ spec:
     taskRef:
       name: flip
   - conditions:
-    - conditionRef: condition-1
+    - conditionRef: super-condition
       params:
-      - name: flip
+      - name: operand1
         value: $(tasks.flip.results.output)
+      - name: operand2
+        value: heads
+      - name: operator
+        value: ==
     name: flip-again
     params: []
     taskRef:
       name: flip-again
   - conditions:
-    - conditionRef: condition-2
+    - conditionRef: super-condition
       params:
-      - name: flip-again
+      - name: operand1
         value: $(tasks.flip-again.results.output)
-    - conditionRef: condition-1
+      - name: operand2
+        value: tails
+      - name: operator
+        value: ==
+    - conditionRef: super-condition
       params:
-      - name: flip
+      - name: operand1
         value: $(tasks.flip.results.output)
+      - name: operand2
+        value: heads
+      - name: operator
+        value: ==
     name: print1
     params:
     - name: flip-again-output
@@ -170,10 +144,14 @@ spec:
     taskRef:
       name: print1
   - conditions:
-    - conditionRef: condition-3
+    - conditionRef: super-condition
       params:
-      - name: flip
+      - name: operand1
         value: $(tasks.flip.results.output)
+      - name: operand2
+        value: tails
+      - name: operator
+        value: ==
     name: print2
     params:
     - name: flip-again-output
