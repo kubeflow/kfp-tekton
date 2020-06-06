@@ -37,10 +37,10 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: metadata.labels['tekton.dev/pipelineRun']
-    - name: PODNAME
+    - name: PIPELINETASK
       valueFrom:
         fieldRef:
-          fieldPath: metadata.name
+          fieldPath: metadata.labels['tekton.dev/pipelineTask']
     - name: NAMESPACE
       valueFrom:
         fieldRef:
@@ -62,7 +62,9 @@ spec:
       mc config host add storage http://minio-service.$(inputs.params.namespace):9000
       $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 
-      mc cp $(results.output.path) storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/output.txt
+      tar -cvzf generate-output-output.tgz $(results.output.path)
+
+      mc cp generate-output-output.tgz storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PIPELINETASK/generate-output-output.tgz
 
       '
 ---

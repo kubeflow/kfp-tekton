@@ -93,8 +93,12 @@ class TektonCompiler(Compiler):
   def __init__(self, **kwargs):
     # Intentionally set self.generate_pipeline and self.enable_artifacts to None because when _create_pipeline_workflow is called directly
     # (e.g. in the case of there being no pipeline decorator), self.generate_pipeline and self.enable_artifacts is not set
+    #
+    # Input and output artifacts are hash maps for metadata tracking.
     self.generate_pipelinerun = None
     self.enable_artifacts = None
+    self.input_artifacts = {}
+    self.output_artifacts = {}
     super().__init__(**kwargs)
 
   def _get_loop_task(self, task: Dict, op_name_to_for_loop_op):
@@ -216,7 +220,7 @@ class TektonCompiler(Compiler):
       op_to_templates_handler: Handler which converts a base op into a list of argo templates.
     """
 
-    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op, self.enable_artifacts)])
+    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op, self)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise
@@ -310,7 +314,11 @@ class TektonCompiler(Compiler):
       'apiVersion': tekton_api_version,
       'kind': 'PipelineRun',
       'metadata': {
-        'name': sanitize_k8s_name(pipeline_template['metadata']['name'], suffix_space=4) + '-run'
+        'name': sanitize_k8s_name(pipeline_template['metadata']['name'], suffix_space=4) + '-run',
+        'annotation': {
+          'tekton.dev/output_artifacts': json.dumps(self.output_artifacts),
+          'tekton.dev/input_artifacts': json.dumps(self.input_artifacts)
+        }
       },
       'spec': {
         'params': [{
@@ -475,6 +483,16 @@ class TektonCompiler(Compiler):
             if tp['name'] == pp.full_name:
               # replace '_' to '-' since tekton results doesn't support underscore
               tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
+              # Create input artifact tracking annotation
+              if self.enable_artifacts:
+                input_annotation = self.input_artifacts.get(task['name'], [])
+                input_annotation.append(
+                    {
+                        'name': tp['name'],
+                        'parent_task': pp.op_name
+                    }
+                )
+                self.input_artifacts[task['name']] = input_annotation
               break
 
     # add retries params
