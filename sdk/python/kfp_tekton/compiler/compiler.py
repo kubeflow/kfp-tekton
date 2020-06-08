@@ -220,7 +220,7 @@ class TektonCompiler(Compiler):
       op_to_templates_handler: Handler which converts a base op into a list of argo templates.
     """
 
-    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op, self)])
+    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op, self.output_artifacts, self.enable_artifacts)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise

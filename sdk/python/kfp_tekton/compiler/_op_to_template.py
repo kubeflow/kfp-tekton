@@ -368,7 +368,7 @@ def _process_base_ops(op: BaseOp):
     return op
 
 
-def _op_to_template(op: BaseOp, tekton_compiler):
+def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifacts=False):
     """Generate template given an operator inherited from BaseOp."""
 
     # initial local variables for tracking volumes and artifacts
@@ -400,7 +400,7 @@ def _op_to_template(op: BaseOp, tekton_compiler):
                     path=path,
                     key='runs/$PIPELINERUN/$PIPELINETASK/' + name))
             for name, path in output_artifact_paths.items()
-        ] if tekton_compiler.enable_artifacts else []
+        ] if enable_artifacts else []
 
         # workflow template
         container = convert_k8s_obj_to_json(
@@ -421,16 +421,16 @@ def _op_to_template(op: BaseOp, tekton_compiler):
         }
 
         # Create output artifact tracking annotation.
-        if tekton_compiler.enable_artifacts:
+        if enable_artifacts:
             for output_artifact in output_artifacts:
-                output_annotation = tekton_compiler.output_artifacts.get(processed_op.name, [])
+                output_annotation = pipelinerun_output_artifacts.get(processed_op.name, [])
                 output_annotation.append(
                     {
                         'name': output_artifact['name'],
                         'path': output_artifact['path']
                     }
                 )
-                tekton_compiler.output_artifacts[processed_op.name] = output_annotation
+                pipelinerun_output_artifacts[processed_op.name] = output_annotation
 
     elif isinstance(op, dsl.ResourceOp):
         # no output artifacts
