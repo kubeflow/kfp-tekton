@@ -101,6 +101,9 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
   name: print-repeating-lines-pipeline-run
 spec:
   pipelineRef:

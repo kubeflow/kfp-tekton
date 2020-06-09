@@ -54,13 +54,13 @@ spec:
     - -u
     - -c
     - "def produce_two_small_outputs()      :\n    return (\"data 1\", 42)\n\ndef\
-      \ _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value, str):\n\
-      \        raise TypeError('Value \"{}\" has type \"{}\" instead of str.'.format(str(str_value),\
-      \ str(type(str_value))))\n    return str_value\n\ndef _serialize_int(int_value:\
-      \ int) -> str:\n    if isinstance(int_value, str):\n        return int_value\n\
-      \    if not isinstance(int_value, int):\n        raise TypeError('Value \"{}\"\
-      \ has type \"{}\" instead of int.'.format(str(int_value), str(type(int_value))))\n\
-      \    return str(int_value)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Produce\
+      \ _serialize_int(int_value: int) -> str:\n    if isinstance(int_value, str):\n\
+      \        return int_value\n    if not isinstance(int_value, int):\n        raise\
+      \ TypeError('Value \"{}\" has type \"{}\" instead of int.'.format(str(int_value),\
+      \ str(type(int_value))))\n    return str(int_value)\n\ndef _serialize_str(str_value:\
+      \ str) -> str:\n    if not isinstance(str_value, str):\n        raise TypeError('Value\
+      \ \"{}\" has type \"{}\" instead of str.'.format(str(str_value), str(type(str_value))))\n\
+      \    return str_value\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Produce\
       \ two small outputs', description='')\n_parser.add_argument(\"----output-paths\"\
       , dest=\"_output_paths\", type=str, nargs=2)\n_parsed_args = vars(_parser.parse_args())\n\
       _output_files = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = produce_two_small_outputs(**_parsed_args)\n\
@@ -218,6 +218,9 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
   name: producers-to-consumers-pipeline-run
 spec:
   params:
