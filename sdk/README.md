@@ -29,7 +29,7 @@ to ensure you are set up properly to use the KFP-Tekton compiler.
 
  - Python: `3.7.5`
  - Kubeflow Pipelines: [`0.5.0`](https://github.com/kubeflow/pipelines/releases/tag/0.5.0)
- - Tekton: [`0.11.3`](https://github.com/tektoncd/pipeline/releases/tag/v0.11.3)
+ - Tekton: [`0.13.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.13.0)
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
 
 Follow the instructions for [installing project prerequisites](/sdk/python/README.md#development-prerequisites)
@@ -102,8 +102,6 @@ please ensure that your code changes are improving the number of successfully co
 In order to utilize the latest features and functions of the `kfp-tekton` compiler, we suggest to install Tekton from a
 nightly built or build it from the [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline) branch. 
 Features that require special builds different from the 'Tested Version' will be listed below.
-
-- [Affinity, Node Selector, and Tolerations](/sdk/FEATURES.md#affinity-node-selector-and-tolerations)
 
 ## Additional Features
 

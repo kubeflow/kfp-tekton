@@ -47,7 +47,7 @@ spec:
   params: []
   pipelineRef:
     name: affinity
-  taskRunSpec:
+  taskRunSpecs:
   - pipelineTaskName: sleep
     taskPodTemplate:
       affinity:

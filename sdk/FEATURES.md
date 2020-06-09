@@ -11,6 +11,7 @@ Below are the list of features that are currently available in the KFP Tekton co
     + [Input Parameters](#input-parameters)
     + [ContainerOp](#containerop)
     + [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations)
+    + [ImagePullSecrets](#imagepullsecrets)
 - [Pipeline DSL features with custom Tekton implementation](#pipeline-dsl-features-with-custom-tekton-implementation)
   * [Features with same behavior as Argo](#features-with-same-behavior-as-argo)
     + [InitContainers](#initcontainers)
@@ -22,7 +23,6 @@ Below are the list of features that are currently available in the KFP Tekton co
   * [Features with limitations](#features-with-limitations)
     + [ParallelFor](#parallelfor) - [Tracking issue][ParallelFor]
     + [Variable Substitutions](#variable-substitutions) - [Tracking issue][VarSub]
-    + [ImagePullSecrets](#imagepullsecrets) - [Tracking issue][ImagePullSecrets]
   * [Features with different behavior than Argo](#features-with-different-behavior-than-argo)
     + [Sidecars](#sidecars) - [Tracking issue][Sidecars]
 - [Pipeline features that are unavailable on Tekton](#pipeline-features-that-are-unavailable-on-tekton)
@@ -82,7 +82,16 @@ The [affinity](/sdk/python/tests/compiler/testdata/affinity.py),
 [node_selector](/sdk/python/tests/compiler/testdata/node_selector.py), and
 [tolerations](/sdk/python/tests/compiler/testdata/tolerations.py) python tests are examples of how to use these features.
 
-This feature is recently implemented in Tekton and is available on the Tekton master branch and Tekton 0.13.0+.
+This feature is recently implemented in Tekton and is available on Tekton v0.13.0 and above.
+
+### ImagePullSecrets
+
+ImagePullSecret is a feature for the component to know which secret to use when pulling container images from private registries. It is implemented
+with Tekton's [podTemplate](https://github.com/tektoncd/pipeline/blob/master/docs/podtemplates.md) field under Tekton
+PipelineRun. The [imagepullsecrets](/sdk/python/tests/compiler/testdata/imagepullsecrets.py) python test is an example of how to use this
+feature.
+
+This feature is recently implemented in Tekton and is available on Tekton v0.13.0 and above.
 
 # Pipeline DSL features with custom Tekton implementation
 ## Features with same behavior as Argo
@@ -155,17 +164,6 @@ argo -> tekton
 [parallel_join_with_argo_vars](/sdk/python/tests/compiler/testdata/parallel_join_with_argo_vars.py) is an example of how Argo variables are
 used and it can still be converted to Tekton variables with our Tekton compiler. However, other Argo variables will throw out an error because those Argo variables are very unique to Argo's pipeline system. 
 
-### ImagePullSecrets
-
-[Tracking issue #1779][ImagePullSecrets]
-
-ImagePullSecret is a feature for the component to know which secret to use when pulling container images from private registries. It is implemented with Kubernetes `ServiceAccount` and bound to the Tekton's [ServiceAccount](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#specifying-custom-serviceaccount-credentials) field under Tekton
-PipelineRun. The [imagepullsecrets](/sdk/python/tests/compiler/testdata/imagepullsecrets.py) python test is an example of how to use this
-feature.
-
-However, this approach is not an ideal way to solve this problem because it adds extra work to the server to maintain the `ServiceAccount`. The better approach will be using `podTemplate` to store the image pull `secrets`. The Tekton pipeline doesn't support this feature yet, but we opened a
-[tracking issue](https://github.com/tektoncd/pipeline/issues/2339) in the Tekton pipeline.
-
 ## Features with different behavior than Argo
 Below are the KFP-Tekton features with different behavior than Argo.
 
@@ -197,6 +195,5 @@ An exit handler is a component that always executes, irrespective of success or 
 
 [ParallelFor]: https://github.com/tektoncd/pipeline/issues/2050
 [VarSub]: https://github.com/tektoncd/pipeline/issues/2322
-[ImagePullSecrets]: https://github.com/tektoncd/pipeline/issues/1779
 [Sidecars]: https://github.com/tektoncd/pipeline/issues/1347
 [exitHandler]: https://github.com/tektoncd/pipeline/pull/2437
