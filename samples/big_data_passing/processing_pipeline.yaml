@@ -68,13 +68,13 @@ spec:
     - -u
     - -c
     - "def get_item_from_list(list_of_strings , index )  :\n    return list_of_strings[index]\n\
-      \ndef _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value,\
+      \nimport json\ndef _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value,\
       \ str):\n        raise TypeError('Value \"{}\" has type \"{}\" instead of str.'.format(str(str_value),\
-      \ str(type(str_value))))\n    return str_value\n\nimport json\nimport argparse\n\
-      _parser = argparse.ArgumentParser(prog='Get item from list', description='')\n\
-      _parser.add_argument(\"--list-of-strings\", dest=\"list_of_strings\", type=json.loads,\
-      \ required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--index\"\
-      , dest=\"index\", type=int, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"\
+      \ str(type(str_value))))\n    return str_value\n\nimport argparse\n_parser =\
+      \ argparse.ArgumentParser(prog='Get item from list', description='')\n_parser.add_argument(\"\
+      --list-of-strings\", dest=\"list_of_strings\", type=json.loads, required=True,\
+      \ default=argparse.SUPPRESS)\n_parser.add_argument(\"--index\", dest=\"index\"\
+      , type=int, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"\
       ----output-paths\", dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args\
       \ = vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"_output_paths\"\
       , [])\n\n_outputs = get_item_from_list(**_parsed_args)\n\n_outputs = [_outputs]\n\
@@ -150,6 +150,9 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
   name: processing-pipeline-run
 spec:
   params:
