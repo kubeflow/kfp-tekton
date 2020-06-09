@@ -38,10 +38,8 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: tolerations
 spec:
-  params: []
   tasks:
   - name: download
-    params: []
     taskRef:
       name: download
 ---
@@ -50,7 +48,6 @@ kind: PipelineRun
 metadata:
   name: tolerations-run
 spec:
-  params: []
   pipelineRef:
     name: tolerations
   taskRunSpec:

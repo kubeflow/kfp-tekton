@@ -136,21 +136,16 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: pipeline-with-artifact-input-raw-argument-value
 spec:
-  params: []
   tasks:
   - name: component-with-inline-input-artifact
-    params: []
     taskRef:
       name: component-with-inline-input-artifact
   - name: component-with-input-artifact
-    params: []
     taskRef:
       name: component-with-input-artifact
   - name: component-with-input-artifact-2
-    params: []
     taskRef:
       name: component-with-input-artifact-2
   - name: component-with-input-artifact-3
-    params: []
     taskRef:
       name: component-with-input-artifact-3

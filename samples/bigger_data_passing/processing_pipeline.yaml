@@ -1,0 +1,159 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"inputs": [{"name": "text", "type": "String"},
+      {"name": "max_length", "type": "Integer"}], "name": "Truncate text", "outputs":
+      [{"name": "Output", "type": "String"}]}'
+  name: truncate-text
+spec:
+  params:
+  - name: text
+  results:
+  - description: /tmp/outputs/Output/data
+    name: output
+  steps:
+  - args:
+    - --text
+    - $(inputs.params.text)
+    - --max-length
+    - '5'
+    - '----output-paths'
+    - $(results.output.path)
+    command:
+    - python3
+    - -u
+    - -c
+    - "def truncate_text(text , max_length )  :\n    return text[0:max_length]\n\n\
+      def _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value,\
+      \ str):\n        raise TypeError('Value \"{}\" has type \"{}\" instead of str.'.format(str(str_value),\
+      \ str(type(str_value))))\n    return str_value\n\nimport argparse\n_parser =\
+      \ argparse.ArgumentParser(prog='Truncate text', description='')\n_parser.add_argument(\"\
+      --text\", dest=\"text\", type=str, required=True, default=argparse.SUPPRESS)\n\
+      _parser.add_argument(\"--max-length\", dest=\"max_length\", type=int, required=True,\
+      \ default=argparse.SUPPRESS)\n_parser.add_argument(\"----output-paths\", dest=\"\
+      _output_paths\", type=str, nargs=1)\n_parsed_args = vars(_parser.parse_args())\n\
+      _output_files = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = truncate_text(**_parsed_args)\n\
+      \n_outputs = [_outputs]\n\n_output_serializers = [\n    _serialize_str,\n\n\
+      ]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n    try:\n\
+      \        os.makedirs(os.path.dirname(output_file))\n    except OSError:\n  \
+      \      pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
+    image: tensorflow/tensorflow:1.13.2-py3
+    name: main
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"inputs": [{"name": "list_of_strings",
+      "type": "JsonArray"}, {"name": "index", "type": "Integer"}], "name": "Get item
+      from list", "outputs": [{"name": "Output", "type": "String"}]}'
+  name: get-item-from-list
+spec:
+  params:
+  - name: truncate-text-output
+  results:
+  - description: /tmp/outputs/Output/data
+    name: output
+  steps:
+  - args:
+    - --list-of-strings
+    - '[3, 1, "$(inputs.params.truncate-text-output)", 1, 5, 9, 2, 6, 7]'
+    - --index
+    - '2'
+    - '----output-paths'
+    - $(results.output.path)
+    command:
+    - python3
+    - -u
+    - -c
+    - "def get_item_from_list(list_of_strings , index )  :\n    return list_of_strings[index]\n\
+      \ndef _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value,\
+      \ str):\n        raise TypeError('Value \"{}\" has type \"{}\" instead of str.'.format(str(str_value),\
+      \ str(type(str_value))))\n    return str_value\n\nimport json\nimport argparse\n\
+      _parser = argparse.ArgumentParser(prog='Get item from list', description='')\n\
+      _parser.add_argument(\"--list-of-strings\", dest=\"list_of_strings\", type=json.loads,\
+      \ required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--index\"\
+      , dest=\"index\", type=int, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"\
+      ----output-paths\", dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args\
+      \ = vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"_output_paths\"\
+      , [])\n\n_outputs = get_item_from_list(**_parsed_args)\n\n_outputs = [_outputs]\n\
+      \n_output_serializers = [\n    _serialize_str,\n\n]\n\nimport os\nfor idx, output_file\
+      \ in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n\
+      \    except OSError:\n        pass\n    with open(output_file, 'w') as f:\n\
+      \        f.write(_output_serializers[idx](_outputs[idx]))\n"
+    image: tensorflow/tensorflow:1.13.2-py3
+    name: main
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    pipelines.kubeflow.org/component_spec: '{"description": "Print small text", "inputs":
+      [{"name": "text", "type": "String"}], "name": "Print small text"}'
+  name: print-small-text
+spec:
+  params:
+  - name: get-item-from-list-output
+  steps:
+  - args:
+    - --text
+    - $(inputs.params.get-item-from-list-output)
+    command:
+    - python3
+    - -u
+    - -c
+    - "def print_small_text(text ):\n    '''Print small text'''\n    print(text)\n\
+      \nimport argparse\n_parser = argparse.ArgumentParser(prog='Print small text',\
+      \ description='Print small text')\n_parser.add_argument(\"--text\", dest=\"\
+      text\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args =\
+      \ vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"_output_paths\"\
+      , [])\n\n_outputs = print_small_text(**_parsed_args)\n\n_output_serializers\
+      \ = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
+      \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except OSError:\n\
+      \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
+    image: tensorflow/tensorflow:1.13.2-py3
+    name: main
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "Hello world",
+      "name": "text", "optional": true, "type": "String"}], "name": "Processing pipeline"}'
+    sidecar.istio.io/inject: 'false'
+  name: processing-pipeline
+spec:
+  params:
+  - default: Hello world
+    name: text
+  tasks:
+  - name: truncate-text
+    params:
+    - name: text
+      value: $(params.text)
+    taskRef:
+      name: truncate-text
+  - name: get-item-from-list
+    params:
+    - name: truncate-text-output
+      value: $(tasks.truncate-text.results.output)
+    taskRef:
+      name: get-item-from-list
+  - name: print-small-text
+    params:
+    - name: get-item-from-list-output
+      value: $(tasks.get-item-from-list.results.output)
+    taskRef:
+      name: print-small-text
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: processing-pipeline-run
+spec:
+  params:
+  - name: text
+    value: Hello world
+  pipelineRef:
+    name: processing-pipeline
