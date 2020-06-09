@@ -47,7 +47,7 @@ metadata:
 spec:
   pipelineRef:
     name: node-selector
-  taskRunSpec:
+  taskRunSpecs:
   - pipelineTaskName: sleep
     taskPodTemplate:
       nodeSelector:

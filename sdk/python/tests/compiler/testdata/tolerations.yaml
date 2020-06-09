@@ -53,7 +53,7 @@ metadata:
 spec:
   pipelineRef:
     name: tolerations
-  taskRunSpec:
+  taskRunSpecs:
   - pipelineTaskName: download
     taskPodTemplate:
       tolerations:

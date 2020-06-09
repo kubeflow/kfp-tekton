@@ -332,7 +332,7 @@ class TektonCompiler(Compiler):
       }
     }
 
-    # Generate TaskRunSpec PodTemplate:s
+    # Generate TaskRunSpecs PodTemplate:s
     task_run_spec = []
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
@@ -347,26 +347,16 @@ class TektonCompiler(Compiler):
       if bool(task_spec["taskPodTemplate"]):
         task_run_spec.append(task_spec)
     if len(task_run_spec) > 0:
-      pipelinerun['spec']['taskRunSpec'] = task_run_spec
+      pipelinerun['spec']['taskRunSpecs'] = task_run_spec
 
     # add workflow level timeout to pipeline run
     if pipeline.conf.timeout:
       pipelinerun['spec']['timeout'] = '%ds' % pipeline.conf.timeout
 
-    # generate the Tekton service account template for image pull secret
-    service_template = {}
+    # generate the Tekton podTemplate for image pull secret
     if len(pipeline.conf.image_pull_secrets) > 0:
-      service_template = {
-        'apiVersion': 'v1',
-        'kind': 'ServiceAccount',
-        'metadata': {'name': sanitize_k8s_name(pipelinerun['metadata']['name'], suffix_space=3) + '-sa'}
-      }
-    for image_pull_secret in pipeline.conf.image_pull_secrets:
-      service_template['imagePullSecrets'] = [{'name': image_pull_secret.name}]
-
-    if service_template:
-      workflow = workflow + [service_template]
-      pipelinerun['spec']['serviceAccountName'] = service_template['metadata']['name']
+      pipelinerun['spec']['podTemplate'] = pipelinerun['spec'].get('podTemplate', {})
+      pipelinerun['spec']['podTemplate']['imagePullSecrets'] = [{"name": s.name} for s in pipeline.conf.image_pull_secrets]
 
     workflow = workflow + [pipelinerun]
 
