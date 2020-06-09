@@ -82,16 +82,16 @@ The [affinity](/sdk/python/tests/compiler/testdata/affinity.py),
 [node_selector](/sdk/python/tests/compiler/testdata/node_selector.py), and
 [tolerations](/sdk/python/tests/compiler/testdata/tolerations.py) python tests are examples of how to use these features.
 
-This feature is recently implemented in Tekton and is available on Tekton v0.13.0 and above.
+This feature is recently implemented in Tekton and is available on Tekton v0.13.0 onwards.
 
 ### ImagePullSecrets
 
-ImagePullSecret is a feature for the component to know which secret to use when pulling container images from private registries. It is implemented
+ImagePullSecret is a feature for the components to know which secret to use when pulling container images from private registries. It is implemented
 with Tekton's [podTemplate](https://github.com/tektoncd/pipeline/blob/master/docs/podtemplates.md) field under Tekton
 PipelineRun. The [imagepullsecrets](/sdk/python/tests/compiler/testdata/imagepullsecrets.py) python test is an example of how to use this
 feature.
 
-This feature is recently implemented in Tekton and is available on Tekton v0.13.0 and above.
+This feature is recently implemented in Tekton and is available on Tekton v0.13.0 onwards.
 
 # Pipeline DSL features with custom Tekton implementation
 ## Features with same behavior as Argo
@@ -194,6 +194,6 @@ An exit handler is a component that always executes, irrespective of success or 
 <!-- Issue and PR links-->
 
 [ParallelFor]: https://github.com/tektoncd/pipeline/issues/2050
-[VarSub]: https://github.com/tektoncd/pipeline/issues/2322
+[VarSub]: https://github.com/tektoncd/pipeline/issues/1522
 [Sidecars]: https://github.com/tektoncd/pipeline/issues/1347
 [exitHandler]: https://github.com/tektoncd/pipeline/pull/2437
