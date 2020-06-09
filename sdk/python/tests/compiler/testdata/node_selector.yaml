@@ -32,19 +32,19 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: node-selector
 spec:
-  params: []
   tasks:
   - name: sleep
-    params: []
     taskRef:
       name: sleep
 ---
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
   name: node-selector-run
 spec:
-  params: []
   pipelineRef:
     name: node-selector
   taskRunSpecs:

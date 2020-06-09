@@ -71,10 +71,8 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: hidden-output-file-pipeline
 spec:
-  params: []
   tasks:
   - name: download-file
-    params: []
     taskRef:
       name: download-file
   - name: echo

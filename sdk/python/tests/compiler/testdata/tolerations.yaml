@@ -38,19 +38,19 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: tolerations
 spec:
-  params: []
   tasks:
   - name: download
-    params: []
     taskRef:
       name: download
 ---
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
   name: tolerations-run
 spec:
-  params: []
   pipelineRef:
     name: tolerations
   taskRunSpecs:

@@ -32,6 +32,41 @@ spec:
     - -c
     image: google/cloud-sdk:279.0.0
     name: main
+  - env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    - name: PIPELINETASK
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineTask']
+    - name: NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          key: accesskey
+          name: mlpipeline-minio-artifact
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          key: secretkey
+          name: mlpipeline-minio-artifact
+    image: minio/mc
+    name: copy-artifacts
+    script: '#!/usr/bin/env sh
+
+      mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+      $AWS_SECRET_ACCESS_KEY
+
+      tar -cvzf gcs-download-data.tgz $(results.data.path)
+
+      mc cp gcs-download-data.tgz storage/mlpipeline/runs/$PIPELINERUN/$PIPELINETASK/gcs-download-data.tgz
+
+      '
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -53,6 +88,41 @@ spec:
     - -c
     image: google/cloud-sdk:279.0.0
     name: main
+  - env:
+    - name: PIPELINERUN
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineRun']
+    - name: PIPELINETASK
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['tekton.dev/pipelineTask']
+    - name: NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          key: accesskey
+          name: mlpipeline-minio-artifact
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          key: secretkey
+          name: mlpipeline-minio-artifact
+    image: minio/mc
+    name: copy-artifacts
+    script: '#!/usr/bin/env sh
+
+      mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+      $AWS_SECRET_ACCESS_KEY
+
+      tar -cvzf gcs-download-2-data.tgz $(results.data.path)
+
+      mc cp gcs-download-2-data.tgz storage/mlpipeline/runs/$PIPELINERUN/$PIPELINETASK/gcs-download-2-data.tgz
+
+      '
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -115,8 +185,11 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotation:
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{"echo": [{"name": "gcs-download-2-data", "parent_task":
+      "gcs-download-2"}, {"name": "gcs-download-data", "parent_task": "gcs-download"}]}'
+    tekton.dev/output_artifacts: '{"gcs-download": [{"name": "gcs-download-data",
+      "path": "/tmp/results.txt"}], "gcs-download-2": [{"name": "gcs-download-2-data",
+      "path": "/tmp/results.txt"}]}'
   name: parallel-pipeline-run
 spec:
   params:

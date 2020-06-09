@@ -87,6 +87,16 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
 
+  def test_parallel_join_workflow_with_artifacts(self):
+    """
+    Test compiling a parallel join workflow with artifacts and pipelineRun.
+    """
+    from .testdata.parallel_join import download_and_join
+    self._test_pipeline_workflow(download_and_join,
+                                 'parallel_join_with_artifacts.yaml',
+                                 generate_pipelinerun=True,
+                                 enable_artifacts=True)
+
   def test_parallel_join_with_argo_vars_workflow(self):
     """
     Test compiling a parallel join workflow.
@@ -230,6 +240,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.input_artifact_raw_value import input_artifact_pipeline
     self._test_pipeline_workflow(input_artifact_pipeline, 'input_artifact_raw_value.yaml')
+
+  def test_bigger_data_workflow(self):
+    """
+    Test compiling a big data passing workflow.
+    """
+    from .testdata.big_data_passing import file_passing_pipelines
+    self._test_pipeline_workflow(file_passing_pipelines, 'big_data_passing.yaml', generate_pipelinerun=True)
 
   def test_katib_workflow(self):
     """
