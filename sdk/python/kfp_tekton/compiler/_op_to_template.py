@@ -279,7 +279,7 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
         script: |
             #!/usr/bin/env sh
             mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
-            mc cp /tmp/file.txt storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$PODNAME/file.txt
+            mc cp /tmp/file.txt storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$TASKRUN/file.txt
 
     Args:
         outputs_dict {Dict[Text, Any]}: Dictionary of the possible parameters/artifacts in this task
@@ -311,7 +311,7 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
                         ''' % (endpoint)),
             'env': [
                 {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}},
-                {'name': 'PODNAME', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.name"}}},
+                {'name': 'PIPELINETASK', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineTask']"}}},
                 {'name': 'NAMESPACE', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.namespace"}}},
                 {'name': 'AWS_ACCESS_KEY_ID', 'valueFrom': {'secretKeyRef': {'name': access_key['name'], 'key': access_key['key']}}},
                 {'name': 'AWS_SECRET_ACCESS_KEY', 'valueFrom': {'secretKeyRef': {'name': secret_access_key['name'],
@@ -322,11 +322,13 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
         for artifact in outputs_dict['artifacts']:
             if artifact['name'] in replaced_param_list:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'mc cp $(results.%s.path) storage/%s/runs/$PIPELINERUN/$PODNAME/%s\n' % (artifact_to_result_mapping[artifact['name']],
-                                                                                             bucket, artifact['path'].rsplit("/", 1)[1])
+                    'tar -cvzf %s.tgz $(results.%s.path)\n' % (artifact['name'], artifact_to_result_mapping[artifact['name']]) + \
+                    'mc cp %s.tgz storage/%s/runs/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact['name'],
+                                                                                     bucket, artifact['name'])
             else:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'mc cp %s storage/%s/runs/$PIPELINERUN/$PODNAME/%s\n' % (artifact['path'], bucket, artifact['path'].rsplit("/", 1)[1])
+                    'tar -cvzf %s.tgz %s\n' % (artifact['name'], artifact['path']) + \
+                    'mc cp %s.tgz storage/%s/runs/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact['name'], bucket, artifact['name'])
                 if artifact['path'].rsplit("/", 1)[0] not in mounted_artifact_paths:
                     volume_mount_step_template.append({
                         'name': sanitize_k8s_name(artifact['name']), 'mountPath': artifact['path'].rsplit("/", 1)[0]
@@ -368,7 +370,7 @@ def _process_base_ops(op: BaseOp):
     return op
 
 
-def _op_to_template(op: BaseOp, enable_artifacts=False):
+def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifacts=False):
     """Generate template given an operator inherited from BaseOp."""
 
     # initial local variables for tracking volumes and artifacts
@@ -398,7 +400,7 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                     op.artifact_location,
                     name=name,
                     path=path,
-                    key='runs/$PIPELINERUN/$PODNAME/' + name))
+                    key='runs/$PIPELINERUN/$PIPELINETASK/' + name))
             for name, path in output_artifact_paths.items()
         ] if enable_artifacts else []
 
@@ -419,6 +421,18 @@ def _op_to_template(op: BaseOp, enable_artifacts=False):
                 'steps': [step]
             }
         }
+
+        # Create output artifact tracking annotation.
+        if enable_artifacts:
+            for output_artifact in output_artifacts:
+                output_annotation = pipelinerun_output_artifacts.get(processed_op.name, [])
+                output_annotation.append(
+                    {
+                        'name': output_artifact['name'],
+                        'path': output_artifact['path']
+                    }
+                )
+                pipelinerun_output_artifacts[processed_op.name] = output_annotation
 
     elif isinstance(op, dsl.ResourceOp):
         # no output artifacts
