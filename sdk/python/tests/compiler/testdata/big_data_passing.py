@@ -44,7 +44,7 @@ from kfp.components import func_to_container_op, InputPath, OutputPath
 #
 # Small lists, dictionaries and JSON structures are fine, but keep an eye on the size
 # and consider switching to file-based data passing methods taht are more suitable for
-# bigger data(more than several kilobytes) or binary data.
+# big data(more than several kilobytes) or binary data.
 #
 # All small data outputs will be at some point serialized to strings
 # and all small data input values will be at some point deserialized
@@ -56,9 +56,9 @@ from kfp.components import func_to_container_op, InputPath, OutputPath
 # and the component function will receive strings instead of deserialized objects.
 
 # %% [markdown]
-# ## Bigger data (files)
+# ## big data (files)
 #
-# Bigger data should be read from files and written to files.
+# big data should be read from files and written to files.
 #
 # The paths for the input and output files are chosen by the system and are passed into the function (as strings).
 #
@@ -86,11 +86,11 @@ from kfp.components import func_to_container_op, InputPath, OutputPath
 # This makes the argument passing look more natural: `number=42` instead of `number_file_path=42`.
 # %% [markdown]
 #
-# ### Writing and reading bigger data
+# ### Writing and reading big data
 
 
 # %%
-# Writing bigger data
+# Writing big data
 @func_to_container_op
 def repeat_line(line: str, output_text_path: OutputPath(str), count: int = 10):
     '''Repeat the line specified number of times'''
@@ -99,7 +99,7 @@ def repeat_line(line: str, output_text_path: OutputPath(str), count: int = 10):
             writer.write(line + '\n')
 
 
-# Reading bigger data
+# Reading big data
 @func_to_container_op
 def print_text(
         text_path: InputPath()
@@ -116,7 +116,7 @@ def print_repeating_lines_pipeline():
 
 
 # %% [markdown]
-# ### Processing bigger data
+# ### Processing big data
 
 
 # %%
