@@ -40,17 +40,14 @@ class PrintOp(dsl.ContainerOp):
     name='Flip Coin Example Pipeline',
     description='Shows how to use dsl.Condition.'
 )
-def flipcoin():
-    flip = FlipCoinOp('flip')
+def flipcoin(flip1: str = 'heads', flip2: str = 'tails'):
 
-    with dsl.Condition(flip.output == 'heads'):
-        flip2 = FlipCoinOp('flip-again')
+    with dsl.Condition(flip1 == 'heads'):
+        with dsl.Condition(flip2 == 'tails'):
+            PrintOp('print1', flip2)
 
-        with dsl.Condition(flip2.output == 'tails'):
-            PrintOp('print1', flip2.output)
-
-    with dsl.Condition(flip.output == 'tails'):
-        PrintOp('print2', flip2.output)
+    with dsl.Condition(flip1 == 'tails'):
+        PrintOp('print2', flip1)
 
 
 if __name__ == '__main__':

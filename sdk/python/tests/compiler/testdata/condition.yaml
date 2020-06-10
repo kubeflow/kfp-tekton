@@ -31,50 +31,14 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: flip
-spec:
-  results:
-  - description: /tmp/output
-    name: output
-  steps:
-  - args:
-    - python -c "import random; result = 'heads' if random.randint(0,1) == 0 else
-      'tails'; print(result)" | tee $(results.output.path)
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: flip-again
-spec:
-  results:
-  - description: /tmp/output
-    name: output
-  steps:
-  - args:
-    - python -c "import random; result = 'heads' if random.randint(0,1) == 0 else
-      'tails'; print(result)" | tee $(results.output.path)
-    command:
-    - sh
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
   name: print1
 spec:
   params:
-  - name: flip-again-output
+  - name: flip2
   steps:
   - command:
     - echo
-    - $(inputs.params.flip-again-output)
+    - $(inputs.params.flip2)
     image: alpine:3.6
     name: main
 ---
@@ -84,11 +48,11 @@ metadata:
   name: print2
 spec:
   params:
-  - name: flip-again-output
+  - name: flip1
   steps:
   - command:
     - echo
-    - $(inputs.params.flip-again-output)
+    - $(inputs.params.flip1)
     image: alpine:3.6
     name: main
 ---
@@ -97,31 +61,23 @@ kind: Pipeline
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
+      "inputs": [{"default": "heads", "name": "flip1", "optional": true, "type": "String"},
+      {"default": "tails", "name": "flip2", "optional": true, "type": "String"}],
       "name": "Flip Coin Example Pipeline"}'
     sidecar.istio.io/inject: 'false'
   name: flip-coin-example-pipeline
 spec:
+  params:
+  - default: heads
+    name: flip1
+  - default: tails
+    name: flip2
   tasks:
-  - name: flip
-    taskRef:
-      name: flip
   - conditions:
     - conditionRef: super-condition
       params:
       - name: operand1
-        value: $(tasks.flip.results.output)
-      - name: operand2
-        value: heads
-      - name: operator
-        value: ==
-    name: flip-again
-    taskRef:
-      name: flip-again
-  - conditions:
-    - conditionRef: super-condition
-      params:
-      - name: operand1
-        value: $(tasks.flip-again.results.output)
+        value: $(params.flip2)
       - name: operand2
         value: tails
       - name: operator
@@ -129,29 +85,29 @@ spec:
     - conditionRef: super-condition
       params:
       - name: operand1
-        value: $(tasks.flip.results.output)
+        value: $(params.flip1)
       - name: operand2
         value: heads
       - name: operator
         value: ==
     name: print1
     params:
-    - name: flip-again-output
-      value: $(tasks.flip-again.results.output)
+    - name: flip2
+      value: $(params.flip2)
     taskRef:
       name: print1
   - conditions:
     - conditionRef: super-condition
       params:
       - name: operand1
-        value: $(tasks.flip.results.output)
+        value: $(params.flip1)
       - name: operand2
         value: tails
       - name: operator
         value: ==
     name: print2
     params:
-    - name: flip-again-output
-      value: $(tasks.flip-again.results.output)
+    - name: flip1
+      value: $(params.flip1)
     taskRef:
       name: print2
