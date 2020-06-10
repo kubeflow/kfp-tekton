@@ -24,7 +24,7 @@ LICENSE = "Apache 2.0"
 HOMEPAGE = "https://github.com/kubeflow/kfp-tekton/"
 
 REQUIRES = [
-    'kfp==0.5.0',
+    'kfp==0.5.1',
 ]
 
 

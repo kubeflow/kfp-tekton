@@ -55,7 +55,7 @@ def parse_arguments():
   return args
 
 
-def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check,
+def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, allow_telemetry,
                                generate_pipelinerun=False, enable_artifacts=False):
   if len(pipeline_funcs) == 0:
     raise ValueError('A function with @dsl.pipeline decorator is required in the py file.')
@@ -72,18 +72,21 @@ def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_
   else:
     pipeline_func = pipeline_funcs[0]
 
-  TektonCompiler().compile(pipeline_func, output_path, type_check,
+  TektonCompiler().compile(pipeline_func, output_path, type_check, allow_telemetry=allow_telemetry,
                            generate_pipelinerun=generate_pipelinerun,
                            enable_artifacts=enable_artifacts)
 
 
-def compile_pyfile(pyfile, function_name, output_path, type_check, generate_pipelinerun=False, enable_artifacts=False):
+def compile_pyfile(pyfile, function_name, output_path, type_check, allow_telemetry,
+                   generate_pipelinerun=False, enable_artifacts=False):
   sys.path.insert(0, os.path.dirname(pyfile))
   try:
     filename = os.path.basename(pyfile)
     with kfp_compiler_main.PipelineCollectorContext() as pipeline_funcs:
       __import__(os.path.splitext(filename)[0])
-    _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, generate_pipelinerun, enable_artifacts)
+    _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check,
+                               allow_telemetry=allow_telemetry, generate_pipelinerun=generate_pipelinerun,
+                               enable_artifacts=enable_artifacts)
   finally:
     del sys.path[0]
 

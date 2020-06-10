@@ -20,6 +20,8 @@ metadata:
       number of times", "inputs": [{"name": "line", "type": "String"}, {"default":
       "10", "name": "count", "optional": true, "type": "Integer"}], "name": "Repeat
       line", "outputs": [{"name": "output_text", "type": "String"}]}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: repeat-line
 spec:
   steps:
@@ -61,6 +63,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/component_spec: '{"description": "Print text", "inputs":
       [{"name": "text"}], "name": "Print text"}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print-text
 spec:
   steps:
@@ -93,6 +97,8 @@ metadata:
     pipelines.kubeflow.org/component_spec: '{"inputs": [{"name": "source", "type":
       "String"}], "name": "Split text lines", "outputs": [{"name": "odd_lines", "type":
       "String"}, {"name": "even_lines", "type": "String"}]}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: split-text-lines
 spec:
   stepTemplate:
@@ -173,6 +179,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/component_spec: '{"description": "Print text", "inputs":
       [{"name": "text"}], "name": "Print text"}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print-text-2
 spec:
   steps:
@@ -204,6 +212,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/component_spec: '{"description": "Print text", "inputs":
       [{"name": "text"}], "name": "Print text"}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print-text-3
 spec:
   steps:
@@ -237,6 +247,8 @@ metadata:
       "optional": true, "type": "Integer"}, {"default": "10", "name": "count", "optional":
       true, "type": "Integer"}], "name": "Write numbers", "outputs": [{"name": "numbers",
       "type": "String"}]}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: write-numbers
 spec:
   steps:
@@ -274,6 +286,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/component_spec: '{"description": "Print text", "inputs":
       [{"name": "text"}], "name": "Print text"}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print-text-4
 spec:
   steps:
@@ -305,6 +319,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/component_spec: '{"inputs": [{"name": "numbers", "type":
       "String"}], "name": "Sum numbers", "outputs": [{"name": "Output", "type": "Integer"}]}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: sum-numbers
 spec:
   steps:
@@ -343,6 +359,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/component_spec: '{"description": "Print text", "inputs":
       [{"name": "text"}], "name": "Print text"}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print-text-5
 spec:
   steps:
@@ -374,6 +392,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/component_spec: '{"name": "Gen params", "outputs": [{"name":
       "Output", "type": "Integer"}]}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: gen-params
 spec:
   results:
@@ -409,6 +429,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/component_spec: '{"inputs": [{"name": "numbers_parm", "type":
       "Integer"}], "name": "Print params"}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print-params
 spec:
   params:

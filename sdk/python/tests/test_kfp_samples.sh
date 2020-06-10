@@ -63,7 +63,7 @@ while (( $# > 0 )); do
 done
 
 # define global variables
-KFP_VERSION=${KFP_VERSION:-0.5.0}
+KFP_VERSION=${KFP_VERSION:-0.5.1}
 KFP_REPO_URL="https://github.com/kubeflow/pipelines.git"
 SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)"
 PROJECT_DIR="${TRAVIS_BUILD_DIR:-$(cd "${SCRIPT_DIR%/sdk/python/tests}"; pwd)}"
@@ -259,7 +259,7 @@ fi
 # print overall success-failure-report summary
 SUCCESS=$( grep -c "SUCCESS" "${COMPILE_REPORT_FILE}" )
 TOTAL=$(   grep -c "SUCCESS\|FAILURE" "${COMPILE_REPORT_FILE}")
-SUCCESS_RATE=$(awk -v s="${SUCCESS}" -v t="${TOTAL}" 'BEGIN { printf("%.0f%\n", 100.0/t*s) }')
+SUCCESS_RATE=$(awk -v s="${SUCCESS}" -v t="${TOTAL}" 'BEGIN { printf("%.0f%%\n", 100.0/t*s) }')
 echo
 echo "Overall success rate: ${SUCCESS}/${TOTAL} = ${SUCCESS_RATE}"
 
