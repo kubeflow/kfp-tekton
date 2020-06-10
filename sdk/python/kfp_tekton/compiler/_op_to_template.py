@@ -224,7 +224,6 @@ def _process_parameters(processed_op: BaseOp,
         template['spec']['results'] = []
         copy_results_step = _get_base_step('copy-results')
         for name, path in processed_op.file_outputs.items():
-            name = name.replace('_', '-')  # replace '_' to '-' since tekton results doesn't support underscore
             template['spec']['results'].append({
                 'name': name,
                 'description': path
@@ -359,7 +358,7 @@ def _process_base_ops(op: BaseOp):
 
     # map param's (unsanitized pattern or serialized str pattern) -> input param var str
     map_to_tmpl_var = {
-        (param.pattern or str(param)): '$(inputs.params.%s)' % param.full_name.replace('_', '-')  # Tekton change
+        (param.pattern or str(param)): '$(inputs.params.%s)' % param.full_name  # Tekton change
         for param in op.inputs
     }
 

@@ -18,11 +18,11 @@ metadata:
   name: my-in-coop1
 spec:
   params:
-  - name: loop-item-param-subvar-A-a
-  - name: my-pipe-param
+  - name: loop-item-param-subvar-A_a
+  - name: my_pipe_param
   steps:
   - args:
-    - echo op1 $(inputs.params.loop-item-param-subvar-A-a) $(inputs.params.my-pipe-param)
+    - echo op1 $(inputs.params.loop-item-param-subvar-A_a) $(inputs.params.my_pipe_param)
     command:
     - sh
     - -c
@@ -35,10 +35,10 @@ metadata:
   name: my-in-coop2
 spec:
   params:
-  - name: loop-item-param-subvar-B-b
+  - name: loop-item-param-subvar-B_b
   steps:
   - args:
-    - echo op2 $(inputs.params.loop-item-param-subvar-B-b)
+    - echo op2 $(inputs.params.loop-item-param-subvar-B_b)
     command:
     - sh
     - -c
@@ -51,10 +51,10 @@ metadata:
   name: my-out-cop
 spec:
   params:
-  - name: my-pipe-param
+  - name: my_pipe_param
   steps:
   - args:
-    - echo $(inputs.params.my-pipe-param)
+    - echo $(inputs.params.my_pipe_param)
     command:
     - sh
     - -c
@@ -72,39 +72,39 @@ metadata:
 spec:
   params:
   - default: '10'
-    name: my-pipe-param
+    name: my_pipe_param
   tasks:
   - name: my-in-coop1-loop-item-0
     params:
-    - name: loop-item-param-subvar-A-a
+    - name: loop-item-param-subvar-A_a
       value: '1'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-in-coop1
   - name: my-in-coop1-loop-item-1
     params:
-    - name: loop-item-param-subvar-A-a
+    - name: loop-item-param-subvar-A_a
       value: '10'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-in-coop1
   - name: my-in-coop2-loop-item-0
     params:
-    - name: loop-item-param-subvar-B-b
+    - name: loop-item-param-subvar-B_b
       value: '2'
     taskRef:
       name: my-in-coop2
   - name: my-in-coop2-loop-item-1
     params:
-    - name: loop-item-param-subvar-B-b
+    - name: loop-item-param-subvar-B_b
       value: '20'
     taskRef:
       name: my-in-coop2
   - name: my-out-cop-loop-item-0
     params:
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-out-cop
