@@ -19,6 +19,7 @@ import json
 import re
 from typing import Optional, Set
 from . import _op_to_template
+from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
 
 def fix_big_data_passing(
@@ -96,11 +97,6 @@ def fix_big_data_passing(
     pipelinerun_templates = [
         template for template in workflow if template['kind'] == 'PipelineRun'
     ]
-
-    # we need to make the format in tekton unified for params, artifacts, outputs.
-    container_templates = unify_container_params(container_templates)
-    pipeline_templates = unify_pipeline_params(pipeline_templates)
-    pipelinerun_templates = unify_pipelinerun_params(pipelinerun_templates)
 
     # 1. Index the pipelines to understand how data is being passed and which
     #  inputs/outputs are connected to each other.
@@ -397,6 +393,20 @@ def fix_big_data_passing(
             if (template.get('metadata', {}).get('name'),
                 output_parameter['name']) in outputs_consumed_as_parameters
         ]
+        # tekton results doesn't support underscore
+        renamed_results_in_pipeline_task = set()
+        for task_result in spec['results']:
+            task_result_old_name = task_result.get('name')
+            task_result_new_name = sanitize_k8s_name(task_result_old_name)
+            if task_result_new_name != task_result_old_name:
+                task_result['name'] = task_result_new_name
+                renamed_results_in_pipeline_task.add(
+                    (task_result_old_name, task_result_new_name))
+        for renamed_result in renamed_results_in_pipeline_task:
+            # Change results.downloaded_resultOutput to results.downloaded-resultoutput
+            template['spec'] = replace_big_data_placeholder(
+                spec, 'results.%s' % renamed_result[0],
+                'results.%s' % renamed_result[1])
 
     # Remove pipeline task parameters unless they're used downstream
     for template in pipeline_templates:
@@ -412,50 +422,26 @@ def fix_big_data_passing(
                 or task['taskRef']['name'] in resource_template_names
             ]
 
+            # tekton results doesn't support underscore
+            for argument in task['params']:
+                argument_value = argument.get('value')
+                argument_placeholder_parts = deconstruct_tekton_single_placeholder(
+                    argument_value)
+                if argument_placeholder_parts and argument_placeholder_parts[
+                        0] == 'tasks' and argument_placeholder_parts[
+                            1] and argument_placeholder_parts[
+                                2] and argument_placeholder_parts[3]:
+                    argument['value'] = '$(tasks.%s.%s.%s)' % (
+                        argument_placeholder_parts[1],
+                        argument_placeholder_parts[2],
+                        sanitize_k8s_name(argument_placeholder_parts[3]))
+
     # Need to confirm:
     # I didn't find the use cases to support workflow parameter consumed as artifacts downstream in tekton.
     # Whether this case need to be supporting?
 
     clean_up_empty_workflow_structures(workflow)
     return workflow
-
-
-# Replaced '_' to '-' to make the format in tekton unified for params, artifacts, outputs.
-def unify_container_params(templates: list):
-    for template in templates:
-        template_params = template.get('spec', {}).get('params', [])
-        for template_param in template_params:
-            template_param['name'] = template_param.get('name').replace(
-                '_', '-')
-        template_artifacts = template.get('spec', {}).get('artifacts', [])
-        for template_artifact in template_artifacts:
-            template_artifact['raw']['data'] = template_artifact.get(
-                'raw', {}).get('data').replace('_', '-')
-    return templates
-
-
-def unify_pipeline_params(templates: list):
-    for template in templates:
-        tasks = template.get('spec', {}).get('tasks', [])
-        pipeline_params = template.get('spec', {}).get('params', [])
-        for pipeline_param in pipeline_params:
-            pipeline_param['name'] = pipeline_param.get('name').replace(
-                '_', '-')
-        for task in tasks:
-            task_params = task.get('params')
-            for task_param in task_params:
-                task_param['name'] = task_param.get('name').replace('_', '-')
-                task_param['value'] = task_param.get('value').replace('_', '-')
-    return templates
-
-
-def unify_pipelinerun_params(templates: list):
-    for template in templates:
-        pipelinerun_params = template.get('spec', {}).get('params', [])
-        for pipelinerun_param in pipelinerun_params:
-            pipelinerun_param['name'] = pipelinerun_param.get('name').replace(
-                '_', '-')
-    return templates
 
 
 def extract_all_tekton_placeholders(template: dict) -> Set[str]:

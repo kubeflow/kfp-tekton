@@ -31,7 +31,7 @@ def pipelineparams_pipeline(tag: str = 'latest', sleep_ms: int = 10):
         command=['sh', '-c'],
         arguments=['sleep %s; wget localhost:5678 -O /tmp/results.txt' % sleep_ms],
         sidecars=[echo],
-        file_outputs={'downloaded': '/tmp/results.txt'})
+        file_outputs={'downloaded_resultOutput': '/tmp/results.txt'})
 
     op2 = dsl.ContainerOp(
         name='echo',

@@ -471,8 +471,7 @@ class TektonCompiler(Compiler):
         else:
           for pp in op.inputs:
             if tp['name'] == pp.full_name:
-              # replace '_' to '-' since tekton results doesn't support underscore
-              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
+              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
               # Create input artifact tracking annotation
               if self.enable_artifacts:
                 input_annotation = self.input_artifacts.get(task['name'], [])
