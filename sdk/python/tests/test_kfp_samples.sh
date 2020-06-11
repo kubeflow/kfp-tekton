@@ -52,7 +52,7 @@ function help {
 # process command line parameters
 while (( $# > 0 )); do
   case "$1" in
-    -v|--kfp-version)          KFP_VERSION="$2";            shift 2 ;;  # KFP SDK version, default: 0.5.0
+    -v|--kfp-version)          KFP_VERSION="$2";            shift 2 ;;  # KFP SDK version, default: 0.5.1
     -a|--include-all-samples)  ALL_SAMPLES="TRUE";          shift 1 ;;  # Compile all DSL scripts in KFP repo
     -s|--dont-list-files)      SKIP_FILES="TRUE";           shift 1 ;;  # Suppress compile status for each DSL file
     -e|--print-error-details)  PRINT_ERRORS="TRUE";         shift 1 ;;  # Print summary of compilation errors
@@ -63,7 +63,7 @@ while (( $# > 0 )); do
 done
 
 # define global variables
-KFP_VERSION=${KFP_VERSION:-0.5.0}
+KFP_VERSION=${KFP_VERSION:-0.5.1}
 KFP_REPO_URL="https://github.com/kubeflow/pipelines.git"
 SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)"
 PROJECT_DIR="${TRAVIS_BUILD_DIR:-$(cd "${SCRIPT_DIR%/sdk/python/tests}"; pwd)}"
@@ -259,7 +259,7 @@ fi
 # print overall success-failure-report summary
 SUCCESS=$( grep -c "SUCCESS" "${COMPILE_REPORT_FILE}" )
 TOTAL=$(   grep -c "SUCCESS\|FAILURE" "${COMPILE_REPORT_FILE}")
-SUCCESS_RATE=$(awk -v s="${SUCCESS}" -v t="${TOTAL}" 'BEGIN { printf("%.0f%\n", 100.0/t*s) }')
+SUCCESS_RATE=$(awk -v s="${SUCCESS}" -v t="${TOTAL}" 'BEGIN { printf("%.0f%%\n", 100.0/t*s) }')
 echo
 echo "Overall success rate: ${SUCCESS}/${TOTAL} = ${SUCCESS_RATE}"
 

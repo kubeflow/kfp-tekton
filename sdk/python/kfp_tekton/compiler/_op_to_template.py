@@ -23,7 +23,6 @@ from typing import List, Text, Dict, Any
 from kfp import dsl
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name
 from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
-from kfp.dsl import ArtifactLocation
 from kfp.dsl._container_op import BaseOp
 
 from .. import tekton_api_version
@@ -394,12 +393,7 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
                                              for param in processed_op.outputs.values()), key=lambda x: x[0]))
 
         output_artifacts = [
-            convert_k8s_obj_to_json(
-                ArtifactLocation.create_artifact_for_s3(
-                    op.artifact_location,
-                    name=name,
-                    path=path,
-                    key='runs/$PIPELINERUN/$PIPELINETASK/' + name))
+            {'name': name, 'path': path}
             for name, path in output_artifact_paths.items()
         ] if enable_artifacts else []
 

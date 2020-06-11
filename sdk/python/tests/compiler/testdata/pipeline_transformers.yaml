@@ -19,6 +19,7 @@ metadata:
     hobby: football
   labels:
     hobby: football
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print
 spec:
   steps:
@@ -35,6 +36,7 @@ metadata:
     hobby: football
   labels:
     hobby: football
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print-2
 spec:
   steps:

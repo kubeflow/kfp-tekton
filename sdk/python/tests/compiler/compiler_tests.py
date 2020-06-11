@@ -227,13 +227,6 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.pipeline_transformers import transform_pipeline
     self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
 
-  def test_artifact_location_workflow(self):
-    """
-    Test compiling an artifact location workflow.
-    """
-    from .testdata.artifact_location import custom_artifact_location
-    self._test_pipeline_workflow(custom_artifact_location, 'artifact_location.yaml', enable_artifacts=True)
-
   def test_input_artifact_raw_value_workflow(self):
     """
     Test compiling an input artifact workflow.

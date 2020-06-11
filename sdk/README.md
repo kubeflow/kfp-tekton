@@ -28,7 +28,7 @@ to ensure you are set up properly to use the KFP-Tekton compiler.
 ## Project Prerequisites
 
  - Python: `3.7.5`
- - Kubeflow Pipelines: [`0.5.0`](https://github.com/kubeflow/pipelines/releases/tag/0.5.0)
+ - Kubeflow Pipelines: [`0.5.1`](https://github.com/kubeflow/pipelines/releases/tag/0.5.1)
  - Tekton: [`0.13.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.13.0)
  - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
 

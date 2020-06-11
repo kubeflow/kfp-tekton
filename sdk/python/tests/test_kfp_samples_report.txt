@@ -1,5 +1,4 @@
 SUCCESS: add_pod_env.py
-SUCCESS: artifact_location.py
 SUCCESS: basic.py
 SUCCESS: basic_no_decorator.py
 SUCCESS: coin.py
