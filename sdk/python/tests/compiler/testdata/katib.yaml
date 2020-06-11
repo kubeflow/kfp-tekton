@@ -29,7 +29,7 @@ spec:
   - name: parallelTrialCount
   results:
   - description: /output.txt
-    name: bestHyperParameter
+    name: besthyperparameter
   steps:
   - args:
     - --name
@@ -63,7 +63,7 @@ spec:
       ''parameterType'': ''categorical'', ''feasibleSpace'': {''list'': [''sgd'',
       ''adam'', ''ftrl'']}}]'
     - --outputFile
-    - $(results.bestHyperParameter.path)
+    - $(results.besthyperparameter.path)
     - --deleteAfterDone
     - $(inputs.params.deleteAfterDone)
     - --experimentTimeoutMinutes
@@ -141,6 +141,6 @@ spec:
   - name: my-out-cop
     params:
     - name: mnist-hpo-bestHyperParameter
-      value: $(tasks.mnist-hpo.results.bestHyperParameter)
+      value: $(tasks.mnist-hpo.results.besthyperparameter)
     taskRef:
       name: my-out-cop

@@ -19,6 +19,7 @@ import json
 import re
 from typing import Optional, Set
 from . import _op_to_template
+from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
 
 def fix_big_data_passing(
@@ -61,9 +62,9 @@ def fix_big_data_passing(
     3. Propagate the consumption information upstream to all inputs/outputs all
        the way up to the data producers.
     4. Convert the inputs, outputs based on how they're consumed downstream.
-    5. Use workspaces instead of result and params for bigger data passing.
-    6. Added workspaces to tasks, pipelines, pipelineruns, if the parmas is bigger data.
-    7. A PVC named with pipelinerun name will be created if bigger data passing, as workspaces need to use it.
+    5. Use workspaces instead of result and params for big data passing.
+    6. Added workspaces to tasks, pipelines, pipelineruns, if the parmas is big data.
+    7. A PVC named with pipelinerun name will be created if big data is passed, as workspaces need to use it.
        User need to define proper volume or enable dynamic volume provisioning refer to the link of:
        https://kubernetes.io/docs/concepts/storage/dynamic-provisioning
     """
@@ -72,7 +73,8 @@ def fix_big_data_passing(
     resource_templates = []
     for template in workflow:
         resource_params = [
-            param.get('name') for param in template.get('spec', {}).get('params', [])
+            param.get('name')
+            for param in template.get('spec', {}).get('params', [])
             if param.get('name') == 'action'
             or param.get('name') == 'success-condition'
         ]
@@ -84,9 +86,8 @@ def fix_big_data_passing(
         for template in resource_templates)
 
     container_templates = [
-        template for template in workflow
-        if template['kind'] == 'Task' and template.get('metadata', {}).get(
-            'name') not in resource_template_names
+        template for template in workflow if template['kind'] == 'Task' and
+        template.get('metadata', {}).get('name') not in resource_template_names
     ]
 
     pipeline_templates = [
@@ -96,11 +97,6 @@ def fix_big_data_passing(
     pipelinerun_templates = [
         template for template in workflow if template['kind'] == 'PipelineRun'
     ]
-
-    # we need to make the format in tekton unified for params, artifacts, outputs.
-    container_templates = unify_container_params(container_templates)
-    pipeline_templates = unify_pipeline_params(pipeline_templates)
-    pipelinerun_templates = unify_pipelinerun_params(pipelinerun_templates)
 
     # 1. Index the pipelines to understand how data is being passed and which
     #  inputs/outputs are connected to each other.
@@ -339,7 +335,7 @@ def fix_big_data_passing(
                                     outputs_consumed_as_parameters)
 
     # 4. Convert the inputs, outputs and arguments based on how they're consumed downstream.
-    # Add workspaces to pipeline and pipeline task_ref if bigger data passing
+    # Add workspaces to pipeline and pipeline task_ref if big data passing
     pipeline_workspaces = set()
     pipelinerun_workspaces = set()
     output_tasks_consumed_as_artifacts = {
@@ -353,24 +349,24 @@ def fix_big_data_passing(
             pipeline, inputs_consumed_as_artifacts,
             output_tasks_consumed_as_artifacts)
 
-    # Add workspaces to pipelinerun if bigger data passing
+    # Add workspaces to pipelinerun if big data passing
     # Check whether pipelinerun was generated, through error if not.
     if pipeline_workspaces:
         if not pipelinerun_templates:
             raise AssertionError(
-                'Found bigger data passing, please enable generate_pipelinerun for your complier'
+                'Found big data passing, please enable generate_pipelinerun for your complier'
             )
         for pipelinerun in pipelinerun_templates:
             pipeline, pipelinerun_workspaces = big_data_passing_pipelinerun(
                 pipelinerun, pipeline_workspaces)
 
-    # Use workspaces to tasks if bigger data passing instead of 'results', 'copy-inputs'
+    # Use workspaces to tasks if big data passing instead of 'results', 'copy-inputs'
     for task_template in container_templates:
-        task_template = big_data_passing_tasks(
-            task_template, inputs_consumed_as_artifacts,
-            outputs_consumed_as_artifacts)
+        task_template = big_data_passing_tasks(task_template,
+                                               inputs_consumed_as_artifacts,
+                                               outputs_consumed_as_artifacts)
 
-    # Create pvc for pipelinerun if bigger data passing.
+    # Create pvc for pipelinerun if big data passing.
     # As we used workspaces in tekton pipelines which depends on it.
     # User need to create PV manually, or enable dynamic volume provisioning, refer to the link of:
     # https://kubernetes.io/docs/concepts/storage/dynamic-provisioning
@@ -397,6 +393,20 @@ def fix_big_data_passing(
             if (template.get('metadata', {}).get('name'),
                 output_parameter['name']) in outputs_consumed_as_parameters
         ]
+        # tekton results doesn't support underscore
+        renamed_results_in_pipeline_task = set()
+        for task_result in spec['results']:
+            task_result_old_name = task_result.get('name')
+            task_result_new_name = sanitize_k8s_name(task_result_old_name)
+            if task_result_new_name != task_result_old_name:
+                task_result['name'] = task_result_new_name
+                renamed_results_in_pipeline_task.add(
+                    (task_result_old_name, task_result_new_name))
+        for renamed_result in renamed_results_in_pipeline_task:
+            # Change results.downloaded_resultOutput to results.downloaded-resultoutput
+            template['spec'] = replace_big_data_placeholder(
+                spec, 'results.%s' % renamed_result[0],
+                'results.%s' % renamed_result[1])
 
     # Remove pipeline task parameters unless they're used downstream
     for template in pipeline_templates:
@@ -412,50 +422,24 @@ def fix_big_data_passing(
                 or task['taskRef']['name'] in resource_template_names
             ]
 
+            # tekton results doesn't support underscore
+            for argument in task['params']:
+                argument_value = argument.get('value')
+                argument_placeholder_parts = deconstruct_tekton_single_placeholder(
+                    argument_value)
+                if len(argument_placeholder_parts) == 4 \
+                        and argument_placeholder_parts[0] == 'tasks':
+                    argument['value'] = '$(tasks.%s.%s.%s)' % (
+                        argument_placeholder_parts[1],
+                        argument_placeholder_parts[2],
+                        sanitize_k8s_name(argument_placeholder_parts[3]))
+
     # Need to confirm:
     # I didn't find the use cases to support workflow parameter consumed as artifacts downstream in tekton.
     # Whether this case need to be supporting?
 
     clean_up_empty_workflow_structures(workflow)
     return workflow
-
-
-# Replaced '_' to '-' to make the format in tekton unified for params, artifacts, outputs.
-def unify_container_params(templates: list):
-    for template in templates:
-        template_params = template.get('spec', {}).get('params', [])
-        for template_param in template_params:
-            template_param['name'] = template_param.get('name').replace(
-                '_', '-')
-        template_artifacts = template.get('spec', {}).get('artifacts', [])
-        for template_artifact in template_artifacts:
-            template_artifact['raw']['data'] = template_artifact.get(
-                'raw', {}).get('data').replace('_', '-')
-    return templates
-
-
-def unify_pipeline_params(templates: list):
-    for template in templates:
-        tasks = template.get('spec', {}).get('tasks', [])
-        pipeline_params = template.get('spec', {}).get('params', [])
-        for pipeline_param in pipeline_params:
-            pipeline_param['name'] = pipeline_param.get('name').replace(
-                '_', '-')
-        for task in tasks:
-            task_params = task.get('params')
-            for task_param in task_params:
-                task_param['name'] = task_param.get('name').replace('_', '-')
-                task_param['value'] = task_param.get('value').replace('_', '-')
-    return templates
-
-
-def unify_pipelinerun_params(templates: list):
-    for template in templates:
-        pipelinerun_params = template.get('spec', {}).get('params', [])
-        for pipelinerun_param in pipelinerun_params:
-            pipelinerun_param['name'] = pipelinerun_param.get('name').replace(
-                '_', '-')
-    return templates
 
 
 def extract_all_tekton_placeholders(template: dict) -> Set[str]:
@@ -474,12 +458,12 @@ def extract_tekton_input_parameter_name(s: str) -> Optional[str]:
 
 def deconstruct_tekton_single_placeholder(s: str) -> List[str]:
     if not re.fullmatch('\\$\\([-._a-zA-Z0-9]+\\)', s):
-        return None
+        return []
     return s.lstrip('$(').rstrip(')').split('.')
 
 
-def replace_bigger_data_placeholder(template: dict, old_str: str,
-                                    new_str: str) -> dict:
+def replace_big_data_placeholder(template: dict, old_str: str,
+                                 new_str: str) -> dict:
     template_str = json.dumps(template)
     template_str = template_str.replace(old_str, new_str)
     template = json.loads(template_str)
@@ -487,7 +471,7 @@ def replace_bigger_data_placeholder(template: dict, old_str: str,
 
 
 def big_data_passing_pipeline(template: dict, inputs_tasks: set(),
-                                 outputs_tasks: set):
+                              outputs_tasks: set):
     pipeline_workspaces = set()
     pipeline_name = template.get('metadata', {}).get('name')
     pipeline_spec = template.get('spec', {})
@@ -499,7 +483,7 @@ def big_data_passing_pipeline(template: dict, inputs_tasks: set(),
             if (task.get('taskRef',
                          {}).get('name'), input_name) in inputs_tasks:
                 pipeline_workspaces.add(pipeline_name)
-                # Add workspaces instead of parmas, for tasks of bigger data inputs
+                # Add workspaces instead of parmas, for tasks of big data inputs
                 if not task.setdefault('workspaces', []):
                     task['workspaces'].append({
                         "name": task.get('name'),
@@ -516,7 +500,7 @@ def big_data_passing_pipeline(template: dict, inputs_tasks: set(),
                     task.setdefault('runAfter', [])
                     task['runAfter'].append(dependency_task)
         if task.get('taskRef', {}).get('name') in outputs_tasks:
-            # Add workspaces for tasks of bigger data outputs
+            # Add workspaces for tasks of big data outputs
             if not task.setdefault('workspaces', []):
                 task['workspaces'].append({
                     "name": task.get('name'),
@@ -546,7 +530,7 @@ def big_data_passing_pipelinerun(pr: dict, pw: set):
 
 
 def big_data_passing_tasks(task: dict, inputs_tasks: set,
-                              outputs_tasks: set) -> dict:
+                           outputs_tasks: set) -> dict:
     task_name = task.get('metadata', {}).get('name')
     task_spec = task.get('spec', {})
     # Data passing for the task outputs
@@ -561,7 +545,7 @@ def big_data_passing_tasks(task: dict, inputs_tasks: set,
             placeholder = '$(results.%s.path)' % (task_output.get('name'))
             workspaces_parameter = '$(workspaces.%s.path)/%s-%s' % (
                 task_name, task_name, task_output.get('name'))
-            task['spec'] = replace_bigger_data_placeholder(
+            task['spec'] = replace_big_data_placeholder(
                 task['spec'], placeholder, workspaces_parameter)
 
     # Remove artifacts outputs from results
@@ -587,7 +571,7 @@ def big_data_passing_tasks(task: dict, inputs_tasks: set,
                     placeholder = task_artifact.get('path')
             workspaces_parameter = '$(workspaces.%s.path)/%s' % (
                 task_name, task_parma.get('name'))
-            task['spec'] = replace_bigger_data_placeholder(
+            task['spec'] = replace_big_data_placeholder(
                 task_spec, placeholder, workspaces_parameter)
     # Handle the case of input artifact without dependent the output of other tasks
     for task_artifact in task_artifacts:
@@ -608,7 +592,7 @@ def big_data_passing_tasks(task: dict, inputs_tasks: set,
     return task
 
 
-# Create pvc for pipelinerun if bigger data passing.
+# Create pvc for pipelinerun if using big data passing.
 # As we used workspaces in tekton pipelines which depends on it.
 # User need to create PV manually, or enable dynamic volume provisioning, refer to the link of:
 # https://kubernetes.io/docs/concepts/storage/dynamic-provisioning

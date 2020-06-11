@@ -31,7 +31,7 @@ spec:
     - --count
     - '5000'
     - --output-text
-    - $(workspaces.repeat-line.path)/repeat-line-output-text
+    - $(workspaces.repeat-line.path)/repeat-line-output_text
     command:
     - python3
     - -u
@@ -70,7 +70,7 @@ spec:
   steps:
   - args:
     - --text
-    - $(workspaces.print-text.path)/repeat-line-output-text
+    - $(workspaces.print-text.path)/repeat-line-output_text
     command:
     - python3
     - -u
@@ -137,9 +137,9 @@ spec:
     - --source
     - /tmp/inputs/source/data
     - --odd-lines
-    - $(workspaces.split-text-lines.path)/split-text-lines-odd-lines
+    - $(workspaces.split-text-lines.path)/split-text-lines-odd_lines
     - --even-lines
-    - $(workspaces.split-text-lines.path)/split-text-lines-even-lines
+    - $(workspaces.split-text-lines.path)/split-text-lines-even_lines
     command:
     - python3
     - -u
@@ -186,7 +186,7 @@ spec:
   steps:
   - args:
     - --text
-    - $(workspaces.print-text-2.path)/split-text-lines-odd-lines
+    - $(workspaces.print-text-2.path)/split-text-lines-odd_lines
     command:
     - python3
     - -u
@@ -219,7 +219,7 @@ spec:
   steps:
   - args:
     - --text
-    - $(workspaces.print-text-3.path)/split-text-lines-even-lines
+    - $(workspaces.print-text-3.path)/split-text-lines-even_lines
     command:
     - python3
     - -u

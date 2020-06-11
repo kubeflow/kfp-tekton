@@ -20,11 +20,11 @@ metadata:
   name: download
 spec:
   params:
-  - name: sleep-ms
+  - name: sleep_ms
   - name: tag
   results:
   - description: /tmp/results.txt
-    name: downloaded
+    name: downloaded-resultoutput
   sidecars:
   - args:
     - -text="hello world"
@@ -32,7 +32,7 @@ spec:
     name: echo
   steps:
   - args:
-    - sleep $(inputs.params.sleep-ms); wget localhost:5678 -O $(results.downloaded.path)
+    - sleep $(inputs.params.sleep_ms); wget localhost:5678 -O $(results.downloaded-resultoutput.path)
     command:
     - sh
     - -c
@@ -47,10 +47,10 @@ metadata:
   name: echo
 spec:
   params:
-  - name: download-downloaded
+  - name: download-downloaded_resultOutput
   steps:
   - args:
-    - echo $MSG $(inputs.params.download-downloaded)
+    - echo $MSG $(inputs.params.download-downloaded_resultOutput)
     command:
     - sh
     - -c
@@ -75,19 +75,19 @@ spec:
   - default: latest
     name: tag
   - default: '10'
-    name: sleep-ms
+    name: sleep_ms
   tasks:
   - name: download
     params:
-    - name: sleep-ms
-      value: $(params.sleep-ms)
+    - name: sleep_ms
+      value: $(params.sleep_ms)
     - name: tag
       value: $(params.tag)
     taskRef:
       name: download
   - name: echo
     params:
-    - name: download-downloaded
-      value: $(tasks.download.results.downloaded)
+    - name: download-downloaded_resultOutput
+      value: $(tasks.download.results.downloaded-resultoutput)
     taskRef:
       name: echo
