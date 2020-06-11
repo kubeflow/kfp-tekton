@@ -31,14 +31,58 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  name: flip
+spec:
+  params:
+  - name: forced-result1
+  results:
+  - description: /tmp/output
+    name: output
+  steps:
+  - args:
+    - python -c "import random; import sys; forced_result = '$(inputs.params.forced-result1)';
+      result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
+      if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
+      | tee $(results.output.path)
+    command:
+    - sh
+    - -c
+    image: python:alpine3.6
+    name: main
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: flip-again
+spec:
+  params:
+  - name: forced-result2
+  results:
+  - description: /tmp/output
+    name: output
+  steps:
+  - args:
+    - python -c "import random; import sys; forced_result = '$(inputs.params.forced-result2)';
+      result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
+      if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
+      | tee $(results.output.path)
+    command:
+    - sh
+    - -c
+    image: python:alpine3.6
+    name: main
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
   name: print1
 spec:
   params:
-  - name: flip2
+  - name: flip-again-output
   steps:
   - command:
     - echo
-    - $(inputs.params.flip2)
+    - $(inputs.params.flip-again-output)
     image: alpine:3.6
     name: main
 ---
@@ -48,11 +92,11 @@ metadata:
   name: print2
 spec:
   params:
-  - name: flip1
+  - name: flip-output
   steps:
   - command:
     - echo
-    - $(inputs.params.flip1)
+    - $(inputs.params.flip-output)
     image: alpine:3.6
     name: main
 ---
@@ -61,23 +105,44 @@ kind: Pipeline
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
-      "inputs": [{"default": "heads", "name": "flip1", "optional": true, "type": "String"},
-      {"default": "tails", "name": "flip2", "optional": true, "type": "String"}],
-      "name": "Flip Coin Example Pipeline"}'
+      "inputs": [{"default": "heads", "name": "forced_result1", "optional": true,
+      "type": "String"}, {"default": "tails", "name": "forced_result2", "optional":
+      true, "type": "String"}], "name": "Flip Coin Example Pipeline"}'
     sidecar.istio.io/inject: 'false'
   name: flip-coin-example-pipeline
 spec:
   params:
   - default: heads
-    name: flip1
+    name: forced-result1
   - default: tails
-    name: flip2
+    name: forced-result2
   tasks:
+  - name: flip
+    params:
+    - name: forced-result1
+      value: $(params.forced-result1)
+    taskRef:
+      name: flip
   - conditions:
     - conditionRef: super-condition
       params:
       - name: operand1
-        value: $(params.flip2)
+        value: $(tasks.flip.results.output)
+      - name: operand2
+        value: heads
+      - name: operator
+        value: ==
+    name: flip-again
+    params:
+    - name: forced-result2
+      value: $(params.forced-result2)
+    taskRef:
+      name: flip-again
+  - conditions:
+    - conditionRef: super-condition
+      params:
+      - name: operand1
+        value: $(tasks.flip-again.results.output)
       - name: operand2
         value: tails
       - name: operator
@@ -85,29 +150,29 @@ spec:
     - conditionRef: super-condition
       params:
       - name: operand1
-        value: $(params.flip1)
+        value: $(tasks.flip.results.output)
       - name: operand2
         value: heads
       - name: operator
         value: ==
     name: print1
     params:
-    - name: flip2
-      value: $(params.flip2)
+    - name: flip-again-output
+      value: $(tasks.flip-again.results.output)
     taskRef:
       name: print1
   - conditions:
     - conditionRef: super-condition
       params:
       - name: operand1
-        value: $(params.flip1)
+        value: $(tasks.flip.results.output)
       - name: operand2
         value: tails
       - name: operator
         value: ==
     name: print2
     params:
-    - name: flip1
-      value: $(params.flip1)
+    - name: flip-output
+      value: $(tasks.flip.results.output)
     taskRef:
       name: print2
