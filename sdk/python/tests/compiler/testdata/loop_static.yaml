@@ -72,9 +72,9 @@ kind: Pipeline
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
-      "optional": true}], "name": "my-pipeline"}'
+      "optional": true}], "name": "my-loop-pipeline"}'
     sidecar.istio.io/inject: 'false'
-  name: my-pipeline
+  name: my-loop-pipeline
 spec:
   params:
   - default: '10'
@@ -114,3 +114,17 @@ spec:
       value: $(params.my_pipe_param)
     taskRef:
       name: my-out-cop
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: my-loop-pipeline-run
+spec:
+  params:
+  - name: my_pipe_param
+    value: '10'
+  pipelineRef:
+    name: my-loop-pipeline

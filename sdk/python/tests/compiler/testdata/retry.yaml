@@ -67,3 +67,14 @@ spec:
     retries: 5
     taskRef:
       name: random-failure-2
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: retry-random-failures-run
+spec:
+  pipelineRef:
+    name: retry-random-failures

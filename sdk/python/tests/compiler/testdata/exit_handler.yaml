@@ -15,6 +15,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: echo
 spec:
   steps:
@@ -30,6 +32,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: gcs-download
 spec:
   params:
@@ -51,6 +55,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: echo-2
 spec:
   params:
@@ -71,7 +77,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Downloads a message and
       prints it. The exit handler will run after the pipeline finishes (successfully
-      or not).", "inputs": [{"default": "gs://ml-pipeline/shakespeare/shakespeare1.txt",
+      or not).", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
       "name": "url", "optional": true}], "name": "Exit Handler"}'
     sidecar.istio.io/inject: 'false'
   name: exit-handler
@@ -81,7 +87,7 @@ spec:
     taskRef:
       name: echo
   params:
-  - default: gs://ml-pipeline/shakespeare/shakespeare1.txt
+  - default: gs://ml-pipeline-playground/shakespeare1.txt
     name: url
   tasks:
   - name: gcs-download
@@ -96,3 +102,17 @@ spec:
       value: $(tasks.gcs-download.results.data)
     taskRef:
       name: echo-2
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: exit-handler-run
+spec:
+  params:
+  - name: url
+    value: gs://ml-pipeline-playground/shakespeare1.txt
+  pipelineRef:
+    name: exit-handler

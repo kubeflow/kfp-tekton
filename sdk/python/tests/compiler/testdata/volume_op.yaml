@@ -105,12 +105,14 @@ kind: Pipeline
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on VolumeOp
-      Usage.", "inputs": [{"name": "size"}], "name": "VolumeOp Basic"}'
+      Usage.", "inputs": [{"default": "10M", "name": "size", "optional": true}], "name":
+      "VolumeOp Basic"}'
     sidecar.istio.io/inject: 'false'
   name: volumeop-basic
 spec:
   params:
-  - name: size
+  - default: 10M
+    name: size
   tasks:
   - name: create-pvc
     params:
@@ -131,3 +133,17 @@ spec:
       value: $(tasks.create-pvc.results.name)
     taskRef:
       name: cop
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: volumeop-basic-run
+spec:
+  params:
+  - name: size
+    value: 10M
+  pipelineRef:
+    name: volumeop-basic

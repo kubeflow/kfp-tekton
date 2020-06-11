@@ -91,3 +91,19 @@ spec:
       value: $(tasks.download.results.downloaded-resultoutput)
     taskRef:
       name: echo
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: pipelineparams-run
+spec:
+  params:
+  - name: tag
+    value: latest
+  - name: sleep_ms
+    value: '10'
+  pipelineRef:
+    name: pipelineparams

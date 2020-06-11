@@ -1,0 +1,11 @@
+[create-pvc : main] time="2020-06-11T06:35:11Z" level=error msg="Initialize script failed: exit status 2:"
+[create-pvc : main] time="2020-06-11T06:35:11Z" level=info msg="kubectl create -f /tmp/manifest.yaml -o json"
+[create-pvc : main] time="2020-06-11T06:35:11Z" level=info msg=kubeflow/PersistentVolumeClaim./volumeop-basic-run-my-pvc
+[create-pvc : main] time="2020-06-11T06:35:11Z" level=info msg="Saving resource output parameters"
+[create-pvc : main] time="2020-06-11T06:35:11Z" level=info msg="[kubectl get PersistentVolumeClaim./volumeop-basic-run-my-pvc -o jsonpath={} -n kubeflow]"
+[create-pvc : main] time="2020-06-11T06:35:12Z" level=info msg="Saved output parameter: manifest, value: map[apiVersion:v1 kind:PersistentVolumeClaim metadata:map[annotations:map[ibm.io/provisioning-status:inprogress volume.beta.kubernetes.io/storage-provisioner:ibm.io/ibmc-block] creationTimestamp:2020-06-11T06:35:11Z finalizers:[kubernetes.io/pvc-protection] labels:map[region:us-south zone:sjc04] name:volumeop-basic-run-my-pvc namespace:kubeflow resourceVersion:9785247 selfLink:/api/v1/namespaces/kubeflow/persistentvolumeclaims/volumeop-basic-run-my-pvc uid:090e9661-48b7-413b-9e77-4f5a40fef7da] spec:map[accessModes:[ReadWriteOnce] resources:map[requests:map[storage:10M]] storageClassName:ibmc-block-gold volumeMode:Filesystem] status:map[phase:Pending]]"
+[create-pvc : main] time="2020-06-11T06:35:12Z" level=info msg="[kubectl get PersistentVolumeClaim./volumeop-basic-run-my-pvc -o jsonpath={.metadata.name} -n kubeflow]"
+[create-pvc : main] time="2020-06-11T06:35:12Z" level=info msg="Saved output parameter: name, value: volumeop-basic-run-my-pvc"
+[create-pvc : main] time="2020-06-11T06:35:12Z" level=info msg="[kubectl get PersistentVolumeClaim./volumeop-basic-run-my-pvc -o jsonpath={.status.capacity.storage} -n kubeflow]"
+[create-pvc : main] time="2020-06-11T06:35:12Z" level=info msg="Saved output parameter: size, value: "
+

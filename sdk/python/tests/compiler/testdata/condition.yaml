@@ -36,13 +36,13 @@ metadata:
   name: flip
 spec:
   params:
-  - name: forced-result1
+  - name: forced_result1
   results:
   - description: /tmp/output
     name: output
   steps:
   - args:
-    - python -c "import random; import sys; forced_result = '$(inputs.params.forced-result1)';
+    - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result1)';
       result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
       if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
       | tee $(results.output.path)
@@ -60,13 +60,13 @@ metadata:
   name: flip-again
 spec:
   params:
-  - name: forced-result2
+  - name: forced_result2
   results:
   - description: /tmp/output
     name: output
   steps:
   - args:
-    - python -c "import random; import sys; forced_result = '$(inputs.params.forced-result2)';
+    - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result2)';
       result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
       if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
       | tee $(results.output.path)
@@ -121,14 +121,14 @@ metadata:
 spec:
   params:
   - default: heads
-    name: forced-result1
+    name: forced_result1
   - default: tails
-    name: forced-result2
+    name: forced_result2
   tasks:
   - name: flip
     params:
-    - name: forced-result1
-      value: $(params.forced-result1)
+    - name: forced_result1
+      value: $(params.forced_result1)
     taskRef:
       name: flip
   - conditions:
@@ -142,8 +142,8 @@ spec:
         value: ==
     name: flip-again
     params:
-    - name: forced-result2
-      value: $(params.forced-result2)
+    - name: forced_result2
+      value: $(params.forced_result2)
     taskRef:
       name: flip-again
   - conditions:
@@ -184,3 +184,19 @@ spec:
       value: $(tasks.flip.results.output)
     taskRef:
       name: print2
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotation:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: flip-coin-example-pipeline-run
+spec:
+  params:
+  - name: forced_result1
+    value: heads
+  - name: forced_result2
+    value: tails
+  pipelineRef:
+    name: flip-coin-example-pipeline

@@ -214,15 +214,8 @@ def file_passing_pipelines():
     params_pipeline()
 
 
-# # General by kfp
-# if __name__ == '__main__':
-#     # Compiling the pipeline
-#     import kfp
-#     kfp.compiler.Compiler().compile(file_passing_pipelines, __file__ + '.yaml')
-
 # General by kfp-tekton
 if __name__ == '__main__':
-    # don't use top-level import of TektonCompiler to prevent monkey-patching KFP compiler when using KFP's dsl-compile
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(file_passing_pipelines,
                              __file__.replace('.py', '.yaml'),

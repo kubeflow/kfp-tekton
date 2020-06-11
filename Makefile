@@ -21,7 +21,7 @@ export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
 .PHONY: help
 help: ## Display the Make targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
+	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: venv
@@ -31,9 +31,21 @@ $(VENV)/bin/activate: sdk/python/setup.py
 	pip install -e sdk/python
 	@touch $(VENV)/bin/activate
 
-.PHONY: test
-test: venv ## Run compiler unit tests
+.PHONY: unit_test
+unit_test: venv ## Run compiler unit tests
 	@sdk/python/tests/run_tests.sh
+
+.PHONY: e2e_test
+e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
+	@which kubectl || (echo "Missing kubectl CLI" && exit 1)
+	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" && exit 1 || echo "${KUBECONFIG}"
+	@kubectl version --short || (echo "Failed to access kubernetes cluster" && exit 1)
+	@which tkn && tkn version || (echo "Missing tkn CLI" && exit 1)
+	@sdk/python/tests/run_e2e_tests.sh
+
+.PHONY: test
+test: unit_test e2e_test ## Run compiler unit tests and end-to-end tests
+	@echo OK
 
 .PHONY: report
 report: ## Report compilation status of KFP testdata DSL scripts

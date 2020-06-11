@@ -1,0 +1,17 @@
+[component-with-input-artifact-3 : copy-inputs] + echo -n 'Text from a file with hard-coded artifact value
+[component-with-input-artifact-3 : copy-inputs] '
+
+[component-with-inline-input-artifact : copy-inputs] + echo -n 'Constant artifact value'
+
+[component-with-input-artifact-3 : main] Text from a file with hard-coded artifact value
+
+[component-with-input-artifact : copy-inputs] + echo -n 'Constant artifact value'
+
+[component-with-input-artifact-2 : copy-inputs] + echo -n 'hard-coded artifact value'
+
+[component-with-inline-input-artifact : main] Constant artifact value
+
+[component-with-input-artifact : main] Constant artifact value
+
+[component-with-input-artifact-2 : main] hard-coded artifact value
+
