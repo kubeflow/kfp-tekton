@@ -499,6 +499,14 @@ class TektonCompiler(Compiler):
     # handle resourceOp cases in pipeline
     self._process_resourceOp(task_refs, pipeline)
 
+    # handle exit handler in pipeline
+    finally_tasks = []
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.is_exit_handler:
+        finally_tasks.append(task)
+    task_refs = [task for task in task_refs if not pipeline.ops.get(task['name']).is_exit_handler]
+
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
     op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
@@ -525,7 +533,8 @@ class TektonCompiler(Compiler):
       },
       'spec': {
         'params': params,
-        'tasks': task_refs
+        'tasks': task_refs,
+        'finally': finally_tasks
       }
     }
 
