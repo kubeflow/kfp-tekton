@@ -116,7 +116,7 @@ def fix_big_data_passing(
     for template in pipeline_templates:
         pipeline_template_name = template.get('metadata', {}).get('name')
         # Indexing task arguments
-        pipeline_tasks = template.get('spec', {})['tasks']
+        pipeline_tasks = template.get('spec', {}).get('tasks', []) + template.get('spec', {}).get('finally', [])
         task_name_to_template_name = {
             task['name']: task['taskRef']['name']
             for task in pipeline_tasks
@@ -205,7 +205,7 @@ def fix_big_data_passing(
     # TODO: loop params is not support for tekton yet, refer to https://github.com/kubeflow/kfp-tekton/issues/82
     for template in pipeline_templates:
         template_name = template.get('metadata', {}).get('name')
-        pipeline_tasks = template.get('spec', {})['tasks']
+        pipeline_tasks = template.get('spec', {}).get('tasks', []) + template.get('spec', {}).get('finally', [])
         task_name_to_template_name = {
             task['name']: task['taskRef']['name']
             for task in pipeline_tasks
@@ -400,7 +400,7 @@ def fix_big_data_passing(
 
     # Remove pipeline task parameters unless they're used downstream
     for template in pipeline_templates:
-        tasks = template.get('spec', {}).get('tasks', [])
+        tasks = template.get('spec', {}).get('tasks', []) + template.get('spec', {}).get('finally', [])
         for task in tasks:
             task['params'] = [
                 parameter_argument
@@ -491,7 +491,7 @@ def big_data_passing_pipeline(template: dict, inputs_tasks: set(),
     pipeline_workspaces = set()
     pipeline_name = template.get('metadata', {}).get('name')
     pipeline_spec = template.get('spec', {})
-    tasks = pipeline_spec.get('tasks', [])
+    tasks = pipeline_spec.get('tasks', []) + pipeline_spec.get('finally', [])
     for task in tasks:
         parameter_arguments = task.get('params', [])
         for parameter_argument in parameter_arguments:
@@ -667,8 +667,10 @@ def clean_up_empty_workflow_structures(workflow: list):
         if not template_spec:
             del template['spec']
         if template['kind'] == 'Pipeline':
-            for task in template['spec'].get('tasks', []):
+            for task in template['spec'].get('tasks', []) + template['spec'].get('finally', []):
                 if not task.setdefault('params', []):
                     del task['params']
                 if not task.setdefault('artifacts', []):
                     del task['artifacts']
+            if not template.get('spec', {}).setdefault('finally', []):
+                del template.get('spec', {})['finally']

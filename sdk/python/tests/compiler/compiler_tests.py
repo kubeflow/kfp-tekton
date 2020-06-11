@@ -275,6 +275,13 @@ class TestTektonCompiler(unittest.TestCase):
     }
     self._test_workflow_without_decorator('basic_no_decorator.yaml', parameter_dict)
 
+  def test_exit_handler_workflow(self):
+    """
+    Test compiling a exit handler workflow.
+    """
+    from .testdata.exit_handler import download_and_print
+    self._test_pipeline_workflow(download_and_print, 'exit_handler.yaml')
+
   def test_compose(self):
     """
     Test compiling a simple workflow, and a bigger one composed from a simple one.

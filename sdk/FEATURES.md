@@ -189,9 +189,9 @@ kubectl get pods will show a 'Completed' pod when a sidecar exits successfully b
 
 ### Exit Handler
 
-[Tracking pull request #2437][exitHandler]
-
 An exit handler is a component that always executes, irrespective of success or failure, at the end of the pipeline.
+
+The finally syntax is now supported in tekton preview mode, the final tasks can be specified but not executed yet, implementation and execution of final tasks are tracked in separate PR [Tracking pull request #2661][exitHandler]
 
 
 <!-- Issue and PR links-->
@@ -199,4 +199,4 @@ An exit handler is a component that always executes, irrespective of success or 
 [ParallelFor]: https://github.com/tektoncd/pipeline/issues/2050
 [VarSub]: https://github.com/tektoncd/pipeline/issues/1522
 [Sidecars]: https://github.com/tektoncd/pipeline/issues/1347
-[exitHandler]: https://github.com/tektoncd/pipeline/pull/2437
+[exitHandler]: https://github.com/tektoncd/pipeline/pull/2661

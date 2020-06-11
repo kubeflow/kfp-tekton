@@ -84,14 +84,15 @@ metadata:
     sidecar.istio.io/inject: 'false'
   name: save-most-frequent
 spec:
+  finally:
+  - name: exiting
+    taskRef:
+      name: exiting
   params:
   - name: message
   - default: default_output
     name: outputpath
   tasks:
-  - name: exiting
-    taskRef:
-      name: exiting
   - name: get-frequent
     params:
     - name: message
