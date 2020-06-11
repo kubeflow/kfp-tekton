@@ -23,7 +23,7 @@ class FlipCoinOp(dsl.ContainerOp):
             image='python:alpine3.6',
             command=['sh', '-c'],
             arguments=['python -c "import random; import sys; forced_result = \''+forced_result+'\'; '
-                       'result = \'heads\' if random.randint(0,1) == 0 else \'tails\';'
+                       'result = \'heads\' if random.randint(0,1) == 0 else \'tails\'; '
                        'print(forced_result) if (forced_result == \'heads\' or forced_result == \'tails\') else print(result)"'
                        ' | tee /tmp/output'],
             file_outputs={'output': '/tmp/output'})
