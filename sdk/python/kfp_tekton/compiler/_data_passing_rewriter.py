@@ -542,7 +542,7 @@ def big_data_passing_tasks(task: dict, inputs_tasks: set,
             # Replace the args for the outputs in the task_spec
             # $(results.task_output.get('name').path)  -->
             # $(workspaces.task_name.path)/task_name-task_output.get('name')
-            placeholder = '$(results.%s.path)' % (task_output.get('name'))
+            placeholder = '$(results.%s.path)' % (sanitize_k8s_name(task_output.get('name')))
             workspaces_parameter = '$(workspaces.%s.path)/%s-%s' % (
                 task_name, task_name, task_output.get('name'))
             task['spec'] = replace_big_data_placeholder(

@@ -315,7 +315,7 @@ class TektonCompiler(Compiler):
       'kind': 'PipelineRun',
       'metadata': {
         'name': sanitize_k8s_name(pipeline_template['metadata']['name'], suffix_space=4) + '-run',
-        'annotation': {
+        'annotations': {
           'tekton.dev/output_artifacts': json.dumps(self.output_artifacts),
           'tekton.dev/input_artifacts': json.dumps(self.input_artifacts)
         }

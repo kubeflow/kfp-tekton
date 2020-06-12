@@ -234,7 +234,7 @@ def _process_parameters(processed_op: BaseOp,
                     commands = []
                     for c in s['command']:
                         if path in c:
-                            c = c.replace(path, '$(results.%s.path)' % name)
+                            c = c.replace(path, '$(results.%s.path)' % sanitize_k8s_name(name))
                             need_copy_step = False
                         commands.append(c)
                     s['command'] = commands
@@ -242,7 +242,7 @@ def _process_parameters(processed_op: BaseOp,
                     args = []
                     for a in s['args']:
                         if path in a:
-                            a = a.replace(path, '$(results.%s.path)' % name)
+                            a = a.replace(path, '$(results.%s.path)' % sanitize_k8s_name(name))
                             need_copy_step = False
                         args.append(a)
                     s['args'] = args
@@ -253,7 +253,7 @@ def _process_parameters(processed_op: BaseOp,
                 if mount_path not in mounted_param_paths:
                     _add_mount_path(name, path, mount_path, volume_mount_step_template, volume_template, mounted_param_paths)
             # Record what artifacts are moved to result parameters.
-            parameter_name = (processed_op.name + '-' + name).replace(' ', '-').replace('_', '-')
+            parameter_name = sanitize_k8s_name(processed_op.name + '-' + name, allow_capital_underscore=True)
             replaced_param_list.append(parameter_name)
             artifact_to_result_mapping[parameter_name] = name
         return copy_results_step
@@ -318,15 +318,16 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
         }
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
+            artifact_name = artifact_to_result_mapping[artifact['name']]
             if artifact['name'] in replaced_param_list:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'tar -cvzf %s.tgz $(results.%s.path)\n' % (artifact['name'], artifact_to_result_mapping[artifact['name']]) + \
-                    'mc cp %s.tgz storage/%s/runs/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact['name'],
-                                                                                     bucket, artifact['name'])
+                    'tar -cvzf %s.tgz $(results.%s.path)\n' % (artifact_name, sanitize_k8s_name(artifact_name)) + \
+                    'mc cp %s.tgz storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact_name,
+                                                                                     bucket, artifact_name)
             else:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'tar -cvzf %s.tgz %s\n' % (artifact['name'], artifact['path']) + \
-                    'mc cp %s.tgz storage/%s/runs/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact['name'], bucket, artifact['name'])
+                    'tar -cvzf %s.tgz %s\n' % (artifact_name, artifact['path']) + \
+                    'mc cp %s.tgz storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact_name, bucket, artifact_name)
                 if artifact['path'].rsplit("/", 1)[0] not in mounted_artifact_paths:
                     volume_mount_step_template.append({
                         'name': sanitize_k8s_name(artifact['name']), 'mountPath': artifact['path'].rsplit("/", 1)[0]
