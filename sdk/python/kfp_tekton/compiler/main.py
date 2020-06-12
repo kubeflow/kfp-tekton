@@ -44,6 +44,9 @@ def parse_arguments():
   parser.add_argument('--disable-type-check',
                       action='store_true',
                       help='disable the type check, default is enabled.')
+  parser.add_argument('--disable-telemetry',
+                      action='store_true',
+                      help='disable adding telemetry labels, default is enabled.')
   parser.add_argument('--generate-pipelinerun',
                       action='store_true',
                       help='enable pipelinerun yaml generation')
@@ -98,7 +101,8 @@ def main():
         (args.py is not None and args.package is not None)):
         raise ValueError('Either --py or --package is needed but not both.')
     if args.py:
-        compile_pyfile(args.py, args.function, args.output, not args.disable_type_check, args.generate_pipelinerun, args.enable_artifacts)
+        compile_pyfile(args.py, args.function, args.output, not args.disable_type_check, not args.disable_telemetry,
+                       args.generate_pipelinerun, args.enable_artifacts)
     else:
         if args.namespace is None:
             raise ValueError('--namespace is required for compiling packages.')

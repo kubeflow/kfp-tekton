@@ -103,6 +103,8 @@ In order to utilize the latest features and functions of the `kfp-tekton` compil
 nightly built or build it from the [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline) branch. 
 Features that require special builds different from the 'Tested Version' will be listed below.
 
+- [Exit Handler](/sdk/FEATURES.md#exit-handler)
+
 ## Additional Features
 
 ### 1. Compile Kubeflow Pipelines as a Tekton PipelineRun
@@ -147,23 +149,38 @@ to your `dsl-compile-tekton` commands. Then, run the pipeline in the same namesp
 Kubeflow Pipelines (typically `kubeflow`) by using the `-n` flag. e.g.:
 
 ```shell
-dsl-compile-tekton --py sdk/python/tests/compiler/testdata/artifact_location.py --output pipeline.yaml --enable-artifacts
+dsl-compile-tekton --py sdk/python/tests/compiler/testdata/parallel_join.py --output pipeline.yaml --enable-artifacts
 kubectl apply -f pipeline.yaml -n kubeflow
-tkn pipeline start custom-artifact-location-pipeline --showlog -n kubeflow
+tkn pipeline start parallel-pipeline --showlog -n kubeflow
 ```
 
 You should see the below outputs saying the artifacts are stored in the object storage you specify.
 ```
-? Value for param `secret_name` of type `string`? (Default is `mlpipeline-minio-artifact`) mlpipeline-minio-artifact
-? Value for param `tag` of type `string`? (Default is `1.31.0`) 1.31.0
-? Value for param `namespace` of type `string`? (Default is `kubeflow`) kubeflow
-? Value for param `bucket` of type `string`? (Default is `mlpipeline`) mlpipeline
-Pipelinerun started: custom-artifact-location-pipeline-run-b87bq
-Waiting for logs to be available...
+? Value for param `url1` of type `string`? (Default is `gs://ml-pipeline-playground/shakespeare1.txt`) gs://ml-pipeline-playground/shakespeare1.txt
+? Value for param `url2` of type `string`? (Default is `gs://ml-pipeline-playground/shakespeare2.txt`) gs://ml-pipeline-playground/shakespeare2.txt
 
-[generate-output : copy-artifacts] Added `storage` successfully.
-[generate-output : copy-artifacts] `/tekton/results/output` -> `storage/mlpipeline/runs/custom-artifact-location-pipeline-run-b87bq/custom-artifact-location-pipeline-run-b87bq-generate-outp-7rnxv/output.txt`
-[generate-output : copy-artifacts] Total: 0 B, Transferred: 6 B, Speed: 504 B/s
+Pipelinerun started: parallel-pipeline-run-g87bs
+Waiting for logs to be available...
+[gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+[gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+
+[gcs-download : copy-artifacts] Added `storage` successfully.
+[gcs-download : copy-artifacts] tar: removing leading '/' from member names
+[gcs-download : copy-artifacts] tekton/results/data
+[gcs-download : copy-artifacts] `gcs-download-data.tgz` -> `storage/mlpipeline/runs/parallel-pipeline-run-g87bs/gcs-download/gcs-download-data.tgz`
+[gcs-download : copy-artifacts] Total: 0 B, Transferred: 196 B, Speed: 422 B/s
+
+[gcs-download-2 : copy-artifacts] Added `storage` successfully.
+[gcs-download-2 : copy-artifacts] tekton/results/data
+[gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
+[gcs-download-2 : copy-artifacts] `gcs-download-2-data.tgz` -> `storage/mlpipeline/runs/parallel-pipeline-run-g87bs/gcs-download-2/gcs-download-2-data.tgz`
+[gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 204 B, Speed: 328 B/s
+
+
+[echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+[echo : main]
+[echo : main] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+[echo : main]
 ```
 
 
