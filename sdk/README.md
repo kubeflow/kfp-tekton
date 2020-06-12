@@ -162,20 +162,20 @@ You should see the below outputs saying the artifacts are stored in the object s
 Pipelinerun started: parallel-pipeline-run-g87bs
 Waiting for logs to be available...
 [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-[gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
 
 [gcs-download : copy-artifacts] Added `storage` successfully.
-[gcs-download : copy-artifacts] tar: removing leading '/' from member names
 [gcs-download : copy-artifacts] tekton/results/data
-[gcs-download : copy-artifacts] `gcs-download-data.tgz` -> `storage/mlpipeline/runs/parallel-pipeline-run-g87bs/gcs-download/gcs-download-data.tgz`
-[gcs-download : copy-artifacts] Total: 0 B, Transferred: 196 B, Speed: 422 B/s
+[gcs-download : copy-artifacts] tar: removing leading '/' from member names
+[gcs-download : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-run/gcs-download/data.tgz`
+[gcs-download : copy-artifacts] Total: 0 B, Transferred: 194 B, Speed: 12.07 KiB/s
+
+[gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
 
 [gcs-download-2 : copy-artifacts] Added `storage` successfully.
-[gcs-download-2 : copy-artifacts] tekton/results/data
 [gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
-[gcs-download-2 : copy-artifacts] `gcs-download-2-data.tgz` -> `storage/mlpipeline/runs/parallel-pipeline-run-g87bs/gcs-download-2/gcs-download-2-data.tgz`
-[gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 204 B, Speed: 328 B/s
-
+[gcs-download-2 : copy-artifacts] tekton/results/data
+[gcs-download-2 : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-run/gcs-download-2/data.tgz`
+[gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 204 B, Speed: 22.86 KiB/s
 
 [echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 [echo : main]
