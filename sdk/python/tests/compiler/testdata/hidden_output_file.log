@@ -1,7 +1,7 @@
-[echo : main] Text 1: hello world
-[echo : main] 
-
 [download-file : main] hello world
 
 [download-file : copy-results] + cp /tmp/results.txt /tekton/results/data
+
+[echo : main] Text 1: hello world
+[echo : main] 
 

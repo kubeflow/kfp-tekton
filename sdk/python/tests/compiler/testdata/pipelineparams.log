@@ -1,8 +1,8 @@
-[echo : main] pipelineParams: hello world
 [download : main] Connecting to localhost:5678 (127.0.0.1:5678)
 [download : main] saving to '/tekton/results/downloaded-resultoutput'
 [download : main] downloaded-resultout 100% |********************************|    14  0:00:00 ETA
 [download : main] '/tekton/results/downloaded-resultoutput' saved
+[echo : main] pipelineParams: hello world
 
 
 
