@@ -1,7 +1,7 @@
-[print1 : main] tails
-[print1 : main] 
 [flip : main] heads
 
-
 [flip-again : main] tails
+
+[print1 : main] tails
+[print1 : main] 
 

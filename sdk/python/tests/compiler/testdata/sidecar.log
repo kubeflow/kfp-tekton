@@ -2,7 +2,10 @@
 [download : main] saving to '/tekton/results/downloaded'
 [download : main] downloaded           100% |********************************|    14  0:00:00 ETA
 [download : main] '/tekton/results/downloaded' saved
-[echo : main] hello world
 
+[download : sidecar-echo] 2020/06/13 05:18:51 Server is listening on :5678
+[download : sidecar-echo] 2020/06/13 05:19:02 localhost:5678 127.0.0.1:47654 "GET / HTTP/1.1" 200 14 "Wget" 15.147µs
+[download : sidecar-echo] 2020/06/13 05:19:04 [ERR] Unknown signal terminated
+[echo : main] hello world
 
 
