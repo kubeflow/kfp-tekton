@@ -33,10 +33,6 @@ spec:
         value: create
       - name: output
         value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n"
-      - name: success-condition
-        value: status.succeeded > 0
-      - name: failure-condition
-        value: status.failed > 0
       - name: set-ownerreference
         value: 'false'
       taskSpec:
