@@ -58,14 +58,17 @@ spec:
           description: Merge strategy when using action patch
           name: merge-strategy
           type: string
-        - description: An express to retrieval data from resource.
+        - default: ''
+          description: An express to retrieval data from resource.
           name: output
           type: string
-        - description: A label selector express to decide if the action on resource
+        - default: ''
+          description: A label selector express to decide if the action on resource
             is success.
           name: success-condition
           type: string
-        - description: A label selector express to decide if the action on resource
+        - default: ''
+          description: A label selector express to decide if the action on resource
             is failure.
           name: failure-condition
           type: string
@@ -103,6 +106,7 @@ spec:
                 fieldPath: metadata.labels['tekton.dev/pipelineRun']
           image: $(params.image)
           name: main
+          resources: {}
     - name: cop
       params:
       - name: create-pvc-name
