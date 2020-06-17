@@ -58,8 +58,8 @@ def resourceop_basic():
         name='test-step',
         k8s_resource=json.loads(_CONTAINER_MANIFEST),
         action='create',
-        success_condition='status.succeeded > 0',
-        failure_condition='status.failed > 0'
+        # success_condition='status.succeeded > 0',
+        # failure_condition='status.failed > 0'
     )
 
 

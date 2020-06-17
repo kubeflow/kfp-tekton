@@ -25,8 +25,8 @@ def volumeop_basic(size="10M"):
         resource_name="my-pvc",
         modes=dsl.VOLUME_MODE_RWO,
         size=size,
-        success_condition="status.phase = Bound",
-        failure_condition="status.phase = Failed"
+        # success_condition="status.phase = Bound",
+        # failure_condition="status.phase = Failed"
     )
 
     cop = dsl.ContainerOp(

@@ -41,10 +41,6 @@ spec:
       - name: output
         value: "- name: manifest\n  valueFrom: '{}'\n- name: name\n  valueFrom: '{.metadata.name}'\n\
           - name: size\n  valueFrom: '{.status.capacity.storage}'\n"
-      - name: success-condition
-        value: status.phase = Bound
-      - name: failure-condition
-        value: status.phase = Failed
       - name: set-ownerreference
         value: 'false'
       - name: size
