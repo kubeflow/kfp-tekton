@@ -65,3 +65,13 @@ check_license: ## Check for license header in source files
 		grep -H -E -o -c  'Copyright 20.* kubeflow.org'  {} \; | \
 		grep -E ':0$$' | sed 's/..$$//' | \
 		grep . && echo "The files listed above are missing the license header" && exit 1 || echo "OK"
+
+.PHONY: build
+build: ## Create GO vendor directories with all dependencies
+	go mod vendor
+	# Extract go licenses into a single file. This assume licext is install globally through
+	# npm install -g license-extractor
+	# See https://github.com/arei/license-extractor
+	licext --mode merge --source vendor/ --target third_party/license.txt --overwrite
+	# Delete vendor directory
+	rm -rf vendor

@@ -29,8 +29,19 @@ again.
 
 ## Development Guidelines
 
-Please take a look at the [KFP-Tekton Developer Guide](sdk/python/README.md) for details about how to make code 
-contributions to the KFP-Tekton project.
+Please take a look at the [KFP-Tekton Developer Guide](sdk/python/README.md) for
+details about how to make code contributions to the KFP-Tekton project.
+
+## Coding style
+
+The Python part of the project will follow [Google Python style guide](http://google.github.io/styleguide/pyguide.html).
+We provide a [yapf](https://github.com/google/yapf) configuration file to help
+contributors auto-format their code to adopt the Google Python style. Also, it
+is encouraged to lint python docstrings by [docformatter](https://github.com/myint/docformatter).
+
+The frontend part of the project uses [prettier](https://prettier.io/) for
+formatting, read [frontend/README.md#code-style](frontend/README.md#code-style)
+for more details.
 
 ## Code reviews
 
@@ -39,7 +50,8 @@ use GitHub pull requests for this purpose. Consult
 [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
 
-The following should be viewed as Best Practices unless you know better ones (please submit a guidelines PR).
+The following should be viewed as Best Practices unless you know better ones
+(please submit a guidelines PR).
 
 | Practice | Rationale |
 | -------- | --------- |
