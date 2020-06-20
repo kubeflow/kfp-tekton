@@ -1,11 +1,10 @@
 # Compiler for Tekton
 
-There is an [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/) 
-for `Kubeflow Pipeline` for end users to define end to end machine learning and data pipelines.
-The output of the KFP SDK compiler is YAML for [Argo](https://github.com/argoproj/argo).
-
-We are updating the `Compiler` of the KFP SDK to generate `Tekton` YAML. Please go through the steps below
-to ensure you are set up properly to use the KFP-Tekton compiler.
+The Kubeflow Pipelines [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/) 
+allows data scientists to define end-to-end machine learning and data pipelines.
+The output of the Kubeflow Pipelines SDK compiler is YAML for [Argo](https://github.com/argoproj/argo).
+We are extending the compiler of the Kubeflow Pipelines SDK to generate YAML
+for [Tekton](https://github.com/tektoncd/pipeline).
 
 
 ## Table of Contents
@@ -15,6 +14,9 @@ to ensure you are set up properly to use the KFP-Tekton compiler.
   - [Project Prerequisites](#project-prerequisites)
   - [Tested Pipelines](#tested-pipelines)
   - [How to use the KFP-Tekton Compiler](#how-to-use-the-kfp-tekton-compiler)
+    - [Installation](#installation)
+    - [Compiling a Kubeflow Pipelines DSL script](#compiling-a-kubeflow-pipelines-dsl-script)
+    - [Running the compiled pipeline on a Tekton cluster](#running-the-compiled-pipeline-on-a-tekton-cluster)
   - [Build Tekton from Master](#build-tekton-from-master)
   - [Additional Features](#additional-features)
     - [1. Compile Kubeflow Pipelines as a Tekton PipelineRun](#1-compile-kubeflow-pipelines-as-a-tekton-pipelinerun)
@@ -38,94 +40,135 @@ and take note of some important caveats.
 
 ## Tested Pipelines
 
-We are [testing the compiler](/sdk/python/tests/README.md) on more than 80 pipelines found in the Kubeflow Pipelines
-repository, specifically the pipelines in KFP compiler `testdata` folder, the KFP core samples and the samples
-contributed by third parties.
+We are [testing the compiler](/sdk/python/tests/README.md) on more than 80 pipelines
+found in the Kubeflow Pipelines repository, specifically the pipelines in KFP compiler
+`testdata` folder, the KFP core samples and the samples contributed by third parties.
 
-A report card of Kubeflow Pipelines samples that are currently supported by the `kfp-tekton` compiler can be found
-[here](/sdk/python/tests/test_kfp_samples_report.txt). As you work on a PR that enables another of the missing features
-please ensure that your code changes are improving the number of successfully compiled KFP pipeline samples.
+A report card of Kubeflow Pipelines samples that are currently supported by the `kfp-tekton`
+compiler can be found [here](/sdk/python/tests/test_kfp_samples_report.txt).
+If you work on a PR that enables another of the missing features please ensure that
+your code changes are improving the number of successfully compiled KFP pipeline samples.
 
 
 ## How to use the KFP-Tekton Compiler
 
+### Installation
+
+You can install the latest release of the `kfp-tekton` compiler from
+[PyPi](https://pypi.org/project/kfp-tekton/). We recommend to create a Python
+virtual environment first:
+
+    python3 -m venv .venv
+    source .venv/bin/activate
+    
+    pip install kfp-tekton
+    
+Alternatively you can install the latest version of the `kfp-tekton` compiler
+from source by cloning the repository [https://github.com/kubeflow/kfp-tekton](https://github.com/kubeflow/kfp-tekton):
+
 1. Clone the `kfp-tekton` repo:
 
-    - `git clone https://github.com/kubeflow/kfp-tekton.git`
-    - `cd kfp-tekton`
+   ```
+   git clone https://github.com/kubeflow/kfp-tekton.git
+   cd kfp-tekton
+   ```
 
 2. Setup Python environment with Conda or a Python virtual environment:
 
-    - `python3 -m venv .venv`
-    - `source .venv/bin/activate`
+   ```
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
 
 3. Build the compiler:
 
-    - `pip install -e sdk/python`
+   ```
+   pip install -e sdk/python
+   ```
 
 4. Run the compiler tests (optional):
 
-    - `make test`
+   ```
+   make test
+   ```
 
-5. Compile the sample pipeline:
- 
-    - `dsl-compile-tekton --py sdk/python/tests/compiler/testdata/parallel_join.py --output pipeline.yaml`
+
+### Compiling a Kubeflow Pipelines DSL Script
+
+The `kfp-tekton` Python package comes with the `dsl-compile-tekton` command line
+executable, which should be available in your terminal shell environment after
+installing the `kfp-tekton` Python package.
+
+If you cloned the `kfp-tekton` project, you can find example pipelines in the
+`samples` folder or under `sdk/python/tests/compiler/testdata` folder.
+
+    dsl-compile-tekton \
+        --py sdk/python/tests/compiler/testdata/parallel_join.py \
+        --output pipeline.yaml
+
+
+### Running the Pipeline on a Tekton Cluster
+
+After compiling the `sdk/python/tests/compiler/testdata/parallel_join.py` DSL script
+in the step above, we need to deploy the generated Tekton YAML to our Kubernetes
+cluster with `kubectl` and start a pipeline run with `tkn`:
+
+    kubectl apply -f pipeline.yaml
+    tkn pipeline start parallel-pipeline --showlog
+
+A prompt should be asking for the pipeline arguments. Press `enter` and
+accept the defaults:
+
+    ? Value for param `url1` of type `string`? (Default is `gs://ml-pipeline-playground/shakespeare1.txt`) gs://ml-pipeline-playground/shakespeare1.txt
+    ? Value for param `url2` of type `string`? (Default is `gs://ml-pipeline-playground/shakespeare2.txt`) gs://ml-pipeline-playground/shakespeare2.txt
     
-6. Run the sample pipeline on a Tekton cluster:
-
-    - `kubectl apply -f pipeline.yaml`
-    - `tkn pipeline start parallel-pipeline --showlog`
-
-   You should see messages asking for default URLs like below. Press `enter` and take the defaults
+    Pipelinerun started: parallel-pipeline-run-th4x6
    
-    ```bash
-      ? Value for param `url1` of type `string`? (Default  is `gs://ml-pipeline-playground/shakespeare1.txt`) gs://ml-pipeline-playground/shakespeare1.txt
-      ? Value for param `url2` of type `string`? (Default is `gs://ml-pipeline-playground/shakespeare2.txt`) gs://ml-pipeline-playground/shakespeare2.txt
- 
-      Pipelinerun started: parallel-pipeline-run-th4x6
-    ```
-   
-   We will see the logs of the running Tekton Pipeline streamed, similar to the one below
+Once the Tekton Pipeline is running, the logs should start streaming:
       
-      ```bash
-      Waiting for logs to be available...
-
-      [gcs-download-2 : gcs-download-2] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-      [gcs-download : gcs-download] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-      [echo : echo] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-      [echo : echo] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-      ```
+    Waiting for logs to be available...
+    
+    [gcs-download-2 : gcs-download-2] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+    [gcs-download : gcs-download] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+    [echo : echo] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+    [echo : echo] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
 
       
 ## Build Tekton from Master
 
-In order to utilize the latest features and functions of the `kfp-tekton` compiler, we suggest to install Tekton from a
-nightly built or build it from the [master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline) branch. 
-Features that require special builds different from the 'Tested Version' will be listed below.
+In order to utilize the latest features and functions of the `kfp-tekton` compiler,
+we suggest to install Tekton from a nightly built or build it from the
+[master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline)
+branch. Features that require a special build, different from the 'Tested Version',
+will be listed below.
 
 - [Exit Handler](/sdk/FEATURES.md#exit-handler)
+
 
 ## Additional Features
 
 ### 1. Compile Kubeflow Pipelines as a Tekton PipelineRun
 
 By default, a Tekton [`PipelineRun`](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#overview)
-is generated by the `tkn` CLI so that users can interactively change their pipeline parameters during each execution.
-However, `tkn` CLI is lagging several important features when generating `PipelineRun`.
-Therefore, we added support for generating pipelineRun using `dsl-compile-tekton` with all the latest `kfp-tekton` compiler
-features. The comparison between Tekton pipeline and Argo workflow is described in our 
+is generated by the `tkn` CLI so that users can interactively change their pipeline
+parameters during each execution. 
+However, `tkn` CLI is lagging several important features when generating a `PipelineRun`.
+Therefore, we added support for generating pipelineRun using `dsl-compile-tekton`
+with all the latest `kfp-tekton` compiler features. The comparison between Tekton
+pipeline and Argo workflow is described in our 
 [design docs](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.f38y0bqkxo87).
 
-Compiling Kubeflow Pipelines into a Tekton `PipelineRun` is currently in the experimental stage.
-[Here](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md) is the list of supported features in `PipelineRun`.
+Compiling Kubeflow Pipelines into a Tekton `PipelineRun` is currently in the experimental
+stage. [Here](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md) is
+the list of supported features in `PipelineRun`.
 
 As of today, the below `PipelineRun` features are available within `dsl-compile-tekton`:
  - Affinity
  - Node Selector
  - Tolerations
 
-To compile Kubeflow Pipelines as Tekton pipelineRun, simply add the `--generate-pipelinerun` parameter to your `dsl-compile-tekton` 
-commands. e.g.:
+To compile Kubeflow Pipelines as Tekton pipelineRun, add the `--generate-pipelinerun`
+parameter to the `dsl-compile-tekton` command:
 
     dsl-compile-tekton \
         --py sdk/python/tests/compiler/testdata/tolerations.py \
@@ -135,61 +178,71 @@ commands. e.g.:
 
 ### 2. Compile Kubeflow Pipelines with Artifacts Enabled
 
-**Prerequisite**: Install [Kubeflow Pipeline](https://www.kubeflow.org/docs/pipelines/installation/).
+**Prerequisites**: Install [Kubeflow Pipelines](https://www.kubeflow.org/docs/pipelines/installation/).
 
 By default, _artifacts_ are disabled because they are dependent on Kubeflow Pipeline's
-[Minio](https://docs.minio.io/) storage. When artifacts are enabled, all the output parameters are
-also treated as artifacts and persisted to the default object storage. Enabling artifacts
-also allows files to be downloaded or stored as artifact inputs/outputs.
-Since artifacts are dependent on the Kubeflow Pipeline's deployment, the generated Tekton pipeline
-must be deployed to the same namespace as Kubeflow Pipelines.
+[Minio](https://docs.minio.io/) storage. When artifacts are enabled, all the output
+parameters are also treated as artifacts and persisted to the default object storage.
+Enabling artifacts also allows files to be downloaded or stored as artifact inputs/outputs.
+Since artifacts are dependent on the Kubeflow Pipeline's deployment, the generated
+Tekton pipeline must be deployed to the same namespace as Kubeflow Pipelines.
 
-To compile Kubeflow Pipelines as a Tekton `PipelineRun`, simply add the `--enable-artifacts` argument
-to your `dsl-compile-tekton` commands. Then, run the pipeline in the same namespace that is used by
-Kubeflow Pipelines (typically `kubeflow`) by using the `-n` flag. e.g.:
+To compile Kubeflow Pipelines as a Tekton `PipelineRun`, add the `--enable-artifacts`
+argument to your `dsl-compile-tekton` commands. Then, run the pipeline in the same
+namespace that is used by Kubeflow Pipelines (typically `kubeflow`) by using the
+`-n` flag. e.g.:
 
-```shell
-dsl-compile-tekton --py sdk/python/tests/compiler/testdata/parallel_join.py --output pipeline.yaml --enable-artifacts
-kubectl apply -f pipeline.yaml -n kubeflow
-tkn pipeline start parallel-pipeline --showlog -n kubeflow
-```
+    dsl-compile-tekton \
+        --py sdk/python/tests/compiler/testdata/parallel_join.py \
+        --output pipeline.yaml \
+        --enable-artifacts
+        
+    kubectl apply -f pipeline.yaml -n kubeflow
+    
+    tkn pipeline start parallel-pipeline --showlog -n kubeflow
 
-You should see the below outputs saying the artifacts are stored in the object storage you specify.
-```
-? Value for param `url1` of type `string`? (Default is `gs://ml-pipeline-playground/shakespeare1.txt`) gs://ml-pipeline-playground/shakespeare1.txt
-? Value for param `url2` of type `string`? (Default is `gs://ml-pipeline-playground/shakespeare2.txt`) gs://ml-pipeline-playground/shakespeare2.txt
 
-Pipelinerun started: parallel-pipeline-run-g87bs
-Waiting for logs to be available...
-[gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+You should see log messages saying the artifacts were stored in the object storage you specified:
 
-[gcs-download : copy-artifacts] Added `storage` successfully.
-[gcs-download : copy-artifacts] tekton/results/data
-[gcs-download : copy-artifacts] tar: removing leading '/' from member names
-[gcs-download : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-run/gcs-download/data.tgz`
-[gcs-download : copy-artifacts] Total: 0 B, Transferred: 194 B, Speed: 12.07 KiB/s
-
-[gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-
-[gcs-download-2 : copy-artifacts] Added `storage` successfully.
-[gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
-[gcs-download-2 : copy-artifacts] tekton/results/data
-[gcs-download-2 : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-run/gcs-download-2/data.tgz`
-[gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 204 B, Speed: 22.86 KiB/s
-
-[echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-[echo : main]
-[echo : main] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-[echo : main]
-```
+    ? Value for param `url1` of type `string`? (Default is `gs://ml-pipeline-playground/shakespeare1.txt`) gs://ml-pipeline-playground/shakespeare1.txt
+    ? Value for param `url2` of type `string`? (Default is `gs://ml-pipeline-playground/shakespeare2.txt`) gs://ml-pipeline-playground/shakespeare2.txt
+    
+    Pipelinerun started: parallel-pipeline-run-g87bs
+    
+    Waiting for logs to be available...
+    [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+    
+    [gcs-download : copy-artifacts] Added `storage` successfully.
+    [gcs-download : copy-artifacts] tekton/results/data
+    [gcs-download : copy-artifacts] tar: removing leading '/' from member names
+    [gcs-download : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-run/gcs-download/data.tgz`
+    [gcs-download : copy-artifacts] Total: 0 B, Transferred: 194 B, Speed: 12.07 KiB/s
+    
+    [gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+    
+    [gcs-download-2 : copy-artifacts] Added `storage` successfully.
+    [gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
+    [gcs-download-2 : copy-artifacts] tekton/results/data
+    [gcs-download-2 : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-run/gcs-download-2/data.tgz`
+    [gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 204 B, Speed: 22.86 KiB/s
+    
+    [echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+    [echo : main]
+    [echo : main] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+    [echo : main]
 
 
 ## List of Available Features
 
-To understand how each feature is implemented and its current status, please visit the [FEATURES](FEATURES.md) doc.
+To understand how each feature is implemented and its current status, please visit
+the [FEATURES](FEATURES.md) doc.
 
 
 ## Troubleshooting
 
-- When you encounter permission issues related to ServiceAccount, refer to [Servince Account and RBAC doc](sa-and-rbac.md)
-- If you run into `bad interpreter: No such file or director` when trying to use python's venv, remove the current virtual environment in the .venv directory and create a new one using `virtualenv .venv`
+- When you encounter permission issues related to ServiceAccount, refer to
+  [Servince Account and RBAC doc](sa-and-rbac.md)
+  
+- If you run into `bad interpreter: No such file or director` when trying to use
+  python's venv, remove the current virtual environment in the `.venv` directory and
+  create a new one using `virtualenv .venv`

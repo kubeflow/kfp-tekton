@@ -31,6 +31,10 @@ $(VENV)/bin/activate: sdk/python/setup.py
 	pip install -e sdk/python
 	@touch $(VENV)/bin/activate
 
+.PHONY: install
+install: venv ## Install the kfp_tekton compiler in a virtual environment
+	@echo "Run 'source $(VENV)/bin/activate' to activate the virtual environment."
+
 .PHONY: unit_test
 unit_test: venv ## Run compiler unit tests
 	@sdk/python/tests/run_tests.sh
@@ -65,3 +69,13 @@ check_license: ## Check for license header in source files
 		grep -H -E -o -c  'Copyright 20.* kubeflow.org'  {} \; | \
 		grep -E ':0$$' | sed 's/..$$//' | \
 		grep . && echo "The files listed above are missing the license header" && exit 1 || echo "OK"
+
+.PHONY: distribution
+distribution: venv ## Create a distribution and upload to test.PyPi.org
+	@echo "NOTE: Using test.PyPi.org -- edit Makefile to target real PyPi index"
+	@twine --version > /dev/null 2>&1 || pip install twine
+	@cd sdk/python && \
+		rm -rf dist/ && \
+		python3 setup.py sdist && \
+		twine check dist/* && \
+		twine upload --repository testpypi dist/*
