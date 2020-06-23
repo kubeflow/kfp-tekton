@@ -28,6 +28,7 @@ import { URLParser } from '../lib/URLParser';
 import { commonCss, color } from '../Css';
 import { formatDateString, logger, errorToMessage, getRunDuration } from '../lib/Utils';
 import { statusToIcon } from './Status';
+import { statusToPhase } from '../lib/StatusUtils';
 import Tooltip from '@material-ui/core/Tooltip';
 
 interface PipelineVersionInfo {
@@ -300,7 +301,7 @@ class RunList extends React.PureComponent<RunListProps, RunListState> {
   public _statusCustomRenderer: React.FC<CustomRendererProps<NodePhase>> = (
     props: CustomRendererProps<NodePhase>,
   ) => {
-    return statusToIcon(props.value);
+    return statusToIcon(statusToPhase(props.value));
   };
 
   public _metricBufferCustomRenderer: React.FC<CustomRendererProps<{}>> = (

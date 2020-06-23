@@ -74,6 +74,11 @@ export function statusToIcon(
       iconColor = color.success;
       title = 'Executed successfully';
       break;
+    case NodePhase.COMPLETED:
+      IconComponent = SuccessIcon;
+      iconColor = color.success;
+      title = 'Executed successfully';
+      break;
     case NodePhase.CACHED: // This is not argo native, only applies to node.
       IconComponent = CachedIcon;
       iconColor = color.success;
@@ -83,6 +88,16 @@ export function statusToIcon(
       IconComponent = TerminatedIcon;
       iconColor = color.terminated;
       title = 'Run was manually terminated';
+      break;
+    case NodePhase.PIPELINERUNTIMEOUT:
+      IconComponent = ErrorIcon;
+      iconColor = color.errorText;
+      title = 'Pipeline run timeout';
+      break;
+    case NodePhase.COULDNTGETCONDITION:
+      IconComponent = ErrorIcon;
+      iconColor = color.errorText;
+      title = 'Could not retrieve the condition ';
       break;
     case NodePhase.UNKNOWN:
       break;

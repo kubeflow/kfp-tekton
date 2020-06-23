@@ -15,9 +15,7 @@
  */
 
 import * as React from 'react';
-import { ApiRun } from '../apis/run';
 import { ApiTrigger } from '../apis/job';
-import { Workflow } from '../../third_party/argo-ui/argo_template';
 import { isFunction } from 'lodash';
 import { hasFinished, NodePhase } from './StatusUtils';
 import { ListRequest } from './Apis';
@@ -96,23 +94,34 @@ function getDuration(start: Date, end: Date): string {
   return `${sign}${hours}:${minutes}:${seconds}`;
 }
 
-export function getRunDuration(run?: ApiRun): string {
-  if (!run || !run.created_at || !run.finished_at || !hasFinished(run.status as NodePhase)) {
+export function getRunDuration(run?: any): string {
+  if (
+    !run ||
+    !run.status ||
+    !run.status.startTime ||
+    !run.status.completionTime ||
+    !hasFinished(run.status.condition[0].reason as NodePhase)
+  ) {
     return '-';
   }
 
   // A bug in swagger-codegen causes the API to indicate that created_at and finished_at are Dates,
   // as they should be, when in reality they are transferred as strings.
   // See: https://github.com/swagger-api/swagger-codegen/issues/2776
-  return getDuration(new Date(run.created_at), new Date(run.finished_at));
+  return getDuration(new Date(run.status.startTime), new Date(run.status.completionTime));
 }
 
-export function getRunDurationFromWorkflow(workflow?: Workflow): string {
-  if (!workflow || !workflow.status || !workflow.status.startedAt || !workflow.status.finishedAt) {
+export function getRunDurationFromWorkflow(workflow?: any): string {
+  if (
+    !workflow ||
+    !workflow.status ||
+    !workflow.status.startTime ||
+    !workflow.status.completionTime
+  ) {
     return '-';
   }
 
-  return getDuration(new Date(workflow.status.startedAt), new Date(workflow.status.finishedAt));
+  return getDuration(new Date(workflow.status.startTime), new Date(workflow.status.completionTime));
 }
 
 export function s(items: any[] | number): string {
