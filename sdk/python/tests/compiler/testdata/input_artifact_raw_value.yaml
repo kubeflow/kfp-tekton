@@ -15,6 +15,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: component-with-inline-input-artifact
 spec:
   stepTemplate:
@@ -43,6 +45,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: component-with-input-artifact
 spec:
   stepTemplate:
@@ -71,6 +75,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: component-with-input-artifact-2
 spec:
   stepTemplate:
@@ -99,6 +105,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: component-with-input-artifact-3
 spec:
   stepTemplate:
@@ -149,3 +157,14 @@ spec:
   - name: component-with-input-artifact-3
     taskRef:
       name: component-with-input-artifact-3
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: pipeline-with-artifact-input-raw-argument-value-run
+spec:
+  pipelineRef:
+    name: pipeline-with-artifact-input-raw-argument-value

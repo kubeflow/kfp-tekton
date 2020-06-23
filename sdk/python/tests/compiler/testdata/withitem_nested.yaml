@@ -15,14 +15,16 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: my-in-coop1
 spec:
   params:
   - name: loop-item-param-00000001-subvar-a
-  - name: my-pipe-param
+  - name: my_pipe_param
   steps:
   - args:
-    - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.my-pipe-param)
+    - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.my_pipe_param)
     command:
     - sh
     - -c
@@ -32,16 +34,18 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: my-inner-inner-coop
 spec:
   params:
   - name: loop-item-param-00000001-subvar-a
   - name: loop-item-param-00000002
-  - name: my-pipe-param
+  - name: my_pipe_param
   steps:
   - args:
     - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.loop-item-param-00000002)
-      $(inputs.params.my-pipe-param)
+      $(inputs.params.my_pipe_param)
     command:
     - sh
     - -c
@@ -51,6 +55,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: my-in-coop2
 spec:
   params:
@@ -67,13 +73,15 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: my-out-cop
 spec:
   params:
-  - name: my-pipe-param
+  - name: my_pipe_param
   steps:
   - args:
-    - echo $(inputs.params.my-pipe-param)
+    - echo $(inputs.params.my_pipe_param)
     command:
     - sh
     - -c
@@ -91,22 +99,22 @@ metadata:
 spec:
   params:
   - default: '10'
-    name: my-pipe-param
+    name: my_pipe_param
   tasks:
   - name: my-in-coop1-loop-item-0
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '1'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-in-coop1
   - name: my-in-coop1-loop-item-1
     params:
     - name: loop-item-param-00000001-subvar-a
       value: '10'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-in-coop1
   - name: my-inner-inner-coop-loop-item-0
@@ -115,8 +123,8 @@ spec:
       value: '1'
     - name: loop-item-param-00000002
       value: '100'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
   - name: my-inner-inner-coop-loop-item-1
@@ -125,8 +133,8 @@ spec:
       value: '1'
     - name: loop-item-param-00000002
       value: '200'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
   - name: my-inner-inner-coop-loop-item-2
@@ -135,8 +143,8 @@ spec:
       value: '1'
     - name: loop-item-param-00000002
       value: '300'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
   - name: my-inner-inner-coop-loop-item-3
@@ -145,8 +153,8 @@ spec:
       value: '10'
     - name: loop-item-param-00000002
       value: '100'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
   - name: my-inner-inner-coop-loop-item-4
@@ -155,8 +163,8 @@ spec:
       value: '10'
     - name: loop-item-param-00000002
       value: '200'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
   - name: my-inner-inner-coop-loop-item-5
@@ -165,8 +173,8 @@ spec:
       value: '10'
     - name: loop-item-param-00000002
       value: '300'
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-inner-inner-coop
   - name: my-in-coop2-loop-item-0
@@ -183,7 +191,21 @@ spec:
       name: my-in-coop2
   - name: my-out-cop-loop-item-0
     params:
-    - name: my-pipe-param
-      value: $(params.my-pipe-param)
+    - name: my_pipe_param
+      value: $(params.my_pipe_param)
     taskRef:
       name: my-out-cop
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: my-pipeline-run
+spec:
+  params:
+  - name: my_pipe_param
+    value: '10'
+  pipelineRef:
+    name: my-pipeline

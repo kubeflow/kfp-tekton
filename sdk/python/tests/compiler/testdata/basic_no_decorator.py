@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import kfp.dsl as dsl
-import kfp.gcp as gcp
+# import kfp.gcp as gcp
 
 
-message_param = dsl.PipelineParam(name='message')
+message_param = dsl.PipelineParam(name='message', value='When flies fly behind flies')
 output_path_param = dsl.PipelineParam(name='outputpath', value='default_output')
 
 
@@ -25,7 +25,8 @@ class GetFrequentWordOp(dsl.ContainerOp):
   The class provides a nice interface to users by hiding details such as container,
   command, arguments.
   """
-  def __init__(self, name, message):
+  def __init__(self, name, message="When flies fly behind flies,"
+                                   " then flies are following flies."):
     """__init__
     Args:
       name: An identifier of the step which needs to be unique within a pipeline.
@@ -55,7 +56,7 @@ class SaveMessageOp(dsl.ContainerOp):
         name=name,
         image='google/cloud-sdk',
         command=['sh', '-c'],
-        arguments=['echo %s | tee /tmp/results.txt | gsutil cp /tmp/results.txt %s'
+        arguments=['echo "%s" | tee /tmp/results.txt | gsutil cp /tmp/results.txt %s'
                    % (message, output_path)])
 
 
@@ -75,19 +76,18 @@ def save_most_frequent_word():
     counter = GetFrequentWordOp(
         name='get-Frequent',
         message=message_param)
-    counter.set_memory_request('200M')
+    counter.container.set_memory_request('200M')
 
     saver = SaveMessageOp(
         name='save',
         message=counter.output,
         output_path=output_path_param)
-    saver.set_cpu_limit('0.5')
-    saver.set_gpu_limit('2')
+    saver.container.set_cpu_limit('0.5')
+    # saver.container.set_gpu_limit('2')
     saver.add_node_selector_constraint(
-        'cloud.google.com/gke-accelerator',
-        'nvidia-tesla-k80')
-    saver.apply(
-        gcp.use_tpu(tpu_cores=8, tpu_resource='v2', tf_version='1.12'))
+        'failure-domain.beta.kubernetes.io/region',
+        'us-south')
+    # saver.apply(gcp.use_tpu(tpu_cores=2, tpu_resource='v2', tf_version='1.12'))
 
 
 if __name__ == '__main__':
@@ -95,7 +95,7 @@ if __name__ == '__main__':
   tkc = TektonCompiler()
   compiled_workflow = tkc._create_workflow(
     save_most_frequent_word,
-    'Save Most Frequent',
+    'Save Most Frequent Word',
     'Get Most Frequent Word and Save to GCS',
     [message_param, output_path_param],
     None)

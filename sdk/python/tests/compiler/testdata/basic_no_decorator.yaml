@@ -15,6 +15,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: exiting
 spec:
   steps:
@@ -29,6 +31,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: get-frequent
 spec:
   params:
@@ -52,8 +56,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  annotations:
-    tf-version.cloud-tpus.google.com: '1.12'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: save
 spec:
   params:
@@ -61,8 +65,8 @@ spec:
   - name: outputpath
   steps:
   - args:
-    - echo $(inputs.params.get-frequent-word) | tee /tmp/results.txt | gsutil cp /tmp/results.txt
-      $(inputs.params.outputpath)
+    - echo "$(inputs.params.get-frequent-word)" | tee /tmp/results.txt | gsutil cp
+      /tmp/results.txt $(inputs.params.outputpath)
     command:
     - sh
     - -c
@@ -70,28 +74,29 @@ spec:
     name: main
     resources:
       limits:
-        cloud-tpus.google.com/v2: '8'
         cpu: '0.5'
-        nvidia.com/gpu: '2'
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Get Most Frequent Word
-      and Save to GCS", "inputs": [{"name": "message"}, {"default": "default_output",
-      "name": "outputpath"}], "name": "Save Most Frequent"}'
+      and Save to GCS", "inputs": [{"default": "When flies fly behind flies", "name":
+      "message"}, {"default": "default_output", "name": "outputpath"}], "name": "Save
+      Most Frequent Word"}'
     sidecar.istio.io/inject: 'false'
-  name: save-most-frequent
+  name: save-most-frequent-word
 spec:
-  params:
-  - name: message
-  - default: default_output
-    name: outputpath
-  tasks:
+  finally:
   - name: exiting
     taskRef:
       name: exiting
+  params:
+  - default: When flies fly behind flies
+    name: message
+  - default: default_output
+    name: outputpath
+  tasks:
   - name: get-frequent
     params:
     - name: message
@@ -106,3 +111,24 @@ spec:
       value: $(params.outputpath)
     taskRef:
       name: save
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: save-most-frequent-word-run
+spec:
+  params:
+  - name: message
+    value: When flies fly behind flies
+  - name: outputpath
+    value: default_output
+  pipelineRef:
+    name: save-most-frequent-word
+  taskRunSpecs:
+  - pipelineTaskName: save
+    taskPodTemplate:
+      nodeSelector:
+        failure-domain.beta.kubernetes.io/region: us-south

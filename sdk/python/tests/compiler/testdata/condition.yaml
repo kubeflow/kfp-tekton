@@ -31,15 +31,21 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: flip
 spec:
+  params:
+  - name: forced_result1
   results:
   - description: /tmp/output
     name: output
   steps:
   - args:
-    - python -c "import random; result = 'heads' if random.randint(0,1) == 0 else
-      'tails'; print(result)" | tee $(results.output.path)
+    - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result1)';
+      result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
+      if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
+      | tee $(results.output.path)
     command:
     - sh
     - -c
@@ -49,15 +55,21 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: flip-again
 spec:
+  params:
+  - name: forced_result2
   results:
   - description: /tmp/output
     name: output
   steps:
   - args:
-    - python -c "import random; result = 'heads' if random.randint(0,1) == 0 else
-      'tails'; print(result)" | tee $(results.output.path)
+    - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result2)';
+      result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
+      if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
+      | tee $(results.output.path)
     command:
     - sh
     - -c
@@ -67,6 +79,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print1
 spec:
   params:
@@ -81,14 +95,16 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print2
 spec:
   params:
-  - name: flip-again-output
+  - name: flip-output
   steps:
   - command:
     - echo
-    - $(inputs.params.flip-again-output)
+    - $(inputs.params.flip-output)
     image: alpine:3.6
     name: main
 ---
@@ -97,12 +113,22 @@ kind: Pipeline
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
-      "name": "Flip Coin Example Pipeline"}'
+      "inputs": [{"default": "heads", "name": "forced_result1", "optional": true,
+      "type": "String"}, {"default": "tails", "name": "forced_result2", "optional":
+      true, "type": "String"}], "name": "Flip Coin Example Pipeline"}'
     sidecar.istio.io/inject: 'false'
   name: flip-coin-example-pipeline
 spec:
+  params:
+  - default: heads
+    name: forced_result1
+  - default: tails
+    name: forced_result2
   tasks:
   - name: flip
+    params:
+    - name: forced_result1
+      value: $(params.forced_result1)
     taskRef:
       name: flip
   - conditions:
@@ -115,6 +141,9 @@ spec:
       - name: operator
         value: ==
     name: flip-again
+    params:
+    - name: forced_result2
+      value: $(params.forced_result2)
     taskRef:
       name: flip-again
   - conditions:
@@ -151,7 +180,23 @@ spec:
         value: ==
     name: print2
     params:
-    - name: flip-again-output
-      value: $(tasks.flip-again.results.output)
+    - name: flip-output
+      value: $(tasks.flip.results.output)
     taskRef:
       name: print2
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: flip-coin-example-pipeline-run
+spec:
+  params:
+  - name: forced_result1
+    value: heads
+  - name: forced_result2
+    value: tails
+  pipelineRef:
+    name: flip-coin-example-pipeline

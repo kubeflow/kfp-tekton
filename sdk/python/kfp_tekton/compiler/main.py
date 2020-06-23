@@ -44,6 +44,9 @@ def parse_arguments():
   parser.add_argument('--disable-type-check',
                       action='store_true',
                       help='disable the type check, default is enabled.')
+  parser.add_argument('--disable-telemetry',
+                      action='store_true',
+                      help='disable adding telemetry labels, default is enabled.')
   parser.add_argument('--generate-pipelinerun',
                       action='store_true',
                       help='enable pipelinerun yaml generation')
@@ -55,7 +58,7 @@ def parse_arguments():
   return args
 
 
-def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check,
+def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, allow_telemetry,
                                generate_pipelinerun=False, enable_artifacts=False):
   if len(pipeline_funcs) == 0:
     raise ValueError('A function with @dsl.pipeline decorator is required in the py file.')
@@ -72,18 +75,21 @@ def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_
   else:
     pipeline_func = pipeline_funcs[0]
 
-  TektonCompiler().compile(pipeline_func, output_path, type_check,
+  TektonCompiler().compile(pipeline_func, output_path, type_check, allow_telemetry=allow_telemetry,
                            generate_pipelinerun=generate_pipelinerun,
                            enable_artifacts=enable_artifacts)
 
 
-def compile_pyfile(pyfile, function_name, output_path, type_check, generate_pipelinerun=False, enable_artifacts=False):
+def compile_pyfile(pyfile, function_name, output_path, type_check, allow_telemetry,
+                   generate_pipelinerun=False, enable_artifacts=False):
   sys.path.insert(0, os.path.dirname(pyfile))
   try:
     filename = os.path.basename(pyfile)
     with kfp_compiler_main.PipelineCollectorContext() as pipeline_funcs:
       __import__(os.path.splitext(filename)[0])
-    _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, generate_pipelinerun, enable_artifacts)
+    _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check,
+                               allow_telemetry=allow_telemetry, generate_pipelinerun=generate_pipelinerun,
+                               enable_artifacts=enable_artifacts)
   finally:
     del sys.path[0]
 
@@ -95,7 +101,8 @@ def main():
         (args.py is not None and args.package is not None)):
         raise ValueError('Either --py or --package is needed but not both.')
     if args.py:
-        compile_pyfile(args.py, args.function, args.output, not args.disable_type_check, args.generate_pipelinerun, args.enable_artifacts)
+        compile_pyfile(args.py, args.function, args.output, not args.disable_type_check, not args.disable_telemetry,
+                       args.generate_pipelinerun, args.enable_artifacts)
     else:
         if args.namespace is None:
             raise ValueError('--namespace is required for compiling packages.')

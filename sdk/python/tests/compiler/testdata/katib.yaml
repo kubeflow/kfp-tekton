@@ -15,6 +15,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: mnist-hpo
 spec:
   params:
@@ -27,7 +29,7 @@ spec:
   - name: parallelTrialCount
   results:
   - description: /output.txt
-    name: bestHyperParameter
+    name: besthyperparameter
   steps:
   - args:
     - --name
@@ -61,7 +63,7 @@ spec:
       ''parameterType'': ''categorical'', ''feasibleSpace'': {''list'': [''sgd'',
       ''adam'', ''ftrl'']}}]'
     - --outputFile
-    - $(results.bestHyperParameter.path)
+    - $(results.besthyperparameter.path)
     - --deleteAfterDone
     - $(inputs.params.deleteAfterDone)
     - --experimentTimeoutMinutes
@@ -72,6 +74,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: my-out-cop
 spec:
   params:
@@ -92,11 +96,12 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "An example to launch katib
       experiment.", "inputs": [{"default": "mnist", "name": "name", "optional": true},
       {"default": "kubeflow", "name": "namespace", "optional": true}, {"default":
-      "0.99", "name": "goal", "optional": true}, {"default": "3", "name": "parallelTrialCount",
-      "optional": true}, {"default": "12", "name": "maxTrialCount", "optional": true},
-      {"default": "60", "name": "experimentTimeoutMinutes", "optional": true}, {"default":
-      "True", "name": "deleteAfterDone", "optional": true}], "name": "Launch katib
-      experiment"}'
+      "0.99", "name": "goal", "optional": true, "type": "Float"}, {"default": "3",
+      "name": "parallelTrialCount", "optional": true, "type": "Integer"}, {"default":
+      "12", "name": "maxTrialCount", "optional": true, "type": "Integer"}, {"default":
+      "60", "name": "experimentTimeoutMinutes", "optional": true, "type": "Integer"},
+      {"default": "True", "name": "deleteAfterDone", "optional": true, "type": "Boolean"}],
+      "name": "Launch katib experiment"}'
     sidecar.istio.io/inject: 'false'
   name: launch-katib-experiment
 spec:
@@ -137,6 +142,32 @@ spec:
   - name: my-out-cop
     params:
     - name: mnist-hpo-bestHyperParameter
-      value: $(tasks.mnist-hpo.results.bestHyperParameter)
+      value: $(tasks.mnist-hpo.results.besthyperparameter)
     taskRef:
       name: my-out-cop
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: launch-katib-experiment-run
+spec:
+  params:
+  - name: name
+    value: mnist
+  - name: namespace
+    value: kubeflow
+  - name: goal
+    value: '0.99'
+  - name: parallelTrialCount
+    value: '3'
+  - name: maxTrialCount
+    value: '12'
+  - name: experimentTimeoutMinutes
+    value: '60'
+  - name: deleteAfterDone
+    value: 'True'
+  pipelineRef:
+    name: launch-katib-experiment

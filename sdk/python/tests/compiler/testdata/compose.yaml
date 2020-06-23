@@ -15,6 +15,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: download
 spec:
   params:
@@ -34,6 +36,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: get-frequent
 spec:
   params:
@@ -43,8 +47,9 @@ spec:
     name: word
   steps:
   - args:
-    - python -c "from collections import Counter; words = Counter('$(inputs.params.download-downloaded)'.split());
-      print(max(words, key=words.get))" | tee $(results.word.path)
+    - python -c "import sys; from collections import Counter; input_text = sys.argv[1];
+      words = Counter(input_text.split()); print(max(words, key=words.get));" "$(inputs.params.download-downloaded)"
+      | tee $(results.word.path)
     command:
     - sh
     - -c
@@ -54,6 +59,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: save
 spec:
   params:
@@ -61,8 +68,8 @@ spec:
   - name: outputpath
   steps:
   - args:
-    - echo $(inputs.params.get-frequent-word) | tee /tmp/results.txt | gsutil cp /tmp/results.txt
-      $(inputs.params.outputpath)
+    - echo "$(inputs.params.get-frequent-word)" | tee /tmp/results.txt | gsutil cp
+      /tmp/results.txt $(inputs.params.outputpath)
     command:
     - sh
     - -c
@@ -74,14 +81,18 @@ kind: Pipeline
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Download and Get Most
-      Frequent Word and Save to GCS", "inputs": [{"name": "url", "type": "String"},
-      {"name": "outputpath", "type": "String"}], "name": "Download and Save Most Frequent"}'
+      Frequent Word and Save to GCS", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
+      "name": "url", "optional": true, "type": "String"}, {"default": "/tmp/output.txt",
+      "name": "outputpath", "optional": true, "type": "String"}], "name": "Download
+      and Save Most Frequent"}'
     sidecar.istio.io/inject: 'false'
   name: download-and-save-most-frequent
 spec:
   params:
-  - name: url
-  - name: outputpath
+  - default: gs://ml-pipeline-playground/shakespeare1.txt
+    name: url
+  - default: /tmp/output.txt
+    name: outputpath
   tasks:
   - name: download
     params:
@@ -103,3 +114,19 @@ spec:
       value: $(params.outputpath)
     taskRef:
       name: save
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: download-and-save-most-frequent-run
+spec:
+  params:
+  - name: url
+    value: gs://ml-pipeline-playground/shakespeare1.txt
+  - name: outputpath
+    value: /tmp/output.txt
+  pipelineRef:
+    name: download-and-save-most-frequent

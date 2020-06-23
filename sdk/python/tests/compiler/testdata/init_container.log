@@ -1,0 +1,4 @@
+[hello : echo] bye
+
+[hello : main] hello
+

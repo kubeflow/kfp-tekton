@@ -26,7 +26,7 @@ from typing import Callable, List, Text, Dict, Any
 from ._op_to_template import _op_to_template
 
 from kfp import dsl
-from kfp.compiler._default_transformers import add_pod_env
+from kfp.compiler._default_transformers import add_pod_env, add_pod_labels, get_default_telemetry_labels
 from kfp.compiler.compiler import Compiler
 # from kfp.components._yaml_utils import dump_yaml
 from kfp.components.structures import InputSpec
@@ -315,7 +315,7 @@ class TektonCompiler(Compiler):
       'kind': 'PipelineRun',
       'metadata': {
         'name': sanitize_k8s_name(pipeline_template['metadata']['name'], suffix_space=4) + '-run',
-        'annotation': {
+        'annotations': {
           'tekton.dev/output_artifacts': json.dumps(self.output_artifacts),
           'tekton.dev/input_artifacts': json.dumps(self.input_artifacts)
         }
@@ -336,8 +336,20 @@ class TektonCompiler(Compiler):
     task_run_spec = []
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      task_spec = {"pipelineTaskName": task['name'],
-                   "taskPodTemplate": {}}
+
+      # TODO: should loop-item tasks be included here?
+      if LoopArguments.LOOP_ITEM_NAME_BASE in task['name']:
+        task_name = re.sub(r'-%s-.+$' % LoopArguments.LOOP_ITEM_NAME_BASE, '', task['name'])
+      else:
+        task_name = task['name']
+      op = pipeline.ops.get(task_name)
+      if not op:
+        raise RuntimeError("unable to find op with name '%s'" % task["name"])
+
+      task_spec = {
+        "pipelineTaskName": task['name'],
+        "taskPodTemplate": {}
+      }
       if op.affinity:
         task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
       if op.tolerations:
@@ -471,8 +483,7 @@ class TektonCompiler(Compiler):
         else:
           for pp in op.inputs:
             if tp['name'] == pp.full_name:
-              # replace '_' to '-' since tekton results doesn't support underscore
-              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name.replace('_', '-'))
+              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
               # Create input artifact tracking annotation
               if self.enable_artifacts:
                 input_annotation = self.input_artifacts.get(task['name'], [])
@@ -500,6 +511,14 @@ class TektonCompiler(Compiler):
     # handle resourceOp cases in pipeline
     self._process_resourceOp(task_refs, pipeline)
 
+    # handle exit handler in pipeline
+    finally_tasks = []
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if op.is_exit_handler:
+        finally_tasks.append(task)
+    task_refs = [task for task in task_refs if not pipeline.ops.get(task['name']).is_exit_handler]
+
     # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
     root_group = pipeline.groups[0]
     op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
@@ -526,7 +545,8 @@ class TektonCompiler(Compiler):
       },
       'spec': {
         'params': params,
-        'tasks': task_refs
+        'tasks': task_refs,
+        'finally': finally_tasks
       }
     }
 
@@ -544,16 +564,8 @@ class TektonCompiler(Compiler):
 
     # Sanitize operator names and param names
     sanitized_ops = {}
-    # pipeline level artifact location
-    artifact_location = pipeline_conf.artifact_location
 
     for op in pipeline.ops.values():
-      # inject pipeline level artifact location into if the op does not have
-      # an artifact location config already.
-      if hasattr(op, "artifact_location"):
-        if artifact_location and not op.artifact_location:
-          op.artifact_location = artifact_location
-
       sanitized_name = sanitize_k8s_name(op.name)
       op.name = sanitized_name
       for param in op.outputs.values():
@@ -590,6 +602,7 @@ class TektonCompiler(Compiler):
                        pipeline_description: Text = None,
                        params_list: List[dsl.PipelineParam] = None,
                        pipeline_conf: dsl.PipelineConf = None,
+                       allow_telemetry: bool = True,
                        ) -> List[Dict[Text, Any]]:  # Tekton change, signature
     """ Internal implementation of create_workflow."""
     params_list = params_list or []
@@ -653,6 +666,12 @@ class TektonCompiler(Compiler):
             default=param.value) for param in params_list]
 
     op_transformers = [add_pod_env]
+    # By default adds telemetry instruments. Users can opt out toggling
+    # allow_telemetry.
+    # Also, TFX pipelines will be bypassed for pipeline compiled by tfx>0.21.4.
+    if allow_telemetry:
+      pod_labels = get_default_telemetry_labels()
+      op_transformers.append(add_pod_labels(pod_labels))
     op_transformers.extend(pipeline_conf.op_transformers)
 
     workflow = self._create_pipeline_workflow(
@@ -677,6 +696,7 @@ class TektonCompiler(Compiler):
               package_path,
               type_check=True,
               pipeline_conf: dsl.PipelineConf = None,
+              allow_telemetry: bool = True,
               generate_pipelinerun=False,
               enable_artifacts=False):
     """Compile the given pipeline function into workflow yaml.
@@ -691,7 +711,7 @@ class TektonCompiler(Compiler):
     """
     self.generate_pipelinerun = generate_pipelinerun
     self.enable_artifacts = enable_artifacts
-    super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
+    super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf, allow_telemetry=allow_telemetry)
 
   @staticmethod
   def _write_workflow(workflow: List[Dict[Text, Any]],  # Tekton change, signature
@@ -765,7 +785,8 @@ class TektonCompiler(Compiler):
                                  pipeline_description: Text = None,
                                  params_list: List[dsl.PipelineParam] = None,
                                  pipeline_conf: dsl.PipelineConf = None,
-                                 package_path: Text = None
+                                 package_path: Text = None,
+                                 allow_telemetry: bool = True
                                  ) -> None:
     """Compile the given pipeline function and dump it to specified file format."""
     workflow = self._create_workflow(
@@ -773,7 +794,8 @@ class TektonCompiler(Compiler):
         pipeline_name,
         pipeline_description,
         params_list,
-        pipeline_conf)
+        pipeline_conf,
+        allow_telemetry)
     TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
     _validate_workflow(workflow)
 

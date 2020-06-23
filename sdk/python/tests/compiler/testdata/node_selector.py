@@ -15,11 +15,12 @@
 from kfp import dsl
 
 
-def some_op():
+def echo_op():
     return dsl.ContainerOp(
-        name='sleep',
+        name='echo',
         image='busybox',
-        command=['sleep 1'],
+        command=['sh', '-c'],
+        arguments=['echo "Found my node"']
     )
 
 
@@ -30,9 +31,12 @@ def some_op():
 def node_selector_pipeline(
 ):
     """A pipeline with Node Selector"""
-    some_op().add_node_selector_constraint('accelerator', 'nvidia-tesla-k80')
+    echo_op().add_node_selector_constraint(
+        label_name='beta.kubernetes.io/instance-type',
+        value='b3c.4x16.encrypted')
 
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(node_selector_pipeline, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)
+    TektonCompiler().compile(node_selector_pipeline, __file__.replace('.py', '.yaml'),
+                             generate_pipelinerun=True)

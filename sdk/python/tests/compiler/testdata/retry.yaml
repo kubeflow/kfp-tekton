@@ -15,6 +15,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: random-failure
 spec:
   steps:
@@ -31,6 +33,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: random-failure-2
 spec:
   steps:
@@ -63,3 +67,14 @@ spec:
     retries: 5
     taskRef:
       name: random-failure-2
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: retry-random-failures-run
+spec:
+  pipelineRef:
+    name: retry-random-failures

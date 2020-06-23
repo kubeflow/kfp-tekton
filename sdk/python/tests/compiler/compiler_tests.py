@@ -227,13 +227,6 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.pipeline_transformers import transform_pipeline
     self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
 
-  def test_artifact_location_workflow(self):
-    """
-    Test compiling an artifact location workflow.
-    """
-    from .testdata.artifact_location import custom_artifact_location
-    self._test_pipeline_workflow(custom_artifact_location, 'artifact_location.yaml', enable_artifacts=True)
-
   def test_input_artifact_raw_value_workflow(self):
     """
     Test compiling an input artifact workflow.
@@ -269,11 +262,18 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata import basic_no_decorator
     parameter_dict = {
       "function": basic_no_decorator.save_most_frequent_word,
-      "name": 'Save Most Frequent',
+      "name": 'Save Most Frequent Word',
       "description": 'Get Most Frequent Word and Save to GCS',
       "paramsList": [basic_no_decorator.message_param, basic_no_decorator.output_path_param]
     }
     self._test_workflow_without_decorator('basic_no_decorator.yaml', parameter_dict)
+
+  def test_exit_handler_workflow(self):
+    """
+    Test compiling a exit handler workflow.
+    """
+    from .testdata.exit_handler import download_and_print
+    self._test_pipeline_workflow(download_and_print, 'exit_handler.yaml')
 
   def test_compose(self):
     """
@@ -285,7 +285,7 @@ class TestTektonCompiler(unittest.TestCase):
   def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
-                              generate_pipelinerun=False,
+                              generate_pipelinerun=True,
                               enable_artifacts=False,
                               normalize_compiler_output_function=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
@@ -313,7 +313,9 @@ class TestTektonCompiler(unittest.TestCase):
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     try:
-      compiled_workflow = compiler.TektonCompiler()._create_workflow(
+      kfp_tekton_compiler = compiler.TektonCompiler()
+      kfp_tekton_compiler.generate_pipelinerun = True
+      compiled_workflow = kfp_tekton_compiler._create_workflow(
           params_dict['function'],
           params_dict.get('name', None),
           params_dict.get('description', None),
@@ -326,7 +328,7 @@ class TestTektonCompiler(unittest.TestCase):
   def _test_nested_workflow(self,
                             pipeline_yaml,
                             pipeline_list,
-                            generate_pipelinerun=False,
+                            generate_pipelinerun=True,
                             enable_artifacts=False,
                             normalize_compiler_output_function=None):
     """

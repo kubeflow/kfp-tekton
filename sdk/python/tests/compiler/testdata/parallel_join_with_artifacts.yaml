@@ -15,6 +15,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: gcs-download
 spec:
   params:
@@ -62,15 +64,17 @@ spec:
       mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
       $AWS_SECRET_ACCESS_KEY
 
-      tar -cvzf gcs-download-data.tgz $(results.data.path)
+      tar -cvzf data.tgz $(results.data.path)
 
-      mc cp gcs-download-data.tgz storage/mlpipeline/runs/$PIPELINERUN/$PIPELINETASK/gcs-download-data.tgz
+      mc cp data.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/data.tgz
 
       '
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: gcs-download-2
 spec:
   params:
@@ -118,15 +122,17 @@ spec:
       mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
       $AWS_SECRET_ACCESS_KEY
 
-      tar -cvzf gcs-download-2-data.tgz $(results.data.path)
+      tar -cvzf data.tgz $(results.data.path)
 
-      mc cp gcs-download-2-data.tgz storage/mlpipeline/runs/$PIPELINERUN/$PIPELINETASK/gcs-download-2-data.tgz
+      mc cp data.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/data.tgz
 
       '
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: echo
 spec:
   params:
@@ -184,7 +190,7 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  annotation:
+  annotations:
     tekton.dev/input_artifacts: '{"echo": [{"name": "gcs-download-2-data", "parent_task":
       "gcs-download-2"}, {"name": "gcs-download-data", "parent_task": "gcs-download"}]}'
     tekton.dev/output_artifacts: '{"gcs-download": [{"name": "gcs-download-data",

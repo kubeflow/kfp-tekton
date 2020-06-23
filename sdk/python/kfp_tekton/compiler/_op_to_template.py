@@ -23,7 +23,6 @@ from typing import List, Text, Dict, Any
 from kfp import dsl
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name
 from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
-from kfp.dsl import ArtifactLocation
 from kfp.dsl._container_op import BaseOp
 
 from .. import tekton_api_version
@@ -224,7 +223,6 @@ def _process_parameters(processed_op: BaseOp,
         template['spec']['results'] = []
         copy_results_step = _get_base_step('copy-results')
         for name, path in processed_op.file_outputs.items():
-            name = name.replace('_', '-')  # replace '_' to '-' since tekton results doesn't support underscore
             template['spec']['results'].append({
                 'name': name,
                 'description': path
@@ -236,7 +234,7 @@ def _process_parameters(processed_op: BaseOp,
                     commands = []
                     for c in s['command']:
                         if path in c:
-                            c = c.replace(path, '$(results.%s.path)' % name)
+                            c = c.replace(path, '$(results.%s.path)' % sanitize_k8s_name(name))
                             need_copy_step = False
                         commands.append(c)
                     s['command'] = commands
@@ -244,7 +242,7 @@ def _process_parameters(processed_op: BaseOp,
                     args = []
                     for a in s['args']:
                         if path in a:
-                            a = a.replace(path, '$(results.%s.path)' % name)
+                            a = a.replace(path, '$(results.%s.path)' % sanitize_k8s_name(name))
                             need_copy_step = False
                         args.append(a)
                     s['args'] = args
@@ -255,7 +253,7 @@ def _process_parameters(processed_op: BaseOp,
                 if mount_path not in mounted_param_paths:
                     _add_mount_path(name, path, mount_path, volume_mount_step_template, volume_template, mounted_param_paths)
             # Record what artifacts are moved to result parameters.
-            parameter_name = (processed_op.name + '-' + name).replace(' ', '-').replace('_', '-')
+            parameter_name = sanitize_k8s_name(processed_op.name + '-' + name, allow_capital_underscore=True)
             replaced_param_list.append(parameter_name)
             artifact_to_result_mapping[parameter_name] = name
         return copy_results_step
@@ -320,15 +318,16 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
         }
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
+            artifact_name = artifact_to_result_mapping[artifact['name']]
             if artifact['name'] in replaced_param_list:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'tar -cvzf %s.tgz $(results.%s.path)\n' % (artifact['name'], artifact_to_result_mapping[artifact['name']]) + \
-                    'mc cp %s.tgz storage/%s/runs/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact['name'],
-                                                                                     bucket, artifact['name'])
+                    'tar -cvzf %s.tgz $(results.%s.path)\n' % (artifact_name, sanitize_k8s_name(artifact_name)) + \
+                    'mc cp %s.tgz storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact_name,
+                                                                                     bucket, artifact_name)
             else:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'tar -cvzf %s.tgz %s\n' % (artifact['name'], artifact['path']) + \
-                    'mc cp %s.tgz storage/%s/runs/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact['name'], bucket, artifact['name'])
+                    'tar -cvzf %s.tgz %s\n' % (artifact_name, artifact['path']) + \
+                    'mc cp %s.tgz storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact_name, bucket, artifact_name)
                 if artifact['path'].rsplit("/", 1)[0] not in mounted_artifact_paths:
                     volume_mount_step_template.append({
                         'name': sanitize_k8s_name(artifact['name']), 'mountPath': artifact['path'].rsplit("/", 1)[0]
@@ -359,7 +358,7 @@ def _process_base_ops(op: BaseOp):
 
     # map param's (unsanitized pattern or serialized str pattern) -> input param var str
     map_to_tmpl_var = {
-        (param.pattern or str(param)): '$(inputs.params.%s)' % param.full_name.replace('_', '-')  # Tekton change
+        (param.pattern or str(param)): '$(inputs.params.%s)' % param.full_name  # Tekton change
         for param in op.inputs
     }
 
@@ -395,12 +394,7 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
                                              for param in processed_op.outputs.values()), key=lambda x: x[0]))
 
         output_artifacts = [
-            convert_k8s_obj_to_json(
-                ArtifactLocation.create_artifact_for_s3(
-                    op.artifact_location,
-                    name=name,
-                    path=path,
-                    key='runs/$PIPELINERUN/$PIPELINETASK/' + name))
+            {'name': name, 'path': path}
             for name, path in output_artifact_paths.items()
         ] if enable_artifacts else []
 

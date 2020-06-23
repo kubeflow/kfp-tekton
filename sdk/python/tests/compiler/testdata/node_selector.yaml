@@ -15,11 +15,16 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: sleep
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: echo
 spec:
   steps:
-  - command:
-    - sleep 1
+  - args:
+    - echo "Found my node"
+    command:
+    - sh
+    - -c
     image: busybox
     name: main
 ---
@@ -33,14 +38,14 @@ metadata:
   name: node-selector
 spec:
   tasks:
-  - name: sleep
+  - name: echo
     taskRef:
-      name: sleep
+      name: echo
 ---
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  annotation:
+  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
   name: node-selector-run
@@ -48,7 +53,7 @@ spec:
   pipelineRef:
     name: node-selector
   taskRunSpecs:
-  - pipelineTaskName: sleep
+  - pipelineTaskName: echo
     taskPodTemplate:
       nodeSelector:
-        accelerator: nvidia-tesla-k80
+        beta.kubernetes.io/instance-type: b3c.4x16.encrypted

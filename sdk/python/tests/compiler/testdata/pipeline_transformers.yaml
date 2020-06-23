@@ -19,6 +19,7 @@ metadata:
     hobby: football
   labels:
     hobby: football
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print
 spec:
   steps:
@@ -35,6 +36,7 @@ metadata:
     hobby: football
   labels:
     hobby: football
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: print-2
 spec:
   steps:
@@ -61,3 +63,14 @@ spec:
   - name: print-2
     taskRef:
       name: print-2
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: pipeline-transformer-run
+spec:
+  pipelineRef:
+    name: pipeline-transformer

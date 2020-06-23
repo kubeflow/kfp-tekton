@@ -37,7 +37,10 @@ class GetFrequentWordOp(dsl.ContainerOp):
             image='python:3.5-jessie',
             command=['sh', '-c'],
             arguments=['python -c "from collections import Counter; '
-                       'words = Counter(\'%s\'.split()); print(max(words, key=words.get))" '
+                       'text = \'%s\'; '
+                       'print(\'Input: \' + text); '
+                       'words = Counter(text.split()); '
+                       'print(\'Most frequent word: \' + str(max(words, key=words.get)))" '
                        '| tee /tmp/message.txt' % message],
             file_outputs={'word': '/tmp/message.txt'})
 
@@ -47,7 +50,8 @@ class GetFrequentWordOp(dsl.ContainerOp):
     description='Get Most Frequent Word and Save to GCS'
 )
 # def save_most_frequent_word(message: str):
-def imagepullsecrets_pipeline(message="This is a test"):
+def imagepullsecrets_pipeline(
+        message="When flies fly behind flies, then flies are following flies."):
     """A pipeline function describing the orchestration of the workflow."""
 
     counter = GetFrequentWordOp(

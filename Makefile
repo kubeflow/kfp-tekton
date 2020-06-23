@@ -21,7 +21,7 @@ export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
 .PHONY: help
 help: ## Display the Make targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
+	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: venv
@@ -31,9 +31,25 @@ $(VENV)/bin/activate: sdk/python/setup.py
 	pip install -e sdk/python
 	@touch $(VENV)/bin/activate
 
-.PHONY: test
-test: venv ## Run compiler unit tests
+.PHONY: install
+install: venv ## Install the kfp_tekton compiler in a virtual environment
+	@echo "Run 'source $(VENV)/bin/activate' to activate the virtual environment."
+
+.PHONY: unit_test
+unit_test: venv ## Run compiler unit tests
 	@sdk/python/tests/run_tests.sh
+
+.PHONY: e2e_test
+e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
+	@which kubectl || (echo "Missing kubectl CLI" && exit 1)
+	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" && exit 1 || echo "${KUBECONFIG}"
+	@kubectl version --short || (echo "Failed to access kubernetes cluster" && exit 1)
+	@which tkn && tkn version || (echo "Missing tkn CLI" && exit 1)
+	@sdk/python/tests/run_e2e_tests.sh
+
+.PHONY: test
+test: unit_test e2e_test ## Run compiler unit tests and end-to-end tests
+	@echo OK
 
 .PHONY: report
 report: ## Report compilation status of KFP testdata DSL scripts
@@ -53,3 +69,23 @@ check_license: ## Check for license header in source files
 		grep -H -E -o -c  'Copyright 20.* kubeflow.org'  {} \; | \
 		grep -E ':0$$' | sed 's/..$$//' | \
 		grep . && echo "The files listed above are missing the license header" && exit 1 || echo "OK"
+
+.PHONY: distribution
+distribution: venv ## Create a distribution and upload to test.PyPi.org
+	@echo "NOTE: Using test.PyPi.org -- edit Makefile to target real PyPi index"
+	@twine --version > /dev/null 2>&1 || pip install twine
+	@cd sdk/python && \
+		rm -rf dist/ && \
+		python3 setup.py sdist && \
+		twine check dist/* && \
+		twine upload --repository testpypi dist/*
+
+.PHONY: build
+build: ## Create GO vendor directories with all dependencies
+	go mod vendor
+	# Extract go licenses into a single file. This assume licext is install globally through
+	# npm install -g license-extractor
+	# See https://github.com/arei/license-extractor
+	licext --mode merge --source vendor/ --target third_party/license.txt --overwrite
+	# Delete vendor directory
+	rm -rf vendor

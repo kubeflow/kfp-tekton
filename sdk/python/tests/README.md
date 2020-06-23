@@ -24,10 +24,9 @@ or run this command from the project root directory:
 You should see an output similar to the one below, outlining which test scripts have passed and which are failing:
 
 ```YAML
-KFP version: 0.5.0
+KFP version: 0.5.1
 
 SUCCESS: add_pod_env.py
-SUCCESS: artifact_location.py
 SUCCESS: basic.py
 SUCCESS: basic_no_decorator.py
 SUCCESS: coin.py
@@ -60,11 +59,11 @@ FAILURE: withparam_output_dict.py
 
 Compilation status for testdata DSL scripts:
 
-  Success: 25
+  Success: 24
   Failure: 6
-  Total:   31
+  Total:   30
 
-Overall success rate: 25/31 = 81%
+Overall success rate: 24/30 = 80%
 
 Compilation status report:   sdk/python/tests/test_kfp_samples_report.txt
 Accumulated compiler logs:   temp/test_kfp_samples_output.txt
@@ -132,5 +131,5 @@ Occurences of other Errors:
 
 ## Disclaimer
 
-**Note:** The reports above were created for the pipeline scripts found in KFP version `0.5.0` since the
-`kfp_tekton` compiler code is currently based on the `kfp` SDK compiler version `0.5.0`.
+**Note:** The reports above were created for the pipeline scripts found in KFP version `0.5.1` since the
+`kfp_tekton` compiler code is currently based on the `kfp` SDK compiler version `0.5.1`.
