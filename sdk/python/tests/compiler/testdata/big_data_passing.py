@@ -218,5 +218,4 @@ def file_passing_pipelines():
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(file_passing_pipelines,
-                             __file__.replace('.py', '.yaml'),
-                             generate_pipelinerun=True)
+                             __file__.replace('.py', '.yaml'))
