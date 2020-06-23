@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"time"
 
-	workflowregister "github.com/argoproj/argo/pkg/apis/workflow"
-	workflowinformers "github.com/argoproj/argo/pkg/client/informers/externalversions"
 	"github.com/kubeflow/pipelines/backend/src/agent/persistence/client"
 	"github.com/kubeflow/pipelines/backend/src/agent/persistence/worker"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
@@ -27,6 +25,8 @@ import (
 	swfScheme "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned/scheme"
 	swfinformers "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/informers/externalversions"
 	log "github.com/sirupsen/logrus"
+	workflowregister "github.com/tektoncd/pipeline/pkg/apis/pipeline"
+	workflowinformers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -44,13 +44,13 @@ type PersistenceAgent struct {
 
 // NewPersistenceAgent returns a new persistence agent.
 func NewPersistenceAgent(
-		swfInformerFactory swfinformers.SharedInformerFactory,
-		workflowInformerFactory workflowinformers.SharedInformerFactory,
-		pipelineClient *client.PipelineClient,
-		time util.TimeInterface) *PersistenceAgent {
+	swfInformerFactory swfinformers.SharedInformerFactory,
+	workflowInformerFactory workflowinformers.SharedInformerFactory,
+	pipelineClient *client.PipelineClient,
+	time util.TimeInterface) *PersistenceAgent {
 	// obtain references to shared informers
 	swfInformer := swfInformerFactory.Scheduledworkflow().V1beta1().ScheduledWorkflows()
-	workflowInformer := workflowInformerFactory.Argoproj().V1alpha1().Workflows()
+	workflowInformer := workflowInformerFactory.Tekton().V1beta1().PipelineRuns()
 
 	// Add controller types to the default Kubernetes Scheme so Events can be
 	// logged for controller types.
@@ -62,7 +62,7 @@ func NewPersistenceAgent(
 	swfWorker := worker.NewPersistenceWorker(time, swfregister.Kind, swfInformer.Informer(), true,
 		worker.NewScheduledWorkflowSaver(swfClient, pipelineClient))
 
-	workflowWorker := worker.NewPersistenceWorker(time, workflowregister.Kind,
+	workflowWorker := worker.NewPersistenceWorker(time, workflowregister.PipelineRunControllerName,
 		workflowInformer.Informer(), true,
 		worker.NewWorkflowSaver(workflowClient, pipelineClient, ttlSecondsAfterWorkflowFinish))
 

@@ -15,8 +15,8 @@
 package client
 
 import (
-	"github.com/argoproj/argo/pkg/client/informers/externalversions/workflow/v1alpha1"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
+	"github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/cache"
 )
@@ -27,11 +27,11 @@ type WorkflowClientInterface interface {
 
 // WorkflowClient is a client to call the Workflow API.
 type WorkflowClient struct {
-	informer v1alpha1.WorkflowInformer
+	informer v1beta1.PipelineRunInformer
 }
 
 // NewWorkflowClient creates an instance of the WorkflowClient.
-func NewWorkflowClient(informer v1alpha1.WorkflowInformer) *WorkflowClient {
+func NewWorkflowClient(informer v1beta1.PipelineRunInformer) *WorkflowClient {
 	return &WorkflowClient{
 		informer: informer,
 	}
@@ -50,7 +50,7 @@ func (c *WorkflowClient) HasSynced() func() bool {
 // Get returns a Workflow, given a namespace and name.
 func (c *WorkflowClient) Get(namespace string, name string) (
 	wf *util.Workflow, err error) {
-	workflow, err := c.informer.Lister().Workflows(namespace).Get(name)
+	workflow, err := c.informer.Lister().PipelineRuns(namespace).Get(name)
 	if err != nil {
 		var code util.CustomCode
 		if util.IsNotFound(err) {

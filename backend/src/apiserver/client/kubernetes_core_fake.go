@@ -27,7 +27,8 @@ func (c *FakeKuberneteCoreClient) PodClient(namespace string) v1.PodInterface {
 	if len(namespace) == 0 {
 		panic(util.NewResourceNotFoundError("Namespace", namespace))
 	}
-	return c.podClientFake
+	return nil
+	// return c.podClientFake
 }
 
 func NewFakeKuberneteCoresClient() *FakeKuberneteCoreClient {
@@ -43,5 +44,6 @@ func NewFakeKubernetesCoreClientWithBadPodClient() *FakeKubernetesCoreClientWith
 }
 
 func (c *FakeKubernetesCoreClientWithBadPodClient) PodClient(namespace string) v1.PodInterface {
-	return c.podClientFake
+	return nil
+	// return c.podClientFake
 }

@@ -19,8 +19,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/golang/glog"
+
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 type WorkflowFormatter struct {
@@ -43,7 +44,7 @@ func NewWorkflowFormatter(uuid UUIDGeneratorInterface, scheduledAtInSec int64,
 	}
 }
 
-func (p *WorkflowFormatter) Format(workflow *v1alpha1.Workflow) error {
+func (p *WorkflowFormatter) Format(workflow *v1beta1.PipelineRun) error {
 	workflowName := getWorkflowName(workflow)
 	formattedWorkflowName, err := p.formatString(workflowName)
 	if err != nil {
@@ -59,7 +60,7 @@ func (p *WorkflowFormatter) Format(workflow *v1alpha1.Workflow) error {
 	return nil
 }
 
-func getWorkflowName(workflow *v1alpha1.Workflow) string {
+func getWorkflowName(workflow *v1beta1.PipelineRun) string {
 
 	const (
 		defaultWorkflowName = "workflow-"
@@ -74,14 +75,14 @@ func getWorkflowName(workflow *v1alpha1.Workflow) string {
 	return defaultWorkflowName
 }
 
-func (p *WorkflowFormatter) formatWorkflowParameters(workflow *v1alpha1.Workflow) error {
-	if workflow.Spec.Arguments.Parameters == nil {
+func (p *WorkflowFormatter) formatWorkflowParameters(workflow *v1beta1.PipelineRun) error {
+	if workflow.Spec.Params == nil {
 		return nil
 	}
 
-	newParams := make([]v1alpha1.Parameter, 0)
+	newParams := make([]v1beta1.Param, 0)
 
-	for _, param := range workflow.Spec.Arguments.Parameters {
+	for _, param := range workflow.Spec.Params {
 		newParam, err := p.formatParameter(param)
 		if err != nil {
 			return err
@@ -89,19 +90,24 @@ func (p *WorkflowFormatter) formatWorkflowParameters(workflow *v1alpha1.Workflow
 		newParams = append(newParams, *newParam)
 	}
 
-	workflow.Spec.Arguments.Parameters = newParams
+	workflow.Spec.Params = newParams
 	return nil
 }
 
-func (p *WorkflowFormatter) formatParameter(param v1alpha1.Parameter) (*v1alpha1.Parameter, error) {
-	formatted, err := p.formatString(*param.Value)
+func (p *WorkflowFormatter) formatParameter(param v1beta1.Param) (*v1beta1.Param, error) {
+	formatted, err := p.formatString(param.Value.StringVal)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1alpha1.Parameter{
+	tektonFormatted := v1beta1.ArrayOrString{
+		Type:      "string",
+		StringVal: formatted,
+	}
+
+	return &v1beta1.Param{
 		Name:  param.Name,
-		Value: &formatted,
+		Value: tektonFormatted,
 	}, nil
 }
 

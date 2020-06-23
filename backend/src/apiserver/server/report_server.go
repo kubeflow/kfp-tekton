@@ -18,12 +18,13 @@ import (
 	"context"
 	"encoding/json"
 
-	workflow "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
+	// workflow "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/golang/protobuf/ptypes/empty"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	scheduledworkflow "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
+	workflow "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 type ReportServer struct {
@@ -57,20 +58,20 @@ func (s *ReportServer) ReportScheduledWorkflow(ctx context.Context,
 }
 
 func ValidateReportWorkflowRequest(request *api.ReportWorkflowRequest) (*util.Workflow, error) {
-	var workflow1 workflow.Workflow
+	var workflow1 workflow.PipelineRun
 	err := json.Unmarshal([]byte(request.Workflow), &workflow1)
 	if err != nil {
 		return nil, util.NewInvalidInputError("Could not unmarshal workflow: %v: %v", err, request.Workflow)
 	}
 	workflow := util.NewWorkflow(&workflow1)
 	if workflow.Name == "" {
-		return nil, util.NewInvalidInputError("The workflow must have a name: %+v", workflow.Workflow)
+		return nil, util.NewInvalidInputError("The workflow must have a name: %+v", workflow.PipelineRun)
 	}
 	if workflow.Namespace == "" {
-		return nil, util.NewInvalidInputError("The workflow must have a namespace: %+v", workflow.Workflow)
+		return nil, util.NewInvalidInputError("The workflow must have a namespace: %+v", workflow.PipelineRun)
 	}
 	if workflow.UID == "" {
-		return nil, util.NewInvalidInputError("The workflow must have a UID: %+v", workflow.Workflow)
+		return nil, util.NewInvalidInputError("The workflow must have a UID: %+v", workflow.PipelineRun)
 	}
 	return workflow, nil
 }

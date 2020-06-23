@@ -17,10 +17,10 @@ package util
 import (
 	"strings"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/golang/glog"
 	swfregister "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -28,11 +28,11 @@ import (
 
 // Workflow is a type to help manipulate Workflow objects.
 type Workflow struct {
-	*workflowapi.Workflow
+	*workflowapi.PipelineRun
 }
 
 // NewWorkflow creates a Workflow.
-func NewWorkflow(workflow *workflowapi.Workflow) *Workflow {
+func NewWorkflow(workflow *workflowapi.PipelineRun) *Workflow {
 	return &Workflow{
 		workflow,
 	}
@@ -45,26 +45,29 @@ func (w *Workflow) SetServiceAccount(serviceAccount string) {
 
 // OverrideParameters overrides some of the parameters of a Workflow.
 func (w *Workflow) OverrideParameters(desiredParams map[string]string) {
-	desiredSlice := make([]workflowapi.Parameter, 0)
-	for _, currentParam := range w.Spec.Arguments.Parameters {
-		var desiredValue *string = nil
-		if param, ok := desiredParams[currentParam.Name]; ok {
-			desiredValue = &param
-		} else {
-			desiredValue = currentParam.Value
+	desiredSlice := make([]workflowapi.Param, 0)
+	for _, currentParam := range w.Spec.Params {
+		var desiredValue workflowapi.ArrayOrString = workflowapi.ArrayOrString{
+			Type:      "string",
+			StringVal: "",
 		}
-		desiredSlice = append(desiredSlice, workflowapi.Parameter{
+		if param, ok := desiredParams[currentParam.Name]; ok {
+			desiredValue.StringVal = param
+		} else {
+			desiredValue.StringVal = currentParam.Value.StringVal
+		}
+		desiredSlice = append(desiredSlice, workflowapi.Param{
 			Name:  currentParam.Name,
 			Value: desiredValue,
 		})
 	}
-	w.Spec.Arguments.Parameters = desiredSlice
+	w.Spec.Params = desiredSlice
 }
 
 func (w *Workflow) VerifyParameters(desiredParams map[string]string) error {
 	templateParamsMap := make(map[string]*string)
-	for _, param := range w.Spec.Arguments.Parameters {
-		templateParamsMap[param.Name] = param.Value
+	for _, param := range w.Spec.Params {
+		templateParamsMap[param.Name] = &param.Value.StringVal
 	}
 	for k := range desiredParams {
 		_, ok := templateParamsMap[k]
@@ -76,8 +79,8 @@ func (w *Workflow) VerifyParameters(desiredParams map[string]string) error {
 }
 
 // Get converts this object to a workflowapi.Workflow.
-func (w *Workflow) Get() *workflowapi.Workflow {
-	return w.Workflow
+func (w *Workflow) Get() *workflowapi.PipelineRun {
+	return w.PipelineRun
 }
 
 func (w *Workflow) ScheduledWorkflowUUIDAsStringOrEmpty() string {
@@ -143,33 +146,37 @@ func (w *Workflow) ScheduledAtInSecOr0() int64 {
 }
 
 func (w *Workflow) FinishedAt() int64 {
-	if w.Status.FinishedAt.IsZero() {
+	if w.Status.PipelineRunStatusFields.CompletionTime.IsZero() {
 		// If workflow is not finished
 		return 0
 	}
-	return w.Status.FinishedAt.Unix()
+	return w.Status.PipelineRunStatusFields.CompletionTime.Unix()
 }
 
 func (w *Workflow) Condition() string {
-	return string(w.Status.Phase)
+	if len(w.Status.Status.Conditions) > 0 {
+		return string(w.Status.Status.Conditions[0].Reason)
+	} else {
+		return ""
+	}
 }
 
 func (w *Workflow) ToStringForStore() string {
-	workflow, err := json.Marshal(w.Workflow)
+	workflow, err := json.Marshal(w.PipelineRun)
 	if err != nil {
-		glog.Errorf("Could not marshal the workflow: %v", w.Workflow)
+		glog.Errorf("Could not marshal the workflow: %v", w.PipelineRun)
 		return ""
 	}
 	return string(workflow)
 }
 
 func (w *Workflow) HasScheduledWorkflowAsParent() bool {
-	return containsScheduledWorkflow(w.Workflow.OwnerReferences)
+	return containsScheduledWorkflow(w.PipelineRun.OwnerReferences)
 }
 
 func (w *Workflow) GetWorkflowSpec() *Workflow {
 	workflow := w.DeepCopy()
-	workflow.Status = workflowapi.WorkflowStatus{}
+	workflow.Status = workflowapi.PipelineRunStatus{}
 	workflow.TypeMeta = metav1.TypeMeta{Kind: w.Kind, APIVersion: w.APIVersion}
 	// To prevent collisions, clear name, set GenerateName to first 200 runes of previous name.
 	nameRunes := []rune(w.Name)
@@ -189,30 +196,14 @@ func (w *Workflow) OverrideName(name string) {
 
 // SetAnnotations sets annotations on all templates in a Workflow
 func (w *Workflow) SetAnnotationsToAllTemplates(key string, value string) {
-	if len(w.Spec.Templates) == 0 {
-		return
-	}
-	for index, _ := range w.Spec.Templates {
-		if w.Spec.Templates[index].Metadata.Annotations == nil {
-			w.Spec.Templates[index].Metadata.Annotations = make(map[string]string)
-		}
-		w.Spec.Templates[index].Metadata.Annotations[key] = value
-	}
+	// No metadata object within pipelineRun task
+	return
 }
 
 // SetLabels sets labels on all templates in a Workflow
 func (w *Workflow) SetLabelsToAllTemplates(key string, value string) {
-	if len(w.Spec.Templates) == 0 {
-		return
-	}
-	for index, _ := range w.Spec.Templates {
-		if w.Spec.Templates[index].Metadata.Labels == nil {
-			w.Spec.Templates[index].Metadata.Labels = make(map[string]string)
-		}
-		if w.Spec.Templates[index].Metadata.Labels[key] != value {
-			w.Spec.Templates[index].Metadata.Labels[key] = value
-		}
-	}
+	// No metadata object within pipelineRun task
+	return
 }
 
 // SetOwnerReferences sets owner references on a Workflow.
@@ -242,12 +233,12 @@ func (w *Workflow) SetAnnotations(key string, value string) {
 
 func (w *Workflow) ReplaceUID(id string) error {
 	newWorkflowString := strings.Replace(w.ToStringForStore(), "{{workflow.uid}}", id, -1)
-	var workflow *workflowapi.Workflow
+	var workflow *workflowapi.PipelineRun
 	if err := json.Unmarshal([]byte(newWorkflowString), &workflow); err != nil {
 		return NewInternalServerError(err,
 			"Failed to unmarshal workflow spec manifest. Workflow: %s", w.ToStringForStore())
 	}
-	w.Workflow = workflow
+	w.PipelineRun = workflow
 	return nil
 }
 
@@ -261,30 +252,36 @@ func (w *Workflow) SetCannonicalLabels(name string, nextScheduledEpoch int64, in
 // FindObjectStoreArtifactKeyOrEmpty loops through all node running statuses and look up the first
 // S3 artifact with the specified nodeID and artifactName. Returns empty if nothing is found.
 func (w *Workflow) FindObjectStoreArtifactKeyOrEmpty(nodeID string, artifactName string) string {
-	if w.Status.Nodes == nil {
+	// TODO: The below artifact keys are only for parameter artifacts. Will need to also implement
+	//       metric and raw input artifacts once we finallized the big data passing in our compiler.
+
+	if w.Status.PipelineRunStatusFields.TaskRuns == nil {
 		return ""
 	}
-	node, found := w.Status.Nodes[nodeID]
+	node, found := w.Status.PipelineRunStatusFields.TaskRuns[nodeID]
 	if !found {
 		return ""
 	}
-	if node.Outputs == nil || node.Outputs.Artifacts == nil {
+	if node.Status == nil || node.Status.TaskRunResults == nil {
 		return ""
 	}
 	var s3Key string
-	for _, artifact := range node.Outputs.Artifacts {
-		if artifact.Name != artifactName || artifact.S3 == nil || artifact.S3.Key == "" {
+	for _, artifact := range node.Status.TaskRunResults {
+		if artifact.Name != artifactName {
 			continue
 		}
-		s3Key = artifact.S3.Key
+		s3Key = "artifacts/" + w.ObjectMeta.Name + "/" + nodeID + "/" + artifactName + ".tgz"
 	}
 	return s3Key
 }
 
 // IsInFinalState whether the workflow is in a final state.
 func (w *Workflow) IsInFinalState() bool {
-	if w.Status.Phase == workflowapi.NodeSucceeded || w.Status.Phase == workflowapi.NodeFailed {
-		return true
+	if len(w.Status.Status.Conditions) > 0 {
+		phase := w.Status.Status.Conditions[0].Reason
+		if phase == "Succeeded" || phase == "Failed" || phase == "Completed" {
+			return true
+		}
 	}
 	return false
 }

@@ -3,13 +3,13 @@ package api_server
 import (
 	"fmt"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/strfmt"
 	apiclient "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client"
 	params "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client/run_service"
 	model "github.com/kubeflow/pipelines/backend/api/go_http_client/run_model"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"golang.org/x/net/context"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
@@ -17,7 +17,7 @@ import (
 
 type RunInterface interface {
 	Archive(params *params.ArchiveRunParams) error
-	Get(params *params.GetRunParams) (*model.APIRunDetail, *workflowapi.Workflow, error)
+	Get(params *params.GetRunParams) (*model.APIRunDetail, *workflowapi.PipelineRun, error)
 	List(params *params.ListRunsParams) ([]*model.APIRun, int, string, error)
 	ListAll(params *params.ListRunsParams, maxResultSize int) ([]*model.APIRun, error)
 	Unarchive(params *params.UnarchiveRunParams) error
@@ -45,7 +45,7 @@ func NewRunClient(clientConfig clientcmd.ClientConfig, debug bool) (
 }
 
 func (c *RunClient) Create(parameters *params.CreateRunParams) (*model.APIRunDetail,
-	*workflowapi.Workflow, error) {
+	*workflowapi.PipelineRun, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
 	defer cancel()
@@ -66,7 +66,7 @@ func (c *RunClient) Create(parameters *params.CreateRunParams) (*model.APIRunDet
 	}
 
 	// Unmarshal response
-	var workflow workflowapi.Workflow
+	var workflow workflowapi.PipelineRun
 	err = yaml.Unmarshal([]byte(response.Payload.PipelineRuntime.WorkflowManifest), &workflow)
 	if err != nil {
 		return nil, nil, util.NewUserError(err,
@@ -79,7 +79,7 @@ func (c *RunClient) Create(parameters *params.CreateRunParams) (*model.APIRunDet
 }
 
 func (c *RunClient) Get(parameters *params.GetRunParams) (*model.APIRunDetail,
-	*workflowapi.Workflow, error) {
+	*workflowapi.PipelineRun, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
 	defer cancel()
@@ -100,7 +100,7 @@ func (c *RunClient) Get(parameters *params.GetRunParams) (*model.APIRunDetail,
 	}
 
 	// Unmarshal response
-	var workflow workflowapi.Workflow
+	var workflow workflowapi.PipelineRun
 	err = yaml.Unmarshal([]byte(response.Payload.PipelineRuntime.WorkflowManifest), &workflow)
 	if err != nil {
 		return nil, nil, util.NewUserError(err,
