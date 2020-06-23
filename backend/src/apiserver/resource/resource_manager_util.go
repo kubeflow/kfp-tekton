@@ -21,14 +21,13 @@ import (
 	"strings"
 	"time"
 
-	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	"github.com/argoproj/argo/workflow/common"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	servercommon "github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	scheduledworkflow "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
+	wfv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -120,58 +119,64 @@ func toParametersMap(apiParams []*api.Parameter) map[string]string {
 }
 
 func formulateRetryWorkflow(wf *util.Workflow) (*util.Workflow, []string, error) {
-	switch wf.Status.Phase {
-	case wfv1.NodeFailed, wfv1.NodeError:
-		break
-	default:
-		return nil, nil, util.NewBadRequestError(errors.New("workflow cannot be retried"), "Workflow must be Failed/Error to retry")
+	if len(wf.Status.Status.Conditions) > 0 {
+		switch wf.Status.Status.Conditions[0].Type {
+		case "Failed", "Error":
+			break
+		default:
+			return nil, nil, util.NewBadRequestError(errors.New("workflow cannot be retried"), "Workflow must be Failed/Error to retry")
+		}
 	}
+
+	// TODO: Fix the below code to retry Tekton task. It may not be possible with the
+	//       current implementation because Tekton doesn't have the concept of pipeline
+	//       phases.
 
 	newWF := wf.DeepCopy()
 	// Delete/reset fields which indicate workflow completed
-	delete(newWF.Labels, common.LabelKeyCompleted)
-	// Delete/reset fields which indicate workflow is finished being persisted to the database
-	delete(newWF.Labels, util.LabelKeyWorkflowPersistedFinalState)
-	newWF.ObjectMeta.Labels[common.LabelKeyPhase] = string(wfv1.NodeRunning)
-	newWF.Status.Phase = wfv1.NodeRunning
-	newWF.Status.Message = ""
-	newWF.Status.FinishedAt = metav1.Time{}
-	if newWF.Spec.ActiveDeadlineSeconds != nil && *newWF.Spec.ActiveDeadlineSeconds == 0 {
-		// if it was terminated, unset the deadline
-		newWF.Spec.ActiveDeadlineSeconds = nil
-	}
+	// delete(newWF.Labels, common.LabelKeyCompleted)
+	// // Delete/reset fields which indicate workflow is finished being persisted to the database
+	// delete(newWF.Labels, util.LabelKeyWorkflowPersistedFinalState)
+	// newWF.ObjectMeta.Labels[common.LabelKeyPhase] = string("Running")
+	// newWF.Status.Phase = "Running"
+	// newWF.Status.Message = ""
+	// newWF.Status.FinishedAt = metav1.Time{}
+	// if newWF.Spec.ActiveDeadlineSeconds != nil && *newWF.Spec.ActiveDeadlineSeconds == 0 {
+	// 	// if it was terminated, unset the deadline
+	// 	newWF.Spec.ActiveDeadlineSeconds = nil
+	// }
 
-	// Iterate the previous nodes. If it was successful Pod carry it forward
-	newWF.Status.Nodes = make(map[string]wfv1.NodeStatus)
-	onExitNodeName := wf.ObjectMeta.Name + ".onExit"
+	// // Iterate the previous nodes. If it was successful Pod carry it forward
+	// newWF.Status.Nodes = make(map[string]wfv1.NodeStatus)
+	// onExitNodeName := wf.ObjectMeta.Name + ".onExit"
 	var podsToDelete []string
-	for _, node := range wf.Status.Nodes {
-		switch node.Phase {
-		case wfv1.NodeSucceeded, wfv1.NodeSkipped:
-			if !strings.HasPrefix(node.Name, onExitNodeName) {
-				newWF.Status.Nodes[node.ID] = node
-				continue
-			}
-		case wfv1.NodeError, wfv1.NodeFailed:
-			if !strings.HasPrefix(node.Name, onExitNodeName) && node.Type == wfv1.NodeTypeDAG {
-				newNode := node.DeepCopy()
-				newNode.Phase = wfv1.NodeRunning
-				newNode.Message = ""
-				newNode.FinishedAt = metav1.Time{}
-				newWF.Status.Nodes[newNode.ID] = *newNode
-				continue
-			}
-			// do not add this status to the node. pretend as if this node never existed.
-		default:
-			// Do not allow retry of workflows with pods in Running/Pending phase
-			return nil, nil, util.NewInternalServerError(
-				errors.New("workflow cannot be retried"),
-				"Workflow cannot be retried with node %s in %s phase", node, node.Phase)
-		}
-		if node.Type == wfv1.NodeTypePod {
-			podsToDelete = append(podsToDelete, node.ID)
-		}
-	}
+	// for _, node := range wf.Status.Nodes {
+	// 	switch node.Phase {
+	// 	case "Succeeded", "Skipped":
+	// 		if !strings.HasPrefix(node.Name, onExitNodeName) {
+	// 			newWF.Status.Nodes[node.ID] = node
+	// 			continue
+	// 		}
+	// 	case "Error", "Failed":
+	// 		if !strings.HasPrefix(node.Name, onExitNodeName) && node.Type == "DAG" {
+	// 			newNode := node.DeepCopy()
+	// 			newNode.Phase = "Running"
+	// 			newNode.Message = ""
+	// 			newNode.FinishedAt = metav1.Time{}
+	// 			newWF.Status.Nodes[newNode.ID] = *newNode
+	// 			continue
+	// 		}
+	// 		// do not add this status to the node. pretend as if this node never existed.
+	// 	default:
+	// 		// Do not allow retry of workflows with pods in Running/Pending phase
+	// 		return nil, nil, util.NewInternalServerError(
+	// 			errors.New("workflow cannot be retried"),
+	// 			"Workflow cannot be retried with node %s in %s phase", node, node.Phase)
+	// 	}
+	// 	if node.Type == "Pod" {
+	// 		podsToDelete = append(podsToDelete, node.ID)
+	// 	}
+	// }
 	return util.NewWorkflow(newWF), podsToDelete, nil
 }
 
@@ -204,30 +209,25 @@ func PatchPipelineDefaultParameter(text string) (string, error) {
 // Patch the system-specified default parameters if available.
 func OverrideParameterWithSystemDefault(workflow util.Workflow, apiRun *api.Run) error {
 	// Patch the default value to workflow spec.
+	// Please be aware that Tekton doesn't have system default params
 	if servercommon.GetBoolConfigWithDefault(HasDefaultBucketEnvVar, false) {
-		patchedSlice := make([]wfv1.Parameter, 0)
-		for _, currentParam := range workflow.Spec.Arguments.Parameters {
-			if currentParam.Value != nil {
-				desiredValue, err := PatchPipelineDefaultParameter(*currentParam.Value)
+		patchedSlice := make([]wfv1.Param, 0)
+		for _, currentParam := range workflow.Spec.Params {
+			if currentParam.Value.StringVal != "" {
+				desiredValue, err := PatchPipelineDefaultParameter(currentParam.Value.StringVal)
 				if err != nil {
 					return fmt.Errorf("failed to patch default value to pipeline. Error: %v", err)
 				}
-				patchedSlice = append(patchedSlice, wfv1.Parameter{
-					Name:  currentParam.Name,
-					Value: util.StringPointer(desiredValue),
-				})
-			} else if currentParam.Default != nil {
-				desiredValue, err := PatchPipelineDefaultParameter(*currentParam.Default)
-				if err != nil {
-					return fmt.Errorf("failed to patch default value to pipeline. Error: %v", err)
-				}
-				patchedSlice = append(patchedSlice, wfv1.Parameter{
-					Name:  currentParam.Name,
-					Value: util.StringPointer(desiredValue),
+				patchedSlice = append(patchedSlice, wfv1.Param{
+					Name: currentParam.Name,
+					Value: wfv1.ArrayOrString{
+						Type:      "string",
+						StringVal: *util.StringPointer(desiredValue),
+					},
 				})
 			}
 		}
-		workflow.Spec.Arguments.Parameters = patchedSlice
+		workflow.Spec.Params = patchedSlice
 
 		// Patched the default value to apiRun
 		for _, param := range apiRun.PipelineSpec.Parameters {

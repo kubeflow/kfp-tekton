@@ -62,6 +62,7 @@ def patch_pod_metadata(
 mlmd_store = connect_to_mlmd()
 print("Connected to the metadata store")
 
+PIPELINE_RUNTIME = os.getenv("PIPELINE_RUNTIME", "argo").lower()
 
 ARGO_OUTPUTS_ANNOTATION_KEY = 'workflows.argoproj.io/outputs'
 ARGO_TEMPLATE_ANNOTATION_KEY = 'workflows.argoproj.io/template'
@@ -76,13 +77,22 @@ ARGO_WORKFLOW_LABEL_KEY = 'workflows.argoproj.io/workflow'
 ARGO_COMPLETED_LABEL_KEY = 'workflows.argoproj.io/completed'
 METADATA_WRITTEN_LABEL_KEY = 'pipelines.kubeflow.org/metadata_written'
 
+TEKTON_PIPELINERUN_LABEL_KEY = 'tekton.dev/pipelineRun'
+TEKTON_READY_ANNOTATION_KEY = 'tekton.dev/ready'
+TEKTON_TASKRUN_LABEL_KEY = 'tekton.dev/taskRun'
+TEKTON_PIPELINETASK_LABEL_KEY = 'tekton.dev/pipelineTask'
+TEKTON_INPUT_ARTIFACT_ANNOTATION_KEY = 'tekton.dev/input_artifacts'
+TEKTON_OUTPUT_ARTIFACT_ANNOTATION_KEY = 'tekton.dev/output_artifacts'
+
+PIPELINE_LABEL_KEY = TEKTON_PIPELINERUN_LABEL_KEY if PIPELINE_RUNTIME == "tekton" else ARGO_WORKFLOW_LABEL_KEY
+
 
 def output_name_to_argo(name: str) -> str:
     import re
     return re.sub('-+', '-', re.sub('[^-0-9a-z]+', '-', name.lower())).strip('-')
 
 
-def argo_artifact_to_uri(artifact: dict) -> str:
+def artifact_to_uri(artifact: dict) -> str:
     if 's3' in artifact:
         s3_artifact = artifact['s3']
         return 'minio://{bucket}/{key}'.format(
@@ -96,11 +106,69 @@ def argo_artifact_to_uri(artifact: dict) -> str:
 
 
 def is_tfx_pod(pod) -> bool:
-    main_containers = [container for container in pod.spec.containers if container.name == 'main']
+    main_step_name = 'step-main' if PIPELINE_RUNTIME == "tekton" else 'main'
+    main_containers = [container for container in pod.spec.containers if container.name == main_step_name]
     if len(main_containers) != 1:
         return False
     main_container = main_containers[0]
     return main_container.command and main_container.command[-1].endswith('tfx/orchestration/kubeflow/container_entrypoint.py')
+
+
+def get_component_template(obj):
+    '''
+    Return an Argo formatted component template
+    '''
+    if PIPELINE_RUNTIME == "tekton":
+        artifacts = json.loads(obj.metadata.annotations[TEKTON_INPUT_ARTIFACT_ANNOTATION_KEY])
+        results = artifacts.get(obj.metadata.labels[TEKTON_PIPELINETASK_LABEL_KEY], [])
+        component_template = {
+            "name": obj.metadata.labels[TEKTON_PIPELINETASK_LABEL_KEY],
+            "inputs": {
+                "artifacts": [
+                    {
+                        "name": i["name"],
+                        "s3": {
+                            "bucket": "mlpipeline",
+                            "key": "artifacts/%s/%s/%s.tgz" % (obj.metadata.labels[TEKTON_PIPELINERUN_LABEL_KEY],
+                                                               i['parent_task'],
+                                                               i["name"].replace(i['parent_task'] + '-', ''))
+                        }
+                    } for i in results
+                ]
+            }
+        }
+        return component_template
+    else:
+        return json.loads(obj.metadata.annotations[ARGO_TEMPLATE_ANNOTATION_KEY])
+
+
+def get_output_template(obj):
+    '''
+    Return an Argo formatted artifact output template
+    '''
+    if PIPELINE_RUNTIME == "tekton":
+        artifacts = json.loads(obj.metadata.annotations[TEKTON_OUTPUT_ARTIFACT_ANNOTATION_KEY])
+        results = artifacts.get(obj.metadata.labels[TEKTON_PIPELINETASK_LABEL_KEY], [])
+        artifact_prefix = obj.metadata.labels[TEKTON_PIPELINETASK_LABEL_KEY] + '-'
+        s3_key_prefix = 'artifacts/%s/%s' % (obj.metadata.labels[TEKTON_PIPELINERUN_LABEL_KEY],
+                                             obj.metadata.labels[TEKTON_PIPELINETASK_LABEL_KEY])
+        output_template = {
+            "name": obj.metadata.labels[TEKTON_PIPELINETASK_LABEL_KEY],
+            "artifacts": [
+                {
+                    "name": i["name"],
+                    "path": i["path"],
+                    "s3": {
+                        "bucket": "mlpipeline",
+                        "key": "%s/%s.tgz" % (s3_key_prefix,
+                                              i["name"].replace(artifact_prefix, ''))
+                    }
+                } for i in results
+            ]
+        }
+        return output_template
+    else:
+        return json.loads(obj.metadata.annotations[ARGO_OUTPUTS_ANNOTATION_KEY])
 
 
 # Caches (not expected to be persistent)
@@ -117,7 +185,7 @@ while True:
     for event in k8s_watch.stream(
         k8s_api.list_namespaced_pod,
         namespace=namespace_to_watch,
-        label_selector=ARGO_WORKFLOW_LABEL_KEY,
+        label_selector=PIPELINE_LABEL_KEY,
     ):
         try:
             obj = event['object']
@@ -140,13 +208,13 @@ while True:
             if is_tfx_pod(obj):
                 continue
 
-            argo_workflow_name = obj.metadata.labels[ARGO_WORKFLOW_LABEL_KEY] # Should exist due to initial filtering
-            argo_template = json.loads(obj.metadata.annotations[ARGO_TEMPLATE_ANNOTATION_KEY])
-            argo_template_name = argo_template['name']
+            pipeline_name = obj.metadata.labels[PIPELINE_LABEL_KEY] # Should exist due to initial filtering
+            template = get_component_template(obj)
+            template_name = template['name']
 
-            component_name = argo_template_name
+            component_name = template_name
             component_version = component_name
-            argo_output_name_to_type = {}
+            output_name_to_type = {}
             if KFP_COMPONENT_SPEC_ANNOTATION_KEY in obj.metadata.annotations:
                 component_spec_text = obj.metadata.annotations[KFP_COMPONENT_SPEC_ANNOTATION_KEY]
                 component_spec = json.loads(component_spec_text)
@@ -154,11 +222,11 @@ while True:
                 component_name = component_spec.get('name', component_name)
                 component_version = component_name + '@sha256=' + component_spec_digest
                 output_name_to_type = {output['name']: output.get('type', None) for output in component_spec.get('outputs', [])}
-                argo_output_name_to_type = {output_name_to_argo(k): v for k, v in output_name_to_type.items() if v}
+                output_name_to_type = {output_name_to_argo(k): v for k, v in output_name_to_type.items() if v}
 
             if obj.metadata.name in pod_name_to_execution_id:
                 execution_id = pod_name_to_execution_id[obj.metadata.name]
-                context_id = workflow_name_to_context_id[argo_workflow_name]
+                context_id = workflow_name_to_context_id[pipeline_name]
             elif METADATA_EXECUTION_ID_LABEL_KEY in obj.metadata.labels:
                 execution_id = int(obj.metadata.labels[METADATA_EXECUTION_ID_LABEL_KEY])
                 context_id = int(obj.metadata.labels[METADATA_CONTEXT_ID_LABEL_KEY])
@@ -166,7 +234,7 @@ while True:
             else:
                 run_context = get_or_create_run_context(
                     store=mlmd_store,
-                    run_id=argo_workflow_name, # We can switch to internal run IDs once backend starts adding them
+                    run_id=pipeline_name, # We can switch to internal run IDs once backend starts adding them
                 )
 
                 # Adding new execution to the database
@@ -175,25 +243,30 @@ while True:
                     context_id=run_context.id,
                     execution_type_name=KFP_EXECUTION_TYPE_NAME_PREFIX + component_version,
                     pod_name=pod_name,
-                    pipeline_name=argo_workflow_name,
-                    run_id=argo_workflow_name,
+                    pipeline_name=pipeline_name,
+                    run_id=pipeline_name,
                     instance_id=component_name,
                 )
 
-                argo_input_artifacts = argo_template.get('inputs', {}).get('artifacts', [])
+                input_artifacts = template.get('inputs', {}).get('artifacts', [])
                 input_artifact_ids = []
-                for argo_artifact in argo_input_artifacts:
-                    artifact_uri = argo_artifact_to_uri(argo_artifact)
+                for input_artifact in input_artifacts:
+                    artifact_uri = artifact_to_uri(input_artifact)
                     if not artifact_uri:
                         continue
 
-                    input_name = argo_artifact.get('path', '') # Every artifact should have a path in Argo
-                    input_artifact_path_prefix = '/tmp/inputs/'
-                    input_artifact_path_postfix = '/data'
-                    if input_name.startswith(input_artifact_path_prefix):
-                        input_name = input_name[len(input_artifact_path_prefix):]
-                    if input_name.endswith(input_artifact_path_postfix):
-                        input_name = input_name[0: -len(input_artifact_path_postfix)]
+                    if PIPELINE_RUNTIME == "tekton":
+                        input_name = input_artifact.get('name', '')
+                        input_prefix = template_name + '-'
+                        input_name = input_name[len(input_prefix):]
+                    else:
+                        input_name = input_artifact.get('path', '') # Every artifact should have a path in Argo
+                        input_artifact_path_prefix = '/tmp/inputs/'
+                        input_artifact_path_postfix = '/data'
+                        if input_name.startswith(input_artifact_path_prefix):
+                            input_name = input_name[len(input_artifact_path_prefix):]
+                        if input_name.endswith(input_artifact_path_postfix):
+                            input_name = input_name[0: -len(input_artifact_path_postfix)]
 
                     artifact = link_execution_to_input_artifact(
                         store=mlmd_store,
@@ -238,13 +311,13 @@ while True:
                     patch=metadata_to_add,
                 )
                 pod_name_to_execution_id[obj.metadata.name] = execution_id
-                workflow_name_to_context_id[argo_workflow_name] = context_id
+                workflow_name_to_context_id[pipeline_name] = context_id
 
                 print('New execution id: {}, context id: {} for pod {}.'.format(execution_id, context_id, obj.metadata.name))
 
                 print('Execution: ' + str(dict(
                     context_id=context_id,
-                    context_name=argo_workflow_name,
+                    context_name=pipeline_name,
                     execution_id=execution_id,
                     execution_name=obj.metadata.name,
                     component_name=component_name,
@@ -258,27 +331,28 @@ while True:
                 and (
                     obj.metadata.labels.get(ARGO_COMPLETED_LABEL_KEY, 'false') == 'true'
                     or ARGO_OUTPUTS_ANNOTATION_KEY in obj.metadata.annotations
+                    or TEKTON_OUTPUT_ARTIFACT_ANNOTATION_KEY in obj.metadata.annotations
                 )
             ):
                 artifact_ids = []
 
-                if ARGO_OUTPUTS_ANNOTATION_KEY in obj.metadata.annotations: # Should be present
-                    argo_outputs = json.loads(obj.metadata.annotations[ARGO_OUTPUTS_ANNOTATION_KEY])
-                    argo_output_artifacts = {}
+                if ARGO_OUTPUTS_ANNOTATION_KEY in obj.metadata.annotations or TEKTON_OUTPUT_ARTIFACT_ANNOTATION_KEY in obj.metadata.annotations: # Should be present
+                    outputs = get_output_template(obj)
+                    pipeline_output_artifacts = {}
 
-                    for artifact in argo_outputs.get('artifacts', []):
+                    for artifact in outputs.get('artifacts', []):
                         art_name = artifact['name']
-                        output_prefix = argo_template_name + '-'
+                        output_prefix = template_name + '-'
                         if art_name.startswith(output_prefix):
                             art_name = art_name[len(output_prefix):]
-                        argo_output_artifacts[art_name] = artifact
+                        pipeline_output_artifacts[art_name] = artifact
                     
                     output_artifacts = []
-                    for name, art in argo_output_artifacts.items():
-                        artifact_uri = argo_artifact_to_uri(art)
+                    for name, art in pipeline_output_artifacts.items():
+                        artifact_uri = artifact_to_uri(art)
                         if not artifact_uri:
                             continue
-                        artifact_type_name = argo_output_name_to_type.get(name, 'NoType') # Cannot be None or ''
+                        artifact_type_name = output_name_to_type.get(name, 'NoType') # Cannot be None or ''
 
                         print('Adding Output Artifact: ' + str(dict(
                             output_name=name,
@@ -294,7 +368,7 @@ while True:
                             type_name=artifact_type_name,
                             output_name=name,
                             #run_id='Context_' + str(context_id) + '_run',
-                            run_id=argo_workflow_name,
+                            run_id=pipeline_name,
                             argo_artifact=art,
                         )
 

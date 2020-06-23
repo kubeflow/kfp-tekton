@@ -3,13 +3,13 @@ package api_server
 import (
 	"fmt"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/strfmt"
 	apiclient "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client"
 	params "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
 	model "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_model"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"golang.org/x/net/context"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
@@ -19,7 +19,7 @@ type PipelineInterface interface {
 	Create(params *params.CreatePipelineParams) (*model.APIPipeline, error)
 	Get(params *params.GetPipelineParams) (*model.APIPipeline, error)
 	Delete(params *params.DeletePipelineParams) error
-	GetTemplate(params *params.GetTemplateParams) (*workflowapi.Workflow, error)
+	GetTemplate(params *params.GetTemplateParams) (*workflowapi.PipelineRun, error)
 	List(params *params.ListPipelinesParams) ([]*model.APIPipeline, int, string, error)
 	ListAll(params *params.ListPipelinesParams, maxResultSize int) (
 		[]*model.APIPipeline, error)
@@ -116,7 +116,7 @@ func (c *PipelineClient) Delete(parameters *params.DeletePipelineParams) error {
 }
 
 func (c *PipelineClient) GetTemplate(parameters *params.GetTemplateParams) (
-	*workflowapi.Workflow, error) {
+	*workflowapi.PipelineRun, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
 	defer cancel()
@@ -137,7 +137,7 @@ func (c *PipelineClient) GetTemplate(parameters *params.GetTemplateParams) (
 	}
 
 	// Unmarshal response
-	var workflow workflowapi.Workflow
+	var workflow workflowapi.PipelineRun
 	err = yaml.Unmarshal([]byte(response.Payload.Template), &workflow)
 	if err != nil {
 		return nil, util.NewUserError(err,
@@ -275,7 +275,7 @@ func (c *PipelineClient) GetPipelineVersion(parameters *params.GetPipelineVersio
 }
 
 func (c *PipelineClient) GetPipelineVersionTemplate(parameters *params.GetPipelineVersionTemplateParams) (
-	*workflowapi.Workflow, error) {
+	*workflowapi.PipelineRun, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
 	defer cancel()
@@ -296,7 +296,7 @@ func (c *PipelineClient) GetPipelineVersionTemplate(parameters *params.GetPipeli
 	}
 
 	// Unmarshal response
-	var workflow workflowapi.Workflow
+	var workflow workflowapi.PipelineRun
 	err = yaml.Unmarshal([]byte(response.Payload.Template), &workflow)
 	if err != nil {
 		return nil, util.NewUserError(err,

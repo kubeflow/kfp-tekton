@@ -18,14 +18,14 @@ import (
 	"flag"
 	"time"
 
-	workflowclientSet "github.com/argoproj/argo/pkg/client/clientset/versioned"
-	workflowinformers "github.com/argoproj/argo/pkg/client/informers/externalversions"
 	"github.com/kubeflow/pipelines/backend/src/agent/persistence/client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	swfclientset "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned"
 	swfinformers "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/informers/externalversions"
 	"github.com/kubeflow/pipelines/backend/src/crd/pkg/signals"
 	log "github.com/sirupsen/logrus"
+	workflowclientSet "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
+	workflowinformers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
 )

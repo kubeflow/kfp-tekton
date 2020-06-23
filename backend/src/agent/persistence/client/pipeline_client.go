@@ -92,7 +92,7 @@ func (p *PipelineClient) ReportWorkflow(workflow *util.Workflow) error {
 				statusCode.Code(),
 				statusCode.Message(),
 				err.Error(),
-				workflow.Workflow)
+				workflow.PipelineRun)
 		} else {
 			// Retry otherwise
 			return util.NewCustomError(err, util.CUSTOM_CODE_TRANSIENT,
@@ -100,7 +100,7 @@ func (p *PipelineClient) ReportWorkflow(workflow *util.Workflow) error {
 				statusCode.Code(),
 				statusCode.Message(),
 				err.Error(),
-				workflow.Workflow)
+				workflow.PipelineRun)
 		}
 	}
 	return nil
