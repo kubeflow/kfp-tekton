@@ -13,81 +13,57 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: download
-spec:
-  results:
-  - description: /tmp/results.txt
-    name: downloaded
-  steps:
-  - args:
-    - ls | tee $(results.downloaded.path)
-    command:
-    - sh
-    - -c
-    env:
-    - name: GOOGLE_APPLICATION_CREDENTIALS
-      value: /secret/gcp-credentials/user-gcp-sa.json
-    - name: Foo
-      value: bar
-    image: google/cloud-sdk
-    name: main
-    volumeMounts:
-    - mountPath: /secret/gcp-credentials
-      name: gcp-credentials
-  volumes:
-  - name: gcp-credentials
-    secret:
-      secretName: user-gcp-sa
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: echo
-spec:
-  params:
-  - name: download-downloaded
-  steps:
-  - args:
-    - echo $(inputs.params.download-downloaded)
-    command:
-    - sh
-    - -c
-    image: library/bash
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with volume.",
       "name": "Volume"}'
     sidecar.istio.io/inject: 'false'
-  name: volume
-spec:
-  tasks:
-  - name: download
-    taskRef:
-      name: download
-  - name: echo
-    params:
-    - name: download-downloaded
-      value: $(tasks.download.results.downloaded)
-    taskRef:
-      name: echo
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: volume-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: volume
 spec:
-  pipelineRef:
-    name: volume
+  pipelineSpec:
+    tasks:
+    - name: download
+      taskSpec:
+        results:
+        - description: /tmp/results.txt
+          name: downloaded
+        steps:
+        - args:
+          - ls | tee $(results.downloaded.path)
+          command:
+          - sh
+          - -c
+          env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /secret/gcp-credentials/user-gcp-sa.json
+          - name: Foo
+            value: bar
+          image: google/cloud-sdk
+          name: main
+          volumeMounts:
+          - mountPath: /secret/gcp-credentials
+            name: gcp-credentials
+        volumes:
+        - name: gcp-credentials
+          secret:
+            secretName: user-gcp-sa
+    - name: echo
+      params:
+      - name: download-downloaded
+        value: $(tasks.download.results.downloaded)
+      taskSpec:
+        params:
+        - name: download-downloaded
+        steps:
+        - args:
+          - echo $(inputs.params.download-downloaded)
+          command:
+          - sh
+          - -c
+          image: library/bash
+          name: main

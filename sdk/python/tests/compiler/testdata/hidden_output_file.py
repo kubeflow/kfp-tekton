@@ -51,4 +51,4 @@ def hidden_output_file_pipeline(
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(hidden_output_file_pipeline, __file__.replace('.py', '.yaml'), generate_pipelinerun=True)
+    TektonCompiler().compile(hidden_output_file_pipeline, __file__.replace('.py', '.yaml'))

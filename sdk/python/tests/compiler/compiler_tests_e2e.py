@@ -21,7 +21,7 @@ import yaml
 
 from glob import glob
 from os import environ as env
-from subprocess import run
+from subprocess import run, SubprocessError
 from time import sleep
 
 
@@ -45,10 +45,12 @@ KUBECONFIG = env.get("KUBECONFIG")
 
 # ignore pipelines with unpredictable log output or complex prerequisites
 # TODO: revisit this list, try to rewrite those Python DSLs in a way that they
-#  will produce logs which can be verified
+#  will produce logs which can be verified. One option would be to keep more
+#  than one "golden" log file to match either of the desired possible outputs
 ignored_yaml_files = [
     "big_data_passing.yaml",    # does not complete in a reasonable time frame
     "katib.yaml",               # service account needs Katib permission, takes too long doing 9 trail runs
+    "timeout.yaml",             # random failure (by design) ... would need multiple log files to compare to
     "tolerations.yaml",         # designed to fail, test show only how to add the toleration to the pod
     "volume.yaml",              # need to rework the credentials part
     "volume_snapshot_op.yaml",  # only works on Minikube, K8s alpha feature, requires a feature gate from K8s master
@@ -142,19 +144,6 @@ class TestCompilerE2E(unittest.TestCase):
         logging.warning("The following pipelines were ignored: {}".format(
             ", ".join(ignored_yaml_files)))
 
-    def _get_task_names(self, yaml_file):
-        with open(yaml_file, 'r') as f:
-            workflow = list(yaml.safe_load_all(f))
-        tasks = filter(lambda d: d["kind"] == "Task", workflow)
-        if not tasks:
-            raise RuntimeError("Could not find a Task in " + yaml_file)
-        task_names = [t["metadata"]["name"] for t in tasks]
-        return task_names
-
-    def _delete_tasks(self, task_names: [str]):
-        del_cmd = "tkn task delete -n {} -f {}".format(namespace, " ".join(task_names))
-        run(del_cmd.split(), capture_output=True, timeout=10, check=False)
-
     def _delete_pipelinerun(self, name):
         del_cmd = "tkn pipelinerun delete -f {} -n {}".format(name, namespace)
         run(del_cmd.split(), capture_output=True, timeout=10, check=False)
@@ -172,13 +161,37 @@ class TestCompilerE2E(unittest.TestCase):
         #   to be created and logs may not be available yet even with --follow
         sleep(5)
 
-    def _get_pipelinerun_logs(self, name) -> str:
-        tkn_cmd = "tkn pipelinerun logs {} -n {} --follow".format(name, namespace)
-        tkn_proc = run(tkn_cmd.split(), capture_output=True, timeout=60, check=False)
-        self.assertEqual(tkn_proc.returncode, 0,
+    def _get_pipelinerun_status(self, name, retries: int = 10) -> str:
+        tkn_status_cmd = "tkn pipelinerun describe %s -n %s -o jsonpath=" \
+                         "'{.status.conditions[0].type}'" % (name, namespace)
+        status = "Unknown"
+        for i in range(0, retries):
+            try:
+                tkn_status_proc = run(tkn_status_cmd.split(), capture_output=True,
+                                      timeout=10, check=False)
+                if tkn_status_proc.returncode == 0:
+                    status = tkn_status_proc.stdout.decode("utf-8").strip("'")
+                    if "Succeeded" in status or "Failed" in status:
+                        return status
+                    logging.warning("tkn pipeline '{}' {} ({}/{})".format(
+                        name, status, i + 1, retries))
+                else:
+                    logging.error("Could not get pipelinerun status ({}/{}): {}".format(
+                        i + 1, retries, tkn_status_proc.stderr.decode("utf-8")))
+            except SubprocessError:
+                logging.exception("Error trying to get pipelinerun status ({}/{})".format(
+                        i + 1, retries))
+            sleep(3)
+        return status
+
+    def _get_pipelinerun_logs(self, name, timeout: int = 30) -> str:
+        sleep(10)  # if we don't wait, we often only get logs of some pipeline tasks
+        tkn_logs_cmd = "tkn pipelinerun logs {} -n {}".format(name, namespace)
+        tkn_logs_proc = run(tkn_logs_cmd.split(), capture_output=True, timeout=timeout, check=False)
+        self.assertEqual(tkn_logs_proc.returncode, 0,
                          "Process returned non-zero exit code: {} -> {}".format(
-                             tkn_cmd, tkn_proc.stderr))
-        return tkn_proc.stdout.decode("utf-8")
+                             tkn_logs_cmd, tkn_logs_proc.stderr))
+        return tkn_logs_proc.stdout.decode("utf-8")
 
     def _verify_logs(self, name, golden_log_file, test_log):
         if GENERATE_GOLDEN_E2E_LOGS:
@@ -241,9 +254,12 @@ class TestCompilerE2E(unittest.TestCase):
 
     def _run_test__validate_tekton_yaml(self, name, yaml_file):
         if not USE_LOGS_FROM_PREVIOUS_RUN:
-            self._delete_tasks(self._get_task_names(yaml_file))
             self._delete_pipelinerun(name)
             self._start_pipelinerun(yaml_file)
+
+    def _run_test__verify_pipelinerun_success(self, name):
+        status = self._get_pipelinerun_status(name)
+        self.assertEqual("Succeeded", status)
 
     def _run_test__verify_pipelinerun_logs(self, name, log_file):
         test_log = self._get_pipelinerun_logs(name)
@@ -251,6 +267,7 @@ class TestCompilerE2E(unittest.TestCase):
 
     def _run_test(self, name, yaml_file, log_file):
         self._run_test__validate_tekton_yaml(name, yaml_file)
+        self._run_test__verify_pipelinerun_success(name)
         self._run_test__verify_pipelinerun_logs(name, log_file)
 
 
@@ -265,6 +282,11 @@ def _generate_test_cases(pipeline_runs: [dict]):
             self._run_test__validate_tekton_yaml(test_name, yaml_file)
         return test_function
 
+    def create_test_function__check_run_status(test_name):
+        def test_function(self):
+            self._run_test__verify_pipelinerun_success(test_name)
+        return test_function
+
     def create_test_function__verify_logs(test_name, log_file):
         def test_function(self):
             self._run_test__verify_pipelinerun_logs(test_name, log_file)
@@ -275,12 +297,17 @@ def _generate_test_cases(pipeline_runs: [dict]):
 
         # 1. validate Tekton YAML (and kick of pipelineRun)
         setattr(TestCompilerE2E,
-                'test_{0}.validate_yaml'.format(yaml_file_name),
+                'test_{0}.i_validate_yaml'.format(yaml_file_name),
                 create_test_function__validate_yaml(p["name"], p["yaml_file"]))
 
-        # 2. verify pipelineRun log output
+        # 2. check pipelineRun status
         setattr(TestCompilerE2E,
-                'test_{0}.verify_logs'.format(yaml_file_name),
+                'test_{0}.ii_check_run_success'.format(yaml_file_name),
+                create_test_function__check_run_status(p["name"]))
+
+        # 3. verify pipelineRun log output
+        setattr(TestCompilerE2E,
+                'test_{0}.iii_verify_logs'.format(yaml_file_name),
                 create_test_function__verify_logs(p["name"], p["log_file"]))
 
 
@@ -294,10 +321,7 @@ def _generate_test_list(file_name_expr="*.yaml") -> [dict]:
     pipeline_runs = []
     for yaml_file in yaml_files:
         with open(yaml_file, 'r') as f:
-            workflow = list(yaml.safe_load_all(f))
-        pipeline_run = next(filter(lambda d: d["kind"] == "PipelineRun", workflow), None)
-        if not pipeline_run:
-            raise RuntimeError("Could not find a PipelineRun in " + yaml_file)
+            pipeline_run = yaml.safe_load(f)
         pipeline_runs.append({
             "name": pipeline_run["metadata"]["name"],
             "yaml_file": yaml_file,

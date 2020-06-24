@@ -13,68 +13,44 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: random-failure
-spec:
-  steps:
-  - args:
-    - import random; import sys; exit_code = random.choice([int(i) for i in sys.argv[1].split(",")]);
-      print(exit_code); sys.exit(exit_code)
-    - 0,1,2,3
-    command:
-    - python
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: random-failure-2
-spec:
-  steps:
-  - args:
-    - import random; import sys; exit_code = random.choice([int(i) for i in sys.argv[1].split(",")]);
-      print(exit_code); sys.exit(exit_code)
-    - 0,1
-    command:
-    - python
-    - -c
-    image: python:alpine3.6
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline includes
       two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).",
       "name": "Retry random failures"}'
     sidecar.istio.io/inject: 'false'
-  name: retry-random-failures
-spec:
-  tasks:
-  - name: random-failure
-    retries: 10
-    taskRef:
-      name: random-failure
-  - name: random-failure-2
-    retries: 5
-    taskRef:
-      name: random-failure-2
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: retry-random-failures-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: retry-random-failures
 spec:
-  pipelineRef:
-    name: retry-random-failures
+  pipelineSpec:
+    tasks:
+    - name: random-failure
+      retries: 10
+      taskSpec:
+        steps:
+        - args:
+          - import random; import sys; exit_code = random.choice([int(i) for i in
+            sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
+          - 0,1,2,3
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+          name: main
+    - name: random-failure-2
+      retries: 5
+      taskSpec:
+        steps:
+        - args:
+          - import random; import sys; exit_code = random.choice([int(i) for i in
+            sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
+          - 0,1
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+          name: main
