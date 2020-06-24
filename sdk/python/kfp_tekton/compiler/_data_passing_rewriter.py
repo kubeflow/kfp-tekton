@@ -145,15 +145,17 @@ def fix_big_data_passing(workflow: dict) -> dict:
                     template_input_to_parent_task_outputs.setdefault(
                         (task_template_name, task_input_name), set()).add(
                             (upstream_task_name, upstream_output_name))
-                elif placeholder_type == 'item' or placeholder_type == 'workflow' or placeholder_type == 'pod':
+                elif placeholder_type in ('item', 'workflow', 'pod'):
                     # workflow.parameters.* placeholders are not supported,
                     # but the DSL compiler does not produce those.
                     template_input_to_parent_constant_arguments.setdefault(
                         (task_template_name, task_input_name),
                         set()).add(argument_value)
                 else:
-                    raise AssertionError
-
+                    # raise AssertionError
+                    logging.error(
+                        'Found unexpected Tekton placeholder in pipline template: {}'
+                        .format(placeholder_type))
             pipeline_input_name = extract_tekton_input_parameter_name(
                 argument_value)
             if pipeline_input_name:
@@ -298,7 +300,6 @@ def fix_big_data_passing(workflow: dict) -> dict:
         output_tasks_consumed_as_artifacts)
 
     # Add workspaces to pipelinerun if big data passing
-    # Check whether pipelinerun was generated, throw error if not.
     if pipeline_workspaces:
         pipeline, pipelinerun_workspaces = big_data_passing_pipelinerun(
             pipelinerun_name, pipelinerun_template, pipeline_workspaces)
@@ -313,8 +314,8 @@ def fix_big_data_passing(workflow: dict) -> dict:
     # # As we used workspaces in tekton pipelines which depends on it.
     # # User need to create PV manually, or enable dynamic volume provisioning, refer to the link of:
     # # https://kubernetes.io/docs/concepts/storage/dynamic-provisioning
-    # # TODO: Remove PVC if Tekton version > = 0.12, use 'volumeClaimTemplate' instead
-    # User need to create pvc manually recently after issue #181 addressed
+    # # TODO: Remove PVC, use 'volumeClaimTemplate' instead, issue #181.
+    # User need to create pvc manually recently until issue #181 addressed
     # if pipelinerun_workspaces:
     #     for pipelinerun in pipelinerun_workspaces:
     #         workflow.append(create_pvc(pipelinerun))
