@@ -31,3 +31,15 @@ rules:
   - watch
   - update
   - patch
+- apiGroups:
+  - tekton.dev
+  resources:
+  - pipelineruns
+  - taskruns
+  - conditions
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch

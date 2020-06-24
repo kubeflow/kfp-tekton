@@ -15,9 +15,9 @@
 package util
 
 import (
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/golang/glog"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
@@ -103,7 +103,7 @@ func (s *ScheduledWorkflow) ConditionSummary() string {
 }
 
 func (s *ScheduledWorkflow) ParametersAsString() (string, error) {
-	workflowParams := make([]workflowapi.Parameter, 0)
+	workflowParams := make([]workflowapi.Param, 0)
 
 	var params []swfapi.Parameter
 	if s.ScheduledWorkflow.Spec.Workflow == nil {
@@ -113,9 +113,12 @@ func (s *ScheduledWorkflow) ParametersAsString() (string, error) {
 	}
 
 	for _, param := range params {
-		workflowParam := workflowapi.Parameter{
-			Name:  param.Name,
-			Value: &param.Value,
+		workflowParam := workflowapi.Param{
+			Name: param.Name,
+			Value: workflowapi.ArrayOrString{
+				Type:      "string",
+				StringVal: param.Value,
+			},
 		}
 		workflowParams = append(workflowParams, workflowParam)
 	}

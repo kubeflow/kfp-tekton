@@ -18,12 +18,12 @@ import (
 	"errors"
 	"strings"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/golang/protobuf/jsonpb"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/agent/persistence/client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	log "github.com/sirupsen/logrus"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 const (
@@ -46,7 +46,7 @@ func NewMetricsReporter(pipelineClient client.PipelineClientInterface) *MetricsR
 
 // ReportMetrics reports workflow metrics to pipeline server.
 func (r MetricsReporter) ReportMetrics(workflow *util.Workflow) error {
-	if workflow.Status.Nodes == nil {
+	if workflow.Status.PipelineRunStatusFields.TaskRuns == nil {
 		return nil
 	}
 	if _, ok := workflow.ObjectMeta.Labels[util.LabelKeyWorkflowRunId]; !ok {
@@ -56,8 +56,8 @@ func (r MetricsReporter) ReportMetrics(workflow *util.Workflow) error {
 	runID := workflow.ObjectMeta.Labels[util.LabelKeyWorkflowRunId]
 	runMetrics := []*api.RunMetric{}
 	partialFailures := []error{}
-	for _, nodeStatus := range workflow.Status.Nodes {
-		nodeMetrics, err := r.collectNodeMetricsOrNil(runID, nodeStatus)
+	for _, nodeStatus := range workflow.Status.PipelineRunStatusFields.TaskRuns {
+		nodeMetrics, err := r.collectNodeMetricsOrNil(runID, *nodeStatus)
 		if err != nil {
 			partialFailures = append(partialFailures, err)
 			continue
@@ -89,12 +89,12 @@ func (r MetricsReporter) ReportMetrics(workflow *util.Workflow) error {
 }
 
 func (r MetricsReporter) collectNodeMetricsOrNil(
-	runID string, nodeStatus workflowapi.NodeStatus) (
+	runID string, nodeStatus workflowapi.PipelineRunTaskRunStatus) (
 	[]*api.RunMetric, error) {
-	if !nodeStatus.Completed() {
+	if nodeStatus.Status.TaskRunStatusFields.CompletionTime == nil {
 		return nil, nil
 	}
-	metricsJSON, err := r.readNodeMetricsJSONOrEmpty(runID, nodeStatus.ID)
+	metricsJSON, err := r.readNodeMetricsJSONOrEmpty(runID, nodeStatus.PipelineTaskName)
 	if err != nil || metricsJSON == "" {
 		return nil, err
 	}
@@ -109,19 +109,19 @@ func (r MetricsReporter) collectNodeMetricsOrNil(
 		// TODO(#1426): report the error back to api server to notify user
 		log.WithFields(log.Fields{
 			"run":         runID,
-			"node":        nodeStatus.ID,
+			"node":        nodeStatus.PipelineTaskName,
 			"raw_content": metricsJSON,
 			"error":       err.Error(),
 		}).Warning("Failed to unmarshal metrics file.")
 		return nil, util.NewCustomError(err, util.CUSTOM_CODE_PERMANENT,
-			"failed to unmarshal metrics file from (%s, %s).", runID, nodeStatus.ID)
+			"failed to unmarshal metrics file from (%s, %s).", runID, nodeStatus.PipelineTaskName)
 	}
 	if reportMetricsRequest.GetMetrics() == nil {
 		return nil, nil
 	}
 	for _, metric := range reportMetricsRequest.GetMetrics() {
 		// User metrics just have name and value but no NodeId.
-		metric.NodeId = nodeStatus.ID
+		metric.NodeId = nodeStatus.PipelineTaskName
 	}
 	return reportMetricsRequest.GetMetrics(), nil
 }

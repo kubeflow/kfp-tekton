@@ -48,8 +48,10 @@ spec:
             configMapKeyRef:
               name: mysql-configmap
               key: port
+        - name: PIPELINE_RUNTIME
+          value: tekton
         image: gcr.io/ml-pipeline/api-server:dummy
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         name: ml-pipeline-api-server
         ports:
         - name: http

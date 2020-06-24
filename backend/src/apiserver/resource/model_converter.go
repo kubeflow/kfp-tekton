@@ -17,12 +17,12 @@ package resource
 import (
 	"encoding/json"
 
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
+	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 func (r *ResourceManager) ToModelExperiment(apiExperiment *api.Experiment) (*model.Experiment, error) {
@@ -200,11 +200,16 @@ func toModelParameters(apiParams []*api.Parameter) (string, error) {
 	if apiParams == nil || len(apiParams) == 0 {
 		return "", nil
 	}
-	var params []v1alpha1.Parameter
+
+	// for Tekton
+	var params []v1beta1.Param
 	for _, apiParam := range apiParams {
-		param := v1alpha1.Parameter{
-			Name:  apiParam.Name,
-			Value: &apiParam.Value,
+		param := v1beta1.Param{
+			Name: apiParam.Name,
+			Value: v1beta1.ArrayOrString{
+				Type:      "string",
+				StringVal: apiParam.Value,
+			},
 		}
 		params = append(params, param)
 	}

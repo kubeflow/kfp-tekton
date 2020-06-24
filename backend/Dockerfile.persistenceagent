@@ -1,4 +1,7 @@
-FROM golang:1.11-alpine3.7 as builder
+# Updated golang image to 1.13 since Tekton 0.13 onwards
+# requires golang 1.13 in order to build certain packages.
+
+FROM golang:1.13-alpine3.11 as builder
 
 WORKDIR /go/src/github.com/kubeflow/pipelines
 COPY . .
@@ -9,7 +12,7 @@ RUN apk update && apk upgrade && \
 
 RUN GO111MODULE=on go build -o /bin/persistence_agent backend/src/agent/persistence/*.go
 
-FROM alpine:3.8
+FROM alpine:3.11
 WORKDIR /bin
 
 COPY --from=builder /bin/persistence_agent /bin/persistence_agent

@@ -66,12 +66,13 @@ type ClientManager struct {
 	dBStatusStore          storage.DBStatusStoreInterface
 	defaultExperimentStore storage.DefaultExperimentStoreInterface
 	objectStore            storage.ObjectStoreInterface
-	argoClient             client.ArgoClientInterface
-	swfClient              client.SwfClientInterface
-	k8sCoreClient          client.KubernetesCoreInterface
-	kfamClient             client.KFAMClientInterface
-	time                   util.TimeInterface
-	uuid                   util.UUIDGeneratorInterface
+	// argoClient             client.ArgoClientInterface
+	tektonClient  client.TektonClientInterface
+	swfClient     client.SwfClientInterface
+	k8sCoreClient client.KubernetesCoreInterface
+	kfamClient    client.KFAMClientInterface
+	time          util.TimeInterface
+	uuid          util.UUIDGeneratorInterface
 }
 
 func (c *ClientManager) ExperimentStore() storage.ExperimentStoreInterface {
@@ -106,8 +107,12 @@ func (c *ClientManager) ObjectStore() storage.ObjectStoreInterface {
 	return c.objectStore
 }
 
-func (c *ClientManager) ArgoClient() client.ArgoClientInterface {
-	return c.argoClient
+// func (c *ClientManager) ArgoClient() client.ArgoClientInterface {
+// 	return c.argoClient
+// }
+
+func (c *ClientManager) TektonClient() client.TektonClientInterface {
+	return c.tektonClient
 }
 
 func (c *ClientManager) SwfClient() client.SwfClientInterface {
@@ -149,7 +154,8 @@ func (c *ClientManager) init() {
 	c.defaultExperimentStore = storage.NewDefaultExperimentStore(db)
 	c.objectStore = initMinioClient(common.GetDurationConfig(initConnectionTimeout))
 
-	c.argoClient = client.NewArgoClientOrFatal(common.GetDurationConfig(initConnectionTimeout))
+	// c.argoClient = client.NewArgoClientOrFatal(common.GetDurationConfig(initConnectionTimeout))
+	c.tektonClient = client.NewTektonClientOrFatal(common.GetDurationConfig(initConnectionTimeout))
 
 	c.swfClient = client.NewScheduledWorkflowClientOrFatal(common.GetDurationConfig(initConnectionTimeout))
 

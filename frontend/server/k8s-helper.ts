@@ -214,7 +214,7 @@ export function getPodLogs(podName: string, podNamespace?: string): Promise<stri
       `podNamespace is not specified and cannot get namespace from ${namespaceFilePath}.`,
     );
   }
-  return (k8sV1Client.readNamespacedPodLog(podName, podNamespace, 'main') as any).then(
+  return (k8sV1Client.readNamespacedPodLog(podName, podNamespace, 'step-main') as any).then(
     (response: any) => (response && response.body ? response.body.toString() : ''),
     (error: any) => {
       throw new Error(JSON.stringify(error.body));

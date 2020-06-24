@@ -13,45 +13,30 @@
 # limitations under the License.
 
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
-  name: echo
-spec:
-  steps:
-  - args:
-    - echo "Got scheduled"
-    command:
-    - sh
-    - -c
-    image: busybox
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with affinity",
       "name": "affinity"}'
     sidecar.istio.io/inject: 'false'
-  name: affinity
-spec:
-  tasks:
-  - name: echo
-    taskRef:
-      name: echo
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotations:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: affinity-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: affinity
 spec:
-  pipelineRef:
-    name: affinity
+  pipelineSpec:
+    tasks:
+    - name: echo
+      taskSpec:
+        steps:
+        - args:
+          - echo "Got scheduled"
+          command:
+          - sh
+          - -c
+          image: busybox
+          name: main
   taskRunSpecs:
   - pipelineTaskName: echo
     taskPodTemplate:
