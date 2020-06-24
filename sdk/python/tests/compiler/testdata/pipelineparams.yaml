@@ -51,7 +51,7 @@ spec:
         - name: tag
         results:
         - description: /tmp/results.txt
-          name: downloaded_resultOutput
+          name: downloaded-resultoutput
         sidecars:
         - args:
           - -text="hello world"
@@ -68,7 +68,7 @@ spec:
     - name: echo
       params:
       - name: download-downloaded_resultOutput
-        value: $(tasks.download.results.downloaded_resultOutput)
+        value: $(tasks.download.results.downloaded-resultoutput)
       taskSpec:
         params:
         - name: download-downloaded_resultOutput

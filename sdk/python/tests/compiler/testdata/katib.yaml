@@ -91,7 +91,7 @@ spec:
         - name: parallelTrialCount
         results:
         - description: /output.txt
-          name: bestHyperParameter
+          name: besthyperparameter
         steps:
         - args:
           - --name
@@ -136,7 +136,7 @@ spec:
     - name: my-out-cop
       params:
       - name: mnist-hpo-bestHyperParameter
-        value: $(tasks.mnist-hpo.results.bestHyperParameter)
+        value: $(tasks.mnist-hpo.results.besthyperparameter)
       taskSpec:
         params:
         - name: mnist-hpo-bestHyperParameter

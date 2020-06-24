@@ -28,9 +28,6 @@ spec:
     tasks:
     - name: repeat-line
       taskSpec:
-        results:
-        - description: /tmp/outputs/output_text/data
-          name: output_text
         steps:
         - args:
           - --line
@@ -38,7 +35,7 @@ spec:
           - --count
           - '5000'
           - --output-text
-          - $(results.output-text.path)
+          - $(workspaces.repeat-line.path)/repeat-line-output_text
           command:
           - python3
           - -u
@@ -62,22 +59,19 @@ spec:
             \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        workspaces:
+        - name: repeat-line
+      workspaces:
+      - name: repeat-line
+        workspace: file-passing-pipelines
     - name: print-text
-      params:
-      - name: repeat-line-output_text
-        value: $(tasks.repeat-line.results.output_text)
+      runAfter:
+      - repeat-line
       taskSpec:
-        artifacts:
-        - name: text
-          path: /tmp/inputs/text/data
-          raw:
-            data: $(inputs.params.repeat-line-output_text)
-        params:
-        - name: repeat-line-output_text
         steps:
         - args:
           - --text
-          - /tmp/inputs/text/data
+          - $(workspaces.print-text.path)/repeat-line-output_text
           command:
           - python3
           - -u
@@ -96,44 +90,52 @@ spec:
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        workspaces:
+        - name: print-text
+      workspaces:
+      - name: print-text
+        workspace: file-passing-pipelines
     - name: split-text-lines
       taskSpec:
-        artifacts:
-        - name: source
-          path: /tmp/inputs/source/data
-          raw:
-            data: 'one
-
-              two
-
-              three
-
-              four
-
-              five
-
-              six
-
-              seven
-
-              eight
-
-              nine
-
-              ten'
-        results:
-        - description: /tmp/outputs/odd_lines/data
-          name: odd_lines
-        - description: /tmp/outputs/even_lines/data
-          name: even_lines
+        stepTemplate:
+          volumeMounts:
+          - mountPath: /tmp/inputs/source
+            name: source
         steps:
+        - image: busybox
+          name: copy-inputs
+          script: '#!/bin/sh
+
+            set -exo pipefail
+
+            echo -n "one
+
+            two
+
+            three
+
+            four
+
+            five
+
+            six
+
+            seven
+
+            eight
+
+            nine
+
+            ten" > /tmp/inputs/source/data
+
+            '
         - args:
           - --source
           - /tmp/inputs/source/data
           - --odd-lines
-          - $(results.odd-lines.path)
+          - $(workspaces.split-text-lines.path)/split-text-lines-odd_lines
           - --even-lines
-          - $(results.even-lines.path)
+          - $(workspaces.split-text-lines.path)/split-text-lines-even_lines
           command:
           - python3
           - -u
@@ -163,22 +165,22 @@ spec:
             \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        volumes:
+        - emptyDir: {}
+          name: source
+        workspaces:
+        - name: split-text-lines
+      workspaces:
+      - name: split-text-lines
+        workspace: file-passing-pipelines
     - name: print-text-2
-      params:
-      - name: split-text-lines-odd_lines
-        value: $(tasks.split-text-lines.results.odd_lines)
+      runAfter:
+      - split-text-lines
       taskSpec:
-        artifacts:
-        - name: text
-          path: /tmp/inputs/text/data
-          raw:
-            data: $(inputs.params.split-text-lines-odd_lines)
-        params:
-        - name: split-text-lines-odd_lines
         steps:
         - args:
           - --text
-          - /tmp/inputs/text/data
+          - $(workspaces.print-text-2.path)/split-text-lines-odd_lines
           command:
           - python3
           - -u
@@ -197,22 +199,19 @@ spec:
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        workspaces:
+        - name: print-text-2
+      workspaces:
+      - name: print-text-2
+        workspace: file-passing-pipelines
     - name: print-text-3
-      params:
-      - name: split-text-lines-even_lines
-        value: $(tasks.split-text-lines.results.even_lines)
+      runAfter:
+      - split-text-lines
       taskSpec:
-        artifacts:
-        - name: text
-          path: /tmp/inputs/text/data
-          raw:
-            data: $(inputs.params.split-text-lines-even_lines)
-        params:
-        - name: split-text-lines-even_lines
         steps:
         - args:
           - --text
-          - /tmp/inputs/text/data
+          - $(workspaces.print-text-3.path)/split-text-lines-even_lines
           command:
           - python3
           - -u
@@ -231,17 +230,19 @@ spec:
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        workspaces:
+        - name: print-text-3
+      workspaces:
+      - name: print-text-3
+        workspace: file-passing-pipelines
     - name: write-numbers
       taskSpec:
-        results:
-        - description: /tmp/outputs/numbers/data
-          name: numbers
         steps:
         - args:
           - --count
           - '100000'
           - --numbers
-          - $(results.numbers.path)
+          - $(workspaces.write-numbers.path)/write-numbers-numbers
           command:
           - python3
           - -u
@@ -264,22 +265,19 @@ spec:
             \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        workspaces:
+        - name: write-numbers
+      workspaces:
+      - name: write-numbers
+        workspace: file-passing-pipelines
     - name: print-text-4
-      params:
-      - name: write-numbers-numbers
-        value: $(tasks.write-numbers.results.numbers)
+      runAfter:
+      - write-numbers
       taskSpec:
-        artifacts:
-        - name: text
-          path: /tmp/inputs/text/data
-          raw:
-            data: $(inputs.params.write-numbers-numbers)
-        params:
-        - name: write-numbers-numbers
         steps:
         - args:
           - --text
-          - /tmp/inputs/text/data
+          - $(workspaces.print-text-4.path)/write-numbers-numbers
           command:
           - python3
           - -u
@@ -298,27 +296,21 @@ spec:
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        workspaces:
+        - name: print-text-4
+      workspaces:
+      - name: print-text-4
+        workspace: file-passing-pipelines
     - name: sum-numbers
-      params:
-      - name: write-numbers-numbers
-        value: $(tasks.write-numbers.results.numbers)
+      runAfter:
+      - write-numbers
       taskSpec:
-        artifacts:
-        - name: numbers
-          path: /tmp/inputs/numbers/data
-          raw:
-            data: $(inputs.params.write-numbers-numbers)
-        params:
-        - name: write-numbers-numbers
-        results:
-        - description: /tmp/outputs/Output/data
-          name: output
         steps:
         - args:
           - --numbers
-          - /tmp/inputs/numbers/data
+          - $(workspaces.sum-numbers.path)/write-numbers-numbers
           - '----output-paths'
-          - $(results.output.path)
+          - $(workspaces.sum-numbers.path)/sum-numbers-output
           command:
           - python3
           - -u
@@ -342,22 +334,19 @@ spec:
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        workspaces:
+        - name: sum-numbers
+      workspaces:
+      - name: sum-numbers
+        workspace: file-passing-pipelines
     - name: print-text-5
-      params:
-      - name: sum-numbers-output
-        value: $(tasks.sum-numbers.results.output)
+      runAfter:
+      - sum-numbers
       taskSpec:
-        artifacts:
-        - name: text
-          path: /tmp/inputs/text/data
-          raw:
-            data: $(inputs.params.sum-numbers-output)
-        params:
-        - name: sum-numbers-output
         steps:
         - args:
           - --text
-          - /tmp/inputs/text/data
+          - $(workspaces.print-text-5.path)/sum-numbers-output
           command:
           - python3
           - -u
@@ -376,6 +365,11 @@ spec:
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        workspaces:
+        - name: print-text-5
+      workspaces:
+      - name: print-text-5
+        workspace: file-passing-pipelines
     - name: gen-params
       taskSpec:
         results:
@@ -432,3 +426,9 @@ spec:
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+    workspaces:
+    - name: file-passing-pipelines
+  workspaces:
+  - name: file-passing-pipelines
+    persistentVolumeClaim:
+      claimName: file-passing-pipelines

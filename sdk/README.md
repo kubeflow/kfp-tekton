@@ -205,3 +205,7 @@ the [FEATURES](FEATURES.md) doc.
 - If you run into the error `bad interpreter: No such file or director` when trying to use
   python's venv, remove the current virtual environment in the `.venv` directory and
   create a new one using `virtualenv .venv`
+
+- For big data passing, user need to create PV manually, or enable dynamic volume provisioning, refer to the link of: https://kubernetes.io/docs/concepts/storage/dynamic-provisioning
+
+  User need to create pvc manually with the pvc name same as pipelinerun name until [issue #181](https://github.com/kubeflow/kfp-tekton/issues/181) addressed
