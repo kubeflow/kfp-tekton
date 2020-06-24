@@ -14,7 +14,6 @@
 
 import copy
 import json
-import logging
 import re
 
 from typing import List, Optional, Set
@@ -152,10 +151,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
                         (task_template_name, task_input_name),
                         set()).add(argument_value)
                 else:
-                    # raise AssertionError
-                    logging.error(
-                        'Found unexpected Tekton placeholder in pipline template: {}'
-                        .format(placeholder_type))
+                    raise AssertionError
             pipeline_input_name = extract_tekton_input_parameter_name(
                 argument_value)
             if pipeline_input_name:
@@ -214,13 +210,11 @@ def fix_big_data_passing(workflow: dict) -> dict:
                     inputs_directly_consumed_as_parameters.add(
                         (template_name, input_name))
                 elif parts[1] == 'artifacts':
-                    # raise RuntimeError(
-                    logging.error(
+                    raise RuntimeError(
                         'Found unexpected Tekton input artifact placeholder in container template: {}'
                         .format(placeholder))
                 else:
-                    # raise RuntimeError(
-                    logging.error(
+                    raise RuntimeError(
                         'Found unexpected Tekton input placeholder in container template: {}'
                         .format(placeholder))
             elif placeholder_type == 'results':
@@ -228,8 +222,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
                 outputs_directly_consumed_as_parameters.add(
                     (template_name, input_name))
             else:
-                # raise RuntimeError(
-                logging.error(
+                raise RuntimeError(
                     'Found unexpected Tekton placeholder in container template: {}'
                     .format(placeholder))
 
