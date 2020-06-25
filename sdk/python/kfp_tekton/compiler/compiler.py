@@ -34,7 +34,7 @@ from kfp.dsl._for_loop import LoopArguments, LoopArgumentVariable
 from kfp.dsl._metadata import _extract_pipeline_metadata
 
 # KFP-Tekton imports
-from kfp_tekton import tekton_api_version
+from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name
 from kfp_tekton.compiler._op_to_template import _op_to_template
