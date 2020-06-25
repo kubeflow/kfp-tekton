@@ -14,4 +14,4 @@
 
 __version__ = '0.1.0'
 
-tekton_api_version = 'tekton.dev/v1beta1'
+from ._client import TektonClient  # noqa F401

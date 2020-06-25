@@ -21,7 +21,7 @@ from typing import Mapping, Callable
 
 import kfp
 
-from kfp_tekton.compiler import TektonCompiler
+from .compiler import TektonCompiler
 
 
 class TektonClient(kfp.Client):

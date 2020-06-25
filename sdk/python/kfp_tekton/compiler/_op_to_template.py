@@ -25,7 +25,7 @@ from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8
 from kfp.compiler._op_to_template import _process_obj, _inputs_to_json, _outputs_to_json
 from kfp.dsl._container_op import BaseOp
 
-from .. import tekton_api_version
+from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 
 
 def _get_base_step(name: str):
