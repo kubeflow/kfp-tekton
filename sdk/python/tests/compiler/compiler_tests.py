@@ -80,12 +80,12 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.sequential import sequential_pipeline
     self._test_pipeline_workflow(sequential_pipeline, 'sequential.yaml')
 
-  def test_parallel_join_workflow(self):
+  def test_parallel_join_workflow_without_artifacts(self):
     """
     Test compiling a parallel join workflow.
     """
     from .testdata.parallel_join import download_and_join
-    self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
+    self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml', enable_artifacts=False)
 
   def test_parallel_join_workflow_with_artifacts(self):
     """
@@ -270,7 +270,7 @@ class TestTektonCompiler(unittest.TestCase):
   def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
-                              enable_artifacts=False,
+                              enable_artifacts=True,
                               normalize_compiler_output_function=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
@@ -309,7 +309,7 @@ class TestTektonCompiler(unittest.TestCase):
   def _test_nested_workflow(self,
                             pipeline_yaml,
                             pipeline_list,
-                            enable_artifacts=False,
+                            enable_artifacts=True,
                             normalize_compiler_output_function=None):
     """
     Test compiling a simple workflow, and a bigger one composed from the simple one.

@@ -18,8 +18,21 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"name": "File passing pipelines"}'
     sidecar.istio.io/inject: 'false'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{"print-text": [{"name": "repeat-line-output_text",
+      "parent_task": "repeat-line"}], "print-text-2": [{"name": "split-text-lines-odd_lines",
+      "parent_task": "split-text-lines"}], "print-text-3": [{"name": "split-text-lines-even_lines",
+      "parent_task": "split-text-lines"}], "print-text-4": [{"name": "write-numbers-numbers",
+      "parent_task": "write-numbers"}], "sum-numbers": [{"name": "write-numbers-numbers",
+      "parent_task": "write-numbers"}], "print-text-5": [{"name": "sum-numbers-output",
+      "parent_task": "sum-numbers"}], "print-params": [{"name": "gen-params-output",
+      "parent_task": "gen-params"}]}'
+    tekton.dev/output_artifacts: '{"repeat-line": [{"name": "repeat-line-output_text",
+      "path": "/tmp/outputs/output_text/data"}], "split-text-lines": [{"name": "split-text-lines-even_lines",
+      "path": "/tmp/outputs/even_lines/data"}, {"name": "split-text-lines-odd_lines",
+      "path": "/tmp/outputs/odd_lines/data"}], "write-numbers": [{"name": "write-numbers-numbers",
+      "path": "/tmp/outputs/numbers/data"}], "sum-numbers": [{"name": "sum-numbers-output",
+      "path": "/tmp/outputs/Output/data"}], "gen-params": [{"name": "gen-params-output",
+      "path": "/tmp/outputs/Output/data"}]}'
   labels:
     pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: file-passing-pipelines
@@ -59,6 +72,41 @@ spec:
             \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf output_text.tgz $(workspaces.repeat-line.path)/repeat-line-output_text
+
+            mc cp output_text.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/output_text.tgz
+
+            '
         workspaces:
         - name: repeat-line
       workspaces:
@@ -165,6 +213,45 @@ spec:
             \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf even_lines.tgz $(workspaces.split-text-lines.path)/split-text-lines-even_lines
+
+            mc cp even_lines.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/even_lines.tgz
+
+            tar -cvzf odd_lines.tgz $(workspaces.split-text-lines.path)/split-text-lines-odd_lines
+
+            mc cp odd_lines.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/odd_lines.tgz
+
+            '
         volumes:
         - emptyDir: {}
           name: source
@@ -265,6 +352,41 @@ spec:
             \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf numbers.tgz $(workspaces.write-numbers.path)/write-numbers-numbers
+
+            mc cp numbers.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/numbers.tgz
+
+            '
         workspaces:
         - name: write-numbers
       workspaces:
@@ -334,6 +456,41 @@ spec:
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf output.tgz $(workspaces.sum-numbers.path)/sum-numbers-output
+
+            mc cp output.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/output.tgz
+
+            '
         workspaces:
         - name: sum-numbers
       workspaces:
@@ -399,6 +556,41 @@ spec:
             \ f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: tensorflow/tensorflow:1.13.2-py3
           name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf output.tgz $(results.output.path)
+
+            mc cp output.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/output.tgz
+
+            '
     - name: print-params
       params:
       - name: gen-params-output

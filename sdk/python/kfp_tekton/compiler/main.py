@@ -47,9 +47,9 @@ def parse_arguments():
   parser.add_argument('--disable-telemetry',
                       action='store_true',
                       help='disable adding telemetry labels, default is enabled.')
-  parser.add_argument('--enable-artifacts',
+  parser.add_argument('--disable_artifacts',
                       action='store_true',
-                      help='enable artifact inputs and outputs')
+                      help='disable artifact inputs and outputs')
 
   args = parser.parse_args()
   return args
@@ -99,7 +99,7 @@ def main():
         raise ValueError('Either --py or --package is needed but not both.')
     if args.py:
         compile_pyfile(args.py, args.function, args.output, not args.disable_type_check, not args.disable_telemetry,
-                       args.enable_artifacts)
+                       not args.disable_artifacts)
     else:
         if args.namespace is None:
             raise ValueError('--namespace is required for compiling packages.')

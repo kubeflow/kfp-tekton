@@ -137,9 +137,7 @@ python test is an example of how to use this feature.
 Output Artifacts are files that need to be persisted to the default/destination object storage. Additionally, by default, all Kubeflow pipeline 'Output Parameters' are also stored as output artifacts. Since Tekton deprecated pipelineResource and the recommended gsutil task is not capable of moving files to the minio object storage without proper DNS address, we decided to create a step based on the [minio mc](https://github.com/minio/mc) image for moving output artifacts. This feature also includes the ArtifactLocation support where users can set their own object storage credentials during execution. The [artifact_location](/sdk/python/tests/compiler/testdata/artifact_location.py) python test is an example of how to use this feature.
 
 It also includes two annontations `tekton.dev/input_artifacts` and `tekton.dev/output_artifacts` for metadata tracking. Refer to the
-[Tetkon Artifact design proposal](https://docs.google.com/document/d/1nx63yZzANk8yDAm_Cwx_UHu-SVFrg73GVeshhtaYNsM/edit?usp=sharing) for more details.
-
-However, both ArtifactLocation and explicit output artifacts are deprecated and removed in the KFP 0.5.1 release. This is probably due to a more mature multi-user support because ArtifactLocation required users to pre-define the object storage credentials as Kubernetes secret within the same namespace. 
+[Tetkon Artifact design proposal](https://docs.google.com/document/d/1nx63yZzANk8yDAm_Cwx_UHu-SVFrg73GVeshhtaYNsM/edit?usp=sharing) for more details. 
 
 The current implementation is relying on the existing KFP's minio setup for getting the default credentials. This feature probably needs to be deprecated and merged with the output parameters once KFP finalizes the artifact management for the multi-user scenario. 
 

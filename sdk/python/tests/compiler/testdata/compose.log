@@ -1,8 +1,8 @@
+Pipeline still running ...
 [download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
-[get-frequent : main] your
-
-[save : main] Copying file:///tmp/results.txt...
-[save : main] / [0 files][    0.0 B/    6.0 B]                                                / [1 files][    6.0 B/    6.0 B]                                                
-[save : main] Operation completed over 1 objects/6.0 B.                                        
+[download : copy-artifacts] Added `storage` successfully.
+[download : copy-artifacts] tar: removing leading '/' from member names
+[download : copy-artifacts] tekton/results/downloaded
+[download : copy-artifacts] `downloaded.tgz` -> `storage/mlpipeline/artifacts/download-and-save-most-frequent/download/downloaded.tgz`
 

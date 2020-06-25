@@ -686,7 +686,7 @@ class TektonCompiler(Compiler):
               type_check=True,
               pipeline_conf: dsl.PipelineConf = None,
               allow_telemetry: bool = True,
-              enable_artifacts=False):
+              enable_artifacts=True):
     """Compile the given pipeline function into workflow yaml.
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.

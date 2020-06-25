@@ -1,11 +1,15 @@
-[gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-
+Pipeline still running ...
 [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
-[echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-[echo : main] 
-[echo : main] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-[echo : main] 
-[echo : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-[echo : main] 
+[gcs-download : copy-artifacts] Added `storage` successfully.
+[gcs-download : copy-artifacts] tar: removing leading '/' from member names
+[gcs-download : copy-artifacts] tekton/results/data
+[gcs-download : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-with-argo-vars/gcs-download/data.tgz`
+
+[gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+
+[gcs-download-2 : copy-artifacts] Added `storage` successfully.
+[gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
+[gcs-download-2 : copy-artifacts] tekton/results/data
+[gcs-download-2 : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-with-argo-vars/gcs-download-2/data.tgz`
 

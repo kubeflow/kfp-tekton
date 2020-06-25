@@ -1,7 +1,8 @@
+Pipeline still running ...
 [flip : main] heads
 
-[flip-again : main] tails
-
-[print1 : main] tails
-[print1 : main] 
+[flip : copy-artifacts] Added `storage` successfully.
+[flip : copy-artifacts] tar: removing leading '/' from member names
+[flip : copy-artifacts] tekton/results/output
+[flip : copy-artifacts] `output.tgz` -> `storage/mlpipeline/artifacts/flip-coin-example-pipeline/flip/output.tgz`
 

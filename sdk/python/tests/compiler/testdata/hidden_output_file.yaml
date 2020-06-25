@@ -19,8 +19,10 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Run a script that passes
       file to a non configurable path", "name": "Hidden output file pipeline"}'
     sidecar.istio.io/inject: 'false'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{"echo": [{"name": "download-file-data", "parent_task":
+      "download-file"}]}'
+    tekton.dev/output_artifacts: '{"download-file": [{"name": "download-file-data",
+      "path": "/tmp/results.txt"}]}'
   labels:
     pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: hidden-output-file-pipeline
@@ -51,6 +53,41 @@ spec:
             set -exo pipefail
 
             cp /tmp/results.txt $(results.data.path);
+
+            '
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf data.tgz $(results.data.path)
+
+            mc cp data.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/data.tgz
 
             '
         volumes:

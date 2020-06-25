@@ -1,6 +1,8 @@
+Pipeline still running ...
 [get-frequent : main] flies
 
 [save : main] Copying file:///tmp/results.txt...
-[save : main] / [0 files][    0.0 B/    7.0 B]                                                / [1 files][    7.0 B/    7.0 B]                                                
+[save : main] / [0 files][    0.0 B/    7.0 B]                                                
+/ [1 files][    7.0 B/    7.0 B]                                                
 [save : main] Operation completed over 1 objects/7.0 B.                                        
 
