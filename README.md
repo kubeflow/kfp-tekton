@@ -1,8 +1,9 @@
-# Kubeflow Pipelines DSL Compiler for Tekton
+# Kubeflow Pipelines with Tekton
 
-Project to bring Kubeflow Pipelines DSL and Tekton together. The work is being driven in accordance with this evolving [design doc specifications](http://bit.ly/kfp-tekton). The work is split in phases. While the details of the phases are listed in the [design doc](http://bit.ly/kfp-tekton), the current effort in this repository is focused on creating a Kubeflow Pipeline compiler for Tekton, which can take KFP DSL, and compile it to Tekton YAML. You can then run those Pipelines on Tekton directly.
+Project to bring Kubeflow Pipelines and Tekton together. The work is being driven in accordance with this [design doc specifications](http://bit.ly/kfp-tekton). The work is split in phases. While the details of the phases are listed in the [design doc](http://bit.ly/kfp-tekton), the current code allows you run Kuubeflow Pipelines with Tekton backend end to end.
 
-If you would like to take the compiled output to Kubeflow Pipelines (KFP) engine and run it through KFP SDK and UI, please follow [the evolving code in the backend repository](https://github.com/kubeflow/kfp-tekton-backend)
+* Craft your Pipelines using KFP DSL, and compile it to Tekton YAML. 
+* Upload the compiled Tekton YAML to KFP UI and API engine, and run end to end with logging and artifact tracking enabled.
 
 ## Tekton
 
@@ -11,7 +12,7 @@ several new CRDs including Task, Pipeline, TaskRun, and PipelineRun. A PipelineR
 of a Pipeline and is responsible for creating a Pod for each of its Tasks and as many containers within each Pod as it
 has Steps. Please look for more details in [Tekton repo](https://github.com/tektoncd/pipeline).
 
-## Kubeflow Pipeline DSL to Tekton Compiler
+## Kubeflow Pipeline with Tekton backend
 
 We are currently using [Kubeflow Pipelines 0.5.1](https://github.com/kubeflow/pipelines/releases/tag/0.5.1) and
 [Tekton 0.13.0](https://github.com/tektoncd/pipeline/releases/tag/v0.13.0) for this project.
