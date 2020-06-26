@@ -18,7 +18,7 @@ for [Tekton](https://github.com/tektoncd/pipeline).
     - [Compiling a Kubeflow Pipelines DSL Script](#compiling-a-kubeflow-pipelines-dsl-script)
     - [Running the Pipeline on a Tekton Cluster](#running-the-pipeline-on-a-tekton-cluster)
   - [Build Tekton from Master](#build-tekton-from-master)
-  - [Removable Features](#removable-features)
+  - [Optional Features](#optional-features)
     - [Compile Kubeflow Pipelines without Artifacts](#compile-kubeflow-pipelines-without-artifacts)
   - [List of Available Features](#list-of-available-features)
   - [Troubleshooting](#troubleshooting)
@@ -111,7 +111,9 @@ If you cloned the `kfp-tekton` project, you can find example pipelines in the
 After compiling the `sdk/python/tests/compiler/testdata/parallel_join.py` DSL script
 in the step above, we need to deploy the generated Tekton YAML to our Kubernetes
 cluster with `kubectl`. The Tekton server will automatically start a pipeline run
-for which we can follow the logs using the `tkn` CLI:
+for which we can follow the logs using the `tkn` CLI. Here we have to deploy the
+pipeline in the kubeflow namespace because all the pipelines with metadata
+tracking have to rely on the minio credential in the kubeflow namespace:
 
     kubectl apply -f pipeline.yaml -n kubeflow
     
@@ -153,7 +155,7 @@ will be listed below.
 - [Exit Handler](/sdk/FEATURES.md#exit-handler)
 
 
-## Removable Features
+## Optional Features
 
 ### Compile Kubeflow Pipelines without Artifacts
 
