@@ -157,14 +157,14 @@ will be listed below.
 
 ### Compile Kubeflow Pipelines without Artifacts
 
-By default, _artifacts_ are enabled because the DSL are designed to run on Kubeflow Pipeline's
+By default, _artifacts_ are enabled because the KFP DSL are designed to run on Kubeflow Pipeline's engine with artifacts to be stored on
 [Minio](https://docs.minio.io/) storage. When artifacts are enabled, all the output
 parameters are also treated as artifacts and persisted to the default object storage.
 Enabling artifacts also allows files to be downloaded or stored as artifact inputs/outputs.
 Since artifacts are dependent on the Kubeflow Pipeline's deployment, the generated
 Tekton pipeline must be deployed to the same namespace as Kubeflow Pipelines.
 
-To run Tekton pipelines without installing Kubeflow pipeline, we need to compile the Kubeflow
+To run Tekton pipelines without installing Kubeflow pipeline, or if you need to compile the Kubeflow
 Pipelines DSL without artifacts, add the `--disable-artifacts` argument to your
 `dsl-compile-tekton` commands. Then, run the pipeline in the same namespace that is
 used by Kubeflow Pipelines (typically `kubeflow`) by specifying the `-n` flag:

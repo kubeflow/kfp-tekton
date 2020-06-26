@@ -47,7 +47,7 @@ npm run docker
 ```
 
 ### Backend
-The KFP backend with Tekton needs to modify the Kubeflow Pipelines api-server, persistent agent, and metadata writer. 
+The KFP backend with Tekton uses a modified version of Kubeflow Pipelines api-server, persistent agent, and metadata writer. 
 1. To build these two images, clone this repository under the [GOPATH](https://golang.org/doc/gopath_code.html#GOPATH) and rename it to `pipelines`. 
     ```shell
     cd $GOPATH/src/go/github.com/kubeflow
