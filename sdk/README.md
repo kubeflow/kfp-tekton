@@ -111,9 +111,10 @@ If you cloned the `kfp-tekton` project, you can find example pipelines in the
 After compiling the `sdk/python/tests/compiler/testdata/parallel_join.py` DSL script
 in the step above, we need to deploy the generated Tekton YAML to our Kubernetes
 cluster with `kubectl`. The Tekton server will automatically start a pipeline run
-for which we can follow the logs using the `tkn` CLI. Here we have to deploy the
-pipeline in the kubeflow namespace because all the pipelines with metadata
-tracking have to rely on the minio credential in the kubeflow namespace:
+for which we can follow the logs using the `tkn` CLI. 
+
+Here we have to deploy the pipeline in the kubeflow namespace because all the pipelines with metadata
+and artifacts tracking  rely on the minio object storage credentials in the kubeflow namespace.
 
     kubectl apply -f pipeline.yaml -n kubeflow
     
