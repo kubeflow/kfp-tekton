@@ -20,7 +20,8 @@ metadata:
       "name": "tolerations"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
+    tekton.dev/output_artifacts: '{"download": [{"name": "download-downloaded", "path":
+      "/tmp/results.txt"}]}'
   labels:
     pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: tolerations
@@ -40,6 +41,41 @@ spec:
           - -c
           image: busybox
           name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf downloaded.tgz $(results.downloaded.path)
+
+            mc cp downloaded.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/downloaded.tgz
+
+            '
   taskRunSpecs:
   - pipelineTaskName: download
     taskPodTemplate:

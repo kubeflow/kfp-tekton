@@ -21,7 +21,14 @@ metadata:
       to run this pipeline.", "inputs": [{"name": "url"}], "name": "VolumeSnapshotOp
       Sequential"}'
     sidecar.istio.io/inject: 'false'
-    tekton.dev/input_artifacts: '{}'
+    tekton.dev/input_artifacts: '{"step1-ingest": [{"name": "create-volume-name",
+      "parent_task": "create-volume"}], "step1-snap": [{"name": "create-volume-name",
+      "parent_task": "create-volume"}], "step2-gunzip": [{"name": "create-volume-name",
+      "parent_task": "create-volume"}], "step2-snap": [{"name": "create-volume-name",
+      "parent_task": "create-volume"}], "step3-copy": [{"name": "create-volume-name",
+      "parent_task": "create-volume"}], "step3-snap": [{"name": "create-volume-name",
+      "parent_task": "create-volume"}], "step4-output": [{"name": "create-volume-name",
+      "parent_task": "create-volume"}]}'
     tekton.dev/output_artifacts: '{}'
   labels:
     pipelines.kubeflow.org/pipeline-sdk-type: kfp

@@ -30,10 +30,14 @@
     Now go ahead and access the pipeline in the Kubeflow dashboard. It should be accessible from the istio-ingressgateway which is the
     `<public_ip>:31380`
 
+    Once you have the Kubeflow pipeline running with Tekton, then install the [KFP-Tekton DSL](/sdk/README.md) and start building your
+    own pipelines.
+
 ## Development: Building from source code
 ### Prerequites
 1. [NodeJS 12 or above](https://nodejs.org/en/download/)
 2. [Golang 1.13 or above](https://golang.org/dl/)
+3. [Python 3.6 or above](https://www.python.org/downloads/)
 
 ### Frontend
 The development instructions are under the [frontend](/frontend) directory. Below are the commands for building the frontend docker image.
@@ -43,7 +47,7 @@ npm run docker
 ```
 
 ### Backend
-The KFP backend with Tekton needs to modify the Kubeflow Pipelines api-server and persistent agent. 
+The KFP backend with Tekton uses a modified version of Kubeflow Pipelines api-server, persistent agent, and metadata writer. 
 1. To build these two images, clone this repository under the [GOPATH](https://golang.org/doc/gopath_code.html#GOPATH) and rename it to `pipelines`. 
     ```shell
     cd $GOPATH/src/go/github.com/kubeflow
@@ -58,10 +62,14 @@ The KFP backend with Tekton needs to modify the Kubeflow Pipelines api-server an
    go build -o agent ./backend/src/agent/persistence
    ```
 
+   Note: The metadata writer is written in Python, so the code will be compiled during runtime execution.
+
 3. For Docker builds, use the below `docker build` commands
    ```shell
-   docker build -t api-server -f backend/Dockerfile .
-   docker build -t persistenceagent -f backend/Dockerfile.persistenceagent .
+   DOCKER_REGISTRY="<fill in your docker registry here>"
+   docker build -t ${DOCKER_REGISTRY}/api-server -f backend/Dockerfile .
+   docker build -t ${DOCKER_REGISTRY}/persistenceagent -f backend/Dockerfile.persistenceagent .
+   docker build -t ${DOCKER_REGISTRY}/metadata-writer -f backend/metadata_writer/Dockerfile .
    ```
 
 4. Push the images to registry and modify the Kustomization to use your own built images.

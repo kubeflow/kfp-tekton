@@ -15,11 +15,11 @@ for [Tekton](https://github.com/tektoncd/pipeline).
   - [Tested Pipelines](#tested-pipelines)
   - [How to use the KFP-Tekton Compiler](#how-to-use-the-kfp-tekton-compiler)
     - [Installation](#installation)
-    - [Compiling a Kubeflow Pipelines DSL script](#compiling-a-kubeflow-pipelines-dsl-script)
-    - [Running the compiled pipeline on a Tekton cluster](#running-the-compiled-pipeline-on-a-tekton-cluster)
+    - [Compiling a Kubeflow Pipelines DSL Script](#compiling-a-kubeflow-pipelines-dsl-script)
+    - [Running the Pipeline on a Tekton Cluster](#running-the-pipeline-on-a-tekton-cluster)
   - [Build Tekton from Master](#build-tekton-from-master)
-  - [Additional Features](#additional-features)
-    - [Compile Kubeflow Pipelines with Artifacts Enabled](#compile-kubeflow-pipelines-with-artifacts-enabled)
+  - [Optional Features](#optional-features)
+    - [Compile Kubeflow Pipelines without Artifacts](#compile-kubeflow-pipelines-without-artifacts)
   - [List of Available Features](#list-of-available-features)
   - [Troubleshooting](#troubleshooting)
 
@@ -29,9 +29,9 @@ for [Tekton](https://github.com/tektoncd/pipeline).
 ## Project Prerequisites
 
  - Python: `3.7.5`
- - Kubeflow Pipelines: [`0.5.1`](https://github.com/kubeflow/pipelines/releases/tag/0.5.1)
  - Tekton: [`0.13.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.13.0)
- - Tekton CLI: [`0.8.0`](https://github.com/tektoncd/cli/releases/tag/v0.8.0)
+ - Tekton CLI: [`0.10.0`](https://github.com/tektoncd/cli/releases/tag/v0.10.0)
+ - Kubeflow Pipelines: [KFP with Tekton backend](/tekton_kfp_guide.md)
 
 Follow the instructions for [installing project prerequisites](/sdk/python/README.md#development-prerequisites)
 and take note of some important caveats.
@@ -111,21 +111,39 @@ If you cloned the `kfp-tekton` project, you can find example pipelines in the
 After compiling the `sdk/python/tests/compiler/testdata/parallel_join.py` DSL script
 in the step above, we need to deploy the generated Tekton YAML to our Kubernetes
 cluster with `kubectl`. The Tekton server will automatically start a pipeline run
-for which we can follow the logs using the `tkn` CLI:
+for which we can follow the logs using the `tkn` CLI. 
 
-    kubectl apply -f pipeline.yaml
+Here we have to deploy the pipeline in the kubeflow namespace because all the pipelines with metadata
+and artifacts tracking  rely on the minio object storage credentials in the kubeflow namespace.
+
+    kubectl apply -f pipeline.yaml -n kubeflow
     
-    tkn pipelinerun logs --last
+    tkn pipelinerun logs --last -n kubeflow
 
 Once the Tekton Pipeline is running, the logs should start streaming:
       
     Waiting for logs to be available...
     
-    [gcs-download-2 : gcs-download-2] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-    [gcs-download : gcs-download] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-    [echo : echo] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-    [echo : echo] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+    [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
+    [gcs-download : copy-artifacts] Added `storage` successfully.
+    [gcs-download : copy-artifacts] tar: removing leading '/' from member names
+    [gcs-download : copy-artifacts] tekton/results/data
+    [gcs-download : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline/gcs-download/data.tgz`
+    [gcs-download : copy-artifacts] Total: 0 B, Transferred: 195 B, Speed: 1 B/s
+
+    [gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+
+    [gcs-download-2 : copy-artifacts] Added `storage` successfully.
+    [gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
+    [gcs-download-2 : copy-artifacts] tekton/results/data
+    [gcs-download-2 : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline/gcs-download-2/data.tgz`
+    [gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 205 B, Speed: 1 B/s
+
+    [echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
+    [echo : main]
+    [echo : main] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+    [echo : main]
       
 ## Build Tekton from Master
 
@@ -138,52 +156,38 @@ will be listed below.
 - [Exit Handler](/sdk/FEATURES.md#exit-handler)
 
 
-## Additional Features
+## Optional Features
 
-### Compile Kubeflow Pipelines with Artifacts Enabled
+### Compile Kubeflow Pipelines without Artifacts
 
-**Prerequisite**: Install [Kubeflow Pipelines](https://www.kubeflow.org/docs/pipelines/installation/).
-
-By default, _artifacts_ are disabled because they are dependent on Kubeflow Pipeline's
+By default, _artifacts_ are enabled because the KFP DSL are designed to run on Kubeflow Pipeline's engine with artifacts to be stored on
 [Minio](https://docs.minio.io/) storage. When artifacts are enabled, all the output
 parameters are also treated as artifacts and persisted to the default object storage.
 Enabling artifacts also allows files to be downloaded or stored as artifact inputs/outputs.
 Since artifacts are dependent on the Kubeflow Pipeline's deployment, the generated
 Tekton pipeline must be deployed to the same namespace as Kubeflow Pipelines.
 
-To compile Kubeflow Pipelines DSL script into a Tekton `PipelineRun`, add the
-`--enable-artifacts` argument to your `dsl-compile-tekton` commands. Then, run the
-pipeline in the same namespace that is used by Kubeflow Pipelines (typically `kubeflow`)
-by specifying the `-n` flag:
+To run Tekton pipelines without installing Kubeflow pipeline, or if you need to compile the Kubeflow
+Pipelines DSL without artifacts, add the `--disable-artifacts` argument to your
+`dsl-compile-tekton` commands. Then, run the pipeline in the same namespace that is
+used by Kubeflow Pipelines (typically `kubeflow`) by specifying the `-n` flag:
 
     dsl-compile-tekton \
         --py sdk/python/tests/compiler/testdata/parallel_join.py \
         --output pipeline.yaml \
-        --enable-artifacts
+        --disable-artifacts
         
     kubectl apply -f pipeline.yaml -n kubeflow
     
     tkn pipelinerun logs --last -n kubeflow
 
-You should see log messages saying the artifacts were stored in the object storage:
+You should see log messages without any artifact reference:
 
     Waiting for logs to be available...
     
     [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
     
-    [gcs-download : copy-artifacts] Added `storage` successfully.
-    [gcs-download : copy-artifacts] tekton/results/data
-    [gcs-download : copy-artifacts] tar: removing leading '/' from member names
-    [gcs-download : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-run/gcs-download/data.tgz`
-    [gcs-download : copy-artifacts] Total: 0 B, Transferred: 194 B, Speed: 12.07 KiB/s
-    
     [gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-    
-    [gcs-download-2 : copy-artifacts] Added `storage` successfully.
-    [gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
-    [gcs-download-2 : copy-artifacts] tekton/results/data
-    [gcs-download-2 : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline-run/gcs-download-2/data.tgz`
-    [gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 204 B, Speed: 22.86 KiB/s
     
     [echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
     [echo : main]

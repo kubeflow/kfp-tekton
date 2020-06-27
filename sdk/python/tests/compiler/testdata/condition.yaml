@@ -21,8 +21,10 @@ metadata:
       "type": "String"}, {"default": "tails", "name": "forced_result2", "optional":
       true, "type": "String"}], "name": "Flip Coin Example Pipeline"}'
     sidecar.istio.io/inject: 'false'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{"print1": [{"name": "flip-again-output", "parent_task":
+      "flip-again"}], "print2": [{"name": "flip-output", "parent_task": "flip"}]}'
+    tekton.dev/output_artifacts: '{"flip": [{"name": "flip-output", "path": "/tmp/output"}],
+      "flip-again": [{"name": "flip-again-output", "path": "/tmp/output"}]}'
   labels:
     pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: flip-coin-example-pipeline
@@ -60,6 +62,41 @@ spec:
           - -c
           image: python:alpine3.6
           name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf output.tgz $(results.output.path)
+
+            mc cp output.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/output.tgz
+
+            '
     - conditions:
       - conditionRef: super-condition
         params:
@@ -90,6 +127,41 @@ spec:
           - -c
           image: python:alpine3.6
           name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf output.tgz $(results.output.path)
+
+            mc cp output.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/output.tgz
+
+            '
     - conditions:
       - conditionRef: super-condition
         params:

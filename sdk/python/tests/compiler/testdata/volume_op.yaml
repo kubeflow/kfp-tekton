@@ -20,7 +20,8 @@ metadata:
       Usage.", "inputs": [{"default": "10M", "name": "size", "optional": true}], "name":
       "VolumeOp Basic"}'
     sidecar.istio.io/inject: 'false'
-    tekton.dev/input_artifacts: '{}'
+    tekton.dev/input_artifacts: '{"cop": [{"name": "create-pvc-name", "parent_task":
+      "create-pvc"}]}'
     tekton.dev/output_artifacts: '{}'
   labels:
     pipelines.kubeflow.org/pipeline-sdk-type: kfp
