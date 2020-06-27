@@ -66,13 +66,13 @@ class TestK8sHelper(unittest.TestCase):
             "My-other-hobbies": "eating-drinking.-sleeping"
         }
         self.assertEqual(
-            list(map(lambda k: sanitize_k8s_name(k, allow_capital_underscore=True, allow_dot=True,
-                                                 allow_slash=True, max_length=253), labels.keys())),
-            list(expected_labels.keys()))
+            sorted(map(lambda k: sanitize_k8s_name(k, allow_capital_underscore=True, allow_dot=True,
+                                                   allow_slash=True, max_length=253), labels.keys())),
+            sorted(expected_labels.keys()))
         self.assertEqual(
-            list(map(lambda v: sanitize_k8s_name(v, allow_capital_underscore=True, allow_dot=True,
-                                                 allow_slash=False, max_length=63), labels.values())),
-            list(expected_labels.values()))
+            sorted(map(lambda v: sanitize_k8s_name(v, allow_capital_underscore=True, allow_dot=True,
+                                                   allow_slash=False, max_length=63), labels.values())),
+            sorted(expected_labels.values()))
 
     def test_sanitize_k8s_annotations(self):
         annotation_keys = {

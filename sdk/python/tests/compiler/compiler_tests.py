@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 import os
 import re
 import shutil
+import sys
 import tempfile
 import textwrap
 import unittest
 import yaml
+
 from os import environ as env
 
 from kfp_tekton import compiler
@@ -230,8 +233,14 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test compiling a katib workflow.
     """
-    from .testdata.katib import mnist_hpo
-    self._test_pipeline_workflow(mnist_hpo, 'katib.yaml')
+    # dictionaries and lists do not preserve insertion order before Python 3.6.
+    # katib.py uses (string-serialized) dictionaries containing dsl.PipelineParam objects
+    # which can't be JSON-serialized so using json.dumps(sorted) is not an alternative
+    if sys.version_info < (3, 6, 0):
+      logging.warning("Skipping katib workflow test for Python version < 3.6.0")
+    else:
+      from .testdata.katib import mnist_hpo
+      self._test_pipeline_workflow(mnist_hpo, 'katib.yaml')
 
   def test_load_from_yaml_workflow(self):
     """
@@ -352,4 +361,20 @@ class TestTektonCompiler(unittest.TestCase):
       with open(golden_yaml_file, 'r') as f:
         golden = yaml.safe_load(f)
       self.maxDiff = None
-      self.assertEqual(golden, compiled_workflow)
+
+      # sort dicts and lists, insertion order was not guaranteed before Python 3.6
+      if sys.version_info < (3, 6, 0):
+        def sort_items(obj):
+          from collections import OrderedDict
+          if isinstance(obj, dict):
+            return OrderedDict({k: sort_items(v) for k, v in sorted(obj.items())})
+          elif isinstance(obj, list):
+            return sorted([sort_items(o) for o in obj], key=lambda x: str(x))
+          else:
+            return obj
+        golden = sort_items(golden)
+        compiled_workflow = sort_items(compiled_workflow)
+
+      self.assertEqual(golden, compiled_workflow,
+                       msg="\n===[ " + golden_yaml_file.split(os.path.sep)[-1] + " ]===\n"
+                           + json.dumps(compiled_workflow, indent=2))

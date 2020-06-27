@@ -18,21 +18,21 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"name": "File passing pipelines"}'
     sidecar.istio.io/inject: 'false'
-    tekton.dev/input_artifacts: '{"print-text": [{"name": "repeat-line-output_text",
-      "parent_task": "repeat-line"}], "print-text-2": [{"name": "split-text-lines-odd_lines",
-      "parent_task": "split-text-lines"}], "print-text-3": [{"name": "split-text-lines-even_lines",
+    tekton.dev/input_artifacts: '{"print-params": [{"name": "gen-params-output", "parent_task":
+      "gen-params"}], "print-text": [{"name": "repeat-line-output_text", "parent_task":
+      "repeat-line"}], "print-text-2": [{"name": "split-text-lines-odd_lines", "parent_task":
+      "split-text-lines"}], "print-text-3": [{"name": "split-text-lines-even_lines",
       "parent_task": "split-text-lines"}], "print-text-4": [{"name": "write-numbers-numbers",
-      "parent_task": "write-numbers"}], "sum-numbers": [{"name": "write-numbers-numbers",
       "parent_task": "write-numbers"}], "print-text-5": [{"name": "sum-numbers-output",
-      "parent_task": "sum-numbers"}], "print-params": [{"name": "gen-params-output",
-      "parent_task": "gen-params"}]}'
-    tekton.dev/output_artifacts: '{"repeat-line": [{"name": "repeat-line-output_text",
+      "parent_task": "sum-numbers"}], "sum-numbers": [{"name": "write-numbers-numbers",
+      "parent_task": "write-numbers"}]}'
+    tekton.dev/output_artifacts: '{"gen-params": [{"name": "gen-params-output", "path":
+      "/tmp/outputs/Output/data"}], "repeat-line": [{"name": "repeat-line-output_text",
       "path": "/tmp/outputs/output_text/data"}], "split-text-lines": [{"name": "split-text-lines-even_lines",
       "path": "/tmp/outputs/even_lines/data"}, {"name": "split-text-lines-odd_lines",
-      "path": "/tmp/outputs/odd_lines/data"}], "write-numbers": [{"name": "write-numbers-numbers",
-      "path": "/tmp/outputs/numbers/data"}], "sum-numbers": [{"name": "sum-numbers-output",
-      "path": "/tmp/outputs/Output/data"}], "gen-params": [{"name": "gen-params-output",
-      "path": "/tmp/outputs/Output/data"}]}'
+      "path": "/tmp/outputs/odd_lines/data"}], "sum-numbers": [{"name": "sum-numbers-output",
+      "path": "/tmp/outputs/Output/data"}], "write-numbers": [{"name": "write-numbers-numbers",
+      "path": "/tmp/outputs/numbers/data"}]}'
   labels:
     pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: file-passing-pipelines

@@ -318,7 +318,7 @@ class TektonCompiler(Compiler):
     for arg in args:
       param = {'name': arg.name}
       if arg.value is not None:
-        if isinstance(arg.value, (list, tuple)):
+        if isinstance(arg.value, (list, tuple, dict)):
           param['default'] = json.dumps(arg.value, sort_keys=True)
         else:
           param['default'] = str(arg.value)
@@ -478,8 +478,8 @@ class TektonCompiler(Compiler):
         'name': sanitize_k8s_name(pipeline.name or 'Pipeline', suffix_space=4),
         'labels': get_default_telemetry_labels(),
         'annotations': {
-          'tekton.dev/output_artifacts': json.dumps(self.output_artifacts),
-          'tekton.dev/input_artifacts': json.dumps(self.input_artifacts),
+          'tekton.dev/output_artifacts': json.dumps(self.output_artifacts, sort_keys=True),
+          'tekton.dev/input_artifacts': json.dumps(self.input_artifacts, sort_keys=True),
           'sidecar.istio.io/inject': 'false'  # disable Istio inject since Tekton cannot run with Istio sidecar
         }
       },
