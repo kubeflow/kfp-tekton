@@ -330,11 +330,6 @@ def fix_big_data_passing(workflow: dict) -> dict:
         spec = template.get('taskSpec', {}) or template.get('pipelineSpec', {})
         spec['results'] = [
             output_parameter for output_parameter in spec.get('results', [])
-            if (
-                template.get(
-                    'name'
-                ),  # TODO: pipeline has no name, use pipelineRun name?
-                output_parameter['name']) in outputs_consumed_as_parameters
         ]
         # tekton results doesn't support underscore
         renamed_results_in_pipeline_task = set()

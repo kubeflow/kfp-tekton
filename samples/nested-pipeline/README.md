@@ -5,55 +5,27 @@ This example contains two pipelines, `save-most-frequent` and `download-and-save
 
 ## Prerequisites
 - Install [Kubeflow 1.0.2+](https://www.kubeflow.org/docs/started/getting-started/) and connect the cluster to the current shell with `kubectl`
-- Install [kfp-tekton](/sdk/README.md#steps) SDK
+- Install [kfp-tekton](/sdk/README.md#steps) SDK and [Kubeflow pipeline with Tekton backend](/tekton_kfp_guide.md)
 
 ## Instructions
 
-Once you have completed all the prerequisites for this example, you can first try out the `save-most-frequent` pipeline
+1. Once you have completed all the prerequisites for this example, you can first try out the `save-most-frequent` pipeline
 ```
 dsl-compile-tekton --py compose.py --output pipeline.yaml --function save_most_frequent_word
-kubectl apply -f pipeline.yaml
-tkn pipeline start save-most-frequent --showlog
 ```
-You will see the following params, specify the string and outputpath, both are required params, even you don't have GCS setup.
-```
-? Value for param `message` of type `string`? hello world hello
-? Value for param `outputpath` of type `string`? result.txt
 
-```
-you will see the result
-```
-Waiting for logs to be available...
-[get-frequent : get-frequent] hello
+Next, upload the `pipeline.yaml` file to the Kubeflow pipeline dashboard to run this pipeline.
 
-[save : save] {{inputs.parameters.get-frequent-word}}
 
-```
-To tryout the nested pipeline `download-and-save-most-frequent`:
+
+2. To tryout the nested pipeline `download-and-save-most-frequent`:
 ```
 dsl-compile-tekton --py compose.py --output pipeline.yaml --function download_save_most_frequent_word
-kubectl apply -f pipeline.yaml
-tkn pipeline start download-and-save-most-frequent --showlog
 ```
-To give the input string and path
-```
-? Value for param `url` of type `string`? gs://ml-pipeline-playground/shakespeare1.txt
-? Value for param `outputpath` of type `string`? res.txt
-```
-You will see the result
-```
-Waiting for logs to be available...
-[download : download] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
-[get-frequent : get-frequent] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-[get-frequent : get-frequent] 
-[get-frequent : get-frequent] your
+Next, upload the `pipeline.yaml` file to the Kubeflow pipeline dashboard to run this pipeline.
 
-[save : save] Copying file:///tmp/results.txt...
-/ [1 files][    6.0 B/    6.0 B]                                                              
-[save : save] Operation completed over 1 objects/6.0 B.                                        
 
-```
 ## Acknowledgements
 
 The original [nested pipeline](https://github.com/kubeflow/pipelines/blob/master/sdk/python/tests/compiler/testdata/compose.py) from kubeflow/pipeline project.

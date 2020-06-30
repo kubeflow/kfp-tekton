@@ -8,7 +8,7 @@ To run this pipeline, make sure your cluster has at least 16 cpu and 32GB in tot
 
 ## Prerequisites 
 - Install [Kubeflow 1.0.2+](https://www.kubeflow.org/docs/started/getting-started/) and connect the cluster to the current shell with `kubectl`
-- Install [kfp-tekton](/sdk/README.md#steps) SDK
+- Install [kfp-tekton](/sdk/README.md#steps) SDK and [Kubeflow pipeline with Tekton backend](/tekton_kfp_guide.md)
 - Install the necessary Python packages for running Jupyter notebook.
     ```shell
     pip install jupyter numpy Pillow
@@ -28,7 +28,7 @@ To run this pipeline, make sure your cluster has at least 16 cpu and 32GB in tot
 
 Once you have completed all the prerequisites for this example, then you can start the Jupyter server in this directory and click on the `mnist.ipynb` notebook. The notebook has step by step instructions for running the KFP Tekton pipeline.
 ```
-jupyter notebook
+python -m jupyter notebook
 ```
 
 ## Acknowledgements

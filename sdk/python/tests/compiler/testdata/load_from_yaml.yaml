@@ -1,0 +1,80 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with components
+      loaded from yaml", "name": "component-yaml-pipeline"}'
+    sidecar.istio.io/inject: 'false'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{"busybox": [{"name": "busybox-dummy_output_path",
+      "path": "/tmp/outputs/dummy_output_path/data"}]}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: component-yaml-pipeline
+spec:
+  pipelineSpec:
+    tasks:
+    - name: busybox
+      taskSpec:
+        results:
+        - description: /tmp/outputs/dummy_output_path/data
+          name: dummy-output-path
+        steps:
+        - args:
+          - start
+          - ''
+          - $(results.dummy-output-path.path)
+          - end
+          command:
+          - echo
+          image: alpine:latest
+          name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            tar -cvzf dummy_output_path.tgz $(results.dummy-output-path.path)
+
+            mc cp dummy_output_path.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/dummy_output_path.tgz
+
+            '
