@@ -28,7 +28,7 @@ for [Tekton](https://github.com/tektoncd/pipeline).
 
 ## Project Prerequisites
 
- - Python: `3.7.5`
+ - Python: `3.5.3` or later
  - Tekton: [`0.13.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.13.0)
  - Tekton CLI: [`0.10.0`](https://github.com/tektoncd/cli/releases/tag/v0.10.0)
  - Kubeflow Pipelines: [KFP with Tekton backend](/tekton_kfp_guide.md)
