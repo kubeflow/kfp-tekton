@@ -5,9 +5,7 @@
 This pipeline uses the [MNIST dataset](http://yann.lecun.com/exdb/mnist/) to train the model and try to find the best hyperparameters using random search. Learning rate, number of convolutional layers, and the optimizer are the training parameters we want to search. Once the pipeline is completed, the ending step will print out the best hyperparameters in this pipeline experiment and clean up the workspace.
 
 ## Prerequisites 
-- Install [Kubeflow 1.0.2+](https://www.kubeflow.org/docs/started/getting-started/) and connect the cluster to the current shell with `kubectl`
-- Install [Tekton 0.13.0](https://github.com/tektoncd/pipeline/releases/tag/v0.13.0)
-- Install [kfp-tekton](/sdk/README.md#steps) SDK and [Kubeflow pipeline with Tekton backend](/tekton_kfp_guide.md)
+- Install [KFP Tekton prerequisites](/samples/README.md)
 
 ## Instructions
 

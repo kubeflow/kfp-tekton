@@ -4,8 +4,7 @@ This pipeline example demonstrates that within a pipeline, you can call another 
 This example contains two pipelines, `save-most-frequent` and `download-and-save-most-frequent`. `save-most-frequent` will take two inputs, one is a message string which you want to find the most frequent word in it, the other is the location/path you want to save in GCS, if you don't have GCS setup, this parameter will be ignored, and the result will not be saved. Both input fields are required. `download-and-save-most-frequent` will take two inputs, one is an URL with plain text, the second one is the location/path which you want to save the result in GCS. This pipeline will first download the text from the input URL, then call `save-most-frequent` pipeline. Both inputs are required.
 
 ## Prerequisites
-- Install [Kubeflow 1.0.2+](https://www.kubeflow.org/docs/started/getting-started/) and connect the cluster to the current shell with `kubectl`
-- Install [kfp-tekton](/sdk/README.md#steps) SDK and [Kubeflow pipeline with Tekton backend](/tekton_kfp_guide.md)
+- Install [KFP Tekton prerequisites](/samples/README.md)
 
 ## Instructions
 

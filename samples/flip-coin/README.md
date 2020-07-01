@@ -3,11 +3,11 @@
 The [flip-coin pipeline](https://github.com/kubeflow/pipelines/blob/master/samples/core/condition/condition.py)
 is used to demonstrate the use of conditions.
 
-* [Installing Tekton Pipelines on Kubernetes](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes) 
+## prerequisites
+- Install [KFP Tekton prerequisites](/samples/README.md)
 
-* [Installing Tekton Pipelines on OpenShift](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-openshift)
-
-There are two ways to generate `Tekton` YAML. One is using `dsl-compile-tekton` command line tool, another way is using `TektonCompiler` inside your pipeline script. Both will generate the same `Tekton` YAML file. Then either run the YAML to your Kubeflow cluster by using the Kubeflow pipeline UI or use the SDK command line.
+## Instructions
+There are two ways to generate `Tekton` YAML. One is using `dsl-compile-tekton` command line tool, another way is using `TektonCompiler` inside your pipeline script. Both will generate the same `Tekton` YAML file.
 
 * Using command line to generate YAML
 
@@ -22,4 +22,4 @@ There are two ways to generate `Tekton` YAML. One is using `dsl-compile-tekton` 
     python condition.py
     ```
 
-Next, upload the `condition.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline.
+Then, upload the `condition.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline.

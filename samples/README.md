@@ -3,6 +3,18 @@
 Below are the list of samples that are currently running end to end taking the compiled Tekton yaml and deploying on a Tekton cluster directly. 
 If you are interested more in the larger list of pipelines samples we are testing for whether they can be 'compiled to Tekton' format, please [look at the corresponding status page](/sdk/python/tests/README.md)
 
+## Prerequisites 
+- Install [Kubeflow 1.0.2+](https://www.kubeflow.org/docs/started/getting-started/) and connect the cluster to the current shell with `kubectl`
+- Install [Tekton 0.13.0](https://github.com/tektoncd/pipeline/releases/tag/v0.13.0)
+    - For KFP, we shouldn't modify the default work directory for any component. Therefore, please run the below command to disable the [home and work directory overwrite](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#customizing-the-pipelines-controller-behavior) from Tekton default.
+        ```shell
+        kubectl patch cm feature-flags -n tekton-pipelines -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true"}}'
+        ```
+- Install [Kubeflow pipeline with Tekton backend](/tekton_kfp_guide.md)
+- Install [kfp-tekton](/sdk/README.md) SDK
+
+## Samples
+
 + [MNIST End to End example with Kubeflow components](/samples/e2e-mnist)
 + [Hyperparameter tuning using Katib](/samples/katib)
 + [Trusted AI Pipeline with AI Fairness 360 and Adversarial Robustness 360 components](/samples/trusted-ai)
