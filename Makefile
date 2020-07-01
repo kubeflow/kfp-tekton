@@ -38,6 +38,7 @@ install: venv ## Install the kfp_tekton compiler in a virtual environment
 .PHONY: unit_test
 unit_test: venv ## Run compiler unit tests
 	@sdk/python/tests/run_tests.sh
+	@echo "$@: OK"
 
 .PHONY: e2e_test
 e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
@@ -46,29 +47,37 @@ e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
 	@kubectl version --short || (echo "Failed to access kubernetes cluster" && exit 1)
 	@which tkn && tkn version || (echo "Missing tkn CLI" && exit 1)
 	@sdk/python/tests/run_e2e_tests.sh
+	@echo "$@: OK"
 
 .PHONY: test
 test: unit_test e2e_test ## Run compiler unit tests and end-to-end tests
-	@echo OK
+	@echo "$@: OK"
 
 .PHONY: report
 report: ## Report compilation status of KFP testdata DSL scripts
-	@cd sdk/python/tests && ./test_kfp_samples.sh
+	@sdk/python/tests/test_kfp_samples.sh
+	@echo "$@: OK"
 
 .PHONY: lint
 lint: venv ## Check Python code style compliance
 	@which flake8 > /dev/null || pip install flake8
-	flake8 sdk/python --count --show-source --statistics \
+	@flake8 sdk/python --show-source --statistics \
 		--select=E9,E2,E3,E5,F63,F7,F82,F4,F841,W291,W292 \
 		--per-file-ignores sdk/python/tests/compiler/testdata/*:F841 \
- 		--max-line-length=140  && echo OK
+ 		--max-line-length=140
+	@echo "$@: OK"
 
 .PHONY: check_license
 check_license: ## Check for license header in source files
 	@find ./sdk/python -type f \( -name '*.py' -o -name '*.yaml' \) -exec \
 		grep -H -E -o -c  'Copyright 20.* kubeflow.org'  {} \; | \
 		grep -E ':0$$' | sed 's/..$$//' | \
-		grep . && echo "The files listed above are missing the license header" && exit 1 || echo "OK"
+		grep . && echo "The files listed above are missing the license header" && exit 1 || \
+		echo "$@: OK"
+
+.PHONY: verify
+verify: check_license lint unit_test report ## Run all verification targets: check_license, lint, unit_test, report
+	@echo "$@: OK"
 
 .PHONY: distribution
 distribution: venv ## Create a distribution and upload to test.PyPi.org
