@@ -13,7 +13,7 @@ This pipeline uses the [UTKface's aligned & cropped faces dataset](https://susan
 
 2. Compile the trusted-ai pipeline
 ```shell
-dsl-compile-tekton --py trusted-ai.py --output trusted-ai.yaml
+python trusted-ai.py
 ```
 
 3. Next, upload the `trusted-ai.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline.

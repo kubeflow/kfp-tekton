@@ -11,11 +11,11 @@ This pipeline runs training, storing and deploying a Tensorflow model with MNIST
 
 1. Compile the Watson ML pipeline
 ```shell
-dsl-compile-tekton --py watson_train_serve_pipeline.py --output watson-train-server.yaml
+python watson_train_serve_pipeline.py
 ```
 2. If your default Kubeflow service account dosn't have edit permission, follow this [sa-and-rbac](/sdk/sa-and-rbac.md) to setup.
 
-3. Next, upload the `watson-train-server.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline. Then, use the default pipeline variables except for these two variables. 
+3. Next, upload the `watson_train_serve_pipeline.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline. Then, use the default pipeline variables except for these two variables. 
 
     `GITHUB_TOKEN`: your github token
 

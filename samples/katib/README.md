@@ -13,7 +13,7 @@ This pipeline uses the [MNIST dataset](http://yann.lecun.com/exdb/mnist/) to tra
 
 2. Compile the Katib pipeline
 ```shell
-dsl-compile-tekton --py katib.py --output katib.yaml
+python katib.py
 ```
 
 3. Next, upload the `katib.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline. This pipeline will run for 10 to 15 minutes.

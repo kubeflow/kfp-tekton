@@ -12,6 +12,14 @@ If you are interested more in the larger list of pipelines samples we are testin
         ```
 - Install [Kubeflow pipeline with Tekton backend](/tekton_kfp_guide.md)
 - Install [kfp-tekton](/sdk/README.md) SDK
+    ```
+    # Set up the python virtual environment
+    python3 -m venv .venv
+    source .venv/bin/activate
+
+    # Install the kfp-tekton SDK
+    pip install kfp-tekton
+    ```
 
 ## Samples
 
