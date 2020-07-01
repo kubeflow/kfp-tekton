@@ -22,4 +22,4 @@ There are two ways to generate `Tekton` YAML. One is using `dsl-compile-tekton` 
     python condition.py
     ```
 
-Next, upload the `condition.yaml` file to the Kubeflow pipeline dashboard to run this pipeline.
+Next, upload the `condition.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline.

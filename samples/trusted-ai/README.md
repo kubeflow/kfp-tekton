@@ -22,7 +22,7 @@ This pipeline uses the [UTKface's aligned & cropped faces dataset](https://susan
 dsl-compile-tekton --py trusted-ai.py --output trusted-ai.yaml
 ```
 
-3. Next, upload the `trusted-ai.yaml` file to the Kubeflow pipeline dashboard to run this pipeline.
+3. Next, upload the `trusted-ai.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline.
 
 Below are the metrics definition for this example:
 **Fairness Metrics**

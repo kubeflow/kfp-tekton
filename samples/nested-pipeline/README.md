@@ -23,7 +23,7 @@ Next, upload the `pipeline.yaml` file to the Kubeflow pipeline dashboard to run 
 dsl-compile-tekton --py compose.py --output pipeline.yaml --function download_save_most_frequent_word
 ```
 
-Next, upload the `pipeline.yaml` file to the Kubeflow pipeline dashboard to run this pipeline.
+Next, upload the `pipeline.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline.
 
 
 ## Acknowledgements
