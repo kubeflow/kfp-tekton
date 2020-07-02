@@ -9,7 +9,7 @@ This pipeline runs training, storing and deploying a Tensorflow model with MNIST
 
 ## Instructions
 
-1. Compile the Watson ML pipeline
+1. Compile the Watson ML pipeline. The kfp-tekton SDK will produce a Tekton pipeline yaml definition in the same directory called `watson_train_serve_pipeline.yaml`.
 ```shell
 python watson_train_serve_pipeline.py
 ```

@@ -7,7 +7,7 @@ is used to demonstrate the use of conditions.
 - Install [KFP Tekton prerequisites](/samples/README.md)
 
 ## Instructions
-* Compile the flip-coin pipeline using the compiler inside the python code.
+* Compile the flip-coin pipeline using the compiler inside the python code. The kfp-tekton SDK will produce a Tekton pipeline yaml definition in the same directory called `condition.yaml`.
     ```
     # Compile the python code
     python condition.py

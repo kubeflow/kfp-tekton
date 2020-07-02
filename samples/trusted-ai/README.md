@@ -11,7 +11,7 @@ This pipeline uses the [UTKface's aligned & cropped faces dataset](https://susan
 
 1. First, go to the Kubeflow dashboard and create a user namespace. The Kubeflow dashboard is the endpoint to your istio-ingressgateway. We will be using the namespace `anonymous` for this example.
 
-2. Compile the trusted-ai pipeline
+2. Compile the trusted-ai pipeline. The kfp-tekton SDK will produce a Tekton pipeline yaml definition in the same directory called `trusted-ai.yaml`.
 ```shell
 python trusted-ai.py
 ```
