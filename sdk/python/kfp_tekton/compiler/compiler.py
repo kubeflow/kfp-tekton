@@ -672,7 +672,7 @@ class TektonCompiler(Compiler):
       if not isinstance(obj, (dict, list)):
         return obj
       if isinstance(obj, list):
-        return [remove_empty_elements(o) for o in obj if o]
+        return [remove_empty_elements(o) for o in obj if o != []]
       return {k: remove_empty_elements(v) for k, v in obj.items()
               if v != []}
 

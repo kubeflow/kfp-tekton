@@ -7,8 +7,7 @@ This pipeline contains 5 steps, it finds the best hyperparameter using Katib, cr
 To run this pipeline, make sure your cluster has at least 16 cpu and 32GB in total. Otherwise some jobs might not able to run because TFJob needs to run 4 TensorFlow pods in parallel for distributed training.
 
 ## Prerequisites 
-- Install [Kubeflow 1.0.2+](https://www.kubeflow.org/docs/started/getting-started/) and connect the cluster to the current shell with `kubectl`
-- Install [kfp-tekton](/sdk/README.md#steps) SDK
+- Install [KFP Tekton prerequisites](/samples/README.md)
 - Install the necessary Python packages for running Jupyter notebook.
     ```shell
     pip install jupyter numpy Pillow
@@ -28,7 +27,7 @@ To run this pipeline, make sure your cluster has at least 16 cpu and 32GB in tot
 
 Once you have completed all the prerequisites for this example, then you can start the Jupyter server in this directory and click on the `mnist.ipynb` notebook. The notebook has step by step instructions for running the KFP Tekton pipeline.
 ```
-jupyter notebook
+python -m jupyter notebook
 ```
 
 ## Acknowledgements

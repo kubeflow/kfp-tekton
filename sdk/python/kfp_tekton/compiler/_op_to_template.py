@@ -318,7 +318,7 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
         }
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
-            artifact_name = artifact_to_result_mapping[artifact['name']]
+            artifact_name = artifact_to_result_mapping.get(artifact['name'], artifact['name'])
             if artifact['name'] in replaced_param_list:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
                     'tar -cvzf %s.tgz $(results.%s.path)\n' % (artifact_name, sanitize_k8s_name(artifact_name)) + \
