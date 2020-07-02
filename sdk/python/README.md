@@ -115,6 +115,17 @@ identify pieces of code that need to be refactored in KFP in order to accommodat
 When it is necessary to bring further methods from `kfp` compiler package into the `kfp-tekton` compiler package, keep
 the original method names and signatures as well as their position inside their respective Python modules. 
 
+Be sure to run `make verify` before committing your code changes and creating a pull request:
+
+    $ make verify
+    
+    check_license: OK
+    lint: OK
+    unit_test: OK
+    report: OK
+    verify: OK
+
+
 ### Overriding KFP Compiler Methods
 
 Most of the functions provided by the `kfp.compiler.compiler.Compiler` are instance based and can be overridden in
@@ -173,14 +184,16 @@ Typically a test case comes with a minimal Python DSL script and a "golden" YAML
 The "golden" YAML file contains the expected compiler output. The unit tests use the "golden" YAML files to compare
 the current compiler output with the previously expected compiler output. 
 
-    make test
+    make unit_test
 
 
 If the pipeline script compiles but does not match the "golden" YAML, then the unit test should fail. If the change in
 the output YAML is desired, then the "golden" YAML needs to be regenerated, i.e. by temporarily enabling the
-`GENERATE_GOLDEN_YAML` flag in `compiler_tests.py`.
+`GENERATE_GOLDEN_YAML` flag in `compiler_tests.py`, or by using the environment variable:
 
-   
+    make test GENERATE_GOLDEN_YAML="True"
+
+
 ### End-to-End Tests with Tekton
 
 The unit tests are designed to verify the YAML produced by the compiler matches the expected, previously generated
@@ -204,6 +217,10 @@ compiler `testdata` directory and runs them on a Kubernetes cluster, prerequisit
 `KUBECONFIG` is set and the K8s cluster has both Kubeflow Pipelines as well as Tekton Pipelines installed:
 
     make e2e_test
+
+After adding new E2E test case or after modifying existing ones, regenerate the "golden" log files:
+
+    make e2e_test GENERATE_GOLDEN_E2E_LOGS=True
 
 
 ### Compiler Test Report
@@ -235,6 +252,11 @@ added and the last year it was modified:
     # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     # See the License for the specific language governing permissions and
     # limitations under the License.
+
+
+Use the `check_license` Make target to verify all Python and YAML files contain the license header:
+
+    make check_license
 
 
 ## Removed Features
