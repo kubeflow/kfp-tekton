@@ -70,13 +70,25 @@ lint: venv ## Check Python code style compliance
 .PHONY: check_license
 check_license: ## Check for license header in source files
 	@find ./sdk/python -type f \( -name '*.py' -o -name '*.yaml' \) -exec \
-		grep -H -E -o -c  'Copyright 20.* kubeflow.org'  {} \; | \
+		grep -H -E -o -c 'Copyright 20.* kubeflow.org' {} \; | \
 		grep -E ':0$$' | sed 's/..$$//' | \
 		grep . && echo "The files listed above are missing the license header" && exit 1 || \
 		echo "$@: OK"
 
+.PHONY: check_mdtoc
+check_mdtoc: ## Check Markdown files for valid the Table of Contents
+	@find ./*.md ./samples ./sdk -type f -name '*.md' -exec \
+		grep -l -i 'Table of Contents' {} \; | sort | \
+		while read -r md_file; do \
+			grep -E '^ *\- \[[^]]+\]\(#[^)]+\) *$$' "$${md_file}" > md_file_toc; \
+			./tools/mdtoc.sh "$${md_file}" > generated_toc; \
+			diff -w md_file_toc generated_toc || echo "$${md_file}"; \
+			rm -f md_file_toc generated_toc; \
+		done | grep . && echo "Run './tools/mdtoc.sh <md-file>' to update the 'Table of Contents' in the markdown files listed above." && exit 1 || \
+		echo "$@: OK"
+
 .PHONY: verify
-verify: check_license lint unit_test report ## Run all verification targets: check_license, lint, unit_test, report
+verify: check_license lint unit_test report check_mdtoc ## Run all verification targets: check_license, lint, unit_test, report, check_mdtoc
 	@echo "$@: OK"
 
 .PHONY: distribution
