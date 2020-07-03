@@ -1,9 +1,9 @@
 # Kubeflow Pipelines with Tekton
 
-Project to bring Kubeflow Pipelines and Tekton together. The work is being driven in accordance with this [design doc specifications](http://bit.ly/kfp-tekton). The work is split in phases. While the details of the phases are listed in the [design doc](http://bit.ly/kfp-tekton), the current code allows you run Kubeflow Pipelines with Tekton backend end to end.
+Project to bring Kubeflow Pipelines and Tekton together. The project is split in phases and driven according to this [design doc](http://bit.ly/kfp-tekton). The current code allows you run Kubeflow Pipelines with Tekton backend end to end.
 
-* Craft your Pipelines using KFP DSL, and compile it to Tekton YAML. 
-* Upload the compiled Tekton YAML to KFP UI and API engine, and run end to end with logging and artifacts tracking enabled.
+* Create your Pipeline using Kubeflow Pipelines DSL, and compile it to Tekton YAML. 
+* Upload the compiled Tekton YAML to KFP engine (API and UI), and run end to end with logging and artifacts tracking enabled.
 
 ## Tekton
 
@@ -19,12 +19,12 @@ We are currently using [Kubeflow Pipelines 0.5.1](https://github.com/kubeflow/pi
 
 ![kfp-tekton](images/kfp-tekton.png)
 
-## Installation Kubeflow Pipeline with Tekton
+### Installing Kubeflow Pipelines with Tekton backend
 
 [Getting started with KFP Tekton deployment](tekton_kfp_guide.md)
 
 ### Getting Started
-[Getting started with KFP Tekton Compiler SDK](/sdk/README.md)
+[Getting started with KFP Tekton SDK](/sdk/README.md)
 
 ### Developer Guide
 [Developer Guide](/sdk/python/README.md) 
