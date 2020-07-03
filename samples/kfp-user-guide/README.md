@@ -23,18 +23,18 @@ def echo_pipeline(
 ```
 ## Table of Contents
 
-  - [Pipeline compilation](#pipeline-compilation)
+  - [Compile Pipelines](#compile-pipelines)
     - [1. Compile pipelines using the `kfp_tekton.compiler.TektonCompiler` in Python](#1-compile-pipelines-using-the-kfp_tektoncompilertektoncompiler-in-python)
     - [2. Compile pipelines using the `dsl-compile-tekton` bash command line tool](#2-compile-pipelines-using-the-dsl-compile-tekton-bash-command-line-tool)
-  - [Uploading pipelines](#uploading-pipelines)
+  - [Upload Pipelines](#upload-pipelines)
     - [1. Upload pipelines using the Kubeflow Pipeline user interface.](#1-upload-pipelines-using-the-kubeflow-pipeline-user-interface)
     - [2. Upload pipelines using the `kfp_tekton.TektonClient` in Python](#2-upload-pipelines-using-the-kfp_tektontektonclient-in-python)
     - [3. Upload pipelines using the `kfp` bash command line tool](#3-upload-pipelines-using-the-kfp-bash-command-line-tool)
-  - [Pipeline execution](#pipeline-execution)
+  - [Execute Pipelines](#execute-pipelines)
     - [1. Execute pipelines using the Kubeflow Pipeline user interface.](#1-execute-pipelines-using-the-kubeflow-pipeline-user-interface)
     - [2. Execute pipelines using the `kfp_tekton.TektonClient` in Python](#2-execute-pipelines-using-the-kfp_tektontektonclient-in-python)
     - [3. Execute pipelines using the `kfp` bash command line tool](#3-execute-pipelines-using-the-kfp-bash-command-line-tool)
-    - [4. Tekton Exclusive: Execute Tekton pipelines without using Kubeflow pipeline](#4-tekton-exclusive-execute-tekton-pipelines-without-using-kubeflow-pipeline)
+    - [4. Optional: Execute Tekton pipelines without using Kubeflow Pipelines engine](#4-optional-execute-tekton-pipelines-without-using-kubeflow-pipelines-engine)
 
 ## Compile Pipelines
 
