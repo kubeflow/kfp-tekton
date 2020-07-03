@@ -1,6 +1,9 @@
-# KFP Tekton compiler features
+# KFP-Tekton Compiler Features
 
-Below are the list of features that are currently available in the KFP Tekton compiler along with its implementation. With the current implementation, we are getting a greater than [80% success rate for compilation tests we are running over approximately 90 pipelines](/sdk/python/tests/README.md) spread across different parts of the Kubeflow Pipeline samples and tests. 
+This document describes the features supported by the _KFP-Tekton_ compiler.
+With the current implementation, the _KFP-Tekton_ compiler is capable of
+[compiling 80%](/sdk/python/tests/README.md) of approximately 90 sample
+and test pipelines found in the KFP repository.
 
 - [Pipeline DSL features with native Tekton implementation](#pipeline-dsl-features-with-native-tekton-implementation)
     + [pod_annotations and pod_labels](#pod_annotations-and-pod_labels)
@@ -12,6 +15,7 @@ Below are the list of features that are currently available in the KFP Tekton co
     + [ContainerOp](#containerop)
     + [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations)
     + [ImagePullSecrets](#imagepullsecrets)
+    + [Exit Handler](#exit-handler)
 - [Pipeline DSL features with custom Tekton implementation](#pipeline-dsl-features-with-custom-tekton-implementation)
   * [Features with same behavior as Argo](#features-with-same-behavior-as-argo)
     + [InitContainers](#initcontainers)
@@ -25,8 +29,7 @@ Below are the list of features that are currently available in the KFP Tekton co
     + [Variable Substitutions](#variable-substitutions) - [Tracking issue][VarSub]
   * [Features with different behavior than Argo](#features-with-different-behavior-than-argo)
     + [Sidecars](#sidecars) - [Tracking issue][Sidecars]
-- [Pipeline features that are unavailable on Tekton](#pipeline-features-that-are-unavailable-on-tekton)
-    + [Exit Handler](#exit-handler) - [Tracking PR][exitHandler]
+
 
 # Pipeline DSL features with native Tekton implementation
 Below are the features using Tekton's native support without any custom workaround.
@@ -34,7 +37,7 @@ Below are the features using Tekton's native support without any custom workarou
 ### pod_annotations and pod_labels
 pod_annotations and pod_labels are for assigning custom annotations or labels to a pipeline component. They are implemented with
 Tekton's [task metadata](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#configuring-a-task) field under Tekton
-Task. The [pipeline transformers](/sdk/python/tests/compiler/testdata/transfromers.py) example shows how to apply
+Task. The [pipeline transformers](/sdk/python/tests/compiler/testdata/pipeline_transfromers.py) example shows how to apply
 custom annotations and labels to one or more components in the pipeline. 
 
 ### Retries
@@ -84,7 +87,7 @@ The [affinity](/sdk/python/tests/compiler/testdata/affinity.py),
 [node_selector](/sdk/python/tests/compiler/testdata/node_selector.py), and
 [tolerations](/sdk/python/tests/compiler/testdata/tolerations.py) Python tests are examples of how to use these features.
 
-This feature is recently implemented in Tekton and is available on Tekton v0.13.0 onwards.
+This feature has been implemented in Tekton version `0.13.0`.
 
 ### ImagePullSecrets
 
@@ -93,7 +96,14 @@ with Tekton's [podTemplate](https://github.com/tektoncd/pipeline/blob/master/doc
 PipelineRun. The [imagepullsecrets](/sdk/python/tests/compiler/testdata/imagepullsecrets.py) python test is an example of how to use this
 feature.
 
-This feature is recently implemented in Tekton and is available on Tekton v0.13.0 onwards.
+This feature has been available since Tekton version `0.13.0`.
+
+### Exit Handler
+
+An exit handler is a component that always executes, irrespective of success or failure, at the end of the pipeline.
+
+The `finally` syntax is supported since Tekton version `0.14.0`.
+
 
 # Pipeline DSL features with custom Tekton implementation
 
@@ -168,6 +178,7 @@ argo -> tekton
 [parallel_join_with_argo_vars](/sdk/python/tests/compiler/testdata/parallel_join_with_argo_vars.py) is an example of how Argo variables are
 used and it can still be converted to Tekton variables with our Tekton compiler. However, other Argo variables will throw out an error because those Argo variables are very unique to Argo's pipeline system. 
 
+
 ## Features with different behavior than Argo
 Below are the KFP-Tekton features with different behavior than Argo.
 
@@ -186,19 +197,9 @@ When the nop image does provide the sidecar's command, the sidecar will continue
 kubectl get pods will show a 'Completed' pod when a sidecar exits successfully but an Error when the sidecar exits with an error. This is only apparent when using kubectl to get the pods of a TaskRun, not when describing the Pod using kubectl describe pod ... nor when looking at the TaskRun, but can be quite confusing. However, it has no functional impact. 
 [Tekton pipeline readme](https://github.com/tektoncd/pipeline/blob/master/docs/developers/README.md#handling-of-injected-sidecars) has documented this limitation. 
 
-# Pipeline features that are unavailable on Tekton
-
-### Exit Handler
-
-An exit handler is a component that always executes, irrespective of success or failure, at the end of the pipeline.
-
-The `finally` syntax is now supported in Tekton preview mode. The final tasks can be specified but not executed yet,
-implementation and execution of final tasks are tracked in separate PR [Tracking pull request #2661][exitHandler]
-
 
 <!-- Issue and PR links-->
 
 [ParallelFor]: https://github.com/tektoncd/pipeline/issues/2050
 [VarSub]: https://github.com/tektoncd/pipeline/issues/1522
 [Sidecars]: https://github.com/tektoncd/pipeline/issues/1347
-[exitHandler]: https://github.com/tektoncd/pipeline/pull/2661
