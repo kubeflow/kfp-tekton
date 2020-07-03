@@ -1,6 +1,6 @@
 # Kubeflow pipeline user guide
 
-This page introduces the different ways to compile, upload, and execute Kubeflow pipeline with Tekton backend. The usual flow for using the Kubeflow pipeline is to compile the Kubeflow pipeline python DSL into a Tekton formatted file. Then upload the compiled file to the Kubeflow pipeline platform. Lastly, execute the uploaded pipeline using the Kubeflow pipeline interfaces. For starter, we recommend to use the first method in each section.
+This page introduces different ways to compile, upload, and execute Kubeflow Pipelines with Tekton backend. The usual flow for using the Kubeflow Pipeline is to compile the Kubeflow Pipeline Python DSL into a Tekton formatted file. Then upload the compiled file to the Kubeflow Pipeline platform. Lastly, execute the uploaded pipeline using the Kubeflow Pipeline backend engine. For starter, we recommend using the first method in each section.
 
 In this tutorial, we use the below single step pipeline as our example
 ```python
@@ -36,7 +36,7 @@ def echo_pipeline(
     - [3. Execute pipelines using the `kfp` bash command line tool](#3-execute-pipelines-using-the-kfp-bash-command-line-tool)
     - [4. Tekton Exclusive: Execute Tekton pipelines without using Kubeflow pipeline](#4-tekton-exclusive-execute-tekton-pipelines-without-using-kubeflow-pipeline)
 
-## Pipeline compilation
+## Compile Pipelines
 
 ### 1. Compile pipelines using the `kfp_tekton.compiler.TektonCompiler` in Python
 This is the recommended way to compile pipelines using Python. Here we will import the `TektonCompiler` class and use the `compile` function to compile the above `echo_pipeline` into a Tekton yaml called `echo_pipeline.yaml`. The output format can be renamed to one of the followings: `[.tar.gz, .tgz, .zip, .yaml, .yml]` 
@@ -56,7 +56,7 @@ The kfp-tekton SDK also comes with a bash command line tool for compiling Kubefl
 dsl-compile-tekton --py echo_pipeline.py  --output pipeline.yaml
 ```
 
-## Uploading pipelines
+## Upload Pipelines
 
 ### 1. Upload pipelines using the Kubeflow Pipeline user interface.
 This is the recommended way to upload and manage pipeline using the Kubeflow pipeline web user interface. Go to the Kubeflow main dashboard(Endpoint of the istio-ingressgateway) and click on the **Pipelines** tab on the left panel. Then click on the **Upload pipeline button**.
@@ -137,7 +137,7 @@ kfp pipeline upload-version -p <existing_pipeline_id> -v new_pipeline_version ec
 # Uploaded at   2020-07-02T17:58:05+00:00
 ```
 
-## Pipeline execution
+## Execute Pipelines
 
 ### 1. Execute pipelines using the Kubeflow Pipeline user interface.
 Once we have the pipeline uploaded, we can simply execute the pipeline by clicking on the pipeline name. Then click **Create run** on the pipeline page. 
@@ -250,8 +250,8 @@ kfp run get bb96363f-ec0d-4e5a-9ce9-f69a485c2d94
 ```
 
 
-### 4. Tekton Exclusive: Execute Tekton pipelines without using Kubeflow pipeline
-For all the compiled Kubeflow pipeline, we can extract the file into `.yaml` format and run it directly on Kubernetes using the Tekton CRD. However, this method should **only use for Tekton development** because Kubeflow pipeline cannot track these pipelines that run directly on Tekton.
+### 4. Optional: Execute Tekton pipelines without using Kubeflow Pipelines engine
+For all the compiled Kubeflow pipelines, we can extract them into `.yaml` format and run them directly on Kubernetes using the Tekton CRD. However, this method should **only use for Tekton development** because Kubeflow Pipelines engine cannot track these pipelines that run directly on Tekton.
 
 Assuming the `kubectl` is connected to a Kubernetes cluster with Tekton, we can simply run the apply command to run the Tekton pipeline.
 

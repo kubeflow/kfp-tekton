@@ -1,5 +1,5 @@
 # KFP Tekton User Guide
-[KFP Tekton User Guide](/samples/kfp-user-guide) is a guideline for all the possible ways on how to develop and consume Kubeflow pipeline. It's recommended to go over at least one of the methods in the user guide before heading into the KFP Tekton Samples.
+[KFP Tekton User Guide](/samples/kfp-user-guide) is a guideline for the possible ways to develop and consume Kubeflow Pipeline with Tekton. It's recommended to go over at least one of the methods in the user guide before heading into the KFP Tekton Samples.
 
 # KFP Tekton Samples
 
