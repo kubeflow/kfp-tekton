@@ -1,3 +1,6 @@
+# KFP Tekton User Guide
+[KFP Tekton User Guide](/samples/kfp-user-guide) is a guideline for the possible ways to develop and consume Kubeflow Pipeline with Tekton. It's recommended to go over at least one of the methods in the user guide before heading into the KFP Tekton Samples.
+
 # KFP Tekton Samples
 
 Below are the list of samples that are currently running end to end taking the compiled Tekton yaml and deploying on a Tekton cluster directly. 
