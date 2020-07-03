@@ -8,7 +8,7 @@ If you are interested more in the larger list of pipelines samples we are testin
 
 ## Prerequisites 
 - Install [Kubeflow 1.0.2+](https://www.kubeflow.org/docs/started/getting-started/) and connect the cluster to the current shell with `kubectl`
-- Install [Tekton 0.13.0](https://github.com/tektoncd/pipeline/releases/tag/v0.13.0)
+- Install [Tekton 0.14.0](https://github.com/tektoncd/pipeline/releases/tag/v0.14.0)
     - For KFP, we shouldn't be modifying the default work directory for any component. Therefore, please run the below command to disable the [home and work directories overwrite](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#customizing-the-pipelines-controller-behavior) from Tekton default.
         ```shell
         kubectl patch cm feature-flags -n tekton-pipelines -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true"}}'
