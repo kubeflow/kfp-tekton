@@ -2,7 +2,7 @@
 
 # Getting Started
 ## Prequisites
-1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes) v0.13.0 or above
+1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes) v0.14.0 or above
 2. [Install Kubeflow](https://www.kubeflow.org/docs/started/getting-started/) if you want to leverage the Kubeflow stack
 3. Clone this repository
     ```
