@@ -81,7 +81,7 @@ export default class WorkflowParser {
         for (const condition of conditions)
           edges.push(...this.checkParams(statusMap, pipelineParams, condition, taskId));
 
-        if (task['taskSpec']['runAfter']) {
+        if (task['runAfter']) {
           task['runAfter'].forEach((parentTask: any) => {
             if (
               statusMap.get(parentTask) &&
