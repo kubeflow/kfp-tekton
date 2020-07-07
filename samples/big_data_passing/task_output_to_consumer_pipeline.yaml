@@ -1,129 +1,97 @@
 apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  annotations:
-    pipelines.kubeflow.org/component_spec: '{"name": "Produce one small output", "outputs":
-      [{"name": "Output", "type": "String"}]}'
-  name: produce-one-small-output
-spec:
-  results:
-  - description: /tmp/outputs/Output/data
-    name: output
-  steps:
-  - args:
-    - '----output-paths'
-    - $(results.output.path)
-    command:
-    - python3
-    - -u
-    - -c
-    - "def produce_one_small_output()  :\n    return 'Hello world'\n\ndef _serialize_str(str_value:\
-      \ str) -> str:\n    if not isinstance(str_value, str):\n        raise TypeError('Value\
-      \ \"{}\" has type \"{}\" instead of str.'.format(str(str_value), str(type(str_value))))\n\
-      \    return str_value\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Produce\
-      \ one small output', description='')\n_parser.add_argument(\"----output-paths\"\
-      , dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args = vars(_parser.parse_args())\n\
-      _output_files = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = produce_one_small_output(**_parsed_args)\n\
-      \n_outputs = [_outputs]\n\n_output_serializers = [\n    _serialize_str,\n\n\
-      ]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n    try:\n\
-      \        os.makedirs(os.path.dirname(output_file))\n    except OSError:\n  \
-      \      pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
-    image: tensorflow/tensorflow:1.13.2-py3
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  annotations:
-    pipelines.kubeflow.org/component_spec: '{"description": "Print small text", "inputs":
-      [{"name": "text", "type": "String"}], "name": "Print small text"}'
-  name: print-small-text
-spec:
-  params:
-  - name: produce-one-small-output-output
-  steps:
-  - args:
-    - --text
-    - $(inputs.params.produce-one-small-output-output)
-    command:
-    - python3
-    - -u
-    - -c
-    - "def print_small_text(text ):\n    '''Print small text'''\n    print(text)\n\
-      \nimport argparse\n_parser = argparse.ArgumentParser(prog='Print small text',\
-      \ description='Print small text')\n_parser.add_argument(\"--text\", dest=\"\
-      text\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args =\
-      \ vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"_output_paths\"\
-      , [])\n\n_outputs = print_small_text(**_parsed_args)\n\n_output_serializers\
-      \ = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
-      \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except OSError:\n\
-      \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
-    image: tensorflow/tensorflow:1.13.2-py3
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  annotations:
-    pipelines.kubeflow.org/component_spec: '{"description": "Print small text", "inputs":
-      [{"name": "text", "type": "String"}], "name": "Print small text"}'
-  name: print-small-text-2
-spec:
-  params:
-  - name: produce-one-small-output-output
-  steps:
-  - args:
-    - --text
-    - $(inputs.params.produce-one-small-output-output)
-    command:
-    - python3
-    - -u
-    - -c
-    - "def print_small_text(text ):\n    '''Print small text'''\n    print(text)\n\
-      \nimport argparse\n_parser = argparse.ArgumentParser(prog='Print small text',\
-      \ description='Print small text')\n_parser.add_argument(\"--text\", dest=\"\
-      text\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args =\
-      \ vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"_output_paths\"\
-      , [])\n\n_outputs = print_small_text(**_parsed_args)\n\n_output_serializers\
-      \ = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
-      \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except OSError:\n\
-      \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
-    image: tensorflow/tensorflow:1.13.2-py3
-    name: main
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Pipeline that passes small
       data from producer to consumer", "name": "Task output to consumer pipeline"}'
     sidecar.istio.io/inject: 'false'
-  name: task-output-to-consumer-pipeline
-spec:
-  tasks:
-  - name: produce-one-small-output
-    taskRef:
-      name: produce-one-small-output
-  - name: print-small-text
-    params:
-    - name: produce-one-small-output-output
-      value: $(tasks.produce-one-small-output.results.output)
-    taskRef:
-      name: print-small-text
-  - name: print-small-text-2
-    params:
-    - name: produce-one-small-output-output
-      value: $(tasks.produce-one-small-output.results.output)
-    taskRef:
-      name: print-small-text-2
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  annotation:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: task-output-to-consumer-pipeline-run
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: task-output-to-consumer-pipeline
 spec:
-  pipelineRef:
-    name: task-output-to-consumer-pipeline
+  pipelineSpec:
+    tasks:
+    - name: produce-one-small-output
+      taskSpec:
+        results:
+        - description: /tmp/outputs/Output/data
+          name: output
+        steps:
+        - args:
+          - '----output-paths'
+          - $(results.output.path)
+          command:
+          - python3
+          - -u
+          - -c
+          - "def produce_one_small_output()  :\n    return 'Hello world'\n\ndef _serialize_str(str_value:\
+            \ str) -> str:\n    if not isinstance(str_value, str):\n        raise\
+            \ TypeError('Value \"{}\" has type \"{}\" instead of str.'.format(str(str_value),\
+            \ str(type(str_value))))\n    return str_value\n\nimport argparse\n_parser\
+            \ = argparse.ArgumentParser(prog='Produce one small output', description='')\n\
+            _parser.add_argument(\"----output-paths\", dest=\"_output_paths\", type=str,\
+            \ nargs=1)\n_parsed_args = vars(_parser.parse_args())\n_output_files =\
+            \ _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = produce_one_small_output(**_parsed_args)\n\
+            \n_outputs = [_outputs]\n\n_output_serializers = [\n    _serialize_str,\n\
+            \n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
+            \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
+            \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
+            \    f.write(_output_serializers[idx](_outputs[idx]))\n"
+          image: tensorflow/tensorflow:1.13.2-py3
+          name: main
+    - name: print-small-text
+      params:
+      - name: produce-one-small-output-output
+        value: $(tasks.produce-one-small-output.results.output)
+      taskSpec:
+        params:
+        - name: produce-one-small-output-output
+        steps:
+        - args:
+          - --text
+          - $(inputs.params.produce-one-small-output-output)
+          command:
+          - python3
+          - -u
+          - -c
+          - "def print_small_text(text ):\n    '''Print small text'''\n    print(text)\n\
+            \nimport argparse\n_parser = argparse.ArgumentParser(prog='Print small\
+            \ text', description='Print small text')\n_parser.add_argument(\"--text\"\
+            , dest=\"text\", type=str, required=True, default=argparse.SUPPRESS)\n\
+            _parsed_args = vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"\
+            _output_paths\", [])\n\n_outputs = print_small_text(**_parsed_args)\n\n\
+            _output_serializers = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
+            \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
+            \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
+            \    f.write(_output_serializers[idx](_outputs[idx]))\n"
+          image: tensorflow/tensorflow:1.13.2-py3
+          name: main
+    - name: print-small-text-2
+      params:
+      - name: produce-one-small-output-output
+        value: $(tasks.produce-one-small-output.results.output)
+      taskSpec:
+        params:
+        - name: produce-one-small-output-output
+        steps:
+        - args:
+          - --text
+          - $(inputs.params.produce-one-small-output-output)
+          command:
+          - python3
+          - -u
+          - -c
+          - "def print_small_text(text ):\n    '''Print small text'''\n    print(text)\n\
+            \nimport argparse\n_parser = argparse.ArgumentParser(prog='Print small\
+            \ text', description='Print small text')\n_parser.add_argument(\"--text\"\
+            , dest=\"text\", type=str, required=True, default=argparse.SUPPRESS)\n\
+            _parsed_args = vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"\
+            _output_paths\", [])\n\n_outputs = print_small_text(**_parsed_args)\n\n\
+            _output_serializers = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
+            \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
+            \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
+            \    f.write(_output_serializers[idx](_outputs[idx]))\n"
+          image: tensorflow/tensorflow:1.13.2-py3
+          name: main
