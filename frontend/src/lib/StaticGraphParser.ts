@@ -86,7 +86,9 @@ export function createGraph(workflow: any): dagre.graphlib.Graph {
 
 function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
   const pipeline = template;
-  const tasks = pipeline['spec']['pipelineSpec']['tasks'];
+  const tasks = (pipeline['spec']['pipelineSpec']['tasks'] || []).concat(
+    pipeline['spec']['pipelineSpec']['finally'] || [],
+  );
 
   for (const task of tasks) {
     const taskName = task['name'];

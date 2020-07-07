@@ -56,13 +56,14 @@ export default class WorkflowParser {
       return graph;
 
     const tasks = (workflow['spec']['pipelineSpec']['tasks'] || []).concat(
-      workflow['spec']['pipelineSpec']['finally'],
+      workflow['spec']['pipelineSpec']['finally'] || [],
     );
     const status = workflow['status']['taskRuns'];
     const pipelineParams = workflow['spec']['params'];
-    const exitHandlers = workflow['spec']['pipelineSpec']['finally'].map((element: any) => {
-      return element['name'];
-    });
+    const exitHandlers =
+      (workflow['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
+        return element['name'];
+      }) || [];
 
     // Create a map from task name to status for every status received
     const statusMap = new Map<string, any>();
