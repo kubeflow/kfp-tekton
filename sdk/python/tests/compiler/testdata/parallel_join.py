@@ -54,4 +54,11 @@ def download_and_join(
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(download_and_join, __file__.replace('.py', '.yaml'))
+    TektonCompiler().compile(
+        download_and_join,
+        __file__.replace('.py', '') + "_s3.yaml",
+        enable_s3_logs=True,
+        S3_ACCESSKEY='UzNfQUNDRVNTS0VZ',
+        S3_SECRETKEY='U0VDUkVUS0VZ',
+        minio_endpoint='http://minio.tools.svc.cluster.local:9000'
+    )

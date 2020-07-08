@@ -99,6 +99,19 @@ class TestTektonCompiler(unittest.TestCase):
                                  'parallel_join_with_artifacts.yaml',
                                  enable_artifacts=True)
 
+  def test_parallel_join_workflow_with_s3_archive_logs(self):
+    """
+    Test compiling a parallel join workflow with s3 archived pipelineRun logs.
+    """
+    from .testdata.parallel_join import download_and_join
+    self._test_list_workflow(download_and_join,
+                                'parallel_join_with_s3_archive_logs.yaml',
+                                enable_artifacts=False,
+                                enable_s3_logs=True,
+                                S3_ACCESSKEY='UzNfQUNDRVNTS0VZ',
+                                S3_SECRETKEY='U0VDUkVUS0VZ',
+                                minio_endpoint='http://minio.tools.svc.cluster.local:9000')
+
   def test_parallel_join_with_argo_vars_workflow(self):
     """
     Test compiling a parallel join workflow.
@@ -348,6 +361,35 @@ class TestTektonCompiler(unittest.TestCase):
     finally:
       shutil.rmtree(temp_dir)
 
+  def _test_list_workflow(self,
+                          pipeline_function,
+                          pipeline_yaml,
+                          enable_artifacts=True,
+                          normalize_compiler_output_function=None,
+                          enable_s3_logs=False,
+                          S3_ACCESSKEY=None,
+                          S3_SECRETKEY=None,
+                          minio_endpoint=None):
+    test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
+    golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
+    temp_dir = tempfile.mkdtemp()
+    compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
+    try:
+      compiler.TektonCompiler().compile(pipeline_function,
+                                        compiled_yaml_file,
+                                        enable_artifacts=enable_artifacts,
+                                        enable_s3_logs=enable_s3_logs,
+                                        S3_ACCESSKEY=S3_ACCESSKEY,
+                                        S3_SECRETKEY=S3_SECRETKEY,
+                                        minio_endpoint=minio_endpoint)
+      with open(compiled_yaml_file, 'r') as f:
+        f = normalize_compiler_output_function(
+          f.read()) if normalize_compiler_output_function else f
+        compiled = list(yaml.safe_load_all(f))
+      self._verify_compiled_list_workflow(golden_yaml_file, compiled)
+    finally:
+      shutil.rmtree(temp_dir)
+
   def _verify_compiled_workflow(self, golden_yaml_file, compiled_workflow):
     """
     Tests if the compiled workflow matches the golden yaml.
@@ -360,6 +402,37 @@ class TestTektonCompiler(unittest.TestCase):
     else:
       with open(golden_yaml_file, 'r') as f:
         golden = yaml.safe_load(f)
+      self.maxDiff = None
+
+      # sort dicts and lists, insertion order was not guaranteed before Python 3.6
+      if sys.version_info < (3, 6, 0):
+        def sort_items(obj):
+          from collections import OrderedDict
+          if isinstance(obj, dict):
+            return OrderedDict({k: sort_items(v) for k, v in sorted(obj.items())})
+          elif isinstance(obj, list):
+            return sorted([sort_items(o) for o in obj], key=lambda x: str(x))
+          else:
+            return obj
+        golden = sort_items(golden)
+        compiled_workflow = sort_items(compiled_workflow)
+
+      self.assertEqual(golden, compiled_workflow,
+                       msg="\n===[ " + golden_yaml_file.split(os.path.sep)[-1] + " ]===\n"
+                           + json.dumps(compiled_workflow, indent=2))
+
+  def _verify_compiled_list_workflow(self, golden_yaml_file, compiled_workflow):
+    """
+    Tests if the compiled list workflow matches the golden yaml.
+    """
+    if GENERATE_GOLDEN_YAML:
+      with open(golden_yaml_file, 'w') as f:
+        f.write(LICENSE_HEADER)
+      with open(golden_yaml_file, 'a+') as f:
+        yaml.dump_all(compiled_workflow, f, default_flow_style=False)
+    else:
+      with open(golden_yaml_file, 'r') as f:
+        golden = list(yaml.safe_load_all(f))
       self.maxDiff = None
 
       # sort dicts and lists, insertion order was not guaranteed before Python 3.6

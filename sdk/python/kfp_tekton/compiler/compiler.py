@@ -99,6 +99,7 @@ class TektonCompiler(Compiler):
     #
     # Input and output artifacts are hash maps for metadata tracking.
     self.enable_artifacts = None
+    self.enable_s3_logs = None
     self.input_artifacts = {}
     self.output_artifacts = {}
     super().__init__(**kwargs)
@@ -686,7 +687,11 @@ class TektonCompiler(Compiler):
               type_check=True,
               pipeline_conf: dsl.PipelineConf = None,
               allow_telemetry: bool = True,
-              enable_artifacts=True):
+              enable_artifacts=True,
+              enable_s3_logs=False,
+              S3_ACCESSKEY=None,
+              S3_SECRETKEY=None,
+              minio_endpoint=None):
     """Compile the given pipeline function into workflow yaml.
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.
@@ -696,13 +701,21 @@ class TektonCompiler(Compiler):
                      image pull secrets and other pipeline-level configuration options.
                      Overrides any configuration that may be set by the pipeline.
       enable_artifacts: enable artifacts, requires Kubeflow Pipelines with Minio.
+      enable_s3_logs: enable pipelinerun logs archive to S3 storage
+      S3_ACCESSKEY: AWS BASE64 ACCESS_KEY
+      S3_SECRETKEY: AWS BASE64 SECRETKEY
+      minio_endpoint: minio service endpoint, e.g: http://minio.tools.svc.cluster.local:9000
     """
     self.enable_artifacts = enable_artifacts
+    self.enable_s3_logs = enable_s3_logs
+    self.S3_ACCESSKEY = S3_ACCESSKEY
+    self.S3_SECRETKEY = S3_SECRETKEY
+    self.minio_endpoint = minio_endpoint
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf,
                     allow_telemetry=allow_telemetry)
 
   @staticmethod
-  def _write_workflow(workflow: Dict[Text, Any],
+  def _write_workflow(workflow,
                       package_path: Text = None):
     """Dump pipeline workflow into yaml spec and write out in the format specified by the user.
 
@@ -713,7 +726,10 @@ class TektonCompiler(Compiler):
     """
     # yaml_text = dump_yaml(workflow)
     yaml.Dumper.ignore_aliases = lambda *args: True
-    yaml_text = yaml.dump(workflow, default_flow_style=False)  # Tekton change
+    if type(workflow) == list:
+      yaml_text = yaml.dump_all(workflow, default_flow_style=False)  # Tekton change
+    else:
+      yaml_text = yaml.dump(workflow, default_flow_style=False)
 
     # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
     # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
@@ -784,8 +800,86 @@ class TektonCompiler(Compiler):
         params_list,
         pipeline_conf,
         allow_telemetry)
-    TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
     _validate_workflow(workflow)
+    if self.enable_s3_logs:
+      workflow = _achive_logs_to_s3(workflow, self.S3_ACCESSKEY, self.S3_SECRETKEY, self.minio_endpoint)
+    TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
+
+
+def _achive_logs_to_s3(
+    workflow: Dict[Text, Any], S3_ACCESSKEY, S3_SECRETKEY, minio_endpoint
+) -> List[Dict[Text, Any]]:
+  """Complie to achive pipelinerun logs to AWS S3 storage if user set enable_s3_logs=True"""
+  s3_logs_template = [{
+      "apiVersion": "logging.banzaicloud.io/v1beta1",
+      "kind": "Logging",
+      "metadata": {
+          "name": "logging"
+      },
+      "spec": {
+          "fluentd": {},
+          "fluentbit": {},
+          "controlNamespace": "tools"
+      }
+  }, {
+      "apiVersion": "logging.banzaicloud.io/v1beta1",
+      "kind": "ClusterOutput",
+      "metadata": {
+          "name": "s3"
+      },
+      "spec": {
+          "s3": {
+              "aws_key_id": {
+                  "value": S3_ACCESSKEY
+              },
+              "aws_sec_key": {
+                  "value": S3_SECRETKEY
+              },
+              "s3_endpoint":
+                  minio_endpoint,
+              "s3_bucket":
+                  "tekton-logs",
+              "s3_region":
+                  "tekton",
+              "force_path_style":
+                  "true",
+              "store_as":
+                  "text",
+              "path":
+                  "\\${\\$.kubernetes.namespace_name}/\\${\\$.kubernetes.pod_name}/\\${\\$.kubernetes.container_name}/",
+              "s3_object_key_format":
+                  "%{path}%{time_slice}_%{index}.log",
+              "buffer": {
+                  "tags":
+                      "time,\\$.kubernetes.namespace_name,\\$.kubernetes.pod_name,\\$.kubernetes.container_name",
+                  "timekey":
+                      "1m",
+                  "timekey_wait":
+                      "1m",
+                  "timekey_use_utc":
+                      True
+              },
+              "format": {
+                  "type": "single_value",
+                  "message_key": "message"
+              }
+          }
+      }
+  }, {
+      "apiVersion": "logging.banzaicloud.io/v1beta1",
+      "kind": "ClusterFlow",
+      "metadata": {
+          "name": "flow"
+      },
+      "spec": {
+          "outputRefs": ["s3"],
+          "selectors": {
+              "app.kubernetes.io/managed-by": "tekton-pipelines"
+          }
+      }
+  }]
+  s3_logs_template.append(workflow)
+  return s3_logs_template
 
 
 def _validate_workflow(workflow: Dict[Text, Any]):

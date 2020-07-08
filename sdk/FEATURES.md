@@ -16,6 +16,7 @@ and test pipelines found in the KFP repository.
     + [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations)
     + [ImagePullSecrets](#imagepullsecrets)
     + [Exit Handler](#exit-handler)
+    + [Log Archive](#log-archive)
 - [Pipeline DSL Features with a Custom Tekton Implementation](#pipeline-dsl-features-with-a-custom-tekton-implementation)
   * [Features with the Same Behavior as Argo](#features-with-the-same-behavior-as-argo)
     + [InitContainers](#initcontainers)
@@ -116,6 +117,12 @@ the [exit_handler](/sdk/python/tests/compiler/testdata/exit_handler.py) compiler
 
 The `finally` syntax is supported since Tekton version `0.14.0`.
 
+### Log archive
+Archive tekton pipelinerun logs to S3 storage.
+
+Install [minio](https://min.io) and [banzaicloud logging operator](https://banzaicloud.com/docs/one-eye/logging-operator/deploy/) under `tools` namespaces before using this feature.
+
+Set `enable_s3_logs=True` during complie, for example [parallel join with S3 archive logs](/sdk/python/tests/compiler/testdata/parallel_join.py) compiler test
 
 # Pipeline DSL Features with a Custom Tekton Implementation
 
