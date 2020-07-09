@@ -77,18 +77,18 @@ check_license: ## Check for license header in source files
 
 .PHONY: check_mdtoc
 check_mdtoc: ## Check Markdown files for valid the Table of Contents
-	@find ./*.md ./samples ./sdk -type f -name '*.md' -exec \
+	@find samples sdk *.md -type f -name '*.md' -exec \
 		grep -l -i 'Table of Contents' {} \; | sort | \
 		while read -r md_file; do \
-			grep -E '^ *\- \[[^]]+\]\(#[^)]+\) *$$' "$${md_file}" > md_file_toc; \
+			grep -oE '^ *[-+*] \[[^]]+\]\(#[^)]+\)' "$${md_file}" |  sed -e 's/[-+*] /- /g' > md_file_toc; \
 			./tools/mdtoc.sh "$${md_file}" > generated_toc; \
 			diff -w md_file_toc generated_toc || echo "$${md_file}"; \
 			rm -f md_file_toc generated_toc; \
-		done | grep . && echo "Run './tools/mdtoc.sh <md-file>' to update the 'Table of Contents' in the markdown files listed above." && exit 1 || \
+		done | grep . && echo "Run './tools/mdtoc.sh <md-file>' to update the 'Table of Contents' in the Markdown files reported above." && exit 1 || \
 		echo "$@: OK"
 
 .PHONY: verify
-verify: check_license lint unit_test report check_mdtoc ## Run all verification targets: check_license, lint, unit_test, report, check_mdtoc
+verify: check_license check_mdtoc lint unit_test report ## Run all verification targets: check_license, check_mdtoc, lint, unit_test, report
 	@echo "$@: OK"
 
 .PHONY: distribution

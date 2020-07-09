@@ -5,6 +5,8 @@ With the current implementation, the _KFP-Tekton_ compiler is capable of
 [compiling 80%](/sdk/python/tests/README.md) of approximately 90 sample
 and test pipelines found in the KFP repository.
 
+<!-- # Table of Contents -->
+
 - [Pipeline DSL Features with Native Tekton Implementation](#pipeline-dsl-features-with-native-tekton-implementation)
     + [pod_annotations and pod_labels](#pod_annotations-and-pod_labels)
     + [Retries](#retries)
