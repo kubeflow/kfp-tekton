@@ -61,7 +61,7 @@ COPY ./samples .
 # The "for" loop breaks on all whitespace, so we either need to override IFS or
 # use the "read" command instead.
 RUN line="import kfp;kfp.components.default_base_image_or_builder='gcr.io/google-appengine/python:2020-03-31-141326";\
-    set -e; find core tutorials -maxdepth 2 -name '*.py' -type f | while read pipeline; do \
+    set -e; find flip-coin -maxdepth 2 -name '*.py' -type f | while read pipeline; do \
     awk -v text="$line" '!/^#/ && !p {print text; p=1} 1' "$pipeline" && \
     python3 "$pipeline"; \
     done

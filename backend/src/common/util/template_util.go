@@ -33,7 +33,7 @@ const (
 )
 
 func GetParameters(template []byte) (string, error) {
-	if strings.ToLower(os.Getenv("PIPELINE_RUNTIME")) == "tekton" {
+	if strings.ToLower(os.Getenv("PIPELINE_RUNTIME")) != "argo" {
 		return GetTektonParameters(template)
 	}
 	return "nil", nil
