@@ -77,11 +77,11 @@ spec:
 EOF
 ```
 
-3. Deploy minio via `kubectl apply -f minio_standalon.yaml -n tools`
+3. Deploy minio via `kubectl apply -f minio_standalon.yaml -n logging`
 
 4. Access minio service:
 ```
- kc get svc -n tools
+ kc get svc -n logging
 NAME            TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
 minio-service   NodePort   10.108.182.51   <none>        9000:31440/TCP   52m
 ```
@@ -138,7 +138,7 @@ spec:
         secretKeyRef:
           key: secretkey
           name: logging-s3
-    s3_endpoint: http://<your_public_ip>:31706
+    s3_endpoint: http://<your_public_ip>:31440
     s3_bucket: tekton-pipline-logs
     s3_region: test_region
     force_path_style: 'true'
@@ -176,6 +176,9 @@ EOF
 
 The ClusterFlow above takes all logs from pods that have the app.kubernetes.io/managed-by: tekton-pipelines label (those are the pods baking TaskRuns) and dispatches them to the ClusterOutput created in the previous step.
 
+
+## Submit a tekton pipelinerun for testing
+
 Running the PipelineRun should produce logs and you should see corresponding objects being added in minio as far as logs get collected and stored by the logs pipeline.
 e.g. [parallel_join.yaml](https://github.com/kubeflow/pipelines/blob/master/sdk/python/tests/compiler/testdata/parallel_join.yaml)
 
@@ -183,6 +186,6 @@ e.g. [parallel_join.yaml](https://github.com/kubeflow/pipelines/blob/master/sdk/
 kubectl apply -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/sdk/python/tests/compiler/testdata/parallel_join.yaml
 ```
 
-
-## You can get the logs from S3 web now, via `http://<public_ip>:31440`
-![minio_s3](images/minio_s3.png)
+## Access to S3 Web
+You can get the logs from S3 web now, via `http://<public_ip>:31440`
+![minio_s3](minio_s3.png)
