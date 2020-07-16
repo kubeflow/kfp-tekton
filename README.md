@@ -53,3 +53,6 @@ We are currently using [Kubeflow Pipelines 0.5.1](https://github.com/kubeflow/pi
 
 + [Kubeflow and TFX Pipelines](/samples/kfp-tfx)
 + [Kubeflow and TFX Pipelines talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
+
+### Adding something just to see how it feels 
+- Marcelo Nazar
