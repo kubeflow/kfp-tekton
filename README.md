@@ -15,7 +15,7 @@ has Steps. Please look for more details in [Tekton repo](https://github.com/tekt
 ## Kubeflow Pipeline with Tekton backend
 
 We are currently using [Kubeflow Pipelines 0.5.1](https://github.com/kubeflow/pipelines/releases/tag/0.5.1) and
-[Tekton 0.14.0](https://github.com/tektoncd/pipeline/releases/tag/v0.14.0) for this project.
+[Tekton 0.14.0](https://github.com/ tektoncd/pipeline/releases/tag/v0.14.0) for this project.
 
 ![kfp-tekton](images/kfp-tekton.png)
 
@@ -53,3 +53,7 @@ We are currently using [Kubeflow Pipelines 0.5.1](https://github.com/kubeflow/pi
 
 + [Kubeflow and TFX Pipelines](/samples/kfp-tfx)
 + [Kubeflow and TFX Pipelines talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
+
+### Credit
+
+- Christian Kadner
