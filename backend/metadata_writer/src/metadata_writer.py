@@ -62,7 +62,7 @@ def patch_pod_metadata(
 mlmd_store = connect_to_mlmd()
 print("Connected to the metadata store")
 
-PIPELINE_RUNTIME = os.getenv("PIPELINE_RUNTIME", "argo").lower()
+PIPELINE_RUNTIME = os.getenv("PIPELINE_RUNTIME", "tekton").lower()
 
 ARGO_OUTPUTS_ANNOTATION_KEY = 'workflows.argoproj.io/outputs'
 ARGO_TEMPLATE_ANNOTATION_KEY = 'workflows.argoproj.io/template'
