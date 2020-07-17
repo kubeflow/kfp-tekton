@@ -446,11 +446,11 @@ func (r *ResourceManager) ListJobs(filterContext *common.FilterContext,
 	return r.jobStore.ListJobs(filterContext, opts)
 }
 
-// TerminateWorkflow terminates a workflow by setting its activeDeadlineSeconds to 0
+// TerminateWorkflow terminates a pipelinerun by setting its status to PipelineRunCancelled
 func TerminateWorkflow(wfClient workflowclient.PipelineRunInterface, name string) error {
 	patchObj := map[string]interface{}{
 		"spec": map[string]interface{}{
-			"activeDeadlineSeconds": 0,
+			"status": "PipelineRunCancelled",
 		},
 	}
 
