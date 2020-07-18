@@ -92,12 +92,10 @@ class TestTektonCompiler(unittest.TestCase):
 
   def test_parallel_join_workflow_with_artifacts(self):
     """
-    Test compiling a parallel join workflow with artifacts and pipelineRun.
+    Test compiling a parallel join workflow with artifacts.
     """
     from .testdata.parallel_join import download_and_join
-    self._test_pipeline_workflow(download_and_join,
-                                 'parallel_join_with_artifacts.yaml',
-                                 enable_artifacts=True)
+    self._test_pipeline_workflow(download_and_join, 'parallel_join_with_artifacts.yaml', enable_artifacts=True)
 
   def test_parallel_join_with_argo_vars_workflow(self):
     """

@@ -1,4 +1,3 @@
-Pipeline still running ...
 [create-pvc : main] time="2020-06-25T18:06:00Z" level=error msg="Initialize script failed: exit status 2:"
 [create-pvc : main] time="2020-06-25T18:06:00Z" level=info msg="kubectl create -f /tmp/manifest.yaml -o json"
 [create-pvc : main] time="2020-06-25T18:06:01Z" level=info msg=kubeflow/PersistentVolumeClaim./volumeop-basic-my-pvc
