@@ -19,37 +19,44 @@ We are currently using [Kubeflow Pipelines 0.5.1](https://github.com/kubeflow/pi
 
 ![kfp-tekton](images/kfp-tekton.png)
 
-### Installing Kubeflow Pipelines with Tekton backend
+### 1. Get Started with Kubeflow Pipelines with Tekton
+#### 1.1 Install Kubeflow Pipelines with Tekton backend
 
-[Getting started with KFP Tekton deployment](tekton_kfp_guide.md)
+[Kubeflow Pipelines with Tekton backend installation](tekton_kfp_guide.md)
 
-### Getting Started
+#### 1.2 Use KFP Tekton SDK
 [Getting started with KFP Tekton SDK](/sdk/README.md)
 
-### Developer Guide
-[Developer Guide](/sdk/python/README.md) 
-
-### Available Features and Implementation Details
-[Available Features and Implementation Details](/sdk/FEATURES.md)
-
-### Compiler Status Report
-[Compilation Tests Status Report](/sdk/python/tests/README.md)
-
-### Samples
+#### 1.3 Run Samples
 [Samples being run end to end for verification](/samples/README.md)
 
-### KFP, Argo and Tekton Features Comparison
-[KFP, Argo and Tekton Features Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
+### 2. Developer Guides
 
-### Design Doc 
+#### 2.1 Get Started with Development
+[Developer Guide](/sdk/python/README.md) 
+
+#### 2.1 Available Features and Implementation Details
+[Available Features and Implementation Details](/sdk/FEATURES.md)
+
+#### 2.1 Compilation Tests Status Reports
+[Compilation Tests Status Report](/sdk/python/tests/README.md)
+
+### 3. Design Guides
+
+#### 3.1 Design Doc 
 [Design Doc](http://bit.ly/kfp-tekton)
 
-### CD Foundation
+#### 3.2 KFP, Argo and Tekton Features Comparison
+[KFP, Argo and Tekton Features Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
+
+### 4. Community
+#### 4.1 CD Foundation
 
 + [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/). 
 + [Instructions to join](https://github.com/cdfoundation/sig-mlops)
 
-### Additional Reference Materials: KFP and TFX
+### 4. References
 
+#### 4.1 Additional Reference Materials: KFP and TFX
 + [Kubeflow and TFX Pipelines](/samples/kfp-tfx)
 + [Kubeflow and TFX Pipelines talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
