@@ -27,13 +27,13 @@ We are currently using [Kubeflow Pipelines 0.5.1](https://github.com/kubeflow/pi
 
 1.3 [Run Samples](/samples/README.md)
 
+1.4 [Available KFP DSL Features](/sdk/FEATURES.md)
+
 ### 2. Development Guides
 
 2.1 [Developer Guide](/sdk/python/README.md) 
 
-2.2 [Available Features and Implementation Details](/sdk/FEATURES.md)
-
-2.3 [Compilation Tests Status Report](/sdk/python/tests/README.md)
+2.2 [Compilation Tests Status Report](/sdk/python/tests/README.md)
 
 ### 3. Design Guides
 
