@@ -21,36 +21,36 @@ We are currently using [Kubeflow Pipelines 0.5.1](https://github.com/kubeflow/pi
 
 ![kfp-tekton](images/kfp-tekton.png)
 
-### 1. Get Started using Kubeflow Pipelines with Tekton
+### Get Started using Kubeflow Pipelines with Tekton
 
-1.1 [Install Kubeflow Pipelines with Tekton backend](tekton_kfp_guide.md)
+[Install Kubeflow Pipelines with Tekton backend](tekton_kfp_guide.md)
 
-1.2 [Use KFP Tekton SDK](/sdk/README.md)
+[Use KFP Tekton SDK](/sdk/README.md)
 
-1.3 [Run Samples](/samples/README.md)
+[Run Samples](/samples/README.md)
 
-1.4 [Available KFP DSL Features](/sdk/FEATURES.md)
+[Available KFP DSL Features](/sdk/FEATURES.md)
 
-### 2. Development Guides
+### Development Guides
 
-2.1 [Developer Guide](/sdk/python/README.md) 
+[Developer Guide](/sdk/python/README.md) 
 
-2.2 [Compilation Tests Status Report](/sdk/python/tests/README.md)
+[Compilation Tests Status Report](/sdk/python/tests/README.md)
 
-### 3. Design Guides
+### Design Guides
 
-3.1 [Design Doc](http://bit.ly/kfp-tekton)
+[Design Doc](http://bit.ly/kfp-tekton)
 
-3.2 [KFP, Argo and Tekton Features Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
+[KFP, Argo and Tekton Features Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
 
-### 4. Community
+### Community
 
-4.1 [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/).
+[CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/).
 
-4.2 [Instructions to join](https://github.com/cdfoundation/sig-mlops)
+[Instructions to join](https://github.com/cdfoundation/sig-mlops)
 
-### 5. References
+### References
 
-5.1 [Kubeflow and TFX Pipelines](/samples/kfp-tfx)
+[Kubeflow and TFX Pipelines](/samples/kfp-tfx)
 
-5.2 [Kubeflow and TFX Pipelines talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
+[Kubeflow and TFX Pipelines talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
