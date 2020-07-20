@@ -5,6 +5,8 @@ Project to bring Kubeflow Pipelines and Tekton together. The project is split in
 * Create your Pipeline using Kubeflow Pipelines DSL, and compile it to Tekton YAML. 
 * Upload the compiled Tekton YAML to KFP engine (API and UI), and run end to end with logging and artifacts tracking enabled.
 
+For more details about the project, including demos, please look at these [slides](https://www.slideshare.net/AnimeshSingh/kubeflow-pipelines-with-tekton-236769976) and the [deep dive presentation](https://www.youtube.com/watch?v=AYIeNtXLT_k).
+
 ## Tekton
 
 The Tekton Pipelines project provides Kubernetes-style resources for declaring CI/CD-style pipelines. Tekton introduces
@@ -19,37 +21,36 @@ We are currently using [Kubeflow Pipelines 0.5.1](https://github.com/kubeflow/pi
 
 ![kfp-tekton](images/kfp-tekton.png)
 
-### Installing Kubeflow Pipelines with Tekton backend
+### 1. Get Started using Kubeflow Pipelines with Tekton
 
-[Getting started with KFP Tekton deployment](tekton_kfp_guide.md)
+1.1 [Install Kubeflow Pipelines with Tekton backend](tekton_kfp_guide.md)
 
-### Getting Started
-[Getting started with KFP Tekton SDK](/sdk/README.md)
+1.2 [Use KFP Tekton SDK](/sdk/README.md)
 
-### Developer Guide
-[Developer Guide](/sdk/python/README.md) 
+1.3 [Run Samples](/samples/README.md)
 
-### Available Features and Implementation Details
-[Available Features and Implementation Details](/sdk/FEATURES.md)
+1.4 [Available KFP DSL Features](/sdk/FEATURES.md)
 
-### Compiler Status Report
-[Compilation Tests Status Report](/sdk/python/tests/README.md)
+### 2. Development Guides
 
-### Samples
-[Samples being run end to end for verification](/samples/README.md)
+2.1 [Developer Guide](/sdk/python/README.md) 
 
-### KFP, Argo and Tekton Features Comparison
-[KFP, Argo and Tekton Features Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
+2.2 [Compilation Tests Status Report](/sdk/python/tests/README.md)
 
-### Design Doc 
-[Design Doc](http://bit.ly/kfp-tekton)
+### 3. Design Guides
 
-### CD Foundation
+3.1 [Design Doc](http://bit.ly/kfp-tekton)
 
-+ [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/). 
-+ [Instructions to join](https://github.com/cdfoundation/sig-mlops)
+3.2 [KFP, Argo and Tekton Features Comparison](https://docs.google.com/spreadsheets/d/1LFUy86MhVrU2cRhXNsDU-OBzB4BlkT9C0ASD3hoXqpo/edit#gid=979402121)
 
-### Additional Reference Materials: KFP and TFX
+### 4. Community
 
-+ [Kubeflow and TFX Pipelines](/samples/kfp-tfx)
-+ [Kubeflow and TFX Pipelines talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)
+4.1 [CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/).
+
+4.2 [Instructions to join](https://github.com/cdfoundation/sig-mlops)
+
+### 5. References
+
+5.1 [Kubeflow and TFX Pipelines](/samples/kfp-tfx)
+
+5.2 [Kubeflow and TFX Pipelines talk at Tensorflow World](https://www.slideshare.net/AnimeshSingh/hybrid-cloud-kubeflow-and-tensorflow-extended-tfx)

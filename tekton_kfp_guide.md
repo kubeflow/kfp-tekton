@@ -2,6 +2,9 @@
 
 # Getting Started
 ## Prequisites
+
+Note: You can get an all-in-one installation of Kubeflow on IBM Cloud or Minikube, including [Kubeflow Pipelines with Tekton backend by following the instructions here](https://github.com/IBM/KubeflowDojo/tree/master/HandsOn/Deployment). If you would like to do it step by step, or if you already have a Kubeflow deployment including Kubeflow Pipelines with Argo, please follow the instructions below.
+
 1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes) v`0.14.0` or later
 2. [Install Kubeflow](https://www.kubeflow.org/docs/started/getting-started/) if you want to leverage the Kubeflow stack
 3. Clone this repository
@@ -11,7 +14,7 @@
     ```
 
 ## Install Tekton KFP with pre-built images
-1. Remove the old version of KFP from a previous Kubeflow deployment if it exists on your cluster. Also clean up the old webhooks if you were using KFP 0.4 or above.
+1. Remove the old version of KFP (with Argo) from a previous Kubeflow deployment if it exists on your cluster. Also clean up the old webhooks if you were using KFP 0.4 or above.
     ```shell
     kubectl delete -k manifests/kustomize/env/platform-agnostic
     kubectl delete MutatingWebhookConfiguration cache-webhook-kubeflow
