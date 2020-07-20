@@ -15,6 +15,7 @@
  */
 
 import * as dagre from 'dagre';
+import { color } from '../Css';
 import { Constants } from './Constants';
 
 export type nodeType = 'container' | 'resource' | 'dag' | 'unknown';
@@ -86,7 +87,14 @@ export function createGraph(workflow: any): dagre.graphlib.Graph {
 
 function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
   const pipeline = template;
-  const tasks = pipeline['spec']['pipelineSpec']['tasks'];
+  const tasks = (pipeline['spec']['pipelineSpec']['tasks'] || []).concat(
+    pipeline['spec']['pipelineSpec']['finally'] || [],
+  );
+
+  const exitHandlers =
+    (pipeline['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
+      return element['name'];
+    }) || [];
 
   for (const task of tasks) {
     const taskName = task['name'];
@@ -129,11 +137,18 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
     const info = new SelectedNodeInfo();
     _populateInfoFromTask(info, task);
 
+    const label = exitHandlers.includes(task['name']) ? 'onExit - ' + taskName : taskName;
+    const bgColor = exitHandlers.includes(task['name'])
+      ? color.lightGrey
+      : task.when
+      ? 'cornsilk'
+      : undefined;
+
     graph.setNode(taskName, {
-      bgColor: task.when ? 'cornsilk' : undefined,
+      bgColor: bgColor,
       height: Constants.NODE_HEIGHT,
       info,
-      label: taskName,
+      label: label,
       width: Constants.NODE_WIDTH,
     });
   }

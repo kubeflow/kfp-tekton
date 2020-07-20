@@ -2,7 +2,7 @@
 
 # Getting Started
 ## Prequisites
-1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes) v0.13.0 or above
+1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes) v`0.14.0` or later
 2. [Install Kubeflow](https://www.kubeflow.org/docs/started/getting-started/) if you want to leverage the Kubeflow stack
 3. Clone this repository
     ```
@@ -33,8 +33,10 @@
     Once you have the Kubeflow pipeline running with Tekton, then install the [KFP-Tekton DSL](/sdk/README.md) and start building your
     own pipelines.
 
+
 ## Development: Building from source code
-### Prerequites
+
+### Prerequisites
 1. [NodeJS 12 or above](https://nodejs.org/en/download/)
 2. [Golang 1.13 or above](https://golang.org/dl/)
 3. [Python 3.6 or above](https://www.python.org/downloads/)
