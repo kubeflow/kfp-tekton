@@ -124,5 +124,12 @@ export function statusToPhase(nodeStatus: string | undefined): NodePhase {
   else if (nodeStatus === 'Completed') return 'Succeeded' as NodePhase;
   else if (nodeStatus === 'ConditionCheckFailed') return 'Skipped' as NodePhase;
   else if (nodeStatus === 'CouldntGetCondition') return 'Error' as NodePhase;
+  else if (
+    nodeStatus === 'PipelineRunCancelled' ||
+    nodeStatus === 'PipelineRunCouldntCancel' ||
+    nodeStatus === 'TaskRunCancelled' ||
+    nodeStatus === 'TaskRunCouldntCancel'
+  )
+    return 'Terminated' as NodePhase;
   return nodeStatus as NodePhase;
 }
