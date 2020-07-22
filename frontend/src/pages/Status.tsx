@@ -97,7 +97,31 @@ export function statusToIcon(
     case NodePhase.COULDNTGETCONDITION:
       IconComponent = ErrorIcon;
       iconColor = color.errorText;
-      title = 'Could not retrieve the condition ';
+      title = 'Could not retrieve the condition';
+      break;
+    case NodePhase.CONDITIONCHECKFAILED:
+      IconComponent = SkippedIcon;
+      title = 'Execution has been skipped due to a Condition check failure';
+      break;
+    case NodePhase.PIPELINERUNCANCELLED:
+      IconComponent = TerminatedIcon;
+      iconColor = color.terminated;
+      title = 'PipelineRun cancelled';
+      break;
+    case NodePhase.PIPELINERUNCOULDNTCANCEL:
+      IconComponent = TerminatedIcon;
+      iconColor = color.terminated;
+      title = 'PipelineRun couldn\'t cancel';
+      break;
+    case NodePhase.TASKRUNCANCELLED:
+      IconComponent = TerminatedIcon;
+      iconColor = color.terminated;
+      title = 'TaskRun cancelled';
+      break;
+    case NodePhase.TASKRUNCOULDNTCANCEL:
+      IconComponent = TerminatedIcon;
+      iconColor = color.terminated;
+      title = 'TaskRun couldn\'t cancel';
       break;
     case NodePhase.UNKNOWN:
       break;

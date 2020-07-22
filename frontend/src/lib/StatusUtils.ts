@@ -39,6 +39,11 @@ export enum NodePhase {
   TERMINATING = 'Terminating',
   PIPELINERUNTIMEOUT = 'PipelineRunTimeout',
   COULDNTGETCONDITION = 'CouldntGetCondition',
+  CONDITIONCHECKFAILED = 'ConditionCheckFailed',
+  PIPELINERUNCANCELLED = 'PipelineRunCancelled',
+  PIPELINERUNCOULDNTCANCEL = 'PipelineRunCouldntCancel',
+  TASKRUNCANCELLED = 'TaskRunCancelled',
+  TASKRUNCOULDNTCANCEL = 'TaskRunCouldntCancel',
   TERMINATED = 'Terminated',
   UNKNOWN = 'Unknown',
 }
