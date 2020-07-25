@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2020 kubeflow.org
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -277,6 +277,13 @@ func (w *Workflow) FindObjectStoreArtifactKeyOrEmpty(nodeID string, artifactName
 
 // IsInFinalState whether the workflow is in a final state.
 func (w *Workflow) IsInFinalState() bool {
+	// Workflows in the statuses other than pending or running are considered final.
+// TODO: kfp 1.0.0 merge
+// 	if w.Status.Phase == workflowapi.NodeSucceeded
+// 	    || w.Status.Phase == workflowapi.NodeFailed
+// 	    || w.Status.Phase == workflowapi.NodeError
+// 	    || w.Status.Phase == workflowapi.NodeSkipped {
+
 	if len(w.Status.Status.Conditions) > 0 {
 		finalConditions := map[string]int{
 			"Succeeded":                1,

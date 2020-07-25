@@ -25,8 +25,6 @@ metadata:
       "flip-again"}], "print2": [{"name": "flip-output", "parent_task": "flip"}]}'
     tekton.dev/output_artifacts: '{"flip": [{"name": "flip-output", "path": "/tmp/output"}],
       "flip-again": [{"name": "flip-again-output", "path": "/tmp/output"}]}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: flip-coin-example-pipeline
 spec:
   params:

@@ -30,8 +30,6 @@ metadata:
       "parent_task": "create-volume"}], "step4-output": [{"name": "create-volume-name",
       "parent_task": "create-volume"}]}'
     tekton.dev/output_artifacts: '{}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: volumesnapshotop-sequential
 spec:
   params:
