@@ -7,9 +7,11 @@
 [download : copy-artifacts] tar: removing leading '/' from member names
 [download : copy-artifacts] tekton/results/downloaded
 [download : copy-artifacts] `downloaded.tgz` -> `storage/mlpipeline/artifacts/sidecar/download/downloaded.tgz`
-[download : copy-artifacts] Total: 0 B, Transferred: 128 B, Speed: 10.89 KiB/s
+[download : copy-artifacts] Total: 0 B, Transferred: 130 B, Speed: 12.63 KiB/s
 
-[download : sidecar-echo] 2020/07/13 10:40:23 Server is listening on :5678
-[download : sidecar-echo] 2020/07/13 10:40:35 localhost:5678 127.0.0.1:38196 "GET / HTTP/1.1" 200 14 "Wget" 38.547µs
-[download : sidecar-echo] 2020/07/13 10:40:37 [ERR] Unknown signal terminated
+[download : sidecar-echo] 2020/07/31 09:31:18 Server is listening on :5678
+[download : sidecar-echo] 2020/07/31 09:31:30 localhost:5678 127.0.0.1:38090 "GET / HTTP/1.1" 200 14 "Wget" 41.526µs
+[download : sidecar-echo] 2020/07/31 09:31:33 [ERR] Unknown signal terminated
+
+[echo : main] hello world
 

@@ -98,4 +98,4 @@ spec:
   - pipelineTaskName: save
     taskPodTemplate:
       nodeSelector:
-        failure-domain.beta.kubernetes.io/region: us-south
+        kubernetes.io/os: linux
