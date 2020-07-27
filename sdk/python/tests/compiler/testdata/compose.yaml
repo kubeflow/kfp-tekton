@@ -28,8 +28,6 @@ metadata:
     tekton.dev/output_artifacts: '{"download": [{"name": "download-downloaded", "path":
       "/tmp/results.txt"}], "get-frequent": [{"name": "get-frequent-word", "path":
       "/tmp/message.txt"}]}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: download-and-save-most-frequent
 spec:
   params:

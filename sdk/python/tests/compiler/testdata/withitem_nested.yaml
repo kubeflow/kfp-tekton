@@ -24,8 +24,6 @@ metadata:
       "parent_task": null}], "my-inner-inner-coop": [{"name": "loop-item-param-00000001-subvar-a",
       "parent_task": null}, {"name": "loop-item-param-00000002", "parent_task": null}]}'
     tekton.dev/output_artifacts: '{}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: my-pipeline
 spec:
   params:

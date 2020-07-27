@@ -23,8 +23,6 @@ metadata:
       "download"}]}'
     tekton.dev/output_artifacts: '{"download": [{"name": "download-downloaded", "path":
       "/tmp/results.txt"}]}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: volume
 spec:
   pipelineSpec:

@@ -23,8 +23,6 @@ metadata:
     sidecar.istio.io/inject: 'false'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: parallel-pipeline
 spec:
   params:
