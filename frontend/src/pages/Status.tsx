@@ -111,7 +111,7 @@ export function statusToIcon(
     case NodePhase.PIPELINERUNCOULDNTCANCEL:
       IconComponent = TerminatedIcon;
       iconColor = color.terminated;
-      title = "PipelineRun couldn't cancel";
+      title = 'PipelineRun could not cancel';
       break;
     case NodePhase.TASKRUNCANCELLED:
       IconComponent = TerminatedIcon;
@@ -121,7 +121,7 @@ export function statusToIcon(
     case NodePhase.TASKRUNCOULDNTCANCEL:
       IconComponent = TerminatedIcon;
       iconColor = color.terminated;
-      title = "TaskRun couldn't cancel";
+      title = 'TaskRun could not cancel';
       break;
     case NodePhase.UNKNOWN:
       break;
