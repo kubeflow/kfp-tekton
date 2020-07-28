@@ -258,20 +258,8 @@ func (w *Workflow) FindObjectStoreArtifactKeyOrEmpty(nodeID string, artifactName
 	if w.Status.PipelineRunStatusFields.TaskRuns == nil {
 		return ""
 	}
-	node, found := w.Status.PipelineRunStatusFields.TaskRuns[nodeID]
-	if !found {
-		return ""
-	}
-	if node.Status == nil || node.Status.TaskRunResults == nil {
-		return ""
-	}
 	var s3Key string
-	for _, artifact := range node.Status.TaskRunResults {
-		if artifact.Name != artifactName {
-			continue
-		}
-		s3Key = "artifacts/" + w.ObjectMeta.Name + "/" + nodeID + "/" + artifactName + ".tgz"
-	}
+	s3Key = "artifacts/" + w.ObjectMeta.Name + "/" + nodeID + "/" + artifactName + ".tgz"
 	return s3Key
 }
 
