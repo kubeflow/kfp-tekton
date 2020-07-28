@@ -4,8 +4,8 @@ import kfp.dsl as dsl
 
 
 katib_experiment_launcher_op = components.load_component_from_url('https://raw.githubusercontent.com/kubeflow/pipelines/master/components/kubeflow/katib-launcher/component.yaml')
-fairness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/IBM/AIF360/master/mlops/kubeflow/bias_detector_pytorch/component.yaml')
-robustness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/IBM/adversarial-robustness-toolbox/master/utils/mlops/kubeflow/robustness_evaluation_fgsm_pytorch/component.yaml')
+fairness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/Trusted-AI/AIF360/master/mlops/kubeflow/bias_detector_pytorch/component.yaml')
+robustness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/Trusted-AI/adversarial-robustness-toolbox/main/utils/mlops/kubeflow/robustness_evaluation_fgsm_pytorch/component.yaml')
 
 
 @dsl.pipeline(

@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2020 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ import json
 import hashlib
 import os
 import sys
+import re
 import kubernetes
 import yaml
 from time import sleep
@@ -62,7 +63,7 @@ def patch_pod_metadata(
 mlmd_store = connect_to_mlmd()
 print("Connected to the metadata store")
 
-PIPELINE_RUNTIME = os.getenv("PIPELINE_RUNTIME", "argo").lower()
+PIPELINE_RUNTIME = os.getenv("PIPELINE_RUNTIME", "tekton").lower()
 
 ARGO_OUTPUTS_ANNOTATION_KEY = 'workflows.argoproj.io/outputs'
 ARGO_TEMPLATE_ANNOTATION_KEY = 'workflows.argoproj.io/template'
@@ -89,18 +90,32 @@ PIPELINE_LABEL_KEY = TEKTON_PIPELINERUN_LABEL_KEY if PIPELINE_RUNTIME == "tekton
 
 def output_name_to_argo(name: str) -> str:
     import re
-    return re.sub('-+', '-', re.sub('[^-0-9a-z]+', '-', name.lower())).strip('-')
+    # This sanitization code should be kept in sync with the code in the DSL compiler.
+    # See https://github.com/kubeflow/pipelines/blob/39975e3cde7ba4dcea2bca835b92d0fe40b1ae3c/sdk/python/kfp/compiler/_k8s_helper.py#L33
+    return re.sub('-+', '-', re.sub('[^-_0-9A-Za-z]+', '-', name)).strip('-')
 
+def is_s3_endpoint(endpoint: str) -> bool:
+    return re.search('^.*s3.*amazonaws.com.*$', endpoint)
 
+def get_object_store_provider(endpoint: str) -> bool:
+    if is_s3_endpoint(endpoint):
+        return 's3'
+    else:
+        return 'minio'
+
+# TODO: kfp 1.0.0 merge
 def artifact_to_uri(artifact: dict) -> str:
+    # s3 here means s3 compatible object storage. not AWS S3.
     if 's3' in artifact:
         s3_artifact = artifact['s3']
-        return 'minio://{bucket}/{key}'.format(
+        return '{provider}://{bucket}/{key}'.format(
+            provider=get_object_store_provider(s3_artifact['endpoint']),
             bucket=s3_artifact.get('bucket', ''),
             key=s3_artifact.get('key', ''),
         )
     elif 'raw' in artifact:
         return None
+
     else:
         return None
 
@@ -186,6 +201,8 @@ while True:
         k8s_api.list_namespaced_pod,
         namespace=namespace_to_watch,
         label_selector=PIPELINE_LABEL_KEY,
+        timeout_seconds=1800,  # Sometimes watch gets stuck
+        _request_timeout=2000,  # Sometimes HTTP GET gets stuck
     ):
         try:
             obj = event['object']

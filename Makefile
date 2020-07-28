@@ -19,6 +19,9 @@ VENV ?= .venv
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
+TKN_PIPELINE_VERSION ?= "0.14"
+TKN_CLIENT_VERSION ?= "0.10"
+
 .PHONY: help
 help: ## Display the Make targets
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -46,6 +49,8 @@ e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
 	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" && exit 1 || echo "${KUBECONFIG}"
 	@kubectl version --short || (echo "Failed to access kubernetes cluster" && exit 1)
 	@which tkn && tkn version || (echo "Missing tkn CLI" && exit 1)
+	@tkn version | grep "Pipeline version: v$${TKN_PIPELINE_VERSION}" || (echo "Required Tekton Pipeline version: $${TKN_PIPELINE_VERSION}" && exit 1)
+	@tkn version | grep "Client version: $${TKN_CLIENT_VERSION}" || (echo "Required tkn CLI version: $${TKN_CLIENT_VERSION}" && exit 1)
 	@sdk/python/tests/run_e2e_tests.sh
 	@echo "$@: OK"
 
@@ -70,13 +75,25 @@ lint: venv ## Check Python code style compliance
 .PHONY: check_license
 check_license: ## Check for license header in source files
 	@find ./sdk/python -type f \( -name '*.py' -o -name '*.yaml' \) -exec \
-		grep -H -E -o -c  'Copyright 20.* kubeflow.org'  {} \; | \
+		grep -H -E -o -c 'Copyright 20.* kubeflow.org' {} \; | \
 		grep -E ':0$$' | sed 's/..$$//' | \
 		grep . && echo "The files listed above are missing the license header" && exit 1 || \
 		echo "$@: OK"
 
+.PHONY: check_mdtoc
+check_mdtoc: ## Check Markdown files for valid the Table of Contents
+	@find samples sdk *.md -type f -name '*.md' -exec \
+		grep -l -i 'Table of Contents' {} \; | sort | \
+		while read -r md_file; do \
+			grep -oE '^ *[-+*] \[[^]]+\]\(#[^)]+\)' "$${md_file}" |  sed -e 's/[-+*] /- /g' > md_file_toc; \
+			./tools/mdtoc.sh "$${md_file}" > generated_toc; \
+			diff -w md_file_toc generated_toc || echo "$${md_file}"; \
+			rm -f md_file_toc generated_toc; \
+		done | grep . && echo "Run './tools/mdtoc.sh <md-file>' to update the 'Table of Contents' in the Markdown files reported above." && exit 1 || \
+		echo "$@: OK"
+
 .PHONY: verify
-verify: check_license lint unit_test report ## Run all verification targets: check_license, lint, unit_test, report
+verify: check_license check_mdtoc lint unit_test report ## Run all verification targets: check_license, check_mdtoc, lint, unit_test, report
 	@echo "$@: OK"
 
 .PHONY: distribution

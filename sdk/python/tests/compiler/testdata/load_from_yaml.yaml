@@ -22,8 +22,6 @@ metadata:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{"busybox": [{"name": "busybox-dummy_output_path",
       "path": "/tmp/outputs/dummy_output_path/data"}]}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: component-yaml-pipeline
 spec:
   pipelineSpec:

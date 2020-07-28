@@ -22,8 +22,6 @@ metadata:
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{"download": [{"name": "download-downloaded", "path":
       "/tmp/results.txt"}]}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: tolerations
 spec:
   pipelineSpec:

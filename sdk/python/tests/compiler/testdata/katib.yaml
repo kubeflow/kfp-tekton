@@ -30,8 +30,6 @@ metadata:
       "parent_task": "mnist-hpo"}]}'
     tekton.dev/output_artifacts: '{"mnist-hpo": [{"name": "mnist-hpo-bestHyperParameter",
       "path": "/output.txt"}]}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: launch-katib-experiment
 spec:
   params:

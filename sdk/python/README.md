@@ -36,7 +36,7 @@ the [SDK README](/sdk/README.md)
 1. [`Python`](https://www.python.org/downloads/): version `3.5.3` or later (new code must maintain compatibility with `3.5`)
 2. [`Kubernetes` Cluster](https://v1-15.docs.kubernetes.io/docs/setup/): version `1.15` ([required by Kubeflow](https://www.kubeflow.org/docs/started/k8s/overview/) and Tekton 0.11)
 3. [`kubectl` CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/): required to deploy Tekton pipelines to Kubernetes cluster
-4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.13.0/): version `0.13.0` (or greater to support Tekton API version `v1beta1`), required for end-to-end testing
+4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.14.0/): version `0.14.0` or greater (minimum version `0.13.0` to support Tekton API version `v1beta1`), required for end-to-end testing
 5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): required to work with Tekton pipelines
 6. [`Kubeflow Pipelines` Deployment](https://www.kubeflow.org/docs/pipelines/installation/overview/): required for some end-to-end tests
 
@@ -48,10 +48,10 @@ A working Tekton cluster deployment is required to perform end-to-end tests of t
 
 #### Tekton Cluster
 
-Follow the instructions listed [here](https://github.com/tektoncd/pipeline/blob/v0.13.0/docs/install.md#installing-tekton-pipelines-on-kubernetes)
+Follow the instructions listed [here](https://github.com/tektoncd/pipeline/blob/v0.14.0/docs/install.md#installing-tekton-pipelines-on-kubernetes)
 or simply run:
 
-    kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.13.0/release.yaml
+    kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.14.0/release.yaml
 
 **Note**, if your container runtime does not support image-reference:tag@digest (like cri-o used in OpenShift 4.x),
 use `release.notags.yaml` instead.
@@ -103,7 +103,7 @@ the Tekton YAML instead of Argo YAML. Since the KFP SDK was not designed and imp
 _monkey-patching_ was used to replace non-class methods and functions at runtime.
 
 In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a 
-specific version of the `kfp` SDK compiler. As of now that version is [`0.5.1`](https://github.com/kubeflow/pipelines/releases/tag/0.5.1). 
+specific version of the `kfp` SDK compiler. As of now that version is [`1.0.0`](https://github.com/kubeflow/pipelines/releases/tag/1.0.0). 
 
 
 ## Adding New Code
