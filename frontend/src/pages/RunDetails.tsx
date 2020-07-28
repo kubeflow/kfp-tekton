@@ -840,7 +840,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     return !workflow.status
       ? []
       : [
-          ['Status', workflow.status.conditions[0].reason],
+          ['Status', workflow.status.conditions ? workflow.status.conditions[0].reason : 'Pending'],
           ['Description', runMetadata ? runMetadata!.description! : ''],
           [
             'Created at',
