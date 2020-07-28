@@ -29,11 +29,7 @@ import {
   getTfxRunContext,
 } from 'src/lib/MlmdUtils';
 import { classes, stylesheet } from 'typestyle';
-import {
-  NodePhase as ArgoNodePhase,
-  NodeStatus,
-  Workflow,
-} from '../../third_party/argo-ui/argo_template';
+import { NodePhase as ArgoNodePhase, NodeStatus } from '../../third_party/argo-ui/argo_template';
 import { ApiExperiment } from '../apis/experiment';
 import { ApiRun, RunStorageState } from '../apis/run';
 import { ApiVisualization, ApiVisualizationType } from '../apis/visualization';
@@ -88,10 +84,9 @@ enum SidePaneTab {
   EVENTS,
   MANIFEST,
 }
-// TODO: kfp 1.0.0 merge
+
 interface SelectedNodeDetails {
   id: string;
-  mode?: Mode;
   logs?: string;
   phase?: string;
   phaseMessage?: string;
@@ -311,7 +306,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
                           <React.Fragment>
                             {!!selectedNodeDetails.phaseMessage && (
                               <Banner
-                                mode={selectedNodeDetails.mode || 'warning'}
+                                mode={sidepanelBannerMode}
                                 message={selectedNodeDetails.phaseMessage}
                               />
                             )}
@@ -677,9 +672,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
         runFinished = true;
       }
 
-      const workflow = JSON.parse(
-        runDetail.pipeline_runtime!.workflow_manifest || '{}',
-      ) as Workflow;
+      const workflow = JSON.parse(runDetail.pipeline_runtime!.workflow_manifest || '{}');
 
       // Show workflow errors
       const workflowError = WorkflowParser.getWorkflowError(workflow);
@@ -866,14 +859,13 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     );
   }
 
-  // TODO: kfp 1.0.0 merge
   private async _loadSidePaneTab(tab: SidePaneTab): Promise<void> {
     const workflow = this.state.workflow;
     const selectedNodeDetails = this.state.selectedNodeDetails;
 
     let sidepanelBannerMode: Mode = 'warning';
 
-    if (workflow && workflow.status && workflow.status && selectedNodeDetails) {
+    if (workflow && workflow.status && workflow.status.taskRuns && selectedNodeDetails) {
       let node: any;
 
       for (const podName of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
@@ -887,18 +879,36 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
         }
       }
 
-      if (node && node.status && node.status.conditions[0].type !== 'Succeeded') {
-        selectedNodeDetails.phaseMessage =
-          node && node.status
-            ? `This step is in ${node.status.conditions[0].type} state with this message: ` +
-              node.status.conditions[0].message
-            : undefined;
-      } else if (node && node.status && node.status.conditions && node.conditionChecks) {
-        if (node.status.conditions[0].reason === 'Succeeded') {
-          selectedNodeDetails.mode = 'info';
-          selectedNodeDetails.phaseMessage = 'All ConditionChecks have completed executing';
-        } else selectedNodeDetails.phaseMessage = node.status.conditions[0].message;
+      if (node) {
+        selectedNodeDetails.phase = statusToPhase(node.status.conditions[0].reason);
+
+        switch (selectedNodeDetails.phase) {
+          // TODO: make distinction between system and pipelines error clear
+          case NodePhase.ERROR:
+          case NodePhase.SKIPPED:
+            sidepanelBannerMode = 'warning';
+            break;
+          case NodePhase.FAILED:
+            sidepanelBannerMode = 'error';
+            break;
+          default:
+            sidepanelBannerMode = 'info';
+            break;
+        }
+
+        if (node.status.conditions[0].type !== 'Succeeded') {
+          selectedNodeDetails.phaseMessage =
+            node && node.status
+              ? `This step is in ${node.status.conditions[0].type} state with this message: ` +
+                node.status.conditions[0].message
+              : undefined;
+        } else if (node.status.conditions && node.conditionChecks) {
+          if (node.status.conditions[0].reason === 'Succeeded') {
+            selectedNodeDetails.phaseMessage = 'All ConditionChecks have completed executing';
+          } else selectedNodeDetails.phaseMessage = node.status.conditions[0].message;
+        }
       }
+
       this.setStateSafe({ selectedNodeDetails, sidepanelSelectedTab: tab, sidepanelBannerMode });
 
       switch (tab) {
