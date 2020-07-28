@@ -103,19 +103,18 @@ def get_object_store_provider(endpoint: str) -> bool:
     else:
         return 'minio'
 
-# TODO: kfp 1.0.0 merge
+
 def artifact_to_uri(artifact: dict) -> str:
     # s3 here means s3 compatible object storage. not AWS S3.
     if 's3' in artifact:
         s3_artifact = artifact['s3']
         return '{provider}://{bucket}/{key}'.format(
-            provider=get_object_store_provider(s3_artifact['endpoint']),
+            provider=get_object_store_provider(s3_artifact.get('endpoint', 'minio')),
             bucket=s3_artifact.get('bucket', ''),
             key=s3_artifact.get('key', ''),
         )
     elif 'raw' in artifact:
         return None
-
     else:
         return None
 
