@@ -1,0 +1,301 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Download two messages
+      in parallel and prints the concatenated result.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
+      "name": "url1", "optional": true}, {"default": "gs://ml-pipeline-playground/shakespeare2.txt",
+      "name": "url2", "optional": true}], "name": "Parallel pipeline"}'
+    sidecar.istio.io/inject: 'false'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{"echo": [{"name": "echo", "path": "logs_to_S3"}],
+      "gcs-download": [{"name": "gcs-download", "path": "logs_to_S3"}], "gcs-download-2":
+      [{"name": "gcs-download-2", "path": "logs_to_S3"}]}'
+  labels:
+    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+  name: parallel-pipeline
+spec:
+  params:
+  - name: url1
+    value: gs://ml-pipeline-playground/shakespeare1.txt
+  - name: url2
+    value: gs://ml-pipeline-playground/shakespeare2.txt
+  pipelineSpec:
+    params:
+    - default: gs://ml-pipeline-playground/shakespeare1.txt
+      name: url1
+    - default: gs://ml-pipeline-playground/shakespeare2.txt
+      name: url2
+    tasks:
+    - name: gcs-download
+      params:
+      - name: url1
+        value: $(params.url1)
+      taskSpec:
+        params:
+        - name: url1
+        results:
+        - description: /tmp/results.txt
+          name: data
+        stepTemplate:
+          volumeMounts:
+          - mountPath: /var/log
+            name: varlog
+          - mountPath: /var/lib/docker/containers
+            name: varlibdockercontainers
+            readOnly: true
+          - mountPath: /var/lib/kubelet/pods
+            name: varlibkubeletpods
+            readOnly: true
+          - mountPath: /var/log/pods
+            name: varlogpods
+            readOnly: true
+        steps:
+        - args:
+          - gsutil cat $0 | tee $1
+          - $(inputs.params.url1)
+          - $(results.data.path)
+          command:
+          - sh
+          - -c
+          image: google/cloud-sdk:279.0.0
+          name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          - name: TASKRUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/taskRun']
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log
+            && tar -czf $TASKRUN-$NAMESPACE-step-main_log.tgz step-main.log
+
+            mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/
+
+            '
+        volumes:
+        - hostPath:
+            path: /var/log
+          name: varlog
+        - hostPath:
+            path: /var/lib/docker/containers
+          name: varlibdockercontainers
+        - hostPath:
+            path: /var/lib/kubelet/pods
+          name: varlibkubeletpods
+        - hostPath:
+            path: /var/log/pods
+          name: varlogpods
+    - name: gcs-download-2
+      params:
+      - name: url2
+        value: $(params.url2)
+      taskSpec:
+        params:
+        - name: url2
+        results:
+        - description: /tmp/results.txt
+          name: data
+        stepTemplate:
+          volumeMounts:
+          - mountPath: /var/log
+            name: varlog
+          - mountPath: /var/lib/docker/containers
+            name: varlibdockercontainers
+            readOnly: true
+          - mountPath: /var/lib/kubelet/pods
+            name: varlibkubeletpods
+            readOnly: true
+          - mountPath: /var/log/pods
+            name: varlogpods
+            readOnly: true
+        steps:
+        - args:
+          - gsutil cat $0 | tee $1
+          - $(inputs.params.url2)
+          - $(results.data.path)
+          command:
+          - sh
+          - -c
+          image: google/cloud-sdk:279.0.0
+          name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          - name: TASKRUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/taskRun']
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log
+            && tar -czf $TASKRUN-$NAMESPACE-step-main_log.tgz step-main.log
+
+            mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/
+
+            '
+        volumes:
+        - hostPath:
+            path: /var/log
+          name: varlog
+        - hostPath:
+            path: /var/lib/docker/containers
+          name: varlibdockercontainers
+        - hostPath:
+            path: /var/lib/kubelet/pods
+          name: varlibkubeletpods
+        - hostPath:
+            path: /var/log/pods
+          name: varlogpods
+    - name: echo
+      params:
+      - name: gcs-download-2-data
+        value: $(tasks.gcs-download-2.results.data)
+      - name: gcs-download-data
+        value: $(tasks.gcs-download.results.data)
+      taskSpec:
+        params:
+        - name: gcs-download-2-data
+        - name: gcs-download-data
+        stepTemplate:
+          volumeMounts:
+          - mountPath: /var/log
+            name: varlog
+          - mountPath: /var/lib/docker/containers
+            name: varlibdockercontainers
+            readOnly: true
+          - mountPath: /var/lib/kubelet/pods
+            name: varlibkubeletpods
+            readOnly: true
+          - mountPath: /var/log/pods
+            name: varlogpods
+            readOnly: true
+        steps:
+        - args:
+          - 'echo "Text 1: $0"; echo "Text 2: $1"'
+          - $(inputs.params.gcs-download-data)
+          - $(inputs.params.gcs-download-2-data)
+          command:
+          - sh
+          - -c
+          image: library/bash:4.4.23
+          name: main
+        - env:
+          - name: PIPELINERUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineRun']
+          - name: PIPELINETASK
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/pipelineTask']
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: accesskey
+                name: mlpipeline-minio-artifact
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretkey
+                name: mlpipeline-minio-artifact
+          - name: TASKRUN
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tekton.dev/taskRun']
+          image: minio/mc
+          name: copy-artifacts
+          script: '#!/usr/bin/env sh
+
+            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
+            $AWS_SECRET_ACCESS_KEY
+
+            cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log
+            && tar -czf $TASKRUN-$NAMESPACE-step-main_log.tgz step-main.log
+
+            mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/
+
+            '
+        volumes:
+        - hostPath:
+            path: /var/log
+          name: varlog
+        - hostPath:
+            path: /var/lib/docker/containers
+          name: varlibdockercontainers
+        - hostPath:
+            path: /var/lib/kubelet/pods
+          name: varlibkubeletpods
+        - hostPath:
+            path: /var/log/pods
+          name: varlogpods

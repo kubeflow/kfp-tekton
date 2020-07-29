@@ -99,6 +99,7 @@ class TektonCompiler(Compiler):
     #
     # Input and output artifacts are hash maps for metadata tracking.
     self.enable_artifacts = None
+    self.enable_s3_logs = None
     self.input_artifacts = {}
     self.output_artifacts = {}
     super().__init__(**kwargs)
@@ -222,7 +223,10 @@ class TektonCompiler(Compiler):
       op_to_templates_handler: Handler which converts a base op into a list of argo templates.
     """
 
-    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op, self.output_artifacts, self.enable_artifacts)])
+    op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op,
+                                                                  self.output_artifacts,
+                                                                  self.enable_artifacts,
+                                                                  self.enable_s3_logs)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise
@@ -684,7 +688,8 @@ class TektonCompiler(Compiler):
               package_path,
               type_check=True,
               pipeline_conf: dsl.PipelineConf = None,
-              enable_artifacts=True):
+              enable_artifacts=True,
+              enable_s3_logs=False):
     """Compile the given pipeline function into workflow yaml.
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.
@@ -694,8 +699,10 @@ class TektonCompiler(Compiler):
                      image pull secrets and other pipeline-level configuration options.
                      Overrides any configuration that may be set by the pipeline.
       enable_artifacts: enable artifacts, requires Kubeflow Pipelines with Minio.
+      enable_s3_logs: enable pipelinerun logs archive to S3 storage
     """
     self.enable_artifacts = enable_artifacts
+    self.enable_s3_logs = enable_s3_logs
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
