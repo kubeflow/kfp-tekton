@@ -56,7 +56,7 @@ def parse_arguments():
 
 
 def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check,
-                               allow_telemetry, enable_artifacts=False):
+                               allow_telemetry, enable_artifacts=False, enable_s3_logs=False):
   if len(pipeline_funcs) == 0:
     raise ValueError('A function with @dsl.pipeline decorator is required in the py file.')
 
@@ -74,11 +74,12 @@ def _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_
 
   TektonCompiler().compile(pipeline_func, output_path, type_check,
                            allow_telemetry=allow_telemetry,
-                           enable_artifacts=enable_artifacts)
+                           enable_artifacts=enable_artifacts,
+                           enable_s3_logs=enable_s3_logs)
 
 
 def compile_pyfile(pyfile, function_name, output_path, type_check, allow_telemetry,
-                   enable_artifacts=False):
+                   enable_artifacts=False, enable_s3_logs=False):
   sys.path.insert(0, os.path.dirname(pyfile))
   try:
     filename = os.path.basename(pyfile)
@@ -86,7 +87,8 @@ def compile_pyfile(pyfile, function_name, output_path, type_check, allow_telemet
       __import__(os.path.splitext(filename)[0])
     _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check,
                                allow_telemetry=allow_telemetry,
-                               enable_artifacts=enable_artifacts)
+                               enable_artifacts=enable_artifacts,
+                               enable_s3_logs=enable_s3_logs)
   finally:
     del sys.path[0]
 
