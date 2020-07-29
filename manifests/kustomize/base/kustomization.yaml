@@ -13,7 +13,6 @@ bases:
 resources:
   - pipeline-application.yaml
 
-# TODO: kfp 1.0.0 merge
 images:
   - name: gcr.io/ml-pipeline/api-server
     newName: docker.io/aipipeline/api-server
