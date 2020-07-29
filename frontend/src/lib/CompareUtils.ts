@@ -118,7 +118,7 @@ export default class CompareUtils {
       xLabels = Array.from(namesToNodesToValues.keys());
 
       rows = Array.from(nodeIds.keys()).map(nodeId => {
-        yLabels.push((workflow && workflow.status.nodes[nodeId].displayName) || nodeId);
+        yLabels.push(nodeId);
         return xLabels.map(metricName => namesToNodesToValues.get(metricName)!.get(nodeId) || '');
       });
     }
