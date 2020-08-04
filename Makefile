@@ -19,7 +19,7 @@ VENV ?= .venv
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
-TKN_PIPELINE_VERSION ?= "0.14."
+TKN_PIPELINE_VERSION ?= "0.15."
 TKN_CLIENT_VERSION ?= "0.11."
 
 .PHONY: help

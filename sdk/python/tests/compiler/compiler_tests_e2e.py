@@ -32,11 +32,11 @@ from time import sleep
 # get the Kubernetes context from the KUBECONFIG env var
 KUBECONFIG = env.get("KUBECONFIG")
 
-# set or override the Tekton Pipeline version, default "0.14.x":
-#    TKN_PIPELINE_VERSION=0.14 sdk/python/tests/run_e2e_tests.sh
+# set or override the Tekton Pipeline version, default "0.15.x":
+#    TKN_PIPELINE_VERSION=0.15 sdk/python/tests/run_e2e_tests.sh
 # or:
-#    make e2e_test TKN_PIPELINE_VERSION=0.14
-TKN_PIPELINE_VERSION = env.get("TKN_PIPELINE_VERSION", "0.14.")
+#    make e2e_test TKN_PIPELINE_VERSION=0.15
+TKN_PIPELINE_VERSION = env.get("TKN_PIPELINE_VERSION", "0.15.")
 
 # let the user know the expected Tekton Pipeline version
 if env.get("TKN_PIPELINE_VERSION"):
@@ -290,7 +290,7 @@ class TestCompilerE2E(unittest.TestCase):
         #   when attempting (and retrying) to get the pipelinerun status
         sleep(SLEEP_BETWEEN_TEST_PHASES)
 
-    def _get_pipelinerun_status(self, name, retries: int = 10) -> str:
+    def _get_pipelinerun_status(self, name, retries: int = 20) -> str:
         tkn_status_cmd = "tkn pipelinerun describe %s -n %s -o jsonpath=" \
                          "'{.status.conditions[0].reason}'" % (name, namespace)
         status = "Unknown"
