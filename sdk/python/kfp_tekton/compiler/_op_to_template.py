@@ -290,16 +290,10 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
         Dict[Text, Any]
     """
     if outputs_dict.get('artifacts'):
-        # TODO: Pull default values from KFP configmap when integrated with KFP.
-        storage_location = outputs_dict['artifacts'][0].get('s3', {})
-        insecure = storage_location.get("insecure", True)
-        endpoint = storage_location.get("endpoint", "minio-service.$NAMESPACE:9000")
-        # We want to use the insecure flag to figure out whether to use http or https scheme
-        endpoint = re.sub(r"https?://", "", endpoint)
-        endpoint = 'http://' + endpoint if insecure else 'https://' + endpoint
-        access_key = storage_location.get("accessKeySecret", {"name": "mlpipeline-minio-artifact", "key": "accesskey"})
-        secret_access_key = storage_location.get("secretKeySecret", {"name": "mlpipeline-minio-artifact", "key": "secretkey"})
-        bucket = storage_location.get("bucket", "mlpipeline")
+        endpoint = '${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT}'
+        access_key = {"name": "mlpipeline-minio-artifact", "key": "accesskey"}
+        secret_access_key = {"name": "mlpipeline-minio-artifact", "key": "secretkey"}
+        bucket = '$ARTIFACT_BUCKET'
         copy_artifacts_step = {
             'image': 'minio/mc',
             'name': 'copy-artifacts',
@@ -310,7 +304,11 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
             'env': [
                 {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}},
                 {'name': 'PIPELINETASK', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineTask']"}}},
-                {'name': 'NAMESPACE', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.namespace"}}},
+                {'name': 'ARTIFACT_ENDPOINT_SCHEME', 'valueFrom':
+                    {'fieldRef': {'fieldPath': "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"}}},
+                {'name': 'ARTIFACT_ENDPOINT', 'valueFrom':
+                    {'fieldRef': {'fieldPath': "metadata.annotations['tekton.dev/artifact_endpoint']"}}},
+                {'name': 'ARTIFACT_BUCKET', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.annotations['tekton.dev/artifact_bucket']"}}},
                 {'name': 'AWS_ACCESS_KEY_ID', 'valueFrom': {'secretKeyRef': {'name': access_key['name'], 'key': access_key['key']}}},
                 {'name': 'AWS_SECRET_ACCESS_KEY', 'valueFrom': {'secretKeyRef': {'name': secret_access_key['name'],
                                                                                  'key': secret_access_key['key']}}}
@@ -423,7 +421,9 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
                 output_annotation.append(
                     {
                         'name': output_artifact['name'],
-                        'path': output_artifact['path']
+                        'path': output_artifact['path'],
+                        'key': "artifacts/$PIPELINERUN/%s/%s.tgz" %
+                        (processed_op.name, output_artifact['name'].replace(processed_op.name + '-', ''))
                     }
                 )
                 pipelinerun_output_artifacts[processed_op.name] = output_annotation

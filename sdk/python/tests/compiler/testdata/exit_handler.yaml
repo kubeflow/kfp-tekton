@@ -21,10 +21,13 @@ metadata:
       or not).", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
       "name": "url", "optional": true}], "name": "Exit Handler"}'
     sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/input_artifacts: '{"echo-2": [{"name": "gcs-download-data", "parent_task":
       "gcs-download"}]}'
-    tekton.dev/output_artifacts: '{"gcs-download": [{"name": "gcs-download-data",
-      "path": "/tmp/results.txt"}]}'
+    tekton.dev/output_artifacts: '{"gcs-download": [{"key": "artifacts/$PIPELINERUN/gcs-download/data.tgz",
+      "name": "gcs-download-data", "path": "/tmp/results.txt"}]}'
   name: exit-handler
 spec:
   params:
@@ -76,10 +79,18 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.labels['tekton.dev/pipelineTask']
-          - name: NAMESPACE
+          - name: ARTIFACT_ENDPOINT_SCHEME
             valueFrom:
               fieldRef:
-                fieldPath: metadata.namespace
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint_scheme']
+          - name: ARTIFACT_ENDPOINT
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint']
+          - name: ARTIFACT_BUCKET
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_bucket']
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
@@ -94,12 +105,12 @@ spec:
           name: copy-artifacts
           script: '#!/usr/bin/env sh
 
-            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
-            $AWS_SECRET_ACCESS_KEY
+            mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT}
+            $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 
             tar -cvzf data.tgz $(results.data.path)
 
-            mc cp data.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/data.tgz
+            mc cp data.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/data.tgz
 
             '
     - name: echo-2

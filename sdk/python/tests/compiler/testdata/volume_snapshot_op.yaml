@@ -21,6 +21,9 @@ metadata:
       to run this pipeline.", "inputs": [{"name": "url"}], "name": "VolumeSnapshotOp
       Sequential"}'
     sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/input_artifacts: '{"step1-ingest": [{"name": "create-volume-name",
       "parent_task": "create-volume"}], "step1-snap": [{"name": "create-volume-name",
       "parent_task": "create-volume"}], "step2-gunzip": [{"name": "create-volume-name",

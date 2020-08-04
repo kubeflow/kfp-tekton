@@ -20,6 +20,9 @@ metadata:
       two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).",
       "name": "Retry random failures"}'
     sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
   name: retry-random-failures
