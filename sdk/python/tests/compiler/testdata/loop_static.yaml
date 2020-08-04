@@ -23,8 +23,6 @@ metadata:
       "parent_task": null}], "my-in-coop2": [{"name": "loop-item-param-subvar-B_b",
       "parent_task": null}]}'
     tekton.dev/output_artifacts: '{}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: my-loop-pipeline
 spec:
   params:

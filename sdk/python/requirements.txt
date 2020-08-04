@@ -21,7 +21,7 @@ idna==2.9                 # via requests
 importlib-metadata==1.6.1  # via jsonschema
 jsonschema==3.2.0         # via kfp
 kfp-server-api==0.5.0     # via kfp
-kfp==0.5.1                # via -r requirements.in
+kfp==1.0.0                # via -r requirements.in
 kubernetes==11.0.0        # via kfp
 oauthlib==3.1.0           # via requests-oauthlib
 protobuf==3.12.2          # via google-api-core, googleapis-common-protos

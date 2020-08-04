@@ -101,7 +101,7 @@ export default class WorkflowParser {
 
         for (const edge of edges || []) graph.setEdge(edge['parent'], edge['child']);
 
-        const status = this.getStatus(statusMap.get(task['name']))
+        const status = this.getStatus(statusMap.get(task['name']));
         const phase = statusToPhase(status);
         const statusColoring = exitHandlers.includes(task['name'])
           ? '#fef7f0'

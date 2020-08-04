@@ -23,8 +23,6 @@ metadata:
     tekton.dev/input_artifacts: '{"cop": [{"name": "create-pvc-name", "parent_task":
       "create-pvc"}]}'
     tekton.dev/output_artifacts: '{}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: volumeop-basic
 spec:
   params:

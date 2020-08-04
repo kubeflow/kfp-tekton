@@ -27,8 +27,6 @@ metadata:
     tekton.dev/output_artifacts: '{"gcs-download": [{"name": "gcs-download-data",
       "path": "/tmp/results.txt"}], "gcs-download-2": [{"name": "gcs-download-2-data",
       "path": "/tmp/results.txt"}]}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
   name: parallel-pipeline-with-argo-vars
 spec:
   params:
