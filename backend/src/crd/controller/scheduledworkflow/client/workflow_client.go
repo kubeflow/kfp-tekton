@@ -17,13 +17,13 @@ package client
 import (
 	"time"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	workflowclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
-	"github.com/argoproj/argo/pkg/client/informers/externalversions/workflow/v1alpha1"
 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/kubeflow/pipelines/backend/src/crd/controller/scheduledworkflow/util"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	wraperror "github.com/pkg/errors"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
+	"github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -33,12 +33,12 @@ import (
 // WorkflowClient is a client to call the Workflow API.
 type WorkflowClient struct {
 	clientSet workflowclientset.Interface
-	informer  v1alpha1.WorkflowInformer
+	informer  v1beta1.PipelineRunInformer
 }
 
 // NewWorkflowClient creates an instance of the WorkflowClient.
 func NewWorkflowClient(clientSet workflowclientset.Interface,
-	informer v1alpha1.WorkflowInformer) *WorkflowClient {
+	informer v1beta1.PipelineRunInformer) *WorkflowClient {
 	return &WorkflowClient{
 		clientSet: clientSet,
 		informer:  informer,
@@ -58,7 +58,7 @@ func (p *WorkflowClient) HasSynced() func() bool {
 // Get returns a Workflow, given a namespace and name.
 func (p *WorkflowClient) Get(namespace string, name string) (
 	wf *commonutil.Workflow, isNotFoundError bool, err error) {
-	workflow, err := p.informer.Lister().Workflows(namespace).Get(name)
+	workflow, err := p.informer.Lister().PipelineRuns(namespace).Get(name)
 	if err != nil {
 		return nil, commonutil.IsNotFound(err), wraperror.Wrapf(err,
 			"Error retrieving workflow (%v) in namespace (%v): %v", name, namespace, err)
@@ -84,7 +84,7 @@ func (p *WorkflowClient) List(swfName string, completed bool, minIndex int64) (
 	return result, nil
 }
 
-func toWorkflowStatuses(workflows []*workflowapi.Workflow) []swfapi.WorkflowStatus {
+func toWorkflowStatuses(workflows []*workflowapi.PipelineRun) []swfapi.WorkflowStatus {
 	result := make([]swfapi.WorkflowStatus, 0)
 	for _, workflow := range workflows {
 		result = append(result, *toWorkflowStatus(workflow))
@@ -92,23 +92,19 @@ func toWorkflowStatuses(workflows []*workflowapi.Workflow) []swfapi.WorkflowStat
 	return result
 }
 
-func toWorkflowStatus(workflow *workflowapi.Workflow) *swfapi.WorkflowStatus {
+func toWorkflowStatus(workflow *workflowapi.PipelineRun) *swfapi.WorkflowStatus {
 	return &swfapi.WorkflowStatus{
 		Name:        workflow.Name,
 		Namespace:   workflow.Namespace,
 		SelfLink:    workflow.SelfLink,
 		UID:         workflow.UID,
-		Phase:       workflow.Status.Phase,
-		Message:     workflow.Status.Message,
 		CreatedAt:   workflow.CreationTimestamp,
-		StartedAt:   workflow.Status.StartedAt,
-		FinishedAt:  workflow.Status.FinishedAt,
 		ScheduledAt: retrieveScheduledTime(workflow),
 		Index:       retrieveIndex(workflow),
 	}
 }
 
-func retrieveScheduledTime(workflow *workflowapi.Workflow) metav1.Time {
+func retrieveScheduledTime(workflow *workflowapi.PipelineRun) metav1.Time {
 	value, ok := workflow.Labels[commonutil.LabelKeyWorkflowEpoch]
 	if !ok {
 		return workflow.CreationTimestamp
@@ -120,7 +116,7 @@ func retrieveScheduledTime(workflow *workflowapi.Workflow) metav1.Time {
 	return metav1.NewTime(time.Unix(result, 0).UTC())
 }
 
-func retrieveIndex(workflow *workflowapi.Workflow) int64 {
+func retrieveIndex(workflow *workflowapi.PipelineRun) int64 {
 	value, ok := workflow.Labels[commonutil.LabelKeyWorkflowIndex]
 	if !ok {
 		return 0
@@ -135,7 +131,7 @@ func retrieveIndex(workflow *workflowapi.Workflow) int64 {
 // Create creates a workflow given a namespace and its specification.
 func (p *WorkflowClient) Create(namespace string, workflow *commonutil.Workflow) (
 	*commonutil.Workflow, error) {
-	result, err := p.clientSet.ArgoprojV1alpha1().Workflows(namespace).Create(workflow.Get())
+	result, err := p.clientSet.TektonV1beta1().PipelineRuns(namespace).Create(workflow.Get())
 	if err != nil {
 		return nil, wraperror.Wrapf(err, "Error creating workflow in namespace (%v): %v: %+v", namespace,
 			err, workflow.Get())

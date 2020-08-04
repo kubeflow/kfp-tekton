@@ -26,6 +26,9 @@ images:
   - name: gcr.io/ml-pipeline/metadata-writer
     newName: docker.io/aipipeline/metadata-writer
     newTag: 1.0.0
+  - name: gcr.io/ml-pipeline/scheduledworkflow
+    newName: docker.io/aipipeline/scheduledworkflow
+    newTag: 1.0.0
 
 # Used by Kustomize
 configMapGenerator:

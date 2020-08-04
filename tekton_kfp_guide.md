@@ -65,6 +65,7 @@ The KFP backend with Tekton uses a modified version of Kubeflow Pipelines api-se
    ```shell
    go build -o apiserver ./backend/src/apiserver
    go build -o agent ./backend/src/agent/persistence
+   go build -o workflow ./backend/src/crd/controller/scheduledworkflow/*.go
    ```
 
    Note: The metadata writer is written in Python, so the code will be compiled during runtime execution.
@@ -75,6 +76,7 @@ The KFP backend with Tekton uses a modified version of Kubeflow Pipelines api-se
    docker build -t ${DOCKER_REGISTRY}/api-server -f backend/Dockerfile .
    docker build -t ${DOCKER_REGISTRY}/persistenceagent -f backend/Dockerfile.persistenceagent .
    docker build -t ${DOCKER_REGISTRY}/metadata-writer -f backend/metadata_writer/Dockerfile .
+   docker build -t ${DOCKER_REGISTRY}/scheduledworkflow -f backend/Dockerfile.scheduledworkflow .
    ```
 
 4. Push the images to registry and modify the Kustomization to use your own built images.
