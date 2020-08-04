@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2020 kubeflow.org
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -258,25 +258,15 @@ func (w *Workflow) FindObjectStoreArtifactKeyOrEmpty(nodeID string, artifactName
 	if w.Status.PipelineRunStatusFields.TaskRuns == nil {
 		return ""
 	}
-	node, found := w.Status.PipelineRunStatusFields.TaskRuns[nodeID]
-	if !found {
-		return ""
-	}
-	if node.Status == nil || node.Status.TaskRunResults == nil {
-		return ""
-	}
 	var s3Key string
-	for _, artifact := range node.Status.TaskRunResults {
-		if artifact.Name != artifactName {
-			continue
-		}
-		s3Key = "artifacts/" + w.ObjectMeta.Name + "/" + nodeID + "/" + artifactName + ".tgz"
-	}
+	s3Key = "artifacts/" + w.ObjectMeta.Name + "/" + nodeID + "/" + artifactName + ".tgz"
 	return s3Key
 }
 
 // IsInFinalState whether the workflow is in a final state.
 func (w *Workflow) IsInFinalState() bool {
+	// Workflows in the statuses other than pending or running are considered final.
+
 	if len(w.Status.Status.Conditions) > 0 {
 		finalConditions := map[string]int{
 			"Succeeded":                1,

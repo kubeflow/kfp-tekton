@@ -94,6 +94,8 @@ class Banner extends React.Component<BannerProps, BannerState> {
     });
     let bannerIcon = <ErrorIcon className={css.icon} />;
     let dialogTitle = 'An error occurred';
+    let showTroubleshootingGuideLink = false;
+    let showRefreshButton = true;
 
     switch (this.props.mode) {
       case 'error':
@@ -102,6 +104,7 @@ class Banner extends React.Component<BannerProps, BannerState> {
         });
         bannerIcon = <ErrorIcon className={css.icon} />;
         dialogTitle = 'An error occurred';
+        showTroubleshootingGuideLink = this.props.showTroubleshootingGuideLink || false;
         break;
       case 'warning':
         bannerModeCss = stylesheet({
@@ -112,10 +115,11 @@ class Banner extends React.Component<BannerProps, BannerState> {
         break;
       case 'info':
         bannerModeCss = stylesheet({
-          mode: { backgroundColor: color.background, color: color.success },
+          mode: { backgroundColor: color.infoBg, color: color.infoText },
         });
         bannerIcon = <InfoIcon className={css.icon} />;
         dialogTitle = 'Info';
+        showRefreshButton = false;
         break;
       default:
         // Already set defaults above.

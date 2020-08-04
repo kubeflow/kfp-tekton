@@ -103,7 +103,7 @@ the Tekton YAML instead of Argo YAML. Since the KFP SDK was not designed and imp
 _monkey-patching_ was used to replace non-class methods and functions at runtime.
 
 In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a 
-specific version of the `kfp` SDK compiler. As of now that version is [`0.5.1`](https://github.com/kubeflow/pipelines/releases/tag/0.5.1). 
+specific version of the `kfp` SDK compiler. As of now that version is [`1.0.0`](https://github.com/kubeflow/pipelines/releases/tag/1.0.0). 
 
 
 ## Adding New Code
