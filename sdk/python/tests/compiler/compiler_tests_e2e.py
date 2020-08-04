@@ -43,11 +43,11 @@ if env.get("TKN_PIPELINE_VERSION"):
     logging.warning("The environment variable 'TKN_PIPELINE_VERSION' was set to '{}'"
                     .format(TKN_PIPELINE_VERSION))
 
-# set or override th Tekton CLI version, default "0.10.x":
-#    TKN_CLIENT_VERSION=0.10 sdk/python/tests/run_e2e_tests.sh
+# set or override th Tekton CLI version, default "0.11.x":
+#    TKN_CLIENT_VERSION=0.11 sdk/python/tests/run_e2e_tests.sh
 # or:
-#    make e2e_test TKN_CLIENT_VERSION=0.10
-TKN_CLIENT_VERSION = env.get("TKN_CLIENT_VERSION", "0.10.")
+#    make e2e_test TKN_CLIENT_VERSION=0.11
+TKN_CLIENT_VERSION = env.get("TKN_CLIENT_VERSION", "0.11.")
 
 # let the user know the expected Tekton CLI version
 if env.get("TKN_CLIENT_VERSION"):
@@ -115,6 +115,23 @@ if EXCLUDE_TESTS:
 # KEEP_FAILED_PIPELINERUNS = env.get("KEEP_FAILED_PIPELINERUNS", "False") == "True"
 
 
+# Set SLEEP_BETWEEN_TEST_PHASES=<seconds> (default: 5) to increase or decrease
+# the sleep time between the test stages of starting a pipelinerun, then first
+# attempting to get the pipelinerun status, and lastly to get the pipelinerun
+# logs. Increase the sleep for under-powered Kubernetes clusters. The minimal
+# recommended configuration for K8s clusters is 4 cores, 2 nodes, 16 GB RAM:
+#    SLEEP_BETWEEN_TEST_PHASES=10 sdk/python/tests/run_e2e_tests.sh
+# or:
+#    make e2e_test SLEEP_BETWEEN_TEST_PHASES=10
+SLEEP_BETWEEN_TEST_PHASES = int(env.get("SLEEP_BETWEEN_TEST_PHASES", "5"))
+
+# let the user know this test run is not performing any verification
+if env.get("SLEEP_BETWEEN_TEST_PHASES"):
+    logging.warning(
+        "The environment variable 'SLEEP_BETWEEN_TEST_PHASES' was set to '{}'. "
+        "Default is '5' seconds. Increasing this value should improve the test "
+        "success rate on a slow Kubernetes cluster.".format(SLEEP_BETWEEN_TEST_PHASES))
+
 # set RERUN_FAILED_TESTS_ONLY=True, to only re-run those E2E tests that failed in
 # the previous test run:
 #    RERUN_FAILED_TESTS_ONLY=True sdk/python/tests/run_e2e_tests.sh
@@ -151,6 +168,7 @@ if RERUN_FAILED_TESTS_ONLY:
 ignored_yaml_files = [
     "big_data_passing.yaml",    # does not complete in a reasonable time frame
     "katib.yaml",               # service account needs Katib permission, takes too long doing 9 trail runs
+    "retry.yaml",               # designed to occasionally fail (randomly) if number of retries exceeded
     "timeout.yaml",             # random failure (by design) ... would need multiple golden log files to compare to
     "tolerations.yaml",         # designed to fail, test show only how to add the toleration to the pod
     "volume.yaml",              # need to rework the credentials part
@@ -259,7 +277,7 @@ class TestCompilerE2E(unittest.TestCase):
         run(del_cmd.split(), capture_output=True, timeout=10, check=False)
         # TODO: find a better way than to sleep, but some PipelineRuns cannot
         #   be recreated right after the previous pipelineRun has been deleted
-        sleep(5)
+        sleep(SLEEP_BETWEEN_TEST_PHASES)
 
     def _start_pipelinerun(self, yaml_file):
         kube_cmd = "kubectl apply -f \"{}\" -n {}".format(yaml_file, namespace)
@@ -268,12 +286,13 @@ class TestCompilerE2E(unittest.TestCase):
                          "Process returned non-zero exit code: {} -> {}".format(
                              kube_cmd, kube_proc.stderr))
         # TODO: find a better way than to sleep, but some PipelineRuns take longer
-        #   to be created and logs may not be available yet even with --follow
-        sleep(5)
+        #   to be created and logs may not be available yet even with --follow or
+        #   when attempting (and retrying) to get the pipelinerun status
+        sleep(SLEEP_BETWEEN_TEST_PHASES)
 
     def _get_pipelinerun_status(self, name, retries: int = 10) -> str:
         tkn_status_cmd = "tkn pipelinerun describe %s -n %s -o jsonpath=" \
-                         "'{.status.conditions[0].type}'" % (name, namespace)
+                         "'{.status.conditions[0].reason}'" % (name, namespace)
         status = "Unknown"
         for i in range(0, retries):
             try:
@@ -281,9 +300,9 @@ class TestCompilerE2E(unittest.TestCase):
                                       timeout=10, check=False)
                 if tkn_status_proc.returncode == 0:
                     status = tkn_status_proc.stdout.decode("utf-8").strip("'")
-                    if "Succeeded" in status or "Failed" in status:
+                    if status in ["Succeeded", "Completed", "Failed"]:
                         return status
-                    logging.warning("tkn pipeline '{}' {} ({}/{})".format(
+                    logging.debug("tkn pipeline '{}' status: {} ({}/{})".format(
                         name, status, i + 1, retries))
                 else:
                     logging.error("Could not get pipelinerun status ({}/{}): {}".format(
@@ -291,11 +310,11 @@ class TestCompilerE2E(unittest.TestCase):
             except SubprocessError:
                 logging.exception("Error trying to get pipelinerun status ({}/{})".format(
                         i + 1, retries))
-            sleep(3)
+            sleep(SLEEP_BETWEEN_TEST_PHASES)
         return status
 
     def _get_pipelinerun_logs(self, name, timeout: int = 30) -> str:
-        sleep(10)  # if we don't wait, we often only get logs of some pipeline tasks
+        sleep(SLEEP_BETWEEN_TEST_PHASES * 2)  # if we don't wait, we often only get logs of some pipeline tasks
         tkn_logs_cmd = "tkn pipelinerun logs {} -n {}".format(name, namespace)
         tkn_logs_proc = run(tkn_logs_cmd.split(), capture_output=True, timeout=timeout, check=False)
         self.assertEqual(tkn_logs_proc.returncode, 0,
@@ -311,9 +330,11 @@ class TestCompilerE2E(unittest.TestCase):
             try:
                 with open(golden_log_file, 'r') as f:
                     golden_log = f.read()
+                sanitized_golden_log = self._sanitize_log(golden_log)
+                sanitized_test_log = self._sanitize_log(test_log)
                 self.maxDiff = None
-                self.assertEqual(self._sanitize_log(golden_log),
-                                 self._sanitize_log(test_log),
+                self.assertEqual(sanitized_golden_log,
+                                 sanitized_test_log,
                                  msg="PipelineRun '{}' did not produce the expected "
                                      " log output: {}".format(name, golden_log_file))
             except FileNotFoundError:
@@ -344,24 +365,26 @@ class TestCompilerE2E(unittest.TestCase):
         # server process receiving a termination signal
         lines_to_remove = [
             "Pipeline still running ...",
+            "Server is listening on",
             "Unknown signal terminated",
             r"Total: .+, Transferred: .+, Speed: .+",
             r"localhost:.*GET / HTTP",
         ]
 
-        # replacements are used on multi-line strings, so use '...\n' as opposed to '...$' to denote end of line
+        # replacements are used on multi-line strings, so '...\n' will be matched by '...$'
         replacements = [
             (r"(-[-0-9a-z]{3}-[-0-9a-z]{5})(?=[ -/\]\"]|$)", r"-XXX-XXXXX"),
             (r"uid:[0-9a-z]{8}(-[0-9a-z]{4}){3}-[0-9a-z]{12}",
              "uid:{}-{}-{}-{}-{}".format("X" * 8, "X" * 4, "X" * 4, "X" * 4, "X" * 12)),
+            (r"resourceVersion:[0-9]+ ", "resourceVersion:-------- "),
             (r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", "DATETIME"),
             (r"{}".format("|".join(_MONTHNAMES)), "MONTH"),
             (r"{}".format("|".join(_DAYNAMES)), "DAY"),
             (r"\d", "-"),
+            (r" +$", ""),
+            (r" +\r", r"\n"),
             (r"^$\n", ""),
             (r"\n^$", ""),
-            (r" +\n", ""),
-            (r" +\r", ""),
         ]
 
         sanitized_log = log
@@ -385,7 +408,7 @@ class TestCompilerE2E(unittest.TestCase):
 
     def _run_test__verify_pipelinerun_success(self, name):
         status = self._get_pipelinerun_status(name)
-        self.assertEqual("Succeeded", status)
+        self.assertIn(status, ["Succeeded", "Completed"])
 
     def _run_test__verify_pipelinerun_logs(self, name, log_file):
         test_log = self._get_pipelinerun_logs(name)

@@ -19,8 +19,8 @@ VENV ?= .venv
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
-TKN_PIPELINE_VERSION ?= "0.14"
-TKN_CLIENT_VERSION ?= "0.10"
+TKN_PIPELINE_VERSION ?= "0.14."
+TKN_CLIENT_VERSION ?= "0.11."
 
 .PHONY: help
 help: ## Display the Make targets
@@ -30,6 +30,7 @@ help: ## Display the Make targets
 .PHONY: venv
 venv: $(VENV)/bin/activate ## Create and activate virtual environment
 $(VENV)/bin/activate: sdk/python/setup.py
+	@echo "VENV=$(VENV)"
 	@test -d $(VENV) || python3 -m venv $(VENV)
 	pip install -e sdk/python
 	@touch $(VENV)/bin/activate
@@ -40,15 +41,23 @@ install: venv ## Install the kfp_tekton compiler in a virtual environment
 
 .PHONY: unit_test
 unit_test: venv ## Run compiler unit tests
+	@echo "=================================================================="
+	@echo "Optional environment variables to configure $@, examples:"
+	@sed -n -e 's/# *\(make $@ .*\)/  \1/p' sdk/python/tests/compiler/compiler_tests.py
+	@echo "=================================================================="
 	@sdk/python/tests/run_tests.sh
 	@echo "$@: OK"
 
 .PHONY: e2e_test
 e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
-	@which kubectl || (echo "Missing kubectl CLI" && exit 1)
-	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" && exit 1 || echo "${KUBECONFIG}"
+	@echo "=================================================================="
+	@echo "Optional environment variables to configure $@, examples:"
+	@sed -n -e 's/# *\(make $@ .*\)/  \1/p' sdk/python/tests/compiler/compiler_tests_e2e.py
+	@echo "=================================================================="
+	@which kubectl > /dev/null || (echo "Missing kubectl CLI" && exit 1)
+	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" && exit 1 || echo "KUBECONFIG: ${KUBECONFIG}"
 	@kubectl version --short || (echo "Failed to access kubernetes cluster" && exit 1)
-	@which tkn && tkn version || (echo "Missing tkn CLI" && exit 1)
+	@which tkn > /dev/null || (echo "Missing tkn CLI" && exit 1)
 	@tkn version | grep "Pipeline version: v$${TKN_PIPELINE_VERSION}" || (echo "Required Tekton Pipeline version: $${TKN_PIPELINE_VERSION}" && exit 1)
 	@tkn version | grep "Client version: $${TKN_CLIENT_VERSION}" || (echo "Required tkn CLI version: $${TKN_CLIENT_VERSION}" && exit 1)
 	@sdk/python/tests/run_e2e_tests.sh

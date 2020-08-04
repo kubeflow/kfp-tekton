@@ -4,7 +4,7 @@
 [download : copy-artifacts] tar: removing leading '/' from member names
 [download : copy-artifacts] tekton/results/downloaded
 [download : copy-artifacts] `downloaded.tgz` -> `storage/mlpipeline/artifacts/download-and-save-most-frequent/download/downloaded.tgz`
-[download : copy-artifacts] Total: 0 B, Transferred: 200 B, Speed: 14.79 KiB/s
+[download : copy-artifacts] Total: 0 B, Transferred: 200 B, Speed: 14.17 KiB/s
 
 [get-frequent : main] your
 
@@ -12,5 +12,9 @@
 [get-frequent : copy-artifacts] tar: removing leading '/' from member names
 [get-frequent : copy-artifacts] tekton/results/word
 [get-frequent : copy-artifacts] `word.tgz` -> `storage/mlpipeline/artifacts/download-and-save-most-frequent/get-frequent/word.tgz`
-[get-frequent : copy-artifacts] Total: 0 B, Transferred: 116 B, Speed: 9.30 KiB/s
+[get-frequent : copy-artifacts] Total: 0 B, Transferred: 117 B, Speed: 2.90 KiB/s
+
+[save : main] Copying file:///tmp/results.txt...
+[save : main] / [0 files][    0.0 B/    6.0 B]                                                / [1 files][    6.0 B/    6.0 B]                                                
+[save : main] Operation completed over 1 objects/6.0 B.                                        
 

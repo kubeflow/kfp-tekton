@@ -32,8 +32,8 @@ def node_selector_pipeline(
 ):
     """A pipeline with Node Selector"""
     echo_op().add_node_selector_constraint(
-        label_name='beta.kubernetes.io/instance-type',
-        value='b3c.4x16.encrypted')
+        label_name='kubernetes.io/os',
+        value='linux')
 
 
 if __name__ == '__main__':
