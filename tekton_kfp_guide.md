@@ -8,7 +8,7 @@ Note: You can get an all-in-one installation of Kubeflow on IBM Cloud or Minikub
 1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes). 
     - Minimum version: `0.14.0`
     - Recommended version: `0.15.0`
-2. (Optional) [Install Kubeflow](https://www.kubeflow.org/docs/started/getting-started/) if you want to leverage the Kubeflow stack
+2. [Install Kubeflow](https://www.kubeflow.org/docs/started/getting-started/)
 3. Clone this repository
     ```
     git clone github.com/kubeflow/kfp-tekton
