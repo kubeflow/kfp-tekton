@@ -19,9 +19,6 @@ VENV ?= .venv
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
-TKN_PIPELINE_VERSION ?= "0.14."
-TKN_CLIENT_VERSION ?= "0.11."
-
 .PHONY: help
 help: ## Display the Make targets
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -58,8 +55,6 @@ e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
 	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" && exit 1 || echo "KUBECONFIG: ${KUBECONFIG}"
 	@kubectl version --short || (echo "Failed to access kubernetes cluster" && exit 1)
 	@which tkn > /dev/null || (echo "Missing tkn CLI" && exit 1)
-	@tkn version | grep "Pipeline version: v$${TKN_PIPELINE_VERSION}" || (echo "Required Tekton Pipeline version: $${TKN_PIPELINE_VERSION}" && exit 1)
-	@tkn version | grep "Client version: $${TKN_CLIENT_VERSION}" || (echo "Required tkn CLI version: $${TKN_CLIENT_VERSION}" && exit 1)
 	@sdk/python/tests/run_e2e_tests.sh
 	@echo "$@: OK"
 

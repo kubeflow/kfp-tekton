@@ -50,7 +50,7 @@ SDK provides a `TektonCompiler` and a `TektonClient`:
 ## Project Prerequisites
 
  - Python: `3.5.3` or later
- - Tekton: [`0.14.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.14.0)
+ - Tekton: [`v0.14.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.14.0) or [later](https://github.com/tektoncd/pipeline/releases/latest)
  - Tekton CLI: [`0.11.0`](https://github.com/tektoncd/cli/releases/tag/v0.11.0)
  - Kubeflow Pipelines: [KFP with Tekton backend](/tekton_kfp_guide.md)
 
