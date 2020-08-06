@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
@@ -22,10 +21,14 @@ metadata:
       "name": "url1", "optional": true}, {"default": "gs://ml-pipeline-playground/shakespeare2.txt",
       "name": "url2", "optional": true}], "name": "Parallel pipeline"}'
     sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{"echo": [{"name": "echo", "path": "logs_to_S3"}],
-      "gcs-download": [{"name": "gcs-download", "path": "logs_to_S3"}], "gcs-download-2":
-      [{"name": "gcs-download-2", "path": "logs_to_S3"}]}'
+    tekton.dev/output_artifacts: '{"echo": [{"key": "artifacts/$PIPELINERUN/echo/echo.tgz",
+      "name": "echo", "path": "logs_to_S3"}], "gcs-download": [{"key": "artifacts/$PIPELINERUN/gcs-download/gcs-download.tgz",
+      "name": "gcs-download", "path": "logs_to_S3"}], "gcs-download-2": [{"key": "artifacts/$PIPELINERUN/gcs-download-2/gcs-download-2.tgz",
+      "name": "gcs-download-2", "path": "logs_to_S3"}]}'
   name: parallel-pipeline
 spec:
   params:
@@ -82,10 +85,18 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.labels['tekton.dev/pipelineTask']
-          - name: NAMESPACE
+          - name: ARTIFACT_ENDPOINT_SCHEME
             valueFrom:
               fieldRef:
-                fieldPath: metadata.namespace
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint_scheme']
+          - name: ARTIFACT_ENDPOINT
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint']
+          - name: ARTIFACT_BUCKET
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_bucket']
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
@@ -104,13 +115,13 @@ spec:
           name: copy-artifacts
           script: '#!/usr/bin/env sh
 
-            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
-            $AWS_SECRET_ACCESS_KEY
+            mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT}
+            $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 
             cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log
             && tar -czf $TASKRUN-$NAMESPACE-step-main_log.tgz step-main.log
 
-            mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/
+            mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/
 
             '
         volumes:
@@ -168,10 +179,18 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.labels['tekton.dev/pipelineTask']
-          - name: NAMESPACE
+          - name: ARTIFACT_ENDPOINT_SCHEME
             valueFrom:
               fieldRef:
-                fieldPath: metadata.namespace
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint_scheme']
+          - name: ARTIFACT_ENDPOINT
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint']
+          - name: ARTIFACT_BUCKET
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_bucket']
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
@@ -190,13 +209,13 @@ spec:
           name: copy-artifacts
           script: '#!/usr/bin/env sh
 
-            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
-            $AWS_SECRET_ACCESS_KEY
+            mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT}
+            $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 
             cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log
             && tar -czf $TASKRUN-$NAMESPACE-step-main_log.tgz step-main.log
 
-            mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/
+            mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/
 
             '
         volumes:
@@ -254,10 +273,18 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.labels['tekton.dev/pipelineTask']
-          - name: NAMESPACE
+          - name: ARTIFACT_ENDPOINT_SCHEME
             valueFrom:
               fieldRef:
-                fieldPath: metadata.namespace
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint_scheme']
+          - name: ARTIFACT_ENDPOINT
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint']
+          - name: ARTIFACT_BUCKET
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_bucket']
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
@@ -276,13 +303,13 @@ spec:
           name: copy-artifacts
           script: '#!/usr/bin/env sh
 
-            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
-            $AWS_SECRET_ACCESS_KEY
+            mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT}
+            $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 
             cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log
             && tar -czf $TASKRUN-$NAMESPACE-step-main_log.tgz step-main.log
 
-            mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/
+            mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/
 
             '
         volumes:
