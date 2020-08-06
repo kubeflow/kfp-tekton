@@ -101,7 +101,8 @@ def _get_resourceOp_template(op: BaseOp,
                     "type": "string"
                 },
                 {
-                    # Todo: The image need to be replaced, once there are official images from tekton
+                    # This image is hosted by the kfp-tekton maintainers
+                    # Source code: https://github.com/kubeflow/kfp-tekton/tree/master/tekton-catalog/kubectl-wrapper
                     "default": "index.docker.io/aipipeline/kubeclient:v0.0.2",
                     "description": "Kubectl wrapper image",
                     "name": "image",
