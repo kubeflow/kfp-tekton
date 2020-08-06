@@ -25,6 +25,35 @@ from subprocess import run, SubprocessError
 from time import sleep
 
 
+# =============================================================================
+#  load test settings from environment variables (passed through make)
+# =============================================================================
+
+# get the Kubernetes context from the KUBECONFIG env var
+KUBECONFIG = env.get("KUBECONFIG")
+
+# set or override the Tekton Pipeline version, default "0.14.x":
+#    TKN_PIPELINE_VERSION=0.14 sdk/python/tests/run_e2e_tests.sh
+# or:
+#    make e2e_test TKN_PIPELINE_VERSION=0.14
+TKN_PIPELINE_VERSION = env.get("TKN_PIPELINE_VERSION", "0.14.")
+
+# let the user know the expected Tekton Pipeline version
+if env.get("TKN_PIPELINE_VERSION"):
+    logging.warning("The environment variable 'TKN_PIPELINE_VERSION' was set to '{}'"
+                    .format(TKN_PIPELINE_VERSION))
+
+# set or override th Tekton CLI version, default "0.11.x":
+#    TKN_CLIENT_VERSION=0.11 sdk/python/tests/run_e2e_tests.sh
+# or:
+#    make e2e_test TKN_CLIENT_VERSION=0.11
+TKN_CLIENT_VERSION = env.get("TKN_CLIENT_VERSION", "0.11.")
+
+# let the user know the expected Tekton CLI version
+if env.get("TKN_CLIENT_VERSION"):
+    logging.warning("The environment variable 'TKN_CLIENT_VERSION' was set to '{}'"
+                    .format(TKN_CLIENT_VERSION))
+
 # Temporarily set GENERATE_GOLDEN_E2E_LOGS=True to (re)generate new "golden" log
 # files after making code modifications that change the expected log output.
 # To (re)generate all "golden" log output files from the command line run:
@@ -33,15 +62,104 @@ from time import sleep
 #    make e2e_test GENERATE_GOLDEN_E2E_LOGS=True
 GENERATE_GOLDEN_E2E_LOGS = env.get("GENERATE_GOLDEN_E2E_LOGS", "False") == "True"
 
+# let the user know this test run is not performing any verification
+if GENERATE_GOLDEN_E2E_LOGS:
+    logging.warning(
+        "The environment variable 'GENERATE_GOLDEN_E2E_LOGS' was set to 'True'. "
+        "Test cases will (re)generate the 'golden' log files instead of verifying "
+        "the logs produced by running the Tekton YAML on a Kubernetes cluster.")
+
 # when USE_LOGS_FROM_PREVIOUS_RUN=True, the logs from the previous pipeline run
-# will be use for log verification (or regenerating "golden" log files):
+# will be used for log verification or for regenerating "golden" log files:
 #    USE_LOGS_FROM_PREVIOUS_RUN=True sdk/python/tests/run_e2e_tests.sh
 # or:
 #    make e2e_test USE_LOGS_FROM_PREVIOUS_RUN=True
+# NOTE: this is problematic since multiple test cases (YAML files) use the same
+#   pipelinerun name, so `tkn pipelinerun logs <pipelinerun-name>` will always
+#   return the logs of the last test case running a pipeline with that name
+#   TODO: make sure each YAML file has a unique pipelinerun name
+# ALSO: once we delete pipelineruns after success, logs won't be available after
+#   that test execution
 USE_LOGS_FROM_PREVIOUS_RUN = env.get("USE_LOGS_FROM_PREVIOUS_RUN", "False") == "True"
 
-# get the Kubernetes context from the KUBECONFIG env var
-KUBECONFIG = env.get("KUBECONFIG")
+# let the user know we are using the logs produced during a previous test run
+if USE_LOGS_FROM_PREVIOUS_RUN:
+    logging.warning(
+        "The environment variable 'USE_LOGS_FROM_PREVIOUS_RUN' was set to 'True'. "
+        "Test cases will use the logs produced by a prior pipeline execution. "
+        "The Tekton YAML will not be verified on a Kubernetes cluster.")
+
+# set INCLUDE_TESTS environment variable to only run the specified E2E tests:
+#    INCLUDE_TESTS=test_name1,test_name2 sdk/python/tests/run_e2e_tests.sh
+# or:
+#    make e2e_test INCLUDE_TESTS=test_name1,test_name2
+INCLUDE_TESTS = env.get("INCLUDE_TESTS", "")
+
+# let the user know we are only running specified test
+if INCLUDE_TESTS:
+    logging.warning("INCLUDE_TESTS={} ".format(INCLUDE_TESTS))
+
+# set EXCLUDE_TESTS environment variable to exclude the specified E2E tests:
+#    EXCLUDE_TESTS=test_name1,test_name2 sdk/python/tests/run_e2e_tests.sh
+# or:
+#    make e2e_test EXCLUDE_TESTS=test_name1,test_name2
+EXCLUDE_TESTS = env.get("EXCLUDE_TESTS", "")
+
+# let the user know which tests are excluded
+if EXCLUDE_TESTS:
+    logging.warning("EXCLUDE_TESTS={} ".format(EXCLUDE_TESTS))
+
+
+# TODO: delete pipelineruns (and logs) after test run, keep failed runs (and logs)
+#   if KEEP_FAILED_PIPELINERUNS=True
+# KEEP_FAILED_PIPELINERUNS = env.get("KEEP_FAILED_PIPELINERUNS", "False") == "True"
+
+
+# Set SLEEP_BETWEEN_TEST_PHASES=<seconds> (default: 5) to increase or decrease
+# the sleep time between the test stages of starting a pipelinerun, then first
+# attempting to get the pipelinerun status, and lastly to get the pipelinerun
+# logs. Increase the sleep for under-powered Kubernetes clusters. The minimal
+# recommended configuration for K8s clusters is 4 cores, 2 nodes, 16 GB RAM:
+#    SLEEP_BETWEEN_TEST_PHASES=10 sdk/python/tests/run_e2e_tests.sh
+# or:
+#    make e2e_test SLEEP_BETWEEN_TEST_PHASES=10
+SLEEP_BETWEEN_TEST_PHASES = int(env.get("SLEEP_BETWEEN_TEST_PHASES", "5"))
+
+# let the user know this test run is not performing any verification
+if env.get("SLEEP_BETWEEN_TEST_PHASES"):
+    logging.warning(
+        "The environment variable 'SLEEP_BETWEEN_TEST_PHASES' was set to '{}'. "
+        "Default is '5' seconds. Increasing this value should improve the test "
+        "success rate on a slow Kubernetes cluster.".format(SLEEP_BETWEEN_TEST_PHASES))
+
+# set RERUN_FAILED_TESTS_ONLY=True, to only re-run those E2E tests that failed in
+# the previous test run:
+#    RERUN_FAILED_TESTS_ONLY=True sdk/python/tests/run_e2e_tests.sh
+# or:
+#    make e2e_test RERUN_FAILED_TESTS_ONLY=True
+RERUN_FAILED_TESTS_ONLY = env.get("RERUN_FAILED_TESTS_ONLY", "False") == "True"
+
+# the file used to keep a record of failed tests
+failed_tests_file = os.path.join(os.path.dirname(__file__), ".failed_tests")
+
+# the list of test_names that failed in the previous test run
+previously_failed_tests = []
+
+# let the user know we are running previously failed tests only
+if RERUN_FAILED_TESTS_ONLY:
+    logging.warning("The environment variable 'RERUN_FAILED_TESTS_ONLY' was set to 'True'.")
+    if os.path.exists(failed_tests_file):
+        with open(failed_tests_file, 'r') as f:
+            previously_failed_tests = f.read().splitlines()
+        logging.warning(
+            "Running previously failed tests only: {}".format(previously_failed_tests))
+    else:
+        logging.warning("Could not find file {}".format(os.path.abspath(failed_tests_file)))
+
+
+# =============================================================================
+#  non-configurable test settings
+# =============================================================================
 
 # ignore pipelines with unpredictable log output or complex prerequisites
 # TODO: revisit this list, try to rewrite those Python DSLs in a way that they
@@ -50,10 +168,13 @@ KUBECONFIG = env.get("KUBECONFIG")
 ignored_yaml_files = [
     "big_data_passing.yaml",    # does not complete in a reasonable time frame
     "katib.yaml",               # service account needs Katib permission, takes too long doing 9 trail runs
-    "timeout.yaml",             # random failure (by design) ... would need multiple log files to compare to
+    "retry.yaml",               # designed to occasionally fail (randomly) if number of retries exceeded
+    "timeout.yaml",             # random failure (by design) ... would need multiple golden log files to compare to
     "tolerations.yaml",         # designed to fail, test show only how to add the toleration to the pod
     "volume.yaml",              # need to rework the credentials part
+    "volume_op.yaml",           # need to delete PVC before/after test run
     "volume_snapshot_op.yaml",  # only works on Minikube, K8s alpha feature, requires a feature gate from K8s master
+    "parallel_join_with_logging.yaml"  # need to work with S3(minio) avaibale, and this is an experimental feature.
 ]
 
 # run pipelines in "kubeflow" namespace as some E2E tests depend on Minio
@@ -81,19 +202,27 @@ rbac = textwrap.dedent("""\
 
 
 # =============================================================================
-#  make sure we have what we need, abort early instead of failing every test
+#  ensure we have what we need, abort early instead of failing every test
 # =============================================================================
 
 # tests require Tekton Pipelines and Kubeflow Pipelines deployed on Kubernetes
 def _verify_tekton_cluster():
-    def exit_on_error(cmd):
+
+    def exit_on_error(cmd, expected_output=None):
         process = run(cmd.split(), capture_output=True, timeout=10, check=False)
         if not process.returncode == 0:
-            logging.error("Process returned non-zero exit code: %s" % process.stderr)
+            logging.error("Process returned non-zero exit code: `{}` --> `{}`"
+                          .format(cmd, process.stdout))
             exit(process.returncode)
+        cmd_output = process.stdout.decode("utf-8").strip("'")
+        if expected_output and expected_output not in cmd_output:
+            logging.error("Command '{}' did not return expected output '{}': {}"
+                          .format(cmd, expected_output, process.stdout))
+            exit(1)
     exit_on_error("kubectl get svc tekton-pipelines-controller -n tekton-pipelines")
     exit_on_error("kubectl get svc ml-pipeline -n {}".format(namespace))
-    exit_on_error("tkn version")
+    exit_on_error("tkn version", "Pipeline version: v{}".format(TKN_PIPELINE_VERSION))
+    exit_on_error("tkn version", "Client version: {}".format(TKN_CLIENT_VERSION))
 
 
 # verify we have a working Tekton cluster
@@ -102,20 +231,6 @@ if not KUBECONFIG:
     exit(1)
 else:
     _verify_tekton_cluster()
-
-# let the user know this test run is not performing any verification
-if GENERATE_GOLDEN_E2E_LOGS:
-    logging.warning(
-        "The environment variable 'GENERATE_GOLDEN_E2E_LOGS' was set to 'True'. "
-        "Test cases will (re)generate the 'golden' log files instead of verifying "
-        "the logs produced by running the Tekton YAML on a Kubernetes cluster.")
-
-# let the user know we are using the logs produced from a prior run
-if USE_LOGS_FROM_PREVIOUS_RUN:
-    logging.warning(
-        "The environment variable 'USE_LOGS_FROM_PREVIOUS_RUN' was set to 'True'. "
-        "Test cases will use the logs produced by a prior pipeline execution. "
-        "The Tekton YAML will not be verified on a Kubernetes cluster.")
 
 
 # =============================================================================
@@ -129,6 +244,7 @@ class TestCompilerE2E(unittest.TestCase):
     Kubernetes cluster with Tekton Pipelines installed."""
 
     verbosity = 2
+    failed_tests = set()
 
     @classmethod
     def setUpClass(cls):
@@ -143,13 +259,26 @@ class TestCompilerE2E(unittest.TestCase):
         #   created during test execution and delete via label selectors after
         logging.warning("The following pipelines were ignored: {}".format(
             ", ".join(ignored_yaml_files)))
+        if cls.failed_tests:
+            with open(failed_tests_file, 'w') as f:
+                f.write("\n".join(sorted(cls.failed_tests)))
+        else:
+            if os.path.exists(failed_tests_file):
+                os.remove(failed_tests_file)
+
+    def tearDown(self) -> None:
+        if hasattr(self, '_outcome'):
+            result = self.defaultTestResult()
+            self._feedErrorsToResult(result, self._outcome.errors)
+            if result.failures or result.errors:
+                self.failed_tests.add(self._testMethodName.split(".")[0])
 
     def _delete_pipelinerun(self, name):
         del_cmd = "tkn pipelinerun delete -f {} -n {}".format(name, namespace)
         run(del_cmd.split(), capture_output=True, timeout=10, check=False)
         # TODO: find a better way than to sleep, but some PipelineRuns cannot
         #   be recreated right after the previous pipelineRun has been deleted
-        sleep(5)
+        sleep(SLEEP_BETWEEN_TEST_PHASES)
 
     def _start_pipelinerun(self, yaml_file):
         kube_cmd = "kubectl apply -f \"{}\" -n {}".format(yaml_file, namespace)
@@ -158,12 +287,13 @@ class TestCompilerE2E(unittest.TestCase):
                          "Process returned non-zero exit code: {} -> {}".format(
                              kube_cmd, kube_proc.stderr))
         # TODO: find a better way than to sleep, but some PipelineRuns take longer
-        #   to be created and logs may not be available yet even with --follow
-        sleep(5)
+        #   to be created and logs may not be available yet even with --follow or
+        #   when attempting (and retrying) to get the pipelinerun status
+        sleep(SLEEP_BETWEEN_TEST_PHASES)
 
     def _get_pipelinerun_status(self, name, retries: int = 10) -> str:
         tkn_status_cmd = "tkn pipelinerun describe %s -n %s -o jsonpath=" \
-                         "'{.status.conditions[0].type}'" % (name, namespace)
+                         "'{.status.conditions[0].reason}'" % (name, namespace)
         status = "Unknown"
         for i in range(0, retries):
             try:
@@ -171,9 +301,9 @@ class TestCompilerE2E(unittest.TestCase):
                                       timeout=10, check=False)
                 if tkn_status_proc.returncode == 0:
                     status = tkn_status_proc.stdout.decode("utf-8").strip("'")
-                    if "Succeeded" in status or "Failed" in status:
+                    if status in ["Succeeded", "Completed", "Failed"]:
                         return status
-                    logging.warning("tkn pipeline '{}' {} ({}/{})".format(
+                    logging.debug("tkn pipeline '{}' status: {} ({}/{})".format(
                         name, status, i + 1, retries))
                 else:
                     logging.error("Could not get pipelinerun status ({}/{}): {}".format(
@@ -181,11 +311,11 @@ class TestCompilerE2E(unittest.TestCase):
             except SubprocessError:
                 logging.exception("Error trying to get pipelinerun status ({}/{})".format(
                         i + 1, retries))
-            sleep(3)
+            sleep(SLEEP_BETWEEN_TEST_PHASES)
         return status
 
     def _get_pipelinerun_logs(self, name, timeout: int = 30) -> str:
-        sleep(10)  # if we don't wait, we often only get logs of some pipeline tasks
+        sleep(SLEEP_BETWEEN_TEST_PHASES * 2)  # if we don't wait, we often only get logs of some pipeline tasks
         tkn_logs_cmd = "tkn pipelinerun logs {} -n {}".format(name, namespace)
         tkn_logs_proc = run(tkn_logs_cmd.split(), capture_output=True, timeout=timeout, check=False)
         self.assertEqual(tkn_logs_proc.returncode, 0,
@@ -201,9 +331,11 @@ class TestCompilerE2E(unittest.TestCase):
             try:
                 with open(golden_log_file, 'r') as f:
                     golden_log = f.read()
+                sanitized_golden_log = self._sanitize_log(golden_log)
+                sanitized_test_log = self._sanitize_log(test_log)
                 self.maxDiff = None
-                self.assertEqual(self._sanitize_log(golden_log),
-                                 self._sanitize_log(test_log),
+                self.assertEqual(sanitized_golden_log,
+                                 sanitized_test_log,
                                  msg="PipelineRun '{}' did not produce the expected "
                                      " log output: {}".format(name, golden_log_file))
             except FileNotFoundError:
@@ -215,11 +347,10 @@ class TestCompilerE2E(unittest.TestCase):
     def _sanitize_log(self, log) -> str:
         """Sanitize log output by removing or replacing elements that differ
         from one pipeline execution to another:
-
           - timestamps like 2020-06-08T21:58:06Z, months, weekdays
           - identifiers generated by Kubernetes i.e. for pod names
           - any numbers
-          - strip empty lines
+          - strip trailing spaces and remove empty lines
 
         :param log: the pipeline execution log output
         :return: the sanitized log output fit for comparing to previous logs
@@ -229,18 +360,34 @@ class TestCompilerE2E(unittest.TestCase):
         _MONTHNAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
+        # depending on cluster capacity and utilization and the timing of the
+        # log listener some task logs contain lines that differ from test run
+        # to test run, like the progress output of file copy operations or a
+        # server process receiving a termination signal
+        lines_to_remove = [
+            "Pipeline still running ...",
+            "Server is listening on",
+            "Unknown signal terminated",
+            r"Total: .+, Transferred: .+, Speed: .+",
+            r"localhost:.*GET / HTTP",
+        ]
+
+        # replacements are used on multi-line strings, so '...\n' will be matched by '...$'
         replacements = [
-            ("Pipeline still running ...\n", ""),
             (r"(-[-0-9a-z]{3}-[-0-9a-z]{5})(?=[ -/\]\"]|$)", r"-XXX-XXXXX"),
             (r"uid:[0-9a-z]{8}(-[0-9a-z]{4}){3}-[0-9a-z]{12}",
              "uid:{}-{}-{}-{}-{}".format("X" * 8, "X" * 4, "X" * 4, "X" * 4, "X" * 12)),
+            (r"resourceVersion:[0-9]+ ", "resourceVersion:-------- "),
             (r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", "DATETIME"),
             (r"{}".format("|".join(_MONTHNAMES)), "MONTH"),
             (r"{}".format("|".join(_DAYNAMES)), "DAY"),
             (r"\d", "-"),
+            (r" +$", ""),
+            (r" +\r", r"\n"),
             (r"^$\n", ""),
             (r"\n^$", ""),
         ]
+
         sanitized_log = log
 
         # replace "random" generated parts of the log text
@@ -248,7 +395,10 @@ class TestCompilerE2E(unittest.TestCase):
             sanitized_log = re.sub(pattern, repl, sanitized_log, flags=re.MULTILINE)
 
         # sort lines since parallel tasks produce log lined in unpredictable order
-        sanitized_log = "\n".join(sorted(sanitized_log.splitlines()))
+        # remove erratic lines which only show up some times
+        sanitized_log = "\n".join(
+            sorted(filter(lambda l: not any(re.findall(r, l) for r in lines_to_remove),
+                          sanitized_log.splitlines())))
 
         return sanitized_log
 
@@ -259,12 +409,13 @@ class TestCompilerE2E(unittest.TestCase):
 
     def _run_test__verify_pipelinerun_success(self, name):
         status = self._get_pipelinerun_status(name)
-        self.assertEqual("Succeeded", status)
+        self.assertIn(status, ["Succeeded", "Completed"])
 
     def _run_test__verify_pipelinerun_logs(self, name, log_file):
         test_log = self._get_pipelinerun_logs(name)
         self._verify_logs(name, log_file, test_log)
 
+    # deprecated, use `self._run_test__xyz` methods separately
     def _run_test(self, name, yaml_file, log_file):
         self._run_test__validate_tekton_yaml(name, yaml_file)
         self._run_test__verify_pipelinerun_success(name)
@@ -312,13 +463,23 @@ def _generate_test_cases(pipeline_runs: [dict]):
 
 
 def _generate_test_list(file_name_expr="*.yaml") -> [dict]:
-    def is_not_ignored(yaml_file):
-        return not any(name_part in yaml_file
-                       for name_part in ignored_yaml_files)
+
+    def is_yaml_file_included(yaml_file_path):
+        yaml_file_name = os.path.basename(yaml_file_path)
+        test_name = 'test_{0}'.format(os.path.splitext(yaml_file_name)[0])
+
+        is_ignored = yaml_file_name in ignored_yaml_files
+        is_excluded = test_name in EXCLUDE_TESTS
+        is_included = not INCLUDE_TESTS or test_name in INCLUDE_TESTS
+        was_failed_if_rerun_failed_only = test_name in previously_failed_tests \
+            or not RERUN_FAILED_TESTS_ONLY
+
+        return not is_ignored and not is_excluded and is_included and was_failed_if_rerun_failed_only
 
     testdata_dir = os.path.join(os.path.dirname(__file__), "testdata")
-    yaml_files = filter(is_not_ignored, glob(os.path.join(testdata_dir, file_name_expr)))
+    yaml_files = sorted(filter(is_yaml_file_included, glob(os.path.join(testdata_dir, file_name_expr))))
     pipeline_runs = []
+
     for yaml_file in yaml_files:
         with open(yaml_file, 'r') as f:
             pipeline_run = yaml.safe_load(f)

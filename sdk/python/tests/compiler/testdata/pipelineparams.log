@@ -1,4 +1,3 @@
-Pipeline still running ...
 [download : main] Connecting to localhost:5678 (127.0.0.1:5678)
 [download : main] saving to '/tekton/results/downloaded-resultoutput'
 [download : main] downloaded-resultout 100% |********************************|    14  0:00:00 ETA
@@ -8,7 +7,11 @@ Pipeline still running ...
 [download : copy-artifacts] tekton/results/downloaded-resultoutput
 [download : copy-artifacts] tar: removing leading '/' from member names
 [download : copy-artifacts] `downloaded_resultOutput.tgz` -> `storage/mlpipeline/artifacts/pipelineparams/download/downloaded_resultOutput.tgz`
+[download : copy-artifacts] Total: 0 B, Transferred: 138 B, Speed: 11.44 KiB/s
 
-[download : sidecar-echo] 2020/06/25 18:03:41 Server is listening on :5678
-[download : sidecar-echo] 2020/06/25 18:03:53 localhost:5678 127.0.0.1:48402 "GET / HTTP/1.1" 200 14 "Wget" 33.728µs
+[download : sidecar-echo] 2020/07/31 09:29:31 Server is listening on :5678
+[download : sidecar-echo] 2020/07/31 09:29:43 localhost:5678 127.0.0.1:54892 "GET / HTTP/1.1" 200 14 "Wget" 15.199µs
+[download : sidecar-echo] 2020/07/31 09:29:45 [ERR] Unknown signal terminated
+
+[echo : main] pipelineParams: hello world
 

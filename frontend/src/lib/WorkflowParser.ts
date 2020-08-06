@@ -55,9 +55,15 @@ export default class WorkflowParser {
     )
       return graph;
 
-    const tasks = workflow['spec']['pipelineSpec']['tasks'] || [];
+    const tasks = (workflow['spec']['pipelineSpec']['tasks'] || []).concat(
+      workflow['spec']['pipelineSpec']['finally'] || [],
+    );
     const status = workflow['status']['taskRuns'];
     const pipelineParams = workflow['spec']['params'];
+    const exitHandlers =
+      (workflow['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
+        return element['name'];
+      }) || [];
 
     // Create a map from task name to status for every status received
     const statusMap = new Map<string, any>();
@@ -81,7 +87,7 @@ export default class WorkflowParser {
         for (const condition of conditions)
           edges.push(...this.checkParams(statusMap, pipelineParams, condition, taskId));
 
-        if (task['taskSpec']['runAfter']) {
+        if (task['runAfter']) {
           task['runAfter'].forEach((parentTask: any) => {
             if (
               statusMap.get(parentTask) &&
@@ -95,13 +101,17 @@ export default class WorkflowParser {
 
         for (const edge of edges || []) graph.setEdge(edge['parent'], edge['child']);
 
-        const phase = statusToPhase(this.getPhase(statusMap.get(task['name'])));
+        const status = this.getStatus(statusMap.get(task['name']));
+        const phase = statusToPhase(status);
+        const statusColoring = exitHandlers.includes(task['name'])
+          ? '#fef7f0'
+          : statusToBgColor(phase, '');
         // Add a node for the Task
         graph.setNode(taskId, {
           height: Constants.NODE_HEIGHT,
-          icon: statusToIcon(phase),
+          icon: statusToIcon(status),
           label: task['name'],
-          statusColoring: statusToBgColor(phase, ''),
+          statusColoring: statusColoring,
           width: Constants.NODE_WIDTH,
         });
       }
@@ -176,7 +186,7 @@ export default class WorkflowParser {
     return edges;
   }
 
-  public static getPhase(execStatus: any): NodePhase {
+  public static getStatus(execStatus: any): NodePhase {
     return execStatus!.status.conditions[0].reason;
   }
 

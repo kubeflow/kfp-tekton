@@ -84,9 +84,7 @@ def save_most_frequent_word():
         output_path=output_path_param)
     saver.container.set_cpu_limit('0.5')
     # saver.container.set_gpu_limit('2')
-    saver.add_node_selector_constraint(
-        'failure-domain.beta.kubernetes.io/region',
-        'us-south')
+    saver.add_node_selector_constraint('kubernetes.io/os', 'linux')
     # saver.apply(gcp.use_tpu(tpu_cores=2, tpu_resource='v2', tf_version='1.12'))
 
 

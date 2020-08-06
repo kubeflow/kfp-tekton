@@ -319,7 +319,46 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
             artifact_name = artifact_to_result_mapping.get(artifact['name'], artifact['name'])
-            if artifact['name'] in replaced_param_list:
+            if artifact['path'] == 'logs_to_S3':
+                copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
+                    'cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log && ' + \
+                    'tar -czf $TASKRUN-$NAMESPACE-step-main_log.tgz step-main.log\n' + \
+                    'mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz' + \
+                    ' storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/\n' % (bucket)
+                copy_artifacts_step['env'].append({
+                    'name': 'TASKRUN',
+                    'valueFrom': {
+                        'fieldRef': {
+                            'fieldPath': "metadata.labels['tekton.dev/taskRun']"
+                        }
+                    }
+                })
+                volume_mount_step_template.extend([{
+                    'name': 'varlog',
+                    'mountPath': '/var/log'
+                }, {
+                    'name': 'varlibdockercontainers',
+                    'mountPath': '/var/lib/docker/containers',
+                    'readOnly': True
+                }, {
+                    'name': 'varlibkubeletpods',
+                    'mountPath': '/var/lib/kubelet/pods',
+                    'readOnly': True
+                }, {
+                    'name': 'varlogpods',
+                    'mountPath': '/var/log/pods',
+                    'readOnly': True
+                }])
+                volume_template.extend([{
+                    'name': 'varlog', 'hostPath': {'path': '/var/log'}
+                }, {
+                    'name': 'varlibdockercontainers', 'hostPath': {'path': '/var/lib/docker/containers'}
+                }, {
+                    'name': 'varlibkubeletpods', 'hostPath': {'path': '/var/lib/kubelet/pods'}
+                }, {
+                    'name': 'varlogpods', 'hostPath': {'path': '/var/log/pods'}
+                }])
+            elif artifact['name'] in replaced_param_list:
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
                     'tar -cvzf %s.tgz $(results.%s.path)\n' % (artifact_name, sanitize_k8s_name(artifact_name)) + \
                     'mc cp %s.tgz storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact_name,
@@ -369,7 +408,7 @@ def _process_base_ops(op: BaseOp):
     return op
 
 
-def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifacts=False):
+def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifacts=False, enable_s3_logs=False):
     """Generate template given an operator inherited from BaseOp."""
 
     # initial local variables for tracking volumes and artifacts
@@ -398,6 +437,11 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
             for name, path in output_artifact_paths.items()
         ] if enable_artifacts else []
 
+        if enable_s3_logs:
+            output_artifacts.append({
+                'name': op.name, 'path': 'logs_to_S3'
+            })
+
         # workflow template
         container = convert_k8s_obj_to_json(
             processed_op.container
@@ -417,13 +461,13 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
         }
 
         # Create output artifact tracking annotation.
-        if enable_artifacts:
+        if enable_artifacts or enable_s3_logs:
             for output_artifact in output_artifacts:
                 output_annotation = pipelinerun_output_artifacts.get(processed_op.name, [])
                 output_annotation.append(
                     {
-                        'name': output_artifact['name'],
-                        'path': output_artifact['path']
+                        'name': output_artifact.get('name'),
+                        'path': output_artifact.get('path')
                     }
                 )
                 pipelinerun_output_artifacts[processed_op.name] = output_annotation

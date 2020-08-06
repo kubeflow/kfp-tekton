@@ -1,12 +1,13 @@
-Pipeline still running ...
 [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
 [gcs-download : copy-artifacts] Added `storage` successfully.
 [gcs-download : copy-artifacts] tar: removing leading '/' from member names
 [gcs-download : copy-artifacts] tekton/results/data
 [gcs-download : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/exit-handler/gcs-download/data.tgz`
+[gcs-download : copy-artifacts] Total: 0 B, Transferred: 195 B, Speed: 14.59 KiB/s
 
 [echo-2 : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-[echo-2 : main]
+[echo-2 : main] 
 
 [echo : main] exit!
+

@@ -24,7 +24,7 @@ or run this command from the project root directory:
 You should see an output similar to the one below, outlining which test scripts have passed and which are failing:
 
 ```YAML
-KFP version: 0.5.1
+KFP version: 1.0.0
 
 SUCCESS: add_pod_env.py
 SUCCESS: basic.py
@@ -131,5 +131,5 @@ Occurences of other Errors:
 
 ## Disclaimer
 
-**Note:** The reports above were created for the pipeline scripts found in KFP version `0.5.1` since the
-`kfp_tekton` compiler code is currently based on the `kfp` SDK compiler version `0.5.1`.
+**Note:** The reports above were created for the pipeline scripts found in KFP version `1.0.0` since the
+`kfp_tekton` compiler code is currently based on the `kfp` SDK compiler version `1.0.0`.
