@@ -14,10 +14,10 @@ several new CRDs including Task, Pipeline, TaskRun, and PipelineRun. A PipelineR
 of a Pipeline and is responsible for creating a Pod for each of its Tasks and as many containers within each Pod as it
 has Steps. Please look for more details in [Tekton repo](https://github.com/tektoncd/pipeline).
 
-## Kubeflow Pipeline with Tekton backend
+## Kubeflow Pipeline with Tekton Backend
 
 We are currently using [Kubeflow Pipelines 1.0.0](https://github.com/kubeflow/pipelines/releases/tag/1.0.0) and
-[Tekton 0.15.0](https://github.com/tektoncd/pipeline/releases/tag/v0.15.0) for this project.
+[Tekton >= 0.14.0](https://github.com/tektoncd/pipeline/releases/tag/v0.14.0) for this project.
 
 ![kfp-tekton](images/kfp-tekton.png)
 

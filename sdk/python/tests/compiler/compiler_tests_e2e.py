@@ -20,6 +20,7 @@ import unittest
 import yaml
 
 from glob import glob
+from packaging import version
 from os import environ as env
 from subprocess import run, SubprocessError
 from time import sleep
@@ -32,27 +33,27 @@ from time import sleep
 # get the Kubernetes context from the KUBECONFIG env var
 KUBECONFIG = env.get("KUBECONFIG")
 
-# set or override the Tekton Pipeline version, default "0.15.x":
-#    TKN_PIPELINE_VERSION=0.15 sdk/python/tests/run_e2e_tests.sh
+# set or override the minimum required Tekton Pipeline version, default "0.14.0":
+#    TKN_PIPELINE_MIN_VERSION=0.14 sdk/python/tests/run_e2e_tests.sh
 # or:
-#    make e2e_test TKN_PIPELINE_VERSION=0.15
-TKN_PIPELINE_VERSION = env.get("TKN_PIPELINE_VERSION", "0.15.")
+#    make e2e_test TKN_PIPELINE_MIN_VERSION=0.14
+TKN_PIPELINE_MIN_VERSION = env.get("TKN_PIPELINE_MIN_VERSION", "0.14.0")
 
 # let the user know the expected Tekton Pipeline version
-if env.get("TKN_PIPELINE_VERSION"):
-    logging.warning("The environment variable 'TKN_PIPELINE_VERSION' was set to '{}'"
-                    .format(TKN_PIPELINE_VERSION))
+if env.get("TKN_PIPELINE_MIN_VERSION"):
+    logging.warning("The environment variable 'TKN_PIPELINE_MIN_VERSION' was set to '{}'"
+                    .format(TKN_PIPELINE_MIN_VERSION))
 
-# set or override th Tekton CLI version, default "0.11.x":
-#    TKN_CLIENT_VERSION=0.11 sdk/python/tests/run_e2e_tests.sh
+# set or override the minimum required Tekton CLI version, default "0.11.0":
+#    TKN_CLIENT_MIN_VERSION=0.11 sdk/python/tests/run_e2e_tests.sh
 # or:
-#    make e2e_test TKN_CLIENT_VERSION=0.11
-TKN_CLIENT_VERSION = env.get("TKN_CLIENT_VERSION", "0.11.")
+#    make e2e_test TKN_CLIENT_MIN_VERSION=0.11
+TKN_CLIENT_MIN_VERSION = env.get("TKN_CLIENT_MIN_VERSION", "0.11.0")
 
 # let the user know the expected Tekton CLI version
-if env.get("TKN_CLIENT_VERSION"):
-    logging.warning("The environment variable 'TKN_CLIENT_VERSION' was set to '{}'"
-                    .format(TKN_CLIENT_VERSION))
+if env.get("TKN_CLIENT_MIN_VERSION"):
+    logging.warning("The environment variable 'TKN_CLIENT_MIN_VERSION' was set to '{}'"
+                    .format(TKN_CLIENT_MIN_VERSION))
 
 # Temporarily set GENERATE_GOLDEN_E2E_LOGS=True to (re)generate new "golden" log
 # files after making code modifications that change the expected log output.
@@ -218,10 +219,17 @@ def _verify_tekton_cluster():
             logging.error("Command '{}' did not return expected output '{}': {}"
                           .format(cmd, expected_output, process.stdout))
             exit(1)
+        return cmd_output
+
     exit_on_error("kubectl get svc tekton-pipelines-controller -n tekton-pipelines")
     exit_on_error("kubectl get svc ml-pipeline -n {}".format(namespace))
-    exit_on_error("tkn version", "Pipeline version: v{}".format(TKN_PIPELINE_VERSION))
-    exit_on_error("tkn version", "Client version: {}".format(TKN_CLIENT_VERSION))
+    tkn_ver_out = exit_on_error("tkn version")
+    tkn_pipeline_ver = re.search(r"^Pipeline version: v(.*)$", tkn_ver_out, re.MULTILINE).group(1)
+    tkn_client_ver = re.search(r"^Client version: (.*)$", tkn_ver_out, re.MULTILINE).group(1)
+    assert version.parse(TKN_PIPELINE_MIN_VERSION) <= version.parse(tkn_pipeline_ver),\
+        "Tekton Pipeline version must be >= {}, found {}".format(TKN_PIPELINE_MIN_VERSION, tkn_pipeline_ver)
+    assert version.parse(TKN_CLIENT_MIN_VERSION) <= version.parse(tkn_client_ver),\
+        "Tekton CLI version must be >= {}, found {}".format(TKN_CLIENT_MIN_VERSION, tkn_client_ver)
 
 
 # verify we have a working Tekton cluster
