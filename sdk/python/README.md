@@ -36,7 +36,7 @@ the [SDK README](/sdk/README.md)
 1. [`Python`](https://www.python.org/downloads/): version `3.5.3` or later (new code must maintain compatibility with `3.5`)
 2. [`Kubernetes` Cluster](https://v1-15.docs.kubernetes.io/docs/setup/): version `1.15` ([required by Kubeflow](https://www.kubeflow.org/docs/started/k8s/overview/) and Tekton 0.11)
 3. [`kubectl` CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/): required to deploy Tekton pipelines to Kubernetes cluster
-4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.15.0/): version `0.15.0` or greater (minimum version `0.13.0` to support Tekton API version `v1beta1`), required for end-to-end testing
+4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.15.0/): version `0.14.0` or greater (minimum version `0.13.0` to support Tekton API version `v1beta1`), required for end-to-end testing
 5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): version `0.11.0` or greater, required for end-to-end testing of Tekton pipelines
 6. [`Kubeflow Pipelines` Deployment](https://www.kubeflow.org/docs/pipelines/installation/overview/): required for some end-to-end tests
 
