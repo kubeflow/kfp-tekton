@@ -31,9 +31,9 @@ from kfp_tekton import compiler
 # temporarily set this flag to True in order to (re)generate new "golden" YAML
 # files after making code changes that modify the expected YAML output.
 # to (re)generate all "golden" YAML files from the command line run:
-#   GENERATE_GOLDEN_YAML=True sdk/python/tests/run_tests.sh
+#    GENERATE_GOLDEN_YAML=True sdk/python/tests/run_tests.sh
 # or:
-#   make test GENERATE_GOLDEN_YAML=True
+#    make unit_test GENERATE_GOLDEN_YAML=True
 GENERATE_GOLDEN_YAML = env.get("GENERATE_GOLDEN_YAML", "False") == "True"
 
 if GENERATE_GOLDEN_YAML:
@@ -96,6 +96,14 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join_with_artifacts.yaml', enable_artifacts=True)
+
+  def test_parallel_join_workflow_with_logging(self):
+    """
+    Test compiling a parallel join workflow with logging.
+    """
+    from .testdata.parallel_join import download_and_join
+    self._test_pipeline_workflow(download_and_join, 'parallel_join_with_logging.yaml',
+                                 enable_artifacts=False, enable_s3_logs=True)
 
   def test_parallel_join_with_argo_vars_workflow(self):
     """
@@ -285,6 +293,7 @@ class TestTektonCompiler(unittest.TestCase):
                               pipeline_function,
                               pipeline_yaml,
                               enable_artifacts=True,
+                              enable_s3_logs=False,
                               normalize_compiler_output_function=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
@@ -293,7 +302,8 @@ class TestTektonCompiler(unittest.TestCase):
     try:
       compiler.TektonCompiler().compile(pipeline_function,
                                         compiled_yaml_file,
-                                        enable_artifacts=enable_artifacts)
+                                        enable_artifacts=enable_artifacts,
+                                        enable_s3_logs=enable_s3_logs)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f

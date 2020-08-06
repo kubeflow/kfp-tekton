@@ -6,6 +6,7 @@
 ```
 ACCESS_KEY_ID=admin123
 SECRET_ACCESS_KEY=admin123
+kubectl create ns logging
 kubectl -n logging create secret generic logging-s3 --from-literal "accesskey=$ACCESS_KEY_ID" --from-literal "secretkey=$SECRET_ACCESS_KEY"
 ```
 
@@ -77,9 +78,7 @@ spec:
 EOF
 ```
 
-3. Deploy minio via `kubectl apply -f minio_standalon.yaml -n logging`
-
-4. Access minio service:
+3. Access minio service:
 ```
  kc get svc -n logging
 NAME            TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE

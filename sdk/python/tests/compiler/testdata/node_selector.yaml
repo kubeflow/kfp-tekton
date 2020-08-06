@@ -42,4 +42,4 @@ spec:
   - pipelineTaskName: echo
     taskPodTemplate:
       nodeSelector:
-        beta.kubernetes.io/instance-type: b3c.4x16.encrypted
+        kubernetes.io/os: linux

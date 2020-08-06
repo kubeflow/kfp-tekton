@@ -37,7 +37,7 @@ def affinity_pipeline(
             required_during_scheduling_ignored_during_execution=V1NodeSelector(
                 node_selector_terms=[V1NodeSelectorTerm(
                     match_expressions=[V1NodeSelectorRequirement(
-                        key='beta.kubernetes.io/os',
+                        key='kubernetes.io/os',
                         operator='In',
                         values=['linux'])])])))
     echo_op().add_affinity(affinity)
