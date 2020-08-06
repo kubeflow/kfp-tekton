@@ -174,6 +174,7 @@ ignored_yaml_files = [
     "volume.yaml",              # need to rework the credentials part
     "volume_op.yaml",           # need to delete PVC before/after test run
     "volume_snapshot_op.yaml",  # only works on Minikube, K8s alpha feature, requires a feature gate from K8s master
+    "parallel_join_with_logging.yaml"  # need to work with S3(minio) avaibale, and this is an experimental feature.
 ]
 
 # run pipelines in "kubeflow" namespace as some E2E tests depend on Minio
