@@ -464,10 +464,10 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
                 output_annotation = pipelinerun_output_artifacts.get(processed_op.name, [])
                 output_annotation.append(
                     {
-                        'name': output_artifact.get('name'),
-                        'path': output_artifact.get('path'),
+                        'name': output_artifact.get('name', ''),
+                        'path': output_artifact.get('path', ''),
                         'key': "artifacts/$PIPELINERUN/%s/%s.tgz" %
-                        (processed_op.name, output_artifact['name'].replace(processed_op.name + '-', ''))
+                        (processed_op.name, output_artifact.get('name', '').replace(processed_op.name + '-', ''))
                     }
                 )
                 pipelinerun_output_artifacts[processed_op.name] = output_annotation
