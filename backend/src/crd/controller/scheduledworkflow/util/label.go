@@ -14,7 +14,7 @@ func GetRequirementForCompletedWorkflowOrFatal(completed bool) *labels.Requireme
 	if completed == true {
 		operator = selection.Equals
 	}
-	req, err := labels.NewRequirement("Completed", operator,
+	req, err := labels.NewRequirement(commonutil.LabelKeyWorkflowPersistedFinalState, operator,
 		[]string{"true"})
 	if err != nil {
 		log.Fatalf("Error while creating requirement: %s", err)
