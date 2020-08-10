@@ -22,9 +22,9 @@ import (
 	"strconv"
 	"time"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -167,11 +167,11 @@ func (s *ScheduledWorkflow) NewWorkflow(
 
 	const (
 		workflowKind       = "Workflow"
-		workflowApiVersion = "argoproj.io/v1alpha1"
+		workflowApiVersion = "tekton.dev/v1beta1"
 	)
 
 	// Creating the workflow.
-	workflow := &workflowapi.Workflow{
+	workflow := &workflowapi.PipelineRun{
 		Spec: *s.Spec.Workflow.Spec.DeepCopy(),
 	}
 	workflow.Kind = workflowKind

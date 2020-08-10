@@ -1,7 +1,6 @@
 package util
 
 import (
-	"github.com/argoproj/argo/workflow/common"
 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/labels"
@@ -15,7 +14,7 @@ func GetRequirementForCompletedWorkflowOrFatal(completed bool) *labels.Requireme
 	if completed == true {
 		operator = selection.Equals
 	}
-	req, err := labels.NewRequirement(common.LabelKeyCompleted, operator,
+	req, err := labels.NewRequirement(commonutil.LabelKeyWorkflowPersistedFinalState, operator,
 		[]string{"true"})
 	if err != nil {
 		log.Fatalf("Error while creating requirement: %s", err)
