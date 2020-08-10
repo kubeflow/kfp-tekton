@@ -23,6 +23,7 @@ import re
 import textwrap
 
 from typing import Callable, List, Text, Dict, Any
+from os import environ as env
 
 # Kubeflow Pipeline imports
 from kfp import dsl
@@ -38,6 +39,11 @@ from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name
 from kfp_tekton.compiler._op_to_template import _op_to_template
+
+
+DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
+DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
+DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
 
 
 def _get_super_condition_template():
@@ -484,6 +490,9 @@ class TektonCompiler(Compiler):
         'annotations': {
           'tekton.dev/output_artifacts': json.dumps(self.output_artifacts, sort_keys=True),
           'tekton.dev/input_artifacts': json.dumps(self.input_artifacts, sort_keys=True),
+          'tekton.dev/artifact_bucket': DEFAULT_ARTIFACT_BUCKET,
+          'tekton.dev/artifact_endpoint': DEFAULT_ARTIFACT_ENDPOINT,
+          'tekton.dev/artifact_endpoint_scheme': DEFAULT_ARTIFACT_ENDPOINT_SCHEME,
           'sidecar.istio.io/inject': 'false'  # disable Istio inject since Tekton cannot run with Istio sidecar
         }
       },

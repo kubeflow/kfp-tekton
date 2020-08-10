@@ -19,9 +19,12 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with components
       loaded from yaml", "name": "component-yaml-pipeline"}'
     sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{"busybox": [{"name": "busybox-dummy_output_path",
-      "path": "/tmp/outputs/dummy_output_path/data"}]}'
+    tekton.dev/output_artifacts: '{"busybox": [{"key": "artifacts/$PIPELINERUN/busybox/dummy_output_path.tgz",
+      "name": "busybox-dummy_output_path", "path": "/tmp/outputs/dummy_output_path/data"}]}'
   name: component-yaml-pipeline
 spec:
   pipelineSpec:
@@ -50,10 +53,18 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.labels['tekton.dev/pipelineTask']
-          - name: NAMESPACE
+          - name: ARTIFACT_ENDPOINT_SCHEME
             valueFrom:
               fieldRef:
-                fieldPath: metadata.namespace
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint_scheme']
+          - name: ARTIFACT_ENDPOINT
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_endpoint']
+          - name: ARTIFACT_BUCKET
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['tekton.dev/artifact_bucket']
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
@@ -68,11 +79,11 @@ spec:
           name: copy-artifacts
           script: '#!/usr/bin/env sh
 
-            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID
-            $AWS_SECRET_ACCESS_KEY
+            mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT}
+            $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 
             tar -cvzf dummy_output_path.tgz $(results.dummy-output-path.path)
 
-            mc cp dummy_output_path.tgz storage/mlpipeline/artifacts/$PIPELINERUN/$PIPELINETASK/dummy_output_path.tgz
+            mc cp dummy_output_path.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/dummy_output_path.tgz
 
             '

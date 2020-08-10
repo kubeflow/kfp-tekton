@@ -19,6 +19,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
       "optional": true}], "name": "my-loop-pipeline"}'
     sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/input_artifacts: '{"my-in-coop1": [{"name": "loop-item-param-subvar-A_a",
       "parent_task": null}], "my-in-coop2": [{"name": "loop-item-param-subvar-B_b",
       "parent_task": null}]}'
