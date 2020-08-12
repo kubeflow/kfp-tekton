@@ -200,9 +200,9 @@ export default class WorkflowParser {
 
   public static getTaskRunStatusFromPodName(workflow: any, podName: string) {
     for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
-      const taskRun = workflow.status.taskRuns[taskRunId]
+      const taskRun = workflow.status.taskRuns[taskRunId];
       if (taskRun.status && taskRun.status.podName === podName) {
-        return taskRun
+        return taskRun;
       }
     }
   }
@@ -247,11 +247,17 @@ export default class WorkflowParser {
     let inputArtifacts: ParamList = [];
     let outputArtifacts: ParamList = [];
 
-    if (!workflow || !workflow.metadata || !workflow.status || !workflow.metadata.annotations)
+    if (
+      !workflow ||
+      !workflow.metadata ||
+      !workflow.status ||
+      !workflow.status.taskRuns ||
+      !workflow.metadata.annotations
+    )
       return { inputArtifacts, outputArtifacts };
 
     // Get the task name that corresponds to the nodeId
-    let taskName = "";
+    let taskName = '';
     for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
       const taskRun = workflow.status.taskRuns[taskRunId];
       if (taskRun.status && taskRun.status.podName === nodeId) {
@@ -259,45 +265,56 @@ export default class WorkflowParser {
       }
     }
 
-    if (!taskName)
-      return { inputArtifacts, outputArtifacts };
+    if (!taskName) return { inputArtifacts, outputArtifacts };
 
-    const annotations = workflow.metadata.annotations
-    const rawInputArtifacts = annotations["tekton.dev/input_artifacts"] ? JSON.parse(annotations["tekton.dev/input_artifacts"]) : [];
-    const rawOutputArtifacts = annotations["tekton.dev/output_artifacts"] ? JSON.parse(annotations["tekton.dev/output_artifacts"]) : [];
+    const annotations = workflow.metadata.annotations;
+    const rawInputArtifacts = annotations['tekton.dev/input_artifacts']
+      ? JSON.parse(annotations['tekton.dev/input_artifacts'])
+      : [];
+    const rawOutputArtifacts = annotations['tekton.dev/output_artifacts']
+      ? JSON.parse(annotations['tekton.dev/output_artifacts'])
+      : [];
 
-    let template =  {
+    let template = {
       endpoint: annotations['tekton.dev/artifact_endpoint'],
       bucket: annotations['tekton.dev/artifact_bucket'],
       insecure: annotations['tekton.dev/artifact_endpoint_scheme'] === 'http://',
-      accessKeySecret: {name: "mlpipeline-minio-artifact", key: "accesskey", optional: false},
-      secretKeySecret: {name: "mlpipeline-minio-artifact", key: "secretkey", optional: false},
-      key: `artifacts/${workflow.metadata.name || ""}`,
+      accessKeySecret: { name: 'mlpipeline-minio-artifact', key: 'accesskey', optional: false },
+      secretKeySecret: { name: 'mlpipeline-minio-artifact', key: 'secretkey', optional: false },
+      key: `artifacts/${workflow.metadata.name || ''}`,
     };
 
-    inputArtifacts = (rawInputArtifacts[taskName] || []).map((artifact : any) => {
-      return [ artifact.name, {
-        endpoint: template.endpoint,
-        bucket: template.bucket,
-        insecure: template.insecure,
-        accessKeySecret: template.accessKeySecret,
-        secretKeySecret: template.secretKeySecret,
-        key: `artifacts/${workflow.metadata.name}/${artifact.parent_task}/${artifact.name.substring(artifact.parent_task.length + 1)}.tgz`,
-      }]
-    })
+    inputArtifacts = (rawInputArtifacts[taskName] || []).map((artifact: any) => {
+      return [
+        artifact.name,
+        {
+          endpoint: template.endpoint,
+          bucket: template.bucket,
+          insecure: template.insecure,
+          accessKeySecret: template.accessKeySecret,
+          secretKeySecret: template.secretKeySecret,
+          key: `artifacts/${workflow.metadata.name}/${
+            artifact.parent_task
+          }/${artifact.name.substring(artifact.parent_task.length + 1)}.tgz`,
+        },
+      ];
+    });
 
-    outputArtifacts = (rawOutputArtifacts[taskName] || []).map((artifact : any) => {
-      return [ artifact.name, {
-        endpoint: template.endpoint,
-        bucket: template.bucket,
-        insecure: template.insecure,
-        accessKeySecret: template.accessKeySecret,
-        secretKeySecret: template.secretKeySecret,
-        key: artifact.key.replace("$PIPELINERUN", workflow.metadata.name || ""),
-      }]
-    })
+    outputArtifacts = (rawOutputArtifacts[taskName] || []).map((artifact: any) => {
+      return [
+        artifact.name,
+        {
+          endpoint: template.endpoint,
+          bucket: template.bucket,
+          insecure: template.insecure,
+          accessKeySecret: template.accessKeySecret,
+          secretKeySecret: template.secretKeySecret,
+          key: artifact.key.replace('$PIPELINERUN', workflow.metadata.name || ''),
+        },
+      ];
+    });
 
-    return {inputArtifacts, outputArtifacts };
+    return { inputArtifacts, outputArtifacts };
   }
 
   // Makes sure the workflow object contains the node and returns its
@@ -348,21 +365,30 @@ export default class WorkflowParser {
   public static loadNodeOutputPaths(selectedWorkflowNode: any, workflow: any): StoragePath[] {
     const outputPaths: StoragePath[] = [];
 
-    if (!workflow || !workflow.metadata || !workflow.metadata.annotations || !workflow.metadata.name)
+    if (
+      !workflow ||
+      !workflow.metadata ||
+      !workflow.metadata.annotations ||
+      !workflow.metadata.name
+    )
       return outputPaths;
 
-    const annotations = workflow.metadata.annotations
-    const artifacts = annotations["tekton.dev/output_artifacts"] ? JSON.parse(annotations["tekton.dev/output_artifacts"])[selectedWorkflowNode.pipelineTaskName] : [];
-    const bucket = annotations["tekton.dev/artifact_bucket"] || "";
-    const source = annotations["tekton.dev/artifact_endpoint"] || "";
+    const annotations = workflow.metadata.annotations;
+    const artifacts = annotations['tekton.dev/output_artifacts']
+      ? JSON.parse(annotations['tekton.dev/output_artifacts'])[
+          selectedWorkflowNode.pipelineTaskName
+        ]
+      : [];
+    const bucket = annotations['tekton.dev/artifact_bucket'] || '';
+    const source = annotations['tekton.dev/artifact_endpoint'] || '';
 
     if (artifacts) {
       (artifacts || [])
-        .filter((a : any) => a.name === 'mlpipeline-ui-metadata')
-        .forEach((a : any) =>
+        .filter((a: any) => a.name === 'mlpipeline-ui-metadata')
+        .forEach((a: any) =>
           outputPaths.push({
             bucket: bucket,
-            key: a.key.replace("$PIPELINERUN", workflow.metadata.name || ""),
+            key: a.key.replace('$PIPELINERUN', workflow.metadata.name || ''),
             source: source.indexOf('minio') !== -1 ? StorageService.MINIO : StorageService.S3,
           }),
         );
@@ -383,16 +409,17 @@ export default class WorkflowParser {
   ): Array<{ stepName: string; path: StoragePath }> {
     const outputPaths: Array<{ stepName: string; path: StoragePath }> = [];
 
-    const annotations = workflow.metadata.annotations
-    const rawOutputArtifacts = annotations["tekton.dev/output_artifacts"] ? JSON.parse(annotations["tekton.dev/output_artifacts"]) : [];
-  
+    const annotations = workflow.metadata.annotations;
+    const rawOutputArtifacts = annotations['tekton.dev/output_artifacts']
+      ? JSON.parse(annotations['tekton.dev/output_artifacts'])
+      : [];
+
     if (workflow && workflow.status && workflow.status.taskRuns) {
       Object.keys(workflow.status.taskRuns).forEach(n => {
-        const stepName = workflow.status.taskRuns[n].pipelineTaskName
-        const artifact =  rawOutputArtifacts[stepName]
+        const stepName = workflow.status.taskRuns[n].pipelineTaskName;
         this.loadNodeOutputPaths(workflow.status.taskRuns[n], workflow).map(path =>
           outputPaths.push({ stepName: workflow.status.taskRuns[n].pipelineTaskName, path }),
-        )
+        );
       });
     }
 

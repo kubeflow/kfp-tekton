@@ -339,13 +339,16 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
                                 data-testid='run-details-node-details'
                                 className={commonCss.page}
                               >
-                                { sidepanelSelectedTab === SidePaneTab.VISUALIZATIONS &&
+                                {sidepanelSelectedTab === SidePaneTab.VISUALIZATIONS &&
                                   this.state.selectedNodeDetails &&
                                   this.state.workflow && (
                                     <VisualizationsTabContent
                                       execution={selectedExecution}
                                       nodeId={selectedNodeId}
-                                      nodeStatus={WorkflowParser.getTaskRunStatusFromPodName(workflow, selectedNodeDetails!.id)}
+                                      nodeStatus={WorkflowParser.getTaskRunStatusFromPodName(
+                                        workflow,
+                                        selectedNodeDetails!.id,
+                                      )}
                                       namespace={this.state.workflow?.metadata?.namespace}
                                       visualizationCreatorConfig={visualizationCreatorConfig}
                                       generatedVisualizations={this.state.generatedVisualizations.filter(
@@ -1091,7 +1094,8 @@ const VisualizationsTabContent: React.FC<{
 
   const [progress, setProgress] = React.useState(0);
   const [viewerConfigs, setViewerConfigs] = React.useState<ViewerConfig[]>([]);
-  const nodeCompleted: boolean = !!nodeStatus && COMPLETED_NODE_PHASES.includes(nodeStatus.status.conditions[0].reason);
+  const nodeCompleted: boolean =
+    !!nodeStatus && COMPLETED_NODE_PHASES.includes(nodeStatus.status.conditions[0].reason);
 
   React.useEffect(() => {
     let aborted = false;
