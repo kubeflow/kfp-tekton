@@ -404,7 +404,7 @@ export default class WorkflowParser {
               bucket: bucket,
               key: a.key.replace('$PIPELINERUN', workflow.metadata.name || ''),
               source: source.indexOf('minio') !== -1 ? StorageService.MINIO : StorageService.S3,
-            })
+            });
         });
     }
     return outputPaths;
