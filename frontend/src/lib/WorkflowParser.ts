@@ -258,10 +258,12 @@ export default class WorkflowParser {
 
     // Get the task name that corresponds to the nodeId
     let taskName = '';
+    let taskStatus: NodePhase = NodePhase.SUCCEEDED;
     for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
       const taskRun = workflow.status.taskRuns[taskRunId];
       if (taskRun.status && taskRun.status.podName === nodeId) {
         taskName = taskRun.pipelineTaskName;
+        taskStatus = this.getStatus(taskRun);
       }
     }
 
@@ -300,7 +302,17 @@ export default class WorkflowParser {
       ];
     });
 
-    outputArtifacts = (rawOutputArtifacts[taskName] || []).map((artifact: any) => {
+    // If no key exists in artifact annotations then return no output artifacts (for backwards compatibility)
+    // If the task has not completed successfully then the output artifacts do not exist yet
+    if (
+      !rawOutputArtifacts[taskName] ||
+      !rawOutputArtifacts[taskName][0] ||
+      !rawOutputArtifacts[taskName][0].key ||
+      (taskStatus !== NodePhase.COMPLETED && taskStatus !== NodePhase.SUCCEEDED)
+    )
+      return { inputArtifacts, outputArtifacts };
+
+    outputArtifacts = rawOutputArtifacts[taskName].map((artifact: any) => {
       return [
         artifact.name,
         {
@@ -385,13 +397,15 @@ export default class WorkflowParser {
     if (artifacts) {
       (artifacts || [])
         .filter((a: any) => a.name === 'mlpipeline-ui-metadata')
-        .forEach((a: any) =>
-          outputPaths.push({
-            bucket: bucket,
-            key: a.key.replace('$PIPELINERUN', workflow.metadata.name || ''),
-            source: source.indexOf('minio') !== -1 ? StorageService.MINIO : StorageService.S3,
-          }),
-        );
+        .forEach((a: any) => {
+          // Check that key exists (for backwards compatibility)
+          if (a.key)
+            outputPaths.push({
+              bucket: bucket,
+              key: a.key.replace('$PIPELINERUN', workflow.metadata.name || ''),
+              source: source.indexOf('minio') !== -1 ? StorageService.MINIO : StorageService.S3,
+            })
+        });
     }
     return outputPaths;
   }
