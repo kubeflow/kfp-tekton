@@ -8,7 +8,6 @@ Collect Tekton pipeline logs to S3, via Fluentd in a DaemonSet.
 > 2. server-side-enable: security controlled by RBAC from server side.
 > 3. Easy to use: user just need to provide your S3 info, and apply yaml file to your cluster, then everything is OK.
 
-
 ## How to use it
 
 ### 1. Create secret for your S3 ACCESS_KEY_ID and SECRET_ACCESS_KEY (admin123):
@@ -17,7 +16,7 @@ ACCESS_KEY_ID=admin123
 SECRET_ACCESS_KEY=admin123
 kubectl -n kube-system create secret generic pipeline-logs-s3-secret --from-literal "accesskey=$ACCESS_KEY_ID" --from-literal "secretkey=$SECRET_ACCESS_KEY"
 ```
-### 2. Create configMap:
+### 2. Create configMap for S3 related info:
 
 ```
 kubectl apply -f - <<EOF
@@ -38,9 +37,9 @@ EOF
 
 > Notes:
 >
-> S3_BUCKET: your s3_bucket name, e.g. mlpipeline
+> S3_BUCKET: s3_bucket name, e.g. mlpipeline
 >
-> S3_REGION: your s3_region, e.g. us-east-1 or test_region
+> S3_REGION: s3_region, e.g. us-east-1 or test_region
 >
 > FORCE_PATH_STYLE: This prevents AWS SDK from breaking endpoint URL, set true if you are using minio
 >
@@ -50,7 +49,7 @@ EOF
 
 ### 3. Collect the pipeline logs to S3
 ```
-kubectl apply -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/samples/logging_s3/pipeline_log_to_s3_by_fluentd_recommend/pipeline-logs-fluentd-s3.yaml
+make deploy
 ```
 
 ## Demo The Result
@@ -60,14 +59,14 @@ The container logs will be archived to S3 as below picture
 ![s3-2](images/s3-2.png)
 
 
-## [Optional] Build Image
+## Build your image (Optional)
 
 Change the name of docker image in "Makefile", build your docker image:
 ```
 make build
 ```
 
-## [Optional] Uninstall/Stop collect logs
+## Uninstall/Stop collecting the logs (Optional)
 
 ```
 kubectl delete -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/samples/logging_s3/pipeline_log_to_s3_by_fluentd_recommend/pipeline-logs-fluentd-s3.yaml
