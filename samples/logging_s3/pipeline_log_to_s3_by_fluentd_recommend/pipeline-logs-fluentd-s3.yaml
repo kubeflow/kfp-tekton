@@ -113,6 +113,8 @@ spec:
         - name: varlogpods
           mountPath: /var/log/pods
           readOnly: true
+        - name: config-volume
+          mountPath: /etc/fluent/config.d
       terminationGracePeriodSeconds: 30
       volumes:
       - name: varlog
@@ -127,3 +129,6 @@ spec:
       - name: varlogpods
         hostPath:
           path: /var/log/pods
+      - name: config-volume
+        configMap:
+          name: fluentd-config
