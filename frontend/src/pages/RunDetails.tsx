@@ -339,27 +339,23 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
                                 data-testid='run-details-node-details'
                                 className={commonCss.page}
                               >
-                                {/* Visualizations need work before being added back */}
-                                {false &&
-                                  sidepanelSelectedTab === SidePaneTab.VISUALIZATIONS &&
+                                {sidepanelSelectedTab === SidePaneTab.VISUALIZATIONS &&
                                   this.state.selectedNodeDetails &&
                                   this.state.workflow && (
                                     <VisualizationsTabContent
                                       execution={selectedExecution}
                                       nodeId={selectedNodeId}
-                                      nodeStatus={
-                                        this.state.workflow && this.state.workflow.status
-                                          ? this.state.workflow.status.nodes[
-                                              this.state.selectedNodeDetails!.id
-                                            ]
-                                          : undefined
-                                      }
+                                      nodeStatus={WorkflowParser.getTaskRunStatusFromPodName(
+                                        workflow,
+                                        selectedNodeDetails!.id,
+                                      )}
                                       namespace={this.state.workflow?.metadata?.namespace}
                                       visualizationCreatorConfig={visualizationCreatorConfig}
                                       generatedVisualizations={this.state.generatedVisualizations.filter(
                                         visualization =>
                                           visualization.nodeId === selectedNodeDetails!.id,
                                       )}
+                                      workflow={workflow}
                                       onError={this.handleError}
                                     />
                                   )}
@@ -1077,9 +1073,10 @@ const VisualizationsTabContent: React.FC<{
   visualizationCreatorConfig: VisualizationCreatorConfig;
   execution?: Execution;
   nodeId: string;
-  nodeStatus?: NodeStatus;
+  nodeStatus?: any;
   generatedVisualizations: GeneratedVisualization[];
   namespace: string | undefined;
+  workflow: any;
   onError: (error: Error) => void;
 }> = ({
   visualizationCreatorConfig,
@@ -1088,6 +1085,7 @@ const VisualizationsTabContent: React.FC<{
   nodeId,
   nodeStatus,
   namespace,
+  workflow,
   onError,
 }) => {
   const [loaded, setLoaded] = React.useState(false);
@@ -1096,7 +1094,8 @@ const VisualizationsTabContent: React.FC<{
 
   const [progress, setProgress] = React.useState(0);
   const [viewerConfigs, setViewerConfigs] = React.useState<ViewerConfig[]>([]);
-  const nodeCompleted: boolean = !!nodeStatus && COMPLETED_NODE_PHASES.includes(nodeStatus.phase);
+  const nodeCompleted: boolean =
+    !!nodeStatus && COMPLETED_NODE_PHASES.includes(nodeStatus.status.conditions[0].reason);
 
   React.useEffect(() => {
     let aborted = false;
@@ -1113,7 +1112,7 @@ const VisualizationsTabContent: React.FC<{
         return; // Abort, because there is no data.
       }
       // Load runtime outputs from the selected Node
-      const outputPaths = WorkflowParser.loadNodeOutputPaths(nodeStatus);
+      const outputPaths = WorkflowParser.loadNodeOutputPaths(nodeStatus, workflow);
       const reportProgress = (reportedProgress: number) => {
         if (!aborted) {
           setProgress(reportedProgress);
