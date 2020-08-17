@@ -12,7 +12,7 @@ To run this pipeline, make sure your cluster has at least 16 cpu and 32GB in tot
     ```shell
     pip install jupyter numpy Pillow
     ```
-
+- Make sure the Kubernetes Cluster has a [storageclass](https://kubernetes.io/docs/concepts/storage/storage-classes/) that supports ReadWriteMany in order to run distributed training.
 ## Instructions
 
 Once you have completed all the prerequisites for this example, then you can start the Jupyter server in this directory and click on the `mnist.ipynb` notebook. The notebook has step by step instructions for running the KFP Tekton pipeline.
