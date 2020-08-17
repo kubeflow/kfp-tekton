@@ -79,7 +79,7 @@ Now, we should able to see the pipeline is being uploaded to the **Pipelines** p
 
 ### 2. Upload Pipelines Using the `kfp_tekton.TektonClient` in Python
 
-To begin with, we first need to declare our TektonClient:
+To begin, we first need to declare our TektonClient:
 - For single user:
 ```python
 from kfp_tekton import TektonClient
@@ -180,7 +180,7 @@ Once we have the pipeline uploaded, we can simply execute the pipeline by clicki
 
 ![pipeline-page](images/pipeline-page.png)
 
-Next, pick an experiment to run this pipeline and click **Start** to execute the pipeline. **Picking an experiment is required for multi-tenant mode.**
+Next, pick an experiment that this run will be associated with and click **Start** to execute the pipeline. **Picking an experiment is required for multi-tenant mode.**
 
 ![run-page](images/run-page.png)
 
@@ -191,7 +191,7 @@ Now, the pipeline is running and we can click on the pipeline run to view the ex
 
 ### 2. Run Pipelines Using the `kfp_tekton.TektonClient` in Python
 
-To begin with, we first need to declare our TektonClient:
+To begin, we first need to declare our TektonClient:
 - For single user:
 ```python
 from kfp_tekton import TektonClient
