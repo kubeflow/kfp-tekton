@@ -29,6 +29,9 @@ const (
 	DefaultPipelineRunnerServiceAccount string = "DefaultPipelineRunnerServiceAccount"
 	KubeflowUserIDHeader                string = "KUBEFLOW_USERID_HEADER"
 	KubeflowUserIDPrefix                string = "KUBEFLOW_USERID_PREFIX"
+	ArtifactBucket                      string = "ARTIFACT_BUCKET"
+	ArtifactEndpoint                    string = "ARTIFACT_ENDPOINT"
+	ArtifactEndpointScheme              string = "ARTIFACT_ENDPOINT_SCHEME"
 )
 
 func GetStringConfig(configName string) string {
@@ -97,4 +100,16 @@ func GetKubeflowUserIDHeader() string {
 
 func GetKubeflowUserIDPrefix() string {
 	return GetStringConfigWithDefault(KubeflowUserIDPrefix, GoogleIAPUserIdentityPrefix)
+}
+
+func GetArtifactBucket() string {
+	return GetStringConfigWithDefault(ArtifactBucket, DefaultArtifactBucket)
+}
+
+func GetArtifactEndpoint() string {
+	return GetStringConfigWithDefault(ArtifactEndpoint, DefaultArtifactEndpoint)
+}
+
+func GetArtifactEndpointScheme() string {
+	return GetStringConfigWithDefault(ArtifactEndpointScheme, DefaultArtifactEndpointScheme)
 }

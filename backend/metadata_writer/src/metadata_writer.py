@@ -84,6 +84,7 @@ TEKTON_TASKRUN_LABEL_KEY = 'tekton.dev/taskRun'
 TEKTON_PIPELINETASK_LABEL_KEY = 'tekton.dev/pipelineTask'
 TEKTON_INPUT_ARTIFACT_ANNOTATION_KEY = 'tekton.dev/input_artifacts'
 TEKTON_OUTPUT_ARTIFACT_ANNOTATION_KEY = 'tekton.dev/output_artifacts'
+TEKTON_BUCKET_ARTIFACT_ANNOTATION_KEY = 'tekton.dev/artifact_bucket'
 
 PIPELINE_LABEL_KEY = TEKTON_PIPELINERUN_LABEL_KEY if PIPELINE_RUNTIME == "tekton" else ARGO_WORKFLOW_LABEL_KEY
 
@@ -142,7 +143,7 @@ def get_component_template(obj):
                     {
                         "name": i["name"],
                         "s3": {
-                            "bucket": "mlpipeline",
+                            "bucket": obj.metadata.annotations.get(TEKTON_BUCKET_ARTIFACT_ANNOTATION_KEY, "mlpipeline"),
                             "key": "artifacts/%s/%s/%s.tgz" % (obj.metadata.labels[TEKTON_PIPELINERUN_LABEL_KEY],
                                                                i['parent_task'],
                                                                i["name"].replace(i['parent_task'] + '-', ''))
@@ -173,7 +174,7 @@ def get_output_template(obj):
                     "name": i["name"],
                     "path": i["path"],
                     "s3": {
-                        "bucket": "mlpipeline",
+                        "bucket": obj.metadata.annotations.get(TEKTON_BUCKET_ARTIFACT_ANNOTATION_KEY, "mlpipeline"),
                         "key": "%s/%s.tgz" % (s3_key_prefix,
                                               i["name"].replace(artifact_prefix, ''))
                     }
