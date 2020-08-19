@@ -156,7 +156,7 @@ export BASE_DIR=<path to a base directory>
 export KF_DIR=${BASE_DIR}/${KF_NAME}
 
 # Set the configuration file to use, such as the file specified below:
-export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_ibm_tekton.v1.1.0.yaml"
+export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_ibm_k8s_single_user.yaml"
 
 # Generate and deploy Kubeflow:
 mkdir -p ${KF_DIR}
