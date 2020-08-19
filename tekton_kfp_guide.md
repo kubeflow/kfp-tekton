@@ -2,7 +2,7 @@
 
 ## Prequisites
 
-A Kubernetes cluster that has least 8 vCPU and 16 GB memory
+A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory
 
 1. Using IBM Cloud:
 
