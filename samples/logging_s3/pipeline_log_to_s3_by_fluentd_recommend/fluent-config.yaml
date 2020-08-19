@@ -43,11 +43,11 @@ data:
 
     <match tekton-pipelines>
       @type s3
-      aws_key_id "#{ENV['AWS_KEY_ID']}"             # variabel of aws_key_id, e.g: admin123
-      aws_sec_key "#{ENV['AWS_SEC_KEY']}"           # variabel of aws_sec_key, e.g: admin123
-      s3_endpoint "#{ENV['S3_ENDPOINT']}"           # variabel of s3_endpoint, if you are using minio, e.g: http://9.21.53.162:31846/
+      aws_key_id "#{ENV['AWS_KEY_ID']}"             # variable of aws_key_id, e.g: admin123
+      aws_sec_key "#{ENV['AWS_SEC_KEY']}"           # variable of aws_sec_key, e.g: admin123
+      s3_endpoint "#{ENV['S3_ENDPOINT']}"           # variable of s3_endpoint, if you are using minio, e.g: http://9.21.53.162:31846/
       force_path_style "#{ENV['FORCE_PATH_STYLE']}" # This prevents AWS SDK from breaking endpoint URL, set true if you are using minio
-      s3_bucket "#{ENV['S3_BUCKET']}"               # variabel of s3_bucket, e.g: mlpipeline
+      s3_bucket "#{ENV['S3_BUCKET']}"               # variable of s3_bucket, e.g: mlpipeline
       s3_region "#{ENV['S3_REGION']}"               # variable of s3_region, e.g: us-east-1 or test_region
       path artifact/${$.pipelinerun}/${$.pipelinetask}/${$.kubernetes.pod_name}
       # s3_object_key_format %{path}%{time_slice}_%{index}.log
