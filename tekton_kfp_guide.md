@@ -14,9 +14,9 @@ A Kubernetes cluster that has least 8 vCPU and 16 GB memory
 
     * Accessing the IBM Cloud cluster
 
-    If you do not have access to a cluster created with IBM Cloud Kubernetes Service, follow the [Create an IBM Cloud cluster](/docs/ibm/create-cluster) guide to create a cluster.
+    If you do not have access to a cluster created with IBM Cloud Kubernetes Service, follow the [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster) guide to create a cluster.
 
-    Run following command to switch the Kubernetes context and access the cluster.
+    Run the following command to switch the Kubernetes context and access the cluster.
 
     ```shell
     ibmcloud ks cluster config --cluster <cluster_name>
@@ -30,9 +30,9 @@ A Kubernetes cluster that has least 8 vCPU and 16 GB memory
 
 ## IBM Cloud Block Storage Setup
 
-**Note**: This section is only required when the worker nodes provider `WORKER_NODE_PROVIDER` is set to `classic`. For other infrastructures, IBM Cloud Block Storage is already set up as the cluster's default storage class.
+**Note**: This section is only required when the worker node provider `WORKER_NODE_PROVIDER` is set to `classic`. For other infrastructures, IBM Cloud Block Storage is already set up as the cluster's default storage class.
 
-When using the `classic` worker nodes provider of IBM Cloud Kubernetes cluster, by default, it uses [IBM Cloud File Storage](https://www.ibm.com/cloud/file-storage) based on NFS as the default storage class. File Storage is designed to run RWX (read-write multiple nodes) workloads with proper security built around it. Therefore, File Storage [does not allow `fsGroup` securityContext](https://cloud.ibm.com/docs/containers?topic=containers-security#container) which is needed for DEX and Kubeflow Jupyter Server.
+When using the `classic` worker node provider of IBM Cloud Kubernetes cluster, by default, it uses [IBM Cloud File Storage](https://www.ibm.com/cloud/file-storage) based on NFS as the default storage class. File Storage is designed to run RWX (read-write multiple nodes) workloads with proper security built around it. Therefore, File Storage [does not allow `fsGroup` securityContext](https://cloud.ibm.com/docs/containers?topic=containers-security#container) which is needed for DEX and Kubeflow Jupyter Server.
 
 [IBM Cloud Block Storage](https://www.ibm.com/cloud/block-storage) provides a fast way to store data and
 satisfy many of the Kubeflow persistent volume requirements such as `fsGroup` out of the box and optimized RWO (read-write single node) which is used on all Kubeflow's persistent volume claim. 
@@ -130,7 +130,7 @@ Run the following commands to set up and deploy Kubeflow.
   [Kubeflow releases 
   page](https://github.com/kubeflow/kfctl/releases/tag/v1.1.0).
 
-1. Unpack the tar ball
+1. Unpack the tarball
       ```
       tar -xvf kfctl_v1.1.0_<platform>.tar.gz
       ```
@@ -177,7 +177,7 @@ kfctl apply -V -f ${CONFIG_URI}
 * **${KF_DIR}** - The full path to your Kubeflow application directory.
 
 ### Multi-user, auth-enabled
-Run the following commands to deploy Kubeflow with GitHub OAuth application as authentication provider by dex. To support multi-users with authentication enabled, this guide uses [dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://developer.github.com/apps/building-oauth-apps/). Before continue, refer to the guide [Creating an OAuth App](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/) for steps to create an OAuth app on GitHub.com.
+Run the following commands to deploy Kubeflow with GitHub OAuth application as the authentication provider by dex. To support multi-users with authentication enabled, this guide uses [dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://docs.github.com/developers/apps/building-oauth-apps). Before continue, refer to the guide [Creating an OAuth App](https://docs.github.com/developers/apps/creating-an-oauth-app) for steps to create an OAuth app on GitHub.com.
 
 The scenario is a GitHub organization owner can authorize its organization members to access a deployed kubeflow. A member of this GitHub organization will be redirected to a page to grant access to the GitHub profile by Kubeflow.
 
@@ -312,8 +312,8 @@ While the change is being applied, you can watch the service until below command
 
      kubectl get -w -n istio-system svc/istio-ingressgateway
 
-The external IP should be accessible by visiting http://<EXTERNAL-IP>. Note that above installation instructions do not create any protection for the external endpoint so it will be accessible to anyone without any authentication. 
+The external IP should be accessible by visiting http://<EXTERNAL-IP>. Note that the above installation instructions do not create any protection for the external endpoint so it will be accessible to anyone without any authentication. 
 
 ## Additional information
 
-You can find general information about Kubeflow configuration in the guide to [configuring Kubeflow with kfctl and kustomize](/docs/other-guides/kustomize/).
+You can find general information about Kubeflow configuration in the guide to [configuring Kubeflow with kfctl and kustomize](https://www.kubeflow.org/docs/other-guides/kustomize/).
