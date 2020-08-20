@@ -32,7 +32,7 @@ Note: You can get an all-in-one installation of Kubeflow on IBM Cloud or Minikub
     kubectl get pods -n kubeflow
     ```
 
-    Now go ahead and access the pipeline in the Kubeflow dashboard. It should be accessible from the istio-ingressgateway which is the
+    Now go ahead and access the Pipelines in the Kubeflow dashboard. It should be accessible from the istio-ingressgateway which is the
     `<public_ip>:31380`
 
     Once you have Kubeflow Pipelines running with Tekton, then install the [KFP-Tekton SDK](/sdk/README.md) and start building your
