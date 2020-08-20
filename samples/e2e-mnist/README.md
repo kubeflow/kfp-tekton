@@ -12,17 +12,7 @@ To run this pipeline, make sure your cluster has at least 16 cpu and 32GB in tot
     ```shell
     pip install jupyter numpy Pillow
     ```
-- Make sure the default storageclass supports ReadWriteMany in order to run distributed training. e.g. For IBM Cloud, you can run the following commands.
-    ```shell
-    new_storageclass=ibmc-file-gold
-    old_storageclass=ibmc-block-gold
-    kubectl patch storageclass ${new_storageclass} -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-    kubectl patch storageclass ${old_storageclass} -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
-    
-    # Check is the default storageclass became the new_storageclass
-    kubectl get storageclass | grep "(default)"
-    ```
-
+- Make sure the Kubernetes Cluster has a [storageclass](https://kubernetes.io/docs/concepts/storage/storage-classes/) that supports ReadWriteMany in order to run distributed training.
 ## Instructions
 
 Once you have completed all the prerequisites for this example, then you can start the Jupyter server in this directory and click on the `mnist.ipynb` notebook. The notebook has step by step instructions for running the KFP Tekton pipeline.
