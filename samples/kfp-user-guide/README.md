@@ -260,7 +260,7 @@ run = client.run_pipeline(experiment.id, pipeline_id='925415d5-18e9-4e08-b57f-3b
 
 ### 3. Run Pipelines Using the `kfp` Bash Command Line Tool
 
-The kfp-tekton SDK also comes with a bash command line tool for running Kubeflow pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster. Please be aware that the `kfp` CLI only works for single user mode.
+The kfp-tekton SDK also comes with a bash command line tool for running Kubeflow Pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster. Please be aware that currently the `kfp` CLI only works for single user mode.
 ```shell
 kubectl get pods -n kubeflow | grep ml-pipeline
 # ml-pipeline-fc87669c7-f98x4                                      1/1     Running   0          8d
