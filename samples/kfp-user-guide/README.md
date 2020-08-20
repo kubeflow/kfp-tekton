@@ -91,7 +91,7 @@ client = TektonClient(host=host)
 
 - For multi tenant:
 1. `KUBEFLOW_PUBLIC_ENDPOINT_URL` - Kubeflow public endpoint URL. 
-2. `SESSION_COOKIE` - A session cookie starts with authservice_session=. You can obtain it from your browser after authenticated from Kubeflow UI. Notice that this session cookie expires in 24 hours, so you need to obtain it again after cookie expired.
+2. `SESSION_COOKIE` - A session cookie starts with authservice_session=. You can obtain it from your browser after authenticating with Kubeflow UI. Notice that this session cookie expires in 24 hours, so you need to obtain it again after cookie expired.
 3. `KUBEFLOW_PROFILE_NAME` - Your Kubeflow profile/namespace name
 ```python
 from kfp_tekton import TektonClient
