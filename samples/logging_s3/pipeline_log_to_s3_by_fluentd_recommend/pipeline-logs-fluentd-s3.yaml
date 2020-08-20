@@ -56,7 +56,7 @@ spec:
       serviceAccountName: fluentd
       containers:
       - name: fluentd-s3
-        image: fenglixa/pipeline-logs-s3:latest
+        image: aipipeline/pipeline-logs-s3:latest
         imagePullPolicy: Always
         env:
         - name: AWS_KEY_ID
