@@ -99,15 +99,11 @@ class TektonCompiler(Compiler):
   """
 
   def __init__(self, **kwargs):
-    # Intentionally set self.enable_artifacts to None because when _create_pipeline_workflow
-    # is called directly (e.g. in the case of there being no pipeline decorator), then
-    # self.enable_artifacts is not set
-    #
     # Input and output artifacts are hash maps for metadata tracking.
-    self.enable_artifacts = None
-    self.enable_s3_logs = None
+    # artifact_items is the artifact dependency map
     self.input_artifacts = {}
     self.output_artifacts = {}
+    self.artifact_items = {}
     super().__init__(**kwargs)
 
   def _get_loop_task(self, task: Dict, op_name_to_for_loop_op):
@@ -231,8 +227,7 @@ class TektonCompiler(Compiler):
 
     op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op,
                                                                   self.output_artifacts,
-                                                                  self.enable_artifacts,
-                                                                  self.enable_s3_logs)])
+                                                                  self.artifact_items)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise
@@ -433,15 +428,14 @@ class TektonCompiler(Compiler):
             if tp['name'] == pp.full_name:
               tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
               # Create input artifact tracking annotation
-              if self.enable_artifacts:
-                input_annotation = self.input_artifacts.get(task['name'], [])
-                input_annotation.append(
-                    {
-                        'name': tp['name'],
-                        'parent_task': pp.op_name
-                    }
-                )
-                self.input_artifacts[task['name']] = input_annotation
+              input_annotation = self.input_artifacts.get(task['name'], [])
+              input_annotation.append(
+                  {
+                      'name': tp['name'],
+                      'parent_task': pp.op_name
+                  }
+              )
+              self.input_artifacts[task['name']] = input_annotation
               break
 
     # add retries params
@@ -493,6 +487,7 @@ class TektonCompiler(Compiler):
           'tekton.dev/artifact_bucket': DEFAULT_ARTIFACT_BUCKET,
           'tekton.dev/artifact_endpoint': DEFAULT_ARTIFACT_ENDPOINT,
           'tekton.dev/artifact_endpoint_scheme': DEFAULT_ARTIFACT_ENDPOINT_SCHEME,
+          'tekton.dev/artifact_items': json.dumps(self.artifact_items, sort_keys=True),
           'sidecar.istio.io/inject': 'false'  # disable Istio inject since Tekton cannot run with Istio sidecar
         }
       },
@@ -696,9 +691,7 @@ class TektonCompiler(Compiler):
               pipeline_func,
               package_path,
               type_check=True,
-              pipeline_conf: dsl.PipelineConf = None,
-              enable_artifacts=True,
-              enable_s3_logs=False):
+              pipeline_conf: dsl.PipelineConf = None):
     """Compile the given pipeline function into workflow yaml.
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.
@@ -707,11 +700,7 @@ class TektonCompiler(Compiler):
       pipeline_conf: PipelineConf instance. Can specify op transforms,
                      image pull secrets and other pipeline-level configuration options.
                      Overrides any configuration that may be set by the pipeline.
-      enable_artifacts: enable artifacts, requires Kubeflow Pipelines with Minio.
-      enable_s3_logs: enable pipelinerun logs archive to S3 storage
     """
-    self.enable_artifacts = enable_artifacts
-    self.enable_s3_logs = enable_s3_logs
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod

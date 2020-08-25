@@ -23,6 +23,9 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"component-with-inline-input-artifact": [], "component-with-input-artifact":
+      [], "component-with-input-artifact-2": [], "component-with-input-artifact-3":
+      []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
   name: pipeline-with-artifact-input-raw-argument-value

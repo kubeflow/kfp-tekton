@@ -29,6 +29,8 @@ const (
 	DefaultPipelineRunnerServiceAccount string = "DefaultPipelineRunnerServiceAccount"
 	KubeflowUserIDHeader                string = "KUBEFLOW_USERID_HEADER"
 	KubeflowUserIDPrefix                string = "KUBEFLOW_USERID_PREFIX"
+	EnableLogging                       string = "ENABLE_LOGGING"
+	EnableArtifact                      string = "ENABLE_ARTIFACT"
 )
 
 func GetStringConfig(configName string) string {
@@ -73,6 +75,14 @@ func GetDurationConfig(configName string) time.Duration {
 
 func IsMultiUserMode() bool {
 	return GetBoolConfigWithDefault(MultiUserMode, false)
+}
+
+func IsEnableLogging() bool {
+	return GetBoolConfigWithDefault(EnableLogging, false)
+}
+
+func IsEnableArtifact() bool {
+	return GetBoolConfigWithDefault(EnableArtifact, true)
 }
 
 func GetPodNamespace() string {

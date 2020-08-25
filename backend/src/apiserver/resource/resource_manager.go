@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strconv"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
@@ -356,6 +358,11 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 
 	workflow.Name = workflow.Name + "-" + runId[0:5]
 
+	err = r.tektonPreprocessing(workflow)
+	if err != nil {
+		return nil, util.NewInternalServerError(err, "Tekton Preprocessing Failed")
+	}
+
 	// Marking auto-added artifacts as optional. Otherwise most older workflows will start failing after upgrade to Argo 2.3.
 	// TODO: Fix the components to explicitly declare the artifacts they really output.
 
@@ -606,6 +613,11 @@ func (r *ResourceManager) CreateJob(apiJob *api.Job) (*model.Job, error) {
 			},
 			NoCatchup: util.BoolPointer(apiJob.NoCatchup),
 		},
+	}
+
+	err = r.tektonPreprocessing(workflow)
+	if err != nil {
+		return nil, util.NewInternalServerError(err, "Tekton Preprocessing Failed")
 	}
 
 	// Marking auto-added artifacts as optional. Otherwise most older workflows will start failing after upgrade to Argo 2.3.
@@ -1140,4 +1152,161 @@ func (r *ResourceManager) getNamespaceFromExperiment(references []*api.ResourceR
 		}
 	}
 	return namespace, nil
+}
+
+// tektonPreprocessing injects artifacts and logging steps if it's enabled
+func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
+	artifactItems, exists := workflow.ObjectMeta.Annotations[common.ArtifactItemsAnnotation]
+
+	// Only inject artifacts if the necessary annotations are provided.
+	if exists {
+		var artifactItemsJSON map[string][][]interface{}
+		if err := json.Unmarshal([]byte(artifactItems), &artifactItemsJSON); err != nil {
+			panic(err)
+		}
+		for _, task := range workflow.Spec.PipelineSpec.Tasks {
+			artifacts, hasArtifacts := artifactItemsJSON[task.Name]
+			logging := common.IsEnableLogging()
+			enableArtifact := common.IsEnableArtifact()
+			if (hasArtifacts && len(artifacts) > 0 && enableArtifact) || logging {
+				// Need to represent as Raw String Literals
+				artifactScript := "#!/usr/bin/env sh\n" +
+					"push_artifact() {\n" +
+					"    tar -cvzf $1.tgz $2\n" +
+					"    mc cp $1.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/$1.tgz\n" +
+					"}\n" +
+					"mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT} $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY\n"
+				if logging {
+					loggingScript := "cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log && " +
+						"push_artifact main-log step-main.log\n"
+					artifactScript += loggingScript
+
+					// Logging volumes
+					if task.TaskSpec.Volumes == nil {
+						task.TaskSpec.Volumes = []corev1.Volume{}
+					}
+					loggingVolumes := []corev1.Volume{
+						{
+							Name: "varlog",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/log",
+								},
+							},
+						},
+						{
+							Name: "varlibdockercontainers",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/docker/containers",
+								},
+							},
+						},
+						{
+							Name: "varlibkubeletpods",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/pods",
+								},
+							},
+						},
+						{
+							Name: "varlogpods",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/log/pods",
+								},
+							},
+						},
+					}
+					task.TaskSpec.Volumes = append(task.TaskSpec.Volumes, loggingVolumes...)
+
+					// Logging volumeMounts
+					if task.TaskSpec.StepTemplate == nil {
+						task.TaskSpec.StepTemplate = &corev1.Container{}
+					}
+					if task.TaskSpec.StepTemplate.VolumeMounts == nil {
+						task.TaskSpec.StepTemplate.VolumeMounts = []corev1.VolumeMount{}
+					}
+					loggingVolumeMounts := []corev1.VolumeMount{
+						{
+							Name:      "varlog",
+							MountPath: "/var/log",
+						},
+						{
+							Name:      "varlibdockercontainers",
+							MountPath: "/var/lib/docker/containers",
+							ReadOnly:  true,
+						},
+						{
+							Name:      "varlibkubeletpods",
+							MountPath: "/var/lib/kubelet/pods",
+							ReadOnly:  true,
+						},
+						{
+							Name:      "varlogpods",
+							MountPath: "/var/log/pods",
+							ReadOnly:  true,
+						},
+					}
+					task.TaskSpec.StepTemplate.VolumeMounts = append(task.TaskSpec.StepTemplate.VolumeMounts, loggingVolumeMounts...)
+				}
+
+				// Upload Artifacts if the artifact is enabled and the annoations are present
+				if hasArtifacts && len(artifacts) > 0 && enableArtifact {
+					for _, artifact := range artifacts {
+						if len(artifact) == 2 {
+							artifactScript += fmt.Sprintf("push_artifact %s %s\n", artifact[0], artifact[1])
+						}
+					}
+				}
+
+				// Define post-processing step
+				step := workflowapi.Step{Container: corev1.Container{
+					Name:  "copy-artifacts",
+					Image: "minio/mc",
+					Env: []corev1.EnvVar{
+						r.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
+						r.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
+						r.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
+						r.getObjectFieldSelector("TASKRUN", "metadata.labels['tekton.dev/taskRun']"),
+						r.getObjectFieldSelector("PIPELINETASK", "metadata.labels['tekton.dev/pipelineTask']"),
+						r.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
+						r.getObjectFieldSelector("NAMESPACE", "metadata.namespace"),
+						r.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
+						r.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
+					},
+				},
+					Script: artifactScript,
+				}
+				task.TaskSpec.Steps = append(task.TaskSpec.Steps, step)
+			}
+		}
+	}
+	return nil
+}
+
+func (r *ResourceManager) getObjectFieldSelector(name string, fieldPath string) corev1.EnvVar {
+	return corev1.EnvVar{
+		Name: name,
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{
+				FieldPath: fieldPath,
+			},
+		},
+	}
+}
+
+func (r *ResourceManager) getSecretKeySelector(name string, objectName string, objectKey string) corev1.EnvVar {
+	return corev1.EnvVar{
+		Name: name,
+		ValueFrom: &corev1.EnvVarSource{
+			SecretKeyRef: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: objectName,
+				},
+				Key: objectKey,
+			},
+		},
+	}
 }

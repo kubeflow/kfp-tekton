@@ -22,6 +22,8 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"my-in-coop1": [], "my-in-coop2": [], "my-out-cop":
+      []}'
     tekton.dev/input_artifacts: '{"my-in-coop1": [{"name": "loop-item-param-subvar-A_a",
       "parent_task": null}], "my-in-coop2": [{"name": "loop-item-param-subvar-B_b",
       "parent_task": null}]}'

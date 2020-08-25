@@ -41,6 +41,10 @@ const (
 	GoogleIAPUserIdentityPrefix string = "accounts.google.com:"
 )
 
+const (
+	ArtifactItemsAnnotation string = "tekton.dev/artifact_items"
+)
+
 func ToModelResourceType(apiType api.ResourceType) (ResourceType, error) {
 	switch apiType {
 	case api.ResourceType_EXPERIMENT:
