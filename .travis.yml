@@ -18,31 +18,27 @@ matrix:
       language: python
       python: "3.5"
       env: TOXENV=py35
-      install:
+      install: &0
         - python3 -m pip install -e sdk/python
-      script:
+        - python3 -m pip install pytest
+      script: &1
         - make unit_test
     - name: "Unit tests, Python 3.6"
       language: python
       python: "3.6"
       env: TOXENV=py36
-      install:
-        - python3 -m pip install -e sdk/python
-      script:
-        - make unit_test
+      install: *0
+      script: *1
     - name: "Unit tests, Python 3.7"
       language: python
       python: "3.7"
       env: TOXENV=py37
-      install:
-        - python3 -m pip install -e sdk/python
-      script:
-        - make unit_test
+      install: *0
+      script: *1
     - name: "Progress report on compiling KFP DSL test scripts"
       language: python
       python: "3.7"
-      install:
-        - python3 -m pip install -e sdk/python
+      install: *0
       script:
         - make report
     - name: "Lint Python code with flake8"

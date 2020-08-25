@@ -367,6 +367,8 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
                     'tar -cvzf %s.tgz %s\n' % (artifact_name, artifact['path']) + \
                     'mc cp %s.tgz storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact_name, bucket, artifact_name)
                 if artifact['path'].rsplit("/", 1)[0] not in mounted_artifact_paths:
+                    if artifact['path'].rsplit("/", 1)[0] == "":
+                        raise ValueError('Undefined volume path or "/" path artifacts are not allowed.')
                     volume_mount_step_template.append({
                         'name': sanitize_k8s_name(artifact['name']), 'mountPath': artifact['path'].rsplit("/", 1)[0]
                     })
