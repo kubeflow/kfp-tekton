@@ -348,6 +348,12 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	workflow.SetLabels(util.LabelKeyWorkflowRunId, runId)
 	// Add run name annotation to the workflow so that it can be logged by the Metadata Writer.
 	workflow.SetAnnotations(util.AnnotationKeyRunName, apiRun.Name)
+
+	// Tekton: Update artifact cred using the KFP Tekton configmap
+	workflow.SetAnnotations(common.ArtifactBucketAnnotation, common.GetArtifactBucket())
+	workflow.SetAnnotations(common.ArtifactEndpointAnnotation, common.GetArtifactEndpoint())
+	workflow.SetAnnotations(common.ArtifactEndpointSchemeAnnotation, common.GetArtifactEndpointScheme())
+
 	// Replace {{workflow.uid}} with runId
 	err = workflow.ReplaceUID(runId)
 	if err != nil {
@@ -607,6 +613,11 @@ func (r *ResourceManager) CreateJob(apiJob *api.Job) (*model.Job, error) {
 			NoCatchup: util.BoolPointer(apiJob.NoCatchup),
 		},
 	}
+
+	// Tekton: Update artifact cred using the KFP Tekton configmap
+	workflow.SetAnnotations(common.ArtifactBucketAnnotation, common.GetArtifactBucket())
+	workflow.SetAnnotations(common.ArtifactEndpointAnnotation, common.GetArtifactEndpoint())
+	workflow.SetAnnotations(common.ArtifactEndpointSchemeAnnotation, common.GetArtifactEndpointScheme())
 
 	// Marking auto-added artifacts as optional. Otherwise most older workflows will start failing after upgrade to Argo 2.3.
 
