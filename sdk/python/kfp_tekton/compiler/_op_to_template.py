@@ -559,7 +559,7 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
 
     # volumes
     if processed_op.volumes:
-        template['spec']['volumes'] = template['spec'].get('volume', []) + [convert_k8s_obj_to_json(volume)
+        template['spec']['volumes'] = template['spec'].get('volumes', []) + [convert_k8s_obj_to_json(volume)
                                                                             for volume in processed_op.volumes]
         template['spec']['volumes'].sort(key=lambda x: x['name'])
 
