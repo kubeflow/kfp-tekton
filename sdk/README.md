@@ -95,6 +95,7 @@ from source by cloning the repository [https://github.com/kubeflow/kfp-tekton](h
 4. Run the compiler tests (optional):
 
    ```
+   pip install pytest
    make test
    ```
 
