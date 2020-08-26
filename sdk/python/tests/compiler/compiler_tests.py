@@ -22,6 +22,7 @@ import tempfile
 import textwrap
 import unittest
 import yaml
+import pytest
 
 from os import environ as env
 
@@ -142,6 +143,21 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.volume import volume_pipeline
     self._test_pipeline_workflow(volume_pipeline, 'volume.yaml')
+
+  def test_old_volume_error(self):
+    """
+    Test compiling a deprecated volume workflow.
+    """
+    from .testdata.old_kfp_volume import auto_generated_pipeline
+    with pytest.raises(ValueError):
+      self._test_pipeline_workflow(auto_generated_pipeline, 'old_kfp_volume.yaml')
+
+  def test_volume_workflow_with_logging(self):
+    """
+    Test compiling a volume workflow.
+    """
+    from .testdata.volume import volume_pipeline
+    self._test_pipeline_workflow(volume_pipeline, 'volume_logging.yaml', enable_s3_logs=True)
 
   def test_timeout_workflow(self):
     """

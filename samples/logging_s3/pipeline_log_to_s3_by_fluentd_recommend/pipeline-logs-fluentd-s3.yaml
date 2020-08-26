@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluentd
+  namespace: kube-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: fluentd
+  namespace: kube-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: fluentd
+roleRef:
+  kind: ClusterRole
+  name: fluentd
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: fluentd
+  namespace: kube-system
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-s3
+  namespace: kube-system
+  labels:
+    k8s-app: fluentd-s3
+spec:
+  selector:
+    matchLabels:
+      k8s-app: fluentd-s3
+  template:
+    metadata:
+      labels:
+        k8s-app: fluentd-s3
+    spec:
+      serviceAccount: fluentd
+      serviceAccountName: fluentd
+      containers:
+      - name: fluentd-s3
+        image: aipipeline/pipeline-logs-s3:latest
+        imagePullPolicy: Always
+        env:
+        - name: AWS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: pipeline-logs-s3-secret
+              key: accesskey
+        - name: AWS_SEC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: pipeline-logs-s3-secret
+              key: secretkey
+        - name: S3_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: pipeline-logs-s3-config
+              key: S3_ENDPOINT
+        - name: FORCE_PATH_STYLE
+          valueFrom:
+            configMapKeyRef:
+              name: pipeline-logs-s3-config
+              key: FORCE_PATH_STYLE
+        - name: S3_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: pipeline-logs-s3-config
+              key: S3_BUCKET
+        - name: S3_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: pipeline-logs-s3-config
+              key: S3_REGION
+        args:
+          - --use-v1-config
+          - -qq
+          # --use-v1-config allows using env vars in config file
+          # -qq sets fluentd log level to ERROR, -v: debug, -vv: trace
+          # - --log-rotate-age 10
+          # - --log-rotate-size 10485760
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            cpu: 100m
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: varlibkubeletpods
+          mountPath: /var/lib/kubelet/pods
+          readOnly: true
+        - name: varlogpods
+          mountPath: /var/log/pods
+          readOnly: true
+        - name: config-volume
+          mountPath: /etc/fluent/config.d
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: varlibkubeletpods
+        hostPath:
+          path: /var/lib/kubelet/pods
+      - name: varlogpods
+        hostPath:
+          path: /var/log/pods
+      - name: config-volume
+        configMap:
+          name: fluent-config

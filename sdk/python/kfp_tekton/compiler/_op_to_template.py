@@ -292,6 +292,8 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
             else:
                 artifact_items.append([artifact_name, artifact['path']])
                 if artifact['path'].rsplit("/", 1)[0] not in mounted_artifact_paths:
+                    if artifact['path'].rsplit("/", 1)[0] == "":
+                        raise ValueError('Undefined volume path or "/" path artifacts are not allowed.')
                     volume_mount_step_template.append({
                         'name': sanitize_k8s_name(artifact['name']), 'mountPath': artifact['path'].rsplit("/", 1)[0]
                     })
@@ -480,7 +482,7 @@ def _op_to_template(op: BaseOp,
 
     # volumes
     if processed_op.volumes:
-        template['spec']['volumes'] = template['spec'].get('volume', []) + [convert_k8s_obj_to_json(volume)
+        template['spec']['volumes'] = template['spec'].get('volumes', []) + [convert_k8s_obj_to_json(volume)
                                                                             for volume in processed_op.volumes]
         template['spec']['volumes'].sort(key=lambda x: x['name'])
 

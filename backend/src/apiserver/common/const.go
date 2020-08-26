@@ -42,7 +42,16 @@ const (
 )
 
 const (
-	ArtifactItemsAnnotation string = "tekton.dev/artifact_items"
+	DefaultArtifactBucket         string = "mlpipeline"
+	DefaultArtifactEndpoint       string = "minio-service.kubeflow:9000"
+	DefaultArtifactEndpointScheme string = "http://"
+)
+
+const (
+	ArtifactItemsAnnotation          string = "tekton.dev/artifact_items"
+	ArtifactBucketAnnotation         string = "tekton.dev/artifact_bucket"
+	ArtifactEndpointAnnotation       string = "tekton.dev/artifact_endpoint"
+	ArtifactEndpointSchemeAnnotation string = "tekton.dev/artifact_endpoint_scheme"
 )
 
 func ToModelResourceType(apiType api.ResourceType) (ResourceType, error) {

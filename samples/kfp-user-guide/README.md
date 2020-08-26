@@ -79,13 +79,37 @@ Now, we should able to see the pipeline is being uploaded to the **Pipelines** p
 
 ### 2. Upload Pipelines Using the `kfp_tekton.TektonClient` in Python
 
-To upload the pipelines using Python, run the below code block inside the Python session. The below code block shows how to upload different versions of the pipeline using the Python client.
+To begin, we first need to declare our TektonClient:
+- For single user:
 ```python
-import kfp_tekton
-import os
-
+from kfp_tekton import TektonClient
 # **Important**: Replace None to the KFP endpoint if the python session is not running on the Kubeflow cluster.
 host = None
+KUBEFLOW_PROFILE_NAME = None
+client = TektonClient(host=host)
+```
+
+- For multi tenant:
+1. `KUBEFLOW_PUBLIC_ENDPOINT_URL` - Kubeflow public endpoint URL. 
+2. `SESSION_COOKIE` - A session cookie starts with authservice_session=. You can obtain it from your browser after authenticating with Kubeflow UI. Notice that this session cookie expires in 24 hours, so you need to obtain it again after cookie expired.
+3. `KUBEFLOW_PROFILE_NAME` - Your Kubeflow profile/namespace name
+```python
+from kfp_tekton import TektonClient
+
+KUBEFLOW_PUBLIC_ENDPOINT_URL = 'http://<Kubeflow_public_endpoint_URL>'
+# this session cookie looks like "authservice_session=xxxxxxx"
+SESSION_COOKIE = 'authservice_session=xxxxxxx'
+KUBEFLOW_PROFILE_NAME = '<your-profile-name>'
+
+client = TektonClient(
+    host=f'{KUBEFLOW_PUBLIC_ENDPOINT_URL}/pipeline',
+    cookies=SESSION_COOKIE
+)
+```
+
+To upload the pipelines using Python, run the below code block inside the Python session. The below code block shows how to upload different versions of the pipeline using the Python client.
+```python
+import os
 
 # Initial version of the compiled pipeline
 pipeline_file_path = 'echo_pipeline.yaml'
@@ -96,7 +120,6 @@ pipeline_version_file_path = 'echo_pipeline.yaml'
 pipeline_version_name = 'new_echo_pipeline'
 
 # Upload initial version of the pipeline
-client = kfp_tekton.TektonClient(host)
 pipeline_file = os.path.join(pipeline_file_path)
 pipeline = client.pipeline_uploads.upload_pipeline(pipeline_file, name=pipeline_name)
 
@@ -110,7 +133,7 @@ pipeline_version = client.pipeline_uploads.upload_pipeline_version(pipeline_vers
 
 ### 3. Upload Pipelines Using the `kfp` Bash Command Line Tool
 
-The kfp-tekton SDK also comes with a bash command line tool for uploading Kubeflow pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster.
+The kfp-tekton SDK also comes with a bash command line tool for uploading Kubeflow pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster. Please be aware that the `kfp` CLI only works for single user mode.
 ```shell
 kubectl get pods -n kubeflow | grep ml-pipeline
 # ml-pipeline-fc87669c7-f98x4                                      1/1     Running   0          8d
@@ -157,7 +180,7 @@ Once we have the pipeline uploaded, we can simply execute the pipeline by clicki
 
 ![pipeline-page](images/pipeline-page.png)
 
-Next, click **Start** to execute the pipeline.
+Next, pick an experiment that this run will be associated with and click **Start** to execute the pipeline. **Picking an experiment is required for multi-tenant mode.**
 
 ![run-page](images/run-page.png)
 
@@ -167,6 +190,35 @@ Now, the pipeline is running and we can click on the pipeline run to view the ex
 
 
 ### 2. Run Pipelines Using the `kfp_tekton.TektonClient` in Python
+
+To begin, we first need to declare our TektonClient:
+- For single user:
+```python
+from kfp_tekton import TektonClient
+# **Important**: Replace None to the KFP endpoint if the python session is not running on the Kubeflow cluster.
+host = None
+KUBEFLOW_PROFILE_NAME = None
+client = TektonClient(host=host)
+```
+
+- For multi tenant:
+1. `KUBEFLOW_PUBLIC_ENDPOINT_URL` - Kubeflow public endpoint URL. 
+2. `SESSION_COOKIE` - A session cookie starts with authservice_session=. You can obtain it from your browser after authenticated from Kubeflow UI. Notice that this session cookie expires in 24 hours, so you need to obtain it again after cookie expired.
+3. `KUBEFLOW_PROFILE_NAME` - Your Kubeflow profile/namespace name
+```python
+from kfp_tekton import TektonClient
+
+KUBEFLOW_PUBLIC_ENDPOINT_URL = 'http://<Kubeflow_public_endpoint_URL>'
+# this session cookie looks like "authservice_session=xxxxxxx"
+SESSION_COOKIE = 'authservice_session=xxxxxxx'
+KUBEFLOW_PROFILE_NAME = '<your-profile-name>'
+
+client = TektonClient(
+    host=f'{KUBEFLOW_PUBLIC_ENDPOINT_URL}/pipeline',
+    cookies=SESSION_COOKIE
+)
+```
+
 
 The `TektonClient` can run pipelines using one of the below sources:
 
@@ -179,39 +231,25 @@ The `create_run_from_pipeline_func` takes the DSL source code to compile and run
 uploading it to the pipeline list. This method is recommended if we are doing some quick experiments without version control.
 
 ```python
-# **Important**: Replace None to the KFP endpoint if the python session is not running on the Kubeflow cluster.
-host = None
-
 # We can overwrite the pipeline default parameters by providing a dictionary of key-value arguments.
 # If we don't want to overwrite the default parameters, then define the arguments as an empty dictionary.
 arguments={}
 
-from kfp_tekton import TektonClient
-TektonClient(host=host).create_run_from_pipeline_func(echo_pipeline, arguments=arguments)
+client.create_run_from_pipeline_func(echo_pipeline, arguments=arguments, namespace=KUBEFLOW_PROFILE_NAME)
 ```
 
 Alternatively, we can also run the pipeline directly using a pre-compiled file. 
 ```python
-from kfp_tekton import TektonClient
-# **Important**: Replace None to the KFP endpoint if the python session is not running on the Kubeflow cluster.
-host = None
-client = TektonClient(host=host)
-
 EXPERIMENT_NAME = 'Demo Experiments'
-experiment = client.create_experiment(name=EXPERIMENT_NAME)
+experiment = client.create_experiment(name=EXPERIMENT_NAME, namespace=KUBEFLOW_PROFILE_NAME)
 run = client.run_pipeline(experiment.id, 'echo-pipeline', 'echo_pipeline.yaml')
 ``` 
 
 Similarly, we can also run the pipeline from the list of uploaded pipelines using the same `run_pipeline` function. 
 
 ```python
-from kfp_tekton import TektonClient
-# **Important**: Replace None to the KFP endpoint if the python session is not running on the Kubeflow cluster.
-host = None
-client = TektonClient(host=host)
-
 EXPERIMENT_NAME = 'Demo Experiments'
-experiment = client.create_experiment(name=EXPERIMENT_NAME)
+experiment = client.create_experiment(name=EXPERIMENT_NAME, namespace=KUBEFLOW_PROFILE_NAME)
 
 # Find the pipeline ID that we want to use.
 client.list_pipelines()
@@ -222,7 +260,7 @@ run = client.run_pipeline(experiment.id, pipeline_id='925415d5-18e9-4e08-b57f-3b
 
 ### 3. Run Pipelines Using the `kfp` Bash Command Line Tool
 
-The kfp-tekton SDK also comes with a bash command line tool for running Kubeflow pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster.
+The kfp-tekton SDK also comes with a bash command line tool for running Kubeflow Pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster. Please be aware that currently the `kfp` CLI only works for single user mode.
 ```shell
 kubectl get pods -n kubeflow | grep ml-pipeline
 # ml-pipeline-fc87669c7-f98x4                                      1/1     Running   0          8d

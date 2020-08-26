@@ -350,6 +350,7 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	workflow.SetLabels(util.LabelKeyWorkflowRunId, runId)
 	// Add run name annotation to the workflow so that it can be logged by the Metadata Writer.
 	workflow.SetAnnotations(util.AnnotationKeyRunName, apiRun.Name)
+
 	// Replace {{workflow.uid}} with runId
 	err = workflow.ReplaceUID(runId)
 	if err != nil {
@@ -1156,6 +1157,12 @@ func (r *ResourceManager) getNamespaceFromExperiment(references []*api.ResourceR
 
 // tektonPreprocessing injects artifacts and logging steps if it's enabled
 func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
+	// Tekton: Update artifact cred using the KFP Tekton configmap
+	workflow.SetAnnotations(common.ArtifactBucketAnnotation, common.GetArtifactBucket())
+	workflow.SetAnnotations(common.ArtifactEndpointAnnotation, common.GetArtifactEndpoint())
+	workflow.SetAnnotations(common.ArtifactEndpointSchemeAnnotation, common.GetArtifactEndpointScheme())
+
+	// Process artifacts
 	artifactItems, exists := workflow.ObjectMeta.Annotations[common.ArtifactItemsAnnotation]
 
 	// Only inject artifacts if the necessary annotations are provided.
