@@ -4,7 +4,7 @@
 
 A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory. 
 
-1. Using IBM Cloud Kubernetes Service (IKS):
+1. Using *IBM Cloud Kubernetes Service (IKS)*:
 
     * Authenticating with IBM Cloud
 
@@ -22,16 +22,18 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
     ibmcloud ks cluster config --cluster <cluster_name>
     ```
 
-    Replace `<cluster_name>` with your cluster name.
+    Replace `<cluster_name>` with your cluster name. 
+    
+    Addtionally follow the instructions to setup [Block storage on IBM Cloud](#ibm-cloud-block-storage-setup)
 
-2. Using Other Cloud provider or Local Kubernetes Deployment:
-    - Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for picking the preferred environment to deploy Kubeflow.
+2. Using other Cloud providers or on-prem Kubernetes deployment:
+    - Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
 
 3. Using OpenShift
-   - 
-   
+    - Follow [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](https://github.com/IBM/KubeflowDojo/tree/master/OpenShift/manifests)
+  
 ## Kubeflow installation including Kubeflow Pipelines with Tekton backend
-Run the following commands to set up and deploy Kubeflow with KFP-Tekton
+Run the following commands to set up and deploy Kubeflow with KFP-Tekton. To understand more about the Kubeflow deployment mechanism, please read [here](#understanding-the-kubeflow-deployment-process).
 
 1. Download the kfctl v1.1.0 release from the
   [Kubeflow releases 
