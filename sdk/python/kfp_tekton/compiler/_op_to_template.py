@@ -320,7 +320,7 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
             artifact_name = artifact_to_result_mapping.get(artifact['name'], artifact['name'])
             if artifact['path'] == 'logs_to_S3':
                 copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log && ' + \
+                    'cat /var/log/containers/$HOSTNAME*step-main*.log > step-main.log && ' + \
                     'tar -czf $TASKRUN-$NAMESPACE-step-main_log.tgz step-main.log\n' + \
                     'mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz' + \
                     ' storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/\n' % (bucket)
