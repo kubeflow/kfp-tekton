@@ -6,3 +6,6 @@ data:
   artifact_bucket: "mlpipeline"
   artifact_endpoint: "minio-service.kubeflow:9000"
   artifact_endpoint_scheme: "http://"
+  enable_logging: false
+  enable_artifact: true
+  strip_eof: false

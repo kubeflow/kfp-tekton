@@ -1173,9 +1173,10 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 		}
 		for _, task := range workflow.Spec.PipelineSpec.Tasks {
 			artifacts, hasArtifacts := artifactItemsJSON[task.Name]
-			logging := common.IsEnableLogging()
+			enableLogging := common.IsEnableLogging()
 			enableArtifact := common.IsEnableArtifact()
-			if (hasArtifacts && len(artifacts) > 0 && enableArtifact) || logging {
+			stripEOF := common.IsStripEOF()
+			if (hasArtifacts && len(artifacts) > 0 && enableArtifact) || enableLogging || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
 				// Need to represent as Raw String Literals
 				artifactScript := "#!/usr/bin/env sh\n" +
 					"push_artifact() {\n" +
@@ -1183,8 +1184,8 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 					"    mc cp $1.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/$1.tgz\n" +
 					"}\n" +
 					"mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT} $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY\n"
-				if logging {
-					loggingScript := "cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log && " +
+				if enableLogging {
+					loggingScript := "cat /var/log/containers/$PODNAME*step-main*.log > step-main.log && " +
 						"push_artifact main-log step-main.log\n"
 					artifactScript += loggingScript
 
@@ -1268,6 +1269,20 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 					}
 				}
 
+				// Strip EOF if enabled
+				if hasArtifacts && len(artifacts) > 0 && stripEOF {
+					for _, artifact := range artifacts {
+						if len(artifact) == 2 {
+							// TODO: Add EOF newline stripping logics. we need a safe and simple command that can run on the
+							//       minio/mc image. Here we need 1. Check is EOF is newline, 2. Remove EOF newlines and
+							//       update the file. 3. Done with one line bash command.
+							//       We may need to run another image that has python or perl to include these logics.
+							//       This feature is better to implement in Tekton controller since KFP can't inject logics
+							//       during pipeline runtime.
+						}
+					}
+				}
+
 				// Define post-processing step
 				step := workflowapi.Step{Container: corev1.Container{
 					Name:  "copy-artifacts",
@@ -1276,10 +1291,9 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 						r.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
 						r.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
 						r.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
-						r.getObjectFieldSelector("TASKRUN", "metadata.labels['tekton.dev/taskRun']"),
 						r.getObjectFieldSelector("PIPELINETASK", "metadata.labels['tekton.dev/pipelineTask']"),
 						r.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
-						r.getObjectFieldSelector("NAMESPACE", "metadata.namespace"),
+						r.getObjectFieldSelector("PODNAME", "metadata.name"),
 						r.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
 						r.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
 					},

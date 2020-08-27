@@ -71,3 +71,18 @@ spec:
             configMapKeyRef:
               name: kfp-tekton-config
               key: artifact_endpoint_scheme
+        - name: ENABLE_LOGGING
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: enable_logging
+        - name: ENABLE_ARTIFACT
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: enable_artifact
+        - name: STRIP_EOF
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: strip_eof

@@ -25,6 +25,7 @@ from metadata_helpers import *
 
 
 namespace_to_watch = os.environ.get('NAMESPACE_TO_WATCH', 'default')
+enable_logging = os.environ.get('ENABLE_LOGGING', 'false')
 
 
 kubernetes.config.load_incluster_config()
@@ -356,6 +357,19 @@ while True:
                 if ARGO_OUTPUTS_ANNOTATION_KEY in obj.metadata.annotations or TEKTON_OUTPUT_ARTIFACT_ANNOTATION_KEY in obj.metadata.annotations: # Should be present
                     outputs = get_output_template(obj)
                     pipeline_output_artifacts = {}
+
+                    # Add logging as output artifacts if enabled.
+                    if enable_logging.lower() == 'true':
+                        main_log_artifact = {
+                            "name": "main-log",
+                            "path": "/var/log/containers/",
+                            "s3": {
+                                "bucket": obj.metadata.annotations.get(TEKTON_BUCKET_ARTIFACT_ANNOTATION_KEY, "mlpipeline"),
+                                "key": "artifacts/%s/%s/main-log.tgz" % (obj.metadata.labels[TEKTON_PIPELINERUN_LABEL_KEY],
+                                                                         obj.metadata.labels[TEKTON_PIPELINETASK_LABEL_KEY])
+                            }
+                        }
+                        pipeline_output_artifacts['main-log'] = main_log_artifact
 
                     for artifact in outputs.get('artifacts', []):
                         art_name = artifact['name']

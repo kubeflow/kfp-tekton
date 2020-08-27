@@ -11,6 +11,7 @@ resources:
 
 patchesStrategicMerge:
   - apiserver-deployment.yaml
+  - metadata-writer-deployment.yaml
 
 # Identifier for application manager to apply ownerReference.
 # The ownerReference ensures the resources get garbage collected

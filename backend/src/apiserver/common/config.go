@@ -31,6 +31,7 @@ const (
 	KubeflowUserIDPrefix                string = "KUBEFLOW_USERID_PREFIX"
 	EnableLogging                       string = "ENABLE_LOGGING"
 	EnableArtifact                      string = "ENABLE_ARTIFACT"
+	StripEOF                            string = "STRIP_EOF"
 	ArtifactBucket                      string = "ARTIFACT_BUCKET"
 	ArtifactEndpoint                    string = "ARTIFACT_ENDPOINT"
 	ArtifactEndpointScheme              string = "ARTIFACT_ENDPOINT_SCHEME"
@@ -82,6 +83,10 @@ func IsMultiUserMode() bool {
 
 func IsEnableLogging() bool {
 	return GetBoolConfigWithDefault(EnableLogging, false)
+}
+
+func IsStripEOF() bool {
+	return GetBoolConfigWithDefault(StripEOF, true)
 }
 
 func IsEnableArtifact() bool {
