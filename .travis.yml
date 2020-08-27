@@ -20,7 +20,6 @@ matrix:
       env: TOXENV=py35
       install: &0
         - python3 -m pip install -e sdk/python
-        - python3 -m pip install pytest
       script: &1
         - make unit_test
     - name: "Unit tests, Python 3.6"

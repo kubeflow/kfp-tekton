@@ -42,6 +42,7 @@ unit_test: venv ## Run compiler unit tests
 	@echo "Optional environment variables to configure $@, examples:"
 	@sed -n -e 's/# *\(make $@ .*\)/  \1/p' sdk/python/tests/compiler/compiler_tests.py
 	@echo "=================================================================="
+	@pip show pytest > /dev/null 2>&1 || pip install pytest
 	@sdk/python/tests/run_tests.sh
 	@echo "$@: OK"
 
