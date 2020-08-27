@@ -21,7 +21,7 @@ matrix:
       install: &0
         - python3 -m pip install -e sdk/python
       script: &1
-        - make unit_test
+        - VENV=$VIRTUAL_ENV make unit_test
     - name: "Unit tests, Python 3.6"
       language: python
       python: "3.6"
@@ -39,12 +39,12 @@ matrix:
       python: "3.7"
       install: *0
       script:
-        - make report
+        - VENV=$VIRTUAL_ENV make report
     - name: "Lint Python code with flake8"
       language: python
       python: "3.7"
       script:
-        - make lint
+        - VENV=$VIRTUAL_ENV make lint
     - name: "Verify source files contain the license header"
       language: bash
       script:
