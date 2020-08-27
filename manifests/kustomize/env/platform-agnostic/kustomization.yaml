@@ -7,7 +7,7 @@ bases:
   - mysql
 
 resources:
-  - kfp-pipeline-install-config.yaml
+  - kfp-pipeline-config.yaml
 
 patchesStrategicMerge:
   - apiserver-deployment.yaml

@@ -1,30 +1,23 @@
 # Installing Kubeflow Pipelines with Tekton
 
+## Table of Contents
+
+- [Prequisites](#prequisites)
+- [Kubeflow installation including Kubeflow Pipelines with Tekton backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
+  * [Single user](#single-user)
+  * [Multi-user, auth-enabled](#multi-user-auth-enabled)
+- [Verify installation](#verify-installation)
+- [Understanding the Kubeflow deployment process](#understanding-the-kubeflow-deployment-process)
+  * [App layout](#app-layout)
+
 ## Prequisites
 
 A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory. 
 
 1. Using *IBM Cloud Kubernetes Service (IKS)*:
 
-    * Authenticating with IBM Cloud
-
-    ```shell
-    ibmcloud login
-    ```
-
-    * Accessing the IBM Cloud cluster
-
-    If you do not have access to a cluster created with IBM Cloud Kubernetes Service, follow the [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster) guide to create a cluster.
-
-    Run the following command to switch the Kubernetes context and access the cluster.
-
-    ```shell
-    ibmcloud ks cluster config --cluster <cluster_name>
-    ```
-
-    Replace `<cluster_name>` with your cluster name. 
-    
-    Addtionally follow the instructions to setup [Block storage on IBM Cloud](#ibm-cloud-block-storage-setup)
+    1. Visit [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or [Initial cluster setup for existing cluster](https://www.kubeflow.org/docs/ibm/existing-cluster/)
+    2. Then configure the cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup)
 
 2. Using other Cloud providers or on-prem Kubernetes deployment:
     - Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
@@ -65,7 +58,7 @@ export BASE_DIR=<path to a base directory>
 export KF_DIR=${BASE_DIR}/${KF_NAME}
 
 # Set the configuration file to use, such as the file specified below:
-export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_ibm_k8s_single_user.yaml"
+export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_k8s_single_user.yaml"
 
 # Generate and deploy Kubeflow:
 mkdir -p ${KF_DIR}
@@ -107,7 +100,7 @@ The scenario is a GitHub organization owner can authorize its organization membe
     ```
 1. Setup configuration files:
     ```
-    export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_ibm_dex_multi_user_tekton_V1.1.0.yaml"
+    export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_dex_multi_user_tekton_V1.1.0.yaml"
     # Generate and deploy Kubeflow:
     mkdir -p ${KF_DIR}
     cd ${KF_DIR}
@@ -197,6 +190,8 @@ The scenario is a GitHub organization owner can authorize its organization membe
 
 1. Visit [KFP Tekton User Guide](/samples/kfp-user-guide) and start learning how to use Kubeflow pipeline.
 
+1. Visit [KFP Tekton Admin Guide](/samples/kfp-admin-guide) for how to configure kfp-tekton with different settings.
+
 ## Verify installation
 
 1. Check the resources deployed correctly in namespace `kubeflow`
@@ -223,71 +218,6 @@ While the change is being applied, you can watch the service until below command
 
 The external IP should be accessible by visiting http://<EXTERNAL-IP>. Note that the above installation instructions do not create any protection for the external endpoint so it will be accessible to anyone without any authentication. 
 
-## IBM Cloud Block Storage Setup
-
-**Note**: This section is only required when the worker node provider `WORKER_NODE_PROVIDER` is set to `classic`. For other infrastructures, IBM Cloud Block Storage is already set up as the cluster's default storage class.
-
-When using the `classic` worker node provider of IBM Cloud Kubernetes cluster, by default, it uses [IBM Cloud File Storage](https://www.ibm.com/cloud/file-storage) based on NFS as the default storage class. File Storage is designed to run RWX (read-write multiple nodes) workloads with proper security built around it. Therefore, File Storage [does not allow `fsGroup` securityContext](https://cloud.ibm.com/docs/containers?topic=containers-security#container) which is needed for DEX and Kubeflow Jupyter Server.
-
-[IBM Cloud Block Storage](https://www.ibm.com/cloud/block-storage) provides a fast way to store data and
-satisfy many of the Kubeflow persistent volume requirements such as `fsGroup` out of the box and optimized RWO (read-write single node) which is used on all Kubeflow's persistent volume claim. 
-
-Therefore, we strongly recommend to set up [IBM Cloud Block Storage](https://cloud.ibm.com/docs/containers?topic=containers-block_storage#add_block) as the default storage class so that you can
-get the best experience from Kubeflow.
-
-1. [Follow the instructions](https://helm.sh/docs/intro/install/) to install the Helm version 3 client on your local machine.
-
-2. Add the IBM Cloud Helm chart repository to the cluster where you want to use the IBM Cloud Block Storage plug-in.
-    ```shell
-    helm repo add iks-charts https://icr.io/helm/iks-charts
-    helm repo update
-    ```
-
-3. Install the IBM Cloud Block Storage plug-in. When you install the plug-in, pre-defined block storage classes are added to your cluster.
-    ```shell
-    helm install 1.6.0 iks-charts/ibmcloud-block-storage-plugin -n kube-system
-    ```
-    
-    Example output:
-    ```
-    NAME: 1.6.0
-    LAST DEPLOYED: Thu Feb 27 11:41:35 2020
-    NAMESPACE: kube-system
-    STATUS: deployed
-    REVISION: 1
-    NOTES:
-    Thank you for installing: ibmcloud-block-storage-plugin.   Your release is named: 1.6.0
-    ...
-    ```
-
-4. Verify that the installation was successful.
-    ```shell
-    kubectl get pod -n kube-system | grep block
-    ```
-    
-5. Verify that the storage classes for Block Storage were added to your cluster.
-    ```
-    kubectl get storageclasses | grep block
-    ```
-
-6. Set the Block Storage as the default storageclass.
-    ```shell
-    kubectl patch storageclass ibmc-block-gold -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-
-    # Check the default storageclass is block storage
-    kubectl get storageclass | grep \(default\)
-    ```
-
-    Example output:
-    ```
-    ibmc-block-gold (default)   ibm.io/ibmc-block   65s
-    ```
-
-    Make sure `ibmc-block-gold` is the only `default` storageclass. If there are two or more rows in the above output, there is other `default` storageclass. Unset it with the below command, for example, will make the `ibmc-file-bronze` storage no longer the `default` storageclass for the cluster.
-
-    ```shell
-    kubectl patch storageclass ibmc-file-bronze -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
-    ```
 ## Understanding the Kubeflow deployment process
 
 The deployment process is controlled by the following commands:
