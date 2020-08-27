@@ -1189,38 +1189,10 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 						task.TaskSpec.Volumes = []corev1.Volume{}
 					}
 					loggingVolumes := []corev1.Volume{
-						{
-							Name: "varlog",
-							VolumeSource: corev1.VolumeSource{
-								HostPath: &corev1.HostPathVolumeSource{
-									Path: "/var/log",
-								},
-							},
-						},
-						{
-							Name: "varlibdockercontainers",
-							VolumeSource: corev1.VolumeSource{
-								HostPath: &corev1.HostPathVolumeSource{
-									Path: "/var/lib/docker/containers",
-								},
-							},
-						},
-						{
-							Name: "varlibkubeletpods",
-							VolumeSource: corev1.VolumeSource{
-								HostPath: &corev1.HostPathVolumeSource{
-									Path: "/var/lib/kubelet/pods",
-								},
-							},
-						},
-						{
-							Name: "varlogpods",
-							VolumeSource: corev1.VolumeSource{
-								HostPath: &corev1.HostPathVolumeSource{
-									Path: "/var/log/pods",
-								},
-							},
-						},
+						r.getHostPathVolumeSource("varlog", "/var/log"),
+						r.getHostPathVolumeSource("varlibdockercontainers", "/var/lib/docker/containers"),
+						r.getHostPathVolumeSource("varlibkubeletpods", "/var/lib/kubelet/pods"),
+						r.getHostPathVolumeSource("varlogpods", "/var/log/pods"),
 					}
 					task.TaskSpec.Volumes = append(task.TaskSpec.Volumes, loggingVolumes...)
 
@@ -1325,6 +1297,17 @@ func (r *ResourceManager) getSecretKeySelector(name string, objectName string, o
 					Name: objectName,
 				},
 				Key: objectKey,
+			},
+		},
+	}
+}
+
+func (r *ResourceManager) getHostPathVolumeSource(name string, path string) corev1.Volume {
+	return corev1.Volume{
+		Name: name,
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: path,
 			},
 		},
 	}
