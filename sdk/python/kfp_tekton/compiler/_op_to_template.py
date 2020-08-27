@@ -299,9 +299,6 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
                     })
                     volume_template.append({'name': sanitize_k8s_name(artifact['name']), 'emptyDir': {}})
                     mounted_artifact_paths.append(artifact['path'].rsplit("/", 1)[0])
-        return ""
-    else:
-        return {}
 
 
 def _process_base_ops(op: BaseOp):
