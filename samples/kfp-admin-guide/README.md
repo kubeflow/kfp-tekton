@@ -25,6 +25,7 @@ Log Archival will capture the log from each task and archived to the artifact st
 ```shell
 kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"enable_logging":"true"}}'
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
+kubectl rollout restart deploy/metadata-writer -n kubeflow
 ```
 
 ## Enable Auto Strip for End of File newlines
