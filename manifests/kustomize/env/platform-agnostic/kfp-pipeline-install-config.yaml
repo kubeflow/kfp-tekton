@@ -6,6 +6,16 @@ data:
   artifact_bucket: "mlpipeline"
   artifact_endpoint: "minio-service.kubeflow:9000"
   artifact_endpoint_scheme: "http://"
-  enable_logging: false
-  enable_artifact: true
-  strip_eof: false
+  enable_logging: "false"
+  enable_artifact: "true"
+  strip_eof: "false"
+  artifact_script: |-
+    #!/usr/bin/env sh
+    push_artifact() {
+        tar -cvzf $1.tgz $2
+        mc cp $1.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/$1.tgz
+    }
+    strip_eof() {
+        awk 'NF' $2 | head -c -1 > $1_temp_save && cp $1_temp_save $2
+    }
+    mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT} $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY

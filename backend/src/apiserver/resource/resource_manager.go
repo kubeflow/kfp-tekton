@@ -1178,12 +1178,7 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 			stripEOF := common.IsStripEOF()
 			if (hasArtifacts && len(artifacts) > 0 && enableArtifact) || enableLogging || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
 				// Need to represent as Raw String Literals
-				artifactScript := "#!/usr/bin/env sh\n" +
-					"push_artifact() {\n" +
-					"    tar -cvzf $1.tgz $2\n" +
-					"    mc cp $1.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/$1.tgz\n" +
-					"}\n" +
-					"mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT} $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY\n"
+				artifactScript := common.GetArtifactScript() + "\n"
 				if enableLogging {
 					loggingScript := "cat /var/log/containers/$PODNAME*step-main*.log > step-main.log && " +
 						"push_artifact main-log step-main.log\n"
@@ -1269,16 +1264,19 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 					}
 				}
 
-				// Strip EOF if enabled
+				// Strip EOF if enabled, do it after artifact upload since it only applies to parameter outputs
 				if hasArtifacts && len(artifacts) > 0 && stripEOF {
 					for _, artifact := range artifacts {
 						if len(artifact) == 2 {
 							// TODO: Add EOF newline stripping logics. we need a safe and simple command that can run on the
 							//       minio/mc image. Here we need 1. Check is EOF is newline, 2. Remove EOF newlines and
-							//       update the file. 3. Done with one line bash command.
+							//       update the file. 3. Done with one line bash command. 4. File path is a Tekton substitution
+							//       variable such as $(results.project.path) before runtime.
 							//       We may need to run another image that has python or perl to include these logics.
 							//       This feature is better to implement in Tekton controller since KFP can't inject logics
 							//       during pipeline runtime.
+							//       The below solution is in experimental stage and didn't cover all edge cases.
+							artifactScript += fmt.Sprintf("strip_eof %s %s\n", artifact[0], artifact[1])
 						}
 					}
 				}

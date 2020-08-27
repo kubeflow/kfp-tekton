@@ -54,6 +54,16 @@ const (
 	ArtifactEndpointSchemeAnnotation string = "tekton.dev/artifact_endpoint_scheme"
 )
 
+const DefaultArtifactScript string = "#!/usr/bin/env sh\n" +
+	"push_artifact() {\n" +
+	"    tar -cvzf $1.tgz $2\n" +
+	"    mc cp $1.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/$1.tgz\n" +
+	"}\n" +
+	"strip_eof() {\n" +
+	"    awk 'NF' $2 | head -c -1 > $1_temp_save && cp $1_temp_save $2\n" +
+	"}\n" +
+	"mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT} $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY\n"
+
 func ToModelResourceType(apiType api.ResourceType) (ResourceType, error) {
 	switch apiType {
 	case api.ResourceType_EXPERIMENT:

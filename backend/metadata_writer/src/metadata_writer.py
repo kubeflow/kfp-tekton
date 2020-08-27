@@ -25,7 +25,6 @@ from metadata_helpers import *
 
 
 namespace_to_watch = os.environ.get('NAMESPACE_TO_WATCH', 'default')
-enable_logging = os.environ.get('ENABLE_LOGGING', 'false')
 
 
 kubernetes.config.load_incluster_config()
@@ -359,6 +358,7 @@ while True:
                     pipeline_output_artifacts = {}
 
                     # Add logging as output artifacts if enabled.
+                    enable_logging = os.environ.get('ENABLE_LOGGING', 'false')
                     if enable_logging.lower() == 'true':
                         main_log_artifact = {
                             "name": "main-log",

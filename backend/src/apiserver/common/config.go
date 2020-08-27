@@ -35,6 +35,7 @@ const (
 	ArtifactBucket                      string = "ARTIFACT_BUCKET"
 	ArtifactEndpoint                    string = "ARTIFACT_ENDPOINT"
 	ArtifactEndpointScheme              string = "ARTIFACT_ENDPOINT_SCHEME"
+	ArtifactScript                      string = "ARTIFACT_SCRIPT"
 )
 
 func GetStringConfig(configName string) string {
@@ -127,4 +128,8 @@ func GetArtifactEndpoint() string {
 
 func GetArtifactEndpointScheme() string {
 	return GetStringConfigWithDefault(ArtifactEndpointScheme, DefaultArtifactEndpointScheme)
+}
+
+func GetArtifactScript() string {
+	return GetStringConfigWithDefault(ArtifactScript, DefaultArtifactScript)
 }

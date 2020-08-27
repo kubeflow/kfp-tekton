@@ -86,3 +86,8 @@ spec:
             configMapKeyRef:
               name: kfp-tekton-config
               key: strip_eof
+        - name: ARTIFACT_SCRIPT
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: artifact_script
