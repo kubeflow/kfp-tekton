@@ -251,7 +251,7 @@ directories:
 You can find general information about Kubeflow configuration in the guide to [configuring Kubeflow with kfctl and kustomize](https://www.kubeflow.org/docs/other-guides/kustomize/).
 
 ## Troubleshooting
- - (For IBM Cloud IKS users) If you accidentally deployed Kubeflow with IBM Cloud File Storage. Run the below command to remove the existing pvc. The below commands are for removing resources in multi-user, so you can ignore any missing pvc or rollout error if you are doing this for single user.
+ - (For IBM Cloud IKS users) If you accidentally deployed Kubeflow with IBM Cloud File Storage. Run the below commands to remove the existing pvc. The below commands are for removing resources in multi-user, so you can ignore any missing pvc or rollout error if you are doing this for single user.
     ```shell
     kubectl delete pvc -n kubeflow katib-mysql metadata-mysql minio-pv-claim minio-pvc mysql-pv-claim
     kubectl delete pvc -n istio-system authservice-pvc

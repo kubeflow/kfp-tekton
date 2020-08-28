@@ -196,15 +196,15 @@ workflow_name_to_context_id = {}
 pods_with_written_metadata = set()
 
 while True:
-    print("Start watching Kubernetes Pods created by Argo")
-    for event in k8s_watch.stream(
-        k8s_api.list_namespaced_pod,
-        namespace=namespace_to_watch,
-        label_selector=PIPELINE_LABEL_KEY,
-        timeout_seconds=1800,  # Sometimes watch gets stuck
-        _request_timeout=2000,  # Sometimes HTTP GET gets stuck
-    ):
-        try:
+    print("Start watching Kubernetes Pods created by Argo or Tekton")
+    try:
+        for event in k8s_watch.stream(
+            k8s_api.list_namespaced_pod,
+            namespace=namespace_to_watch,
+            label_selector=PIPELINE_LABEL_KEY,
+            timeout_seconds=1800,  # Sometimes watch gets stuck
+            _request_timeout=2000,  # Sometimes HTTP GET gets stuck
+        ):
             obj = event['object']
             print('Kubernetes Pod event: ', event['type'], obj.metadata.name, obj.metadata.resource_version)
             if event['type'] == 'ERROR':
@@ -427,6 +427,6 @@ while True:
 
                 pods_with_written_metadata.add(obj.metadata.name)
 
-        except Exception as e:
-            import traceback
-            print(traceback.format_exc())
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
