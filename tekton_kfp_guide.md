@@ -260,3 +260,8 @@ You can find general information about Kubeflow configuration in the guide to [c
     ```
 
     Then, redo the [**single user**](#single-user) or [**multi-tenant**](#multi-user-auth-enabled) section to redeploy Kubeflow with the [block storageclass](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup).
+
+- If you redeploy Kubeflow and some components are not showing up, it was due to the [dynamic created webhook issue](https://github.com/kubeflow/manifests/issues/1379). This issue will be [fixed](https://github.com/kubeflow/pipelines/pull/4429) in the next release of KFP.
+    ```shell
+    kubectl delete MutatingWebhookConfiguration cache-webhook-kubeflow katib-mutating-webhook-config
+    ```
