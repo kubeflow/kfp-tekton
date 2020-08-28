@@ -16,8 +16,8 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 
 1. Using *IBM Cloud Kubernetes Service (IKS)*:
 
-    1. Visit [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or [Initial cluster setup for existing cluster](https://www.kubeflow.org/docs/ibm/existing-cluster/)
-    2. Then configure the cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup)
+    1. Either [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or [Initial cluster setup for existing cluster](https://www.kubeflow.org/docs/ibm/existing-cluster/)
+    2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup)
 
 2. Using other Cloud providers or on-prem Kubernetes deployment:
     - Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
@@ -26,6 +26,9 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
     - Follow [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](https://github.com/IBM/KubeflowDojo/tree/master/OpenShift/manifests)
   
 ## Kubeflow installation including Kubeflow Pipelines with Tekton backend
+
+**Important: Please complete the [prequisites](#prequisites) before proceeding to the following instructions.**
+
 Run the following commands to set up and deploy Kubeflow with KFP-Tekton. To understand more about the Kubeflow deployment mechanism, please read [here](#understanding-the-kubeflow-deployment-process).
 
 1. Download the kfctl v1.1.0 release from the
@@ -79,7 +82,9 @@ kfctl apply -V -f ${CONFIG_URI}
 * **${KF_DIR}** - The full path to your Kubeflow application directory.
 
 ### Multi-user, auth-enabled
-Run the following commands to deploy Kubeflow with GitHub OAuth application as the authentication provider by dex. To support multi-users with authentication enabled, this guide uses [dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://docs.github.com/developers/apps/building-oauth-apps). Before continue, refer to the guide [Creating an OAuth App](https://docs.github.com/developers/apps/creating-an-oauth-app) for steps to create an OAuth app on GitHub.com.
+Run the following commands to deploy Kubeflow with GitHub OAuth application as the authentication provider by dex. To support multi-users with authentication enabled, this guide uses [dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://docs.github.com/developers/apps/building-oauth-apps). 
+
+**Before continue, refer to the guide [Creating an OAuth App](https://docs.github.com/developers/apps/creating-an-oauth-app) for steps to create an OAuth app on GitHub.com.**
 
 The scenario is a GitHub organization owner can authorize its organization members to access a deployed kubeflow. A member of this GitHub organization will be redirected to a page to grant access to the GitHub profile by Kubeflow.
 
@@ -104,7 +109,6 @@ The scenario is a GitHub organization owner can authorize its organization membe
     # Generate and deploy Kubeflow:
     mkdir -p ${KF_DIR}
     cd ${KF_DIR}
-    kfctl build -V -f ${CONFIG_URI}
     ```
 1. Deploy Kubeflow:
     ```
@@ -114,6 +118,12 @@ The scenario is a GitHub organization owner can authorize its organization membe
 1. Update the configmap `dex` in namespace `auth` with credentials from the first step.
     - Get current resource file of current configmap `dex`:
     `kubectl get configmap dex -n auth -o yaml > dex-cm.yaml`
+    - Replace the following values in the `dex-cm.yaml`.
+      - **clientID**: Client ID of the Github OAuth App
+      - **clientSecret**: Client Secret of the Github OAuth App
+      - **orgs[0].name**: Any [Github organization](https://docs.github.com/en/github/setting-up-and-managing-organizations-and-teams/about-your-organization-dashboard) that the OAuth App has member read access. 
+      - (Optional) **hostName**: GitHub Enterprise Hostname. Leave it empty when using github.com.
+
     The `dex-cm.yaml` file looks like following:
     ```YAML
     apiVersion: v1
@@ -144,10 +154,6 @@ The scenario is a GitHub organization owner can authorize its organization membe
               clientID:
               clientSecret: 
               redirectURI: http://dex.auth.svc.cluster.local:5556/dex/callback
-              # Optional organizations and teams, communicated through the "groups" scope.
-              #
-              # NOTE: This is an EXPERIMENTAL config option and will likely change.
-              #
               orgs:
               # Fill in your GitHub organization name
               - name:
@@ -166,11 +172,6 @@ The scenario is a GitHub organization owner can authorize its organization membe
           name: 'Dex Login Application'
           # Update the secret below to match with the oidc authservice.
           secret: pUBnBOY80SnXgjibTYM9ZWNzY2xreNGQok
-    ```
-    - Replace `clientID` and `clientSecret` in the `config.yaml` field with the `Client ID` and `Client Secret` created above for the GitHub OAuth application. Add your organization name to the `orgs` field, e.g.
-    ```YAML
-    orgs:
-    - name: kubeflow-test
     ```
     Save the `dex-cm.yaml` file.
     - Update this change to the Kubernetes cluster:
