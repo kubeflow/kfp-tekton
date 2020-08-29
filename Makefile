@@ -53,7 +53,7 @@ e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
 	@sed -n -e 's/# *\(make $@ .*\)/  \1/p' sdk/python/tests/compiler/compiler_tests_e2e.py
 	@echo "=================================================================="
 	@which kubectl > /dev/null || (echo "Missing kubectl CLI" && exit 1)
-	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" && exit 1 || echo "KUBECONFIG: ${KUBECONFIG}"
+	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" || echo "KUBECONFIG=${KUBECONFIG}"
 	@kubectl version --short || (echo "Failed to access kubernetes cluster" && exit 1)
 	@which tkn > /dev/null || (echo "Missing tkn CLI" && exit 1)
 	@sdk/python/tests/run_e2e_tests.sh
