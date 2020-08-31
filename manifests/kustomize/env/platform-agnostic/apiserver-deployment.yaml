@@ -71,16 +71,16 @@ spec:
             configMapKeyRef:
               name: kfp-tekton-config
               key: artifact_endpoint_scheme
-        - name: ENABLE_LOGGING
+        - name: ENABLE_ARCHIVE_LOGS
           valueFrom:
             configMapKeyRef:
               name: kfp-tekton-config
-              key: enable_logging
-        - name: ENABLE_ARTIFACT
+              key: enable_archive_logs
+        - name: ENABLE_ARTIFACT_TRACKING
           valueFrom:
             configMapKeyRef:
               name: kfp-tekton-config
-              key: enable_artifact
+              key: enable_artifact_tracking
         - name: STRIP_EOF
           valueFrom:
             configMapKeyRef:

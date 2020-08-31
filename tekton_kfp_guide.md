@@ -192,7 +192,7 @@ The scenario is a GitHub organization owner can authorize its organization membe
 
 1. Visit [KFP Tekton User Guide](/samples/kfp-user-guide) and start learning how to use Kubeflow pipeline.
 
-1. Visit [KFP Tekton Admin Guide](/samples/kfp-admin-guide) for how to configure kfp-tekton with different settings.
+1. Visit [KFP Tekton Admin Guide](/kfp-admin-guide.md) for how to configure kfp-tekton with different settings.
 
 ## Verify installation
 

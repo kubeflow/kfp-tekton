@@ -4,17 +4,17 @@ This page introduces different ways to configure the kfp-tekton admin settings s
 
 ## Table of Contents
 
-- [Disable Artifacts](#disable-artifacts)
+- [Disable Artifact Tracking](#disable-artifact-tracking)
 - [Enable Log Archival](#enable-log-archival)
 - [Enable Auto Strip for End of File newlines](#enable-auto-strip-for-end-of-file-newlines)
 
 
-## Disable Artifacts
+## Disable Artifact Tracking
 
 By default, kfp-tekton enabled artifacts for archiving the pipeline outputs and use it for metadata tracking. To disable this feature, run the following commands to update the configmap and rollout a new server.
 
 ```shell
-kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"enable_artifact":"false"}}'
+kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"enable_artifact_tracking":"false"}}'
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 ```
 
@@ -23,7 +23,7 @@ kubectl rollout restart deploy/ml-pipeline -n kubeflow
 Log Archival will capture the log from each task and archived to the artifact storage as an output artifact. By default this feature is disabled. To enable this feafure, run the following commands:
 
 ```shell
-kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"enable_logging":"true"}}'
+kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"enable_archive_logs":"true"}}'
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 kubectl rollout restart deploy/metadata-writer -n kubeflow
 ```

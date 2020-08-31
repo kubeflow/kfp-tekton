@@ -358,8 +358,8 @@ while True:
                     pipeline_output_artifacts = {}
 
                     # Add logging as output artifacts if enabled.
-                    enable_logging = os.environ.get('ENABLE_LOGGING', 'false')
-                    if enable_logging.lower() == 'true':
+                    archive_logs = os.environ.get('ENABLE_ARCHIVE_LOGS', 'false')
+                    if archive_logs.lower() == 'true':
                         main_log_artifact = {
                             "name": "main-log",
                             "path": "/var/log/containers/",

@@ -1173,13 +1173,13 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 		}
 		for _, task := range workflow.Spec.PipelineSpec.Tasks {
 			artifacts, hasArtifacts := artifactItemsJSON[task.Name]
-			enableLogging := common.IsEnableLogging()
-			enableArtifact := common.IsEnableArtifact()
+			archiveLogs := common.IsEnableArchiveLogs()
+			artifactTracking := common.IsEnableArtifactTracking()
 			stripEOF := common.IsStripEOF()
-			if (hasArtifacts && len(artifacts) > 0 && enableArtifact) || enableLogging || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
+			if (hasArtifacts && len(artifacts) > 0 && artifactTracking) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
 				// Need to represent as Raw String Literals
 				artifactScript := common.GetArtifactScript() + "\n"
-				if enableLogging {
+				if archiveLogs {
 					loggingScript := "cat /var/log/containers/$PODNAME*step-main*.log > step-main.log && " +
 						"push_artifact main-log step-main.log\n"
 					artifactScript += loggingScript
@@ -1228,7 +1228,7 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 				}
 
 				// Upload Artifacts if the artifact is enabled and the annoations are present
-				if hasArtifacts && len(artifacts) > 0 && enableArtifact {
+				if hasArtifacts && len(artifacts) > 0 && artifactTracking {
 					for _, artifact := range artifacts {
 						if len(artifact) == 2 {
 							artifactScript += fmt.Sprintf("push_artifact %s %s\n", artifact[0], artifact[1])
