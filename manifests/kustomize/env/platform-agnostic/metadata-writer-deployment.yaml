@@ -24,9 +24,9 @@ spec:
               fieldPath: metadata.namespace
         - name: PIPELINE_RUNTIME
           value: tekton
-        - name: ENABLE_ARCHIVE_LOGS
+        - name: ARCHIVE_LOGS
           valueFrom:
             configMapKeyRef:
               name: kfp-tekton-config
-              key: enable_archive_logs
+              key: archive_logs
       serviceAccountName: kubeflow-pipelines-metadata-writer

@@ -29,8 +29,8 @@ const (
 	DefaultPipelineRunnerServiceAccount string = "DefaultPipelineRunnerServiceAccount"
 	KubeflowUserIDHeader                string = "KUBEFLOW_USERID_HEADER"
 	KubeflowUserIDPrefix                string = "KUBEFLOW_USERID_PREFIX"
-	EnableArchiveLogs                   string = "ENABLE_ARCHIVE_LOGS"
-	EnableArtifactTracking              string = "ENABLE_ARTIFACT_TRACKING"
+	ArchiveLogs                         string = "ARCHIVE_LOGS"
+	TrackArtifacts                      string = "TRACK_ARTIFACTS"
 	StripEOF                            string = "STRIP_EOF"
 	ArtifactBucket                      string = "ARTIFACT_BUCKET"
 	ArtifactEndpoint                    string = "ARTIFACT_ENDPOINT"
@@ -82,16 +82,16 @@ func IsMultiUserMode() bool {
 	return GetBoolConfigWithDefault(MultiUserMode, false)
 }
 
-func IsEnableArchiveLogs() bool {
-	return GetBoolConfigWithDefault(EnableArchiveLogs, false)
+func IsArchiveLogs() bool {
+	return GetBoolConfigWithDefault(ArchiveLogs, false)
 }
 
 func IsStripEOF() bool {
 	return GetBoolConfigWithDefault(StripEOF, true)
 }
 
-func IsEnableArtifactTracking() bool {
-	return GetBoolConfigWithDefault(EnableArtifactTracking, true)
+func IsTrackArtifacts() bool {
+	return GetBoolConfigWithDefault(TrackArtifacts, true)
 }
 
 func GetPodNamespace() string {

@@ -6,8 +6,8 @@ data:
   artifact_bucket: "mlpipeline"
   artifact_endpoint: "minio-service.kubeflow:9000"
   artifact_endpoint_scheme: "http://"
-  enable_archive_logs: "false"
-  enable_artifact_tracking: "true"
+  archive_logs: "false"
+  track_artifacts: "true"
   strip_eof: "false"
   artifact_script: |-
     #!/usr/bin/env sh
