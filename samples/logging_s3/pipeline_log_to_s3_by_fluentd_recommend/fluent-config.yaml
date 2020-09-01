@@ -11,7 +11,7 @@ data:
       pos_file /var/log/fluentd-docker.pos
       time_format %Y-%m-%dT%H:%M:%S
       tag kubernetes.*
-      format json
+      format none
       read_from_head true
     </source>
 
@@ -61,3 +61,4 @@ data:
         chunk_limit_size 30m                        # The maximum size of each chunk
       </buffer>
     </match>
+    
