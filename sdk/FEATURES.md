@@ -165,12 +165,12 @@ python test is an example of how to use this feature.
 
 ### Output Artifacts
 
-Output Artifacts are files that need to be persisted to the default/destination object storage. Additionally, by default, all Kubeflow pipeline 'Output Parameters' are also stored as output artifacts. Since Tekton deprecated pipelineResource and the recommended gsutil task is not capable of moving files to the minio object storage without proper DNS address, we decided to inject a step based on the [minio mc](https://github.com/minio/mc) image for moving output artifacts during Kubeflow pipeline runtime.
+Output Artifacts are files that need to be persisted to the default/destination object storage. Additionally, by default, all Kubeflow Pipeline 'Output Parameters' are also stored as output artifacts. Since Tekton deprecated pipelineResource and the recommended gsutil task is not capable of moving files to the minio object storage without proper DNS address, we decided to inject a step based on the [minio mc](https://github.com/minio/mc) image for moving output artifacts during Kubeflow Pipeline execution time.
 
 It also includes several annontations, `tekton.dev/input_artifacts` and `tekton.dev/output_artifacts` are for metadata tracking, `tekton.dev/artifact_items` is to retain the artifact dependency information. Refer to the
 [Tetkon Artifact design proposal](http://bit.ly/kfp-tekton) for more details. 
 
-The current implementation is relying on the existing KFP's minio setup for getting the default credentials. This default credentials can be updated
+The current implementation is relying on the existing KFP's minio setup for getting the default credentials. These default credentials can be updated
 via a Kubernetes configmap.
 
 ## Features with Limitations

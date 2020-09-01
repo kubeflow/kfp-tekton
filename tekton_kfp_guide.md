@@ -17,7 +17,7 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 
 1. Using *IBM Cloud Kubernetes Service (IKS)*:
 
-    1. Either [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or [Initial cluster setup for existing cluster](https://www.kubeflow.org/docs/ibm/existing-cluster/)
+    1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://www.kubeflow.org/docs/ibm/existing-cluster/)
     2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup)
 
 2. Using other Cloud providers or on-prem Kubernetes deployment:
@@ -83,9 +83,9 @@ kfctl apply -V -f ${CONFIG_URI}
 * **${KF_DIR}** - The full path to your Kubeflow application directory.
 
 ### Multi-user, auth-enabled
-Run the following commands to deploy Kubeflow with GitHub OAuth application as the authentication provider by dex. To support multi-users with authentication enabled, this guide uses [dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://docs.github.com/developers/apps/building-oauth-apps). 
+Run the following commands to deploy multi-user auth-enabled Kubeflow with GitHub OAuth as the Dex authentication provider. To support multi-users with authentication enabled, this guide uses [Dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://docs.github.com/developers/apps/building-oauth-apps). 
 
-**Before continue, refer to the guide [Creating an OAuth App](https://docs.github.com/developers/apps/creating-an-oauth-app) for steps to create an OAuth app on GitHub.com.**
+**Before continuing, refer to the guide [Creating an OAuth App](https://docs.github.com/developers/apps/creating-an-oauth-app) for steps to create an OAuth app on GitHub.com.**
 
 The scenario is a GitHub organization owner can authorize its organization members to access a deployed kubeflow. A member of this GitHub organization will be redirected to a page to grant access to the GitHub profile by Kubeflow.
 
@@ -251,7 +251,7 @@ directories:
 You can find general information about Kubeflow configuration in the guide to [configuring Kubeflow with kfctl and kustomize](https://www.kubeflow.org/docs/other-guides/kustomize/).
 
 ## Troubleshooting
- - (For IBM Cloud IKS users) If you accidentally deployed Kubeflow with IBM Cloud File Storage. Run the below commands to remove the existing pvc. The below commands are for removing resources in multi-user, so you can ignore any missing pvc or rollout error if you are doing this for single user.
+ - (For IBM Cloud IKS users) If you accidentally deployed Kubeflow with IBM Cloud File Storage, run the below commands to remove the existing pvc. The below commands are for removing resources in multi-user, so you can ignore any missing pvc or rollout error if you are doing this for single user.
     ```shell
     kubectl delete pvc -n kubeflow katib-mysql metadata-mysql minio-pv-claim minio-pvc mysql-pv-claim
     kubectl delete pvc -n istio-system authservice-pvc
