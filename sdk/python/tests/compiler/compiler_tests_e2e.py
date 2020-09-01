@@ -30,7 +30,11 @@ from time import sleep
 #  load test settings from environment variables (passed through make)
 # =============================================================================
 
-# get the Kubernetes context from the KUBECONFIG env var
+# get the Kubernetes context from the KUBECONFIG env var, override KUBECONFIG
+# to target a different Kubernetes cluster
+#    KUBECONFIG=/path/to/kube/config sdk/python/tests/run_e2e_tests.sh
+# or:
+#    make e2e_test KUBECONFIG=/path/to/kube/config
 KUBECONFIG = env.get("KUBECONFIG")
 
 # warn the user that the KUBECONFIG variable was not set so the target cluster
