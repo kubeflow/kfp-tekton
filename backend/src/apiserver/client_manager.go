@@ -17,6 +17,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/archive"
 	"os"
 	"time"
 
@@ -71,6 +72,7 @@ type ClientManager struct {
 	swfClient     client.SwfClientInterface
 	k8sCoreClient client.KubernetesCoreInterface
 	kfamClient    client.KFAMClientInterface
+	logArchive    archive.LogArchiveInterface
 	time          util.TimeInterface
 	uuid          util.UUIDGeneratorInterface
 }
@@ -127,6 +129,10 @@ func (c *ClientManager) KFAMClient() client.KFAMClientInterface {
 	return c.kfamClient
 }
 
+func (c *ClientManager) LogArchive() archive.LogArchiveInterface {
+	return c.logArchive
+}
+
 func (c *ClientManager) Time() util.TimeInterface {
 	return c.time
 }
@@ -163,6 +169,9 @@ func (c *ClientManager) init() {
 
 	runStore := storage.NewRunStore(db, c.time)
 	c.runStore = runStore
+
+	// Log archive
+	c.logArchive = archive.NewLogArchive()
 
 	if common.IsMultiUserMode() {
 		c.kfamClient = client.NewKFAMClient(common.GetStringConfig(kfamServiceHost), common.GetStringConfig(kfamServicePort))

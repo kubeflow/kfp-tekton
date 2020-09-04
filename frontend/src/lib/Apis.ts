@@ -329,6 +329,28 @@ export class Apis {
     );
   }
 
+  public static async readRunLog(
+      runId: string,
+      nodeId: string,
+  ): Promise<string> {
+    const path = `/runs/{run_id}/nodes/{node_id}/log`.replace(
+        `{${'run_id'}}`,
+        encodeURIComponent(String(runId)),
+    ).replace(
+        `{${'node_id'}}`,
+        encodeURIComponent(String(nodeId)),
+    );
+    return await this._fetch(
+        path,
+        v1beta1Prefix,
+        undefined,
+        {
+          cache: 'no-cache',
+          method: 'GET',
+        },
+    );
+  }
+
   /*
    * Retrieves the name of the Kubernetes cluster if it is running in GKE, otherwise returns an error.
    */

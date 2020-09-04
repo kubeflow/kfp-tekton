@@ -263,6 +263,16 @@ func (w *Workflow) FindObjectStoreArtifactKeyOrEmpty(nodeID string, artifactName
 	return s3Key
 }
 
+// FindTaskRunByPodName loops through all workflow task runs and look up by the pod name.
+func (w *Workflow) FindTaskRunByPodName(podName string) (*workflowapi.PipelineRunTaskRunStatus, string) {
+	for id, taskRun := range w.Status.TaskRuns {
+		if taskRun.Status.PodName == podName {
+			return taskRun, id
+		}
+	}
+	return nil, ""
+}
+
 // IsInFinalState whether the workflow is in a final state.
 func (w *Workflow) IsInFinalState() bool {
 	// Workflows in the statuses other than pending or running are considered final.
