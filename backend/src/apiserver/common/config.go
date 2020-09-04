@@ -36,6 +36,8 @@ const (
 	ArtifactEndpoint                    string = "ARTIFACT_ENDPOINT"
 	ArtifactEndpointScheme              string = "ARTIFACT_ENDPOINT_SCHEME"
 	ArtifactScript                      string = "ARTIFACT_SCRIPT"
+	ArtifactImage                       string = "ARTIFACT_IMAGE"
+	InjectDefaultScript                 string = "INJECT_DEFAULT_SCRIPT"
 )
 
 func GetStringConfig(configName string) string {
@@ -94,8 +96,16 @@ func IsTrackArtifacts() bool {
 	return GetBoolConfigWithDefault(TrackArtifacts, true)
 }
 
+func IsInjectDefaultScript() bool {
+	return GetBoolConfigWithDefault(InjectDefaultScript, true)
+}
+
 func GetPodNamespace() string {
 	return GetStringConfig(PodNamespace)
+}
+
+func GetArtifactImage() string {
+	return GetStringConfigWithDefault(ArtifactImage, DefaultArtifactImage)
 }
 
 func GetBoolFromStringWithDefault(value string, defaultValue bool) bool {

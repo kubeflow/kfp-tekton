@@ -91,3 +91,13 @@ spec:
             configMapKeyRef:
               name: kfp-tekton-config
               key: artifact_script
+        - name: ARTIFACT_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: artifact_image
+        - name: INJECT_DEFAULT_SCRIPT
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: inject_default_script

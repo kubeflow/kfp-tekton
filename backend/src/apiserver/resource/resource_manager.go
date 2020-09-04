@@ -1169,112 +1169,115 @@ func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
 	if exists {
 		var artifactItemsJSON map[string][][]interface{}
 		if err := json.Unmarshal([]byte(artifactItems), &artifactItemsJSON); err != nil {
-			panic(err)
+			return err
 		}
-		for _, task := range workflow.Spec.PipelineSpec.Tasks {
-			artifacts, hasArtifacts := artifactItemsJSON[task.Name]
-			archiveLogs := common.IsArchiveLogs()
-			trackArtifacts := common.IsTrackArtifacts()
-			stripEOF := common.IsStripEOF()
-			if (hasArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
-				// Need to represent as Raw String Literals
-				artifactScript := common.GetArtifactScript() + "\n"
-				if archiveLogs {
-					loggingScript := "cat /var/log/containers/$PODNAME*step-main*.log > step-main.log && " +
-						"push_artifact main-log step-main.log\n"
-					artifactScript += loggingScript
+		r.injectArchivalStep(workflow, artifactItemsJSON)
+	}
+	return nil
+}
 
-					// Logging volumes
-					if task.TaskSpec.Volumes == nil {
-						task.TaskSpec.Volumes = []corev1.Volume{}
-					}
-					loggingVolumes := []corev1.Volume{
-						r.getHostPathVolumeSource("varlog", "/var/log"),
-						r.getHostPathVolumeSource("varlibdockercontainers", "/var/lib/docker/containers"),
-						r.getHostPathVolumeSource("varlibkubeletpods", "/var/lib/kubelet/pods"),
-						r.getHostPathVolumeSource("varlogpods", "/var/log/pods"),
-					}
-					task.TaskSpec.Volumes = append(task.TaskSpec.Volumes, loggingVolumes...)
+func (r *ResourceManager) injectArchivalStep(workflow util.Workflow, artifactItemsJSON map[string][][]interface{}) {
+	for _, task := range workflow.Spec.PipelineSpec.Tasks {
+		artifacts, hasArtifacts := artifactItemsJSON[task.Name]
+		archiveLogs := common.IsArchiveLogs()
+		trackArtifacts := common.IsTrackArtifacts()
+		stripEOF := common.IsStripEOF()
+		injectDefaultScript := common.IsInjectDefaultScript()
 
-					// Logging volumeMounts
-					if task.TaskSpec.StepTemplate == nil {
-						task.TaskSpec.StepTemplate = &corev1.Container{}
-					}
-					if task.TaskSpec.StepTemplate.VolumeMounts == nil {
-						task.TaskSpec.StepTemplate.VolumeMounts = []corev1.VolumeMount{}
-					}
-					loggingVolumeMounts := []corev1.VolumeMount{
-						{
-							Name:      "varlog",
-							MountPath: "/var/log",
-						},
-						{
-							Name:      "varlibdockercontainers",
-							MountPath: "/var/lib/docker/containers",
-							ReadOnly:  true,
-						},
-						{
-							Name:      "varlibkubeletpods",
-							MountPath: "/var/lib/kubelet/pods",
-							ReadOnly:  true,
-						},
-						{
-							Name:      "varlogpods",
-							MountPath: "/var/log/pods",
-							ReadOnly:  true,
-						},
-					}
-					task.TaskSpec.StepTemplate.VolumeMounts = append(task.TaskSpec.StepTemplate.VolumeMounts, loggingVolumeMounts...)
+		if (hasArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
+			artifactScript := common.GetArtifactScript()
+			if archiveLogs {
+				// Logging volumes
+				if task.TaskSpec.Volumes == nil {
+					task.TaskSpec.Volumes = []corev1.Volume{}
 				}
-
-				// Upload Artifacts if the artifact is enabled and the annoations are present
-				if hasArtifacts && len(artifacts) > 0 && trackArtifacts {
-					for _, artifact := range artifacts {
-						if len(artifact) == 2 {
-							artifactScript += fmt.Sprintf("push_artifact %s %s\n", artifact[0], artifact[1])
-						}
-					}
+				loggingVolumes := []corev1.Volume{
+					r.getHostPathVolumeSource("varlog", "/var/log"),
+					r.getHostPathVolumeSource("varlibdockercontainers", "/var/lib/docker/containers"),
+					r.getHostPathVolumeSource("varlibkubeletpods", "/var/lib/kubelet/pods"),
+					r.getHostPathVolumeSource("varlogpods", "/var/log/pods"),
 				}
+				task.TaskSpec.Volumes = append(task.TaskSpec.Volumes, loggingVolumes...)
 
-				// Strip EOF if enabled, do it after artifact upload since it only applies to parameter outputs
-				if hasArtifacts && len(artifacts) > 0 && stripEOF {
-					for _, artifact := range artifacts {
-						if len(artifact) == 2 {
-							// TODO: Add EOF newline stripping logics. we need a safe and simple command that can run on the
-							//       minio/mc image. Here we need 1. Check is EOF is newline, 2. Remove EOF newlines and
-							//       update the file. 3. Done with one line bash command. 4. File path is a Tekton substitution
-							//       variable such as $(results.project.path) before runtime.
-							//       We may need to run another image that has python or perl to include these logics.
-							//       This feature is better to implement in Tekton controller since KFP can't inject logics
-							//       during pipeline runtime.
-							//       The below solution is in experimental stage and didn't cover all edge cases.
-							artifactScript += fmt.Sprintf("strip_eof %s %s\n", artifact[0], artifact[1])
-						}
-					}
+				// Logging volumeMounts
+				if task.TaskSpec.StepTemplate == nil {
+					task.TaskSpec.StepTemplate = &corev1.Container{}
 				}
+				if task.TaskSpec.StepTemplate.VolumeMounts == nil {
+					task.TaskSpec.StepTemplate.VolumeMounts = []corev1.VolumeMount{}
+				}
+				loggingVolumeMounts := []corev1.VolumeMount{
+					{Name: "varlog", MountPath: "/var/log"},
+					{Name: "varlibdockercontainers", MountPath: "/var/lib/docker/containers", ReadOnly: true},
+					{Name: "varlibkubeletpods", MountPath: "/var/lib/kubelet/pods", ReadOnly: true},
+					{Name: "varlogpods", MountPath: "/var/log/pods", ReadOnly: true},
+				}
+				task.TaskSpec.StepTemplate.VolumeMounts = append(task.TaskSpec.StepTemplate.VolumeMounts, loggingVolumeMounts...)
+			}
 
-				// Define post-processing step
-				step := workflowapi.Step{Container: corev1.Container{
-					Name:  "copy-artifacts",
-					Image: "minio/mc",
-					Env: []corev1.EnvVar{
-						r.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
-						r.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
-						r.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
-						r.getObjectFieldSelector("PIPELINETASK", "metadata.labels['tekton.dev/pipelineTask']"),
-						r.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
-						r.getObjectFieldSelector("PODNAME", "metadata.name"),
-						r.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
-						r.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
-					},
+			// Process the artifacts into minimum sh commands if running with minimum linux kernel
+			if injectDefaultScript {
+				artifactScript = r.injectDefaultScript(workflow, artifactScript, artifacts, hasArtifacts, archiveLogs, trackArtifacts, stripEOF)
+			}
+
+			// Define post-processing step
+			step := workflowapi.Step{Container: corev1.Container{
+				Name:  "copy-artifacts",
+				Image: common.GetArtifactImage(),
+				Env: []corev1.EnvVar{
+					r.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
+					r.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
+					r.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
+					r.getObjectFieldSelector("ARTIFACT_ITEMS", "metadata.annotations['tekton.dev/artifact_items']"),
+					r.getObjectFieldSelector("PIPELINETASK", "metadata.labels['tekton.dev/pipelineTask']"),
+					r.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
+					r.getObjectFieldSelector("PODNAME", "metadata.name"),
+					r.getObjectFieldSelector("NAMESPACE", "metadata.namespace"),
+					r.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
+					r.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
+					r.getEnvVar("ARCHIVE_LOGS", strconv.FormatBool(archiveLogs)),
+					r.getEnvVar("TRACK_ARTIFACTS", strconv.FormatBool(trackArtifacts)),
+					r.getEnvVar("STRIP_EOF", strconv.FormatBool(stripEOF)),
 				},
-					Script: artifactScript,
-				}
-				task.TaskSpec.Steps = append(task.TaskSpec.Steps, step)
+			},
+				Script: artifactScript,
+			}
+			task.TaskSpec.Steps = append(task.TaskSpec.Steps, step)
+		}
+	}
+}
+
+func (r *ResourceManager) injectDefaultScript(workflow util.Workflow, artifactScript string,
+	artifacts [][]interface{}, hasArtifacts bool, archiveLogs bool, trackArtifacts bool, stripEOF bool) string {
+	// Need to represent as Raw String Literals
+	artifactScript += "\n"
+	if archiveLogs {
+		artifactScript += "push_log\n"
+	}
+
+	// Upload Artifacts if the artifact is enabled and the annoations are present
+	if hasArtifacts && len(artifacts) > 0 && trackArtifacts {
+		for _, artifact := range artifacts {
+			if len(artifact) == 2 {
+				artifactScript += fmt.Sprintf("push_artifact %s %s\n", artifact[0], artifact[1])
+			} else {
+				glog.Warningf("Artifact annotations are missing for run %v.", workflow.Name)
 			}
 		}
 	}
-	return nil
+
+	// Strip EOF if enabled, do it after artifact upload since it only applies to parameter outputs
+	if hasArtifacts && len(artifacts) > 0 && stripEOF {
+		for _, artifact := range artifacts {
+			if len(artifact) == 2 {
+				// The below solution is in experimental stage and didn't cover all edge cases.
+				artifactScript += fmt.Sprintf("strip_eof %s %s\n", artifact[0], artifact[1])
+			} else {
+				glog.Warningf("Artifact annotations are missing for run %v.", workflow.Name)
+			}
+		}
+	}
+	return artifactScript
 }
 
 func (r *ResourceManager) getObjectFieldSelector(name string, fieldPath string) corev1.EnvVar {
@@ -1299,6 +1302,13 @@ func (r *ResourceManager) getSecretKeySelector(name string, objectName string, o
 				Key: objectKey,
 			},
 		},
+	}
+}
+
+func (r *ResourceManager) getEnvVar(name string, value string) corev1.EnvVar {
+	return corev1.EnvVar{
+		Name:  name,
+		Value: value,
 	}
 }
 
