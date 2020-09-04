@@ -27,9 +27,12 @@ help: ## Display the Make targets
 .PHONY: venv
 venv: $(VENV)/bin/activate ## Create and activate virtual environment
 $(VENV)/bin/activate: sdk/python/setup.py
+# create/update the VENV when there was a change to setup.py
+# check if kfp-tekton is already installed (Travis/CI did during install step)
+# use pip from the specified VENV as opposed to any pip available in the shell
 	@echo "VENV=$(VENV)"
 	@test -d $(VENV) || python3 -m venv $(VENV)
-	pip install -e sdk/python
+	@$(VENV)/bin/pip show kfp-tekton >/dev/null 2>&1 || $(VENV)/bin/pip install -e sdk/python
 	@touch $(VENV)/bin/activate
 
 .PHONY: install
@@ -42,6 +45,7 @@ unit_test: venv ## Run compiler unit tests
 	@echo "Optional environment variables to configure $@, examples:"
 	@sed -n -e 's/# *\(make $@ .*\)/  \1/p' sdk/python/tests/compiler/compiler_tests.py
 	@echo "=================================================================="
+	@pip show pytest > /dev/null 2>&1 || pip install pytest
 	@sdk/python/tests/run_tests.sh
 	@echo "$@: OK"
 
@@ -52,7 +56,7 @@ e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
 	@sed -n -e 's/# *\(make $@ .*\)/  \1/p' sdk/python/tests/compiler/compiler_tests_e2e.py
 	@echo "=================================================================="
 	@which kubectl > /dev/null || (echo "Missing kubectl CLI" && exit 1)
-	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" && exit 1 || echo "KUBECONFIG: ${KUBECONFIG}"
+	@test -z "${KUBECONFIG}" && echo "KUBECONFIG not set" || echo "KUBECONFIG=${KUBECONFIG}"
 	@kubectl version --short || (echo "Failed to access kubernetes cluster" && exit 1)
 	@which tkn > /dev/null || (echo "Missing tkn CLI" && exit 1)
 	@sdk/python/tests/run_e2e_tests.sh

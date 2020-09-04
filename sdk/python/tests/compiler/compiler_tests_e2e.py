@@ -30,14 +30,25 @@ from time import sleep
 #  load test settings from environment variables (passed through make)
 # =============================================================================
 
-# get the Kubernetes context from the KUBECONFIG env var
+# get the Kubernetes context from the KUBECONFIG env var, override KUBECONFIG
+# to target a different Kubernetes cluster
+#    KUBECONFIG=/path/to/kube/config sdk/python/tests/run_e2e_tests.sh
+# or:
+#    make e2e_test KUBECONFIG=/path/to/kube/config
 KUBECONFIG = env.get("KUBECONFIG")
 
-# set or override the minimum required Tekton Pipeline version, default "0.14.0":
-#    TKN_PIPELINE_MIN_VERSION=0.14 sdk/python/tests/run_e2e_tests.sh
+# warn the user that the KUBECONFIG variable was not set so the target cluster
+# might not be the expected one
+if not KUBECONFIG:
+    logging.warning("The environment variable 'KUBECONFIG' was not set.")
+else:
+    logging.warning("KUBECONFIG={}".format(KUBECONFIG))
+
+# set or override the minimum required Tekton Pipeline version, default "v0.14.0":
+#    TKN_PIPELINE_MIN_VERSION=v0.14 sdk/python/tests/run_e2e_tests.sh
 # or:
-#    make e2e_test TKN_PIPELINE_MIN_VERSION=0.14
-TKN_PIPELINE_MIN_VERSION = env.get("TKN_PIPELINE_MIN_VERSION", "0.14.0")
+#    make e2e_test TKN_PIPELINE_MIN_VERSION=v0.14
+TKN_PIPELINE_MIN_VERSION = env.get("TKN_PIPELINE_MIN_VERSION", "v0.14.0")
 
 # let the user know the expected Tekton Pipeline version
 if env.get("TKN_PIPELINE_MIN_VERSION"):
@@ -225,20 +236,16 @@ def _verify_tekton_cluster():
     exit_on_error("kubectl get svc tekton-pipelines-controller -n tekton-pipelines")
     exit_on_error("kubectl get svc ml-pipeline -n {}".format(namespace))
     tkn_ver_out = exit_on_error("tkn version")
-    tkn_pipeline_ver = re.search(r"^Pipeline version: v(.*)$", tkn_ver_out, re.MULTILINE).group(1)
+    tkn_pipeline_ver = re.search(r"^Pipeline version: (.*)$", tkn_ver_out, re.MULTILINE).group(1)
     tkn_client_ver = re.search(r"^Client version: (.*)$", tkn_ver_out, re.MULTILINE).group(1)
     assert version.parse(TKN_PIPELINE_MIN_VERSION) <= version.parse(tkn_pipeline_ver),\
-        "Tekton Pipeline version must be >= {}, found {}".format(TKN_PIPELINE_MIN_VERSION, tkn_pipeline_ver)
+        "Tekton Pipeline version must be >= {}, found '{}'".format(TKN_PIPELINE_MIN_VERSION, tkn_pipeline_ver)
     assert version.parse(TKN_CLIENT_MIN_VERSION) <= version.parse(tkn_client_ver),\
-        "Tekton CLI version must be >= {}, found {}".format(TKN_CLIENT_MIN_VERSION, tkn_client_ver)
+        "Tekton CLI version must be >= {}, found '{}'".format(TKN_CLIENT_MIN_VERSION, tkn_client_ver)
 
 
 # verify we have a working Tekton cluster
-if not KUBECONFIG:
-    logging.error("The environment variable 'KUBECONFIG' was not set.")
-    exit(1)
-else:
-    _verify_tekton_cluster()
+_verify_tekton_cluster()
 
 
 # =============================================================================
