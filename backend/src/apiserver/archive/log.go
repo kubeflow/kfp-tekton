@@ -87,7 +87,6 @@ func (a *LogArchive) CopyLogFromArchive(logContent []byte, dst io.Writer, opts E
 
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
-		// line := strings.Trim(scanner.LogFormatText(), "\n\r\t ")
 		bytes := scanner.Bytes()
 		if len(bytes) == 0 {
 			continue
