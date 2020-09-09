@@ -2,7 +2,10 @@
 
 ## Table of Contents
 
-- [Prequisites](#prequisites)
+- [Installation Targets and Prequisites](#installation-targets-and-prequisites)
+  * [IBM Cloud Kubernetes Service (IKS)](#ibm-cloud-kubernetes-service-iks)
+  * [OpenShift](#openshift)
+  * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
   * [Single user](#single-user)
   * [Multi-user, auth-enabled](#multi-user-auth-enabled)
@@ -11,24 +14,27 @@
   * [App layout](#app-layout)
 - [Troubleshooting](#troubleshooting)
 
-## Prequisites
+## Installation Targets and Prequisites
 
 A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory. 
 
-1. Using *IBM Cloud Kubernetes Service (IKS)*:
+### IBM Cloud Kubernetes Service (IKS)
 
-    1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://www.kubeflow.org/docs/ibm/existing-cluster/)
-    2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup)
+   1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://www.kubeflow.org/docs/ibm/existing-cluster/)
+   2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup)
 
-2. Using other Cloud providers or on-prem Kubernetes deployment:
-    - Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
+### OpenShift
 
-3. Using OpenShift
-    - Follow [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](https://github.com/IBM/KubeflowDojo/tree/master/OpenShift/manifests)
-  
+   Follow the instructions at [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](https://github.com/IBM/KubeflowDojo/tree/master/OpenShift/manifests). Depending on your situation, you can choose between the two approaches:
+   1. Leverage OpenShift Pipelines (built on Tekton)
+   2. Install Tekton as part of deployment
+
+### Other Cloud Providers or On-Prem Kubernetes Deployment
+   Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
+
 ## Kubeflow installation including Kubeflow Pipelines with Tekton backend
 
-**Important: Please complete the [prequisites](#prequisites) before proceeding to the following instructions.**
+**Important: Please complete the [prequisites](#installation-targets-and-prequisites) before proceeding with the following instructions.**
 
 Run the following commands to set up and deploy Kubeflow with KFP-Tekton. To understand more about the Kubeflow deployment mechanism, please read [here](#understanding-the-kubeflow-deployment-process).
 
