@@ -29,7 +29,7 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
    1. Leverage OpenShift Pipelines (built on Tekton)
    2. Install Tekton as part of deployment
 
-### Other Cloud Providers or On-Prem Kubernetes Deployment:
+### Other Cloud Providers or On-Prem Kubernetes Deployment
    Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
 
 ## Kubeflow installation including Kubeflow Pipelines with Tekton backend
