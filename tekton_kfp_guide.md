@@ -34,7 +34,7 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 
 ## Kubeflow installation including Kubeflow Pipelines with Tekton backend
 
-**Important: Please complete the [prequisites](##installation-targets-and-prequisites) before proceeding with the following instructions.**
+**Important: Please complete the [prequisites](#installation-targets-and-prequisites) before proceeding with the following instructions.**
 
 Run the following commands to set up and deploy Kubeflow with KFP-Tekton. To understand more about the Kubeflow deployment mechanism, please read [here](#understanding-the-kubeflow-deployment-process).
 
