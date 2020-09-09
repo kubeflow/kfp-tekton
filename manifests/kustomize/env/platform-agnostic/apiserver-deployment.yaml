@@ -71,3 +71,33 @@ spec:
             configMapKeyRef:
               name: kfp-tekton-config
               key: artifact_endpoint_scheme
+        - name: ARCHIVE_LOGS
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: archive_logs
+        - name: TRACK_ARTIFACTS
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: track_artifacts
+        - name: STRIP_EOF
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: strip_eof
+        - name: ARTIFACT_SCRIPT
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: artifact_script
+        - name: ARTIFACT_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: artifact_image
+        - name: INJECT_DEFAULT_SCRIPT
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: inject_default_script

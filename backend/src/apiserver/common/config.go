@@ -29,9 +29,15 @@ const (
 	DefaultPipelineRunnerServiceAccount string = "DefaultPipelineRunnerServiceAccount"
 	KubeflowUserIDHeader                string = "KUBEFLOW_USERID_HEADER"
 	KubeflowUserIDPrefix                string = "KUBEFLOW_USERID_PREFIX"
+	ArchiveLogs                         string = "ARCHIVE_LOGS"
+	TrackArtifacts                      string = "TRACK_ARTIFACTS"
+	StripEOF                            string = "STRIP_EOF"
 	ArtifactBucket                      string = "ARTIFACT_BUCKET"
 	ArtifactEndpoint                    string = "ARTIFACT_ENDPOINT"
 	ArtifactEndpointScheme              string = "ARTIFACT_ENDPOINT_SCHEME"
+	ArtifactScript                      string = "ARTIFACT_SCRIPT"
+	ArtifactImage                       string = "ARTIFACT_IMAGE"
+	InjectDefaultScript                 string = "INJECT_DEFAULT_SCRIPT"
 )
 
 func GetStringConfig(configName string) string {
@@ -78,8 +84,28 @@ func IsMultiUserMode() bool {
 	return GetBoolConfigWithDefault(MultiUserMode, false)
 }
 
+func IsArchiveLogs() bool {
+	return GetBoolConfigWithDefault(ArchiveLogs, false)
+}
+
+func IsStripEOF() bool {
+	return GetBoolConfigWithDefault(StripEOF, true)
+}
+
+func IsTrackArtifacts() bool {
+	return GetBoolConfigWithDefault(TrackArtifacts, true)
+}
+
+func IsInjectDefaultScript() bool {
+	return GetBoolConfigWithDefault(InjectDefaultScript, true)
+}
+
 func GetPodNamespace() string {
 	return GetStringConfig(PodNamespace)
+}
+
+func GetArtifactImage() string {
+	return GetStringConfigWithDefault(ArtifactImage, DefaultArtifactImage)
 }
 
 func GetBoolFromStringWithDefault(value string, defaultValue bool) bool {
@@ -112,4 +138,8 @@ func GetArtifactEndpoint() string {
 
 func GetArtifactEndpointScheme() string {
 	return GetStringConfigWithDefault(ArtifactEndpointScheme, DefaultArtifactEndpointScheme)
+}
+
+func GetArtifactScript() string {
+	return GetStringConfigWithDefault(ArtifactScript, DefaultArtifactScript)
 }

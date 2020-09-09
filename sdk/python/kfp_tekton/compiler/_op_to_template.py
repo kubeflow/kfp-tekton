@@ -14,7 +14,6 @@
 
 import json
 import re
-import textwrap
 import yaml
 
 from collections import OrderedDict
@@ -266,19 +265,12 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
                               volume_mount_step_template: List[Dict[Text, Any]],
                               volume_template: List[Dict[Text, Any]],
                               replaced_param_list: List[Text],
-                              artifact_to_result_mapping: Dict[Text, Any]):
-    """Process output artifacts to replicate the same behavior as Argo.
+                              artifact_to_result_mapping: Dict[Text, Any],
+                              artifact_items: List[Any]):
+    """Process output artifact dependencies to replicate the same behavior as Argo.
 
-    For storing artifacts, we will be using the minio/mc image because we need to upload artifacts to any type of
-    object storage and endpoint. The minio/mc is the best image suited for this task because the default KFP
-    is using minio and it also works well with other s3/gcs type of storage.
-
-    - image: minio/mc
-        name: copy-artifacts
-        script: |
-            #!/usr/bin/env sh
-            mc config host add storage http://minio-service.$NAMESPACE:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
-            mc cp /tmp/file.txt storage/$(inputs.params.bucket)/runs/$PIPELINERUN/$TASKRUN/file.txt
+    For storing artifacts, we will need to provide the output artifact dependencies for the server to
+    find and store the artifacts with the proper metadata.
 
     Args:
         outputs_dict {Dict[Text, Any]}: Dictionary of the possible parameters/artifacts in this task
@@ -290,82 +282,15 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
     Returns:
         Dict[Text, Any]
     """
+    
     if outputs_dict.get('artifacts'):
-        endpoint = '${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT}'
-        access_key = {"name": "mlpipeline-minio-artifact", "key": "accesskey"}
-        secret_access_key = {"name": "mlpipeline-minio-artifact", "key": "secretkey"}
-        bucket = '$ARTIFACT_BUCKET'
-        copy_artifacts_step = {
-            'image': 'minio/mc',
-            'name': 'copy-artifacts',
-            'script': textwrap.dedent('''\
-                        #!/usr/bin/env sh
-                        mc config host add storage %s $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
-                        ''' % (endpoint)),
-            'env': [
-                {'name': 'PIPELINERUN', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineRun']"}}},
-                {'name': 'PIPELINETASK', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.labels['tekton.dev/pipelineTask']"}}},
-                {'name': 'ARTIFACT_ENDPOINT_SCHEME', 'valueFrom':
-                    {'fieldRef': {'fieldPath': "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"}}},
-                {'name': 'ARTIFACT_ENDPOINT', 'valueFrom':
-                    {'fieldRef': {'fieldPath': "metadata.annotations['tekton.dev/artifact_endpoint']"}}},
-                {'name': 'ARTIFACT_BUCKET', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.annotations['tekton.dev/artifact_bucket']"}}},
-                {'name': 'AWS_ACCESS_KEY_ID', 'valueFrom': {'secretKeyRef': {'name': access_key['name'], 'key': access_key['key']}}},
-                {'name': 'AWS_SECRET_ACCESS_KEY', 'valueFrom': {'secretKeyRef': {'name': secret_access_key['name'],
-                                                                                 'key': secret_access_key['key']}}}
-            ]
-        }
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
             artifact_name = artifact_to_result_mapping.get(artifact['name'], artifact['name'])
-            if artifact['path'] == 'logs_to_S3':
-                copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'cat /var/log/containers/$TASKRUN*$NAMESPACE*step-main*.log > step-main.log && ' + \
-                    'tar -czf $TASKRUN-$NAMESPACE-step-main_log.tgz step-main.log\n' + \
-                    'mc cp $TASKRUN-$NAMESPACE-step-main_log.tgz' + \
-                    ' storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/\n' % (bucket)
-                copy_artifacts_step['env'].append({
-                    'name': 'TASKRUN',
-                    'valueFrom': {
-                        'fieldRef': {
-                            'fieldPath': "metadata.labels['tekton.dev/taskRun']"
-                        }
-                    }
-                })
-                volume_mount_step_template.extend([{
-                    'name': 'varlog',
-                    'mountPath': '/var/log'
-                }, {
-                    'name': 'varlibdockercontainers',
-                    'mountPath': '/var/lib/docker/containers',
-                    'readOnly': True
-                }, {
-                    'name': 'varlibkubeletpods',
-                    'mountPath': '/var/lib/kubelet/pods',
-                    'readOnly': True
-                }, {
-                    'name': 'varlogpods',
-                    'mountPath': '/var/log/pods',
-                    'readOnly': True
-                }])
-                volume_template.extend([{
-                    'name': 'varlog', 'hostPath': {'path': '/var/log'}
-                }, {
-                    'name': 'varlibdockercontainers', 'hostPath': {'path': '/var/lib/docker/containers'}
-                }, {
-                    'name': 'varlibkubeletpods', 'hostPath': {'path': '/var/lib/kubelet/pods'}
-                }, {
-                    'name': 'varlogpods', 'hostPath': {'path': '/var/log/pods'}
-                }])
-            elif artifact['name'] in replaced_param_list:
-                copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'tar -cvzf %s.tgz $(results.%s.path)\n' % (artifact_name, sanitize_k8s_name(artifact_name)) + \
-                    'mc cp %s.tgz storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact_name,
-                                                                                     bucket, artifact_name)
+            if artifact['name'] in replaced_param_list:
+                artifact_items.append([artifact_name, "$(results.%s.path)" % sanitize_k8s_name(artifact_name)])
             else:
-                copy_artifacts_step['script'] = copy_artifacts_step['script'] + \
-                    'tar -cvzf %s.tgz %s\n' % (artifact_name, artifact['path']) + \
-                    'mc cp %s.tgz storage/%s/artifacts/$PIPELINERUN/$PIPELINETASK/%s.tgz\n' % (artifact_name, bucket, artifact_name)
+                artifact_items.append([artifact_name, artifact['path']])
                 if artifact['path'].rsplit("/", 1)[0] not in mounted_artifact_paths:
                     if artifact['path'].rsplit("/", 1)[0] == "":
                         raise ValueError('Undefined volume path or "/" path artifacts are not allowed.')
@@ -374,9 +299,6 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
                     })
                     volume_template.append({'name': sanitize_k8s_name(artifact['name']), 'emptyDir': {}})
                     mounted_artifact_paths.append(artifact['path'].rsplit("/", 1)[0])
-        return copy_artifacts_step
-    else:
-        return {}
 
 
 def _process_base_ops(op: BaseOp):
@@ -409,7 +331,9 @@ def _process_base_ops(op: BaseOp):
     return op
 
 
-def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifacts=False, enable_s3_logs=False):
+def _op_to_template(op: BaseOp,
+                    pipelinerun_output_artifacts={},
+                    artifact_items={}):
     """Generate template given an operator inherited from BaseOp."""
 
     # initial local variables for tracking volumes and artifacts
@@ -436,12 +360,7 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
         output_artifacts = [
             {'name': name, 'path': path}
             for name, path in output_artifact_paths.items()
-        ] if enable_artifacts else []
-
-        if enable_s3_logs:
-            output_artifacts.append({
-                'name': op.name, 'path': 'logs_to_S3'
-            })
+        ]
 
         # workflow template
         container = convert_k8s_obj_to_json(
@@ -462,18 +381,17 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
         }
 
         # Create output artifact tracking annotation.
-        if enable_artifacts or enable_s3_logs:
-            for output_artifact in output_artifacts:
-                output_annotation = pipelinerun_output_artifacts.get(processed_op.name, [])
-                output_annotation.append(
-                    {
-                        'name': output_artifact.get('name', ''),
-                        'path': output_artifact.get('path', ''),
-                        'key': "artifacts/$PIPELINERUN/%s/%s.tgz" %
-                        (processed_op.name, output_artifact.get('name', '').replace(processed_op.name + '-', ''))
-                    }
-                )
-                pipelinerun_output_artifacts[processed_op.name] = output_annotation
+        for output_artifact in output_artifacts:
+            output_annotation = pipelinerun_output_artifacts.get(processed_op.name, [])
+            output_annotation.append(
+                {
+                    'name': output_artifact.get('name', ''),
+                    'path': output_artifact.get('path', ''),
+                    'key': "artifacts/$PIPELINERUN/%s/%s.tgz" %
+                    (processed_op.name, output_artifact.get('name', '').replace(processed_op.name + '-', ''))
+                }
+            )
+            pipelinerun_output_artifacts[processed_op.name] = output_annotation
 
     elif isinstance(op, dsl.ResourceOp):
         # no output artifacts
@@ -517,6 +435,7 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
         op_outputs = {}
         param_outputs = {}
     outputs_dict = _outputs_to_json(op, op_outputs, param_outputs, output_artifacts)
+    artifact_items[op.name] = artifact_items.get(op.name, [])
     if outputs_dict:
         copy_results_step = _process_parameters(processed_op,
                                                 template,
@@ -526,16 +445,15 @@ def _op_to_template(op: BaseOp, pipelinerun_output_artifacts={}, enable_artifact
                                                 replaced_param_list,
                                                 artifact_to_result_mapping,
                                                 mounted_param_paths)
-        copy_artifacts_step = _process_output_artifacts(outputs_dict,
-                                                        volume_mount_step_template,
-                                                        volume_template,
-                                                        replaced_param_list,
-                                                        artifact_to_result_mapping)
+        _process_output_artifacts(outputs_dict,
+                                  volume_mount_step_template,
+                                  volume_template,
+                                  replaced_param_list,
+                                  artifact_to_result_mapping,
+                                  artifact_items[op.name])
         if mounted_param_paths:
             template['spec']['steps'].append(copy_results_step)
         _update_volumes(template, volume_mount_step_template, volume_template)
-        if copy_artifacts_step:
-            template['spec']['steps'].append(copy_artifacts_step)
 
     # metadata
     if processed_op.pod_annotations or processed_op.pod_labels:

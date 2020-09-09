@@ -1,30 +1,24 @@
 # Installing Kubeflow Pipelines with Tekton
 
+## Table of Contents
+
+- [Prequisites](#prequisites)
+- [Kubeflow installation including Kubeflow Pipelines with Tekton backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
+  * [Single user](#single-user)
+  * [Multi-user, auth-enabled](#multi-user-auth-enabled)
+- [Verify installation](#verify-installation)
+- [Understanding the Kubeflow deployment process](#understanding-the-kubeflow-deployment-process)
+  * [App layout](#app-layout)
+- [Troubleshooting](#troubleshooting)
+
 ## Prequisites
 
 A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory. 
 
 1. Using *IBM Cloud Kubernetes Service (IKS)*:
 
-    * Authenticating with IBM Cloud
-
-    ```shell
-    ibmcloud login
-    ```
-
-    * Accessing the IBM Cloud cluster
-
-    If you do not have access to a cluster created with IBM Cloud Kubernetes Service, follow the [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster) guide to create a cluster.
-
-    Run the following command to switch the Kubernetes context and access the cluster.
-
-    ```shell
-    ibmcloud ks cluster config --cluster <cluster_name>
-    ```
-
-    Replace `<cluster_name>` with your cluster name. 
-    
-    Addtionally follow the instructions to setup [Block storage on IBM Cloud](#ibm-cloud-block-storage-setup)
+    1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://www.kubeflow.org/docs/ibm/existing-cluster/)
+    2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup)
 
 2. Using other Cloud providers or on-prem Kubernetes deployment:
     - Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
@@ -33,6 +27,9 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
     - Follow [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](https://github.com/IBM/KubeflowDojo/tree/master/OpenShift/manifests)
   
 ## Kubeflow installation including Kubeflow Pipelines with Tekton backend
+
+**Important: Please complete the [prequisites](#prequisites) before proceeding to the following instructions.**
+
 Run the following commands to set up and deploy Kubeflow with KFP-Tekton. To understand more about the Kubeflow deployment mechanism, please read [here](#understanding-the-kubeflow-deployment-process).
 
 1. Download the kfctl v1.1.0 release from the
@@ -65,7 +62,7 @@ export BASE_DIR=<path to a base directory>
 export KF_DIR=${BASE_DIR}/${KF_NAME}
 
 # Set the configuration file to use, such as the file specified below:
-export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_ibm_k8s_single_user.yaml"
+export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_k8s_single_user.yaml"
 
 # Generate and deploy Kubeflow:
 mkdir -p ${KF_DIR}
@@ -86,7 +83,9 @@ kfctl apply -V -f ${CONFIG_URI}
 * **${KF_DIR}** - The full path to your Kubeflow application directory.
 
 ### Multi-user, auth-enabled
-Run the following commands to deploy Kubeflow with GitHub OAuth application as the authentication provider by dex. To support multi-users with authentication enabled, this guide uses [dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://docs.github.com/developers/apps/building-oauth-apps). Before continue, refer to the guide [Creating an OAuth App](https://docs.github.com/developers/apps/creating-an-oauth-app) for steps to create an OAuth app on GitHub.com.
+Run the following commands to deploy multi-user auth-enabled Kubeflow with GitHub OAuth as the Dex authentication provider. To support multi-users with authentication enabled, this guide uses [Dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://docs.github.com/developers/apps/building-oauth-apps). 
+
+**Before continuing, refer to the guide [Creating an OAuth App](https://docs.github.com/developers/apps/creating-an-oauth-app) for steps to create an OAuth app on GitHub.com.**
 
 The scenario is a GitHub organization owner can authorize its organization members to access a deployed kubeflow. A member of this GitHub organization will be redirected to a page to grant access to the GitHub profile by Kubeflow.
 
@@ -107,11 +106,10 @@ The scenario is a GitHub organization owner can authorize its organization membe
     ```
 1. Setup configuration files:
     ```
-    export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_ibm_dex_multi_user_tekton_V1.1.0.yaml"
+    export CONFIG_URI="https://raw.githubusercontent.com/IBM/KubeflowDojo/master/manifests/kfctl_dex_multi_user_tekton_V1.1.0.yaml"
     # Generate and deploy Kubeflow:
     mkdir -p ${KF_DIR}
     cd ${KF_DIR}
-    kfctl build -V -f ${CONFIG_URI}
     ```
 1. Deploy Kubeflow:
     ```
@@ -121,6 +119,12 @@ The scenario is a GitHub organization owner can authorize its organization membe
 1. Update the configmap `dex` in namespace `auth` with credentials from the first step.
     - Get current resource file of current configmap `dex`:
     `kubectl get configmap dex -n auth -o yaml > dex-cm.yaml`
+    - Replace the following values in the `dex-cm.yaml`.
+      - **clientID**: Client ID of the Github OAuth App
+      - **clientSecret**: Client Secret of the Github OAuth App
+      - **orgs[0].name**: Any [Github organization](https://docs.github.com/en/github/setting-up-and-managing-organizations-and-teams/about-your-organization-dashboard) that the OAuth App has member read access. 
+      - (Optional) **hostName**: GitHub Enterprise Hostname. Leave it empty when using github.com.
+
     The `dex-cm.yaml` file looks like following:
     ```YAML
     apiVersion: v1
@@ -151,10 +155,6 @@ The scenario is a GitHub organization owner can authorize its organization membe
               clientID:
               clientSecret: 
               redirectURI: http://dex.auth.svc.cluster.local:5556/dex/callback
-              # Optional organizations and teams, communicated through the "groups" scope.
-              #
-              # NOTE: This is an EXPERIMENTAL config option and will likely change.
-              #
               orgs:
               # Fill in your GitHub organization name
               - name:
@@ -174,11 +174,6 @@ The scenario is a GitHub organization owner can authorize its organization membe
           # Update the secret below to match with the oidc authservice.
           secret: pUBnBOY80SnXgjibTYM9ZWNzY2xreNGQok
     ```
-    - Replace `clientID` and `clientSecret` in the `config.yaml` field with the `Client ID` and `Client Secret` created above for the GitHub OAuth application. Add your organization name to the `orgs` field, e.g.
-    ```YAML
-    orgs:
-    - name: kubeflow-test
-    ```
     Save the `dex-cm.yaml` file.
     - Update this change to the Kubernetes cluster:
     ```
@@ -196,6 +191,8 @@ The scenario is a GitHub organization owner can authorize its organization membe
     Then visit the Kubeflow endpoint `<node_public_ip>:31380` to login into Kubeflow
 
 1. Visit [KFP Tekton User Guide](/samples/kfp-user-guide) and start learning how to use Kubeflow pipeline.
+
+1. Visit [KFP Tekton Admin Guide](/kfp-admin-guide.md) for how to configure kfp-tekton with different settings.
 
 ## Verify installation
 
@@ -223,71 +220,6 @@ While the change is being applied, you can watch the service until below command
 
 The external IP should be accessible by visiting http://<EXTERNAL-IP>. Note that the above installation instructions do not create any protection for the external endpoint so it will be accessible to anyone without any authentication. 
 
-## IBM Cloud Block Storage Setup
-
-**Note**: This section is only required when the worker node provider `WORKER_NODE_PROVIDER` is set to `classic`. For other infrastructures, IBM Cloud Block Storage is already set up as the cluster's default storage class.
-
-When using the `classic` worker node provider of IBM Cloud Kubernetes cluster, by default, it uses [IBM Cloud File Storage](https://www.ibm.com/cloud/file-storage) based on NFS as the default storage class. File Storage is designed to run RWX (read-write multiple nodes) workloads with proper security built around it. Therefore, File Storage [does not allow `fsGroup` securityContext](https://cloud.ibm.com/docs/containers?topic=containers-security#container) which is needed for DEX and Kubeflow Jupyter Server.
-
-[IBM Cloud Block Storage](https://www.ibm.com/cloud/block-storage) provides a fast way to store data and
-satisfy many of the Kubeflow persistent volume requirements such as `fsGroup` out of the box and optimized RWO (read-write single node) which is used on all Kubeflow's persistent volume claim. 
-
-Therefore, we strongly recommend to set up [IBM Cloud Block Storage](https://cloud.ibm.com/docs/containers?topic=containers-block_storage#add_block) as the default storage class so that you can
-get the best experience from Kubeflow.
-
-1. [Follow the instructions](https://helm.sh/docs/intro/install/) to install the Helm version 3 client on your local machine.
-
-2. Add the IBM Cloud Helm chart repository to the cluster where you want to use the IBM Cloud Block Storage plug-in.
-    ```shell
-    helm repo add iks-charts https://icr.io/helm/iks-charts
-    helm repo update
-    ```
-
-3. Install the IBM Cloud Block Storage plug-in. When you install the plug-in, pre-defined block storage classes are added to your cluster.
-    ```shell
-    helm install 1.6.0 iks-charts/ibmcloud-block-storage-plugin -n kube-system
-    ```
-    
-    Example output:
-    ```
-    NAME: 1.6.0
-    LAST DEPLOYED: Thu Feb 27 11:41:35 2020
-    NAMESPACE: kube-system
-    STATUS: deployed
-    REVISION: 1
-    NOTES:
-    Thank you for installing: ibmcloud-block-storage-plugin.   Your release is named: 1.6.0
-    ...
-    ```
-
-4. Verify that the installation was successful.
-    ```shell
-    kubectl get pod -n kube-system | grep block
-    ```
-    
-5. Verify that the storage classes for Block Storage were added to your cluster.
-    ```
-    kubectl get storageclasses | grep block
-    ```
-
-6. Set the Block Storage as the default storageclass.
-    ```shell
-    kubectl patch storageclass ibmc-block-gold -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-
-    # Check the default storageclass is block storage
-    kubectl get storageclass | grep \(default\)
-    ```
-
-    Example output:
-    ```
-    ibmc-block-gold (default)   ibm.io/ibmc-block   65s
-    ```
-
-    Make sure `ibmc-block-gold` is the only `default` storageclass. If there are two or more rows in the above output, there is other `default` storageclass. Unset it with the below command, for example, will make the `ibmc-file-bronze` storage no longer the `default` storageclass for the cluster.
-
-    ```shell
-    kubectl patch storageclass ibmc-file-bronze -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
-    ```
 ## Understanding the Kubeflow deployment process
 
 The deployment process is controlled by the following commands:
@@ -317,3 +249,19 @@ directories:
     * You can customize the Kubernetes resources (modify the manifests and run `kfctl apply` again).
     
 You can find general information about Kubeflow configuration in the guide to [configuring Kubeflow with kfctl and kustomize](https://www.kubeflow.org/docs/other-guides/kustomize/).
+
+## Troubleshooting
+ - (For IBM Cloud IKS users) If you accidentally deployed Kubeflow with IBM Cloud File Storage, run the below commands to remove the existing pvc. The below commands are for removing resources in multi-user, so you can ignore any missing pvc or rollout error if you are doing this for single user.
+    ```shell
+    kubectl delete pvc -n kubeflow katib-mysql metadata-mysql minio-pv-claim minio-pvc mysql-pv-claim
+    kubectl delete pvc -n istio-system authservice-pvc
+    kubectl rollout restart -n kubeflow deploy/mysql deploy/minio deploy/katib-mysql deploy/metadata-db
+    kubectl rollout restart -n istio-system statefulset/authservice
+    ```
+
+    Then, redo the [**single user**](#single-user) or [**multi-tenant**](#multi-user-auth-enabled) section to redeploy Kubeflow with the [block storageclass](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup).
+
+- If you redeploy Kubeflow and some components are not showing up, it was due to the [dynamic created webhook issue](https://github.com/kubeflow/manifests/issues/1379). This issue will be [fixed](https://github.com/kubeflow/pipelines/pull/4429) in the next release of KFP.
+    ```shell
+    kubectl delete MutatingWebhookConfiguration cache-webhook-kubeflow katib-mutating-webhook-config
+    ```

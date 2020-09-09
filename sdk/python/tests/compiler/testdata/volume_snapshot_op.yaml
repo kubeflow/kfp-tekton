@@ -24,6 +24,9 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"create-volume": [], "step1-ingest": [], "step1-snap":
+      [], "step2-gunzip": [], "step2-snap": [], "step3-copy": [], "step3-snap": [],
+      "step4-output": []}'
     tekton.dev/input_artifacts: '{"step1-ingest": [{"name": "create-volume-name",
       "parent_task": "create-volume"}], "step1-snap": [{"name": "create-volume-name",
       "parent_task": "create-volume"}], "step2-gunzip": [{"name": "create-volume-name",
