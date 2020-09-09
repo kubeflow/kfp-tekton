@@ -18,7 +18,7 @@
 
 A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory. 
 
-### IBM Cloud Kubernetes Service (IKS):
+### IBM Cloud Kubernetes Service (IKS)
 
    1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://www.kubeflow.org/docs/ibm/existing-cluster/)
    2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup)
