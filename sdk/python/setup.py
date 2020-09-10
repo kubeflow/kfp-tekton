@@ -22,8 +22,8 @@
 #
 #    $ export KFP_TEKTON_VERSION=0.3.0-rc1
 #    $ python3 setup.py sdist
-#    $ twine check dist/kfp-tekton-${KFP_TEKTON_VERSION}.tar.gz
-#    $ twine upload --repository pypi dist/kfp-tekton-${KFP_TEKTON_VERSION}.tar.gz
+#    $ twine check dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
+#    $ twine upload --repository pypi dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #
 #   ... or:
 #
