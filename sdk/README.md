@@ -18,9 +18,6 @@ backed by Tekton.
   - [Installation](#installation)
   - [Compiling a Kubeflow Pipelines DSL Script](#compiling-a-kubeflow-pipelines-dsl-script)
   - [Running the Compiled Pipeline on a Tekton Cluster](#running-the-compiled-pipeline-on-a-tekton-cluster)
-  - [Building Tekton from Master](#building-tekton-from-master)
-  - [Optional Features](#optional-features)
-    - [Compile Kubeflow Pipelines without Artifacts](#compile-kubeflow-pipelines-without-artifacts)
   - [List of Available Features](#list-of-available-features)
   - [Tested Pipelines](#tested-pipelines)
   - [Troubleshooting](#troubleshooting)
@@ -133,15 +130,12 @@ in the same directory:
 
 After compiling the `sdk/python/tests/compiler/testdata/parallel_join.py` DSL script
 in the step above, we need to deploy the generated Tekton YAML to our Kubernetes
-cluster with `kubectl`. The Tekton server will automatically start a pipeline run
-for which we can follow the logs using the `tkn` CLI. 
+cluster with `kubectl`. The Tekton server will automatically start a pipeline run.
+We can follow the logs using the `tkn` CLI.
 
-Here we have to deploy the pipeline in the kubeflow namespace because all the pipelines with metadata
-and artifacts tracking  rely on the minio object storage credentials in the kubeflow namespace.
-
-    kubectl apply -f pipeline.yaml -n kubeflow
+    kubectl apply -f pipeline.yaml
     
-    tkn pipelinerun logs --last -n kubeflow
+    tkn pipelinerun logs --last --follow
 
 Once the Tekton Pipeline is running, the logs should start streaming:
       
@@ -149,70 +143,8 @@ Once the Tekton Pipeline is running, the logs should start streaming:
     
     [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
-    [gcs-download : copy-artifacts] Added `storage` successfully.
-    [gcs-download : copy-artifacts] tar: removing leading '/' from member names
-    [gcs-download : copy-artifacts] tekton/results/data
-    [gcs-download : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline/gcs-download/data.tgz`
-    [gcs-download : copy-artifacts] Total: 0 B, Transferred: 195 B, Speed: 1 B/s
-
     [gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
 
-    [gcs-download-2 : copy-artifacts] Added `storage` successfully.
-    [gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
-    [gcs-download-2 : copy-artifacts] tekton/results/data
-    [gcs-download-2 : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline/gcs-download-2/data.tgz`
-    [gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 205 B, Speed: 1 B/s
-
-    [echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-    [echo : main]
-    [echo : main] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-    [echo : main]
-
-
-## Building Tekton from Master
-
-In order to utilize the latest features and functions of the `kfp-tekton` compiler,
-we suggest to install Tekton from a nightly built or build it from the
-[master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline)
-branch. Features that require a special build, different from the 'Tested Version',
-will be listed below.
-
-- [Exit Handler](/sdk/FEATURES.md#exit-handler)
-
-
-## Optional Features
-
-### Compile Kubeflow Pipelines without Artifacts
-
-By default, _artifacts_ are enabled because the KFP DSL are designed to run on Kubeflow Pipeline's engine with artifacts to be stored on
-[Minio](https://docs.minio.io/) storage. When artifacts are enabled, all the output
-parameters are also treated as artifacts and persisted to the default object storage.
-Enabling artifacts also allows files to be downloaded or stored as artifact inputs/outputs.
-Since artifacts are dependent on the Kubeflow Pipeline's deployment, the generated
-Tekton pipeline must be deployed to the same namespace as Kubeflow Pipelines.
-
-To run Tekton pipelines without installing Kubeflow pipeline, or if you need to compile the Kubeflow
-Pipelines DSL without artifacts, add the `--disable-artifacts` argument to your
-`dsl-compile-tekton` commands. Then, run the pipeline in the same namespace that is
-used by Kubeflow Pipelines (typically `kubeflow`) by specifying the `-n` flag:
-
-    dsl-compile-tekton \
-        --py sdk/python/tests/compiler/testdata/parallel_join.py \
-        --output pipeline.yaml \
-        --disable-artifacts
-        
-    kubectl apply -f pipeline.yaml -n kubeflow
-    
-    tkn pipelinerun logs --last -n kubeflow
-
-You should see log messages without any artifact reference:
-
-    Waiting for logs to be available...
-    
-    [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-    
-    [gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-    
     [echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
     [echo : main]
     [echo : main] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
@@ -239,13 +171,14 @@ your code changes are improving the number of successfully compiled KFP pipeline
 
 ## Troubleshooting
 
-- When you encounter permission issues related to ServiceAccount, refer to
-  [Servince Account and RBAC doc](sa-and-rbac.md)
+- When you encounter ServiceAccount related permission issues, refer to the
+  ["Servince Account and RBAC" doc](sa-and-rbac.md)
   
-- If you run into the error `bad interpreter: No such file or director` when trying to use
-  python's venv, remove the current virtual environment in the `.venv` directory and
-  create a new one using `virtualenv .venv`
+- If you run into the error `bad interpreter: No such file or director` when trying 
+  to use Python's venv, remove the current virtual environment in the `.venv` directory
+  and create a new one using `virtualenv .venv`
 
-- For big data passing, user need to create PV manually, or enable dynamic volume provisioning, refer to the link of: https://kubernetes.io/docs/concepts/storage/dynamic-provisioning
-
-  User need to create pvc manually with the pvc name same as pipelinerun name until [issue #181](https://github.com/kubeflow/kfp-tekton/issues/181) addressed
+- For big data passing, PVs must be created manually, or dynamic volume provisioning,
+  has to be enabled (https://kubernetes.io/docs/concepts/storage/dynamic-provisioning).
+  The PVC name has to match the PipelineRun name until
+  [issue #181](https://github.com/kubeflow/kfp-tekton/issues/181) has been addressed.

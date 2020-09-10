@@ -66,6 +66,11 @@ Optionally, for convenience, set the default namespace to `tekton-pipelines`:
 
     kubectl config set-context --current --namespace=tekton-pipelines
 
+In order to utilize the latest features and functions of the `kfp-tekton` compiler,
+it may be necessary to install Tekton from a nightly built or to build it from the
+[master](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#install-pipeline)
+branch. Currently there are no features that require a special build.
+
 
 #### Tekton CLI
 
