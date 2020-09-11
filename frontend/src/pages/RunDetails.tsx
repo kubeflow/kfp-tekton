@@ -933,7 +933,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
 
     try {
       const taskPodId = selectedNodeDetails.id;
-      let taskName = "";
+      let taskName = '';
       for (const taskRunId of Object.getOwnPropertyNames(this.state.workflow.status.taskRuns)) {
         const taskRun = this.state.workflow.status.taskRuns[taskRunId];
         if (taskRun.status && taskRun.status.podName === taskPodId) {

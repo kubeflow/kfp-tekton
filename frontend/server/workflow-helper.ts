@@ -83,7 +83,11 @@ export function composePodLogsStreamHandler<T = Stream>(
  * @param namespace namespace of the pod (uses the same namespace as the server if not provided).
  * @param taskName name of the task.
  */
-export async function getPodLogsStreamFromK8s(podName: string, namespace?: string, taskName?: string) {
+export async function getPodLogsStreamFromK8s(
+  podName: string,
+  namespace?: string,
+  taskName?: string,
+) {
   const stream = new PassThrough();
   stream.end(await getPodLogs(podName, namespace));
   console.log(`Getting logs for pod:${podName} in namespace ${namespace}.`);
@@ -109,7 +113,11 @@ export const getPodLogsStreamFromWorkflow = toGetPodLogsStream(
  * on the provided pod name and namespace (optional).
  */
 export function toGetPodLogsStream(
-  getMinioRequestConfig: (podName: string, namespace?: string, taskName?: string) => Promise<MinioRequestConfig>,
+  getMinioRequestConfig: (
+    podName: string,
+    namespace?: string,
+    taskName?: string,
+  ) => Promise<MinioRequestConfig>,
 ) {
   return async (podName: string, namespace?: string, taskName?: string) => {
     const request = await getMinioRequestConfig(podName, namespace, taskName);
@@ -133,11 +141,15 @@ export function createPodLogsMinioRequestConfig(
 ) {
   // TODO: support pod log artifacts for diff namespace.
   // different bucket/prefix for diff namespace?
-  return async (podName: string, _namespace?: string, _taskName?: string): Promise<MinioRequestConfig> => {
+  return async (
+    podName: string,
+    _namespace?: string,
+    _taskName?: string,
+  ): Promise<MinioRequestConfig> => {
     // create a new client each time to ensure session token has not expired
     const client = await createMinioClient(minioOptions);
 
-    if(_taskName) {
+    if (_taskName) {
       const taskNameIndex = podName.indexOf(_taskName);
       const workflowName = podName.substring(0, taskNameIndex - 1);
       return {
