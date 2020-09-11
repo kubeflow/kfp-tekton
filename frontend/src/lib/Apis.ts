@@ -98,8 +98,8 @@ export class Apis {
   /**
    * Get pod logs
    */
-  public static getPodLogs(podName: string, podNamespace: string): Promise<string> {
-    let query = `k8s/pod/logs?podname=${encodeURIComponent(podName)}`;
+  public static getPodLogs(podName: string, podNamespace: string, taskName?: string): Promise<string> {
+    let query = `k8s/pod/logs?podname=${encodeURIComponent(podName)}${taskName ? '&taskname='+encodeURIComponent(taskName) : ""}`;
     if (podNamespace) {
       query += `&podnamespace=${encodeURIComponent(podNamespace)}`;
     }

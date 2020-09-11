@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import path from 'path';
+import path, { join } from 'path';
 import { PassThrough, Stream } from 'stream';
 import { ClientOptions as MinioClientOptions } from 'minio';
 import { getK8sSecret, getArgoWorkflow, getPodLogs } from './k8s-helper';
@@ -61,15 +61,15 @@ export interface SecretSelector {
  * fails.
  */
 export function composePodLogsStreamHandler<T = Stream>(
-  handler: (podName: string, namespace?: string) => Promise<T>,
-  fallback?: (podName: string, namespace?: string) => Promise<T>,
+  handler: (podName: string, namespace?: string, taskName?: string) => Promise<T>,
+  fallback?: (podName: string, namespace?: string, taskName?: string) => Promise<T>,
 ) {
-  return async (podName: string, namespace?: string) => {
+  return async (podName: string, namespace?: string, taskName?: string) => {
     try {
-      return await handler(podName, namespace);
+      return await handler(podName, namespace, taskName);
     } catch (err) {
       if (fallback) {
-        return await fallback(podName, namespace);
+        return await fallback(podName, namespace, taskName);
       }
       console.warn(err);
       throw err;
@@ -81,8 +81,9 @@ export function composePodLogsStreamHandler<T = Stream>(
  * Returns a stream containing the pod logs using kubernetes api.
  * @param podName name of the pod.
  * @param namespace namespace of the pod (uses the same namespace as the server if not provided).
+ * @param taskName name of the task.
  */
-export async function getPodLogsStreamFromK8s(podName: string, namespace?: string) {
+export async function getPodLogsStreamFromK8s(podName: string, namespace?: string, taskName?: string) {
   const stream = new PassThrough();
   stream.end(await getPodLogs(podName, namespace));
   console.log(`Getting logs for pod:${podName} in namespace ${namespace}.`);
@@ -94,6 +95,7 @@ export async function getPodLogsStreamFromK8s(podName: string, namespace?: strin
  * workflow status (uses k8s api to retrieve the workflow and secrets).
  * @param podName name of the pod.
  * @param namespace namespace of the pod (uses the same namespace as the server if not provided).
+ * @param taskName name of the task.
  */
 export const getPodLogsStreamFromWorkflow = toGetPodLogsStream(
   getPodLogsMinioRequestConfigfromWorkflow,
@@ -107,10 +109,10 @@ export const getPodLogsStreamFromWorkflow = toGetPodLogsStream(
  * on the provided pod name and namespace (optional).
  */
 export function toGetPodLogsStream(
-  getMinioRequestConfig: (podName: string, namespace?: string) => Promise<MinioRequestConfig>,
+  getMinioRequestConfig: (podName: string, namespace?: string, taskName?: string) => Promise<MinioRequestConfig>,
 ) {
-  return async (podName: string, namespace?: string) => {
-    const request = await getMinioRequestConfig(podName, namespace);
+  return async (podName: string, namespace?: string, taskName?: string) => {
+    const request = await getMinioRequestConfig(podName, namespace, taskName);
     console.log(`Getting logs for pod:${podName} from ${request.bucket}/${request.key}.`);
     return await getObjectStream(request);
   };
@@ -131,9 +133,20 @@ export function createPodLogsMinioRequestConfig(
 ) {
   // TODO: support pod log artifacts for diff namespace.
   // different bucket/prefix for diff namespace?
-  return async (podName: string, _namespace?: string): Promise<MinioRequestConfig> => {
+  return async (podName: string, _namespace?: string, _taskName?: string): Promise<MinioRequestConfig> => {
     // create a new client each time to ensure session token has not expired
     const client = await createMinioClient(minioOptions);
+
+    if(_taskName) {
+      const taskNameIndex = podName.indexOf(_taskName);
+      const workflowName = podName.substring(0, taskNameIndex - 1);
+      return {
+        bucket,
+        client,
+        key: path.join(prefix, workflowName, _taskName, 'main-log.tgz'),
+      };
+    }
+
     const workflowName = workflowNameFromPodName(podName);
     return {
       bucket,

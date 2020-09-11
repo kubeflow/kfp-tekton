@@ -66,13 +66,14 @@ export function getPodLogsHandler(
       return;
     }
     const podName = decodeURIComponent(req.query.podname);
+    const taskName = decodeURIComponent(req.query.taskname) || undefined;
 
     // This is optional.
     // Note decodeURIComponent(undefined) === 'undefined', so I cannot pass the argument directly.
     const podNamespace = decodeURIComponent(req.query.podnamespace || '') || undefined;
 
     try {
-      const stream = await getPodLogsStream(podName, podNamespace);
+      const stream = await getPodLogsStream(podName, podNamespace, taskName);
       stream.on('error', err => {
         if (
           err?.message &&
