@@ -23,6 +23,8 @@ def write_text_op():
         arguments=['-c', '/echo.sh'],
         file_outputs={
             'data': '/tmp/results.txt',
+            'underscore_test': '/tmp/results.txt',
+            'multiple_underscore_test': '/tmp/results.txt'
         }
     )
 
@@ -46,7 +48,7 @@ def hidden_output_file_pipeline(
 
     write_text = write_text_op()
 
-    echo_task = echo2_op(write_text.output)
+    echo_task = echo2_op(write_text.outputs['data'])
 
 
 if __name__ == '__main__':
