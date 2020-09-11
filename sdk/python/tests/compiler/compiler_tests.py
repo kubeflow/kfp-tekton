@@ -184,8 +184,11 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test compiling a workflow with non configurable output file.
     """
-    from .testdata.hidden_output_file import hidden_output_file_pipeline
-    self._test_pipeline_workflow(hidden_output_file_pipeline, 'hidden_output_file.yaml')
+    if sys.version_info < (3, 6, 0):
+      logging.warning("Skipping hidden_output workflow test for Python version < 3.6.0")
+    else:
+      from .testdata.hidden_output_file import hidden_output_file_pipeline
+      self._test_pipeline_workflow(hidden_output_file_pipeline, 'hidden_output_file.yaml')
 
   def test_tolerations_workflow(self):
     """
