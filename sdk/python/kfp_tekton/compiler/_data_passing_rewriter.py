@@ -303,16 +303,6 @@ def fix_big_data_passing(workflow: dict) -> dict:
                                                inputs_consumed_as_artifacts,
                                                outputs_consumed_as_artifacts)
 
-    # # Create pvc for pipelinerun if big data passing.
-    # # As we used workspaces in tekton pipelines which depends on it.
-    # # User need to create PV manually, or enable dynamic volume provisioning, refer to the link of:
-    # # https://kubernetes.io/docs/concepts/storage/dynamic-provisioning
-    # # TODO: Remove PVC, use 'volumeClaimTemplate' instead, issue #181.
-    # User need to create pvc manually recently until issue #181 addressed
-    # if pipelinerun_workspaces:
-    #     for pipelinerun in pipelinerun_workspaces:
-    #         workflow.append(create_pvc(pipelinerun))
-
     # Remove input parameters unless they're used downstream.
     # This also removes unused container template inputs if any.
     for template in container_templates + [pipeline_template]:
@@ -453,10 +443,19 @@ def big_data_passing_pipelinerun(name: str, pr: dict, pw: set):
     pipelinerun_name = name
     if pipelinerun_name in pw:
         pr.get('spec', {}).setdefault('workspaces', [])
+        # Change persistentVolumeClaim to volumeClaimTemplate which need Tekton version > 0.12
+        # User could modify default size of storage in the yaml file mannually if necessary.
         pr['spec']['workspaces'].append({
             "name": pipelinerun_name,
-            "persistentVolumeClaim": {
-                "claimName": pipelinerun_name
+            "volumeClaimTemplate": {
+                "spec": {
+                    "accessModes": ["ReadWriteMany"],
+                    "resources": {
+                        "requests": {
+                            "storage": "2Gi"
+                        }
+                    }
+                }
             }
         })
         prw.add(pipelinerun_name)
@@ -525,31 +524,6 @@ def big_data_passing_tasks(task: dict, inputs_tasks: set,
         del task['taskSpec']['artifacts']
 
     return task
-
-
-# Create pvc for pipelinerun if using big data passing.
-# As we used workspaces in tekton pipelines which depends on it.
-# User need to create PV manually, or enable dynamic volume provisioning, refer to the link of:
-# https://kubernetes.io/docs/concepts/storage/dynamic-provisioning
-# TODO: Remove PVC if Tekton version > = 0.12, use 'volumeClaimTemplate' instead
-def create_pvc(pr: str) -> dict:
-    pvc = {
-        "apiVersion": "v1",
-        "kind": "PersistentVolumeClaim",
-        "metadata": {
-            "name": pr
-        },
-        "spec": {
-            "accessModes": ["ReadWriteOnce"],
-            "resources": {
-                "requests": {
-                    "storage": "100Mi"
-                }
-            },
-            "volumeMode": "Filesystem",
-        }
-    }
-    return pvc
 
 
 def input_artifacts_tasks(template: dict, artifact: dict) -> dict:
