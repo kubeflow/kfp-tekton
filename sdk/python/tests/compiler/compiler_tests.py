@@ -84,27 +84,12 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.sequential import sequential_pipeline
     self._test_pipeline_workflow(sequential_pipeline, 'sequential.yaml')
 
-  def test_parallel_join_workflow_without_artifacts(self):
+  def test_parallel_join_workflow(self):
     """
     Test compiling a parallel join workflow.
     """
     from .testdata.parallel_join import download_and_join
-    self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml', enable_artifacts=False)
-
-  def test_parallel_join_workflow_with_artifacts(self):
-    """
-    Test compiling a parallel join workflow with artifacts.
-    """
-    from .testdata.parallel_join import download_and_join
-    self._test_pipeline_workflow(download_and_join, 'parallel_join_with_artifacts.yaml', enable_artifacts=True)
-
-  def test_parallel_join_workflow_with_logging(self):
-    """
-    Test compiling a parallel join workflow with logging.
-    """
-    from .testdata.parallel_join import download_and_join
-    self._test_pipeline_workflow(download_and_join, 'parallel_join_with_logging.yaml',
-                                 enable_artifacts=False, enable_s3_logs=True)
+    self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
 
   def test_parallel_join_with_argo_vars_workflow(self):
     """
@@ -166,13 +151,6 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.old_kfp_volume import auto_generated_pipeline
     with pytest.raises(ValueError):
       self._test_pipeline_workflow(auto_generated_pipeline, 'old_kfp_volume.yaml')
-
-  def test_volume_workflow_with_logging(self):
-    """
-    Test compiling a volume workflow.
-    """
-    from .testdata.volume import volume_pipeline
-    self._test_pipeline_workflow(volume_pipeline, 'volume_logging.yaml', enable_s3_logs=True)
 
   def test_timeout_workflow(self):
     """
@@ -308,8 +286,6 @@ class TestTektonCompiler(unittest.TestCase):
   def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
-                              enable_artifacts=True,
-                              enable_s3_logs=False,
                               normalize_compiler_output_function=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
@@ -317,9 +293,7 @@ class TestTektonCompiler(unittest.TestCase):
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
     try:
       compiler.TektonCompiler().compile(pipeline_function,
-                                        compiled_yaml_file,
-                                        enable_artifacts=enable_artifacts,
-                                        enable_s3_logs=enable_s3_logs)
+                                        compiled_yaml_file)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f
@@ -349,7 +323,6 @@ class TestTektonCompiler(unittest.TestCase):
   def _test_nested_workflow(self,
                             pipeline_yaml,
                             pipeline_list,
-                            enable_artifacts=True,
                             normalize_compiler_output_function=None):
     """
     Test compiling a simple workflow, and a bigger one composed from the simple one.
@@ -362,8 +335,7 @@ class TestTektonCompiler(unittest.TestCase):
       for index, pipeline in enumerate(pipeline_list):
           package_path = os.path.join(temp_dir, 'nested' + str(index) + '.yaml')
           compiler.TektonCompiler().compile(pipeline,
-                                            package_path,
-                                            enable_artifacts=enable_artifacts)
+                                            package_path)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f

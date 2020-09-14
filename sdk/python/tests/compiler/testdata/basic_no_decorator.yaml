@@ -24,8 +24,12 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
+    tekton.dev/artifact_items: '{"exiting": [], "get-frequent": [["word", "$(results.word.path)"]],
+      "save": []}'
+    tekton.dev/input_artifacts: '{"save": [{"name": "get-frequent-word", "parent_task":
+      "get-frequent"}]}'
+    tekton.dev/output_artifacts: '{"get-frequent": [{"key": "artifacts/$PIPELINERUN/get-frequent/word.tgz",
+      "name": "get-frequent-word", "path": "/tmp/message.txt"}]}'
   name: save-most-frequent-word
 spec:
   params:

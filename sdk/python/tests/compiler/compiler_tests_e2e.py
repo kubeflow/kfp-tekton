@@ -329,7 +329,7 @@ class TestCompilerE2E(unittest.TestCase):
             sleep(SLEEP_BETWEEN_TEST_PHASES)
         return status
 
-    def _get_pipelinerun_logs(self, name, timeout: int = 30) -> str:
+    def _get_pipelinerun_logs(self, name, timeout: int = 120) -> str:
         sleep(SLEEP_BETWEEN_TEST_PHASES * 2)  # if we don't wait, we often only get logs of some pipeline tasks
         tkn_logs_cmd = "tkn pipelinerun logs {} -n {}".format(name, namespace)
         tkn_logs_proc = run(tkn_logs_cmd.split(), capture_output=True, timeout=timeout, check=False)
