@@ -381,13 +381,17 @@ func createMinioBucket(minioClient *minio.Client, bucketName, region string) {
 	glog.Infof("Successfully created bucket %s\n", bucketName)
 }
 
-func initLogArchive() archive.LogArchiveInterface {
+func initLogArchive() (logArchive archive.LogArchiveInterface) {
 	logFileName := common.GetStringConfigWithDefault(
 		"ArchiveConfig.LogFileName", os.Getenv(archiveLogFileName))
 	logPathPrefix := common.GetStringConfigWithDefault(
 		"ArchiveConfig.LogPathPrefix", os.Getenv(archiveLogPathPrefix))
 
-	return archive.NewLogArchive(logPathPrefix, logFileName)
+	if logFileName != "" && logPathPrefix != "" {
+		logArchive = archive.NewLogArchive(logPathPrefix, logFileName)
+	}
+
+	return
 }
 
 // newClientManager creates and Init a new instance of ClientManager

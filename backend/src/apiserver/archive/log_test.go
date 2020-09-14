@@ -54,6 +54,12 @@ var logTs1, _ = time.Parse(time.RFC3339, "2020-08-31T15:00:02.260657206Z")
 
 var logArchive = NewLogArchive()
 
+func TestGetLogObjectKey_InvalidConfig(t *testing.T) {
+	logArchive := NewLogArchive("", "")
+	_, err := logArchive.GetLogObjectKey(nil, "node-id-98765432")
+	assert.NotNil(t, err)
+}
+
 func TestCopyLogFromArchive_FromJsonToJson(t *testing.T) {
 	opts := ExtractLogOptions{LogFormat: LogFormatJSON}
 	dst := bytes.Buffer{}
