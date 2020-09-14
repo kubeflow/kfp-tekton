@@ -12,7 +12,7 @@
     "PipelinePath": "pipelines"
   },
   "ArchiveConfig": {
-    "LogFileName": "main.log",
+    "LogFileName": "step-main.log",
     "LogPathPrefix": "/artifacts"
   },
   "InitConnectionTimeout": "6m",

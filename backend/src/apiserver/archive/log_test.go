@@ -19,7 +19,10 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 	"time"
 )
@@ -52,7 +55,23 @@ var logCriOText = `
 var logTs0, _ = time.Parse(time.RFC3339, "2020-08-31T15:00:00Z")
 var logTs1, _ = time.Parse(time.RFC3339, "2020-08-31T15:00:02.260657206Z")
 
-var logArchive = NewLogArchive()
+func initLogArchive() *LogArchive {
+	return NewLogArchive("/logs", "main.log")
+}
+
+func TestGetLogObjectKey(t *testing.T) {
+	logArchive := initLogArchive()
+	workflow := util.NewWorkflow(&v1beta1.PipelineRun{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "MY_NAMESPACE",
+			Name:      "MY_NAME",
+		},
+	})
+
+	key, err := logArchive.GetLogObjectKey(workflow, "node-id-98765432")
+	assert.Nil(t, err)
+	assert.Equal(t, "/logs/MY_NAME/node-id-98765432/main.log", key)
+}
 
 func TestGetLogObjectKey_InvalidConfig(t *testing.T) {
 	logArchive := NewLogArchive("", "")
@@ -61,6 +80,7 @@ func TestGetLogObjectKey_InvalidConfig(t *testing.T) {
 }
 
 func TestCopyLogFromArchive_FromJsonToJson(t *testing.T) {
+	logArchive := initLogArchive()
 	opts := ExtractLogOptions{LogFormat: LogFormatJSON}
 	dst := bytes.Buffer{}
 	src := compressInput(t, logJsonLines)
@@ -87,6 +107,7 @@ func TestCopyLogFromArchive_FromJsonToJson(t *testing.T) {
 }
 
 func TestCopyLogFromArchive_FromJsonToText(t *testing.T) {
+	logArchive := initLogArchive()
 	opts := ExtractLogOptions{LogFormat: LogFormatText, Timestamps: false}
 	dst := bytes.Buffer{}
 	src := compressInput(t, logJsonLines)
@@ -105,6 +126,7 @@ func TestCopyLogFromArchive_FromJsonToText(t *testing.T) {
 }
 
 func TestCopyLogFromArchive_FromJsonToTextWithTimestamp(t *testing.T) {
+	logArchive := initLogArchive()
 	opts := ExtractLogOptions{LogFormat: LogFormatText, Timestamps: true}
 	dst := bytes.Buffer{}
 	src := compressInput(t, logJsonLines)
@@ -123,6 +145,7 @@ func TestCopyLogFromArchive_FromJsonToTextWithTimestamp(t *testing.T) {
 }
 
 func TestCopyLogFromArchive_FromTextToJson(t *testing.T) {
+	logArchive := initLogArchive()
 	opts := ExtractLogOptions{LogFormat: LogFormatJSON}
 	dst := bytes.Buffer{}
 	src := compressInput(t, logText)
@@ -149,6 +172,7 @@ func TestCopyLogFromArchive_FromTextToJson(t *testing.T) {
 }
 
 func TestCopyLogFromArchive_FromTextToText(t *testing.T) {
+	logArchive := initLogArchive()
 	opts := ExtractLogOptions{LogFormat: LogFormatText, Timestamps: false}
 	dst := bytes.Buffer{}
 	src := compressInput(t, logText)
@@ -167,6 +191,7 @@ func TestCopyLogFromArchive_FromTextToText(t *testing.T) {
 }
 
 func TestCopyLogFromArchive_FromTextToTextWithTimestamp(t *testing.T) {
+	logArchive := initLogArchive()
 	opts := ExtractLogOptions{LogFormat: LogFormatText, Timestamps: true}
 	dst := bytes.Buffer{}
 	src := compressInput(t, logText)
@@ -185,6 +210,7 @@ func TestCopyLogFromArchive_FromTextToTextWithTimestamp(t *testing.T) {
 }
 
 func TestCopyLogFromArchive_FromCriOTextToJson(t *testing.T) {
+	logArchive := initLogArchive()
 	opts := ExtractLogOptions{LogFormat: LogFormatJSON}
 	dst := bytes.Buffer{}
 	src := compressInput(t, logCriOText)
@@ -211,6 +237,7 @@ func TestCopyLogFromArchive_FromCriOTextToJson(t *testing.T) {
 }
 
 func TestCopyLogFromArchive_FromCriOTextToText(t *testing.T) {
+	logArchive := initLogArchive()
 	opts := ExtractLogOptions{LogFormat: LogFormatText, Timestamps: false}
 	dst := bytes.Buffer{}
 	src := compressInput(t, logCriOText)
@@ -229,6 +256,7 @@ func TestCopyLogFromArchive_FromCriOTextToText(t *testing.T) {
 }
 
 func TestCopyLogFromArchive_FromCriOTextToTextWithTimestamp(t *testing.T) {
+	logArchive := initLogArchive()
 	opts := ExtractLogOptions{LogFormat: LogFormatText, Timestamps: true}
 	dst := bytes.Buffer{}
 	src := compressInput(t, logCriOText)
