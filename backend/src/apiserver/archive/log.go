@@ -20,10 +20,10 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/kubeflow/pipelines/backend/src/common/util"
@@ -42,7 +42,7 @@ type ExtractLogOptions struct {
 }
 
 type LogArchiveInterface interface {
-	GetLogObjectKey(workflow util.Workflow, nodeId string) (string, error)
+	GetLogObjectKey(workflow *util.Workflow, nodeId string) (string, error)
 	CopyLogFromArchive(logContent []byte, dst io.Writer, opts ExtractLogOptions) error
 }
 
@@ -56,24 +56,28 @@ var k8sLogPrefixExp = regexp.MustCompile(`(?m)^(\d{4}-\d{2}-\d{2}T\S+)\s(.+)$`)
 var crioLogPrefixExp = regexp.MustCompile(`(?m)^(.+)\s(stdout|stderr)\s\w\s(.+)$`)
 
 type LogArchive struct {
+	logFileName   string
+	logPathPrefix string
 }
 
-func NewLogArchive() *LogArchive {
-	return new(LogArchive)
-}
-
-func (a *LogArchive) GetLogObjectKey(workflow util.Workflow, nodeId string) (key string, err error) {
-	taskRun, taskRunId := workflow.FindTaskRunByPodName(nodeId)
-	if taskRun == nil {
-		err = util.NewBadRequestError(errors.New("archived log cannot be read"),
-			"Failed to retrieve the task run from the runtime workflow")
-		return
+func NewLogArchive(logPathPrefix, logFileName string) *LogArchive {
+	return &LogArchive{
+		logFileName:   logFileName,
+		logPathPrefix: logPathPrefix,
 	}
+}
 
-	workflowName := workflow.Name
-	taskName := taskRun.PipelineTaskName
+func (a *LogArchive) GetLogObjectKey(workflow *util.Workflow, nodeID string) (key string, err error) {
+	/*node, found := workflow.Status.Nodes[nodeID]
+	if !found {
+		err = util.NewBadRequestError(errors.New("archived log cannot be read"),
+			"Failed to retrieve the node from the workflow")
+		return
+	}*/
 
-	key = fmt.Sprintf("/artifacts/%s/%s/%s--step-main_log.gz", workflowName, taskName, taskRunId)
+	// key = fmt.Sprintf("/artifacts/%s/%s/%s--step-main_log.gz", workflow.Name, node.Name, nodeID)
+
+	key = strings.Join([]string{a.logPathPrefix, workflow.Name, nodeID, a.logFileName}, "/")
 
 	return
 }
@@ -87,6 +91,7 @@ func (a *LogArchive) CopyLogFromArchive(logContent []byte, dst io.Writer, opts E
 
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
+		// line := strings.Trim(scanner.LogFormatText(), "\n\r\t ")
 		bytes := scanner.Bytes()
 		if len(bytes) == 0 {
 			continue
@@ -121,7 +126,9 @@ func decompressLogArchive(logContent []byte) (reader io.Reader, err error) {
 	compressedReader := bytes.NewReader(logContent)
 	decompressedLogs, gzipErr := gzip.NewReader(compressedReader)
 	if gzipErr != nil {
-		err = util.NewInternalServerError(gzipErr, "Failed to decompress the archived log file")
+		// err = util.NewInternalServerError(gzipErr, "Failed to decompress the archived log file")
+		// It's not compressed - use original content
+		reader = bytes.NewReader(logContent)
 		return
 	}
 

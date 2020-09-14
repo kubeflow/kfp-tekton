@@ -17,7 +17,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/kubeflow/pipelines/backend/src/apiserver/archive"
 	"os"
 	"time"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/archive"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
@@ -49,6 +49,8 @@ const (
 	kfamServiceHost        = "PROFILES_KFAM_SERVICE_HOST"
 	kfamServicePort        = "PROFILES_KFAM_SERVICE_PORT"
 	mysqlExtraParams       = "DBConfig.ExtraParams"
+	archiveLogFileName     = "ARCHIVE_LOG_FILE_NAME"
+	archiveLogPathPrefix   = "ARCHIVE_LOG_PATH_PREFIX"
 
 	visualizationServiceHost = "ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_HOST"
 	visualizationServicePort = "ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_PORT"
@@ -171,7 +173,7 @@ func (c *ClientManager) init() {
 	c.runStore = runStore
 
 	// Log archive
-	c.logArchive = archive.NewLogArchive()
+	c.logArchive = initLogArchive()
 
 	if common.IsMultiUserMode() {
 		c.kfamClient = client.NewKFAMClient(common.GetStringConfig(kfamServiceHost), common.GetStringConfig(kfamServicePort))
@@ -377,6 +379,15 @@ func createMinioBucket(minioClient *minio.Client, bucketName, region string) {
 		glog.Fatalf("Failed to create Minio bucket. Error: %v", err)
 	}
 	glog.Infof("Successfully created bucket %s\n", bucketName)
+}
+
+func initLogArchive() archive.LogArchiveInterface {
+	logFileName := common.GetStringConfigWithDefault(
+		"ArchiveConfig.LogFileName", os.Getenv(archiveLogFileName))
+	logPathPrefix := common.GetStringConfigWithDefault(
+		"ArchiveConfig.LogPathPrefix", os.Getenv(archiveLogPathPrefix))
+
+	return archive.NewLogArchive(logPathPrefix, logFileName)
 }
 
 // newClientManager creates and Init a new instance of ClientManager

@@ -20,8 +20,6 @@ import (
 	"io"
 	"strconv"
 
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
@@ -592,12 +590,12 @@ func (r *ResourceManager) readRunLogFromPod(run *model.RunDetail, nodeId string,
 }
 
 func (r *ResourceManager) readRunLogFromArchive(run *model.RunDetail, nodeId string, dst io.Writer) error {
-	var workflow util.Workflow
+	workflow := new(util.Workflow)
 
 	if run.WorkflowRuntimeManifest == "" {
 		return util.NewBadRequestError(errors.New("archived log cannot be read"), "Failed to retrieve the runtime workflow from the run")
 	}
-	if err := json.Unmarshal([]byte(run.WorkflowRuntimeManifest), &workflow); err != nil {
+	if err := json.Unmarshal([]byte(run.WorkflowRuntimeManifest), workflow); err != nil {
 		return util.NewInternalServerError(err, "Failed to retrieve the runtime pipeline spec from the run")
 	}
 

@@ -98,8 +98,8 @@ export class Apis {
   /**
    * Get pod logs
    */
-  public static getPodLogs(podName: string, podNamespace: string): Promise<string> {
-    let query = `k8s/pod/logs?podname=${encodeURIComponent(podName)}`;
+  public static getPodLogs(runId: string, podName: string, podNamespace: string): Promise<string> {
+    let query = `k8s/pod/logs?podname=${encodeURIComponent(podName)}&runid=${encodeURIComponent(runId)}`;
     if (podNamespace) {
       query += `&podnamespace=${encodeURIComponent(podNamespace)}`;
     }
@@ -326,28 +326,6 @@ export class Apis {
         cache: 'no-cache',
         method: 'POST',
       },
-    );
-  }
-
-  public static async readRunLog(
-      runId: string,
-      nodeId: string,
-  ): Promise<string> {
-    const path = `/runs/{run_id}/nodes/{node_id}/log`.replace(
-        `{${'run_id'}}`,
-        encodeURIComponent(String(runId)),
-    ).replace(
-        `{${'node_id'}}`,
-        encodeURIComponent(String(nodeId)),
-    );
-    return await this._fetch(
-        path,
-        v1beta1Prefix,
-        undefined,
-        {
-          cache: 'no-cache',
-          method: 'GET',
-        },
     );
   }
 
