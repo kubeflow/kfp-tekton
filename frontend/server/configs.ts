@@ -79,7 +79,7 @@ export function loadConfigs(argv: string[], env: ProcessEnv): UIConfigs {
     /** Envoy service will listen to this port */
     METADATA_ENVOY_SERVICE_SERVICE_PORT = '9090',
     /** Is Argo log archive enabled? */
-    ARGO_ARCHIVE_LOGS = 'true',
+    ARGO_ARCHIVE_LOGS = 'false',
     /** Use minio or s3 client to retrieve archives. */
     ARGO_ARCHIVE_ARTIFACTORY = 'minio',
     /** Bucket to retrive logs from */
