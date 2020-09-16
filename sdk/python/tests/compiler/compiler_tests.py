@@ -184,7 +184,7 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test compiling a workflow with non configurable output file.
     """
-    # OrderedDict sorting before Python 3.6 within _verify_compiled_workflow 
+    # OrderedDict sorting before Python 3.6 within _verify_compiled_workflow
     # will fail on certain special characters.
     if sys.version_info < (3, 6, 0):
       logging.warning("Skipping hidden_output workflow test for Python version < 3.6.0")
