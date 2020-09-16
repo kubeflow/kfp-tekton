@@ -20,6 +20,7 @@ from typing import List, Optional, Set
 
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path, _prepend_steps
+from os import environ as env
 
 
 def fix_big_data_passing(workflow: dict) -> dict:
@@ -445,14 +446,16 @@ def big_data_passing_pipelinerun(name: str, pr: dict, pw: set):
         pr.get('spec', {}).setdefault('workspaces', [])
         # Change persistentVolumeClaim to volumeClaimTemplate which need Tekton version > 0.12
         # User could modify default size of storage in the yaml file mannually if necessary.
+        DEFAULT_ACCESSMODES = env.get('DEFAULT_ACCESSMODES', 'ReadWriteMany')
+        DEFAULT_STORAGE_SIZE = env.get('DEFAULT_STORAGE_SIZE', '2Gi')
         pr['spec']['workspaces'].append({
             "name": pipelinerun_name,
             "volumeClaimTemplate": {
                 "spec": {
-                    "accessModes": ["ReadWriteMany"],
+                    "accessModes": [DEFAULT_ACCESSMODES],
                     "resources": {
                         "requests": {
-                            "storage": "2Gi"
+                            "storage": DEFAULT_STORAGE_SIZE
                         }
                     }
                 }
