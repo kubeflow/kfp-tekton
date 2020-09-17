@@ -20,6 +20,7 @@ require (
 	github.com/google/go-cmp v0.4.1
 	github.com/google/uuid v1.1.1
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
+	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.12.2
 	github.com/jinzhu/gorm v1.9.12
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible
