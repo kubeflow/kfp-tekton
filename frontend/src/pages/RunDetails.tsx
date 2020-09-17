@@ -933,7 +933,21 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     let logsBannerMode = '' as Mode;
 
     try {
-      selectedNodeDetails.logs = await Apis.getPodLogs(runId, selectedNodeDetails.id, namespace);
+      const taskPodId = selectedNodeDetails.id;
+      let taskName = '';
+      for (const taskRunId of Object.getOwnPropertyNames(this.state.workflow.status.taskRuns)) {
+        const taskRun = this.state.workflow.status.taskRuns[taskRunId];
+        if (taskRun.status && taskRun.status.podName === taskPodId) {
+          taskName = taskRun.pipelineTaskName;
+        }
+      }
+
+      selectedNodeDetails.logs = await Apis.getPodLogs(
+        runId,
+        selectedNodeDetails.id,
+        namespace,
+        taskName,
+      );
     } catch (err) {
       let errMsg = await errorToMessage(err);
       logsBannerMessage = 'Failed to retrieve pod logs.';

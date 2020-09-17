@@ -85,7 +85,7 @@ export function loadConfigs(argv: string[], env: ProcessEnv): UIConfigs {
     /** Bucket to retrive logs from */
     ARGO_ARCHIVE_BUCKETNAME = 'mlpipeline',
     /** Prefix to logs. */
-    ARGO_ARCHIVE_PREFIX = 'logs',
+    ARGO_ARCHIVE_PREFIX = 'artifacts',
     /** Should use server API for log streaming? */
     STREAM_LOGS_FROM_SERVER_API = 'false',
     /** Disables GKE metadata endpoint. */
