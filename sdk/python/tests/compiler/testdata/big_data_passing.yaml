@@ -411,5 +411,10 @@ spec:
     - name: file-passing-pipelines
   workspaces:
   - name: file-passing-pipelines
-    persistentVolumeClaim:
-      claimName: file-passing-pipelines
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 2Gi

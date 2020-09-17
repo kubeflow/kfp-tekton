@@ -11,6 +11,10 @@
     "BucketName": "mlpipeline",
     "PipelinePath": "pipelines"
   },
+  "ArchiveConfig": {
+    "LogFileName": "step-main.tgz",
+    "LogPathPrefix": "/artifacts"
+  },
   "InitConnectionTimeout": "6m",
   "DefaultPipelineRunnerServiceAccount": "pipeline-runner",
   "CacheEnabled": "true"

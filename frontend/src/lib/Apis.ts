@@ -99,11 +99,12 @@ export class Apis {
    * Get pod logs
    */
   public static getPodLogs(
+    runId: string,
     podName: string,
     podNamespace: string,
     taskName?: string,
   ): Promise<string> {
-    let query = `k8s/pod/logs?podname=${encodeURIComponent(podName)}${
+    let query = `k8s/pod/logs?podname=${encodeURIComponent(podName)}&runid=${encodeURIComponent(runId)}${
       taskName ? '&taskname=' + encodeURIComponent(taskName) : ''
     }`;
     if (podNamespace) {
