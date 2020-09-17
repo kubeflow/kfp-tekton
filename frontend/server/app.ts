@@ -155,8 +155,9 @@ function createUIServer(options: UIConfigs) {
         target: apiServerAddress,
       }),
     );
-  } else
+  } else {
     registerHandler(app.get, '/k8s/pod/logs', getPodLogsHandler(options.argo, options.artifacts));
+  }
   /** Pod info */
   registerHandler(app.get, '/k8s/pod', podInfoHandler);
   registerHandler(app.get, '/k8s/pod/events', podEventsHandler);
