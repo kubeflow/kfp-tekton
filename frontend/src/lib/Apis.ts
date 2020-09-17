@@ -104,9 +104,9 @@ export class Apis {
     podNamespace: string,
     taskName?: string,
   ): Promise<string> {
-    let query = `k8s/pod/logs?podname=${encodeURIComponent(podName)}&runid=${encodeURIComponent(runId)}${
-      taskName ? '&taskname=' + encodeURIComponent(taskName) : ''
-    }`;
+    let query = `k8s/pod/logs?podname=${encodeURIComponent(podName)}&runid=${encodeURIComponent(
+      runId,
+    )}${taskName ? '&taskname=' + encodeURIComponent(taskName) : ''}`;
     if (podNamespace) {
       query += `&podnamespace=${encodeURIComponent(podNamespace)}`;
     }

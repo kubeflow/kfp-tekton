@@ -942,7 +942,12 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
         }
       }
 
-      selectedNodeDetails.logs = await Apis.getPodLogs(runId, selectedNodeDetails.id, namespace, taskName);
+      selectedNodeDetails.logs = await Apis.getPodLogs(
+        runId,
+        selectedNodeDetails.id,
+        namespace,
+        taskName,
+      );
     } catch (err) {
       let errMsg = await errorToMessage(err);
       logsBannerMessage = 'Failed to retrieve pod logs.';
