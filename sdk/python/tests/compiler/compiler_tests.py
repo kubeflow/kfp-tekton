@@ -77,6 +77,14 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.condition import flipcoin
     self._test_pipeline_workflow(flipcoin, 'condition.yaml')
 
+  def test_condition_dependency_error(self):
+    """
+    Test errors for dependency on Tekton conditional.
+    """
+    from .testdata.condition_error import flipcoin
+    with pytest.raises(TypeError):
+      self._test_pipeline_workflow(flipcoin, 'condition.yaml')
+
   def test_sequential_workflow(self):
     """
     Test compiling a sequential workflow.
