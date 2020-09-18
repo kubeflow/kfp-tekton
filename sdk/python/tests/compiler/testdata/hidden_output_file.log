@@ -1,6 +1,8 @@
 [download-file : main] hello world
 
 [download-file : copy-results] + cp /tmp/results.txt /tekton/results/data
+[download-file : copy-results] + cp /tmp/results.txt /tekton/results/underscore-test
+[download-file : copy-results] + cp /tmp/results.txt /tekton/results/multiple-underscore-test
 
 [echo : main] Text 1: hello world
 [echo : main] 

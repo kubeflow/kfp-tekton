@@ -248,7 +248,8 @@ def _process_parameters(processed_op: BaseOp,
                     s['args'] = args
             # If file output path cannot be found/replaced, use emptyDir to copy it to the tekton/results path
             if need_copy_step:
-                copy_results_step['script'] = copy_results_step['script'] + 'cp ' + path + ' $(results.%s.path);' % name + '\n'
+                copy_results_step['script'] = copy_results_step['script'] + 'cp ' + path + ' $(results.%s.path);' \
+                                                % sanitize_k8s_name(name) + '\n'
                 mount_path = path.rsplit("/", 1)[0]
                 if mount_path not in mounted_param_paths:
                     _add_mount_path(name, path, mount_path, volume_mount_step_template, volume_template, mounted_param_paths)
