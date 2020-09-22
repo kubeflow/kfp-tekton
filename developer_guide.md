@@ -27,19 +27,19 @@ Note: You can get an all-in-one installation of Kubeflow on IBM Cloud or Minikub
     kubectl apply -k manifests/kustomize/env/platform-agnostic
     ```
 
-    Check the new KFP deployment, it should take about 5 to 10 minutes. Please be aware that [cache-deployer-deployment](https://www.kubeflow.org/docs/pipelines/caching/) won't be running unless it's deployed on top of the whole [Kubeflow stack](https://www.kubeflow.org/docs/started/getting-started/) with [Cert Manager](https://cert-manager.io/docs/installation/kubernetes/).
+    Check the new KFP deployment, it should take about 5 to 10 minutes. Please be aware that [cache-deployer-deployment](https://www.kubeflow.org/docs/pipelines/caching/) won't be running unless it's deployed on top of the entire [Kubeflow stack](https://www.kubeflow.org/docs/started/getting-started/) with [Cert Manager](https://cert-manager.io/docs/installation/kubernetes/).
     ```shell
     kubectl get pods -n kubeflow
     ```
 
-    Once all the pods except Cache deployer are running, run the commands below to expose your KFP UI to a public endpoints.
+    Once all the pods except Cache deployer are running, run the commands below to expose your KFP UI to a public endpoint.
     ```shell
     kubectl patch svc ml-pipeline-ui -n kubeflow -p '{"spec": {"type": "LoadBalancer"}}'
-    kubectl -n kubeflow get service ml-pipeline-ui -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+    kubectl get service ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
     ```
-
-    Once you have Kubeflow Pipelines running with Tekton, then install the [KFP-Tekton SDK](/sdk/README.md) and learn about the
-    [KFP Tekton User Guide](/samples/kfp-user-guide) to start building your own pipelines.
+    
+    Now that you have deployed Kubeflow Pipelines with Tekton, install the [KFP-Tekton SDK](/sdk/README.md) and follow
+    the [KFP Tekton User Guide](/samples/kfp-user-guide) to start building your own pipelines.
 
 
 ## Development: Building from source code
