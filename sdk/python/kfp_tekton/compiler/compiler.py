@@ -414,6 +414,14 @@ class TektonCompiler(Compiler):
         if condition_refs.get(parent_group[-2], []):
           task['conditions'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2], [])
       if op.dependent_names:
+        for dependent_name in op.dependent_names:
+          if condition_refs.get(dependent_name, []):
+            # Prompt an error here because Tekton condition cannot be a dependency.
+            raise TypeError(textwrap.dedent("""\
+         '%s' cannot run after the Tekton condition '%s'.
+          A Tekton task is only allowed to run 'after' another Tekton task (ContainerOp).
+          Tekton doc: https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#using-the-runafter-parameter
+          """ % (task['name'], dependent_name)))
         task['runAfter'] = op.dependent_names
 
     # process input parameters from upstream tasks
