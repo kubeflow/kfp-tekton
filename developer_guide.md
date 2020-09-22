@@ -3,40 +3,43 @@
 # Getting Started
 ## Prequisites
 
-Note: You can get an all-in-one installation of Kubeflow on IBM Cloud or Minikube, including [Kubeflow Pipelines with Tekton backend by following the instructions here](https://github.com/IBM/KubeflowDojo/tree/master/HandsOn/Deployment). If you would like to do it step by step, or if you already have a Kubeflow deployment including Kubeflow Pipelines with Argo, please follow the instructions below.
+Note: You can get an all-in-one installation of Kubeflow on IBM Cloud or Minikube, including [Kubeflow Pipelines with Tekton backend by following the instructions here](/tekton_kfp_guide.md). If you would like to do it in development mode, or if you already have a Kubeflow deployment, please follow the instructions below.
 
-1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes). 
+1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes).
     - Minimum version: `0.14.0`
     - Recommended version: `0.15.0`
-2. [Install Kubeflow](https://www.kubeflow.org/docs/started/getting-started/)
-3. Clone this repository
+2. Clone this repository
     ```
     git clone github.com/kubeflow/kfp-tekton
     cd kfp-tekton
     ```
 
 ## Install Tekton KFP with pre-built images
-1. Remove the old version of KFP (with Argo) from a previous Kubeflow deployment if it exists on your cluster. Also clean up the old webhooks if you were using KFP 0.4 or above.
+1. Remove the old version of KFP from a previous Kubeflow deployment and webhooks if it exists on your cluster.
     ```shell
     kubectl delete -k manifests/kustomize/env/platform-agnostic
     kubectl delete MutatingWebhookConfiguration cache-webhook-kubeflow
     ```
 
-2. Once the old KFP deployment is removed, run the below command to deploy this modified Kubeflow Pipeline version with Tekton backend.
+2. Once the previous KFP deployment is removed, run the below command to deploy this modified Kubeflow Pipeline version with Tekton backend.
     ```shell
+    kubectl create ns kubeflow # Skip this if kubeflow namespace aleady exists
     kubectl apply -k manifests/kustomize/env/platform-agnostic
     ```
 
-    Check the new KFP deployment, it should take about 5 to 10 minutes.
+    Check the new KFP deployment, it should take about 5 to 10 minutes. Please be aware that [cache-deployer-deployment](https://www.kubeflow.org/docs/pipelines/caching/) won't be running unless it's deployed on top of the entire [Kubeflow stack](https://www.kubeflow.org/docs/started/getting-started/) with [Cert Manager](https://cert-manager.io/docs/installation/kubernetes/).
     ```shell
     kubectl get pods -n kubeflow
     ```
 
-    Now go ahead and access the Pipelines in the Kubeflow dashboard. It should be accessible from the istio-ingressgateway which is the
-    `<public_ip>:31380`
-
-    Once you have Kubeflow Pipelines running with Tekton, then install the [KFP-Tekton SDK](/sdk/README.md) and start building your
-    own pipelines.
+    Once all the pods except Cache deployer are running, run the commands below to expose your KFP UI to a public endpoint.
+    ```shell
+    kubectl patch svc ml-pipeline-ui -n kubeflow -p '{"spec": {"type": "LoadBalancer"}}'
+    kubectl get service ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+    ```
+    
+    Now that you have deployed Kubeflow Pipelines with Tekton, install the [KFP-Tekton SDK](/sdk/README.md) and follow
+    the [KFP Tekton User Guide](/samples/kfp-user-guide) to start building your own pipelines.
 
 
 ## Development: Building from source code

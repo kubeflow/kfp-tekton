@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: kubeflow
 bases:
 - application
-- argo
 - pipeline
 - metadata
 - cache
@@ -16,19 +15,19 @@ resources:
 images:
   - name: gcr.io/ml-pipeline/api-server
     newName: docker.io/aipipeline/api-server
-    newTag: 1.0.0
+    newTag: latest
   - name: gcr.io/ml-pipeline/persistenceagent
     newName: docker.io/aipipeline/persistenceagent
-    newTag: 1.0.0
+    newTag: latest
   - name: gcr.io/ml-pipeline/frontend
     newName: docker.io/aipipeline/frontend
-    newTag: 1.0.0
+    newTag: latest
   - name: gcr.io/ml-pipeline/metadata-writer
     newName: docker.io/aipipeline/metadata-writer
-    newTag: 1.0.0
+    newTag: latest
   - name: gcr.io/ml-pipeline/scheduledworkflow
     newName: docker.io/aipipeline/scheduledworkflow
-    newTag: 1.0.0
+    newTag: latest
 
 # Used by Kustomize
 configMapGenerator:
