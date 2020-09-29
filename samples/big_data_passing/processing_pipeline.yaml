@@ -5,10 +5,18 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "Hello world",
       "name": "text", "optional": true, "type": "String"}], "name": "Processing pipeline"}'
     sidecar.istio.io/inject: 'false'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"get-item-from-list": [["Output", "$(results.output.path)"]],
+      "print-small-text": [], "truncate-text": [["Output", "$(results.output.path)"]]}'
+    tekton.dev/input_artifacts: '{"get-item-from-list": [{"name": "truncate-text-Output",
+      "parent_task": "truncate-text"}], "print-small-text": [{"name": "get-item-from-list-Output",
+      "parent_task": "get-item-from-list"}]}'
+    tekton.dev/output_artifacts: '{"get-item-from-list": [{"key": "artifacts/$PIPELINERUN/get-item-from-list/Output.tgz",
+      "name": "get-item-from-list-Output", "path": "/tmp/outputs/Output/data"}], "truncate-text":
+      [{"key": "artifacts/$PIPELINERUN/truncate-text/Output.tgz", "name": "truncate-text-Output",
+      "path": "/tmp/outputs/Output/data"}]}'
   name: processing-pipeline
 spec:
   params:
@@ -41,7 +49,7 @@ spec:
           - python3
           - -u
           - -c
-          - "def truncate_text(text , max_length )  :\n    return text[0:max_length]\n\
+          - "def truncate_text(text, max_length):\n    return text[0:max_length]\n\
             \ndef _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value,\
             \ str):\n        raise TypeError('Value \"{}\" has type \"{}\" instead\
             \ of str.'.format(str(str_value), str(type(str_value))))\n    return str_value\n\
@@ -57,22 +65,22 @@ spec:
             \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
             \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+          image: python:3.7
           name: main
     - name: get-item-from-list
       params:
-      - name: truncate-text-output
+      - name: truncate-text-Output
         value: $(tasks.truncate-text.results.output)
       taskSpec:
         params:
-        - name: truncate-text-output
+        - name: truncate-text-Output
         results:
         - description: /tmp/outputs/Output/data
           name: output
         steps:
         - args:
           - --list-of-strings
-          - '[3, 1, "$(inputs.params.truncate-text-output)", 1, 5, 9, 2, 6, 7]'
+          - '[3, 1, "$(inputs.params.truncate-text-Output)", 1, 5, 9, 2, 6, 7]'
           - --index
           - '2'
           - '----output-paths'
@@ -81,7 +89,7 @@ spec:
           - python3
           - -u
           - -c
-          - "def get_item_from_list(list_of_strings , index )  :\n    return list_of_strings[index]\n\
+          - "def get_item_from_list(list_of_strings, index):\n    return list_of_strings[index]\n\
             \nimport json\ndef _serialize_str(str_value: str) -> str:\n    if not\
             \ isinstance(str_value, str):\n        raise TypeError('Value \"{}\" has\
             \ type \"{}\" instead of str.'.format(str(str_value), str(type(str_value))))\n\
@@ -97,32 +105,27 @@ spec:
             \ enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n\
             \    except OSError:\n        pass\n    with open(output_file, 'w') as\
             \ f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+          image: python:3.7
           name: main
     - name: print-small-text
       params:
-      - name: get-item-from-list-output
+      - name: get-item-from-list-Output
         value: $(tasks.get-item-from-list.results.output)
       taskSpec:
         params:
-        - name: get-item-from-list-output
+        - name: get-item-from-list-Output
         steps:
         - args:
           - --text
-          - $(inputs.params.get-item-from-list-output)
+          - $(inputs.params.get-item-from-list-Output)
           command:
           - python3
           - -u
           - -c
-          - "def print_small_text(text ):\n    '''Print small text'''\n    print(text)\n\
+          - "def print_small_text(text):\n    '''Print small text'''\n    print(text)\n\
             \nimport argparse\n_parser = argparse.ArgumentParser(prog='Print small\
             \ text', description='Print small text')\n_parser.add_argument(\"--text\"\
             , dest=\"text\", type=str, required=True, default=argparse.SUPPRESS)\n\
-            _parsed_args = vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"\
-            _output_paths\", [])\n\n_outputs = print_small_text(**_parsed_args)\n\n\
-            _output_serializers = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
-            \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
-            \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
-            \    f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+            _parsed_args = vars(_parser.parse_args())\n\n_outputs = print_small_text(**_parsed_args)\n"
+          image: python:3.7
           name: main

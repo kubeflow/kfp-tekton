@@ -5,10 +5,20 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "100000", "name":
       "count", "optional": true, "type": "Integer"}], "name": "Sum pipeline"}'
     sidecar.istio.io/inject: 'false'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print-text": [], "print-text-2": [], "sum-numbers":
+      [["Output", "$(workspaces.sum-numbers.path)/sum-numbers-Output"]], "write-numbers":
+      [["numbers", "$(workspaces.write-numbers.path)/write-numbers-numbers"]]}'
+    tekton.dev/input_artifacts: '{"print-text": [{"name": "write-numbers-numbers",
+      "parent_task": "write-numbers"}], "print-text-2": [{"name": "sum-numbers-Output",
+      "parent_task": "sum-numbers"}], "sum-numbers": [{"name": "write-numbers-numbers",
+      "parent_task": "write-numbers"}]}'
+    tekton.dev/output_artifacts: '{"sum-numbers": [{"key": "artifacts/$PIPELINERUN/sum-numbers/Output.tgz",
+      "name": "sum-numbers-Output", "path": "/tmp/outputs/Output/data"}], "write-numbers":
+      [{"key": "artifacts/$PIPELINERUN/write-numbers/numbers.tgz", "name": "write-numbers-numbers",
+      "path": "/tmp/outputs/numbers/data"}]}'
   name: sum-pipeline
 spec:
   params:
@@ -38,7 +48,7 @@ spec:
           - -c
           - "def _make_parent_dirs_and_return_path(file_path: str):\n    import os\n\
             \    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return\
-            \ file_path\n\ndef write_numbers(numbers_path , start  = 0, count  = 10):\n\
+            \ file_path\n\ndef write_numbers(numbers_path, start = 0, count = 10):\n\
             \    with open(numbers_path, 'w') as writer:\n        for i in range(start,\
             \ count):\n            writer.write(str(i) + '\\n')\n\nimport argparse\n\
             _parser = argparse.ArgumentParser(prog='Write numbers', description='')\n\
@@ -47,12 +57,8 @@ spec:
             count\", type=int, required=False, default=argparse.SUPPRESS)\n_parser.add_argument(\"\
             --numbers\", dest=\"numbers_path\", type=_make_parent_dirs_and_return_path,\
             \ required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\
-            _output_files = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs =\
-            \ write_numbers(**_parsed_args)\n\n_output_serializers = [\n\n]\n\nimport\
-            \ os\nfor idx, output_file in enumerate(_output_files):\n    try:\n  \
-            \      os.makedirs(os.path.dirname(output_file))\n    except OSError:\n\
-            \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+            \n_outputs = write_numbers(**_parsed_args)\n"
+          image: python:3.7
           name: main
         workspaces:
         - name: write-numbers
@@ -71,19 +77,14 @@ spec:
           - python3
           - -u
           - -c
-          - "def print_text(text_path ): # The \"text\" input is untyped so that any\
+          - "def print_text(text_path): # The \"text\" input is untyped so that any\
             \ data can be printed\n    '''Print text'''\n    with open(text_path,\
             \ 'r') as reader:\n        for line in reader:\n            print(line,\
             \ end = '')\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Print\
             \ text', description='Print text')\n_parser.add_argument(\"--text\", dest=\"\
             text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args\
-            \ = vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"_output_paths\"\
-            , [])\n\n_outputs = print_text(**_parsed_args)\n\n_output_serializers\
-            \ = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
-            \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
-            \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
-            \    f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+            \ = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"
+          image: python:3.7
           name: main
         workspaces:
         - name: print-text
@@ -99,12 +100,12 @@ spec:
           - --numbers
           - $(workspaces.sum-numbers.path)/write-numbers-numbers
           - '----output-paths'
-          - $(workspaces.sum-numbers.path)/sum-numbers-output
+          - $(workspaces.sum-numbers.path)/sum-numbers-Output
           command:
           - python3
           - -u
           - -c
-          - "def sum_numbers(numbers_path )  :\n    sum = 0\n    with open(numbers_path,\
+          - "def sum_numbers(numbers_path):\n    sum = 0\n    with open(numbers_path,\
             \ 'r') as reader:\n        for line in reader:\n            sum = sum\
             \ + int(line)\n    return sum\n\ndef _serialize_int(int_value: int) ->\
             \ str:\n    if isinstance(int_value, str):\n        return int_value\n\
@@ -121,7 +122,7 @@ spec:
             \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
             \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
             \    f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+          image: python:3.7
           name: main
         workspaces:
         - name: sum-numbers
@@ -135,24 +136,19 @@ spec:
         steps:
         - args:
           - --text
-          - $(workspaces.print-text-2.path)/sum-numbers-output
+          - $(workspaces.print-text-2.path)/sum-numbers-Output
           command:
           - python3
           - -u
           - -c
-          - "def print_text(text_path ): # The \"text\" input is untyped so that any\
+          - "def print_text(text_path): # The \"text\" input is untyped so that any\
             \ data can be printed\n    '''Print text'''\n    with open(text_path,\
             \ 'r') as reader:\n        for line in reader:\n            print(line,\
             \ end = '')\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Print\
             \ text', description='Print text')\n_parser.add_argument(\"--text\", dest=\"\
             text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args\
-            \ = vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"_output_paths\"\
-            , [])\n\n_outputs = print_text(**_parsed_args)\n\n_output_serializers\
-            \ = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
-            \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
-            \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
-            \    f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+            \ = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"
+          image: python:3.7
           name: main
         workspaces:
         - name: print-text-2
@@ -163,5 +159,10 @@ spec:
     - name: sum-pipeline
   workspaces:
   - name: sum-pipeline
-    persistentVolumeClaim:
-      claimName: sum-pipeline
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteMany
+        resources:
+          requests:
+            storage: 2Gi
