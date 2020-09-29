@@ -15,10 +15,10 @@ resources:
 images:
   - name: gcr.io/ml-pipeline/api-server
     newName: docker.io/aipipeline/api-server
-    newTag: latest
+    newTag: tekton-0.16
   - name: gcr.io/ml-pipeline/persistenceagent
     newName: docker.io/aipipeline/persistenceagent
-    newTag: latest
+    newTag: tekton-0.16
   - name: gcr.io/ml-pipeline/frontend
     newName: docker.io/aipipeline/frontend
     newTag: latest
@@ -27,7 +27,7 @@ images:
     newTag: latest
   - name: gcr.io/ml-pipeline/scheduledworkflow
     newName: docker.io/aipipeline/scheduledworkflow
-    newTag: latest
+    newTag: tekton-0.16
 
 # Used by Kustomize
 configMapGenerator:
