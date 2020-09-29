@@ -33,7 +33,9 @@ We are currently using [Kubeflow Pipelines 1.0.0](https://github.com/kubeflow/pi
 
 ### Development Guides
 
-[Developer Guide](/sdk/python/README.md) 
+[Backend Developer Guide](/developer_guide.md)
+
+[SDK Developer Guide](/sdk/python/README.md)
 
 [Compilation Tests Status Report](/sdk/python/tests/README.md)
 

@@ -77,6 +77,14 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.condition import flipcoin
     self._test_pipeline_workflow(flipcoin, 'condition.yaml')
 
+  def test_condition_dependency_error(self):
+    """
+    Test errors for dependency on Tekton conditional.
+    """
+    from .testdata.condition_error import flipcoin
+    with pytest.raises(TypeError):
+      self._test_pipeline_workflow(flipcoin, 'condition.yaml')
+
   def test_sequential_workflow(self):
     """
     Test compiling a sequential workflow.
@@ -184,8 +192,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test compiling a workflow with non configurable output file.
     """
-    from .testdata.hidden_output_file import hidden_output_file_pipeline
-    self._test_pipeline_workflow(hidden_output_file_pipeline, 'hidden_output_file.yaml')
+    # OrderedDict sorting before Python 3.6 within _verify_compiled_workflow
+    # will fail on certain special characters.
+    if sys.version_info < (3, 6, 0):
+      logging.warning("Skipping hidden_output workflow test for Python version < 3.6.0")
+    else:
+      from .testdata.hidden_output_file import hidden_output_file_pipeline
+      self._test_pipeline_workflow(hidden_output_file_pipeline, 'hidden_output_file.yaml')
 
   def test_tolerations_workflow(self):
     """

@@ -22,12 +22,16 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"download-file": [["data", "$(results.data.path)"]],
-      "echo": []}'
+    tekton.dev/artifact_items: '{"download-file": [["data", "$(results.data.path)"],
+      ["multiple_underscore_test", "$(results.multiple-underscore-test.path)"], ["underscore_test",
+      "$(results.underscore-test.path)"]], "echo": []}'
     tekton.dev/input_artifacts: '{"echo": [{"name": "download-file-data", "parent_task":
       "download-file"}]}'
     tekton.dev/output_artifacts: '{"download-file": [{"key": "artifacts/$PIPELINERUN/download-file/data.tgz",
-      "name": "download-file-data", "path": "/tmp/results.txt"}]}'
+      "name": "download-file-data", "path": "/tmp/results.txt"}, {"key": "artifacts/$PIPELINERUN/download-file/multiple_underscore_test.tgz",
+      "name": "download-file-multiple_underscore_test", "path": "/tmp/results.txt"},
+      {"key": "artifacts/$PIPELINERUN/download-file/underscore_test.tgz", "name":
+      "download-file-underscore_test", "path": "/tmp/results.txt"}]}'
   name: hidden-output-file-pipeline
 spec:
   pipelineSpec:
@@ -37,6 +41,10 @@ spec:
         results:
         - description: /tmp/results.txt
           name: data
+        - description: /tmp/results.txt
+          name: underscore-test
+        - description: /tmp/results.txt
+          name: multiple-underscore-test
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp
@@ -56,6 +64,10 @@ spec:
             set -exo pipefail
 
             cp /tmp/results.txt $(results.data.path);
+
+            cp /tmp/results.txt $(results.underscore-test.path);
+
+            cp /tmp/results.txt $(results.multiple-underscore-test.path);
 
             '
         volumes:
