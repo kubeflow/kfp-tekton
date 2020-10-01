@@ -4,10 +4,19 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Text splitting pipeline2"}'
     sidecar.istio.io/inject: 'false'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  labels:
-    pipelines.kubeflow.org/pipeline-sdk-type: kfp
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print-text": [], "print-text-2": [], "split-text-lines2":
+      [["even_lines", "$(workspaces.split-text-lines2.path)/split-text-lines2-even_lines"],
+      ["odd_lines", "$(workspaces.split-text-lines2.path)/split-text-lines2-odd_lines"]]}'
+    tekton.dev/input_artifacts: '{"print-text": [{"name": "split-text-lines2-odd_lines",
+      "parent_task": "split-text-lines2"}], "print-text-2": [{"name": "split-text-lines2-even_lines",
+      "parent_task": "split-text-lines2"}]}'
+    tekton.dev/output_artifacts: '{"split-text-lines2": [{"key": "artifacts/$PIPELINERUN/split-text-lines2/even_lines.tgz",
+      "name": "split-text-lines2-even_lines", "path": "/tmp/outputs/even_lines/data"},
+      {"key": "artifacts/$PIPELINERUN/split-text-lines2/odd_lines.tgz", "name": "split-text-lines2-odd_lines",
+      "path": "/tmp/outputs/odd_lines/data"}]}'
   name: text-splitting-pipeline2
 spec:
   pipelineSpec:
@@ -61,24 +70,20 @@ spec:
             \ = None):\n    def make_parent_dirs_and_return_path(file_path: str):\n\
             \        import os\n        os.makedirs(os.path.dirname(file_path), exist_ok=True)\n\
             \        return open(file_path, mode=mode, encoding=encoding)\n    return\
-            \ make_parent_dirs_and_return_path\n\ndef split_text_lines2(source_file\
-            \ , odd_lines_file , even_lines_file ):\n    while True:\n        line\
-            \ = source_file.readline()\n        if line == \"\":\n            break\n\
-            \        odd_lines_file.write(line)\n        line = source_file.readline()\n\
-            \        if line == \"\":\n            break\n        even_lines_file.write(line)\n\
-            \nimport argparse\n_parser = argparse.ArgumentParser(prog='Split text\
-            \ lines2', description='')\n_parser.add_argument(\"--source\", dest=\"\
-            source_file\", type=argparse.FileType('rt'), required=True, default=argparse.SUPPRESS)\n\
-            _parser.add_argument(\"--odd-lines\", dest=\"odd_lines_file\", type=_parent_dirs_maker_that_returns_open_file('wt'),\
+            \ make_parent_dirs_and_return_path\n\ndef split_text_lines2(source_file,\
+            \ odd_lines_file, even_lines_file):\n    while True:\n        line = source_file.readline()\n\
+            \        if line == \"\":\n            break\n        odd_lines_file.write(line)\n\
+            \        line = source_file.readline()\n        if line == \"\":\n   \
+            \         break\n        even_lines_file.write(line)\n\nimport argparse\n\
+            _parser = argparse.ArgumentParser(prog='Split text lines2', description='')\n\
+            _parser.add_argument(\"--source\", dest=\"source_file\", type=argparse.FileType('rt'),\
+            \ required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--odd-lines\"\
+            , dest=\"odd_lines_file\", type=_parent_dirs_maker_that_returns_open_file('wt'),\
             \ required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--even-lines\"\
             , dest=\"even_lines_file\", type=_parent_dirs_maker_that_returns_open_file('wt'),\
             \ required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\
-            _output_files = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs =\
-            \ split_text_lines2(**_parsed_args)\n\n_output_serializers = [\n\n]\n\n\
-            import os\nfor idx, output_file in enumerate(_output_files):\n    try:\n\
-            \        os.makedirs(os.path.dirname(output_file))\n    except OSError:\n\
-            \        pass\n    with open(output_file, 'w') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+            \n_outputs = split_text_lines2(**_parsed_args)\n"
+          image: python:3.7
           name: main
         volumes:
         - emptyDir: {}
@@ -100,19 +105,14 @@ spec:
           - python3
           - -u
           - -c
-          - "def print_text(text_path ): # The \"text\" input is untyped so that any\
+          - "def print_text(text_path): # The \"text\" input is untyped so that any\
             \ data can be printed\n    '''Print text'''\n    with open(text_path,\
             \ 'r') as reader:\n        for line in reader:\n            print(line,\
             \ end = '')\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Print\
             \ text', description='Print text')\n_parser.add_argument(\"--text\", dest=\"\
             text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args\
-            \ = vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"_output_paths\"\
-            , [])\n\n_outputs = print_text(**_parsed_args)\n\n_output_serializers\
-            \ = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
-            \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
-            \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
-            \    f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+            \ = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"
+          image: python:3.7
           name: main
         workspaces:
         - name: print-text
@@ -131,19 +131,14 @@ spec:
           - python3
           - -u
           - -c
-          - "def print_text(text_path ): # The \"text\" input is untyped so that any\
+          - "def print_text(text_path): # The \"text\" input is untyped so that any\
             \ data can be printed\n    '''Print text'''\n    with open(text_path,\
             \ 'r') as reader:\n        for line in reader:\n            print(line,\
             \ end = '')\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Print\
             \ text', description='Print text')\n_parser.add_argument(\"--text\", dest=\"\
             text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args\
-            \ = vars(_parser.parse_args())\n_output_files = _parsed_args.pop(\"_output_paths\"\
-            , [])\n\n_outputs = print_text(**_parsed_args)\n\n_output_serializers\
-            \ = [\n\n]\n\nimport os\nfor idx, output_file in enumerate(_output_files):\n\
-            \    try:\n        os.makedirs(os.path.dirname(output_file))\n    except\
-            \ OSError:\n        pass\n    with open(output_file, 'w') as f:\n    \
-            \    f.write(_output_serializers[idx](_outputs[idx]))\n"
-          image: tensorflow/tensorflow:1.13.2-py3
+            \ = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"
+          image: python:3.7
           name: main
         workspaces:
         - name: print-text-2
@@ -154,5 +149,10 @@ spec:
     - name: text-splitting-pipeline2
   workspaces:
   - name: text-splitting-pipeline2
-    persistentVolumeClaim:
-      claimName: text-splitting-pipeline2
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteMany
+        resources:
+          requests:
+            storage: 2Gi
