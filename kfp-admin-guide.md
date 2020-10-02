@@ -8,6 +8,7 @@ This page introduces different ways to configure the kfp-tekton admin settings s
 - [Enable Log Archival](#enable-log-archival)
 - [Enable Auto Strip for End of File newlines](#enable-auto-strip-for-end-of-file-newlines)
 - [Customize Artifact Image to do your own post processing](#customize-artifact-image-to-do-your-own-post-processing)
+- [Change S3 Endpoint for KFP Tekton artifacts](#change-s3-endpoint-for-kfp-tekton-artifacts)
 
 
 ## Disable Artifact Tracking
@@ -52,8 +53,32 @@ Since Tekton still has many gaps with handling artifacts, KFP-Tekton allows user
 - `inject_default_script`: A set of default script that convert the artifact annotations into `sh` script. We recommend to disable it if using a custom artifact image. 
 
 Then update the default [kfp-tekton configmap](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml) and patch it with the commands below:
-```
-kubectl apply -f manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml
+```shell
+kubectl apply -f manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml -n kubbeflow
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 ```
 
+## Change S3 Endpoint for KFP Tekton artifacts
+
+By default, Kubeflow pipeline stores its pipeline artifacts to the Minio storage in the same cluster. To change this storage to an external S3 endpoint, update the default [kfp-tekton configmap](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml) and S3 credential secret then patch them with the commands below.
+
+Update the S3 Secret:
+- `accesskey`: S3 Access Key ID
+- `secretkey`: S3 Secret Access Key
+```shell
+# Define the S3 access and secret key
+accesskey=<s3_access_key>
+secretkey=<s3_secret_access_key>
+
+kubectl create secret generic -n kubeflow mlpipeline-minio-artifact --from-literal=accesskey=${accesskey}  --from-literal=secretkey=${secretkey} --dry-run -o yaml | kubectl apply -f -
+```
+
+Update the [kfp-tekton configmap](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml):
+- `artifact_bucket`: Bucket for storing the artifacts
+- `artifact_endpoint`: S3 Endpoint for storing artifacts
+- `artifact_endpoint_scheme`: HTTP scheme of the above S3 Endpoint
+```shell
+kubectl apply -f manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml -n kubeflow
+kubectl rollout restart deploy/ml-pipeline -n kubeflow
+kubectl rollout restart deploy/minio -n kubeflow
+```
