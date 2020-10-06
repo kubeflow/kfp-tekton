@@ -54,7 +54,7 @@ Since Tekton still has many gaps with handling artifacts, KFP-Tekton allows user
 
 Then update the default [kfp-tekton configmap](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml) and patch it with the commands below:
 ```shell
-kubectl apply -f manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml -n kubbeflow
+kubectl apply -f manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml -n kubeflow
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 ```
 
