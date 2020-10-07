@@ -738,6 +738,22 @@ class TektonCompiler(Compiler):
         {
           'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}',
           'tekton_rule': '$(results.\g<1>.path)'
+        },
+        {
+          'argo_rule': '{{workflow.uid}}',
+          'tekton_rule': '$(context.pipelineRun.uid)'
+        },
+        {
+          'argo_rule': '{{workflow.name}}',
+          'tekton_rule': '$(context.pipelineRun.name)'
+        },
+        {
+          'argo_rule': '{{workflow.namespace}}',
+          'tekton_rule': '$(context.pipelineRun.namespace)'
+        },
+        {
+          'argo_rule': '{{workflow.parameters.([^ \t\n.:,;{}]+)}}',
+          'tekton_rule': '$(params.\g<1>)'
         }
     ]
     for regex_rule in tekton_var_regex_rules:
