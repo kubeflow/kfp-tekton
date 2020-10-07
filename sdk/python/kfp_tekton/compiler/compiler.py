@@ -357,8 +357,7 @@ class TektonCompiler(Compiler):
         }]
       else:
         templates.append(template)
-        task_refs.append(
-          {
+        task_ref = {
             'name': template['metadata']['name'],
             'params': [{
                 'name': p['name'],
@@ -367,7 +366,14 @@ class TektonCompiler(Compiler):
             ],
             'taskSpec': template['spec'],
           }
-        )
+
+        if template['metadata'].get('labels', None):
+          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+          task_ref['taskSpec']['metadata']['labels'] = template['metadata']['labels']
+        if template['metadata'].get('annotations', None):
+          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+          task_ref['taskSpec']['metadata']['annotations'] = template['metadata']['annotations']
+        task_refs.append(task_ref)
 
     # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
     opsgroup_stack = [pipeline.groups[0]]
