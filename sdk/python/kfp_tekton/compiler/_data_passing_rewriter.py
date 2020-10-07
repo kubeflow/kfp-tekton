@@ -301,6 +301,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
     # Use workspaces to tasks if big data passing instead of 'results', 'copy-inputs'
     for task_template in container_templates:
         task_template = big_data_passing_tasks(task_template,
+                                               pipelinerun_template,
                                                inputs_consumed_as_artifacts,
                                                outputs_consumed_as_artifacts)
 
@@ -465,8 +466,8 @@ def big_data_passing_pipelinerun(name: str, pr: dict, pw: set):
     return pr, prw
 
 
-def big_data_passing_tasks(task: dict, inputs_tasks: set,
-                           outputs_tasks: set) -> dict:
+def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
+                           inputs_tasks: set, outputs_tasks: set) -> dict:
     task_name = task.get('name')
     task_spec = task.get('taskSpec', {})
     # Data passing for the task outputs
@@ -484,6 +485,8 @@ def big_data_passing_tasks(task: dict, inputs_tasks: set,
                 task_name, task_name, task_output.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
                 task['taskSpec'], placeholder, workspaces_parameter)
+            pipelinerun_template['metadata']['annotations'] = replace_big_data_placeholder(
+                pipelinerun_template['metadata']['annotations'], placeholder, workspaces_parameter)
 
     # Remove artifacts outputs from results
     task['taskSpec']['results'] = [

@@ -284,6 +284,7 @@ func (w *Workflow) IsInFinalState() bool {
 			"Completed":                1,
 			"PipelineRunCancelled":     1,
 			"PipelineRunCouldntCancel": 1,
+			"PipelineRunTimeout":       1,
 		}
 		phase := w.Status.Status.Conditions[0].Reason
 		if _, ok := finalConditions[phase]; ok {

@@ -17,6 +17,7 @@ backed by Tekton.
   - [Project Prerequisites](#project-prerequisites)
   - [Installation](#installation)
   - [Compiling a Kubeflow Pipelines DSL Script](#compiling-a-kubeflow-pipelines-dsl-script)
+  - [Big data passing workspace configuration](#big-data-passing-workspace-configuration)
   - [Running the Compiled Pipeline on a Tekton Cluster](#running-the-compiled-pipeline-on-a-tekton-cluster)
   - [List of Available Features](#list-of-available-features)
   - [Tested Pipelines](#tested-pipelines)
@@ -124,6 +125,20 @@ executable from a command line shell, producing a Tekton YAML file `pipeline.yam
 in the same directory:
 
     python3 pipeline.py
+
+
+## Big data passing workspace configuration
+
+When [big data files](/samples/big_data_passing/big_data_passing_description.ipynb)
+are defined in KFP. Tekton will create a workspace to share these big data files
+among tasks that run in the same pipeline. By default, the workspace is a
+Read Write Many PVC with 2Gi storage. But you can change these configuration
+using the environment variables below:
+
+```shell
+export DEFAULT_ACCESSMODES=ReadWriteMany
+export DEFAULT_STORAGE_SIZE=2Gi
+```
 
 
 ## Running the Compiled Pipeline on a Tekton Cluster
