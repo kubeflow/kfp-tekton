@@ -196,6 +196,10 @@ However, when using dynamic parameters, the number of parallel tasks is determin
 argo -> tekton
 {{inputs.parameters.%s}} -> $(inputs.params.%s)
 {{outputs.parameters.%s}} -> $(results.%s.path)
+{{workflow.uid}} -> $(context.pipelineRun.uid)
+{{workflow.name}} -> $(context.pipelineRun.name)
+{{workflow.namespace}} -> $(context.pipelineRun.namespace)
+{{workflow.parameters.%s}} -> $(params.%s)
 ```
 
 [parallel_join_with_argo_vars](/sdk/python/tests/compiler/testdata/parallel_join_with_argo_vars.py) is an example of how Argo variables are
