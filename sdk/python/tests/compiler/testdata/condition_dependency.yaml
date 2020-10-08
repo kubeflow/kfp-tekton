@@ -25,7 +25,8 @@ metadata:
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"flip": [["output", "$(results.output.path)"]], "flip-again":
-      [["output", "$(results.output.path)"]], "print1": [], "print2": []}'
+      [["output", "$(results.output.path)"]], "print1": [], "print2": [], "print3":
+      []}'
     tekton.dev/input_artifacts: '{"print1": [{"name": "flip-again-output", "parent_task":
       "flip-again"}], "print2": [{"name": "flip-output", "parent_task": "flip"}]}'
     tekton.dev/output_artifacts: '{"flip": [{"key": "artifacts/$PIPELINERUN/flip/output.tgz",
@@ -128,6 +129,17 @@ spec:
         operator: in
         values:
         - 'true'
+    - name: print3
+      runAfter:
+      - condition-1
+      - condition-3
+      taskSpec:
+        steps:
+        - command:
+          - echo
+          - done
+          image: alpine:3.6
+          name: main
     - name: condition-1
       params:
       - name: operand1

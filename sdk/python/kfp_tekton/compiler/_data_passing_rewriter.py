@@ -340,15 +340,16 @@ def fix_big_data_passing(workflow: dict) -> dict:
 
     # Remove pipeline task parameters unless they're used downstream
     for task in pipeline_tasks:
-        task['params'] = [
-            parameter_argument
-            for parameter_argument in task.get('params', [])
-            if (task['name'], parameter_argument['name']
-                ) in inputs_consumed_as_parameters and
-            (task['name'],
-             parameter_argument['name']) not in inputs_consumed_as_artifacts
-            or task['name'] in resource_template_names
-        ]
+        if 'condition-' not in task['name']:
+            task['params'] = [
+                parameter_argument
+                for parameter_argument in task.get('params', [])
+                if (task['name'], parameter_argument['name']
+                    ) in inputs_consumed_as_parameters and
+                (task['name'],
+                parameter_argument['name']) not in inputs_consumed_as_artifacts
+                or task['name'] in resource_template_names
+            ]
 
         # tekton results doesn't support underscore
         for argument in task['params']:

@@ -77,13 +77,12 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.condition import flipcoin
     self._test_pipeline_workflow(flipcoin, 'condition.yaml')
 
-  def test_condition_dependency_error(self):
+  def test_condition_dependency(self):
     """
-    Test errors for dependency on Tekton conditional.
+    Test dependency on Tekton conditional task.
     """
-    from .testdata.condition_error import flipcoin
-    with pytest.raises(TypeError):
-      self._test_pipeline_workflow(flipcoin, 'condition.yaml')
+    from .testdata.condition_dependency import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'condition_dependency.yaml')
 
   def test_sequential_workflow(self):
     """
@@ -112,7 +111,7 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.sidecar import sidecar_pipeline
     self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
-  
+
   def test_loop_static_workflow(self):
     """
     Test compiling a loop static params in workflow.
@@ -261,7 +260,7 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.load_from_yaml import component_yaml_pipeline
     self._test_pipeline_workflow(component_yaml_pipeline, 'load_from_yaml.yaml')
-    
+
   def test_imagepullsecrets_workflow(self):
     """
     Test compiling a imagepullsecrets workflow.
@@ -295,7 +294,7 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata import compose
     self._test_nested_workflow('compose.yaml', [compose.save_most_frequent_word, compose.download_save_most_frequent_word])
-    
+
   def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
