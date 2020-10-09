@@ -21,7 +21,7 @@ images:
     newTag: tekton-0.16
   - name: gcr.io/ml-pipeline/frontend
     newName: docker.io/aipipeline/frontend
-    newTag: latest
+    newTag: tekton-0.16
   - name: gcr.io/ml-pipeline/metadata-writer
     newName: docker.io/aipipeline/metadata-writer
     newTag: latest
