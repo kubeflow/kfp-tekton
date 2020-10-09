@@ -88,11 +88,11 @@ export default class WorkflowParser {
           edges.push(...this.checkParams(statusMap, pipelineParams, condition, taskId));
 
         // Add all of this Task's conditional dependencies as Task dependencies
-        for (const condition of (task['when'] || [])) {
-          const param = this.decodeParam(condition['Input'])
+        for (const condition of task['when'] || []) {
+          const param = this.decodeParam(condition['Input']);
           if (param && param.task) {
             const parentId = statusMap.get(param.task)!['status']['podName'];
-            edges.push({parent: parentId, child: taskId })
+            edges.push({ parent: parentId, child: taskId });
           }
         }
         if (task['runAfter']) {
@@ -147,17 +147,17 @@ export default class WorkflowParser {
     for (const param of component['params'] || []) {
       let paramValue = param['value'] || '';
 
-      const splitParam = this.decodeParam(param['value'])
+      const splitParam = this.decodeParam(param['value']);
 
       // If the parameters are passed from the pipeline parameters then grab the value from the pipeline parameters
       if (splitParam && !splitParam.task) {
         for (const pipelineParam of pipelineParams)
           if (pipelineParam['name'] === splitParam.param) paramValue = pipelineParam['value'];
       }
-    // If the parameters are passed from the parent task's results and the task is completed then grab the resulting values
+      // If the parameters are passed from the parent task's results and the task is completed then grab the resulting values
       else if (splitParam && splitParam.task) {
-        const parentTask = splitParam.task
-        const paramName = splitParam.param
+        const parentTask = splitParam.task;
+        const paramName = splitParam.param;
         if (
           statusMap.get(parentTask) &&
           statusMap.get(parentTask)!['status']['conditions'][0]['type'] === 'Succeeded'
@@ -185,14 +185,13 @@ export default class WorkflowParser {
   }
 
   private static decodeParam(paramString: string) {
-
     // If the parameters are passed from the pipeline parameters
     if (
       paramString.substring(0, 9) === '$(params.' &&
       paramString.substring(paramString.length - 1) === ')'
     ) {
       const paramName = paramString.substring(9, paramString.length - 1);
-      return {task: "", param: paramName}
+      return { task: '', param: paramName };
     }
     // If the parameters are passed from the parent task's results
     else if (
@@ -206,9 +205,9 @@ export default class WorkflowParser {
         paramSplit[paramSplit.length - 1].length - 1,
       );
 
-      return {task: parentTask, param: paramName}
+      return { task: parentTask, param: paramName };
     }
-    return {}
+    return {};
   }
 
   public static getStatus(execStatus: any): NodePhase {
