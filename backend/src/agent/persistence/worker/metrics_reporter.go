@@ -91,6 +91,11 @@ func (r MetricsReporter) ReportMetrics(workflow *util.Workflow) error {
 func (r MetricsReporter) collectNodeMetricsOrNil(
 	runID string, nodeStatus workflowapi.PipelineRunTaskRunStatus) (
 	[]*api.RunMetric, error) {
+	defer func() {
+		if panicMessage := recover(); panicMessage != nil {
+			log.Info("nodeStatus is not yet created. Panic message: '%v'.", panicMessage)
+		}
+	}()
 	if nodeStatus.Status.TaskRunStatusFields.CompletionTime == nil {
 		return nil, nil
 	}
