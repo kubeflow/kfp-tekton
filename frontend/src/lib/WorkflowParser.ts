@@ -211,6 +211,11 @@ export default class WorkflowParser {
   }
 
   public static getStatus(execStatus: any): NodePhase {
+    for (const result of execStatus.status.taskResults || []) {
+      if (result.name === 'status' && result.value === 'false') {
+        return NodePhase.CONDITIONCHECKFAILED;
+      }
+    }
     return execStatus!.status.conditions[0].reason;
   }
 
