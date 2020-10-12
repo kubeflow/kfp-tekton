@@ -8,7 +8,7 @@ This page introduces different ways to configure the kfp-tekton admin settings s
 - [Enable Log Archival](#enable-log-archival)
 - [Enable Auto Strip for End of File newlines](#enable-auto-strip-for-end-of-file-newlines)
 - [Customize Artifact Image to do your own post processing](#customize-artifact-image-to-do-your-own-post-processing)
-- [Change S3 Endpoint for KFP Tekton artifacts](#change-s3-endpoint-for-kfp-tekton-artifacts)
+- [Customize S3 Endpoint for KFP Tekton artifacts](#change-s3-endpoint-for-kfp-tekton-artifacts)
 
 
 ## Disable Artifact Tracking
@@ -60,7 +60,7 @@ kubectl rollout restart deploy/ml-pipeline -n kubeflow
 
 ## Change S3 Endpoint for KFP Tekton artifacts
 
-By default, Kubeflow pipeline stores its pipeline artifacts to the Minio storage in the same cluster. To change this storage to an external S3 endpoint, update the default [kfp-tekton configmap](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml) and S3 credential secret then patch them with the commands below.
+By default, Kubeflow Pipelines store pipeline artifacts to the S3 compatible Minio storage server in the same Kubernetes cluster. To change this storage to an external S3 endpoint, update the default [kfp-tekton configmap](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml) and S3 credential secret then patch them with the commands below.
 
 Update the S3 Secret:
 - `accesskey`: S3 Access Key ID
