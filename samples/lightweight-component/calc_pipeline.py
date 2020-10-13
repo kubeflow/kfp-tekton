@@ -3,7 +3,7 @@ import kfp.components as comp
 
 #Define a Python function
 def add(a: float, b: float) -> float:
-   '''Calculates sum of two arguments'''
+   """Calculates sum of two arguments"""
    return a + b
 
 add_op = comp.func_to_container_op(add)
@@ -12,7 +12,7 @@ add_op = comp.func_to_container_op(add)
 #Demonstrates imports, helper functions and multiple outputs
 from typing import NamedTuple
 def my_divmod(dividend: float, divisor:float) -> NamedTuple('MyDivmodOutput', [('quotient', float), ('remainder', float), ('mlpipeline_ui_metadata', 'UI_metadata'), ('mlpipeline_metrics', 'Metrics')]):
-    '''Divides two numbers and calculate  the quotient and remainder'''
+    """Divides two numbers and calculate  the quotient and remainder"""
     #Pip installs inside a component function.
     #NOTE: installs should be placed right at the beginning to avoid upgrading a package
     # after it has already been imported and cached by python
