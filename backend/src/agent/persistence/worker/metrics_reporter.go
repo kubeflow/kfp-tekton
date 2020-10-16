@@ -91,7 +91,8 @@ func (r MetricsReporter) ReportMetrics(workflow *util.Workflow) error {
 func (r MetricsReporter) collectNodeMetricsOrNil(
 	runID string, nodeStatus workflowapi.PipelineRunTaskRunStatus) (
 	[]*api.RunMetric, error) {
-	if nodeStatus.Status.TaskRunStatusFields.CompletionTime == nil {
+	if nodeStatus.Status == nil ||
+		nodeStatus.Status.TaskRunStatusFields.CompletionTime == nil {
 		return nil, nil
 	}
 	metricsJSON, err := r.readNodeMetricsJSONOrEmpty(runID, nodeStatus.PipelineTaskName)
