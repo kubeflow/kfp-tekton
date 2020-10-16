@@ -1255,6 +1255,7 @@ func (r *ResourceManager) injectArchivalStep(workflow util.Workflow, artifactIte
 		trackArtifacts := common.IsTrackArtifacts()
 		stripEOF := common.IsStripEOF()
 		injectDefaultScript := common.IsInjectDefaultScript()
+		copyStepTemplate := common.GetCopyStepTemplate()
 
 		if (hasArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
 			artifactScript := common.GetArtifactScript()
@@ -1293,27 +1294,30 @@ func (r *ResourceManager) injectArchivalStep(workflow util.Workflow, artifactIte
 			}
 
 			// Define post-processing step
-			step := workflowapi.Step{Container: corev1.Container{
-				Name:  "copy-artifacts",
-				Image: common.GetArtifactImage(),
-				Env: []corev1.EnvVar{
-					r.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
-					r.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
-					r.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
-					r.getObjectFieldSelector("ARTIFACT_ITEMS", "metadata.annotations['tekton.dev/artifact_items']"),
-					r.getObjectFieldSelector("PIPELINETASK", "metadata.labels['tekton.dev/pipelineTask']"),
-					r.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
-					r.getObjectFieldSelector("PODNAME", "metadata.name"),
-					r.getObjectFieldSelector("NAMESPACE", "metadata.namespace"),
-					r.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
-					r.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
-					r.getEnvVar("ARCHIVE_LOGS", strconv.FormatBool(archiveLogs)),
-					r.getEnvVar("TRACK_ARTIFACTS", strconv.FormatBool(trackArtifacts)),
-					r.getEnvVar("STRIP_EOF", strconv.FormatBool(stripEOF)),
-				},
-			},
-				Script: artifactScript,
+			container := *copyStepTemplate
+			if container.Name == "" {
+				container.Name = "copy-artifacts"
 			}
+			if container.Image == "" {
+				container.Image = common.GetArtifactImage()
+			}
+			container.Env = append(container.Env,
+				r.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
+				r.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
+				r.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
+				r.getObjectFieldSelector("ARTIFACT_ITEMS", "metadata.annotations['tekton.dev/artifact_items']"),
+				r.getObjectFieldSelector("PIPELINETASK", "metadata.labels['tekton.dev/pipelineTask']"),
+				r.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
+				r.getObjectFieldSelector("PODNAME", "metadata.name"),
+				r.getObjectFieldSelector("NAMESPACE", "metadata.namespace"),
+				r.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
+				r.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
+				r.getEnvVar("ARCHIVE_LOGS", strconv.FormatBool(archiveLogs)),
+				r.getEnvVar("TRACK_ARTIFACTS", strconv.FormatBool(trackArtifacts)),
+				r.getEnvVar("STRIP_EOF", strconv.FormatBool(stripEOF)),
+			)
+
+			step := workflowapi.Step{Container: container, Script: artifactScript}
 			task.TaskSpec.Steps = append(task.TaskSpec.Steps, step)
 		}
 	}
