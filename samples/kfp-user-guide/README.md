@@ -334,7 +334,7 @@ kubectl describe pipelinerun echo
 #   Normal   Succeeded          <invalid>                pipeline-controller  Tasks Completed: 1, Skipped: 0
 ```
 
-## Best practice
+## Best Practice
 
 ### Artifacts and Parameter output files for Tekton
 When developing a Kubeflow pipeline for the Tekton backend, please be aware that the files you produced for artifacts and parameter outputs are carried to a volume mount path then get pushed to S3. It's not recommended to have volume mount on a container's root directory (`/`) because volume mount will overwrite all the files in the container path, including all the system files and binaries. Therefore, we have prohibited the kfp-tekton compiler from putting artifacts and parameter output files in the container's root directory.
