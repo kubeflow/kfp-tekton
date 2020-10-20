@@ -127,19 +127,19 @@ func (r MetricsReporter) collectNodeMetricsOrNil(
 }
 
 func (r MetricsReporter) readNodeMetricsJSONOrEmpty(runID string, nodeStatus workflowapi.NodeStatus) (string, error) {
-	if nodeStatus.Outputs == nil || nodeStatus.Outputs.Artifacts == nil {
-		return "", nil // No output artifacts, skip the reporting
-	}
-
-	var foundMetricsArtifact bool = false
-	for _, artifact := range nodeStatus.Outputs.Artifacts {
-		if artifact.Name == metricsArtifactName {
-			foundMetricsArtifact = true
-		}
-	}
-	if !foundMetricsArtifact {
-		return "", nil // No metrics artifact, skip the reporting
-	}
+    // Tekton doesn't support any artifact spec, artifact records are done by our custom metadata writers:
+    // 	if nodeStatus.Outputs == nil || nodeStatus.Outputs.Artifacts == nil {
+    // 		return "", nil // No output artifacts, skip the reporting
+    // 	}
+    // 	var foundMetricsArtifact bool = false
+    // 	for _, artifact := range nodeStatus.Outputs.Artifacts {
+    // 		if artifact.Name == metricsArtifactName {
+    // 			foundMetricsArtifact = true
+    // 		}
+    // 	}
+    // 	if !foundMetricsArtifact {
+    // 		return "", nil // No metrics artifact, skip the reporting
+    // 	}
 
 	artifactRequest := &api.ReadArtifactRequest{
 		RunId:        runID,
