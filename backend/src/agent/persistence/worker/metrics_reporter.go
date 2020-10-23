@@ -96,7 +96,8 @@ func (r MetricsReporter) collectNodeMetricsOrNil(
 			log.Info("nodeStatus is not yet created. Panic message: '%v'.", panicMessage)
 		}
 	}()
-	if nodeStatus.Status.TaskRunStatusFields.CompletionTime == nil {
+	if nodeStatus.Status == nil ||
+		nodeStatus.Status.TaskRunStatusFields.CompletionTime == nil {
 		return nil, nil
 	}
 	metricsJSON, err := r.readNodeMetricsJSONOrEmpty(runID, nodeStatus.PipelineTaskName)
