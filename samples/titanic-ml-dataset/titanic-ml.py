@@ -409,7 +409,7 @@ def decisiontree():
                     _kale_block2,
                     _kale_data_saving_block)
     _kale_html_artifact = _kale_run_code(_kale_blocks)
-    with open("/decisiontree.html", "w") as f:
+    with open("/tmp/decisiontree.html", "w") as f:
         f.write(_kale_html_artifact)
     _kale_update_uimetadata('decisiontree')
 
@@ -470,7 +470,7 @@ def svm():
                     _kale_block2,
                     _kale_data_saving_block)
     _kale_html_artifact = _kale_run_code(_kale_blocks)
-    with open("/svm.html", "w") as f:
+    with open("/tmp/svm.html", "w") as f:
         f.write(_kale_html_artifact)
     _kale_update_uimetadata('svm')
 
@@ -531,7 +531,7 @@ def naivebayes():
                     _kale_block2,
                     _kale_data_saving_block)
     _kale_html_artifact = _kale_run_code(_kale_blocks)
-    with open("/naivebayes.html", "w") as f:
+    with open("/tmp/naivebayes.html", "w") as f:
         f.write(_kale_html_artifact)
     _kale_update_uimetadata('naivebayes')
 
@@ -592,7 +592,7 @@ def logisticregression():
                     _kale_block2,
                     _kale_data_saving_block)
     _kale_html_artifact = _kale_run_code(_kale_blocks)
-    with open("/logisticregression.html", "w") as f:
+    with open("/tmp/logisticregression.html", "w") as f:
         f.write(_kale_html_artifact)
     _kale_update_uimetadata('logisticregression')
 
@@ -653,7 +653,7 @@ def randomforest():
                     _kale_block2,
                     _kale_data_saving_block)
     _kale_html_artifact = _kale_run_code(_kale_blocks)
-    with open("/randomforest.html", "w") as f:
+    with open("/tmp/randomforest.html", "w") as f:
         f.write(_kale_html_artifact)
     _kale_update_uimetadata('randomforest')
 
@@ -714,7 +714,7 @@ def results():
                     _kale_block2,
                     )
     _kale_html_artifact = _kale_run_code(_kale_blocks)
-    with open("/results.html", "w") as f:
+    with open("/tmp/results.html", "w") as f:
         f.write(_kale_html_artifact)
     _kale_update_uimetadata('results')
 
@@ -782,8 +782,8 @@ def auto_generated_pipeline():
         k8s_client.V1SecurityContext(run_as_user=0))
     _kale_output_artifacts = {}
     _kale_output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    _kale_output_artifacts.update({'loaddata': '/loaddata.html'})
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'loaddata': '/tmp/loaddata.html'})
     _kale_loaddata_task.output_artifact_paths.update(_kale_output_artifacts)
     _kale_loaddata_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
@@ -804,9 +804,9 @@ def auto_generated_pipeline():
         k8s_client.V1SecurityContext(run_as_user=0))
     _kale_output_artifacts = {}
     _kale_output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
     _kale_output_artifacts.update(
-        {'datapreprocessing': '/datapreprocessing.html'})
+        {'datapreprocessing': '/tmp/datapreprocessing.html'})
     _kale_datapreprocessing_task.output_artifact_paths.update(
         _kale_output_artifacts)
     _kale_datapreprocessing_task.add_pod_label(
@@ -828,9 +828,9 @@ def auto_generated_pipeline():
         k8s_client.V1SecurityContext(run_as_user=0))
     _kale_output_artifacts = {}
     _kale_output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
     _kale_output_artifacts.update(
-        {'featureengineering': '/featureengineering.html'})
+        {'featureengineering': '/tmp/featureengineering.html'})
     _kale_featureengineering_task.output_artifact_paths.update(
         _kale_output_artifacts)
     _kale_featureengineering_task.add_pod_label(
@@ -852,8 +852,8 @@ def auto_generated_pipeline():
         k8s_client.V1SecurityContext(run_as_user=0))
     _kale_output_artifacts = {}
     _kale_output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    _kale_output_artifacts.update({'decisiontree': '/decisiontree.html'})
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'decisiontree': '/tmp/decisiontree.html'})
     _kale_decisiontree_task.output_artifact_paths.update(
         _kale_output_artifacts)
     _kale_decisiontree_task.add_pod_label(
@@ -875,8 +875,8 @@ def auto_generated_pipeline():
         k8s_client.V1SecurityContext(run_as_user=0))
     _kale_output_artifacts = {}
     _kale_output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    _kale_output_artifacts.update({'svm': '/svm.html'})
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'svm': '/tmp/svm.html'})
     _kale_svm_task.output_artifact_paths.update(_kale_output_artifacts)
     _kale_svm_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
@@ -897,8 +897,8 @@ def auto_generated_pipeline():
         k8s_client.V1SecurityContext(run_as_user=0))
     _kale_output_artifacts = {}
     _kale_output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    _kale_output_artifacts.update({'naivebayes': '/naivebayes.html'})
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'naivebayes': '/tmp/naivebayes.html'})
     _kale_naivebayes_task.output_artifact_paths.update(_kale_output_artifacts)
     _kale_naivebayes_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
@@ -919,9 +919,9 @@ def auto_generated_pipeline():
         k8s_client.V1SecurityContext(run_as_user=0))
     _kale_output_artifacts = {}
     _kale_output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
     _kale_output_artifacts.update(
-        {'logisticregression': '/logisticregression.html'})
+        {'logisticregression': '/tmp/logisticregression.html'})
     _kale_logisticregression_task.output_artifact_paths.update(
         _kale_output_artifacts)
     _kale_logisticregression_task.add_pod_label(
@@ -943,8 +943,8 @@ def auto_generated_pipeline():
         k8s_client.V1SecurityContext(run_as_user=0))
     _kale_output_artifacts = {}
     _kale_output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    _kale_output_artifacts.update({'randomforest': '/randomforest.html'})
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'randomforest': '/tmp/randomforest.html'})
     _kale_randomforest_task.output_artifact_paths.update(
         _kale_output_artifacts)
     _kale_randomforest_task.add_pod_label(
@@ -966,8 +966,8 @@ def auto_generated_pipeline():
         k8s_client.V1SecurityContext(run_as_user=0))
     _kale_output_artifacts = {}
     _kale_output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    _kale_output_artifacts.update({'results': '/results.html'})
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'results': '/tmp/results.html'})
     _kale_results_task.output_artifact_paths.update(_kale_output_artifacts)
     _kale_results_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
