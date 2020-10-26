@@ -384,13 +384,13 @@ class TektonCompiler(Compiler):
         # Process input parameters if needed
         if isinstance(condition.operand1, dsl.PipelineParam):
           if condition.operand1.op_name:
-            operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + condition.operand1.name + ')'
+            operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + sanitize_k8s_name(condition.operand1.name) + ')'
           else:
             operand_value = '$(params.' + condition.operand1.name + ')'
           input_params.append(operand_value)
         if isinstance(condition.operand2, dsl.PipelineParam):
           if condition.operand2.op_name:
-            operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + condition.operand2.name + ')'
+            operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + sanitize_k8s_name(condition.operand2.name) + ')'
           else:
             operand_value = '$(params.' + condition.operand2.name + ')'
           input_params.append(operand_value)
