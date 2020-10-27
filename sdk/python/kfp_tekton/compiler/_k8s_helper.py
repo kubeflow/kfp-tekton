@@ -197,3 +197,4 @@ def sanitize_k8s_object(k8s_obj, type=None):
           value = sanitize_k8s_object(value, type)
           setattr(k8s_obj, attr, value)
       return k8s_obj
+      
