@@ -685,7 +685,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
           console.error(`Failed to decode compressedNodes: ${err}`);
         }
       }
-      const workflow = jsonWorkflow as Workflow;
+      const workflow = jsonWorkflow;
 
       // Show workflow errors
       const workflowError = WorkflowParser.getWorkflowError(workflow);
