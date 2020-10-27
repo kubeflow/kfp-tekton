@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import http
 import unittest
 
 from datetime import datetime
@@ -21,7 +20,6 @@ from kfp import dsl
 from kubernetes import client as k8s_client
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, \
     sanitize_k8s_name, sanitize_k8s_object
-from kubernetes.dynamic import resource
 
 
 class TestK8sHelper(unittest.TestCase):
@@ -462,4 +460,3 @@ class TestK8sHelper(unittest.TestCase):
                         run_as_group='test',
                     ))
             sanitize_k8s_object(exception_op.container)
-            
