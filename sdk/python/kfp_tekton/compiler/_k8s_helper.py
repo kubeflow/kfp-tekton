@@ -116,8 +116,10 @@ def convert_k8s_obj_to_json(k8s_obj):
     return {key: convert_k8s_obj_to_json(val)
             for key, val in iteritems(obj_dict)}
 
+
 def _to_str(s):
     return None if s is None else str(s)
+
 
 def _to_bool(b):
     if type(b) == str:
@@ -131,6 +133,7 @@ def _to_bool(b):
       raise ValueError('Invalid value {}. Should be boolean.'.format(b))
     return b
 
+
 def _to_int(i):
     try:
       result = int(i)
@@ -138,12 +141,14 @@ def _to_int(i):
       raise ValueError('Invalid {}. Should be integer.'.format(i))
     return result
 
+
 def _to_float(f):
     try:
       result = float(f)
     except ValueError:
       raise ValueError('Invalid {}. Should be float'.format(f))
     return result
+
 
 def sanitize_k8s_object(k8s_obj, type=None):
     """
@@ -153,7 +158,7 @@ def sanitize_k8s_object(k8s_obj, type=None):
     Args:
       k8s_obj: k8s object
     """
-    from six import text_type, integer_types, iteritems
+    from six import text_type, integer_types
     PRIMITIVE_TYPES = (float, bool, bytes, text_type) + integer_types
     from datetime import date, datetime
 
@@ -197,4 +202,3 @@ def sanitize_k8s_object(k8s_obj, type=None):
           value = sanitize_k8s_object(value, type)
           setattr(k8s_obj, attr, value)
       return k8s_obj
-      
