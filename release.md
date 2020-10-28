@@ -10,7 +10,7 @@
     make build-release-template
     ```
 
-4. Test the generate yaml to verify it works properly
+4. Test the generated yaml to verify if it works properly
     ```shell
     kubectl apply -f install/${KFP_TEKTON_RELEASE}/kfp-tekton.yaml
     ```

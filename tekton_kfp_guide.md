@@ -6,8 +6,8 @@
   * [IBM Cloud Kubernetes Service (IKS)](#ibm-cloud-kubernetes-service-iks)
   * [OpenShift](#openshift)
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
-- [Minimum Kubeflow Pipelines with Tekton Backend Deployment](#minimum-kubeflow-pipelines-with-tekton-backend-deployment)
-- [Kubeflow installation including Kubeflow Pipelines with Tekton backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
+- [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
+- [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
   * [Single user](#single-user)
   * [Multi-user, auth-enabled](#multi-user-auth-enabled)
 - [Verify installation](#verify-installation)
@@ -33,21 +33,21 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
    Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
 
-## Minimum Kubeflow Pipelines with Tekton Backend Deployment
-To install the very minimum Kubeflow pipelines deployment without any other kubeflow functionality, run the following steps:
+## Standalone Kubeflow Pipelines with Tekton Backend Deployment
+To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
 1. Install [Tekton v0.14.3](https://github.com/tektoncd/pipeline/releases/tag/v0.14.3)
 
-2. Install KFP Tekton v0.4.0 release
+2. Install Kubeflow Pipelines with Tekton backend (kfp-tekton) v0.4.0 release
     ```shell
     kubectl apply -f install/v0.4.0/kfp-tekton.yaml
     ```
 
-3. Then, if you want to expose the Kubeflow pipelines to the public web, run the following commands:
+3. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
     ```shell
     kubectl patch svc ml-pipeline-ui -n kubeflow -p '{"spec": {"type": "LoadBalancer"}}'
     ```
 
-    To get the Kubeflow pipelines UI public endpoint using command line, run:
+    To get the Kubeflow Pipelines UI public endpoint using command line, run:
     ```shell
     kubectl get svc ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
     ```
