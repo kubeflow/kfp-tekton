@@ -52,7 +52,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
     kubectl get svc ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
     ```
 
-## Kubeflow installation including Kubeflow Pipelines with Tekton backend
+## Kubeflow installation including Kubeflow Pipelines with Tekton Backend
 
 **Important: Please complete the [prequisites](#installation-targets-and-prequisites) before proceeding with the following instructions.**
 
