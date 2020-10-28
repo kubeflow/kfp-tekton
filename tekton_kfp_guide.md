@@ -6,6 +6,7 @@
   * [IBM Cloud Kubernetes Service (IKS)](#ibm-cloud-kubernetes-service-iks)
   * [OpenShift](#openshift)
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
+- [Minimum Kubeflow Pipelines with Tekton Backend Deployment](#minimum-kubeflow-pipelines-with-tekton-backend-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
   * [Single user](#single-user)
   * [Multi-user, auth-enabled](#multi-user-auth-enabled)
@@ -16,7 +17,7 @@
 
 ## Installation Targets and Prequisites
 
-A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory. 
+A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 
 ### IBM Cloud Kubernetes Service (IKS)
 
@@ -32,6 +33,25 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
    Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
 
+## Minimum Kubeflow Pipelines with Tekton Backend Deployment
+To install the very minimum Kubeflow pipelines deployment without any other kubeflow functionality, run the following steps:
+1. Install [Tekton v0.14.3](https://github.com/tektoncd/pipeline/releases/tag/v0.14.3)
+
+2. Install KFP Tekton v0.4.0 release
+    ```shell
+    kubectl apply -f install/v0.4.0/kfp-tekton.yaml
+    ```
+
+3. Then, if you want to expose the Kubeflow pipelines to the public web, run the following commands:
+    ```shell
+    kubectl patch svc ml-pipeline-ui -n kubeflow -p '{"spec": {"type": "LoadBalancer"}}'
+    ```
+
+    To get the Kubeflow pipelines UI public endpoint using command line, run:
+    ```shell
+    kubectl get svc ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+    ```
+
 ## Kubeflow installation including Kubeflow Pipelines with Tekton backend
 
 **Important: Please complete the [prequisites](#installation-targets-and-prequisites) before proceeding with the following instructions.**
@@ -39,7 +59,7 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 Run the following commands to set up and deploy Kubeflow with KFP-Tekton. To understand more about the Kubeflow deployment mechanism, please read [here](#understanding-the-kubeflow-deployment-process).
 
 1. Download the kfctl v1.1.0 release from the
-  [Kubeflow releases 
+  [Kubeflow releases
   page](https://github.com/kubeflow/kfctl/releases/tag/v1.1.0).
 
 1. Unpack the tarball
@@ -50,7 +70,7 @@ Run the following commands to set up and deploy Kubeflow with KFP-Tekton. To und
       ```
       export PATH=$PATH:<path to where kfctl was unpacked>
       ```
-    
+
 Choose either [**single user**](#single-user) or [**multi-tenant**](#multi-user-auth-enabled) section based on your usage.
 
 ### Single user
@@ -61,7 +81,7 @@ Run the following commands to set up and deploy Kubeflow for a single user witho
 # For example, your deployment name can be 'my-kubeflow' or 'kf-test'.
 export KF_NAME=<your choice of name for the Kubeflow deployment>
 
-# Set the path to the base directory where you want to store one or more 
+# Set the path to the base directory where you want to store one or more
 # Kubeflow deployments. For example, /opt/.
 # Then set the Kubeflow application directory for this deployment.
 export BASE_DIR=<path to a base directory>
@@ -83,13 +103,13 @@ kfctl apply -V -f ${CONFIG_URI}
   '-', and must start and end with an alphanumeric character.
   The value of this variable cannot be greater than 25 characters. It must
   contain just a name, not a directory path.
-  This value also becomes the name of the directory where your Kubeflow 
-  configurations are stored, that is, the Kubeflow application directory. 
+  This value also becomes the name of the directory where your Kubeflow
+  configurations are stored, that is, the Kubeflow application directory.
 
 * **${KF_DIR}** - The full path to your Kubeflow application directory.
 
 ### Multi-user, auth-enabled
-Run the following commands to deploy multi-user auth-enabled Kubeflow with GitHub OAuth as the Dex authentication provider. To support multi-users with authentication enabled, this guide uses [Dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://docs.github.com/developers/apps/building-oauth-apps). 
+Run the following commands to deploy multi-user auth-enabled Kubeflow with GitHub OAuth as the Dex authentication provider. To support multi-users with authentication enabled, this guide uses [Dex](https://github.com/dexidp/dex) with [GitHub OAuth](https://docs.github.com/developers/apps/building-oauth-apps).
 
 **Before continuing, refer to the guide [Creating an OAuth App](https://docs.github.com/developers/apps/creating-an-oauth-app) for steps to create an OAuth app on GitHub.com.**
 
@@ -103,7 +123,7 @@ The scenario is a GitHub organization owner can authorize its organization membe
     ```
     export KF_NAME=<your choice of name for the Kubeflow deployment>
 
-    # Set the path to the base directory where you want to store one or more 
+    # Set the path to the base directory where you want to store one or more
     # Kubeflow deployments. For example, /opt/.
     export BASE_DIR=<path to a base directory>
 
@@ -128,7 +148,7 @@ The scenario is a GitHub organization owner can authorize its organization membe
     - Replace the following values in the `dex-cm.yaml`.
       - **clientID**: Client ID of the Github OAuth App
       - **clientSecret**: Client Secret of the Github OAuth App
-      - **orgs[0].name**: Any [Github organization](https://docs.github.com/en/github/setting-up-and-managing-organizations-and-teams/about-your-organization-dashboard) that the OAuth App has member read access. 
+      - **orgs[0].name**: Any [Github organization](https://docs.github.com/en/github/setting-up-and-managing-organizations-and-teams/about-your-organization-dashboard) that the OAuth App has member read access.
       - (Optional) **hostName**: GitHub Enterprise Hostname. Leave it empty when using github.com.
 
     The `dex-cm.yaml` file looks like following:
@@ -159,7 +179,7 @@ The scenario is a GitHub organization owner can authorize its organization membe
             config:
               # Fill in client ID, client Secret as string literal.
               clientID:
-              clientSecret: 
+              clientSecret:
               redirectURI: http://dex.auth.svc.cluster.local:5556/dex/callback
               orgs:
               # Fill in your GitHub organization name
@@ -188,7 +208,7 @@ The scenario is a GitHub organization owner can authorize its organization membe
     # Remove this file with sensitive information.
     rm dex-cm.yaml
     ```
-    
+
 1. Apply configuration changes:
     ```
     kubectl rollout restart deploy/dex -n auth
@@ -224,7 +244,7 @@ While the change is being applied, you can watch the service until below command
 
      kubectl get -w -n istio-system svc/istio-ingressgateway
 
-The external IP should be accessible by visiting http://<EXTERNAL-IP>. Note that the above installation instructions do not create any protection for the external endpoint so it will be accessible to anyone without any authentication. 
+The external IP should be accessible by visiting http://<EXTERNAL-IP>. Note that the above installation instructions do not create any protection for the external endpoint so it will be accessible to anyone without any authentication.
 
 ## Understanding the Kubeflow deployment process
 
@@ -238,10 +258,10 @@ The deployment process is controlled by the following commands:
 
 ### App layout
 
-Your Kubeflow application directory **${KF_DIR}** contains the following files and 
+Your Kubeflow application directory **${KF_DIR}** contains the following files and
 directories:
 
-* **${CONFIG_FILE}** is a YAML file that defines configurations related to your 
+* **${CONFIG_FILE}** is a YAML file that defines configurations related to your
   Kubeflow deployment.
 
   * This file is a copy of the GitHub-based configuration YAML file that
@@ -253,7 +273,7 @@ directories:
 * **kustomize** is a directory that contains the kustomize packages for Kubeflow applications.
     * The directory is created when you run `kfctl build` or `kfctl apply`.
     * You can customize the Kubernetes resources (modify the manifests and run `kfctl apply` again).
-    
+
 You can find general information about Kubeflow configuration in the guide to [configuring Kubeflow with kfctl and kustomize](https://www.kubeflow.org/docs/other-guides/kustomize/).
 
 ## Troubleshooting
