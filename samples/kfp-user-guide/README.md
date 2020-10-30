@@ -1,4 +1,4 @@
-# Kubeflow pipeline user guide
+# Kubeflow Pipelines with Tekton User Guide
 
 This page introduces different ways to compile, upload, and execute Kubeflow Pipelines with Tekton backend. The usual flow for using the Kubeflow Pipeline is to compile the Kubeflow Pipeline Python DSL into a Tekton formatted file. Then upload the compiled file to the Kubeflow Pipeline platform. Lastly, execute the uploaded pipeline using the Kubeflow Pipeline backend engine. For starter, we recommend using the first method in each section.
 
