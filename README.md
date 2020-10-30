@@ -25,7 +25,7 @@ We are currently using [Kubeflow Pipelines 1.0.0](https://github.com/kubeflow/pi
 
 [Install Kubeflow Pipelines with Tekton backend](tekton_kfp_guide.md)
 
-[KFP Tekton Pipelines User Guide] (/samples/kfp-user-guide/README.md)
+[KFP Tekton Pipelines User Guide](/samples/kfp-user-guide/README.md)
 
 [Use KFP Tekton SDK](/sdk/README.md)
 
