@@ -1,5 +1,7 @@
 # Install Kubeflow Pipelines
 
+**This page is under construction. Please follow [official installtion guide](https://github.com/kubeflow/kfp-tekton/blob/master/tekton_kfp_guide.md)**
+
 This folder contains Kubeflow Pipelines Kustomize manifests for a light weight
 deployment. You can follow the instruction and deploy Kubeflow Pipelines in an
 existing cluster.
