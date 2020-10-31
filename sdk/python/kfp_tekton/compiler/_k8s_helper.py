@@ -117,10 +117,6 @@ def convert_k8s_obj_to_json(k8s_obj):
             for key, val in iteritems(obj_dict)}
 
 
-def _to_str(s):
-    return None if s is None else str(s)
-
-
 def _to_bool(b):
     if type(b) == str:
       b = b.lower()
@@ -146,7 +142,7 @@ def _to_float(f):
     try:
       result = float(f)
     except ValueError:
-      raise ValueError('Invalid {}. Should be float'.format(f))
+      raise ValueError('Invalid {}. Should be float.'.format(f))
     return result
 
 
@@ -166,7 +162,7 @@ def sanitize_k8s_object(k8s_obj, type=None):
       return None
     elif isinstance(k8s_obj, PRIMITIVE_TYPES):
       if type == 'str':
-        return _to_str(k8s_obj)
+        return str(k8s_obj)
       elif type == 'int':
         return _to_int(k8s_obj)
       elif type == 'float':
