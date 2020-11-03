@@ -62,7 +62,6 @@ def _get_super_condition_template():
     f.write(status)
     f.close()' ''')
 
-  # TODO Change to tekton_api_version once Conditions are out of v1alpha1
   template = {
     'results': [
       {'name': 'status',
