@@ -1,15 +1,17 @@
-import kfp.dsl as dsl
 import json
-import kfp.components as comp
+
+import kfp.dsl as _kfp_dsl
+import kfp.components as _kfp_components
+
 from collections import OrderedDict
 from kubernetes import client as k8s_client
 
 
 def loaddata():
-    from kale.utils import mlmd_utils as _kale_mlmd_utils
-    _kale_mlmd_utils.init_metadata()
+    from kale.common import mlmdutils as _kale_mlmdutils
+    _kale_mlmdutils.init_metadata()
 
-    block1 = '''
+    _kale_block1 = '''
     import numpy as np
     import pandas as pd
     import seaborn as sns
@@ -27,7 +29,7 @@ def loaddata():
     from sklearn.naive_bayes import GaussianNB
     '''
 
-    block2 = '''
+    _kale_block2 = '''
     path = "data/"
 
     PREDICTION_LABEL = 'Survived'
@@ -36,7 +38,7 @@ def loaddata():
     train_df = pd.read_csv(path + "train.csv")
     '''
 
-    data_saving_block = '''
+    _kale_data_saving_block = '''
     # -----------------------DATA SAVING START---------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
@@ -47,36 +49,35 @@ def loaddata():
     '''
 
     # run the code blocks inside a jupyter kernel
-    from kale.utils.jupyter_utils import run_code as _kale_run_code
-    from kale.utils.kfp_utils import \
+    from kale.common.jputils import run_code as _kale_run_code
+    from kale.common.kfputils import \
         update_uimetadata as _kale_update_uimetadata
-    blocks = (
-        block1,
-        block2,
-        data_saving_block)
-    html_artifact = _kale_run_code(blocks)
+    _kale_blocks = (
+        _kale_block1,
+        _kale_block2,
+        _kale_data_saving_block)
+    _kale_html_artifact = _kale_run_code(_kale_blocks)
     with open("/loaddata.html", "w") as f:
-        f.write(html_artifact)
+        f.write(_kale_html_artifact)
     _kale_update_uimetadata('loaddata')
 
-    _kale_mlmd_utils.call("mark_execution_complete")
+    _kale_mlmdutils.call("mark_execution_complete")
 
 
 def datapreprocessing():
-    from kale.utils import mlmd_utils as _kale_mlmd_utils
-    _kale_mlmd_utils.init_metadata()
+    from kale.common import mlmdutils as _kale_mlmdutils
+    _kale_mlmdutils.init_metadata()
 
-    data_loading_block = '''
+    _kale_data_loading_block = '''
     # -----------------------DATA LOADING START--------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
-    _kale_marshal_utils.set_kale_directory_file_names()
     test_df = _kale_marshal_utils.load("test_df")
     train_df = _kale_marshal_utils.load("train_df")
     # -----------------------DATA LOADING END----------------------------------
     '''
 
-    block1 = '''
+    _kale_block1 = '''
     import numpy as np
     import pandas as pd
     import seaborn as sns
@@ -94,7 +95,7 @@ def datapreprocessing():
     from sklearn.naive_bayes import GaussianNB
     '''
 
-    block2 = '''
+    _kale_block2 = '''
     data = [train_df, test_df]
     for dataset in data:
         dataset['relatives'] = dataset['SibSp'] + dataset['Parch']
@@ -104,12 +105,12 @@ def datapreprocessing():
     train_df['not_alone'].value_counts()
     '''
 
-    block3 = '''
+    _kale_block3 = '''
     # This does not contribute to a person survival probability
     train_df = train_df.drop(['PassengerId'], axis=1)
     '''
 
-    block4 = '''
+    _kale_block4 = '''
     import re
     deck = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7, "U": 8}
     data = [train_df, test_df]
@@ -125,7 +126,7 @@ def datapreprocessing():
     test_df = test_df.drop(['Cabin'], axis=1)
     '''
 
-    block5 = '''
+    _kale_block5 = '''
     data = [train_df, test_df]
 
     for dataset in data:
@@ -142,11 +143,11 @@ def datapreprocessing():
     train_df["Age"].isnull().sum()
     '''
 
-    block6 = '''
+    _kale_block6 = '''
     train_df['Embarked'].describe()
     '''
 
-    block7 = '''
+    _kale_block7 = '''
     # fill with most common value
     common_value = 'S'
     data = [train_df, test_df]
@@ -155,11 +156,11 @@ def datapreprocessing():
         dataset['Embarked'] = dataset['Embarked'].fillna(common_value)
     '''
 
-    block8 = '''
+    _kale_block8 = '''
     train_df.info()
     '''
 
-    data_saving_block = '''
+    _kale_data_saving_block = '''
     # -----------------------DATA SAVING START---------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
@@ -169,43 +170,42 @@ def datapreprocessing():
     '''
 
     # run the code blocks inside a jupyter kernel
-    from kale.utils.jupyter_utils import run_code as _kale_run_code
-    from kale.utils.kfp_utils import \
+    from kale.common.jputils import run_code as _kale_run_code
+    from kale.common.kfputils import \
         update_uimetadata as _kale_update_uimetadata
-    blocks = (data_loading_block,
-              block1,
-              block2,
-              block3,
-              block4,
-              block5,
-              block6,
-              block7,
-              block8,
-              data_saving_block)
-    html_artifact = _kale_run_code(blocks)
+    _kale_blocks = (_kale_data_loading_block,
+                    _kale_block1,
+                    _kale_block2,
+                    _kale_block3,
+                    _kale_block4,
+                    _kale_block5,
+                    _kale_block6,
+                    _kale_block7,
+                    _kale_block8,
+                    _kale_data_saving_block)
+    _kale_html_artifact = _kale_run_code(_kale_blocks)
     with open("/datapreprocessing.html", "w") as f:
-        f.write(html_artifact)
+        f.write(_kale_html_artifact)
     _kale_update_uimetadata('datapreprocessing')
 
-    _kale_mlmd_utils.call("mark_execution_complete")
+    _kale_mlmdutils.call("mark_execution_complete")
 
 
 def featureengineering():
-    from kale.utils import mlmd_utils as _kale_mlmd_utils
-    _kale_mlmd_utils.init_metadata()
+    from kale.common import mlmdutils as _kale_mlmdutils
+    _kale_mlmdutils.init_metadata()
 
-    data_loading_block = '''
+    _kale_data_loading_block = '''
     # -----------------------DATA LOADING START--------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
-    _kale_marshal_utils.set_kale_directory_file_names()
     PREDICTION_LABEL = _kale_marshal_utils.load("PREDICTION_LABEL")
     test_df = _kale_marshal_utils.load("test_df")
     train_df = _kale_marshal_utils.load("train_df")
     # -----------------------DATA LOADING END----------------------------------
     '''
 
-    block1 = '''
+    _kale_block1 = '''
     import numpy as np
     import pandas as pd
     import seaborn as sns
@@ -223,7 +223,7 @@ def featureengineering():
     from sklearn.naive_bayes import GaussianNB
     '''
 
-    block2 = '''
+    _kale_block2 = '''
     data = [train_df, test_df]
 
     for dataset in data:
@@ -231,7 +231,7 @@ def featureengineering():
         dataset['Fare'] = dataset['Fare'].astype(int)
     '''
 
-    block3 = '''
+    _kale_block3 = '''
     data = [train_df, test_df]
     titles = {"Mr": 1, "Miss": 2, "Mrs": 3, "Master": 4, "Rare": 5}
 
@@ -252,7 +252,7 @@ def featureengineering():
     test_df = test_df.drop(['Name'], axis=1)
     '''
 
-    block4 = '''
+    _kale_block4 = '''
     genders = {"male": 0, "female": 1}
     data = [train_df, test_df]
 
@@ -260,12 +260,12 @@ def featureengineering():
         dataset['Sex'] = dataset['Sex'].map(genders)
     '''
 
-    block5 = '''
+    _kale_block5 = '''
     train_df = train_df.drop(['Ticket'], axis=1)
     test_df = test_df.drop(['Ticket'], axis=1)
     '''
 
-    block6 = '''
+    _kale_block6 = '''
     ports = {"S": 0, "C": 1, "Q": 2}
     data = [train_df, test_df]
 
@@ -273,7 +273,7 @@ def featureengineering():
         dataset['Embarked'] = dataset['Embarked'].map(ports)
     '''
 
-    block7 = '''
+    _kale_block7 = '''
     data = [train_df, test_df]
     for dataset in data:
         dataset['Age'] = dataset['Age'].astype(int)
@@ -289,7 +289,7 @@ def featureengineering():
     # let's see how it's distributed train_df['Age'].value_counts()
     '''
 
-    block8 = '''
+    _kale_block8 = '''
     data = [train_df, test_df]
 
     for dataset in data:
@@ -302,13 +302,13 @@ def featureengineering():
         dataset['Fare'] = dataset['Fare'].astype(int)
     '''
 
-    block9 = '''
+    _kale_block9 = '''
     data = [train_df, test_df]
     for dataset in data:
         dataset['Age_Class']= dataset['Age']* dataset['Pclass']
     '''
 
-    block10 = '''
+    _kale_block10 = '''
     for dataset in data:
         dataset['Fare_Per_Person'] = dataset['Fare']/(dataset['relatives']+1)
         dataset['Fare_Per_Person'] = dataset['Fare_Per_Person'].astype(int)
@@ -316,12 +316,12 @@ def featureengineering():
     train_df.head(10)
     '''
 
-    block11 = '''
+    _kale_block11 = '''
     train_labels = train_df[PREDICTION_LABEL]
     train_df = train_df.drop(PREDICTION_LABEL, axis=1)
     '''
 
-    data_saving_block = '''
+    _kale_data_saving_block = '''
     # -----------------------DATA SAVING START---------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
@@ -331,45 +331,44 @@ def featureengineering():
     '''
 
     # run the code blocks inside a jupyter kernel
-    from kale.utils.jupyter_utils import run_code as _kale_run_code
-    from kale.utils.kfp_utils import \
+    from kale.common.jputils import run_code as _kale_run_code
+    from kale.common.kfputils import \
         update_uimetadata as _kale_update_uimetadata
-    blocks = (data_loading_block,
-              block1,
-              block2,
-              block3,
-              block4,
-              block5,
-              block6,
-              block7,
-              block8,
-              block9,
-              block10,
-              block11,
-              data_saving_block)
-    html_artifact = _kale_run_code(blocks)
+    _kale_blocks = (_kale_data_loading_block,
+                    _kale_block1,
+                    _kale_block2,
+                    _kale_block3,
+                    _kale_block4,
+                    _kale_block5,
+                    _kale_block6,
+                    _kale_block7,
+                    _kale_block8,
+                    _kale_block9,
+                    _kale_block10,
+                    _kale_block11,
+                    _kale_data_saving_block)
+    _kale_html_artifact = _kale_run_code(_kale_blocks)
     with open("/featureengineering.html", "w") as f:
-        f.write(html_artifact)
+        f.write(_kale_html_artifact)
     _kale_update_uimetadata('featureengineering')
 
-    _kale_mlmd_utils.call("mark_execution_complete")
+    _kale_mlmdutils.call("mark_execution_complete")
 
 
 def decisiontree():
-    from kale.utils import mlmd_utils as _kale_mlmd_utils
-    _kale_mlmd_utils.init_metadata()
+    from kale.common import mlmdutils as _kale_mlmdutils
+    _kale_mlmdutils.init_metadata()
 
-    data_loading_block = '''
+    _kale_data_loading_block = '''
     # -----------------------DATA LOADING START--------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
-    _kale_marshal_utils.set_kale_directory_file_names()
     train_df = _kale_marshal_utils.load("train_df")
     train_labels = _kale_marshal_utils.load("train_labels")
     # -----------------------DATA LOADING END----------------------------------
     '''
 
-    block1 = '''
+    _kale_block1 = '''
     import numpy as np
     import pandas as pd
     import seaborn as sns
@@ -387,13 +386,13 @@ def decisiontree():
     from sklearn.naive_bayes import GaussianNB
     '''
 
-    block2 = '''
+    _kale_block2 = '''
     decision_tree = DecisionTreeClassifier()
     decision_tree.fit(train_df, train_labels)
     acc_decision_tree = round(decision_tree.score(train_df, train_labels) * 100, 2)
     '''
 
-    data_saving_block = '''
+    _kale_data_saving_block = '''
     # -----------------------DATA SAVING START---------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
@@ -402,36 +401,35 @@ def decisiontree():
     '''
 
     # run the code blocks inside a jupyter kernel
-    from kale.utils.jupyter_utils import run_code as _kale_run_code
-    from kale.utils.kfp_utils import \
+    from kale.common.jputils import run_code as _kale_run_code
+    from kale.common.kfputils import \
         update_uimetadata as _kale_update_uimetadata
-    blocks = (data_loading_block,
-              block1,
-              block2,
-              data_saving_block)
-    html_artifact = _kale_run_code(blocks)
-    with open("/decisiontree.html", "w") as f:
-        f.write(html_artifact)
+    _kale_blocks = (_kale_data_loading_block,
+                    _kale_block1,
+                    _kale_block2,
+                    _kale_data_saving_block)
+    _kale_html_artifact = _kale_run_code(_kale_blocks)
+    with open("/tmp/decisiontree.html", "w") as f:
+        f.write(_kale_html_artifact)
     _kale_update_uimetadata('decisiontree')
 
-    _kale_mlmd_utils.call("mark_execution_complete")
+    _kale_mlmdutils.call("mark_execution_complete")
 
 
 def svm():
-    from kale.utils import mlmd_utils as _kale_mlmd_utils
-    _kale_mlmd_utils.init_metadata()
+    from kale.common import mlmdutils as _kale_mlmdutils
+    _kale_mlmdutils.init_metadata()
 
-    data_loading_block = '''
+    _kale_data_loading_block = '''
     # -----------------------DATA LOADING START--------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
-    _kale_marshal_utils.set_kale_directory_file_names()
     train_df = _kale_marshal_utils.load("train_df")
     train_labels = _kale_marshal_utils.load("train_labels")
     # -----------------------DATA LOADING END----------------------------------
     '''
 
-    block1 = '''
+    _kale_block1 = '''
     import numpy as np
     import pandas as pd
     import seaborn as sns
@@ -449,13 +447,13 @@ def svm():
     from sklearn.naive_bayes import GaussianNB
     '''
 
-    block2 = '''
+    _kale_block2 = '''
     linear_svc = SVC(gamma='auto')
     linear_svc.fit(train_df, train_labels)
     acc_linear_svc = round(linear_svc.score(train_df, train_labels) * 100, 2)
     '''
 
-    data_saving_block = '''
+    _kale_data_saving_block = '''
     # -----------------------DATA SAVING START---------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
@@ -464,36 +462,35 @@ def svm():
     '''
 
     # run the code blocks inside a jupyter kernel
-    from kale.utils.jupyter_utils import run_code as _kale_run_code
-    from kale.utils.kfp_utils import \
+    from kale.common.jputils import run_code as _kale_run_code
+    from kale.common.kfputils import \
         update_uimetadata as _kale_update_uimetadata
-    blocks = (data_loading_block,
-              block1,
-              block2,
-              data_saving_block)
-    html_artifact = _kale_run_code(blocks)
-    with open("/svm.html", "w") as f:
-        f.write(html_artifact)
+    _kale_blocks = (_kale_data_loading_block,
+                    _kale_block1,
+                    _kale_block2,
+                    _kale_data_saving_block)
+    _kale_html_artifact = _kale_run_code(_kale_blocks)
+    with open("/tmp/svm.html", "w") as f:
+        f.write(_kale_html_artifact)
     _kale_update_uimetadata('svm')
 
-    _kale_mlmd_utils.call("mark_execution_complete")
+    _kale_mlmdutils.call("mark_execution_complete")
 
 
 def naivebayes():
-    from kale.utils import mlmd_utils as _kale_mlmd_utils
-    _kale_mlmd_utils.init_metadata()
+    from kale.common import mlmdutils as _kale_mlmdutils
+    _kale_mlmdutils.init_metadata()
 
-    data_loading_block = '''
+    _kale_data_loading_block = '''
     # -----------------------DATA LOADING START--------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
-    _kale_marshal_utils.set_kale_directory_file_names()
     train_df = _kale_marshal_utils.load("train_df")
     train_labels = _kale_marshal_utils.load("train_labels")
     # -----------------------DATA LOADING END----------------------------------
     '''
 
-    block1 = '''
+    _kale_block1 = '''
     import numpy as np
     import pandas as pd
     import seaborn as sns
@@ -511,13 +508,13 @@ def naivebayes():
     from sklearn.naive_bayes import GaussianNB
     '''
 
-    block2 = '''
+    _kale_block2 = '''
     gaussian = GaussianNB()
     gaussian.fit(train_df, train_labels)
     acc_gaussian = round(gaussian.score(train_df, train_labels) * 100, 2)
     '''
 
-    data_saving_block = '''
+    _kale_data_saving_block = '''
     # -----------------------DATA SAVING START---------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
@@ -526,36 +523,35 @@ def naivebayes():
     '''
 
     # run the code blocks inside a jupyter kernel
-    from kale.utils.jupyter_utils import run_code as _kale_run_code
-    from kale.utils.kfp_utils import \
+    from kale.common.jputils import run_code as _kale_run_code
+    from kale.common.kfputils import \
         update_uimetadata as _kale_update_uimetadata
-    blocks = (data_loading_block,
-              block1,
-              block2,
-              data_saving_block)
-    html_artifact = _kale_run_code(blocks)
-    with open("/naivebayes.html", "w") as f:
-        f.write(html_artifact)
+    _kale_blocks = (_kale_data_loading_block,
+                    _kale_block1,
+                    _kale_block2,
+                    _kale_data_saving_block)
+    _kale_html_artifact = _kale_run_code(_kale_blocks)
+    with open("/tmp/naivebayes.html", "w") as f:
+        f.write(_kale_html_artifact)
     _kale_update_uimetadata('naivebayes')
 
-    _kale_mlmd_utils.call("mark_execution_complete")
+    _kale_mlmdutils.call("mark_execution_complete")
 
 
 def logisticregression():
-    from kale.utils import mlmd_utils as _kale_mlmd_utils
-    _kale_mlmd_utils.init_metadata()
+    from kale.common import mlmdutils as _kale_mlmdutils
+    _kale_mlmdutils.init_metadata()
 
-    data_loading_block = '''
+    _kale_data_loading_block = '''
     # -----------------------DATA LOADING START--------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
-    _kale_marshal_utils.set_kale_directory_file_names()
     train_df = _kale_marshal_utils.load("train_df")
     train_labels = _kale_marshal_utils.load("train_labels")
     # -----------------------DATA LOADING END----------------------------------
     '''
 
-    block1 = '''
+    _kale_block1 = '''
     import numpy as np
     import pandas as pd
     import seaborn as sns
@@ -573,13 +569,13 @@ def logisticregression():
     from sklearn.naive_bayes import GaussianNB
     '''
 
-    block2 = '''
+    _kale_block2 = '''
     logreg = LogisticRegression(solver='lbfgs', max_iter=110)
     logreg.fit(train_df, train_labels)
     acc_log = round(logreg.score(train_df, train_labels) * 100, 2)
     '''
 
-    data_saving_block = '''
+    _kale_data_saving_block = '''
     # -----------------------DATA SAVING START---------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
@@ -588,36 +584,35 @@ def logisticregression():
     '''
 
     # run the code blocks inside a jupyter kernel
-    from kale.utils.jupyter_utils import run_code as _kale_run_code
-    from kale.utils.kfp_utils import \
+    from kale.common.jputils import run_code as _kale_run_code
+    from kale.common.kfputils import \
         update_uimetadata as _kale_update_uimetadata
-    blocks = (data_loading_block,
-              block1,
-              block2,
-              data_saving_block)
-    html_artifact = _kale_run_code(blocks)
-    with open("/logisticregression.html", "w") as f:
-        f.write(html_artifact)
+    _kale_blocks = (_kale_data_loading_block,
+                    _kale_block1,
+                    _kale_block2,
+                    _kale_data_saving_block)
+    _kale_html_artifact = _kale_run_code(_kale_blocks)
+    with open("/tmp/logisticregression.html", "w") as f:
+        f.write(_kale_html_artifact)
     _kale_update_uimetadata('logisticregression')
 
-    _kale_mlmd_utils.call("mark_execution_complete")
+    _kale_mlmdutils.call("mark_execution_complete")
 
 
 def randomforest():
-    from kale.utils import mlmd_utils as _kale_mlmd_utils
-    _kale_mlmd_utils.init_metadata()
+    from kale.common import mlmdutils as _kale_mlmdutils
+    _kale_mlmdutils.init_metadata()
 
-    data_loading_block = '''
+    _kale_data_loading_block = '''
     # -----------------------DATA LOADING START--------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
-    _kale_marshal_utils.set_kale_directory_file_names()
     train_df = _kale_marshal_utils.load("train_df")
     train_labels = _kale_marshal_utils.load("train_labels")
     # -----------------------DATA LOADING END----------------------------------
     '''
 
-    block1 = '''
+    _kale_block1 = '''
     import numpy as np
     import pandas as pd
     import seaborn as sns
@@ -635,13 +630,13 @@ def randomforest():
     from sklearn.naive_bayes import GaussianNB
     '''
 
-    block2 = '''
+    _kale_block2 = '''
     random_forest = RandomForestClassifier(n_estimators=100)
     random_forest.fit(train_df, train_labels)
     acc_random_forest = round(random_forest.score(train_df, train_labels) * 100, 2)
     '''
 
-    data_saving_block = '''
+    _kale_data_saving_block = '''
     # -----------------------DATA SAVING START---------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
@@ -650,30 +645,29 @@ def randomforest():
     '''
 
     # run the code blocks inside a jupyter kernel
-    from kale.utils.jupyter_utils import run_code as _kale_run_code
-    from kale.utils.kfp_utils import \
+    from kale.common.jputils import run_code as _kale_run_code
+    from kale.common.kfputils import \
         update_uimetadata as _kale_update_uimetadata
-    blocks = (data_loading_block,
-              block1,
-              block2,
-              data_saving_block)
-    html_artifact = _kale_run_code(blocks)
-    with open("/randomforest.html", "w") as f:
-        f.write(html_artifact)
+    _kale_blocks = (_kale_data_loading_block,
+                    _kale_block1,
+                    _kale_block2,
+                    _kale_data_saving_block)
+    _kale_html_artifact = _kale_run_code(_kale_blocks)
+    with open("/tmp/randomforest.html", "w") as f:
+        f.write(_kale_html_artifact)
     _kale_update_uimetadata('randomforest')
 
-    _kale_mlmd_utils.call("mark_execution_complete")
+    _kale_mlmdutils.call("mark_execution_complete")
 
 
 def results():
-    from kale.utils import mlmd_utils as _kale_mlmd_utils
-    _kale_mlmd_utils.init_metadata()
+    from kale.common import mlmdutils as _kale_mlmdutils
+    _kale_mlmdutils.init_metadata()
 
-    data_loading_block = '''
+    _kale_data_loading_block = '''
     # -----------------------DATA LOADING START--------------------------------
     from kale.marshal import utils as _kale_marshal_utils
     _kale_marshal_utils.set_kale_data_directory("/marshal")
-    _kale_marshal_utils.set_kale_directory_file_names()
     acc_decision_tree = _kale_marshal_utils.load("acc_decision_tree")
     acc_gaussian = _kale_marshal_utils.load("acc_gaussian")
     acc_linear_svc = _kale_marshal_utils.load("acc_linear_svc")
@@ -682,7 +676,7 @@ def results():
     # -----------------------DATA LOADING END----------------------------------
     '''
 
-    block1 = '''
+    _kale_block1 = '''
     import numpy as np
     import pandas as pd
     import seaborn as sns
@@ -700,7 +694,7 @@ def results():
     from sklearn.naive_bayes import GaussianNB
     '''
 
-    block2 = '''
+    _kale_block2 = '''
     results = pd.DataFrame({
         'Model': ['Support Vector Machines', 'logistic Regression',
                   'Random Forest', 'Naive Bayes', 'Decision Tree'],
@@ -712,257 +706,279 @@ def results():
     '''
 
     # run the code blocks inside a jupyter kernel
-    from kale.utils.jupyter_utils import run_code as _kale_run_code
-    from kale.utils.kfp_utils import \
+    from kale.common.jputils import run_code as _kale_run_code
+    from kale.common.kfputils import \
         update_uimetadata as _kale_update_uimetadata
-    blocks = (data_loading_block,
-              block1,
-              block2,
-              )
-    html_artifact = _kale_run_code(blocks)
-    with open("/results.html", "w") as f:
-        f.write(html_artifact)
+    _kale_blocks = (_kale_data_loading_block,
+                    _kale_block1,
+                    _kale_block2,
+                    )
+    _kale_html_artifact = _kale_run_code(_kale_blocks)
+    with open("/tmp/results.html", "w") as f:
+        f.write(_kale_html_artifact)
     _kale_update_uimetadata('results')
 
-    _kale_mlmd_utils.call("mark_execution_complete")
+    _kale_mlmdutils.call("mark_execution_complete")
 
 
-loaddata_op = comp.func_to_container_op(loaddata)
+_kale_loaddata_op = _kfp_components.func_to_container_op(loaddata)
 
 
-datapreprocessing_op = comp.func_to_container_op(datapreprocessing)
+_kale_datapreprocessing_op = _kfp_components.func_to_container_op(
+    datapreprocessing)
 
 
-featureengineering_op = comp.func_to_container_op(featureengineering)
+_kale_featureengineering_op = _kfp_components.func_to_container_op(
+    featureengineering)
 
 
-decisiontree_op = comp.func_to_container_op(decisiontree)
+_kale_decisiontree_op = _kfp_components.func_to_container_op(decisiontree)
 
 
-svm_op = comp.func_to_container_op(svm)
+_kale_svm_op = _kfp_components.func_to_container_op(svm)
 
 
-naivebayes_op = comp.func_to_container_op(naivebayes)
+_kale_naivebayes_op = _kfp_components.func_to_container_op(naivebayes)
 
 
-logisticregression_op = comp.func_to_container_op(logisticregression)
+_kale_logisticregression_op = _kfp_components.func_to_container_op(
+    logisticregression)
 
 
-randomforest_op = comp.func_to_container_op(randomforest)
+_kale_randomforest_op = _kfp_components.func_to_container_op(randomforest)
 
 
-results_op = comp.func_to_container_op(results)
+_kale_results_op = _kfp_components.func_to_container_op(results)
 
 
-@dsl.pipeline(
-    name='titanic-ml-gxj28',
+@_kfp_dsl.pipeline(
+    name='titanic-ml-u1rng',
     description='Predict which passengers survived the Titanic shipwreck'
 )
 def auto_generated_pipeline():
-    pvolumes_dict = OrderedDict()
-    volume_step_names = []
-    volume_name_parameters = []
+    _kale_pvolumes_dict = OrderedDict()
+    _kale_volume_step_names = []
+    _kale_volume_name_parameters = []
 
-    marshal_vop = dsl.VolumeOp(
+    _kale_marshal_vop = _kfp_dsl.VolumeOp(
         name="kale-marshal-volume",
         resource_name="kale-marshal-pvc",
-        modes=dsl.VOLUME_MODE_RWM,
+        modes=_kfp_dsl.VOLUME_MODE_RWM,
         size="1Gi"
     )
-    volume_step_names.append(marshal_vop.name)
-    volume_name_parameters.append(marshal_vop.outputs["name"].full_name)
-    pvolumes_dict['/marshal'] = marshal_vop.volume
+    _kale_volume_step_names.append(_kale_marshal_vop.name)
+    _kale_volume_name_parameters.append(
+        _kale_marshal_vop.outputs["name"].full_name)
+    _kale_pvolumes_dict['/marshal'] = _kale_marshal_vop.volume
 
-    volume_step_names.sort()
-    volume_name_parameters.sort()
+    _kale_volume_step_names.sort()
+    _kale_volume_name_parameters.sort()
 
-    loaddata_task = loaddata_op()\
-        .add_pvolumes(pvolumes_dict)\
+    _kale_loaddata_task = _kale_loaddata_op()\
+        .add_pvolumes(_kale_pvolumes_dict)\
         .after()
-    loaddata_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
-    loaddata_task.container.set_security_context(
+    _kale_loaddata_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/~/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
+    _kale_loaddata_task.container.set_security_context(
         k8s_client.V1SecurityContext(run_as_user=0))
-    output_artifacts = {}
-    output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    output_artifacts.update({'loaddata': '/loaddata.html'})
-    loaddata_task.output_artifact_paths.update(output_artifacts)
-    loaddata_task.add_pod_label(
+    _kale_output_artifacts = {}
+    _kale_output_artifacts.update(
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'loaddata': '/tmp/loaddata.html'})
+    _kale_loaddata_task.output_artifact_paths.update(_kale_output_artifacts)
+    _kale_loaddata_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
-    dep_names = loaddata_task.dependent_names + volume_step_names
-    loaddata_task.add_pod_annotation(
-        "kubeflow-kale.org/dependent-templates", json.dumps(dep_names))
-    if volume_name_parameters:
-        loaddata_task.add_pod_annotation(
+    _kale_dep_names = (_kale_loaddata_task.dependent_names +
+                       _kale_volume_step_names)
+    _kale_loaddata_task.add_pod_annotation(
+        "kubeflow-kale.org/dependent-templates", json.dumps(_kale_dep_names))
+    if _kale_volume_name_parameters:
+        _kale_loaddata_task.add_pod_annotation(
             "kubeflow-kale.org/volume-name-parameters",
-            json.dumps(volume_name_parameters))
+            json.dumps(_kale_volume_name_parameters))
 
-    datapreprocessing_task = datapreprocessing_op()\
-        .add_pvolumes(pvolumes_dict)\
-        .after(loaddata_task)
-    datapreprocessing_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
-    datapreprocessing_task.container.set_security_context(
+    _kale_datapreprocessing_task = _kale_datapreprocessing_op()\
+        .add_pvolumes(_kale_pvolumes_dict)\
+        .after(_kale_loaddata_task)
+    _kale_datapreprocessing_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/~/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
+    _kale_datapreprocessing_task.container.set_security_context(
         k8s_client.V1SecurityContext(run_as_user=0))
-    output_artifacts = {}
-    output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    output_artifacts.update({'datapreprocessing': '/datapreprocessing.html'})
-    datapreprocessing_task.output_artifact_paths.update(output_artifacts)
-    datapreprocessing_task.add_pod_label(
+    _kale_output_artifacts = {}
+    _kale_output_artifacts.update(
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update(
+        {'datapreprocessing': '/tmp/datapreprocessing.html'})
+    _kale_datapreprocessing_task.output_artifact_paths.update(
+        _kale_output_artifacts)
+    _kale_datapreprocessing_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
-    dep_names = datapreprocessing_task.dependent_names + volume_step_names
-    datapreprocessing_task.add_pod_annotation(
-        "kubeflow-kale.org/dependent-templates", json.dumps(dep_names))
-    if volume_name_parameters:
-        datapreprocessing_task.add_pod_annotation(
+    _kale_dep_names = (_kale_datapreprocessing_task.dependent_names +
+                       _kale_volume_step_names)
+    _kale_datapreprocessing_task.add_pod_annotation(
+        "kubeflow-kale.org/dependent-templates", json.dumps(_kale_dep_names))
+    if _kale_volume_name_parameters:
+        _kale_datapreprocessing_task.add_pod_annotation(
             "kubeflow-kale.org/volume-name-parameters",
-            json.dumps(volume_name_parameters))
+            json.dumps(_kale_volume_name_parameters))
 
-    featureengineering_task = featureengineering_op()\
-        .add_pvolumes(pvolumes_dict)\
-        .after(datapreprocessing_task)
-    featureengineering_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
-    featureengineering_task.container.set_security_context(
+    _kale_featureengineering_task = _kale_featureengineering_op()\
+        .add_pvolumes(_kale_pvolumes_dict)\
+        .after(_kale_datapreprocessing_task)
+    _kale_featureengineering_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/~/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
+    _kale_featureengineering_task.container.set_security_context(
         k8s_client.V1SecurityContext(run_as_user=0))
-    output_artifacts = {}
-    output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    output_artifacts.update({'featureengineering': '/featureengineering.html'})
-    featureengineering_task.output_artifact_paths.update(output_artifacts)
-    featureengineering_task.add_pod_label(
+    _kale_output_artifacts = {}
+    _kale_output_artifacts.update(
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update(
+        {'featureengineering': '/tmp/featureengineering.html'})
+    _kale_featureengineering_task.output_artifact_paths.update(
+        _kale_output_artifacts)
+    _kale_featureengineering_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
-    dep_names = featureengineering_task.dependent_names + volume_step_names
-    featureengineering_task.add_pod_annotation(
-        "kubeflow-kale.org/dependent-templates", json.dumps(dep_names))
-    if volume_name_parameters:
-        featureengineering_task.add_pod_annotation(
+    _kale_dep_names = (_kale_featureengineering_task.dependent_names +
+                       _kale_volume_step_names)
+    _kale_featureengineering_task.add_pod_annotation(
+        "kubeflow-kale.org/dependent-templates", json.dumps(_kale_dep_names))
+    if _kale_volume_name_parameters:
+        _kale_featureengineering_task.add_pod_annotation(
             "kubeflow-kale.org/volume-name-parameters",
-            json.dumps(volume_name_parameters))
+            json.dumps(_kale_volume_name_parameters))
 
-    decisiontree_task = decisiontree_op()\
-        .add_pvolumes(pvolumes_dict)\
-        .after(featureengineering_task)
-    decisiontree_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
-    decisiontree_task.container.set_security_context(
+    _kale_decisiontree_task = _kale_decisiontree_op()\
+        .add_pvolumes(_kale_pvolumes_dict)\
+        .after(_kale_featureengineering_task)
+    _kale_decisiontree_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/~/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
+    _kale_decisiontree_task.container.set_security_context(
         k8s_client.V1SecurityContext(run_as_user=0))
-    output_artifacts = {}
-    output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    output_artifacts.update({'decisiontree': '/decisiontree.html'})
-    decisiontree_task.output_artifact_paths.update(output_artifacts)
-    decisiontree_task.add_pod_label(
+    _kale_output_artifacts = {}
+    _kale_output_artifacts.update(
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'decisiontree': '/tmp/decisiontree.html'})
+    _kale_decisiontree_task.output_artifact_paths.update(
+        _kale_output_artifacts)
+    _kale_decisiontree_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
-    dep_names = decisiontree_task.dependent_names + volume_step_names
-    decisiontree_task.add_pod_annotation(
-        "kubeflow-kale.org/dependent-templates", json.dumps(dep_names))
-    if volume_name_parameters:
-        decisiontree_task.add_pod_annotation(
+    _kale_dep_names = (_kale_decisiontree_task.dependent_names +
+                       _kale_volume_step_names)
+    _kale_decisiontree_task.add_pod_annotation(
+        "kubeflow-kale.org/dependent-templates", json.dumps(_kale_dep_names))
+    if _kale_volume_name_parameters:
+        _kale_decisiontree_task.add_pod_annotation(
             "kubeflow-kale.org/volume-name-parameters",
-            json.dumps(volume_name_parameters))
+            json.dumps(_kale_volume_name_parameters))
 
-    svm_task = svm_op()\
-        .add_pvolumes(pvolumes_dict)\
-        .after(featureengineering_task)
-    svm_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
-    svm_task.container.set_security_context(
+    _kale_svm_task = _kale_svm_op()\
+        .add_pvolumes(_kale_pvolumes_dict)\
+        .after(_kale_featureengineering_task)
+    _kale_svm_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/~/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
+    _kale_svm_task.container.set_security_context(
         k8s_client.V1SecurityContext(run_as_user=0))
-    output_artifacts = {}
-    output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    output_artifacts.update({'svm': '/svm.html'})
-    svm_task.output_artifact_paths.update(output_artifacts)
-    svm_task.add_pod_label("pipelines.kubeflow.org/metadata_written", "true")
-    dep_names = svm_task.dependent_names + volume_step_names
-    svm_task.add_pod_annotation(
-        "kubeflow-kale.org/dependent-templates", json.dumps(dep_names))
-    if volume_name_parameters:
-        svm_task.add_pod_annotation(
-            "kubeflow-kale.org/volume-name-parameters",
-            json.dumps(volume_name_parameters))
-
-    naivebayes_task = naivebayes_op()\
-        .add_pvolumes(pvolumes_dict)\
-        .after(featureengineering_task)
-    naivebayes_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
-    naivebayes_task.container.set_security_context(
-        k8s_client.V1SecurityContext(run_as_user=0))
-    output_artifacts = {}
-    output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    output_artifacts.update({'naivebayes': '/naivebayes.html'})
-    naivebayes_task.output_artifact_paths.update(output_artifacts)
-    naivebayes_task.add_pod_label(
+    _kale_output_artifacts = {}
+    _kale_output_artifacts.update(
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'svm': '/tmp/svm.html'})
+    _kale_svm_task.output_artifact_paths.update(_kale_output_artifacts)
+    _kale_svm_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
-    dep_names = naivebayes_task.dependent_names + volume_step_names
-    naivebayes_task.add_pod_annotation(
-        "kubeflow-kale.org/dependent-templates", json.dumps(dep_names))
-    if volume_name_parameters:
-        naivebayes_task.add_pod_annotation(
+    _kale_dep_names = (_kale_svm_task.dependent_names +
+                       _kale_volume_step_names)
+    _kale_svm_task.add_pod_annotation(
+        "kubeflow-kale.org/dependent-templates", json.dumps(_kale_dep_names))
+    if _kale_volume_name_parameters:
+        _kale_svm_task.add_pod_annotation(
             "kubeflow-kale.org/volume-name-parameters",
-            json.dumps(volume_name_parameters))
+            json.dumps(_kale_volume_name_parameters))
 
-    logisticregression_task = logisticregression_op()\
-        .add_pvolumes(pvolumes_dict)\
-        .after(featureengineering_task)
-    logisticregression_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
-    logisticregression_task.container.set_security_context(
+    _kale_naivebayes_task = _kale_naivebayes_op()\
+        .add_pvolumes(_kale_pvolumes_dict)\
+        .after(_kale_featureengineering_task)
+    _kale_naivebayes_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/~/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
+    _kale_naivebayes_task.container.set_security_context(
         k8s_client.V1SecurityContext(run_as_user=0))
-    output_artifacts = {}
-    output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    output_artifacts.update({'logisticregression': '/logisticregression.html'})
-    logisticregression_task.output_artifact_paths.update(output_artifacts)
-    logisticregression_task.add_pod_label(
+    _kale_output_artifacts = {}
+    _kale_output_artifacts.update(
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'naivebayes': '/tmp/naivebayes.html'})
+    _kale_naivebayes_task.output_artifact_paths.update(_kale_output_artifacts)
+    _kale_naivebayes_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
-    dep_names = logisticregression_task.dependent_names + volume_step_names
-    logisticregression_task.add_pod_annotation(
-        "kubeflow-kale.org/dependent-templates", json.dumps(dep_names))
-    if volume_name_parameters:
-        logisticregression_task.add_pod_annotation(
+    _kale_dep_names = (_kale_naivebayes_task.dependent_names +
+                       _kale_volume_step_names)
+    _kale_naivebayes_task.add_pod_annotation(
+        "kubeflow-kale.org/dependent-templates", json.dumps(_kale_dep_names))
+    if _kale_volume_name_parameters:
+        _kale_naivebayes_task.add_pod_annotation(
             "kubeflow-kale.org/volume-name-parameters",
-            json.dumps(volume_name_parameters))
+            json.dumps(_kale_volume_name_parameters))
 
-    randomforest_task = randomforest_op()\
-        .add_pvolumes(pvolumes_dict)\
-        .after(featureengineering_task)
-    randomforest_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
-    randomforest_task.container.set_security_context(
+    _kale_logisticregression_task = _kale_logisticregression_op()\
+        .add_pvolumes(_kale_pvolumes_dict)\
+        .after(_kale_featureengineering_task)
+    _kale_logisticregression_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/~/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
+    _kale_logisticregression_task.container.set_security_context(
         k8s_client.V1SecurityContext(run_as_user=0))
-    output_artifacts = {}
-    output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    output_artifacts.update({'randomforest': '/randomforest.html'})
-    randomforest_task.output_artifact_paths.update(output_artifacts)
-    randomforest_task.add_pod_label(
+    _kale_output_artifacts = {}
+    _kale_output_artifacts.update(
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update(
+        {'logisticregression': '/tmp/logisticregression.html'})
+    _kale_logisticregression_task.output_artifact_paths.update(
+        _kale_output_artifacts)
+    _kale_logisticregression_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
-    dep_names = randomforest_task.dependent_names + volume_step_names
-    randomforest_task.add_pod_annotation(
-        "kubeflow-kale.org/dependent-templates", json.dumps(dep_names))
-    if volume_name_parameters:
-        randomforest_task.add_pod_annotation(
+    _kale_dep_names = (_kale_logisticregression_task.dependent_names +
+                       _kale_volume_step_names)
+    _kale_logisticregression_task.add_pod_annotation(
+        "kubeflow-kale.org/dependent-templates", json.dumps(_kale_dep_names))
+    if _kale_volume_name_parameters:
+        _kale_logisticregression_task.add_pod_annotation(
             "kubeflow-kale.org/volume-name-parameters",
-            json.dumps(volume_name_parameters))
+            json.dumps(_kale_volume_name_parameters))
 
-    results_task = results_op()\
-        .add_pvolumes(pvolumes_dict)\
-        .after(randomforest_task, logisticregression_task, naivebayes_task, svm_task, decisiontree_task)
-    results_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
-    results_task.container.set_security_context(
+    _kale_randomforest_task = _kale_randomforest_op()\
+        .add_pvolumes(_kale_pvolumes_dict)\
+        .after(_kale_featureengineering_task)
+    _kale_randomforest_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/~/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
+    _kale_randomforest_task.container.set_security_context(
         k8s_client.V1SecurityContext(run_as_user=0))
-    output_artifacts = {}
-    output_artifacts.update(
-        {'mlpipeline-ui-metadata': '/mlpipeline-ui-metadata.json'})
-    output_artifacts.update({'results': '/results.html'})
-    results_task.output_artifact_paths.update(output_artifacts)
-    results_task.add_pod_label(
+    _kale_output_artifacts = {}
+    _kale_output_artifacts.update(
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'randomforest': '/tmp/randomforest.html'})
+    _kale_randomforest_task.output_artifact_paths.update(
+        _kale_output_artifacts)
+    _kale_randomforest_task.add_pod_label(
         "pipelines.kubeflow.org/metadata_written", "true")
-    dep_names = results_task.dependent_names + volume_step_names
-    results_task.add_pod_annotation(
-        "kubeflow-kale.org/dependent-templates", json.dumps(dep_names))
-    if volume_name_parameters:
-        results_task.add_pod_annotation(
+    _kale_dep_names = (_kale_randomforest_task.dependent_names +
+                       _kale_volume_step_names)
+    _kale_randomforest_task.add_pod_annotation(
+        "kubeflow-kale.org/dependent-templates", json.dumps(_kale_dep_names))
+    if _kale_volume_name_parameters:
+        _kale_randomforest_task.add_pod_annotation(
             "kubeflow-kale.org/volume-name-parameters",
-            json.dumps(volume_name_parameters))
+            json.dumps(_kale_volume_name_parameters))
+
+    _kale_results_task = _kale_results_op()\
+        .add_pvolumes(_kale_pvolumes_dict)\
+        .after(_kale_randomforest_task, _kale_logisticregression_task, _kale_naivebayes_task, _kale_svm_task, _kale_decisiontree_task)
+    _kale_results_task.container.working_dir = "/Users/animeshsingh/go/src/github.com/kubeflow/kale/~/go/src/github.com/kubeflow/kale/examples/titanic-ml-dataset"
+    _kale_results_task.container.set_security_context(
+        k8s_client.V1SecurityContext(run_as_user=0))
+    _kale_output_artifacts = {}
+    _kale_output_artifacts.update(
+        {'mlpipeline-ui-metadata': '/tmp/mlpipeline-ui-metadata.json'})
+    _kale_output_artifacts.update({'results': '/tmp/results.html'})
+    _kale_results_task.output_artifact_paths.update(_kale_output_artifacts)
+    _kale_results_task.add_pod_label(
+        "pipelines.kubeflow.org/metadata_written", "true")
+    _kale_dep_names = (_kale_results_task.dependent_names +
+                       _kale_volume_step_names)
+    _kale_results_task.add_pod_annotation(
+        "kubeflow-kale.org/dependent-templates", json.dumps(_kale_dep_names))
+    if _kale_volume_name_parameters:
+        _kale_results_task.add_pod_annotation(
+            "kubeflow-kale.org/volume-name-parameters",
+            json.dumps(_kale_volume_name_parameters))
 
 
 if __name__ == "__main__":
@@ -977,7 +993,7 @@ if __name__ == "__main__":
     experiment = client.create_experiment('titanic')
 
     # Submit a pipeline run
-    from kale.utils.kfp_utils import generate_run_name
-    run_name = generate_run_name('titanic-ml-gxj28')
+    from kale.common.kfputils import generate_run_name
+    run_name = generate_run_name('titanic-ml-u1rng')
     run_result = client.run_pipeline(
         experiment.id, run_name, pipeline_filename, {})

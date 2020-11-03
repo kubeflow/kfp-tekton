@@ -16,6 +16,7 @@
 #  - The help target was derived from https://stackoverflow.com/a/35730328/5601796
 
 VENV ?= .venv
+KFP_TEKTON_RELEASE ?= v0.4.0
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
@@ -123,3 +124,8 @@ build: ## Create GO vendor directories with all dependencies
 	licext --mode merge --source vendor/ --target third_party/license.txt --overwrite
 	# Delete vendor directory
 	rm -rf vendor
+
+.PHONY: build-release-template
+build-release-template: ## Build KFP Tekton release deployment templates
+	@mkdir -p install/$(KFP_TEKTON_RELEASE)
+	@kustomize build manifests/kustomize/env/kfp-template -o install/$(KFP_TEKTON_RELEASE)/kfp-tekton.yaml

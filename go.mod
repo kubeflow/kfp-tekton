@@ -34,7 +34,7 @@ require (
 	github.com/tektoncd/pipeline v0.16.3
 	github.com/valyala/fasttemplate v1.1.0 // indirect
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
-	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
+	golang.org/x/sync v0.0.0-20201008141435-b3e1573b7520 // indirect
 	google.golang.org/api v0.25.0
 	google.golang.org/genproto v0.0.0-20200527145253-8367513e4ece
 	google.golang.org/grpc v1.29.1

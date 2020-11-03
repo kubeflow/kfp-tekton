@@ -1,4 +1,4 @@
-# Kubeflow pipeline user guide
+# Kubeflow Pipelines with Tekton User Guide
 
 This page introduces different ways to compile, upload, and execute Kubeflow Pipelines with Tekton backend. The usual flow for using the Kubeflow Pipeline is to compile the Kubeflow Pipeline Python DSL into a Tekton formatted file. Then upload the compiled file to the Kubeflow Pipeline platform. Lastly, execute the uploaded pipeline using the Kubeflow Pipeline backend engine. For starter, we recommend using the first method in each section.
 
@@ -37,6 +37,8 @@ def echo_pipeline(
     - [2. Run Pipelines Using the `kfp_tekton.TektonClient` in Python](#2-run-pipelines-using-the-kfp_tektontektonclient-in-python)
     - [3. Run Pipelines Using the `kfp` Bash Command Line Tool](#3-run-pipelines-using-the-kfp-bash-command-line-tool)
     - [4. Optional: Run Tekton Pipelines Without Using the Kubeflow Pipelines Engine](#4-optional-run-tekton-pipelines-without-using-the-kubeflow-pipelines-engine)
+  - [Best Practices](#best-practices)
+    - [Artifacts and Parameter output files for Tekton](#artifacts-and-parameter-output-files-for-tekton)
 
 
 ## Compiling Pipelines
@@ -331,3 +333,13 @@ kubectl describe pipelinerun echo
 #   Normal   Running            <invalid> (x11 over 2s)  pipeline-controller  Tasks Completed: 0, Incomplete: 1, Skipped: 0
 #   Normal   Succeeded          <invalid>                pipeline-controller  Tasks Completed: 1, Skipped: 0
 ```
+
+## Best Practices
+
+### Artifacts and Parameter output files for Tekton
+When developing a Kubeflow pipeline for the Tekton backend, please be aware that the files produced as artifacts and parameter outputs are carried to a volume mount path then get pushed to S3. It's not recommended to have volume mount on a container's root directory (`/`) because volume mount will overwrite all the files in the container path, including all the system files and binaries. 
+
+
+Therefore, we have prohibited the kfp-tekton compiler from putting artifacts and parameter output files in the container's root directory. We recommend placing the output files inside a new directory under root to avoid this problem, such as `/tmp/`. The [condition](/samples/flip-coin/condition.py) example shows how the output files can be stored. Alternatively, you can learn [how to create reusable components](https://www.kubeflow.org/docs/pipelines/sdk/component-development/) in a component.yaml where you can avoid hard coding your output file path.
+
+This also applies to the Argo backend with k8sapi and kubelet executors, and it's the recommended way to avoid the [race condition for Argo's PNS executor](https://github.com/argoproj/argo/issues/1256#issuecomment-494319015).

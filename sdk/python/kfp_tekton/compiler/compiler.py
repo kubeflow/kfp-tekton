@@ -37,7 +37,7 @@ from kfp.dsl._metadata import _extract_pipeline_metadata
 # KFP-Tekton imports
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
-from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name
+from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
 
 
@@ -396,13 +396,13 @@ class TektonCompiler(Compiler):
         # Process input parameters if needed
         if isinstance(condition.operand1, dsl.PipelineParam):
           if condition.operand1.op_name:
-            operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + condition.operand1.name + ')'
+            operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + sanitize_k8s_name(condition.operand1.name) + ')'
           else:
             operand_value = '$(params.' + condition.operand1.name + ')'
           input_params.append(operand_value)
         if isinstance(condition.operand2, dsl.PipelineParam):
           if condition.operand2.op_name:
-            operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + condition.operand2.name + ')'
+            operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + sanitize_k8s_name(condition.operand2.name) + ')'
           else:
             operand_value = '$(params.' + condition.operand2.name + ')'
           input_params.append(operand_value)
@@ -587,6 +587,8 @@ class TektonCompiler(Compiler):
           sanitized_attribute_outputs[sanitize_k8s_name(key, True)] = \
             op.attribute_outputs[key]
         op.attribute_outputs = sanitized_attribute_outputs
+      if isinstance(op, dsl.ContainerOp) and op.container is not None:
+        sanitize_k8s_object(op.container)
       sanitized_ops[sanitized_name] = op
     pipeline.ops = sanitized_ops
 
