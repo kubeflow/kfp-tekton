@@ -348,7 +348,7 @@ This also applies to the Argo backend with k8sapi and kubelet executors, and it'
 
 ### Argo variables
 
-Variables like `{{workflow.uid}}` are currently not supported. See [this PR](https://github.com/kubeflow/kfp-tekton/pull/321).
+Variables like `{{workflow.uid}}` are currently not supported. See [the list of supported Argo variables](/sdk/FEATURES.md#variable-substitutions).
 
 ### Absolute paths in commands
 
