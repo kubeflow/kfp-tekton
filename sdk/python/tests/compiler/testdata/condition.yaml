@@ -133,7 +133,7 @@ spec:
     - name: condition-1
       params:
       - name: operand1
-        value: $(tasks.flip.results.output)
+        value: $(tasks.flip.results.output-value)
       - name: operand2
         value: heads
       - name: operator
@@ -156,7 +156,7 @@ spec:
     - name: condition-2
       params:
       - name: operand1
-        value: $(tasks.flip-again.results.output)
+        value: $(tasks.flip-again.results.output-value)
       - name: operand2
         value: tails
       - name: operator
@@ -179,7 +179,7 @@ spec:
     - name: condition-3
       params:
       - name: operand1
-        value: $(tasks.flip.results.output)
+        value: $(tasks.flip.results.output-value)
       - name: operand2
         value: tails
       - name: operator

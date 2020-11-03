@@ -191,7 +191,6 @@ class TektonCompiler(Compiler):
     # Generate GroupOp template
     sub_group = group
     template = {
-      'apiVersion': tekton_api_version,
       'metadata': {
         'name': sanitize_k8s_name(sub_group.name),
       },
