@@ -39,6 +39,11 @@ def echo_pipeline(
     - [4. Optional: Run Tekton Pipelines Without Using the Kubeflow Pipelines Engine](#4-optional-run-tekton-pipelines-without-using-the-kubeflow-pipelines-engine)
   - [Best Practices](#best-practices)
     - [Artifacts and Parameter output files for Tekton](#artifacts-and-parameter-output-files-for-tekton)
+  - [Migration from Argo backend](#migration-from-argo-backend)
+    - [Argo variables](#argo-variables)
+    - [Absolute paths in commands](#absolute-paths-in-commands)
+    - [Output artifacts and metrics](#output-artifacts-and-metrics)
+    - [Default pipeline timeouts](#default-pipeline-timeouts)
 
 
 ## Compiling Pipelines
@@ -352,7 +357,8 @@ Variables like `{{workflow.uid}}` are currently not supported. See [the list of 
 
 ### Absolute paths in commands
 
-Absolute paths in component commands are required, e.g. `python app/run.py` works in Argo, in Tekton it has to be `python /app/run.py`.
+Absolute paths in component commands (e.g. `python /app/run.py` instead of `python app/run.py`) are required unless Tekton has been patched for [disabling work directory overwrite](https://github.com/kubeflow/kfp-tekton/blob/master/sdk/python/README.md#tekton-cluster).
+The patch happens automatically in case of whole Kubeflow deployment.
 
 ### Output artifacts and metrics
 
