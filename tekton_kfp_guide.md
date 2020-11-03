@@ -35,7 +35,7 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 
 ## Standalone Kubeflow Pipelines with Tekton Backend Deployment
 To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
-1. Install [Tekton v0.14.3](https://github.com/tektoncd/pipeline/releases/tag/v0.14.3)
+1. Install [Tekton v0.16.3](https://github.com/tektoncd/pipeline/releases/tag/v0.16.3)
 
 2. Install Kubeflow Pipelines with Tekton backend (kfp-tekton) v0.4.0 release
     ```shell

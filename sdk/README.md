@@ -34,11 +34,11 @@ SDK provides a `TektonCompiler` and a `TektonClient`:
 
 `TektonCompiler`:
 
- - `kfp_tekton.compiler.TektonCompiler.compile` compiles Python DSL code into a 
+ - `kfp_tekton.compiler.TektonCompiler.compile` compiles Python DSL code into a
    YAML file containing a Tekton `PipelineRun` which can be deployed directly to
    a Tekton enabled Kubernetes cluster or uploaded to the Kubeflow Pipelines
    dashboard with the Tekton backend.
-   
+
 `TektonClient`:
 
  - `kfp_tekton.TektonClient.create_run_from_pipeline_func` compiles DSL pipeline
@@ -48,7 +48,7 @@ SDK provides a `TektonCompiler` and a `TektonClient`:
 ## Project Prerequisites
 
  - Python: `3.5.3` or later
- - Tekton: [`v0.14.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.14.0) or [later](https://github.com/tektoncd/pipeline/releases/latest)
+ - Tekton: [`v0.16.3`](https://github.com/tektoncd/pipeline/releases/tag/v0.16.3) or [later](https://github.com/tektoncd/pipeline/releases/latest)
  - Tekton CLI: [`0.11.0`](https://github.com/tektoncd/cli/releases/tag/v0.11.0)
  - Kubeflow Pipelines: [KFP with Tekton backend](/tekton_kfp_guide.md)
 
@@ -64,9 +64,9 @@ virtual environment first:
 
     python3 -m venv .venv
     source .venv/bin/activate
-    
+
     pip install kfp-tekton
-    
+
 Alternatively you can install the latest version of the `kfp-tekton` compiler
 from source by cloning the repository [https://github.com/kubeflow/kfp-tekton](https://github.com/kubeflow/kfp-tekton):
 
@@ -149,13 +149,13 @@ cluster with `kubectl`. The Tekton server will automatically start a pipeline ru
 We can then follow the logs using the `tkn` CLI.
 
     kubectl apply -f pipeline.yaml
-    
+
     tkn pipelinerun logs --last --follow
 
 Once the Tekton Pipeline is running, the logs should start streaming:
-      
+
     Waiting for logs to be available...
-    
+
     [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
     [gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
@@ -188,8 +188,8 @@ your code changes are improving the number of successfully compiled KFP pipeline
 
 - When you encounter ServiceAccount related permission issues, refer to the
   ["Servince Account and RBAC" doc](sa-and-rbac.md)
-  
-- If you run into the error `bad interpreter: No such file or director` when trying 
+
+- If you run into the error `bad interpreter: No such file or director` when trying
   to use Python's venv, remove the current virtual environment in the `.venv` directory
   and create a new one using `virtualenv .venv`
 

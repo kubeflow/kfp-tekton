@@ -1,6 +1,6 @@
 # KFP-Tekton Developer Guide
 
-This document describes the development guidelines for contributing to the KFP-Tekton project. 
+This document describes the development guidelines for contributing to the KFP-Tekton project.
 Details about the required contributor license agreement (CLA) and the code review process can be found in the
 [CONTRIBUTING.md](/CONTRIBUTING.md) document.
 A quick-start guide with general setup instruction, trouble shooting guide and technical limitations can be found in
@@ -36,7 +36,7 @@ the [SDK README](/sdk/README.md)
 1. [`Python`](https://www.python.org/downloads/): version `3.5.3` or later (new code must maintain compatibility with `3.5`)
 2. [`Kubernetes` Cluster](https://v1-15.docs.kubernetes.io/docs/setup/): version `1.15` ([required by Kubeflow](https://www.kubeflow.org/docs/started/k8s/overview/) and Tekton 0.11)
 3. [`kubectl` CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/): required to deploy Tekton pipelines to Kubernetes cluster
-4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.15.0/): version `0.14.0` or greater (minimum version `0.13.0` to support Tekton API version `v1beta1`), required for end-to-end testing
+4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.15.0/): version `0.16.3` or greater, required for end-to-end testing
 5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): version `0.11.0` or greater, required for end-to-end testing of Tekton pipelines
 6. [`Kubeflow Pipelines` Deployment](https://www.kubeflow.org/docs/pipelines/installation/overview/): required for some end-to-end tests
 
@@ -74,7 +74,7 @@ branch. Currently there are no features that require a special build.
 
 #### Tekton CLI
 
-Follow the instructions [here](https://github.com/tektoncd/cli#installing-tkn). 
+Follow the instructions [here](https://github.com/tektoncd/cli#installing-tkn).
 
 Mac OS users can install the Tekton CLI using the `homebrew` formula:
 
@@ -91,7 +91,7 @@ The Tekton Dashboard can be accessed through its `ClusterIP` service by running 
 be patched to expose a public `NodePort` IP:
 
   	kubectl patch svc tekton-dashboard -n tekton-pipelines --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"}]'
-   
+
 To open the dashboard run:
 
     TKN_DASHBOARD_SVC_PORT=$(kubectl -n tekton-pipelines get service tekton-dashboard -o jsonpath='{.spec.ports[0].nodePort}')
@@ -107,8 +107,8 @@ like the DSL and components packages, but "override" or "replace" those parts of
 the Tekton YAML instead of Argo YAML. Since the KFP SDK was not designed and implemented to easily be extended,
 _monkey-patching_ was used to replace non-class methods and functions at runtime.
 
-In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a 
-specific version of the `kfp` SDK compiler. As of now that version is [`1.0.0`](https://github.com/kubeflow/pipelines/releases/tag/1.0.0). 
+In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a
+specific version of the `kfp` SDK compiler. As of now that version is [`1.0.0`](https://github.com/kubeflow/pipelines/releases/tag/1.0.0).
 
 
 ## Adding New Code
@@ -118,12 +118,12 @@ The Python package structure as well as the module names and method signatures c
 This helps keeping track of all the code that had to modified and will make merging (some of) the code back into KFP or
 identify pieces of code that need to be refactored in KFP in order to accommodate various execution platforms.
 When it is necessary to bring further methods from `kfp` compiler package into the `kfp-tekton` compiler package, keep
-the original method names and signatures as well as their position inside their respective Python modules. 
+the original method names and signatures as well as their position inside their respective Python modules.
 
 Be sure to run `make verify` before committing your code changes and creating a pull request:
 
     $ make verify
-    
+
     check_license: OK
     lint: OK
     unit_test: OK
@@ -148,8 +148,8 @@ their respective modules in `kfp_tekton.compiler` and added to the _monkey patch
 the `kfp` at runtime.
 
 As of May 2020, the _monkey patch_ was no longer needed and removed since all of the _patched_ methods were
-now invoked directly (and exclusively) by other code implemented in the `kfp_tekton` compiler. 
-Details on how to implement a _monkey patch_ can be found in the 
+now invoked directly (and exclusively) by other code implemented in the `kfp_tekton` compiler.
+Details on how to implement a _monkey patch_ can be found in the
 [Removed Features](#monkey-patch-to-dynamically-replace-static-kfp-compiler-methods)
 section if it becomes necessary to reintroduce the _monkey patch_ for any methods we need to "override" which
 are not exclusively called directly by other methods we already implemented in the `kfp_tekton` compiler.
@@ -187,7 +187,7 @@ Ideally whenever a code change to the compiler results in modified YAML an end-t
 Any new functionality being added to the `kfp_tekton.compiler` should be accompanied by a new unit test in `sdk/python/tests/compiler/compiler_tests.py`
 Typically a test case comes with a minimal Python DSL script and a "golden" YAML file in `sdk/python/tests/compiler/testdata`.
 The "golden" YAML file contains the expected compiler output. The unit tests use the "golden" YAML files to compare
-the current compiler output with the previously expected compiler output. 
+the current compiler output with the previously expected compiler output.
 
     make unit_test
 
@@ -203,7 +203,7 @@ the output YAML is desired, then the "golden" YAML needs to be regenerated, i.e.
 
 The unit tests are designed to verify the YAML produced by the compiler matches the expected, previously generated
 "golden" YAML. End-to-end (E2E) tests are necessary to verify that the generated Tekton YAML is syntactically valid and
-that the pipeline can be executed successfully on a Tekton cluster. 
+that the pipeline can be executed successfully on a Tekton cluster.
 
 A manual E2E test can be performed in the following manner:
 
@@ -218,7 +218,7 @@ access secrets:
     tkn pipeline start <pipeline-name> --showlog -n kubeflow
 
 You can also run the dynamically generated end-to-end test suite which takes all of the "golden" YAML files from the
-compiler `testdata` directory and runs them on a Kubernetes cluster, prerequisite that the environment variable 
+compiler `testdata` directory and runs them on a Kubernetes cluster, prerequisite that the environment variable
 `KUBECONFIG` is set and the K8s cluster has both Kubeflow Pipelines as well as Tekton Pipelines installed:
 
     make e2e_test
@@ -315,7 +315,7 @@ except Exception as error:
 ```
 
 **Note**: Since the _monkey patch_ gets triggered by importing any member of the `kfp_tekton.compiler` module, we try to
-avoid using top-level imports of any members in `kfp_tekton.compiler` in pipeline DSL scripts. 
+avoid using top-level imports of any members in `kfp_tekton.compiler` in pipeline DSL scripts.
 Instead use local imports to avoid triggering the _monkey-patch_ when the original KFP compiler is used to compile a
 pipeline DSL script using KFP's `dsl-compile --py <DSL script>` command.
 
