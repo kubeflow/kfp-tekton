@@ -541,7 +541,7 @@ class TektonCompiler(Compiler):
       pipeline_run['spec']['taskRunSpecs'] = task_run_spec
 
     # add workflow level timeout to pipeline run
-    if pipeline.conf.timeout:
+    if pipeline.conf.timeout is not None:
       pipeline_run['spec']['timeout'] = '%ds' % pipeline.conf.timeout
 
     # generate the Tekton podTemplate for image pull secret

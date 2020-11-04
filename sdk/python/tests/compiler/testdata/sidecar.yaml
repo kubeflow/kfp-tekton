@@ -65,3 +65,4 @@ spec:
           - -c
           image: library/bash
           name: main
+  timeout: 0s

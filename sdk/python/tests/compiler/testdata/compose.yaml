@@ -105,3 +105,4 @@ spec:
           - -c
           image: google/cloud-sdk
           name: main
+  timeout: 0s

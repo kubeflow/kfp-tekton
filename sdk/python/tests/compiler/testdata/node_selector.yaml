@@ -44,3 +44,4 @@ spec:
     taskPodTemplate:
       nodeSelector:
         kubernetes.io/os: linux
+  timeout: 0s

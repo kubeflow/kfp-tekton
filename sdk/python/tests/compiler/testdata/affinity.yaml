@@ -51,3 +51,4 @@ spec:
                 operator: In
                 values:
                 - linux
+  timeout: 0s

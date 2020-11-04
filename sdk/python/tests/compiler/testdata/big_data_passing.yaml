@@ -410,6 +410,7 @@ spec:
           name: main
     workspaces:
     - name: file-passing-pipelines
+  timeout: 0s
   workspaces:
   - name: file-passing-pipelines
     volumeClaimTemplate:

@@ -130,3 +130,4 @@ spec:
         volumes:
         - emptyDir: {}
           name: text
+  timeout: 0s

@@ -42,3 +42,4 @@ spec:
           - hello
           image: alpine:latest
           name: main
+  timeout: 0s

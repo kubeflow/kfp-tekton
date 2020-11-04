@@ -36,7 +36,7 @@ class RandomFailure1Op(dsl.ContainerOp):
 def timeout_sample_pipeline():
     op1 = RandomFailure1Op('0,1,2,3').set_timeout(20)
     op2 = RandomFailure1Op('0,1')
-    dsl.get_pipeline_conf().set_timeout(40)
+    dsl.get_pipeline_conf().set_timeout(0)
 
 
 if __name__ == '__main__':
