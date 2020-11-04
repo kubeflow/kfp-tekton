@@ -42,7 +42,7 @@ Below are the features using Tekton's native support without any custom workarou
 `pod_annotations` and `pod_labels` are for assigning custom annotations or labels to a pipeline component. They are implemented with
 Tekton's [task metadata](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#configuring-a-task) field under Tekton
 Task. The [pipeline transformers](/sdk/python/tests/compiler/testdata/pipeline_transfromers.py) example shows how to apply
-custom annotations and labels to one or more components in the pipeline. 
+custom annotations and labels to one or more components in the pipeline.
 
 ### Retries
 
@@ -60,12 +60,18 @@ Volumes are for mounting existing Kubernetes resources onto the components. It i
 ### Timeout for Tasks and Pipelines
 
 Timeout can be used for setting the amount of time allowed on executing a component within the Pipeline or setting the amount of
-time allowed on executing the whole pipeline. The task timeout is implemented with Tekton's
+time allowed on executing the whole pipeline. By default, the generated pipeline won't be timeout to simulate the same behavior
+as Argo, but users can explicitly assign a timeout period on the task or pipeline level. The task timeout is implemented with Tekton's
 [task failure timeout](https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#configuring-the-failure-timeout) under
 Tekton Pipeline, and pipeline timeout is implemented with Tekton's
 [pipeline failure timeout](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#configuring-a-failure-timeout)
 under Tekton PipelineRun. The [timeout](/sdk/python/tests/compiler/testdata/timeout.py) python test is an example of
 how to use this feature.
+
+If you want to use the
+[Tekton global default timeout value](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#configuring-a-failure-timeout)
+for the generated pipeline, you can run `export TEKTON_GLOBAL_DEFAULT_TIMEOUT=true` to enable this feature.
+
 
 ### RunAfter
 
@@ -111,8 +117,8 @@ This feature has been available since Tekton version `0.13.0`.
 ### Exit Handler
 
 An _exit handler_ is a component that always executes, irrespective of success or failure,
-at the end of the pipeline. It is implemented using Tekton's 
-[finally](https://github.com/tektoncd/pipeline/blob/v0.14.0/docs/pipelines.md#adding-finally-to-the-pipeline) 
+at the end of the pipeline. It is implemented using Tekton's
+[finally](https://github.com/tektoncd/pipeline/blob/v0.14.0/docs/pipelines.md#adding-finally-to-the-pipeline)
 section under the Pipeline `spec`. An example of how to use an _exit handler_ can be found in
 the [exit_handler](/sdk/python/tests/compiler/testdata/exit_handler.py) compiler test.
 
@@ -168,7 +174,7 @@ python test is an example of how to use this feature.
 Output Artifacts are files that need to be persisted to the default/destination object storage. Additionally, by default, all Kubeflow Pipeline 'Output Parameters' are also stored as output artifacts. Since Tekton deprecated pipelineResource and the recommended gsutil task is not capable of moving files to the minio object storage without proper DNS address, we decided to inject a step based on the [minio mc](https://github.com/minio/mc) image for moving output artifacts during Kubeflow Pipeline execution time.
 
 It also includes several annontations, `tekton.dev/input_artifacts` and `tekton.dev/output_artifacts` are for metadata tracking, `tekton.dev/artifact_items` is to retain the artifact dependency information. Refer to the
-[Tetkon Artifact design proposal](http://bit.ly/kfp-tekton) for more details. 
+[Tetkon Artifact design proposal](http://bit.ly/kfp-tekton) for more details.
 
 The current implementation is relying on the existing KFP's minio setup for getting the default credentials. These default credentials can be updated
 via a Kubernetes configmap.
@@ -199,7 +205,7 @@ argo -> tekton
 ```
 
 [parallel_join_with_argo_vars](/sdk/python/tests/compiler/testdata/parallel_join_with_argo_vars.py) is an example of how Argo variables are
-used and it can still be converted to Tekton variables with our Tekton compiler. However, other Argo variables will throw out an error because those Argo variables are very unique to Argo's pipeline system. 
+used and it can still be converted to Tekton variables with our Tekton compiler. However, other Argo variables will throw out an error because those Argo variables are very unique to Argo's pipeline system.
 
 
 ## Features with a Different Behavior than Argo
@@ -218,8 +224,8 @@ However, when you run kfp-tekton pipeline with sidecars, you may notice a comple
 
 When the nop image does provide the sidecar's command, the sidecar will continue to run even after nop has been swapped into the sidecar container's image field. Until this issue is resolved the best way to avoid it is to avoid overriding the nop image when deploying the tekton controller, or ensuring that the overridden nop image contains as few commands as possible.
 
-`kubectl get pods` will show a 'Completed' pod when a sidecar exits successfully but an _Error_ when the sidecar exits with an error. This is only apparent when using `kubectl` to get the pods of a TaskRun, not when describing the Pod using `kubectl describe pod ...` nor when looking at the TaskRun, but can be quite confusing. However, it has no functional impact. 
-[Tekton pipeline readme](https://github.com/tektoncd/pipeline/blob/master/docs/developers/README.md#handling-of-injected-sidecars) has documented this limitation. 
+`kubectl get pods` will show a 'Completed' pod when a sidecar exits successfully but an _Error_ when the sidecar exits with an error. This is only apparent when using `kubectl` to get the pods of a TaskRun, not when describing the Pod using `kubectl describe pod ...` nor when looking at the TaskRun, but can be quite confusing. However, it has no functional impact.
+[Tekton pipeline readme](https://github.com/tektoncd/pipeline/blob/master/docs/developers/README.md#handling-of-injected-sidecars) has documented this limitation.
 
 
 <!-- Issue and PR links-->
