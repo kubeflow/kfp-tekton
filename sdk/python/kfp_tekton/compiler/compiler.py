@@ -455,7 +455,7 @@ class TektonCompiler(Compiler):
     # add timeout params to task_refs, instead of task.
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if op.timeout:
+      if op.timeout is not None:
         task['timeout'] = '%ds' % op.timeout
 
     # handle resourceOp cases in pipeline

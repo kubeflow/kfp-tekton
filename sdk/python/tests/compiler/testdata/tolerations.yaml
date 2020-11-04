@@ -43,6 +43,7 @@ spec:
           - -c
           image: busybox
           name: main
+      timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: download
     taskPodTemplate:
