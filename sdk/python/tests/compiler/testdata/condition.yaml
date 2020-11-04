@@ -68,6 +68,7 @@ spec:
           - -c
           image: python:alpine3.6
           name: main
+      timeout: 0s
     - conditions:
       - conditionRef: super-condition
         params:
@@ -98,6 +99,7 @@ spec:
           - -c
           image: python:alpine3.6
           name: main
+      timeout: 0s
     - conditions:
       - conditionRef: super-condition
         params:
@@ -128,6 +130,7 @@ spec:
           - $(inputs.params.flip-again-output_value)
           image: alpine:3.6
           name: main
+      timeout: 0s
     - conditions:
       - conditionRef: super-condition
         params:
@@ -150,3 +153,5 @@ spec:
           - $(inputs.params.flip-output_value)
           image: alpine:3.6
           name: main
+      timeout: 0s
+  timeout: 0s
