@@ -52,4 +52,5 @@ spec:
           - -c
           image: python:alpine3.6
           name: main
+      timeout: 0s
   timeout: 40s

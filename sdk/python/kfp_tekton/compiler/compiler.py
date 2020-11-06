@@ -24,6 +24,7 @@ import textwrap
 
 from typing import Callable, List, Text, Dict, Any
 from os import environ as env
+from distutils.util import strtobool
 
 # Kubeflow Pipeline imports
 from kfp import dsl
@@ -44,6 +45,7 @@ from kfp_tekton.compiler._op_to_template import _op_to_template
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
+TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
 
 
 def _get_super_condition_template():
@@ -452,7 +454,7 @@ class TektonCompiler(Compiler):
     # add timeout params to task_refs, instead of task.
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if op.timeout:
+      if not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout:
         task['timeout'] = '%ds' % op.timeout
 
     # handle resourceOp cases in pipeline
@@ -544,7 +546,7 @@ class TektonCompiler(Compiler):
       pipeline_run['spec']['taskRunSpecs'] = task_run_spec
 
     # add workflow level timeout to pipeline run
-    if pipeline.conf.timeout:
+    if not TEKTON_GLOBAL_DEFAULT_TIMEOUT or pipeline.conf.timeout:
       pipeline_run['spec']['timeout'] = '%ds' % pipeline.conf.timeout
 
     # generate the Tekton podTemplate for image pull secret

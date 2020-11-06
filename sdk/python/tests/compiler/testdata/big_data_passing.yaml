@@ -102,6 +102,7 @@ spec:
           name: main
         workspaces:
         - name: repeat-line
+      timeout: 0s
       workspaces:
       - name: repeat-line
         workspace: file-passing-pipelines
@@ -141,6 +142,7 @@ spec:
           name: main
         workspaces:
         - name: print-text
+      timeout: 0s
       workspaces:
       - name: print-text
         workspace: file-passing-pipelines
@@ -238,6 +240,7 @@ spec:
           name: source
         workspaces:
         - name: split-text-lines
+      timeout: 0s
       workspaces:
       - name: split-text-lines
         workspace: file-passing-pipelines
@@ -277,6 +280,7 @@ spec:
           name: main
         workspaces:
         - name: print-text-2
+      timeout: 0s
       workspaces:
       - name: print-text-2
         workspace: file-passing-pipelines
@@ -316,6 +320,7 @@ spec:
           name: main
         workspaces:
         - name: print-text-3
+      timeout: 0s
       workspaces:
       - name: print-text-3
         workspace: file-passing-pipelines
@@ -368,6 +373,7 @@ spec:
           name: main
         workspaces:
         - name: write-numbers
+      timeout: 0s
       workspaces:
       - name: write-numbers
         workspace: file-passing-pipelines
@@ -407,6 +413,7 @@ spec:
           name: main
         workspaces:
         - name: print-text-4
+      timeout: 0s
       workspaces:
       - name: print-text-4
         workspace: file-passing-pipelines
@@ -465,6 +472,7 @@ spec:
           name: main
         workspaces:
         - name: sum-numbers
+      timeout: 0s
       workspaces:
       - name: sum-numbers
         workspace: file-passing-pipelines
@@ -504,6 +512,7 @@ spec:
           name: main
         workspaces:
         - name: print-text-5
+      timeout: 0s
       workspaces:
       - name: print-text-5
         workspace: file-passing-pipelines
@@ -554,6 +563,7 @@ spec:
             \ f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"
           image: python:3.7
           name: main
+      timeout: 0s
     - name: print-params
       params:
       - name: gen-params-Output
@@ -587,8 +597,10 @@ spec:
             _parsed_args = vars(_parser.parse_args())\n\n_outputs = print_params(**_parsed_args)\n"
           image: python:3.7
           name: main
+      timeout: 0s
     workspaces:
     - name: file-passing-pipelines
+  timeout: 0s
   workspaces:
   - name: file-passing-pipelines
     volumeClaimTemplate:

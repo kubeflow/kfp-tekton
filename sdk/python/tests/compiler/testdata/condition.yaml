@@ -69,6 +69,7 @@ spec:
           image: python:alpine3.6
           name: main
     - name: flip-again
+      timeout: 0s
       params:
       - name: forced_result2
         value: $(params.forced_result2)
@@ -95,6 +96,7 @@ spec:
         values:
         - 'true'
     - name: print1
+      timeout: 0s
       params:
       - name: flip-again-output_value
         value: $(tasks.flip-again.results.output-value)
@@ -113,6 +115,7 @@ spec:
         values:
         - 'true'
     - name: print2
+      timeout: 0s
       params:
       - name: flip-output_value
         value: $(tasks.flip.results.output-value)
@@ -199,3 +202,5 @@ spec:
             status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
             \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
             \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+      timeout: 0s
+  timeout: 0s

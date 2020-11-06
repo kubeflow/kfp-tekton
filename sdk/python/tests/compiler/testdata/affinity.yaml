@@ -39,6 +39,7 @@ spec:
           - -c
           image: busybox
           name: main
+      timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: echo
     taskPodTemplate:
@@ -51,3 +52,4 @@ spec:
                 operator: In
                 values:
                 - linux
+  timeout: 0s

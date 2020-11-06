@@ -60,12 +60,18 @@ Volumes are for mounting existing Kubernetes resources onto the components. It i
 ### Timeout for Tasks and Pipelines
 
 Timeout can be used for setting the amount of time allowed on executing a component within the Pipeline or setting the amount of
-time allowed on executing the whole pipeline. The task timeout is implemented with Tekton's
+time allowed on executing the whole pipeline. By default, the generated pipeline won't be timeout to simulate the same behavior
+as Argo, but users can explicitly assign a timeout period on the task or pipeline level. The task timeout is implemented with Tekton's
 [task failure timeout](https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#configuring-the-failure-timeout) under
 Tekton Pipeline, and pipeline timeout is implemented with Tekton's
 [pipeline failure timeout](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#configuring-a-failure-timeout)
 under Tekton PipelineRun. The [timeout](/sdk/python/tests/compiler/testdata/timeout.py) python test is an example of
 how to use this feature.
+
+If you want to use the
+[Tekton global default timeout value](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#configuring-a-failure-timeout)
+for the generated pipeline, you can run `export TEKTON_GLOBAL_DEFAULT_TIMEOUT=true` to enable this feature.
+
 
 ### RunAfter
 
