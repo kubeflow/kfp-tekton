@@ -26,7 +26,7 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 
 ### OpenShift
 
-   Follow the instructions at [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](https://github.com/IBM/KubeflowDojo/tree/master/OpenShift/manifests). Depending on your situation, you can choose between the two approaches:
+   Follow the instructions at [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](./kfp-tekton-openshift.md). Depending on your situation, you can choose between the two approaches:
    1. Leverage OpenShift Pipelines (built on Tekton)
    2. Install Tekton as part of deployment
 
