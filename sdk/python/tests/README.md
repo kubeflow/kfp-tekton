@@ -131,5 +131,5 @@ Occurences of other Errors:
 
 ## Disclaimer
 
-**Note:** The reports above were created for the pipeline scripts found in KFP version `1.0.0` since the
-`kfp_tekton` compiler code is currently based on the `kfp` SDK compiler version `1.0.0`.
+**Note:** The reports above were created for the pipeline scripts found in KFP version `1.0.4` since the
+`kfp_tekton` compiler code is currently based on the `kfp` SDK compiler version `1.0.4`.
