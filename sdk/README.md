@@ -28,7 +28,7 @@ backed by Tekton.
 
 ## SDK Packages Overview
 
-The `kfp-tekton` SDK is an extension to the [Kubeflow Pipelines SDK](/docs/pipelines/sdk/sdk-overview/)
+The `kfp-tekton` SDK is an extension to the [Kubeflow Pipelines SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/)
 adding the `TektonCompiler` and the `TektonClient`:
 
 * `kfp_tekton.compiler` includes classes and methods for compiling pipeline Python DSL into a Tekton PipelineRun YAML spec. The methods in this package
@@ -39,12 +39,12 @@ adding the `TektonCompiler` and the `TektonClient`:
     can process. The Kubeflow Pipelines service converts the static 
     configuration into a set of Kubernetes resources for execution.
 
-* `kfp_tekton.TektonClient` contains the Python client libraries for the [Kubeflow Pipelines API](/docs/pipelines/reference/api/kubeflow-pipeline-api-spec/).
+* `kfp_tekton.TektonClient` contains the Python client libraries for the [Kubeflow Pipelines API](https://www.kubeflow.org/docs/pipelines/reference/api/kubeflow-pipeline-api-spec/).
   Methods in this package include, but are not limited to, the following:
 
   * `kfp_tekton.TektonClient.upload_pipeline` uploads a local file to create a new pipeline in Kubeflow Pipelines.
   * `kfp_tekton.TektonClient.create_experiment` creates a pipeline
-    [experiment](/docs/pipelines/concepts/experiment/) and returns an
+    [experiment](https://www.kubeflow.org/docs/pipelines/concepts/experiment/) and returns an
     experiment object.
   * `kfp_tekton.TektonClient.run_pipeline` runs a pipeline and returns a run object.
   * `kfp_tekton.TektonClient.create_run_from_pipeline_func` compiles a pipeline
@@ -58,7 +58,7 @@ adding the `TektonCompiler` and the `TektonClient`:
  - Python: `3.5.3` or later
  - Tekton: [`v0.14.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.14.0) or [later](https://github.com/tektoncd/pipeline/releases/latest)
  - Tekton CLI: [`0.11.0`](https://github.com/tektoncd/cli/releases/tag/v0.11.0)
- - Kubeflow Pipelines: [KFP with Tekton backend](/tekton_kfp_guide.md)
+ - Kubeflow Pipelines: [KFP with Tekton backend](/guides/kfp_tekton_install.md)
 
 Follow the instructions for [installing project prerequisites](/sdk/python/README.md#development-prerequisites)
 and take note of some important caveats.
@@ -154,7 +154,7 @@ export DEFAULT_STORAGE_SIZE=2Gi
 After compiling the `sdk/python/tests/compiler/testdata/parallel_join.py` DSL script
 in the step above, we need to deploy the generated Tekton YAML to Kubeflow Pipeline engine.
 
-You can run the pipeline directly using a pre-compiled file and KFP-Tekton SDK. For more details, please look at the [KFP-Tekton user guide SDK documentation](https://github.com/kubeflow/kfp-tekton/tree/master/guides/kfp-user-guide#2-run-pipelines-using-the-kfp_tektontektonclient-in-python)
+You can run the pipeline directly using a pre-compiled file and KFP-Tekton SDK. For more details, please look at the [KFP-Tekton user guide SDK documentation](/guides/kfp-user-guide#2-run-pipelines-using-the-kfp_tektontektonclient-in-python)
 
 ```python
 experiment = kfp_tekton.TektonClient.create_experiment(name=EXPERIMENT_NAME, namespace=KUBEFLOW_PROFILE_NAME)
@@ -203,13 +203,8 @@ your code changes are improving the number of successfully compiled KFP pipeline
 ## Troubleshooting
 
 - When you encounter ServiceAccount related permission issues, refer to the
-  ["Servince Account and RBAC" doc](sa-and-rbac.md)
+  ["Service Account and RBAC" doc](sa-and-rbac.md)
   
 - If you run into the error `bad interpreter: No such file or director` when trying 
   to use Python's venv, remove the current virtual environment in the `.venv` directory
   and create a new one using `virtualenv .venv`
-
-- For big data passing, PVs must be created manually, or dynamic volume provisioning,
-  has to be enabled (https://kubernetes.io/docs/concepts/storage/dynamic-provisioning).
-  The PVC name has to match the PipelineRun name until
-  [issue #181](https://github.com/kubeflow/kfp-tekton/issues/181) has been addressed.

@@ -23,7 +23,7 @@ export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 .PHONY: help
 help: ## Display the Make targets
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: venv
 venv: $(VENV)/bin/activate ## Create and activate virtual environment
@@ -91,7 +91,7 @@ check_license: ## Check for license header in source files
 
 .PHONY: check_mdtoc
 check_mdtoc: ## Check Markdown files for valid the Table of Contents
-	@find samples sdk *.md -type f -name '*.md' -exec \
+	@find guides samples sdk *.md -type f -name '*.md' -exec \
 		grep -l -i 'Table of Contents' {} \; | sort | \
 		while read -r md_file; do \
 			grep -oE '^ *[-+*] \[[^]]+\]\(#[^)]+\)' "$${md_file}" |  sed -e 's/[-+*] /- /g' > md_file_toc; \
