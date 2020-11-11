@@ -20,14 +20,14 @@
 #
 # To create a distribution for PyPi run:
 #
-#    $ export KFP_TEKTON_VERSION=0.3.0-rc1
+#    $ export KFP_TEKTON_VERSION=0.4.0-rc1
 #    $ python3 setup.py sdist
 #    $ twine check dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #    $ twine upload --repository pypi dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #
 #   ... or:
 #
-#    $ make distribution KFP_TEKTON_VERSION=0.3.0-rc1
+#    $ make distribution KFP_TEKTON_VERSION=0.4.0-rc1
 #
 # =============================================================================
 
@@ -52,7 +52,8 @@ development stage. Contributions are welcome: {}
 """.format(HOMEPAGE)
 
 REQUIRES = [
-    'kfp==1.0.0',
+    'kfp==1.0.4',
+    'kubernetes==11.0.0'
 ]
 
 logging.basicConfig()
@@ -91,7 +92,7 @@ def get_long_description() -> str:
     if "sdist" not in sys.argv:
         # log messages are only displayed when running `pip --verbose`
         logger.warning("This not a distribution build. Using abbreviated "
-                       "long_description: {}".format(LONG_DESCRIPTION))
+                       "long_description: \"{}\"".format(LONG_DESCRIPTION))
         return LONG_DESCRIPTION
     else:
         logger.warning(
@@ -140,9 +141,7 @@ def get_long_description() -> str:
                                    long_description):
         response = requests.head(link, allow_redirects=True, timeout=3)
         if response.status_code >= 400:
-            # raise RuntimeError(  # don't fail the installation
-            # report errors when pip install verbose -v
-            logger.error(
+            raise RuntimeError(
                 "Invalid link in long_description: `[{}]({})`. "
                 "Please open an issue at {}/issues".format(
                     text, link, HOMEPAGE.rstrip("/")))

@@ -162,9 +162,12 @@ Output parameters are a dictionary of string files that users can define as a co
 
 ### Input Artifacts
 
-Input Artifacts in Kubeflow pipelines are used for passing raw text or local files as files placed in the component pod. Since Input Artifacts can only be raw or in a compressed format as strings, we created a
-[custom step](https://github.com/kubeflow/kfp-tekton/blob/master/sdk/python/kfp_tekton/compiler/_op_to_template.py#L435) for passing these strings as files before the main task is executed. The [input_artifact_raw_value](/sdk/python/tests/compiler/testdata/input_artifact_raw_value.py)
-python test is an example of how to use this feature.
+Input Artifacts in Kubeflow pipelines are used for passing raw text or local files as files placed in
+the component pod. Since Input Artifacts can only be raw or in a compressed format as strings, we created a
+[custom copy step](https://github.com/kubeflow/kfp-tekton/blob/7e4df54/sdk/python/kfp_tekton/compiler/_op_to_template.py#L237-L257)
+for passing these strings as files before the main task is executed.
+The [input_artifact_raw_value](/sdk/python/tests/compiler/testdata/input_artifact_raw_value.py) Python test
+is an example of how to use this feature.
 
 ### Output Artifacts
 

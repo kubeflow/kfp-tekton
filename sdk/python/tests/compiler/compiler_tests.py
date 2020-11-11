@@ -241,6 +241,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.big_data_passing import file_passing_pipelines
     self._test_pipeline_workflow(file_passing_pipelines, 'big_data_passing.yaml')
 
+  def test_create_component_from_func_workflow(self):
+    """
+    Test compiling a creating component from func workflow.
+    """
+    from .testdata.create_component_from_func import test_pipeline
+    self._test_pipeline_workflow(test_pipeline, 'create_component_from_func.yaml')
+
   def test_katib_workflow(self):
     """
     Test compiling a katib workflow.

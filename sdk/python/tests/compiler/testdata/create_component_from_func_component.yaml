@@ -12,6 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.4.0'
-
-from ._client import TektonClient  # noqa F401
+name: List items 2
+description: Recursively list directory contents.
+inputs:
+- {name: Directory1, type: Directory}
+- {name: Directory2, type: Directory}
+outputs:
+- {name: Items}
+implementation:
+  container:
+    image: alpine
+    command:
+    - sh
+    - -ex
+    - -c
+    - |
+      mkdir -p "$(dirname "$2")"
+      ls -A -R "$0" > "$2"
+      ls -A -R "$1" >> "$2"
+    - inputPath: Directory1
+    - inputPath: Directory2
+    - outputPath: Items

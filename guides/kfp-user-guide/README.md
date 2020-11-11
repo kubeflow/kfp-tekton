@@ -39,6 +39,11 @@ def echo_pipeline(
     - [4. Optional: Run Tekton Pipelines Without Using the Kubeflow Pipelines Engine](#4-optional-run-tekton-pipelines-without-using-the-kubeflow-pipelines-engine)
   - [Best Practices](#best-practices)
     - [Artifacts and Parameter output files for Tekton](#artifacts-and-parameter-output-files-for-tekton)
+  - [Migration from Argo backend](#migration-from-argo-backend)
+    - [Argo variables](#argo-variables)
+    - [Absolute paths in commands](#absolute-paths-in-commands)
+    - [Output artifacts and metrics](#output-artifacts-and-metrics)
+    - [Default pipeline timeouts](#default-pipeline-timeouts)
 
 
 ## Compiling Pipelines
@@ -343,3 +348,35 @@ When developing a Kubeflow pipeline for the Tekton backend, please be aware that
 Therefore, we have prohibited the kfp-tekton compiler from putting artifacts and parameter output files in the container's root directory. We recommend placing the output files inside a new directory under root to avoid this problem, such as `/tmp/`. The [condition](/samples/flip-coin/condition.py) example shows how the output files can be stored. Alternatively, you can learn [how to create reusable components](https://www.kubeflow.org/docs/pipelines/sdk/component-development/) in a component.yaml where you can avoid hard coding your output file path.
 
 This also applies to the Argo backend with k8sapi and kubelet executors, and it's the recommended way to avoid the [race condition for Argo's PNS executor](https://github.com/argoproj/argo/issues/1256#issuecomment-494319015).
+
+## Migration from Argo backend
+
+### Argo variables
+
+Variables like `{{workflow.uid}}` are currently not supported. See [the list of supported Argo variables](/sdk/FEATURES.md#variable-substitutions).
+
+### Absolute paths in commands
+
+Absolute paths in component commands (e.g. `python /app/run.py` instead of `python app/run.py`) are required unless Tekton has been patched for [disabling work directory overwrite](/sdk/python/README.md#tekton-cluster).
+The patch happens automatically in case of whole Kubeflow deployment.
+
+### Output artifacts and metrics
+
+Output artifacts and metrics in Argo work implicitly by saving `/mlpipeline-metrics.json` or `/mlpipeline-ui-metadata.json`. 
+In Tekton they need to be specified explicitly in the component. Also, `/` paths are not allowed (see [Artifacts and Parameter output files for Tekton](/guides/kfp-user-guide#artifacts-and-parameter-output-files-for-tekton). An example for Tekton:
+```
+output_artifact_paths={
+    "mlpipeline-metrics": "/tmp/mlpipeline-metrics.json",
+    "mlpipeline-ui-metadata": "/tmp/mlpipeline-ui-metadata.json",
+}
+```
+
+### Default pipeline timeouts
+
+Tekton pipelines have 1h timeout by default, Argo pipelines don't timeout by default. To disable timeouts by default, edit Tekton conifmap as follows:
+```
+kubectl edit cm config-defaults -n tekton-pipelines
+# default-timeout-minutes: "0"
+```
+
+Pipeline-specific timeouts are possible by using `dsl.get_pipeline_conf().set_timeout(timeout)`.

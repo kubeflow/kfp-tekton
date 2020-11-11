@@ -16,16 +16,16 @@ has Steps. Please look for more details in [Tekton repo](https://github.com/tekt
 
 ## Kubeflow Pipeline with Tekton Backend
 
-We are currently using [Kubeflow Pipelines 1.0.0](https://github.com/kubeflow/pipelines/releases/tag/1.0.0) and
+We are currently using [Kubeflow Pipelines 1.0.4](https://github.com/kubeflow/pipelines/releases/tag/1.0.4) and
 [Tekton >= 0.16.0](https://github.com/tektoncd/pipeline/releases/tag/v0.16.0) for this project.
 
 ![kfp-tekton](images/kfp-tekton.png)
 
 ### Get Started using Kubeflow Pipelines with Tekton
 
-[Install Kubeflow Pipelines with Tekton backend](tekton_kfp_guide.md)
+[Install Kubeflow Pipelines with Tekton backend](/guides/kfp_tekton_install.md)
 
-[KFP Tekton Pipelines User Guide](/samples/kfp-user-guide/README.md)
+[KFP Tekton Pipelines User Guide](/guides/kfp-user-guide/README.md)
 
 [Use KFP Tekton SDK](/sdk/README.md)
 
@@ -35,7 +35,7 @@ We are currently using [Kubeflow Pipelines 1.0.0](https://github.com/kubeflow/pi
 
 ### Development Guides
 
-[Backend Developer Guide](/developer_guide.md)
+[Backend Developer Guide](/guides/developer_guide.md)
 
 [SDK Developer Guide](/sdk/python/README.md)
 

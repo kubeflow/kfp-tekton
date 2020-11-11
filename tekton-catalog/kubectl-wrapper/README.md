@@ -13,13 +13,13 @@ Wrapper `kubectl` in container. it should work as `step` of [Tekton-pipeline](ht
 ## Install the Task
 
 ```
-kubectl apply -f https://github.com/kubeflow/kfp-tekton/tree/master/tekton-catalog/kubectl-wrapper/deploy/kubectl-deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/tekton-catalog/kubectl-wrapper/deploy/kubectl-deploy.yaml
 ```
 
 ## Install ClusterRolebinding
 
 ```
-kubectl apply -f https://github.com/kubeflow/kfp-tekton/tree/master/tekton-catalog/kubectl-wrapper/deploy/rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/tekton-catalog/kubectl-wrapper/deploy/rbac.yaml
 ```
 
 ## Inputs 

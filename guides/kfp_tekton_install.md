@@ -26,7 +26,7 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 
 ### OpenShift
 
-   Follow the instructions at [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](https://github.com/IBM/KubeflowDojo/tree/master/OpenShift/manifests). Depending on your situation, you can choose between the two approaches:
+   Follow the instructions at [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](./kfp-tekton-openshift.md). Depending on your situation, you can choose between the two approaches:
    1. Leverage OpenShift Pipelines (built on Tekton)
    2. Install Tekton as part of deployment
 
@@ -216,9 +216,9 @@ The scenario is a GitHub organization owner can authorize its organization membe
 
     Then visit the Kubeflow endpoint `<node_public_ip>:31380` to login into Kubeflow
 
-1. Visit [KFP Tekton User Guide](/samples/kfp-user-guide) and start learning how to use Kubeflow pipeline.
+1. Visit [KFP Tekton User Guide](/guides/kfp-user-guide) and start learning how to use Kubeflow pipeline.
 
-1. Visit [KFP Tekton Admin Guide](/kfp-admin-guide.md) for how to configure kfp-tekton with different settings.
+1. Visit [KFP Tekton Admin Guide](/guides/kfp-admin-guide.md) for how to configure kfp-tekton with different settings.
 
 ## Verify installation
 
