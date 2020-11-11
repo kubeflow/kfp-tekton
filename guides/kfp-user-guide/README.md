@@ -357,13 +357,13 @@ Variables like `{{workflow.uid}}` are currently not supported. See [the list of 
 
 ### Absolute paths in commands
 
-Absolute paths in component commands (e.g. `python /app/run.py` instead of `python app/run.py`) are required unless Tekton has been patched for [disabling work directory overwrite](https://github.com/kubeflow/kfp-tekton/blob/master/sdk/python/README.md#tekton-cluster).
+Absolute paths in component commands (e.g. `python /app/run.py` instead of `python app/run.py`) are required unless Tekton has been patched for [disabling work directory overwrite](/sdk/python/README.md#tekton-cluster).
 The patch happens automatically in case of whole Kubeflow deployment.
 
 ### Output artifacts and metrics
 
 Output artifacts and metrics in Argo work implicitly by saving `/mlpipeline-metrics.json` or `/mlpipeline-ui-metadata.json`. 
-In Tekton they need to be specified explicitly in the component. Also, `/` paths are not allowed (see [Artifacts and Parameter output files for Tekton](https://github.com/kubeflow/kfp-tekton/tree/master/samples/kfp-user-guide#artifacts-and-parameter-output-files-for-tekton). An example for Tekton:
+In Tekton they need to be specified explicitly in the component. Also, `/` paths are not allowed (see [Artifacts and Parameter output files for Tekton](/guides/kfp-user-guide#artifacts-and-parameter-output-files-for-tekton). An example for Tekton:
 ```
 output_artifact_paths={
     "mlpipeline-metrics": "/tmp/mlpipeline-metrics.json",
