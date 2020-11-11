@@ -513,6 +513,7 @@ def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
                 task_name, task_parma.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
                 task_spec, placeholder, workspaces_parameter)
+            task_spec = task.get('taskSpec', {})
     # Handle the case of input artifact without dependent the output of other tasks
     for task_artifact in task_artifacts:
         if (task_name, task_artifact.get('name')) not in inputs_tasks:
