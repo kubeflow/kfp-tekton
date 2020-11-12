@@ -53,6 +53,13 @@ matrix:
       language: bash
       script:
         - make check_mdtoc
+    - name: "Verify Markdown files have valid links"
+      language: python
+      python: "3.7"
+      install:
+        - python3 -m pip install requests
+      script:
+        - make check_doc_links
 
 # =================================
 # TODO: merge with config from KFP
