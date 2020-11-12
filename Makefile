@@ -101,8 +101,14 @@ check_mdtoc: ## Check Markdown files for valid the Table of Contents
 		done | grep . && echo "Run './tools/mdtoc.sh <md-file>' to update the 'Table of Contents' in the Markdown files reported above." && exit 1 || \
 		echo "$@: OK"
 
+.PHONY: check_doc_links
+check_doc_links: ## Check Markdown files for valid links
+	@pip3 show requests > /dev/null || pip install requests
+	@python3 tools/python/verify_doc_links.py
+	@echo "$@: OK"
+
 .PHONY: verify
-verify: check_license check_mdtoc lint unit_test report ## Run all verification targets: check_license, check_mdtoc, lint, unit_test, report
+verify: check_license check_mdtoc check_doc_links lint unit_test report ## Run all verification targets: check_license, check_mdtoc, lint, unit_test, report
 	@echo "$@: OK"
 
 .PHONY: distribution
