@@ -41,7 +41,8 @@ Below are the features using Tekton's native support without any custom workarou
 
 `pod_annotations` and `pod_labels` are for assigning custom annotations or labels to a pipeline component. They are implemented with
 Tekton's [task metadata](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#configuring-a-task) field under Tekton
-Task. The [pipeline transformers](/sdk/python/tests/compiler/testdata/pipeline_transfromers.py) example shows how to apply
+Task. The [pipeline transformers](/sdk/python/tests/compiler/testdata/pipeline_transformers.py) example shows how to
+ apply
 custom annotations and labels to one or more components in the pipeline.
 
 ### Retries

@@ -46,6 +46,11 @@ url_status_cache = dict()
 
 def find_md_files() -> [str]:
 
+    print("Checking for Markdown files here:\n")
+    for path_expr in md_file_path_expressions:
+        print("  " + path_expr.lstrip("/"))
+    print("")
+
     md_files_list_of_lists = [glob(project_root_dir + path_expr, recursive=True)
                               for path_expr in md_file_path_expressions]
 
@@ -156,8 +161,11 @@ def verify_doc_links() -> [(str, int, str, str)]:
                               if s != 200]
 
     # 5. print some stats for confidence
-    print("\nChecked {} links ({} unique URLs) in {} Markdown files.\n".format(
-        len(file_line_text_url_status), len(url_status_cache), len(md_file_paths)))
+    print("{} {} links ({} unique URLs) in {} Markdown files.\n".format(
+        "Checked" if file_line_text_url_404 else "Verified",
+        len(file_line_text_url_status),
+        len(url_status_cache),
+        len(md_file_paths)))
 
     # 6. report invalid links, exit with error for CI/CD
     if file_line_text_url_404:

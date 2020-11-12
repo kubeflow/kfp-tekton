@@ -179,7 +179,7 @@ The ClusterFlow above takes all logs from pods that have the app.kubernetes.io/m
 ## Submit a tekton pipelinerun for testing
 
 Running the PipelineRun should produce logs and you should see corresponding objects being added in minio as far as logs get collected and stored by the logs pipeline.
-e.g. [parallel_join.yaml](https://github.com/kubeflow/pipelines/blob/master/sdk/python/tests/compiler/testdata/parallel_join.yaml)
+e.g. [parallel_join.yaml](/sdk/python/tests/compiler/testdata/parallel_join.yaml)
 
 ```
 kubectl apply -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/sdk/python/tests/compiler/testdata/parallel_join.yaml
