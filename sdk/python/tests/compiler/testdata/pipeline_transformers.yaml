@@ -32,6 +32,11 @@ spec:
     tasks:
     - name: print
       taskSpec:
+        metadata:
+          annotations:
+            hobby: football
+          labels:
+            hobby: football
         steps:
         - command:
           - echo
@@ -41,6 +46,11 @@ spec:
       timeout: 0s
     - name: print-2
       taskSpec:
+        metadata:
+          annotations:
+            hobby: football
+          labels:
+            hobby: football
         steps:
         - command:
           - echo

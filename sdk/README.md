@@ -36,7 +36,7 @@ adding the `TektonCompiler` and the `TektonClient`:
 
   * `kfp_tekton.compiler.TektonCompiler.compile` compiles your Python DSL code
     into a single static configuration (in YAML format) that the Kubeflow Pipelines service
-    can process. The Kubeflow Pipelines service converts the static 
+    can process. The Kubeflow Pipelines service converts the static
     configuration into a set of Kubernetes resources for execution.
 
 * `kfp_tekton.TektonClient` contains the Python client libraries for the [Kubeflow Pipelines API](https://www.kubeflow.org/docs/pipelines/reference/api/kubeflow-pipeline-api-spec/).
@@ -49,14 +49,14 @@ adding the `TektonCompiler` and the `TektonClient`:
   * `kfp_tekton.TektonClient.run_pipeline` runs a pipeline and returns a run object.
   * `kfp_tekton.TektonClient.create_run_from_pipeline_func` compiles a pipeline
     function and submits it for execution on Kubeflow Pipelines.
-  * `kfp_tekton.TektonClient.create_run_from_pipeline_package` runs a local 
+  * `kfp_tekton.TektonClient.create_run_from_pipeline_package` runs a local
     pipeline package on Kubeflow Pipelines.
 
 
 ## Project Prerequisites
 
  - Python: `3.5.3` or later
- - Tekton: [`v0.14.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.14.0) or [later](https://github.com/tektoncd/pipeline/releases/latest)
+ - Tekton: [`v0.16.3`](https://github.com/tektoncd/pipeline/releases/tag/v0.16.3) or [later](https://github.com/tektoncd/pipeline/releases/latest)
  - Tekton CLI: [`0.11.0`](https://github.com/tektoncd/cli/releases/tag/v0.11.0)
  - Kubeflow Pipelines: [KFP with Tekton backend](/guides/kfp_tekton_install.md)
 
@@ -72,9 +72,9 @@ virtual environment first:
 
     python3 -m venv .venv
     source .venv/bin/activate
-    
+
     pip install kfp-tekton
-    
+
 Alternatively you can install the latest version of the `kfp-tekton` compiler
 from source by cloning the repository [https://github.com/kubeflow/kfp-tekton](https://github.com/kubeflow/kfp-tekton):
 
@@ -159,19 +159,19 @@ You can run the pipeline directly using a pre-compiled file and KFP-Tekton SDK. 
 ```python
 experiment = kfp_tekton.TektonClient.create_experiment(name=EXPERIMENT_NAME, namespace=KUBEFLOW_PROFILE_NAME)
 run = client.run_pipeline(experiment.id, 'parallal-join-pipeline', 'pipeline.yaml')
-``` 
+```
 
 You can also deploy directly on Tekton cluster with `kubectl`. The Tekton server will automatically start a pipeline run.
 We can then follow the logs using the `tkn` CLI.
 
     kubectl apply -f pipeline.yaml
-    
+
     tkn pipelinerun logs --last --follow
 
 Once the Tekton Pipeline is running, the logs should start streaming:
-      
+
     Waiting for logs to be available...
-    
+
     [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
     [gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
@@ -204,7 +204,7 @@ your code changes are improving the number of successfully compiled KFP pipeline
 
 - When you encounter ServiceAccount related permission issues, refer to the
   ["Service Account and RBAC" doc](sa-and-rbac.md)
-  
-- If you run into the error `bad interpreter: No such file or director` when trying 
+
+- If you run into the error `bad interpreter: No such file or director` when trying
   to use Python's venv, remove the current virtual environment in the `.venv` directory
   and create a new one using `virtualenv .venv`

@@ -59,26 +59,26 @@ def _get_super_condition_template():
       input2=int(input2)
     except:
       input1=str(input1)
-    sys.exit(0) if (input1 $(params.operator) input2) else sys.exit(1)' ''')
+    status="true" if (input1 $(inputs.params.operator) input2) else "false"
+    f = open("/tekton/results/status", "w")
+    f.write(status)
+    f.close()' ''')
 
-  # TODO Change to tekton_api_version once Conditions are out of v1alpha1
   template = {
-    'apiVersion': 'tekton.dev/v1alpha1',
-    'kind': 'Condition',
-    'metadata': {
-      'name': 'super-condition'
-    },
-    'spec': {
-      'params': [
-        {'name': 'operand1'},
-        {'name': 'operand2'},
-        {'name': 'operator'}
-      ],
-      'check': {
-        'script': 'python -c ' + python_script + "'$(params.operand1)' '$(params.operand2)'",
-        'image': 'python:alpine3.6',
-      }
-    }
+    'results': [
+      {'name': 'status',
+       'description': 'Conditional task status'
+       }
+    ],
+    'params': [
+      {'name': 'operand1'},
+      {'name': 'operand2'},
+      {'name': 'operator'}
+    ],
+    'steps': [{
+      'script': 'python -c ' + python_script + "'$(inputs.params.operand1)' '$(inputs.params.operand2)'",
+      'image': 'python:alpine3.6',
+    }]
   }
 
   return template
@@ -193,7 +193,6 @@ class TektonCompiler(Compiler):
     # Generate GroupOp template
     sub_group = group
     template = {
-      'apiVersion': tekton_api_version,
       'metadata': {
         'name': sanitize_k8s_name(sub_group.name),
       },
@@ -342,25 +341,30 @@ class TektonCompiler(Compiler):
     # TODO
     task_refs = []
     templates = []
-    condition_added = False
+    condition_task_refs = {}
     for template in raw_templates:
       # TODO Allow an opt-out for the condition_template
       if template['kind'] == 'Condition':
-        if not condition_added:
-          templates.append(_get_super_condition_template())
-          condition_added = True
-        condition_refs[template['metadata']['name']] = [{
-          'conditionRef': 'super-condition',
-          'params': [{
-              'name': param['name'],
-              'value': param['value']
-            } for param in template['spec'].get('params', [])
-          ]
+        condition_task_ref = [{
+            'name': template['metadata']['name'],
+            'params': [{
+                'name': p['name'],
+                'value': p.get('value', '')
+              } for p in template['spec'].get('params', [])
+            ],
+            'taskSpec': _get_super_condition_template(),
         }]
+        condition_refs[template['metadata']['name']] = [
+            {
+              'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
+              'operator': 'in',
+              'values': ['true']
+            }
+          ]
+        condition_task_refs[template['metadata']['name']] = condition_task_ref
       else:
         templates.append(template)
-        task_refs.append(
-          {
+        task_ref = {
             'name': template['metadata']['name'],
             'params': [{
                 'name': p['name'],
@@ -369,7 +373,14 @@ class TektonCompiler(Compiler):
             ],
             'taskSpec': template['spec'],
           }
-        )
+
+        if template['metadata'].get('labels', None):
+          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+          task_ref['taskSpec']['metadata']['labels'] = template['metadata']['labels']
+        if template['metadata'].get('annotations', None):
+          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+          task_ref['taskSpec']['metadata']['annotations'] = template['metadata']['annotations']
+        task_refs.append(task_ref)
 
     # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
     opsgroup_stack = [pipeline.groups[0]]
@@ -379,7 +390,7 @@ class TektonCompiler(Compiler):
       most_recent_condition = condition_stack.pop()
 
       if cur_opsgroup.type == 'condition':
-        condition_ref = condition_refs[cur_opsgroup.name][0]
+        condition_task_ref = condition_task_refs[cur_opsgroup.name][0]
         condition = cur_opsgroup.condition
         input_params = []
 
@@ -397,16 +408,10 @@ class TektonCompiler(Compiler):
             operand_value = '$(params.' + condition.operand2.name + ')'
           input_params.append(operand_value)
         for param_iter in range(len(input_params)):
-          condition_ref['params'][param_iter]['value'] = input_params[param_iter]
-
-        # Add ancestor conditions to the current condition ref
-        if most_recent_condition:
-          condition_refs[cur_opsgroup.name].extend(condition_refs[most_recent_condition])
-        most_recent_condition = cur_opsgroup.name
+          condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
 
       opsgroup_stack.extend(cur_opsgroup.groups)
       condition_stack.extend([most_recent_condition for x in range(len(cur_opsgroup.groups))])
-
     # add task dependencies and add condition refs to the task ref that depends on the condition
     op_name_to_parent_groups = self._get_groups_for_ops(pipeline.groups[0])
     for task in task_refs:
@@ -414,16 +419,8 @@ class TektonCompiler(Compiler):
       parent_group = op_name_to_parent_groups.get(task['name'], [])
       if parent_group:
         if condition_refs.get(parent_group[-2], []):
-          task['conditions'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2], [])
+          task['when'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2], [])
       if op.dependent_names:
-        for dependent_name in op.dependent_names:
-          if condition_refs.get(dependent_name, []):
-            # Prompt an error here because Tekton condition cannot be a dependency.
-            raise TypeError(textwrap.dedent("""\
-         '%s' cannot run after the Tekton condition '%s'.
-          A Tekton task is only allowed to run 'after' another Tekton task (ContainerOp).
-          Tekton doc: https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#using-the-runafter-parameter
-          """ % (task['name'], dependent_name)))
         task['runAfter'] = op.dependent_names
 
     # process input parameters from upstream tasks
@@ -484,6 +481,12 @@ class TektonCompiler(Compiler):
         include_loop_task_refs.extend(with_loop_task)
       task_refs = include_loop_task_refs
 
+    # Flatten condition task
+    condition_task_refs_temp = []
+    for condition_task_ref in condition_task_refs.values():
+      for ref in condition_task_ref:
+        condition_task_refs_temp.append(ref)
+    condition_task_refs = condition_task_refs_temp
     # TODO: generate the PipelineRun template
     pipeline_run = {
       'apiVersion': tekton_api_version,
@@ -508,7 +511,7 @@ class TektonCompiler(Compiler):
           } for p in params],
         'pipelineSpec': {
           'params': params,
-          'tasks': task_refs,
+          'tasks': task_refs + condition_task_refs,
           'finally': finally_tasks
         }
       }
@@ -742,6 +745,22 @@ class TektonCompiler(Compiler):
         {
           'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}',
           'tekton_rule': '$(results.\g<1>.path)'
+        },
+        {
+          'argo_rule': '{{workflow.uid}}',
+          'tekton_rule': '$(context.pipelineRun.uid)'
+        },
+        {
+          'argo_rule': '{{workflow.name}}',
+          'tekton_rule': '$(context.pipelineRun.name)'
+        },
+        {
+          'argo_rule': '{{workflow.namespace}}',
+          'tekton_rule': '$(context.pipelineRun.namespace)'
+        },
+        {
+          'argo_rule': '{{workflow.parameters.([^ \t\n.:,;{}]+)}}',
+          'tekton_rule': '$(params.\g<1>)'
         }
     ]
     for regex_rule in tekton_var_regex_rules:

@@ -119,7 +119,7 @@ This feature has been available since Tekton version `0.13.0`.
 
 An _exit handler_ is a component that always executes, irrespective of success or failure,
 at the end of the pipeline. It is implemented using Tekton's
-[finally](https://github.com/tektoncd/pipeline/blob/v0.14.0/docs/pipelines.md#adding-finally-to-the-pipeline)
+[finally](https://github.com/tektoncd/pipeline/blob/v0.16.0/docs/pipelines.md#adding-finally-to-the-pipeline)
 section under the Pipeline `spec`. An example of how to use an _exit handler_ can be found in
 the [exit_handler](/sdk/python/tests/compiler/testdata/exit_handler.py) compiler test.
 
@@ -142,11 +142,8 @@ is an example of how to use this feature.
 
 ### Conditions
 
-Conditions are for determining whether to execute certain components based on the output of the condition checks. Since Tekton required users to define an image for doing the [condition check](https://github.com/tektoncd/pipeline/blob/master/docs/conditions.md), we created a custom python image to replicate the same condition checks from Argo and made it as the default in our compiler. The
+Conditions are used for determining whether to execute certain components based on the output of the condition checks. In KFP Argo, each condition is represented as an Argo DAG template so it can be used as a dependency for other Argo templates. To replicate this in KFP Tekton, we put our condition into a dedicated Tekton task so that conditions can be treated as a dependency for other Tekton tasks. Another advantage of creating conditions using Tekton tasks is that we can have more flexible conditions such as comparing an integer and a float number, which currently is not available in Tekton. We are using the Tekton [when expression](https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#guard-task-execution-using-whenexpressions) to check whether the condition task has succeeded or not. We created a custom python image to replicate the same condition checks that are in Argo and made it as the default in our compiler. The
 [flip-coin](/samples/flip-coin) example demonstrates how to use multiple conditions within the same pipeline.
-
-Please be aware that the current Condition feature is using Tekton V1alpha1 API because the Tekton community is still designing the V1beta1 API.
-We will be migrating to the V1beta1 API once it's available in Tekton. Please refer to the [design proposal](https://docs.google.com/document/d/1kESrgmFHnirKNS4oDq3mucuB_OycBm6dSCSwRUHccZg/edit?usp=sharing) for more details.
 
 ### ResourceOp, VolumeOp, and VolumeSnapshotOp
 
@@ -206,6 +203,10 @@ However, when using dynamic parameters, the number of parallel tasks is determin
 argo -> tekton
 {{inputs.parameters.%s}} -> $(inputs.params.%s)
 {{outputs.parameters.%s}} -> $(results.%s.path)
+{{workflow.uid}} -> $(context.pipelineRun.uid)
+{{workflow.name}} -> $(context.pipelineRun.name)
+{{workflow.namespace}} -> $(context.pipelineRun.namespace)
+{{workflow.parameters.%s}} -> $(params.%s)
 ```
 
 [parallel_join_with_argo_vars](/sdk/python/tests/compiler/testdata/parallel_join_with_argo_vars.py) is an example of how Argo variables are
