@@ -108,6 +108,18 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
 
     // Adds any dependencies that arise from Conditions and tracks these dependencies to make sure they aren't duplicated in the case that
     // the Condition and the base task use output from the same dependency
+    for (const condition of task['when'] || []) {
+      const input = condition['input'];
+      if (input.substring(0, 8) === '$(tasks.' && input.substring(input.length - 1) === ')') {
+        const paramSplit = input.split('.');
+        const parentTask = paramSplit[1];
+
+        graph.setEdge(parentTask, taskName);
+      }
+    }
+
+    // Adds any dependencies that arise from Conditions and tracks these dependencies to make sure they aren't duplicated in the case that
+    // the Condition and the base task use output from the same dependency
     for (const condition of task['conditions'] || []) {
       for (const condParam of condition['params'] || []) {
         if (

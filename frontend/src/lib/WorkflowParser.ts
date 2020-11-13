@@ -59,7 +59,7 @@ export default class WorkflowParser {
       workflow['spec']['pipelineSpec']['finally'] || [],
     );
     const status = workflow['status']['taskRuns'];
-    const pipelineParams = workflow['spec']['params'];
+    const pipelineParams = workflow['spec']['params'] || [];
     const exitHandlers =
       (workflow['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
         return element['name'];
@@ -87,6 +87,14 @@ export default class WorkflowParser {
         for (const condition of conditions)
           edges.push(...this.checkParams(statusMap, pipelineParams, condition, taskId));
 
+        // Add all of this Task's conditional dependencies as Task dependencies
+        for (const condition of task['when'] || []) {
+          const param = this.decodeParam(condition['Input']);
+          if (param && param.task) {
+            const parentId = statusMap.get(param.task)!['status']['podName'];
+            edges.push({ parent: parentId, child: taskId });
+          }
+        }
         if (task['runAfter']) {
           task['runAfter'].forEach((parentTask: any) => {
             if (
@@ -139,27 +147,17 @@ export default class WorkflowParser {
     for (const param of component['params'] || []) {
       let paramValue = param['value'] || '';
 
+      const splitParam = this.decodeParam(param['value']);
+
       // If the parameters are passed from the pipeline parameters then grab the value from the pipeline parameters
-      if (
-        param['value'].substring(0, 9) === '$(params.' &&
-        param['value'].substring(param['value'].length - 1) === ')'
-      ) {
-        const paramName = param['value'].substring(9, param['value'].length - 1);
+      if (splitParam && !splitParam.task) {
         for (const pipelineParam of pipelineParams)
-          if (pipelineParam['name'] === paramName) paramValue = pipelineParam['value'];
+          if (pipelineParam['name'] === splitParam.param) paramValue = pipelineParam['value'];
       }
       // If the parameters are passed from the parent task's results and the task is completed then grab the resulting values
-      else if (
-        param['value'].substring(0, 2) === '$(' &&
-        param['value'].substring(param['value'].length - 1) === ')'
-      ) {
-        const paramSplit = param['value'].split('.');
-        const parentTask = paramSplit[1];
-        const paramName = paramSplit[paramSplit.length - 1].substring(
-          0,
-          paramSplit[paramSplit.length - 1].length - 1,
-        );
-
+      else if (splitParam && splitParam.task) {
+        const parentTask = splitParam.task;
+        const paramName = splitParam.param;
         if (
           statusMap.get(parentTask) &&
           statusMap.get(parentTask)!['status']['conditions'][0]['type'] === 'Succeeded'
@@ -186,7 +184,38 @@ export default class WorkflowParser {
     return edges;
   }
 
+  private static decodeParam(paramString: string) {
+    // If the parameters are passed from the pipeline parameters
+    if (
+      paramString.substring(0, 9) === '$(params.' &&
+      paramString.substring(paramString.length - 1) === ')'
+    ) {
+      const paramName = paramString.substring(9, paramString.length - 1);
+      return { task: '', param: paramName };
+    }
+    // If the parameters are passed from the parent task's results
+    else if (
+      paramString.substring(0, 2) === '$(' &&
+      paramString.substring(paramString.length - 1) === ')'
+    ) {
+      const paramSplit = paramString.split('.');
+      const parentTask = paramSplit[1];
+      const paramName = paramSplit[paramSplit.length - 1].substring(
+        0,
+        paramSplit[paramSplit.length - 1].length - 1,
+      );
+
+      return { task: parentTask, param: paramName };
+    }
+    return {};
+  }
+
   public static getStatus(execStatus: any): NodePhase {
+    for (const result of execStatus.status.taskResults || []) {
+      if (result.name === 'status' && result.value === 'false') {
+        return NodePhase.CONDITIONCHECKFAILED;
+      }
+    }
     return execStatus!.status.conditions[0].reason;
   }
 
