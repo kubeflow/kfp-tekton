@@ -5,7 +5,7 @@ Project bringing Kubeflow Pipelines and Tekton together. The project is driven a
 * Create your Pipeline using Kubeflow Pipelines DSL, and compile it to Tekton YAML.
 * Upload the compiled Tekton YAML to KFP engine (API and UI), and run end to end with logging and artifacts tracking enabled.
 
-For more details about the project, including demos, please look at these [slides](https://www.slideshare.net/AnimeshSingh/kubeflow-pipelines-with-tekton-236769976) and the [deep dive presentation](https://www.youtube.com/watch?v=AYIeNtXLT_k).
+For more details about the project please follow this detailed [blog post](https://developer.ibm.com/blogs/kubeflow-pipelines-with-tekton-and-watson/). Additionally look at these [slides](https://www.slideshare.net/AnimeshSingh/kubeflow-pipelines-with-tekton-236769976) and the [deep dive presentation](https://www.youtube.com/watch?v=AYIeNtXLT_k) for demos.
 
 ## Tekton
 
