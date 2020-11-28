@@ -25,7 +25,6 @@ import { statusToIcon } from '../pages/Status';
 import { Constants } from './Constants';
 import { KeyValue } from './StaticGraphParser';
 import { NodePhase, statusToBgColor, statusToPhase } from './StatusUtils';
-import { isS3Endpoint } from './AwsHelper';
 
 export enum StorageService {
   GCS = 'gcs',
@@ -73,9 +72,25 @@ export default class WorkflowParser {
         statusMap.set(status[taskRunId]['pipelineTaskName'], status[taskRunId]);
     }
 
+    // Add When-condition tasks to conditionTasks list if it depends on the result of the tasks in statusMap
+    const conditionTasks: String[] = [];
+    for (const task of tasks) {
+      if (!statusMap.get(task['name'])) {
+        for (const condition of task['when'] || []) {
+          const param = this.decodeParam(condition['Input']);
+          if (param && param.task) {
+            if (statusMap.get(param.task)) {
+              conditionTasks.push(task['name']);
+              break;
+            }
+          }
+        }
+      }
+    }
+
     for (const task of tasks) {
       // If the task has a status then add it and its edges to the graph
-      if (statusMap.get(task['name'])) {
+      if (statusMap.get(task['name']) || conditionTasks.includes(task['name'])) {
         const conditions = task['conditions'] || [];
         const taskId =
           statusMap.get(task['name']) && statusMap.get(task['name'])!['status']['podName'] !== ''
@@ -109,7 +124,11 @@ export default class WorkflowParser {
 
         for (const edge of edges || []) graph.setEdge(edge['parent'], edge['child']);
 
-        const status = this.getStatus(statusMap.get(task['name']));
+        let status = NodePhase.CONDITIONCHECKFAILED;
+        if (!conditionTasks.includes(task['name'])) {
+          status = this.getStatus(statusMap.get(task['name']));
+        }
+
         const phase = statusToPhase(status);
         const statusColoring = exitHandlers.includes(task['name'])
           ? '#fef7f0'
@@ -211,11 +230,6 @@ export default class WorkflowParser {
   }
 
   public static getStatus(execStatus: any): NodePhase {
-    for (const result of execStatus.status.taskResults || []) {
-      if (result.name === 'status' && result.value === 'false') {
-        return NodePhase.CONDITIONCHECKFAILED;
-      }
-    }
     return execStatus!.status.conditions[0].reason;
   }
 
