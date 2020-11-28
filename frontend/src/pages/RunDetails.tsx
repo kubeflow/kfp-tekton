@@ -926,7 +926,12 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
 
       switch (tab) {
         case SidePaneTab.LOGS:
-          if (node.status.phase !== NodePhase.PENDING && node.status.phase !== NodePhase.SKIPPED) {
+          if (
+            node &&
+            node.status &&
+            node.status.phase !== NodePhase.PENDING &&
+            node.status.phase !== NodePhase.SKIPPED
+          ) {
             await this._loadSelectedNodeLogs();
           } else {
             // Clear logs
