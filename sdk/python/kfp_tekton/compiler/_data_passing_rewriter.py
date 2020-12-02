@@ -340,15 +340,16 @@ def fix_big_data_passing(workflow: dict) -> dict:
 
     # Remove pipeline task parameters unless they're used downstream
     for task in pipeline_tasks:
-        task['params'] = [
-            parameter_argument
-            for parameter_argument in task.get('params', [])
-            if (task['name'], parameter_argument['name']
-                ) in inputs_consumed_as_parameters and
-            (task['name'],
-             parameter_argument['name']) not in inputs_consumed_as_artifacts
-            or task['name'] in resource_template_names
-        ]
+        if 'condition-' not in task['name']:
+            task['params'] = [
+                parameter_argument
+                for parameter_argument in task.get('params', [])
+                if (task['name'], parameter_argument['name']
+                    ) in inputs_consumed_as_parameters and
+                (task['name'],
+                parameter_argument['name']) not in inputs_consumed_as_artifacts
+                or task['name'] in resource_template_names
+            ]
 
         # tekton results doesn't support underscore
         for argument in task['params']:
@@ -513,6 +514,7 @@ def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
                 task_name, task_parma.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
                 task_spec, placeholder, workspaces_parameter)
+            task_spec = task.get('taskSpec', {})
     # Handle the case of input artifact without dependent the output of other tasks
     for task_artifact in task_artifacts:
         if (task_name, task_artifact.get('name')) not in inputs_tasks:

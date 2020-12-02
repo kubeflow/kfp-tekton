@@ -16,13 +16,14 @@
 #  - The help target was derived from https://stackoverflow.com/a/35730328/5601796
 
 VENV ?= .venv
+KFP_TEKTON_RELEASE ?= v0.4.0
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 
 .PHONY: help
 help: ## Display the Make targets
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: venv
 venv: $(VENV)/bin/activate ## Create and activate virtual environment
@@ -90,7 +91,7 @@ check_license: ## Check for license header in source files
 
 .PHONY: check_mdtoc
 check_mdtoc: ## Check Markdown files for valid the Table of Contents
-	@find samples sdk *.md -type f -name '*.md' -exec \
+	@find guides samples sdk *.md -type f -name '*.md' -exec \
 		grep -l -i 'Table of Contents' {} \; | sort | \
 		while read -r md_file; do \
 			grep -oE '^ *[-+*] \[[^]]+\]\(#[^)]+\)' "$${md_file}" |  sed -e 's/[-+*] /- /g' > md_file_toc; \
@@ -100,8 +101,14 @@ check_mdtoc: ## Check Markdown files for valid the Table of Contents
 		done | grep . && echo "Run './tools/mdtoc.sh <md-file>' to update the 'Table of Contents' in the Markdown files reported above." && exit 1 || \
 		echo "$@: OK"
 
+.PHONY: check_doc_links
+check_doc_links: ## Check Markdown files for valid links
+	@pip3 show requests > /dev/null || pip install requests
+	@python3 tools/python/verify_doc_links.py
+	@echo "$@: OK"
+
 .PHONY: verify
-verify: check_license check_mdtoc lint unit_test report ## Run all verification targets: check_license, check_mdtoc, lint, unit_test, report
+verify: check_license check_mdtoc check_doc_links lint unit_test report ## Run all verification targets: check_license, check_mdtoc, lint, unit_test, report
 	@echo "$@: OK"
 
 .PHONY: distribution
@@ -123,3 +130,8 @@ build: ## Create GO vendor directories with all dependencies
 	licext --mode merge --source vendor/ --target third_party/license.txt --overwrite
 	# Delete vendor directory
 	rm -rf vendor
+
+.PHONY: build-release-template
+build-release-template: ## Build KFP Tekton release deployment templates
+	@mkdir -p install/$(KFP_TEKTON_RELEASE)
+	@kustomize build manifests/kustomize/env/kfp-template -o install/$(KFP_TEKTON_RELEASE)/kfp-tekton.yaml

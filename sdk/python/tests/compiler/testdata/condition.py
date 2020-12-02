@@ -26,7 +26,7 @@ class FlipCoinOp(dsl.ContainerOp):
                        'result = \'heads\' if random.randint(0,1) == 0 else \'tails\'; '
                        'print(forced_result) if (forced_result == \'heads\' or forced_result == \'tails\') else print(result)"'
                        ' | tee /tmp/output'],
-            file_outputs={'output': '/tmp/output'})
+            file_outputs={'output_value': '/tmp/output'})
 
 
 class PrintOp(dsl.ContainerOp):

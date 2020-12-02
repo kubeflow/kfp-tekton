@@ -1,5 +1,7 @@
 # Install Kubeflow Pipelines
 
+**This page is under construction. Please follow [official installtion guide](/guides/kfp_tekton_install.md)**
+
 This folder contains Kubeflow Pipelines Kustomize manifests for a light weight
 deployment. You can follow the instruction and deploy Kubeflow Pipelines in an
 existing cluster.
@@ -8,7 +10,6 @@ To install Kubeflow Pipelines, you have several options.
 - Via [GCP AI Platform UI](http://console.cloud.google.com/ai-platform/pipelines).
 - Via an upcoming commandline tool.
 - Via Kubectl with Kustomize, it's detailed here.
-  - Community maintains a repo [here](https://github.com/e2fyi/kubeflow-aws/tree/master/pipelines) for AWS.
 
 ## Install via Kustomize
 
@@ -50,6 +51,13 @@ kubectl describe configmap inverse-proxy-config -n kubeflow | grep googleusercon
 Its storage is based on CloudSQL & GCS. It's better than others for production usage.
 
 Please following [sample](sample/README.md) for a customized installation.
+
+### Option-4 Install it to AWS with S3 and RDS MySQL
+Its storage is based on S3 & AWS RDS. It's more natural for AWS users to use this option.
+
+Please following [AWS Instructions](env/aws/README.md) for installation.
+
+Note: Community maintains a repo [e2fyi/kubeflow-aws](https://github.com/e2fyi/kubeflow-aws/tree/master/pipelines) for AWS.
 
 ## Uninstall
 

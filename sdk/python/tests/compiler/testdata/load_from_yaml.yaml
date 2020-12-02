@@ -32,6 +32,14 @@ spec:
     tasks:
     - name: busybox
       taskSpec:
+        metadata:
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Sample component
+              for testing\n", "implementation": {"container": {"args": ["start", {"inputValue":
+              "dummy_text"}, {"outputPath": "dummy_output_path"}, "end"], "command":
+              ["echo"], "image": "alpine:latest"}}, "inputs": [{"default": "", "description":
+              "Test empty input", "name": "dummy_text"}], "name": "busybox", "outputs":
+              [{"description": "Test unused output path", "name": "dummy_output_path"}]}'
         results:
         - description: /tmp/outputs/dummy_output_path/data
           name: dummy-output-path
@@ -45,3 +53,5 @@ spec:
           - echo
           image: alpine:latest
           name: main
+      timeout: 0s
+  timeout: 0s
