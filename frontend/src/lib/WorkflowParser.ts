@@ -72,19 +72,15 @@ export default class WorkflowParser {
         statusMap.set(status[taskRunId]['pipelineTaskName'], status[taskRunId]);
     }
 
-    // Add When-condition tasks to conditionTasks Map if it depends on the result of the tasks in statusMap
-    const conditionTasks = new Map<string, any>();
+    // Add When-condition tasks to conditionTasks list if it depends on the result of the tasks in statusMap
+    const conditionTasks: String[] = [];
     for (const task of tasks) {
       if (!statusMap.get(task['name'])) {
         for (const condition of task['when'] || []) {
           const param = this.decodeParam(condition['Input']);
           if (param && param.task) {
             if (statusMap.get(param.task)) {
-              conditionTasks.set(task['name'], {
-                pipelineTaskName: task['name'],
-                status: {},
-                taskRunId: '',
-              });
+              conditionTasks.push(task['name']);
               break;
             }
           }
@@ -94,7 +90,7 @@ export default class WorkflowParser {
 
     for (const task of tasks) {
       // If the task has a status then add it and its edges to the graph
-      if (statusMap.get(task['name']) || conditionTasks.get(task['name'])) {
+      if (statusMap.get(task['name']) || conditionTasks.includes(task['name'])) {
         const conditions = task['conditions'] || [];
         const taskId =
           statusMap.get(task['name']) && statusMap.get(task['name'])!['status']['podName'] !== ''
@@ -129,7 +125,7 @@ export default class WorkflowParser {
         for (const edge of edges || []) graph.setEdge(edge['parent'], edge['child']);
 
         let status = NodePhase.CONDITIONCHECKFAILED;
-        if (!conditionTasks.get(task['name'])) {
+        if (!conditionTasks.includes(task['name'])) {
           status = this.getStatus(statusMap.get(task['name']));
         }
 
