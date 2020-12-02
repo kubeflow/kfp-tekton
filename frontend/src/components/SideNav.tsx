@@ -228,7 +228,7 @@ export class SideNav extends React.Component<SideNavInternalProps, SideNavState>
         tagName: tagName || 'unknown',
         commitHash: commitHash ? commitHash.substring(0, 7) : 'unknown',
         commitUrl:
-          'https://www.github.com/kubeflow/pipelines' +
+          'https://www.github.com/kubeflow/kfp-tekton' +
           (commitHash && commitHash !== 'unknown' ? `/commit/${commitHash}` : ''),
         date: buildInfo.buildDate
           ? new Date(buildInfo.buildDate).toLocaleDateString('en-US')
@@ -557,7 +557,7 @@ export class SideNav extends React.Component<SideNavInternalProps, SideNavState>
           <Tooltip title='Report an Issue' enterDelay={300} placement={'top-start'}>
             <div className={css.envMetadata}>
               <a
-                href='https://github.com/kubeflow/pipelines/issues/new?template=BUG_REPORT.md'
+                href='https://github.com/kubeflow/kfp-tekton/issues/new?template=bug_report.md'
                 className={classes(css.link, commonCss.unstyled)}
                 rel='noopener'
                 target='_blank'
