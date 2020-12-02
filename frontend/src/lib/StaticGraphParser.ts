@@ -68,7 +68,7 @@ export function _populateInfoFromTask(info: SelectedNodeInfo, task?: any): Selec
 
   if (task['taskSpec'] && task['taskSpec']['params'])
     info.inputs = (task['taskSpec']['params'] || []).map((p: any) => [p['name'], p['value'] || '']);
-  if (task['taskSpec']['results'])
+  if (task['taskSpec'] && task['taskSpec']['results'])
     info.outputs = (task['taskSpec']['results'] || []).map((p: any) => {
       return [p['name'], p['description'] || ''];
     });
