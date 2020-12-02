@@ -9,6 +9,7 @@ metadata:
   labels:
     application-crd-id: kubeflow-pipelines
     controller-tools.k8s.io: "1.0"
+    kubeflow/crd-install: "true"
   name: applications.app.k8s.io
 spec:
   group: app.k8s.io
@@ -244,6 +245,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     application-crd-id: kubeflow-pipelines
+    kubeflow/crd-install: "true"
   name: scheduledworkflows.kubeflow.org
 spec:
   group: kubeflow.org
@@ -265,6 +267,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     application-crd-id: kubeflow-pipelines
+    kubeflow/crd-install: "true"
   name: viewers.kubeflow.org
 spec:
   group: kubeflow.org
