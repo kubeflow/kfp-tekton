@@ -31,7 +31,7 @@ If you would like to do it in development mode, or if you already have a Kubeflo
     - Minimum version: `0.16.0`
 2. Clone this repository
     ```
-    git clone github.com/kubeflow/kfp-tekton
+    git clone https://github.com/kubeflow/kfp-tekton.git
     cd kfp-tekton
     ```
 
@@ -82,7 +82,7 @@ The KFP backend with Tekton uses a modified version of Kubeflow Pipelines api-se
 1. To build these two images, clone this repository under the [GOPATH](https://golang.org/doc/gopath_code.html#GOPATH) and rename it to `pipelines`. 
     ```shell
     cd $GOPATH/src/go/github.com/kubeflow
-    git clone github.com/kubeflow/kfp-tekton
+    git clone https://github.com/kubeflow/kfp-tekton.git
     mv kfp-tekton pipelines
     cd pipelines
     ```
