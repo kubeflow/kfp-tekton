@@ -7,6 +7,11 @@ bases:
 resources:
   - namespace.yaml
 
+patchesStrategicMerge:
+  - application-crd.yaml
+  - scheduled-workflow-crd.yaml
+  - viewer-crd.yaml
+
 images:
   - name: gcr.io/ml-pipeline/api-server
     newName: docker.io/aipipeline/api-server
