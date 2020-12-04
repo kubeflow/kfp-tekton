@@ -135,3 +135,19 @@ build: ## Create GO vendor directories with all dependencies
 build-release-template: ## Build KFP Tekton release deployment templates
 	@mkdir -p install/$(KFP_TEKTON_RELEASE)
 	@kustomize build manifests/kustomize/env/kfp-template -o install/$(KFP_TEKTON_RELEASE)/kfp-tekton.yaml
+
+.PHONY: build-backend
+build-backend: build-apiserver build-agent build-workflow ## Verify apiserver, agent, and workflow build
+	@echo "$@: OK"
+
+.PHONY: build-apiserver
+build-apiserver: ## Build apiserver
+	go build -o apiserver ./backend/src/apiserver
+
+.PHONY: build-agent
+build-agent: ## Build agent
+	go build -o agent ./backend/src/agent/persistence
+
+.PHONY: build-workflow
+build-workflow: ## Build workflow
+	go build -o workflow ./backend/src/crd/controller/scheduledworkflow/*.go

@@ -166,6 +166,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
 
+  def test_display_name_workflow(self):
+    """
+    Test compiling a step level timeout workflow.
+    """
+    from .testdata.set_display_name import echo_pipeline
+    self._test_pipeline_workflow(echo_pipeline, 'set_display_name.yaml')
+
   def test_resourceOp_workflow(self):
     """
     Test compiling a resourceOp basic workflow.

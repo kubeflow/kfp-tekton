@@ -57,3 +57,8 @@ matrix:
         - python3 -m pip install requests
       script:
         - make check_doc_links
+    - name: "Verify apiserver, agent, and workflow build"
+      language: go
+      go: 1.15.x
+      script:
+        - make build-backend
