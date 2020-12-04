@@ -137,14 +137,17 @@ build-release-template: ## Build KFP Tekton release deployment templates
 	@kustomize build manifests/kustomize/env/kfp-template -o install/$(KFP_TEKTON_RELEASE)/kfp-tekton.yaml
 
 .PHONY: build-backend
-build-backend: apiserver agent workflow ## Verify apiserver, agent, and workflow build
+build-backend: build-apiserver build-agent build-workflow ## Verify apiserver, agent, and workflow build
 	@echo "$@: OK"
 
-apiserver: ## Build apiserver
+.PHONY: build-apiserver
+build-apiserver: ## Build apiserver
 	go build -o apiserver ./backend/src/apiserver
 
-agent: ## Build agent
+.PHONY: build-agent
+build-agent: ## Build agent
 	go build -o agent ./backend/src/agent/persistence
 
-workflow: ## Build workflow
+.PHONY: build-workflow
+build-workflow: ## Build workflow
 	go build -o workflow ./backend/src/crd/controller/scheduledworkflow/*.go
