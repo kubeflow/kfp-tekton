@@ -25,6 +25,7 @@ import { statusToIcon } from '../pages/Status';
 import { Constants } from './Constants';
 import { KeyValue } from './StaticGraphParser';
 import { NodePhase, statusToBgColor, statusToPhase } from './StatusUtils';
+import { parseTaskDisplayName } from './ParserUtils';
 
 export enum StorageService {
   GCS = 'gcs',
@@ -137,7 +138,7 @@ export default class WorkflowParser {
         graph.setNode(taskId, {
           height: Constants.NODE_HEIGHT,
           icon: statusToIcon(status),
-          label: task['name'],
+          label: parseTaskDisplayName(task['taskSpec']) || task['name'],
           statusColoring: statusColoring,
           width: Constants.NODE_WIDTH,
         });
