@@ -17,6 +17,7 @@
 import * as dagre from 'dagre';
 import { color } from '../Css';
 import { Constants } from './Constants';
+import { parseTaskDisplayName } from './ParserUtils';
 
 export type nodeType = 'container' | 'resource' | 'dag' | 'unknown';
 
@@ -160,7 +161,7 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
       bgColor: bgColor,
       height: Constants.NODE_HEIGHT,
       info,
-      label: label,
+      label: parseTaskDisplayName(task['taskSpec']) || label,
       width: Constants.NODE_WIDTH,
     });
   }

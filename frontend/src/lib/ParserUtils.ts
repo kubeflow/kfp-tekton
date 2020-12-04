@@ -1,13 +1,13 @@
-import { Metadata } from 'third_party/argo-ui/argo_template';
-
-export function parseTaskDisplayName(metadata?: Metadata): string | undefined {
-  if (!metadata?.annotations) {
+export function parseTaskDisplayName(taskSpec?: any): string | undefined {
+  const metadata = taskSpec['metadata'] || {};
+  const annotations = metadata['annotations'] || false;
+  if (!annotations) {
     return undefined;
   }
-  const taskDisplayName = metadata.annotations['pipelines.kubeflow.org/task_display_name'];
+  const taskDisplayName = annotations['pipelines.kubeflow.org/task_display_name'];
   let componentDisplayName: string | undefined;
   try {
-    componentDisplayName = JSON.parse(metadata.annotations['pipelines.kubeflow.org/component_spec'])
+    componentDisplayName = JSON.parse(annotations['pipelines.kubeflow.org/component_spec'])
       .name;
   } catch (err) {
     // Expected error: metadata is missing or malformed
