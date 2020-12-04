@@ -13,6 +13,8 @@
 # limitations under the License.
 
 from kfp import dsl
+
+
 def echo_op():
     return dsl.ContainerOp(
         name='echo',
@@ -20,6 +22,7 @@ def echo_op():
         command=['sh', '-c'],
         arguments=['echo "Got scheduled"']
     )
+
 
 @dsl.pipeline(
     name='echo',
