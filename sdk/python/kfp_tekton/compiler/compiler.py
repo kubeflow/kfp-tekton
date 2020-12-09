@@ -30,7 +30,6 @@ from distutils.util import strtobool
 from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env  # , add_pod_labels, get_default_telemetry_labels
 from kfp.compiler.compiler import Compiler
-# from kfp.components._yaml_utils import dump_yaml
 from kfp.components.structures import InputSpec
 from kfp.dsl._for_loop import LoopArguments, LoopArgumentVariable
 from kfp.dsl._metadata import _extract_pipeline_metadata
@@ -40,6 +39,7 @@ from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
+from kfp_tekton.compiler.yaml_utils import dump_yaml
 
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
@@ -728,9 +728,7 @@ class TektonCompiler(Compiler):
       package_path: file path to be written. If not specified, a yaml_text string
         will be returned.
     """
-    # yaml_text = dump_yaml(workflow)
-    yaml.Dumper.ignore_aliases = lambda *args: True
-    yaml_text = yaml.dump(workflow, default_flow_style=False)  # Tekton change
+    yaml_text = dump_yaml(workflow)
 
     # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
     # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
