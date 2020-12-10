@@ -1,4 +1,5 @@
-from typing import Any, Union, Optional, TextIO, overload, OrderedDict
+from collections import OrderedDict
+from typing import Any, Union, Optional, TextIO, overload
 import yaml
 
 __all__ = [
