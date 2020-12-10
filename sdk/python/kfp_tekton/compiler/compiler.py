@@ -15,7 +15,6 @@
 import inspect
 import json
 import tarfile
-import yaml
 import copy
 import itertools
 import zipfile
