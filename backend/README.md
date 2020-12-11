@@ -3,13 +3,13 @@ Pipelines backend.
 
 ## Building & Testing
 
-To run all unittests for backend: 
+To run all unit tests for backend: 
 
 ```
 go test -v -cover ./backend/...
 ```
 
-To run the API server unittests:
+To run the API server unit tests:
 
 ```
 go test -v -cover ./backend/src/apiserver/...
