@@ -24,7 +24,13 @@ This pipeline demonstrates how to use the exit handler in the Kubeflow pipeline 
     kubectl apply -f secret.yaml -n ${NAMESPACE}
     ```
 
-2. Compile the send-email pipeline using the compiler inside the python code. The kfp-tekton SDK will produce a Tekton pipeline yaml definition in the same directory called `email_pipeline.yaml`.
+2. Create a shared persistent volume claim for passing optional attachment.
+
+    ```shell
+    kubectl apply -f pvc.yaml -n ${NAMESPACE}
+    ```
+
+3. Compile the send-email pipeline using the compiler inside the python code. The kfp-tekton SDK will produce a Tekton pipeline yaml definition in the same directory called `email_pipeline.yaml`.
     ```shell
     # Compile the python code
     python send-email.py
@@ -42,4 +48,6 @@ Then, upload the `email_pipeline.yaml` file to the Kubeflow pipeline dashboard w
 
 * **sender**: Email sender email address
 
-* **recipients**: Email recipients email addresses (space delimited)
+* **recipients**: Email recipients email addresses (comma space delimited)
+
+* **attachment_path**: Optional attachment path from the previous path

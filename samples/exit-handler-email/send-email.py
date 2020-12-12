@@ -15,15 +15,15 @@
 from kfp import dsl
 import kfp
 from kubernetes import client as k8s_client
+from kfp.components import func_to_container_op
+from kfp import onprem
+import os
 
 
-def echo_op():
-    return dsl.ContainerOp(
-        name='echo',
-        image='busybox',
-        command=['sh', '-c'],
-        arguments=['echo "Got scheduled"']
-    )
+@func_to_container_op
+def write_file(output_text_path: str):
+    with open(output_text_path, 'w') as writer:
+        writer.write('hello world')
 
 
 def env_from_secret(env_name, secret_name, secret_key):
@@ -39,6 +39,8 @@ def env_from_secret(env_name, secret_name, secret_key):
 
 
 email_op = kfp.components.load_component_from_file('component.yaml')
+# pvc mount point has to be string, not pipeline param.
+attachment_path = "/tmp/data"
 
 
 @dsl.pipeline(
@@ -49,22 +51,25 @@ def email_pipeline(
     server="server-secret",
     subject="Hi, again!",
     body="Tekton email",
-    sender="<me@myserver.com>",
-    recipients="<him@hisserver.com> <her@herserver.com>"
+    sender="me@myserver.com",
+    recipients="him@hisserver.com, her@herserver.com",
+    attachment_filepath="/tmp/data/output.txt"
 ):
     email = email_op(server=server,
                      subject=subject,
                      body=body,
                      sender=sender,
-                     recipients=recipients)
+                     recipients=recipients,
+                     attachment_path=attachment_filepath)
     email.add_env_variable(env_from_secret('USER', '$(params.server)', 'user'))
     email.add_env_variable(env_from_secret('PASSWORD', '$(params.server)', 'password'))
     email.add_env_variable(env_from_secret('TLS', '$(params.server)', 'tls'))
     email.add_env_variable(env_from_secret('SERVER', '$(params.server)', 'url'))
     email.add_env_variable(env_from_secret('PORT', '$(params.server)', 'port'))
+    email.apply(onprem.mount_pvc('shared-pvc', 'shared-pvc', attachment_path))
 
     with dsl.ExitHandler(email):
-        echo = echo_op()
+        write_file_task = write_file(attachment_filepath).apply(onprem.mount_pvc('shared-pvc', 'shared-pvc', attachment_path))
 
 
 
