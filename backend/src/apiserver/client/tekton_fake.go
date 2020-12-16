@@ -15,31 +15,38 @@
 package client
 
 import (
-	argoprojv1alpha1 "github.com/argoproj/argo/pkg/client/clientset/versioned/typed/workflow/v1alpha1"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
+	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1beta1"
 )
 
-type FakeArgoClient struct {
+type FakeTektonClient struct {
 	workflowClientFake *FakeWorkflowClient
 }
 
-func NewFakeArgoClient() *FakeArgoClient {
-	return &FakeArgoClient{NewWorkflowClientFake()}
+func NewFakeTektonClient() *FakeTektonClient {
+	return &FakeTektonClient{NewWorkflowClientFake()}
 }
 
-func (c *FakeArgoClient) Workflow(namespace string) argoprojv1alpha1.WorkflowInterface {
+func (c *FakeTektonClient) Workflow(namespace string) tektonv1beta1.PipelineRunInterface {
 	if len(namespace) == 0 {
 		panic(util.NewResourceNotFoundError("Namespace", namespace))
 	}
 	return c.workflowClientFake
 }
 
-func (c *FakeArgoClient) GetWorkflowCount() int {
+func (c *FakeTektonClient) PipelineRun(namespace string) tektonv1beta1.PipelineRunInterface {
+	if len(namespace) == 0 {
+		panic(util.NewResourceNotFoundError("Namespace", namespace))
+	}
+	return c.workflowClientFake
+}
+
+func (c *FakeTektonClient) GetWorkflowCount() int {
 	return len(c.workflowClientFake.workflows)
 }
 
-func (c *FakeArgoClient) GetWorkflowKeys() map[string]bool {
+func (c *FakeTektonClient) GetWorkflowKeys() map[string]bool {
 	result := map[string]bool{}
 	for key := range c.workflowClientFake.workflows {
 		result[key] = true
@@ -47,28 +54,24 @@ func (c *FakeArgoClient) GetWorkflowKeys() map[string]bool {
 	return result
 }
 
-func (c *FakeArgoClient) IsTerminated(name string) (bool, error) {
-	workflow, ok := c.workflowClientFake.workflows[name]
+func (c *FakeTektonClient) IsTerminated(name string) (bool, error) {
+	_, ok := c.workflowClientFake.workflows[name]
 	if !ok {
 		return false, errors.New("No workflow found with name: " + name)
 	}
+	// There's no activeDeadlineSeconds in Tekton
 
-	activeDeadlineSeconds := workflow.Spec.ActiveDeadlineSeconds
-	if activeDeadlineSeconds == nil {
-		return false, errors.New("No ActiveDeadlineSeconds found in workflow with name: " + name)
-	}
-
-	return *activeDeadlineSeconds == 0, nil
+	return true, nil
 }
 
-type FakeArgoClientWithBadWorkflow struct {
+type FakeTektonClientWithBadWorkflow struct {
 	workflowClientFake *FakeBadWorkflowClient
 }
 
-func NewFakeArgoClientWithBadWorkflow() *FakeArgoClientWithBadWorkflow {
-	return &FakeArgoClientWithBadWorkflow{&FakeBadWorkflowClient{}}
+func NewFakeTektonClientWithBadWorkflow() *FakeTektonClientWithBadWorkflow {
+	return &FakeTektonClientWithBadWorkflow{&FakeBadWorkflowClient{}}
 }
 
-func (c *FakeArgoClientWithBadWorkflow) Workflow(namespace string) argoprojv1alpha1.WorkflowInterface {
+func (c *FakeTektonClientWithBadWorkflow) Workflow(namespace string) tektonv1beta1.PipelineRunInterface {
 	return c.workflowClientFake
 }
