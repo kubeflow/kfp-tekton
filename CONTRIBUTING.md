@@ -145,5 +145,5 @@ omit the scope because it's optional, or propose an additional scope here.
 ## Get Involved
 
 * [Slack](http://kubeflow.slack.com/)
-* [Twitter](https://twitter.com/kubeflow)
+* [Twitter](http://twitter.com/kubeflow)
 * [Mailing List](https://groups.google.com/forum/#!forum/kubeflow-discuss)
