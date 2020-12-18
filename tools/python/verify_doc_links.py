@@ -158,7 +158,7 @@ def verify_doc_links() -> [(str, int, str, str)]:
     # 4. filter for the invalid URLs (status 404: "Not Found") to be reported
     file_line_text_url_404 = [(f, l, t, u, s)
                               for (f, l, t, u, s) in file_line_text_url_status
-                              if s != 200]
+                              if s == 404]
 
     # 5. print some stats for confidence
     print("{} {} links ({} unique URLs) in {} Markdown files.\n".format(
