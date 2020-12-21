@@ -16,9 +16,10 @@
 #  - The help target was derived from https://stackoverflow.com/a/35730328/5601796
 
 VENV ?= .venv
-KFP_TEKTON_RELEASE ?= v0.4.0
+KFP_TEKTON_RELEASE ?= v0.5.0
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
+DOCKER_REGISTRY ?= aipipeline
 
 .PHONY: help
 help: ## Display the Make targets
@@ -135,3 +136,44 @@ build: ## Create GO vendor directories with all dependencies
 build-release-template: ## Build KFP Tekton release deployment templates
 	@mkdir -p install/$(KFP_TEKTON_RELEASE)
 	@kustomize build manifests/kustomize/env/kfp-template -o install/$(KFP_TEKTON_RELEASE)/kfp-tekton.yaml
+
+.PHONY: build-backend
+build-backend: build-apiserver build-agent build-workflow ## Verify apiserver, agent, and workflow build
+	@echo "$@: OK"
+
+.PHONY: build-apiserver
+build-apiserver: ## Build apiserver
+	go build -o apiserver ./backend/src/apiserver
+
+.PHONY: build-agent
+build-agent: ## Build agent
+	go build -o agent ./backend/src/agent/persistence
+
+.PHONY: build-workflow
+build-workflow: ## Build workflow
+	go build -o workflow ./backend/src/crd/controller/scheduledworkflow/*.go
+
+.PHONY: build-backend-images
+build-backend-images: \
+	build-api-server-image \
+	build-persistenceagent-image \
+	build-metadata-writer-image \
+	build-scheduledworkflow-image \
+	## Build backend docker images
+	@echo "$@: OK"
+
+.PHONY: build-api-server-image
+build-api-server-image: ## Build api-server docker image
+	docker build -t ${DOCKER_REGISTRY}/api-server -f backend/Dockerfile .
+
+.PHONY: build-persistenceagent-image
+build-persistenceagent-image: ## Build persistenceagent docker image
+	docker build -t ${DOCKER_REGISTRY}/persistenceagent -f backend/Dockerfile.persistenceagent .
+
+.PHONY: build-metadata-writer-image
+build-metadata-writer-image: ## Build metadata-writer docker image
+	docker build -t ${DOCKER_REGISTRY}/metadata-writer -f backend/metadata_writer/Dockerfile .
+
+.PHONY: build-scheduledworkflow-image
+build-scheduledworkflow-image: ## Build scheduledworkflow docker image
+	docker build -t ${DOCKER_REGISTRY}/scheduledworkflow -f backend/Dockerfile.scheduledworkflow .

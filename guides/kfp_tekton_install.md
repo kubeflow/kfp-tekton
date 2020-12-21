@@ -32,12 +32,18 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
 To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
 1. Install [Tekton v0.16.3](https://github.com/tektoncd/pipeline/releases/tag/v0.16.3)
 
-2. Install Kubeflow Pipelines with Tekton backend (kfp-tekton) v0.4.0 release
+2. Install Kubeflow Pipelines with Tekton backend (kfp-tekton) v0.5.0 [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
+   > Note: You can ignore the error `no matches for kind "Application" in version "app.k8s.io/v1beta1"` since it's a warning saying `application` CRD is not yet ready.
     ```shell
-    kubectl apply -f install/v0.4.0/kfp-tekton.yaml
+    kubectl apply --selector kubeflow/crd-install=true -f install/v0.5.0/kfp-tekton.yaml
     ```
 
-3. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
+3. Install Kubeflow Pipelines with Tekton backend (kfp-tekton) v0.5.0 deployment
+    ```shell
+    kubectl apply -f install/v0.5.0/kfp-tekton.yaml
+    ```
+
+4. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
     ```shell
     kubectl patch svc ml-pipeline-ui -n kubeflow -p '{"spec": {"type": "LoadBalancer"}}'
     ```
@@ -51,7 +57,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 **Important: Please complete the [prequisites](#installation-targets-and-prequisites) before proceeding with the following instructions.**
 
-1. Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#kubeflow-installation) to install whole Kubeflow stack with the kfp-tekton installation.
+1. Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#kubeflow-installation) to install whole Kubeflow stack with the kfp-tekton installation. Kubeflow v1.2.0 uses Tekton v0.14.0 and kfp-tekton v0.4.0.
 
 1. Visit [KFP Tekton User Guide](/guides/kfp-user-guide) and start learning how to use Kubeflow pipeline.
 

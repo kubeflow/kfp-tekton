@@ -25,6 +25,7 @@ import { statusToIcon } from '../pages/Status';
 import { Constants } from './Constants';
 import { KeyValue } from './StaticGraphParser';
 import { NodePhase, statusToBgColor, statusToPhase } from './StatusUtils';
+import { parseTaskDisplayName } from './ParserUtils';
 
 export enum StorageService {
   GCS = 'gcs',
@@ -137,7 +138,7 @@ export default class WorkflowParser {
         graph.setNode(taskId, {
           height: Constants.NODE_HEIGHT,
           icon: statusToIcon(status),
-          label: task['name'],
+          label: parseTaskDisplayName(task['taskSpec']) || task['name'],
           statusColoring: statusColoring,
           width: Constants.NODE_WIDTH,
         });
@@ -466,14 +467,8 @@ export default class WorkflowParser {
   ): Array<{ stepName: string; path: StoragePath }> {
     const outputPaths: Array<{ stepName: string; path: StoragePath }> = [];
 
-    const annotations = workflow.metadata.annotations;
-    const rawOutputArtifacts = annotations['tekton.dev/output_artifacts']
-      ? JSON.parse(annotations['tekton.dev/output_artifacts'])
-      : [];
-
     if (workflow && workflow.status && workflow.status.taskRuns) {
       Object.keys(workflow.status.taskRuns).forEach(n => {
-        const stepName = workflow.status.taskRuns[n].pipelineTaskName;
         this.loadNodeOutputPaths(workflow.status.taskRuns[n], workflow).map(path =>
           outputPaths.push({ stepName: workflow.status.taskRuns[n].pipelineTaskName, path }),
         );

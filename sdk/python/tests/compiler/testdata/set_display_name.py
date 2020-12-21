@@ -12,6 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.5.0'
+from kfp import dsl
 
-from ._client import TektonClient  # noqa F401
+
+def echo_op():
+    return dsl.ContainerOp(
+        name='echo',
+        image='busybox',
+        command=['sh', '-c'],
+        arguments=['echo "Got scheduled"']
+    )
+
+
+@dsl.pipeline(
+    name='echo',
+    description='echo pipeline'
+)
+def echo_pipeline(
+):
+    echo = echo_op().set_display_name('Hello World')
+
+
+if __name__ == '__main__':
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(echo_pipeline, 'echo_pipeline.yaml')

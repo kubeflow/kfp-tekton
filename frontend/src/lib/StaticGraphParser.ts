@@ -17,6 +17,7 @@
 import * as dagre from 'dagre';
 import { color } from '../Css';
 import { Constants } from './Constants';
+import { parseTaskDisplayName } from './ParserUtils';
 
 export type nodeType = 'container' | 'resource' | 'dag' | 'unknown';
 
@@ -68,7 +69,7 @@ export function _populateInfoFromTask(info: SelectedNodeInfo, task?: any): Selec
 
   if (task['taskSpec'] && task['taskSpec']['params'])
     info.inputs = (task['taskSpec']['params'] || []).map((p: any) => [p['name'], p['value'] || '']);
-  if (task['taskSpec']['results'])
+  if (task['taskSpec'] && task['taskSpec']['results'])
     info.outputs = (task['taskSpec']['results'] || []).map((p: any) => {
       return [p['name'], p['description'] || ''];
     });
@@ -160,7 +161,7 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
       bgColor: bgColor,
       height: Constants.NODE_HEIGHT,
       info,
-      label: label,
+      label: parseTaskDisplayName(task['taskSpec']) || label,
       width: Constants.NODE_WIDTH,
     });
   }
