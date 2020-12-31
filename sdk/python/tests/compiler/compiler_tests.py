@@ -309,6 +309,25 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata import compose
     self._test_nested_workflow('compose.yaml', [compose.save_most_frequent_word, compose.download_save_most_frequent_word])
 
+  def test_any_sequencer(self):
+    """
+    Test any sequencer dependency.
+    """
+    from .testdata.any_sequencer import any_sequence_pipeline
+
+    def _any_sequencer_normalize(file_context):
+      test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
+      golden_yaml_file = os.path.join(test_data_dir, 'any_sequencer.yaml')
+      with open(golden_yaml_file, 'r') as f:
+        golden_file = yaml.safe_load(f)
+        golden_name = list(json.loads(golden_file['metadata']['annotations']['anyConditions']).keys())[0]
+      compiled_file = yaml.safe_load(file_context)
+      compiled_name = list(json.loads(compiled_file['metadata']['annotations']['anyConditions']).keys())[0]
+      update_context = file_context.replace(compiled_name, golden_name)
+      return update_context
+
+    self._test_pipeline_workflow(any_sequence_pipeline, 'any_sequencer.yaml', _any_sequencer_normalize)
+
   def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
@@ -400,3 +419,4 @@ class TestTektonCompiler(unittest.TestCase):
       self.assertEqual(golden, compiled_workflow,
                        msg="\n===[ " + golden_yaml_file.split(os.path.sep)[-1] + " ]===\n"
                            + json.dumps(compiled_workflow, indent=2))
+
