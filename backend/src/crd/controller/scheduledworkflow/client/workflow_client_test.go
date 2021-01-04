@@ -25,6 +25,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Removed "TestToWorkflowStatuses" and "TestLabelSelectorToGetWorkflows" because Tekton status spec is constantly changing.
+
 func TestToWorkflowStatuses_NullOrEmpty(t *testing.T) {
 	workflow := &workflowapi.PipelineRun{}
 

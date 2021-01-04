@@ -14,4 +14,4 @@
 
 package util
 
-// Removed Argo spec test
+// Removed Argo spec test since Tekton's ArrayorString may subject to change

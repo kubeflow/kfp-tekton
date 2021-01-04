@@ -298,3 +298,5 @@ func TestFormatEmptyWorkflow(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, expected, workflow)
 }
+
+// Removed "TestFormatError" test because Tekton's ArrayorString may subject to change

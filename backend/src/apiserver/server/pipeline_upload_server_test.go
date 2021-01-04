@@ -35,8 +35,6 @@ const (
 	fakeVersionName = "a_fake_version_name"
 )
 
-// Removed argo spec test
-
 func TestUploadPipeline_YAML(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
@@ -144,3 +142,6 @@ func TestUploadPipeline_YAML(t *testing.T) {
 	assert.Equal(t, 2, total_size)
 	assert.Equal(t, versionsExpect, versions)
 }
+
+// Removed TestUploadPipeline tests because it expects argo spec in the tarball file.
+// Need to update the tarball spec once we finalized the Tekton custom multi-task loop client.

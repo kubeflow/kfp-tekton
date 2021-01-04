@@ -15,7 +15,10 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// remove tarball tests that check for argo yaml
+// Removed tarball tests that check for argo yaml and old auth dep: "TestDecompressPipelineTarball", "TestDecompressPipelineTarball_NonYamlTarball",
+// "TestDecompressPipelineZip", "TestDecompressPipelineZip_NonYamlZip", "TestDecompressPipelineZip_EmptyZip", "TestReadPipelineFile_YAML",
+// "TestReadPipelineFile_Zip", "TestReadPipelineFile_Zip_AnyExtension", "TestReadPipelineFile_MultifileZip", "TestReadPipelineFile_Tarball",
+// "TestReadPipelineFile_Tarball_AnyExtension", "TestReadPipelineFile_MultifileTarball", "TestReadPipelineFile_UnknownFileFormat"
 
 func TestGetPipelineName_QueryStringNotEmpty(t *testing.T) {
 	pipelineName, err := GetPipelineName("pipeline%20one", "file one")

@@ -24,8 +24,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Removed Argo spec test
-
 func TestScheduledWorkflow_Getters(t *testing.T) {
 	// Base case
 	workflow := NewScheduledWorkflow(&swfapi.ScheduledWorkflow{
@@ -114,3 +112,5 @@ func TestScheduledWorkflow_ConditionSummary(t *testing.T) {
 	})
 	assert.Equal(t, "NO_STATUS", workflow.ConditionSummary())
 }
+
+// Removed Argo spec test "TestScheduledWorkflow_ParametersAsString" since Tekton's ArrayorString may subject to change

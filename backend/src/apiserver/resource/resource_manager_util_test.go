@@ -28,8 +28,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// remove argo spec test
-
 func TestToSwfCRDResourceGeneratedName_SpecialCharsAndSpace(t *testing.T) {
 	name, err := toSWFCRDResourceGeneratedName("! HaVe ä £unky name")
 	assert.Nil(t, err)
@@ -147,6 +145,8 @@ func TestToCrdPeriodicSchedule_NilEndTime(t *testing.T) {
 		StartTime:      &startTime,
 	})
 }
+
+// removed argo spec test "TestRetryWorkflowWith"
 
 func TestConvertPipelineIdToDefaultPipelineVersion(t *testing.T) {
 	store, manager, experiment, pipeline := initWithExperimentAndPipeline(t)

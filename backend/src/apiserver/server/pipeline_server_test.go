@@ -31,6 +31,8 @@ func TestListPipelineVersion_NoResourceKey(t *testing.T) {
 		PageSize:    20,
 	})
 	assert.Equal(t, "Invalid input error: ResourceKey must be set in the input", err.Error())
+
+	//removed "pipelineServer.CreatePipeline" since the yaml spec is based on Argo yaml spec
 }
 
 func getMockServer(t *testing.T) *httptest.Server {
