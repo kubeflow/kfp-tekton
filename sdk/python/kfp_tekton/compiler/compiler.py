@@ -517,7 +517,6 @@ class TektonCompiler(Compiler):
       }
     }
 
-
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []
     for task in task_refs:
