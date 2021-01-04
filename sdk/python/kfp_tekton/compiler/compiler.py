@@ -337,12 +337,10 @@ class TektonCompiler(Compiler):
     # generate task and condition reference list for the Tekton Pipeline
     condition_refs = {}
 
-    # TODO
     task_refs = []
     templates = []
     condition_task_refs = {}
     for template in raw_templates:
-      # TODO Allow an opt-out for the condition_template
       if template['kind'] == 'Condition':
         condition_task_ref = [{
             'name': template['metadata']['name'],
@@ -407,6 +405,10 @@ class TektonCompiler(Compiler):
             operand_value = '$(params.' + condition.operand2.name + ')'
           input_params.append(operand_value)
         for param_iter in range(len(input_params)):
+          # Add ancestor conditions to the current condition ref
+          if most_recent_condition:
+            condition_refs[cur_opsgroup.name].extend(condition_refs[most_recent_condition])
+          most_recent_condition = cur_opsgroup.name
           condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
 
       opsgroup_stack.extend(cur_opsgroup.groups)
@@ -486,7 +488,6 @@ class TektonCompiler(Compiler):
       for ref in condition_task_ref:
         condition_task_refs_temp.append(ref)
     condition_task_refs = condition_task_refs_temp
-    # TODO: generate the PipelineRun template
     pipeline_run = {
       'apiVersion': tekton_api_version,
       'kind': 'PipelineRun',
@@ -516,7 +517,6 @@ class TektonCompiler(Compiler):
       }
     }
 
-    # TODO: pipelineRun additions
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []

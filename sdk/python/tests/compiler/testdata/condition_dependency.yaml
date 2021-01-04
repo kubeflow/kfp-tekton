@@ -114,6 +114,10 @@ spec:
         operator: in
         values:
         - 'true'
+      - input: $(tasks.condition-1.results.status)
+        operator: in
+        values:
+        - 'true'
     - name: print2
       params:
       - name: flip-output
