@@ -72,7 +72,6 @@ def email_pipeline(
         write_file_task = write_file(attachment_filepath).apply(onprem.mount_pvc('shared-pvc', 'shared-pvc', attachment_path))
 
 
-
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(email_pipeline, 'email_pipeline.yaml')
