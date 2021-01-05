@@ -39,8 +39,10 @@ spec:
           - -c
           image: busybox
           name: main
+      timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: echo
     taskPodTemplate:
       nodeSelector:
         kubernetes.io/os: linux
+  timeout: 0s

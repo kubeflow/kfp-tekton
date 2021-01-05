@@ -41,8 +41,9 @@ Below are the features using Tekton's native support without any custom workarou
 
 `pod_annotations` and `pod_labels` are for assigning custom annotations or labels to a pipeline component. They are implemented with
 Tekton's [task metadata](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#configuring-a-task) field under Tekton
-Task. The [pipeline transformers](/sdk/python/tests/compiler/testdata/pipeline_transfromers.py) example shows how to apply
-custom annotations and labels to one or more components in the pipeline. 
+Task. The [pipeline transformers](/sdk/python/tests/compiler/testdata/pipeline_transformers.py) example shows how to
+ apply
+custom annotations and labels to one or more components in the pipeline.
 
 ### Retries
 
@@ -60,12 +61,18 @@ Volumes are for mounting existing Kubernetes resources onto the components. It i
 ### Timeout for Tasks and Pipelines
 
 Timeout can be used for setting the amount of time allowed on executing a component within the Pipeline or setting the amount of
-time allowed on executing the whole pipeline. The task timeout is implemented with Tekton's
+time allowed on executing the whole pipeline. By default, the generated pipeline won't be timeout to simulate the same behavior
+as Argo, but users can explicitly assign a timeout period on the task or pipeline level. The task timeout is implemented with Tekton's
 [task failure timeout](https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#configuring-the-failure-timeout) under
 Tekton Pipeline, and pipeline timeout is implemented with Tekton's
 [pipeline failure timeout](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#configuring-a-failure-timeout)
 under Tekton PipelineRun. The [timeout](/sdk/python/tests/compiler/testdata/timeout.py) python test is an example of
 how to use this feature.
+
+If you want to use the
+[Tekton global default timeout value](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#configuring-a-failure-timeout)
+for the generated pipeline, you can run `export TEKTON_GLOBAL_DEFAULT_TIMEOUT=true` to enable this feature.
+
 
 ### RunAfter
 
@@ -111,8 +118,8 @@ This feature has been available since Tekton version `0.13.0`.
 ### Exit Handler
 
 An _exit handler_ is a component that always executes, irrespective of success or failure,
-at the end of the pipeline. It is implemented using Tekton's 
-[finally](https://github.com/tektoncd/pipeline/blob/v0.14.0/docs/pipelines.md#adding-finally-to-the-pipeline) 
+at the end of the pipeline. It is implemented using Tekton's
+[finally](https://github.com/tektoncd/pipeline/blob/v0.16.0/docs/pipelines.md#adding-finally-to-the-pipeline)
 section under the Pipeline `spec`. An example of how to use an _exit handler_ can be found in
 the [exit_handler](/sdk/python/tests/compiler/testdata/exit_handler.py) compiler test.
 
@@ -135,11 +142,8 @@ is an example of how to use this feature.
 
 ### Conditions
 
-Conditions are for determining whether to execute certain components based on the output of the condition checks. Since Tekton required users to define an image for doing the [condition check](https://github.com/tektoncd/pipeline/blob/master/docs/conditions.md), we created a custom python image to replicate the same condition checks from Argo and made it as the default in our compiler. The
+Conditions are used for determining whether to execute certain components based on the output of the condition checks. In KFP Argo, each condition is represented as an Argo DAG template so it can be used as a dependency for other Argo templates. To replicate this in KFP Tekton, we put our condition into a dedicated Tekton task so that conditions can be treated as a dependency for other Tekton tasks. Another advantage of creating conditions using Tekton tasks is that we can have more flexible conditions such as comparing an integer and a float number, which currently is not available in Tekton. We are using the Tekton [when expression](https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#guard-task-execution-using-whenexpressions) to check whether the condition task has succeeded or not. We created a custom python image to replicate the same condition checks that are in Argo and made it as the default in our compiler. The
 [flip-coin](/samples/flip-coin) example demonstrates how to use multiple conditions within the same pipeline.
-
-Please be aware that the current Condition feature is using Tekton V1alpha1 API because the Tekton community is still designing the V1beta1 API.
-We will be migrating to the V1beta1 API once it's available in Tekton. Please refer to the [design proposal](https://docs.google.com/document/d/1kESrgmFHnirKNS4oDq3mucuB_OycBm6dSCSwRUHccZg/edit?usp=sharing) for more details.
 
 ### ResourceOp, VolumeOp, and VolumeSnapshotOp
 
@@ -159,16 +163,19 @@ Output parameters are a dictionary of string files that users can define as a co
 
 ### Input Artifacts
 
-Input Artifacts in Kubeflow pipelines are used for passing raw text or local files as files placed in the component pod. Since Input Artifacts can only be raw or in a compressed format as strings, we created a
-[custom step](https://github.com/kubeflow/kfp-tekton/blob/master/sdk/python/kfp_tekton/compiler/_op_to_template.py#L435) for passing these strings as files before the main task is executed. The [input_artifact_raw_value](/sdk/python/tests/compiler/testdata/input_artifact_raw_value.py)
-python test is an example of how to use this feature.
+Input Artifacts in Kubeflow pipelines are used for passing raw text or local files as files placed in
+the component pod. Since Input Artifacts can only be raw or in a compressed format as strings, we created a
+[custom copy step](https://github.com/kubeflow/kfp-tekton/blob/7e4df54/sdk/python/kfp_tekton/compiler/_op_to_template.py#L237-L257)
+for passing these strings as files before the main task is executed.
+The [input_artifact_raw_value](/sdk/python/tests/compiler/testdata/input_artifact_raw_value.py) Python test
+is an example of how to use this feature.
 
 ### Output Artifacts
 
 Output Artifacts are files that need to be persisted to the default/destination object storage. Additionally, by default, all Kubeflow Pipeline 'Output Parameters' are also stored as output artifacts. Since Tekton deprecated pipelineResource and the recommended gsutil task is not capable of moving files to the minio object storage without proper DNS address, we decided to inject a step based on the [minio mc](https://github.com/minio/mc) image for moving output artifacts during Kubeflow Pipeline execution time.
 
 It also includes several annontations, `tekton.dev/input_artifacts` and `tekton.dev/output_artifacts` are for metadata tracking, `tekton.dev/artifact_items` is to retain the artifact dependency information. Refer to the
-[Tetkon Artifact design proposal](http://bit.ly/kfp-tekton) for more details. 
+[Tetkon Artifact design proposal](http://bit.ly/kfp-tekton) for more details.
 
 The current implementation is relying on the existing KFP's minio setup for getting the default credentials. These default credentials can be updated
 via a Kubernetes configmap.
@@ -196,10 +203,14 @@ However, when using dynamic parameters, the number of parallel tasks is determin
 argo -> tekton
 {{inputs.parameters.%s}} -> $(inputs.params.%s)
 {{outputs.parameters.%s}} -> $(results.%s.path)
+{{workflow.uid}} -> $(context.pipelineRun.uid)
+{{workflow.name}} -> $(context.pipelineRun.name)
+{{workflow.namespace}} -> $(context.pipelineRun.namespace)
+{{workflow.parameters.%s}} -> $(params.%s)
 ```
 
 [parallel_join_with_argo_vars](/sdk/python/tests/compiler/testdata/parallel_join_with_argo_vars.py) is an example of how Argo variables are
-used and it can still be converted to Tekton variables with our Tekton compiler. However, other Argo variables will throw out an error because those Argo variables are very unique to Argo's pipeline system. 
+used and it can still be converted to Tekton variables with our Tekton compiler. However, other Argo variables will throw out an error because those Argo variables are very unique to Argo's pipeline system.
 
 
 ## Features with a Different Behavior than Argo
@@ -218,8 +229,8 @@ However, when you run kfp-tekton pipeline with sidecars, you may notice a comple
 
 When the nop image does provide the sidecar's command, the sidecar will continue to run even after nop has been swapped into the sidecar container's image field. Until this issue is resolved the best way to avoid it is to avoid overriding the nop image when deploying the tekton controller, or ensuring that the overridden nop image contains as few commands as possible.
 
-`kubectl get pods` will show a 'Completed' pod when a sidecar exits successfully but an _Error_ when the sidecar exits with an error. This is only apparent when using `kubectl` to get the pods of a TaskRun, not when describing the Pod using `kubectl describe pod ...` nor when looking at the TaskRun, but can be quite confusing. However, it has no functional impact. 
-[Tekton pipeline readme](https://github.com/tektoncd/pipeline/blob/master/docs/developers/README.md#handling-of-injected-sidecars) has documented this limitation. 
+`kubectl get pods` will show a 'Completed' pod when a sidecar exits successfully but an _Error_ when the sidecar exits with an error. This is only apparent when using `kubectl` to get the pods of a TaskRun, not when describing the Pod using `kubectl describe pod ...` nor when looking at the TaskRun, but can be quite confusing. However, it has no functional impact.
+[Tekton pipeline readme](https://github.com/tektoncd/pipeline/blob/master/docs/developers/README.md#handling-of-injected-sidecars) has documented this limitation.
 
 
 <!-- Issue and PR links-->

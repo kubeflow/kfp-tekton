@@ -20,6 +20,11 @@ Once you have completed all the prerequisites for this example, then you can sta
 python -m jupyter notebook
 ```
 
+Or, you can compile the pipeline directly with:
+```
+python -m e2e-mnist.py
+```
+
 ## Acknowledgements
 
 Thanks [Hougang Liu](https://github.com/hougangliu) for creating the original e2e-mnist notebook.

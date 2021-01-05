@@ -56,6 +56,7 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
     - name: my-in-coop1-loop-item-1
       params:
       - name: loop-item-param-subvar-A_a
@@ -74,6 +75,7 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
     - name: my-in-coop2-loop-item-0
       params:
       - name: loop-item-param-subvar-B_b
@@ -89,6 +91,7 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
     - name: my-in-coop2-loop-item-1
       params:
       - name: loop-item-param-subvar-B_b
@@ -104,6 +107,7 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
     - name: my-out-cop-loop-item-0
       params:
       - name: my_pipe_param
@@ -119,3 +123,5 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
+  timeout: 0s

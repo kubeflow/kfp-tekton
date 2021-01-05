@@ -56,6 +56,7 @@ spec:
         volumes:
         - emptyDir: {}
           name: text
+      timeout: 0s
     - name: component-with-input-artifact
       taskSpec:
         stepTemplate:
@@ -80,6 +81,7 @@ spec:
         volumes:
         - emptyDir: {}
           name: text
+      timeout: 0s
     - name: component-with-input-artifact-2
       taskSpec:
         stepTemplate:
@@ -104,6 +106,7 @@ spec:
         volumes:
         - emptyDir: {}
           name: text
+      timeout: 0s
     - name: component-with-input-artifact-3
       taskSpec:
         stepTemplate:
@@ -130,3 +133,5 @@ spec:
         volumes:
         - emptyDir: {}
           name: text
+      timeout: 0s
+  timeout: 0s
