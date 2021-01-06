@@ -23,9 +23,9 @@ import {
 } from '../../third_party/argo-ui/argo_template';
 import { statusToIcon } from '../pages/Status';
 import { Constants } from './Constants';
+import { parseTaskDisplayName } from './ParserUtils';
 import { KeyValue } from './StaticGraphParser';
 import { NodePhase, statusToBgColor, statusToPhase } from './StatusUtils';
-import { parseTaskDisplayName } from './ParserUtils';
 
 export enum StorageService {
   GCS = 'gcs',
@@ -88,6 +88,16 @@ export default class WorkflowParser {
         }
       }
     }
+    // Collect the anyConditions from 'metadata.annotations.anyConditions'
+    let anyConditions = {};
+    if (
+      workflow['metadata'] &&
+      workflow['metadata']['annotations'] &&
+      workflow['metadata']['annotations']['anyConditions']
+    ) {
+      anyConditions = JSON.parse(workflow['metadata']['annotations']['anyConditions'] || '{}');
+    }
+    const anyTasks = Object.keys(anyConditions);
 
     for (const task of tasks) {
       // If the task has a status then add it and its edges to the graph
@@ -122,7 +132,18 @@ export default class WorkflowParser {
             }
           });
         }
-
+        // Adds dependencies for anySequencers from 'anyCondition' annotation
+        if (anyTasks.includes(task['name'])) {
+          for (const depTask of anyConditions[task['name']]) {
+            if (
+              statusMap.get(depTask) &&
+              statusMap.get(depTask)!['status']['conditions'][0]['type'] === 'Succeeded'
+            ) {
+              const parentId = statusMap.get(depTask)!['status']['podName'];
+              edges.push({ parent: parentId, child: taskId });
+            }
+          }
+        }
         for (const edge of edges || []) graph.setEdge(edge['parent'], edge['child']);
 
         let status = NodePhase.CONDITIONCHECKFAILED;
