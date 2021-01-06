@@ -16,6 +16,7 @@ import (
 )
 
 // Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
+// removed tests: "TestReportWorkflow"
 
 func TestReportWorkflow_ValidationFailed(t *testing.T) {
 	clientManager, resourceManager, run := initWithOneTimeRun(t)

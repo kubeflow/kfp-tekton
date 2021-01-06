@@ -59,6 +59,8 @@ func TestLoadFile_ExceedSizeLimit(t *testing.T) {
 	assert.Contains(t, err.Error(), "File size too large")
 }
 
+// removed tests (check top page comment)
+
 func TestDecompressPipelineTarball_MalformattedTarball(t *testing.T) {
 	tarballByte, _ := ioutil.ReadFile("test/malformatted_tarball.tar.gz")
 	_, err := DecompressPipelineTarball(tarballByte)
@@ -66,12 +68,16 @@ func TestDecompressPipelineTarball_MalformattedTarball(t *testing.T) {
 	assert.Contains(t, err.Error(), "Not a valid tarball file")
 }
 
+// removed tests (check top page comment)
+
 func TestDecompressPipelineTarball_EmptyTarball(t *testing.T) {
 	tarballByte, _ := ioutil.ReadFile("test/empty_tarball/empty.tar.gz")
 	_, err := DecompressPipelineTarball(tarballByte)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Not a valid tarball file")
 }
+
+// removed tests (check top page comment)
 
 func TestDecompressPipelineZip_MalformattedZip(t *testing.T) {
 	zipByte, _ := ioutil.ReadFile("test/malformatted_zip.zip")
@@ -86,6 +92,8 @@ func TestDecompressPipelineZip_MalformedZip2(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Not a valid zip file")
 }
+
+// removed tests (check top page comment)
 
 func TestValidateExperimentResourceReference(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)

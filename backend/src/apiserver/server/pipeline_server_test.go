@@ -14,7 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Remove argo yaml test
+// Remove argo yaml test:
+// "TestCreatePipeline_YAML", "TestCreatePipeline_Tarball", "TestCreatePipeline_InvalidYAML",
+// "TestCreatePipeline_InvalidURL", "TestCreatePipelineVersion_YAML", "TestCreatePipelineVersion_InvalidYAML",
+// "TestCreatePipelineVersion_Tarball", "TestCreatePipelineVersion_InvalidURL"
 
 func TestListPipelineVersion_NoResourceKey(t *testing.T) {
 	httpServer := getMockServer(t)

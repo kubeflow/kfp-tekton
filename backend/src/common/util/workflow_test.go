@@ -27,6 +27,11 @@ import (
 // Replaced Argo v1alpha1.Workflow to Tekton v1beta1.PipelineRun
 // Removed Argo spec test on Templates and Artifacts because Tekton API doesn't support those concepts.
 // In Tekton, Artifacts are defined in a custom container where the unit tests are in the SDK.
+//
+// Removed tests: "TestToStringForStore", "TestWorkflow_OverrideParameters", "TestWorkflow_SetLabelsToAllTemplates",
+// "TestGetWorkflowSpec", "TestGetWorkflowSpecTruncatesNameIfLongerThan200Runes", "TestVerifyParameters",
+// "TestVerifyParameters_Failed", "TestFindS3ArtifactKey_Succeed", "TestFindS3ArtifactKey_ArtifactNotFound",
+// "TestFindS3ArtifactKey_NodeNotFound", "TestReplaceUID", ""
 
 func TestWorkflow_ScheduledWorkflowUUIDAsStringOrEmpty(t *testing.T) {
 	// Base case
@@ -145,6 +150,8 @@ func TestCondition(t *testing.T) {
 	assert.Equal(t, "", workflow.Condition())
 }
 
+// removed tests (check top page comment)
+
 func TestWorkflow_OverrideName(t *testing.T) {
 	workflow := NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
@@ -162,6 +169,8 @@ func TestWorkflow_OverrideName(t *testing.T) {
 
 	assert.Equal(t, expected, workflow.Get())
 }
+
+// removed tests (check top page comment)
 
 func TestWorkflow_SetOwnerReferences(t *testing.T) {
 	workflow := NewWorkflow(&workflowapi.PipelineRun{
@@ -192,6 +201,8 @@ func TestWorkflow_SetOwnerReferences(t *testing.T) {
 	assert.Equal(t, expected, workflow.Get())
 }
 
+// removed tests (check top page comment)
+
 func TestSetLabels(t *testing.T) {
 	workflow := NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
@@ -210,3 +221,5 @@ func TestSetLabels(t *testing.T) {
 
 	assert.Equal(t, expected, workflow.Get())
 }
+
+// removed tests (check top page comment)

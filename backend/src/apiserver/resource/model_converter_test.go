@@ -145,7 +145,7 @@ func TestToModelRunMetric(t *testing.T) {
 	assert.Equal(t, expectedModelRunMetric, actualModelRunMetric)
 }
 
-// Remove argo spec test run
+// Remove argo spec test run "TestToModelRunDetail"
 
 func TestToModelJob(t *testing.T) {
 	store, manager, experiment, pipeline := initWithExperimentAndPipeline(t)

@@ -181,4 +181,7 @@ func TestValidateApiJob_InvalidCron(t *testing.T) {
 	assert.Contains(t, err.Error(), "Schedule cron is not a supported format")
 }
 
-// remove argo spec test
+// remove argo spec test:
+// "TestValidateApiJob_MaxConcurrencyOutOfRange", "TestValidateApiJob_NegativeIntervalSecond", "TestCreateJob", "TestCreateJob_Unauthorized",
+// "TestGetJob_Unauthorized", "TestGetJob_Multiuser", "TestListJobs_Unauthorized", "TestListJobs_Multiuser", "TestEnableJob_Unauthorized",
+// "TestEnableJob_Multiuser", "TestDisableJob_Unauthorized", "TestDisableJob_Multiuser", ""

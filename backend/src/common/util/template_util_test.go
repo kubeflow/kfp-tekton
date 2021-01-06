@@ -15,3 +15,4 @@
 package util
 
 // Removed Argo spec test since Tekton's ArrayorString may subject to change
+// "TestGetParameters", "TestGetParameters_ParametersTooLong"

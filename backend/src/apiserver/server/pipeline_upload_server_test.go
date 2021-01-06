@@ -145,3 +145,6 @@ func TestUploadPipeline_YAML(t *testing.T) {
 
 // Removed TestUploadPipeline tests because it expects argo spec in the tarball file.
 // Need to update the tarball spec once we finalized the Tekton custom multi-task loop client.
+// Tests removed: "TestUploadPipeline_Tarball", "TestUploadPipeline_GetFormFileError", "TestUploadPipeline_SpecifyFileName",
+// "TestUploadPipeline_FileNameTooLong", "TestUploadPipeline_SpecifyFileDescription", "TestUploadPipelineVersion_GetFromFileError",
+// "TestUploadPipelineVersion_FileNameTooLong"

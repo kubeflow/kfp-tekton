@@ -286,7 +286,7 @@ func TestListExperiment_Unauthorized(t *testing.T) {
 	assert.Contains(t, err.Error(), "Unauthorized access")
 }
 
-// Removed list multiuser experiment test since it was using old k8s auth (0.11)
+// Removed "TestListExperiment_Multiuser" test since it was using old k8s auth (0.11)
 
 func TestValidateCreateExperimentRequest(t *testing.T) {
 	tests := []struct {
@@ -423,4 +423,4 @@ func TestValidateCreateExperimentRequest_Multiuser(t *testing.T) {
 	}
 }
 
-// remove unmatch Archive test
+// remove "TestArchiveAndUnarchiveExperiment" test

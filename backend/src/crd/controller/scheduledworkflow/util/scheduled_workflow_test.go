@@ -27,9 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Removed "TestScheduledWorkflow_NewWorkflow" and "TestScheduledWorkflow_NewWorkflow_Parameterized"
-// because it uses Argo specific spec and Tekton spec is still constantly changing.
-
 func TestScheduledWorkflow_maxConcurrency(t *testing.T) {
 	// nil
 	schedule := NewScheduledWorkflow(&swfapi.ScheduledWorkflow{})
@@ -531,3 +528,6 @@ func TestScheduledWorkflow_GetNextScheduledEpoch_UpdateStatus_WithWorkflow(t *te
 
 	assert.Equal(t, expected, schedule.Get())
 }
+
+// Removed "TestScheduledWorkflow_NewWorkflow" and "TestScheduledWorkflow_NewWorkflow_Parameterized"
+// because it uses Argo specific spec and Tekton spec is still constantly changing.

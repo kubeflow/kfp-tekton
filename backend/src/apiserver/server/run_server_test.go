@@ -15,7 +15,6 @@ import (
 
 // Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
 // Removed conflicted v1alpha1.parameters.
-// Removed tests with argo spec
 
 func TestCreateRun(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
@@ -143,6 +142,8 @@ func TestListRuns_Unauthorized(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Unauthorized access")
 }
+
+// Removed tests with argo spec: "TestListRuns_Multiuser"
 
 func TestValidateCreateRunRequest(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
@@ -350,3 +351,5 @@ func TestReportRunMetrics_PartialFailures(t *testing.T) {
 	}
 	assert.Equal(t, expectedResponse, response)
 }
+
+// Removed tests with old auth spec: "TestCanAccessRun_Unauthorized", "TestCanAccessRun_Authorized"

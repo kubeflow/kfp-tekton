@@ -144,6 +144,8 @@ func initWithJob(t *testing.T) (*FakeClientManager, *ResourceManager, *model.Job
 	return store, manager, j
 }
 
+// Removed Argo related tests (check the top page comments for more details)
+
 func initWithPatchedRun(t *testing.T) (*FakeClientManager, *ResourceManager, *model.RunDetail) {
 	store, manager, exp := initWithExperiment(t)
 	apiRun := &api.Run{
@@ -165,6 +167,8 @@ func initWithPatchedRun(t *testing.T) (*FakeClientManager, *ResourceManager, *mo
 	assert.Nil(t, err)
 	return store, manager, runDetail
 }
+
+// Removed Argo related tests (check the top page comments for more details)
 
 func TestCreatePipeline_GetParametersError(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
@@ -219,7 +223,7 @@ func TestGetPipelineTemplate_PipelineMetadataNotFound(t *testing.T) {
 	assert.Contains(t, err.Error(), "Pipeline 1 not found")
 }
 
-// Remove argo workflowspec run and patch test
+// Removed Argo related tests (check the top page comments for more details)
 
 func TestCreateRun_EmptyPipelineSpec(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
@@ -256,6 +260,8 @@ func TestCreateRun_InvalidWorkflowSpec(t *testing.T) {
 	assert.Contains(t, err.Error(), "Failed to unmarshal workflow spec manifest")
 }
 
+// Removed Argo related tests (check the top page comments for more details)
+
 func TestDeleteRun_RunNotExist(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	defer store.Close()
@@ -264,6 +270,8 @@ func TestDeleteRun_RunNotExist(t *testing.T) {
 	assert.Equal(t, codes.NotFound, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "not found")
 }
+
+// Removed Argo related tests (check the top page comments for more details)
 
 func TestDeleteExperiment(t *testing.T) {
 	store, manager, experiment := initWithExperiment(t)
@@ -319,6 +327,8 @@ func TestDeleteExperiment_DbFailure(t *testing.T) {
 	assert.Contains(t, err.Error(), "database is closed")
 }
 
+// Removed Argo related tests (check the top page comments for more details)
+
 func TestTerminateRun_RunNotExist(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	defer store.Close()
@@ -328,6 +338,8 @@ func TestTerminateRun_RunNotExist(t *testing.T) {
 	assert.Contains(t, err.Error(), "not found")
 }
 
+// Removed Argo related tests (check the top page comments for more details)
+
 func TestRetryRun_RunNotExist(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	defer store.Close()
@@ -336,6 +348,8 @@ func TestRetryRun_RunNotExist(t *testing.T) {
 	assert.Equal(t, codes.NotFound, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "not found")
 }
+
+// Removed Argo related tests (check the top page comments for more details)
 
 func TestCreateJob_ThroughWorkflowSpec(t *testing.T) {
 	store, _, job := initWithJob(t)
@@ -366,6 +380,8 @@ func TestCreateJob_ThroughWorkflowSpec(t *testing.T) {
 	}
 	assert.Equal(t, expectedJob, job)
 }
+
+// Removed Argo related tests (check the top page comments for more details)
 
 func TestEnableJob_JobNotExist(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
