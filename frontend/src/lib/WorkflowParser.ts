@@ -47,7 +47,7 @@ export default class WorkflowParser {
     graph.setGraph({});
     graph.setDefaultEdgeLabel(() => ({}));
 
-    // If a run exists but has no status is available yet return an empty graph
+    // If a run exists but no status is available yet return an empty graph
     if (
       workflow &&
       workflow.status &&
@@ -117,8 +117,10 @@ export default class WorkflowParser {
         for (const condition of task['when'] || []) {
           const param = this.decodeParam(condition['Input']);
           if (param && param.task) {
-            const parentId = statusMap.get(param.task)!['status']['podName'];
-            edges.push({ parent: parentId, child: taskId });
+            if (statusMap.get(param.task)) {
+              const parentId = statusMap.get(param.task)!['status']['podName'];
+              edges.push({ parent: parentId, child: taskId });
+            }
           }
         }
         if (task['runAfter']) {
