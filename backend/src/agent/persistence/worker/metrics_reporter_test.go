@@ -110,7 +110,7 @@ func TestReportMetrics_NoMetricsArtifact_NoOP(t *testing.T) {
 
 // Removed TestReportMetrics_InvalidMetricsJSON_Fail - specific to argo artifact spec
 
-// Rempoved TestReportMetrics_InvalidMetricsJSON_PartialFail - specific to argo artifact spec
+// Removed TestReportMetrics_InvalidMetricsJSON_PartialFail - specific to argo artifact spec
 
 // Removed TestReportMetrics_CorruptedArchiveFile_Fail - specific to argo artifact spec
 
