@@ -407,7 +407,11 @@ class TektonCompiler(Compiler):
         for param_iter in range(len(input_params)):
           # Add ancestor conditions to the current condition ref
           if most_recent_condition:
-            condition_refs[cur_opsgroup.name].extend(condition_refs[most_recent_condition])
+            condition_task_ref['when'] = [{
+                'input': '$(tasks.%s.results.status)' % most_recent_condition,
+                'operator': 'in',
+                'values': ['true']
+            }]
           most_recent_condition = cur_opsgroup.name
           condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
 
