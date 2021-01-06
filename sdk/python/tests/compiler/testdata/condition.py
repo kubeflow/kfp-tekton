@@ -26,7 +26,7 @@ class FlipCoinOp(dsl.ContainerOp):
                        'result = \'heads\' if random.randint(0,1) == 0 else \'tails\'; '
                        'print(forced_result) if (forced_result == \'heads\' or forced_result == \'tails\') else print(result)"'
                        ' | tee /tmp/output'],
-            file_outputs={'output': '/tmp/output'})
+            file_outputs={'output_value': '/tmp/output'})
 
 
 class PrintOp(dsl.ContainerOp):
@@ -42,14 +42,16 @@ class PrintOp(dsl.ContainerOp):
     name='Flip Coin Example Pipeline',
     description='Shows how to use dsl.Condition.'
 )
-def flipcoin(forced_result1: str = 'heads', forced_result2: str = 'tails'):
+def flipcoin(forced_result1: str = 'heads', forced_result2: str = 'tails', forced_result3: str = 'heads'):
     flip = FlipCoinOp('flip', str(forced_result1))
+    flip3 = FlipCoinOp('flip3', str(forced_result3))
 
     with dsl.Condition(flip.output == 'heads'):
         flip2 = FlipCoinOp('flip-again', str(forced_result2))
 
         with dsl.Condition(flip2.output == 'tails'):
-            PrintOp('print1', flip2.output)
+            with dsl.Condition(flip3.output == 'heads'):
+                PrintOp('print1', flip2.output)
 
     with dsl.Condition(flip.output == 'tails'):
         PrintOp('print2', flip.output)

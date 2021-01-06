@@ -23,9 +23,9 @@ import {
 } from '../../third_party/argo-ui/argo_template';
 import { statusToIcon } from '../pages/Status';
 import { Constants } from './Constants';
+import { parseTaskDisplayName } from './ParserUtils';
 import { KeyValue } from './StaticGraphParser';
 import { NodePhase, statusToBgColor, statusToPhase } from './StatusUtils';
-import { isS3Endpoint } from './AwsHelper';
 
 export enum StorageService {
   GCS = 'gcs',
@@ -47,7 +47,7 @@ export default class WorkflowParser {
     graph.setGraph({});
     graph.setDefaultEdgeLabel(() => ({}));
 
-    // If a run exists but has no status is available yet return an empty graph
+    // If a run exists but no status is available yet return an empty graph
     if (
       workflow &&
       workflow.status &&
@@ -59,7 +59,7 @@ export default class WorkflowParser {
       workflow['spec']['pipelineSpec']['finally'] || [],
     );
     const status = workflow['status']['taskRuns'];
-    const pipelineParams = workflow['spec']['params'];
+    const pipelineParams = workflow['spec']['params'] || [];
     const exitHandlers =
       (workflow['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
         return element['name'];
@@ -73,9 +73,35 @@ export default class WorkflowParser {
         statusMap.set(status[taskRunId]['pipelineTaskName'], status[taskRunId]);
     }
 
+    // Add When-condition tasks to conditionTasks list if it depends on the result of the tasks in statusMap
+    const conditionTasks: String[] = [];
+    for (const task of tasks) {
+      if (!statusMap.get(task['name'])) {
+        for (const condition of task['when'] || []) {
+          const param = this.decodeParam(condition['Input']);
+          if (param && param.task) {
+            if (statusMap.get(param.task)) {
+              conditionTasks.push(task['name']);
+              break;
+            }
+          }
+        }
+      }
+    }
+    // Collect the anyConditions from 'metadata.annotations.anyConditions'
+    let anyConditions = {};
+    if (
+      workflow['metadata'] &&
+      workflow['metadata']['annotations'] &&
+      workflow['metadata']['annotations']['anyConditions']
+    ) {
+      anyConditions = JSON.parse(workflow['metadata']['annotations']['anyConditions'] || '{}');
+    }
+    const anyTasks = Object.keys(anyConditions);
+
     for (const task of tasks) {
       // If the task has a status then add it and its edges to the graph
-      if (statusMap.get(task['name'])) {
+      if (statusMap.get(task['name']) || conditionTasks.includes(task['name'])) {
         const conditions = task['conditions'] || [];
         const taskId =
           statusMap.get(task['name']) && statusMap.get(task['name'])!['status']['podName'] !== ''
@@ -87,6 +113,16 @@ export default class WorkflowParser {
         for (const condition of conditions)
           edges.push(...this.checkParams(statusMap, pipelineParams, condition, taskId));
 
+        // Add all of this Task's conditional dependencies as Task dependencies
+        for (const condition of task['when'] || []) {
+          const param = this.decodeParam(condition['Input']);
+          if (param && param.task) {
+            if (statusMap.get(param.task)) {
+              const parentId = statusMap.get(param.task)!['status']['podName'];
+              edges.push({ parent: parentId, child: taskId });
+            }
+          }
+        }
         if (task['runAfter']) {
           task['runAfter'].forEach((parentTask: any) => {
             if (
@@ -98,10 +134,25 @@ export default class WorkflowParser {
             }
           });
         }
-
+        // Adds dependencies for anySequencers from 'anyCondition' annotation
+        if (anyTasks.includes(task['name'])) {
+          for (const depTask of anyConditions[task['name']]) {
+            if (
+              statusMap.get(depTask) &&
+              statusMap.get(depTask)!['status']['conditions'][0]['type'] === 'Succeeded'
+            ) {
+              const parentId = statusMap.get(depTask)!['status']['podName'];
+              edges.push({ parent: parentId, child: taskId });
+            }
+          }
+        }
         for (const edge of edges || []) graph.setEdge(edge['parent'], edge['child']);
 
-        const status = this.getStatus(statusMap.get(task['name']));
+        let status = NodePhase.CONDITIONCHECKFAILED;
+        if (!conditionTasks.includes(task['name'])) {
+          status = this.getStatus(statusMap.get(task['name']));
+        }
+
         const phase = statusToPhase(status);
         const statusColoring = exitHandlers.includes(task['name'])
           ? '#fef7f0'
@@ -110,7 +161,7 @@ export default class WorkflowParser {
         graph.setNode(taskId, {
           height: Constants.NODE_HEIGHT,
           icon: statusToIcon(status),
-          label: task['name'],
+          label: parseTaskDisplayName(task['taskSpec']) || task['name'],
           statusColoring: statusColoring,
           width: Constants.NODE_WIDTH,
         });
@@ -139,27 +190,17 @@ export default class WorkflowParser {
     for (const param of component['params'] || []) {
       let paramValue = param['value'] || '';
 
+      const splitParam = this.decodeParam(param['value']);
+
       // If the parameters are passed from the pipeline parameters then grab the value from the pipeline parameters
-      if (
-        param['value'].substring(0, 9) === '$(params.' &&
-        param['value'].substring(param['value'].length - 1) === ')'
-      ) {
-        const paramName = param['value'].substring(9, param['value'].length - 1);
+      if (splitParam && !splitParam.task) {
         for (const pipelineParam of pipelineParams)
-          if (pipelineParam['name'] === paramName) paramValue = pipelineParam['value'];
+          if (pipelineParam['name'] === splitParam.param) paramValue = pipelineParam['value'];
       }
       // If the parameters are passed from the parent task's results and the task is completed then grab the resulting values
-      else if (
-        param['value'].substring(0, 2) === '$(' &&
-        param['value'].substring(param['value'].length - 1) === ')'
-      ) {
-        const paramSplit = param['value'].split('.');
-        const parentTask = paramSplit[1];
-        const paramName = paramSplit[paramSplit.length - 1].substring(
-          0,
-          paramSplit[paramSplit.length - 1].length - 1,
-        );
-
+      else if (splitParam && splitParam.task) {
+        const parentTask = splitParam.task;
+        const paramName = splitParam.param;
         if (
           statusMap.get(parentTask) &&
           statusMap.get(parentTask)!['status']['conditions'][0]['type'] === 'Succeeded'
@@ -184,6 +225,32 @@ export default class WorkflowParser {
     }
 
     return edges;
+  }
+
+  private static decodeParam(paramString: string) {
+    // If the parameters are passed from the pipeline parameters
+    if (
+      paramString.substring(0, 9) === '$(params.' &&
+      paramString.substring(paramString.length - 1) === ')'
+    ) {
+      const paramName = paramString.substring(9, paramString.length - 1);
+      return { task: '', param: paramName };
+    }
+    // If the parameters are passed from the parent task's results
+    else if (
+      paramString.substring(0, 2) === '$(' &&
+      paramString.substring(paramString.length - 1) === ')'
+    ) {
+      const paramSplit = paramString.split('.');
+      const parentTask = paramSplit[1];
+      const paramName = paramSplit[paramSplit.length - 1].substring(
+        0,
+        paramSplit[paramSplit.length - 1].length - 1,
+      );
+
+      return { task: parentTask, param: paramName };
+    }
+    return {};
   }
 
   public static getStatus(execStatus: any): NodePhase {
@@ -423,14 +490,8 @@ export default class WorkflowParser {
   ): Array<{ stepName: string; path: StoragePath }> {
     const outputPaths: Array<{ stepName: string; path: StoragePath }> = [];
 
-    const annotations = workflow.metadata.annotations;
-    const rawOutputArtifacts = annotations['tekton.dev/output_artifacts']
-      ? JSON.parse(annotations['tekton.dev/output_artifacts'])
-      : [];
-
     if (workflow && workflow.status && workflow.status.taskRuns) {
       Object.keys(workflow.status.taskRuns).forEach(n => {
-        const stepName = workflow.status.taskRuns[n].pipelineTaskName;
         this.loadNodeOutputPaths(workflow.status.taskRuns[n], workflow).map(path =>
           outputPaths.push({ stepName: workflow.status.taskRuns[n].pipelineTaskName, path }),
         );

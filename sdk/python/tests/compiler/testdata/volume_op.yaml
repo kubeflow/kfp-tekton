@@ -106,6 +106,7 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: cop
       params:
       - name: create-pvc-name
@@ -128,3 +129,5 @@ spec:
         - name: create-pvc
           persistentVolumeClaim:
             claimName: $(inputs.params.create-pvc-name)
+      timeout: 0s
+  timeout: 0s

@@ -50,6 +50,7 @@ spec:
           - -c
           image: busybox
           name: main
+      timeout: 0s
     - name: echo
       params:
       - name: download-downloaded
@@ -65,3 +66,5 @@ spec:
           - -c
           image: library/bash
           name: main
+      timeout: 0s
+  timeout: 0s

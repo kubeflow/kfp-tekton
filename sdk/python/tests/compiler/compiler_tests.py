@@ -77,13 +77,12 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.condition import flipcoin
     self._test_pipeline_workflow(flipcoin, 'condition.yaml')
 
-  def test_condition_dependency_error(self):
+  def test_condition_dependency(self):
     """
-    Test errors for dependency on Tekton conditional.
+    Test dependency on Tekton conditional task.
     """
-    from .testdata.condition_error import flipcoin
-    with pytest.raises(TypeError):
-      self._test_pipeline_workflow(flipcoin, 'condition.yaml')
+    from .testdata.condition_dependency import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'condition_dependency.yaml')
 
   def test_sequential_workflow(self):
     """
@@ -112,7 +111,7 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.sidecar import sidecar_pipeline
     self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
-  
+
   def test_loop_static_workflow(self):
     """
     Test compiling a loop static params in workflow.
@@ -166,6 +165,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
+
+  def test_display_name_workflow(self):
+    """
+    Test compiling a step level timeout workflow.
+    """
+    from .testdata.set_display_name import echo_pipeline
+    self._test_pipeline_workflow(echo_pipeline, 'set_display_name.yaml')
 
   def test_resourceOp_workflow(self):
     """
@@ -242,6 +248,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.big_data_passing import file_passing_pipelines
     self._test_pipeline_workflow(file_passing_pipelines, 'big_data_passing.yaml')
 
+  def test_create_component_from_func_workflow(self):
+    """
+    Test compiling a creating component from func workflow.
+    """
+    from .testdata.create_component_from_func import test_pipeline
+    self._test_pipeline_workflow(test_pipeline, 'create_component_from_func.yaml')
+
   def test_katib_workflow(self):
     """
     Test compiling a katib workflow.
@@ -261,7 +274,7 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.load_from_yaml import component_yaml_pipeline
     self._test_pipeline_workflow(component_yaml_pipeline, 'load_from_yaml.yaml')
-    
+
   def test_imagepullsecrets_workflow(self):
     """
     Test compiling a imagepullsecrets workflow.
@@ -295,7 +308,26 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata import compose
     self._test_nested_workflow('compose.yaml', [compose.save_most_frequent_word, compose.download_save_most_frequent_word])
-    
+
+  def test_any_sequencer(self):
+    """
+    Test any sequencer dependency.
+    """
+    from .testdata.any_sequencer import any_sequence_pipeline
+
+    def _any_sequencer_normalize(file_context):
+      test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
+      golden_yaml_file = os.path.join(test_data_dir, 'any_sequencer.yaml')
+      with open(golden_yaml_file, 'r') as f:
+        golden_file = yaml.safe_load(f)
+        golden_name = list(json.loads(golden_file['metadata']['annotations']['anyConditions']).keys())[0]
+      compiled_file = yaml.safe_load(file_context)
+      compiled_name = list(json.loads(compiled_file['metadata']['annotations']['anyConditions']).keys())[0]
+      update_context = file_context.replace(compiled_name, golden_name)
+      return update_context
+
+    self._test_pipeline_workflow(any_sequence_pipeline, 'any_sequencer.yaml', _any_sequencer_normalize)
+
   def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
@@ -387,3 +419,4 @@ class TestTektonCompiler(unittest.TestCase):
       self.assertEqual(golden, compiled_workflow,
                        msg="\n===[ " + golden_yaml_file.split(os.path.sep)[-1] + " ]===\n"
                            + json.dumps(compiled_workflow, indent=2))
+

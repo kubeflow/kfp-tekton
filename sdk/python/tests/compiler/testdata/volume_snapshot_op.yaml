@@ -111,6 +111,7 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: step1-ingest
       params:
       - name: create-volume-name
@@ -136,6 +137,7 @@ spec:
         - name: create-volume
           persistentVolumeClaim:
             claimName: $(inputs.params.create-volume-name)
+      timeout: 0s
     - name: step1-snap
       params:
       - name: action
@@ -209,6 +211,7 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: step2-gunzip
       params:
       - name: create-volume-name
@@ -233,6 +236,7 @@ spec:
         - name: create-volume
           persistentVolumeClaim:
             claimName: $(inputs.params.create-volume-name)
+      timeout: 0s
     - name: step2-snap
       params:
       - name: action
@@ -306,6 +310,7 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: step3-copy
       params:
       - name: create-volume-name
@@ -330,6 +335,7 @@ spec:
         - name: create-volume
           persistentVolumeClaim:
             claimName: $(inputs.params.create-volume-name)
+      timeout: 0s
     - name: step3-snap
       params:
       - name: action
@@ -403,6 +409,7 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: step4-output
       params:
       - name: create-volume-name
@@ -426,3 +433,5 @@ spec:
         - name: create-volume
           persistentVolumeClaim:
             claimName: $(inputs.params.create-volume-name)
+      timeout: 0s
+  timeout: 0s

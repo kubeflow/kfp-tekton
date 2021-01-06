@@ -58,6 +58,7 @@ spec:
           - -c
           image: google/cloud-sdk:216.0.0
           name: main
+      timeout: 0s
     - name: echo
       params:
       - name: path
@@ -76,3 +77,5 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
+  timeout: 0s

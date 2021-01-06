@@ -17,6 +17,7 @@
 import * as dagre from 'dagre';
 import { color } from '../Css';
 import { Constants } from './Constants';
+import { parseTaskDisplayName } from './ParserUtils';
 
 export type nodeType = 'container' | 'resource' | 'dag' | 'unknown';
 
@@ -68,7 +69,7 @@ export function _populateInfoFromTask(info: SelectedNodeInfo, task?: any): Selec
 
   if (task['taskSpec'] && task['taskSpec']['params'])
     info.inputs = (task['taskSpec']['params'] || []).map((p: any) => [p['name'], p['value'] || '']);
-  if (task['taskSpec']['results'])
+  if (task['taskSpec'] && task['taskSpec']['results'])
     info.outputs = (task['taskSpec']['results'] || []).map((p: any) => {
       return [p['name'], p['description'] || ''];
     });
@@ -95,7 +96,16 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
     (pipeline['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
       return element['name'];
     }) || [];
-
+  // Collect the anyConditions from 'metadata.annotations.anyConditions'
+  let anyConditions = {};
+  if (
+    pipeline['metadata'] &&
+    pipeline['metadata']['annotations'] &&
+    pipeline['metadata']['annotations']['anyConditions']
+  ) {
+    anyConditions = JSON.parse(pipeline['metadata']['annotations']['anyConditions']);
+  }
+  const anyTasks = Object.keys(anyConditions);
   for (const task of tasks) {
     const taskName = task['name'];
 
@@ -105,6 +115,23 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
       task['runAfter'].forEach((depTask: any) => {
         graph.setEdge(depTask, taskName);
       });
+    // Adds dependencies for anySequencers from 'anyCondition' annotation
+    if (anyTasks.includes(task['name'])) {
+      for (const depTask of anyConditions[task['name']]) {
+        graph.setEdge(depTask, taskName);
+      }
+    }
+    // Adds any dependencies that arise from Conditions and tracks these dependencies to make sure they aren't duplicated in the case that
+    // the Condition and the base task use output from the same dependency
+    for (const condition of task['when'] || []) {
+      const input = condition['input'];
+      if (input.substring(0, 8) === '$(tasks.' && input.substring(input.length - 1) === ')') {
+        const paramSplit = input.split('.');
+        const parentTask = paramSplit[1];
+
+        graph.setEdge(parentTask, taskName);
+      }
+    }
 
     // Adds any dependencies that arise from Conditions and tracks these dependencies to make sure they aren't duplicated in the case that
     // the Condition and the base task use output from the same dependency
@@ -148,7 +175,7 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
       bgColor: bgColor,
       height: Constants.NODE_HEIGHT,
       info,
-      label: label,
+      label: parseTaskDisplayName(task['taskSpec']) || label,
       width: Constants.NODE_WIDTH,
     });
   }

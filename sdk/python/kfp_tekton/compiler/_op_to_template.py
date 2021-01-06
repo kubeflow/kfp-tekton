@@ -283,7 +283,7 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
     Returns:
         Dict[Text, Any]
     """
-    
+
     if outputs_dict.get('artifacts'):
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
@@ -336,6 +336,10 @@ def _op_to_template(op: BaseOp,
                     pipelinerun_output_artifacts={},
                     artifact_items={}):
     """Generate template given an operator inherited from BaseOp."""
+
+    # Display name
+    if op.display_name:
+        op.add_pod_annotation('pipelines.kubeflow.org/task_display_name', op.display_name)
 
     # initial local variables for tracking volumes and artifacts
     volume_mount_step_template = []
@@ -483,11 +487,6 @@ def _op_to_template(op: BaseOp,
         template['spec']['volumes'] = template['spec'].get('volumes', []) + [convert_k8s_obj_to_json(volume)
                                                                             for volume in processed_op.volumes]
         template['spec']['volumes'].sort(key=lambda x: x['name'])
-
-    # Display name
-    if processed_op.display_name:
-        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/task_display_name'] = \
-            processed_op.display_name
 
     if isinstance(op, dsl.ContainerOp) and op._metadata:
         template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec'] = \
