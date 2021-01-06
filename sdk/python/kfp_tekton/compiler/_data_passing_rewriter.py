@@ -308,6 +308,8 @@ def fix_big_data_passing(workflow: dict) -> dict:
     # Remove input parameters unless they're used downstream.
     # This also removes unused container template inputs if any.
     for template in container_templates + [pipeline_template]:
+        if 'any-sequencer-' in template.get('name', {}):
+            continue
         spec = template.get('taskSpec', {}) or template.get('pipelineSpec', {})
         spec['params'] = [
             input_parameter for input_parameter in spec.get('params', []) if (
@@ -340,7 +342,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
 
     # Remove pipeline task parameters unless they're used downstream
     for task in pipeline_tasks:
-        if 'condition-' not in task['name']:
+        if 'condition-' not in task['name'] and 'any-sequencer-' not in task['name']:
             task['params'] = [
                 parameter_argument
                 for parameter_argument in task.get('params', [])
