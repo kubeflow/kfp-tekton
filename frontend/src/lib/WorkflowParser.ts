@@ -59,6 +59,7 @@ export default class WorkflowParser {
       workflow['spec']['pipelineSpec']['finally'] || [],
     );
     const status = workflow['status']['taskRuns'];
+    const skippedTasks : string[] = (workflow['status']['skippedTasks'] || []).map((obj: any) => obj.name);
     const pipelineParams = workflow['spec']['params'] || [];
     const exitHandlers =
       (workflow['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
@@ -148,9 +149,12 @@ export default class WorkflowParser {
         }
         for (const edge of edges || []) graph.setEdge(edge['parent'], edge['child']);
 
-        let status = NodePhase.CONDITIONCHECKFAILED;
+        let status = NodePhase.PENDING;
         if (!conditionTasks.includes(task['name'])) {
           status = this.getStatus(statusMap.get(task['name']));
+        }
+        else if(skippedTasks.includes(task['name'])) {
+          status = NodePhase.CONDITIONCHECKFAILED;
         }
 
         const phase = statusToPhase(status);
