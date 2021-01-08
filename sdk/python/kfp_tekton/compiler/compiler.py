@@ -39,7 +39,7 @@ from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
-
+from kfp_tekton.compiler.any_sequencer import generate_any_sequencer
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
@@ -337,12 +337,10 @@ class TektonCompiler(Compiler):
     # generate task and condition reference list for the Tekton Pipeline
     condition_refs = {}
 
-    # TODO
     task_refs = []
     templates = []
     condition_task_refs = {}
     for template in raw_templates:
-      # TODO Allow an opt-out for the condition_template
       if template['kind'] == 'Condition':
         condition_task_ref = [{
             'name': template['metadata']['name'],
@@ -407,6 +405,14 @@ class TektonCompiler(Compiler):
             operand_value = '$(params.' + condition.operand2.name + ')'
           input_params.append(operand_value)
         for param_iter in range(len(input_params)):
+          # Add ancestor conditions to the current condition ref
+          if most_recent_condition:
+            condition_task_ref['when'] = [{
+                'input': '$(tasks.%s.results.status)' % most_recent_condition,
+                'operator': 'in',
+                'values': ['true']
+            }]
+          most_recent_condition = cur_opsgroup.name
           condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
 
       opsgroup_stack.extend(cur_opsgroup.groups)
@@ -486,7 +492,20 @@ class TektonCompiler(Compiler):
       for ref in condition_task_ref:
         condition_task_refs_temp.append(ref)
     condition_task_refs = condition_task_refs_temp
-    # TODO: generate the PipelineRun template
+
+    # Inject any sequencer condition task.
+    any_sequencer_taskrefs = []
+    any_sequencer_annotations = {}
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if hasattr(op, 'any_sequencer'):
+        any_sequencer_task = generate_any_sequencer(op.any_sequencer['tasks_list'])
+        any_sequencer_taskrefs.append(any_sequencer_task)
+        run_after = task.get('runAfter', [])
+        run_after.append(any_sequencer_task['name'])
+        task['runAfter'] = run_after
+        any_sequencer_annotations[any_sequencer_task['name']] = op.any_sequencer['tasks_list'].split(",")
+
     pipeline_run = {
       'apiVersion': tekton_api_version,
       'kind': 'PipelineRun',
@@ -510,13 +529,14 @@ class TektonCompiler(Compiler):
           } for p in params],
         'pipelineSpec': {
           'params': params,
-          'tasks': task_refs + condition_task_refs,
+          'tasks': task_refs + condition_task_refs + any_sequencer_taskrefs,
           'finally': finally_tasks
         }
       }
     }
 
-    # TODO: pipelineRun additions
+    if any_sequencer_annotations:
+      pipeline_run['metadata']['annotations']['anyConditions'] = json.dumps(any_sequencer_annotations)
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []

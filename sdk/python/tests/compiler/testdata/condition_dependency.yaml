@@ -191,6 +191,11 @@ spec:
             status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
             \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
             \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+      when:
+      - input: $(tasks.condition-1.results.status)
+        operator: in
+        values:
+        - 'true'
     - name: condition-3
       params:
       - name: operand1

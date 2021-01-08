@@ -43,7 +43,7 @@ echo "Latest upstream commit: ${latest_commit}"
 dockerfiles=(`ls Dockerfile*`)
 files_to_check=(${dockerfiles} src)
 
-for file in $files_to_check
+for file in ${files_to_check[@]}
 do
     # Make sure to fetch git_url to make sure this commit exists
     diff_output=$(git diff ${latest_commit} HEAD -- $file)

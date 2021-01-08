@@ -23,9 +23,9 @@ import {
 } from '../../third_party/argo-ui/argo_template';
 import { statusToIcon } from '../pages/Status';
 import { Constants } from './Constants';
+import { parseTaskDisplayName } from './ParserUtils';
 import { KeyValue } from './StaticGraphParser';
 import { NodePhase, statusToBgColor, statusToPhase } from './StatusUtils';
-import { parseTaskDisplayName } from './ParserUtils';
 
 export enum StorageService {
   GCS = 'gcs',
@@ -47,7 +47,7 @@ export default class WorkflowParser {
     graph.setGraph({});
     graph.setDefaultEdgeLabel(() => ({}));
 
-    // If a run exists but has no status is available yet return an empty graph
+    // If a run exists but no status is available yet return an empty graph
     if (
       workflow &&
       workflow.status &&
@@ -59,6 +59,7 @@ export default class WorkflowParser {
       workflow['spec']['pipelineSpec']['finally'] || [],
     );
     const status = workflow['status']['taskRuns'];
+    const skippedTasks : string[] = (workflow['status']['skippedTasks'] || []).map((obj: any) => obj.name);
     const pipelineParams = workflow['spec']['params'] || [];
     const exitHandlers =
       (workflow['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
@@ -88,6 +89,16 @@ export default class WorkflowParser {
         }
       }
     }
+    // Collect the anyConditions from 'metadata.annotations.anyConditions'
+    let anyConditions = {};
+    if (
+      workflow['metadata'] &&
+      workflow['metadata']['annotations'] &&
+      workflow['metadata']['annotations']['anyConditions']
+    ) {
+      anyConditions = JSON.parse(workflow['metadata']['annotations']['anyConditions'] || '{}');
+    }
+    const anyTasks = Object.keys(anyConditions);
 
     for (const task of tasks) {
       // If the task has a status then add it and its edges to the graph
@@ -107,8 +118,10 @@ export default class WorkflowParser {
         for (const condition of task['when'] || []) {
           const param = this.decodeParam(condition['Input']);
           if (param && param.task) {
-            const parentId = statusMap.get(param.task)!['status']['podName'];
-            edges.push({ parent: parentId, child: taskId });
+            if (statusMap.get(param.task)) {
+              const parentId = statusMap.get(param.task)!['status']['podName'];
+              edges.push({ parent: parentId, child: taskId });
+            }
           }
         }
         if (task['runAfter']) {
@@ -122,12 +135,26 @@ export default class WorkflowParser {
             }
           });
         }
-
+        // Adds dependencies for anySequencers from 'anyCondition' annotation
+        if (anyTasks.includes(task['name'])) {
+          for (const depTask of anyConditions[task['name']]) {
+            if (
+              statusMap.get(depTask) &&
+              statusMap.get(depTask)!['status']['conditions'][0]['type'] === 'Succeeded'
+            ) {
+              const parentId = statusMap.get(depTask)!['status']['podName'];
+              edges.push({ parent: parentId, child: taskId });
+            }
+          }
+        }
         for (const edge of edges || []) graph.setEdge(edge['parent'], edge['child']);
 
-        let status = NodePhase.CONDITIONCHECKFAILED;
+        let status = NodePhase.PENDING;
         if (!conditionTasks.includes(task['name'])) {
           status = this.getStatus(statusMap.get(task['name']));
+        }
+        else if(skippedTasks.includes(task['name'])) {
+          status = NodePhase.CONDITIONCHECKFAILED;
         }
 
         const phase = statusToPhase(status);
