@@ -30,7 +30,7 @@ build-linux: init
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/any-taskrun ./cmd
 
 image: build-linux
-	docker build  . -t index.docker.io/dspipelines/any-sequencer:$(TAG)
+	docker build  . -t docker.io/dspipelines/any-sequencer:$(TAG)
 
 update:
 	go mod download
