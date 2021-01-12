@@ -128,7 +128,9 @@ The `finally` syntax is supported since Tekton version `0.14.0`.
 
 ### Any sequencer
 
-When any one of the dependencies complete successfully, the Job will be started. Order doesn’t matter, but don’t wait for all the job status. For example:
+When any one of the tasks dependencies complete successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym). 
+
+For example:
 
 ```
 from kfp_tekton.compiler.any_sequencer import after_any
@@ -138,7 +140,7 @@ dsl.ContainerOp(
 ).apply(after_any(([containerOps]))
 ```
 
-Note that the service account of the `Any Sequencer` need get premission to watch the status of sepecified `taskRun`.
+Please note that the service account of the `Any Sequencer` needs 'get' premission to watch the status of the sepecified `taskRun`.
 
 # Pipeline DSL Features with a Custom Tekton Implementation
 
