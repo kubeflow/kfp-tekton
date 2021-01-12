@@ -2,12 +2,8 @@ package server
 
 import (
 	"context"
-	"strings"
 	"testing"
 
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/google/go-cmp/cmp"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
@@ -17,8 +13,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
+// Removed conflicted v1alpha1.parameters.
+
 func TestCreateRun(t *testing.T) {
-	clients, manager, experiment := initWithExperiment(t)
+	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
 	server := NewRunServer(manager)
 	run := &api.Run{
@@ -26,47 +25,19 @@ func TestCreateRun(t *testing.T) {
 		ResourceReferences: validReference,
 		PipelineSpec: &api.PipelineSpec{
 			WorkflowManifest: testWorkflow.ToStringForStore(),
-			Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
 		},
 	}
-	runDetail, err := server.CreateRun(nil, &api.CreateRunRequest{Run: run})
+	_, err := server.CreateRun(nil, &api.CreateRunRequest{Run: run})
 	assert.Nil(t, err)
 
 	expectedRuntimeWorkflow := testWorkflow.DeepCopy()
-	expectedRuntimeWorkflow.Spec.Arguments.Parameters = []v1alpha1.Parameter{
-		{Name: "param1", Value: util.StringPointer("world")}}
 	expectedRuntimeWorkflow.Labels = map[string]string{util.LabelKeyWorkflowRunId: "123e4567-e89b-12d3-a456-426655440000"}
 	expectedRuntimeWorkflow.Annotations = map[string]string{util.AnnotationKeyRunName: "run1"}
 	expectedRuntimeWorkflow.Spec.ServiceAccountName = "pipeline-runner"
-	expectedRunDetail := api.RunDetail{
-		Run: &api.Run{
-			Id:             "123e4567-e89b-12d3-a456-426655440000",
-			Name:           "run1",
-			ServiceAccount: "pipeline-runner",
-			StorageState:   api.Run_STORAGESTATE_AVAILABLE,
-			CreatedAt:      &timestamp.Timestamp{Seconds: 2},
-			ScheduledAt:    &timestamp.Timestamp{},
-			FinishedAt:     &timestamp.Timestamp{},
-			PipelineSpec: &api.PipelineSpec{
-				WorkflowManifest: testWorkflow.ToStringForStore(),
-				Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
-			},
-			ResourceReferences: []*api.ResourceReference{
-				{
-					Key:  &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID},
-					Name: "exp1", Relationship: api.Relationship_OWNER,
-				},
-			},
-		},
-		PipelineRuntime: &api.PipelineRuntime{
-			WorkflowManifest: util.NewWorkflow(expectedRuntimeWorkflow).ToStringForStore(),
-		},
-	}
-	assert.Equal(t, expectedRunDetail, *runDetail)
 }
 
 func TestCreateRunPatch(t *testing.T) {
-	clients, manager, experiment := initWithExperiment(t)
+	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
 	server := NewRunServer(manager)
 	run := &api.Run{
@@ -74,49 +45,15 @@ func TestCreateRunPatch(t *testing.T) {
 		ResourceReferences: validReference,
 		PipelineSpec: &api.PipelineSpec{
 			WorkflowManifest: testWorkflowPatch.ToStringForStore(),
-			Parameters: []*api.Parameter{
-				{Name: "param1", Value: "test-default-bucket"},
-				{Name: "param2", Value: "test-project-id"}},
 		},
 	}
-	runDetail, err := server.CreateRun(nil, &api.CreateRunRequest{Run: run})
+	_, err := server.CreateRun(nil, &api.CreateRunRequest{Run: run})
 	assert.Nil(t, err)
 
 	expectedRuntimeWorkflow := testWorkflowPatch.DeepCopy()
-	expectedRuntimeWorkflow.Spec.Arguments.Parameters = []v1alpha1.Parameter{
-		{Name: "param1", Value: util.StringPointer("test-default-bucket")},
-		{Name: "param2", Value: util.StringPointer("test-project-id")},
-	}
 	expectedRuntimeWorkflow.Labels = map[string]string{util.LabelKeyWorkflowRunId: "123e4567-e89b-12d3-a456-426655440000"}
 	expectedRuntimeWorkflow.Annotations = map[string]string{util.AnnotationKeyRunName: "run1"}
 	expectedRuntimeWorkflow.Spec.ServiceAccountName = "pipeline-runner"
-	expectedRunDetail := api.RunDetail{
-		Run: &api.Run{
-			Id:             "123e4567-e89b-12d3-a456-426655440000",
-			Name:           "run1",
-			ServiceAccount: "pipeline-runner",
-			StorageState:   api.Run_STORAGESTATE_AVAILABLE,
-			CreatedAt:      &timestamp.Timestamp{Seconds: 2},
-			ScheduledAt:    &timestamp.Timestamp{},
-			FinishedAt:     &timestamp.Timestamp{},
-			PipelineSpec: &api.PipelineSpec{
-				WorkflowManifest: testWorkflowPatch.ToStringForStore(),
-				Parameters: []*api.Parameter{
-					{Name: "param1", Value: "test-default-bucket"},
-					{Name: "param2", Value: "test-project-id"}},
-			},
-			ResourceReferences: []*api.ResourceReference{
-				{
-					Key:  &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID},
-					Name: "exp1", Relationship: api.Relationship_OWNER,
-				},
-			},
-		},
-		PipelineRuntime: &api.PipelineRuntime{
-			WorkflowManifest: util.NewWorkflow(expectedRuntimeWorkflow).ToStringForStore(),
-		},
-	}
-	assert.Equal(t, expectedRunDetail, *runDetail)
 }
 
 func TestCreateRun_Unauthorized(t *testing.T) {
@@ -151,7 +88,7 @@ func TestCreateRun_Multiuser(t *testing.T) {
 	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 
-	clients, manager, experiment := initWithExperiment(t)
+	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
 	server := NewRunServer(manager)
 	run := &api.Run{
@@ -159,47 +96,19 @@ func TestCreateRun_Multiuser(t *testing.T) {
 		ResourceReferences: validReference,
 		PipelineSpec: &api.PipelineSpec{
 			WorkflowManifest: testWorkflow.ToStringForStore(),
-			Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
 		},
 	}
-	runDetail, err := server.CreateRun(ctx, &api.CreateRunRequest{Run: run})
+	_, err := server.CreateRun(ctx, &api.CreateRunRequest{Run: run})
 	assert.Nil(t, err)
 
 	expectedRuntimeWorkflow := testWorkflow.DeepCopy()
-	expectedRuntimeWorkflow.Spec.Arguments.Parameters = []v1alpha1.Parameter{
-		{Name: "param1", Value: util.StringPointer("world")}}
 	expectedRuntimeWorkflow.Labels = map[string]string{util.LabelKeyWorkflowRunId: "123e4567-e89b-12d3-a456-426655440000"}
 	expectedRuntimeWorkflow.Annotations = map[string]string{util.AnnotationKeyRunName: "run1"}
 	expectedRuntimeWorkflow.Spec.ServiceAccountName = "default-editor" // In multi-user mode, we use default service account.
-	expectedRunDetail := api.RunDetail{
-		Run: &api.Run{
-			Id:             "123e4567-e89b-12d3-a456-426655440000",
-			Name:           "run1",
-			ServiceAccount: "default-editor",
-			StorageState:   api.Run_STORAGESTATE_AVAILABLE,
-			CreatedAt:      &timestamp.Timestamp{Seconds: 2},
-			ScheduledAt:    &timestamp.Timestamp{},
-			FinishedAt:     &timestamp.Timestamp{},
-			PipelineSpec: &api.PipelineSpec{
-				WorkflowManifest: testWorkflow.ToStringForStore(),
-				Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
-			},
-			ResourceReferences: []*api.ResourceReference{
-				{
-					Key:  &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID},
-					Name: "exp1", Relationship: api.Relationship_OWNER,
-				},
-			},
-		},
-		PipelineRuntime: &api.PipelineRuntime{
-			WorkflowManifest: util.NewWorkflow(expectedRuntimeWorkflow).ToStringForStore(),
-		},
-	}
-	assert.Equal(t, expectedRunDetail, *runDetail)
 }
 
 func TestListRun(t *testing.T) {
-	clients, manager, experiment := initWithExperiment(t)
+	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
 	server := NewRunServer(manager)
 	run := &api.Run{
@@ -207,34 +116,11 @@ func TestListRun(t *testing.T) {
 		ResourceReferences: validReference,
 		PipelineSpec: &api.PipelineSpec{
 			WorkflowManifest: testWorkflow.ToStringForStore(),
-			Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
 		},
 	}
 	_, err := server.CreateRun(nil, &api.CreateRunRequest{Run: run})
 	assert.Nil(t, err)
 
-	expectedRun := &api.Run{
-		Id:             "123e4567-e89b-12d3-a456-426655440000",
-		Name:           "run1",
-		ServiceAccount: "pipeline-runner",
-		StorageState:   api.Run_STORAGESTATE_AVAILABLE,
-		CreatedAt:      &timestamp.Timestamp{Seconds: 2},
-		ScheduledAt:    &timestamp.Timestamp{},
-		FinishedAt:     &timestamp.Timestamp{},
-		PipelineSpec: &api.PipelineSpec{
-			WorkflowManifest: testWorkflow.ToStringForStore(),
-			Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
-		},
-		ResourceReferences: []*api.ResourceReference{
-			{
-				Key:  &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID},
-				Name: "exp1", Relationship: api.Relationship_OWNER,
-			},
-		},
-	}
-	listRunsResponse, err := server.ListRuns(nil, &api.ListRunsRequest{})
-	assert.Equal(t, 1, len(listRunsResponse.Runs))
-	assert.Equal(t, expectedRun, listRunsResponse.Runs[0])
 }
 
 func TestListRuns_Unauthorized(t *testing.T) {
@@ -257,131 +143,7 @@ func TestListRuns_Unauthorized(t *testing.T) {
 	assert.Contains(t, err.Error(), "Unauthorized access")
 }
 
-func TestListRuns_Multiuser(t *testing.T) {
-	viper.Set(common.MultiUserMode, "true")
-	defer viper.Set(common.MultiUserMode, "false")
-
-	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
-	ctx := metadata.NewIncomingContext(context.Background(), md)
-
-	clients, manager, experiment := initWithExperiment(t)
-	defer clients.Close()
-	server := NewRunServer(manager)
-	run := &api.Run{
-		Name:               "run1",
-		ResourceReferences: validReference,
-		PipelineSpec: &api.PipelineSpec{
-			WorkflowManifest: testWorkflow.ToStringForStore(),
-			Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
-		},
-	}
-	_, err := server.CreateRun(ctx, &api.CreateRunRequest{Run: run})
-	assert.Nil(t, err)
-
-	expectedRuns := []*api.Run{{
-		Id:             "123e4567-e89b-12d3-a456-426655440000",
-		Name:           "run1",
-		ServiceAccount: "pipeline-runner",
-		StorageState:   api.Run_STORAGESTATE_AVAILABLE,
-		CreatedAt:      &timestamp.Timestamp{Seconds: 2},
-		ScheduledAt:    &timestamp.Timestamp{},
-		FinishedAt:     &timestamp.Timestamp{},
-		PipelineSpec: &api.PipelineSpec{
-			WorkflowManifest: testWorkflow.ToStringForStore(),
-			Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
-		},
-		ResourceReferences: []*api.ResourceReference{
-			{
-				Key:  &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID},
-				Name: "exp1", Relationship: api.Relationship_OWNER,
-			},
-		},
-	}}
-	expectedRunsEmpty := []*api.Run{}
-
-	tests := []struct {
-		name         string
-		request      *api.ListRunsRequest
-		wantError    bool
-		errorMessage string
-		expectedRuns []*api.Run
-	}{
-		{
-			"Valid - filter by experiment",
-			&api.ListRunsRequest{
-				ResourceReferenceKey: &api.ResourceKey{
-					Type: api.ResourceType_EXPERIMENT,
-					Id:   "123e4567-e89b-12d3-a456-426655440000",
-				},
-			},
-			false,
-			"",
-			expectedRuns,
-		},
-		{
-			"Valid - filter by namespace",
-			&api.ListRunsRequest{
-				ResourceReferenceKey: &api.ResourceKey{
-					Type: api.ResourceType_NAMESPACE,
-					Id:   "ns1",
-				},
-			},
-			false,
-			"",
-			expectedRuns,
-		},
-		{
-			"Vailid - filter by namespace - no result",
-			&api.ListRunsRequest{
-				ResourceReferenceKey: &api.ResourceKey{
-					Type: api.ResourceType_NAMESPACE,
-					Id:   "no-such-ns",
-				},
-			},
-			false,
-			"",
-			expectedRunsEmpty,
-		},
-		{
-			"Invalid - no filter",
-			&api.ListRunsRequest{},
-			true,
-			"ListRuns must filter by resource reference",
-			nil,
-		},
-		{
-			"Inalid - invalid filter type",
-			&api.ListRunsRequest{
-				ResourceReferenceKey: &api.ResourceKey{
-					Type: api.ResourceType_UNKNOWN_RESOURCE_TYPE,
-					Id:   "unknown",
-				},
-			},
-			true,
-			"Unrecognized resource reference type",
-			nil,
-		},
-	}
-
-	for _, tc := range tests {
-		response, err := server.ListRuns(ctx, tc.request)
-
-		if tc.wantError {
-			if err == nil {
-				t.Errorf("TestListRuns_Multiuser(%v) expect error but got nil", tc.name)
-			} else if !strings.Contains(err.Error(), tc.errorMessage) {
-				t.Errorf("TestListRuns_Multiusert(%v) expect error containing: %v, but got: %v", tc.name, tc.errorMessage, err)
-			}
-		} else {
-			if err != nil {
-				t.Errorf("TestListRuns_Multiuser(%v) expect no error but got %v", tc.name, err)
-			} else if !cmp.Equal(tc.expectedRuns, response.Runs) {
-				t.Errorf("TestListRuns_Multiuser(%v) expect (%+v) but got (%+v)", tc.name, tc.expectedRuns, response.Runs)
-			}
-		}
-	}
-
-}
+// Removed tests with argo spec: "TestListRuns_Multiuser"
 
 func TestValidateCreateRunRequest(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
@@ -590,71 +352,4 @@ func TestReportRunMetrics_PartialFailures(t *testing.T) {
 	assert.Equal(t, expectedResponse, response)
 }
 
-func TestCanAccessRun_Unauthorized(t *testing.T) {
-	viper.Set(common.MultiUserMode, "true")
-	defer viper.Set(common.MultiUserMode, "false")
-
-	clients, manager, experiment := initWithExperiment_KFAM_Unauthorized(t)
-	defer clients.Close()
-	runServer := RunServer{resourceManager: manager}
-
-	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
-	ctx := metadata.NewIncomingContext(context.Background(), md)
-
-	apiRun := &api.Run{
-		Name: "run1",
-		PipelineSpec: &api.PipelineSpec{
-			WorkflowManifest: testWorkflow.ToStringForStore(),
-			Parameters: []*api.Parameter{
-				{Name: "param1", Value: "world"},
-			},
-		},
-		ResourceReferences: []*api.ResourceReference{
-			{
-				Key:          &api.ResourceKey{Type: api.ResourceType_NAMESPACE, Id: "ns"},
-				Relationship: api.Relationship_OWNER,
-			},
-			{
-				Key:          &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID},
-				Relationship: api.Relationship_OWNER,
-			},
-		},
-	}
-	runDetail, _ := manager.CreateRun(apiRun)
-
-	err := runServer.canAccessRun(ctx, runDetail.UUID)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unauthorized access")
-}
-
-func TestCanAccessRun_Authorized(t *testing.T) {
-	viper.Set(common.MultiUserMode, "true")
-	defer viper.Set(common.MultiUserMode, "false")
-
-	clients, manager, experiment := initWithExperiment(t)
-	defer clients.Close()
-	runServer := RunServer{resourceManager: manager}
-
-	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
-	ctx := metadata.NewIncomingContext(context.Background(), md)
-
-	apiRun := &api.Run{
-		Name: "run1",
-		PipelineSpec: &api.PipelineSpec{
-			WorkflowManifest: testWorkflow.ToStringForStore(),
-			Parameters: []*api.Parameter{
-				{Name: "param1", Value: "world"},
-			},
-		},
-		ResourceReferences: []*api.ResourceReference{
-			{
-				Key:          &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID},
-				Relationship: api.Relationship_OWNER,
-			},
-		},
-	}
-	runDetail, _ := manager.CreateRun(apiRun)
-
-	err := runServer.canAccessRun(ctx, runDetail.UUID)
-	assert.Nil(t, err)
-}
+// Removed tests with old auth spec: "TestCanAccessRun_Unauthorized", "TestCanAccessRun_Authorized"

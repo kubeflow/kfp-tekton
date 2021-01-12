@@ -22,6 +22,9 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 )
 
+// Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
+// Rename argo fake client to tekton fake client
+
 const (
 	DefaultFakeUUID = "123e4567-e89b-12d3-a456-426655440000"
 	FakeUUIDOne     = "123e4567-e89b-12d3-a456-426655440001"
@@ -37,7 +40,7 @@ type FakeClientManager struct {
 	dBStatusStore          storage.DBStatusStoreInterface
 	defaultExperimentStore storage.DefaultExperimentStoreInterface
 	objectStore            storage.ObjectStoreInterface
-	ArgoClientFake         *client.FakeArgoClient
+	TektonClientFake       *client.FakeTektonClient
 	swfClientFake          *client.FakeSwfClient
 	k8sCoreClientFake      *client.FakeKuberneteCoreClient
 	KfamClientFake         client.KFAMClientInterface
@@ -70,7 +73,7 @@ func NewFakeClientManager(time util.TimeInterface, uuid util.UUIDGeneratorInterf
 		pipelineStore:          storage.NewPipelineStore(db, time, uuid),
 		jobStore:               storage.NewJobStore(db, time),
 		runStore:               storage.NewRunStore(db, time),
-		ArgoClientFake:         client.NewFakeArgoClient(),
+		TektonClientFake:       client.NewFakeTektonClient(),
 		resourceReferenceStore: storage.NewResourceReferenceStore(db),
 		dBStatusStore:          storage.NewDBStatusStore(db),
 		defaultExperimentStore: storage.NewDefaultExperimentStore(db),
@@ -121,8 +124,8 @@ func (f *FakeClientManager) DB() *storage.DB {
 	return f.db
 }
 
-func (f *FakeClientManager) ArgoClient() client.ArgoClientInterface {
-	return f.ArgoClientFake
+func (f *FakeClientManager) TektonClient() client.TektonClientInterface {
+	return f.TektonClientFake
 }
 
 func (f *FakeClientManager) JobStore() storage.JobStoreInterface {

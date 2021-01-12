@@ -20,9 +20,9 @@ import (
 
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	k8errors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -31,18 +31,18 @@ import (
 )
 
 type FakeWorkflowClient struct {
-	workflows       map[string]*v1alpha1.Workflow
+	workflows       map[string]*v1beta1.PipelineRun
 	lastGeneratedId int
 }
 
 func NewWorkflowClientFake() *FakeWorkflowClient {
 	return &FakeWorkflowClient{
-		workflows:       make(map[string]*v1alpha1.Workflow),
+		workflows:       make(map[string]*v1beta1.PipelineRun),
 		lastGeneratedId: -1,
 	}
 }
 
-func (c *FakeWorkflowClient) Create(workflow *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
+func (c *FakeWorkflowClient) Create(workflow *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
 	if workflow.GenerateName != "" {
 		c.lastGeneratedId += 1
 		workflow.Name = workflow.GenerateName + strconv.Itoa(c.lastGeneratedId)
@@ -52,15 +52,19 @@ func (c *FakeWorkflowClient) Create(workflow *v1alpha1.Workflow) (*v1alpha1.Work
 	return workflow, nil
 }
 
-func (c *FakeWorkflowClient) Get(name string, options v1.GetOptions) (*v1alpha1.Workflow, error) {
+func (c *FakeWorkflowClient) Get(name string, options v1.GetOptions) (*v1beta1.PipelineRun, error) {
 	workflow, ok := c.workflows[name]
 	if ok {
 		return workflow, nil
 	}
-	return nil, k8errors.NewNotFound(k8schema.ParseGroupResource("workflows.argoproj.io"), name)
+	return nil, k8errors.NewNotFound(k8schema.ParseGroupResource("tekton.dev"), name)
 }
 
-func (c *FakeWorkflowClient) List(opts v1.ListOptions) (*v1alpha1.WorkflowList, error) {
+func (c *FakeWorkflowClient) UpdateStatus(workflow *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
+	return workflow, nil
+}
+
+func (c *FakeWorkflowClient) List(opts v1.ListOptions) (*v1beta1.PipelineRunList, error) {
 	glog.Error("This fake method is not yet implemented.")
 	return nil, nil
 }
@@ -70,13 +74,13 @@ func (c *FakeWorkflowClient) Watch(opts v1.ListOptions) (watch.Interface, error)
 	return nil, nil
 }
 
-func (c *FakeWorkflowClient) Update(workflow *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
+func (c *FakeWorkflowClient) Update(workflow *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
 	name := workflow.GetObjectMeta().GetName()
 	_, ok := c.workflows[name]
 	if ok {
 		return workflow, nil
 	}
-	return nil, k8errors.NewNotFound(k8schema.ParseGroupResource("workflows.argoproj.io"), name)
+	return nil, k8errors.NewNotFound(k8schema.ParseGroupResource("tekton.dev"), name)
 }
 
 func (c *FakeWorkflowClient) Delete(name string, options *v1.DeleteOptions) error {
@@ -84,7 +88,7 @@ func (c *FakeWorkflowClient) Delete(name string, options *v1.DeleteOptions) erro
 	if ok {
 		return nil
 	}
-	return k8errors.NewNotFound(k8schema.ParseGroupResource("workflows.argoproj.io"), name)
+	return k8errors.NewNotFound(k8schema.ParseGroupResource("tekton.dev"), name)
 }
 
 func (c *FakeWorkflowClient) DeleteCollection(options *v1.DeleteOptions,
@@ -94,11 +98,11 @@ func (c *FakeWorkflowClient) DeleteCollection(options *v1.DeleteOptions,
 }
 
 func (c *FakeWorkflowClient) Patch(name string, pt types.PatchType, data []byte,
-	subresources ...string) (*v1alpha1.Workflow, error) {
+	subresources ...string) (*v1beta1.PipelineRun, error) {
 
 	_, ok := c.workflows[name]
 	if !ok {
-		return nil, k8errors.NewNotFound(k8schema.ParseGroupResource("workflows.argoproj.io"), name)
+		return nil, k8errors.NewNotFound(k8schema.ParseGroupResource("tekton.dev"), name)
 	}
 
 	var dat map[string]interface{}
@@ -108,14 +112,13 @@ func (c *FakeWorkflowClient) Patch(name string, pt types.PatchType, data []byte,
 
 	if _, ok := dat["spec"]; ok {
 		spec := dat["spec"].(map[string]interface{})
+		// There's no activeDeadlineSeconds in Tekton
 		activeDeadlineSeconds := spec["activeDeadlineSeconds"].(float64)
 
 		// Simulate terminating a workflow
 		if pt == types.MergePatchType && activeDeadlineSeconds == 0 {
 			workflow, ok := c.workflows[name]
 			if ok {
-				newActiveDeadlineSeconds := int64(0)
-				workflow.Spec.ActiveDeadlineSeconds = &newActiveDeadlineSeconds
 				return workflow, nil
 			}
 		}
@@ -138,15 +141,15 @@ type FakeBadWorkflowClient struct {
 	FakeWorkflowClient
 }
 
-func (FakeBadWorkflowClient) Create(*v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
+func (FakeBadWorkflowClient) Create(*v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
 	return nil, errors.New("some error")
 }
 
-func (FakeBadWorkflowClient) Get(name string, options v1.GetOptions) (*v1alpha1.Workflow, error) {
+func (FakeBadWorkflowClient) Get(name string, options v1.GetOptions) (*v1beta1.PipelineRun, error) {
 	return nil, errors.New("some error")
 }
 
-func (c *FakeBadWorkflowClient) Update(workflow *v1alpha1.Workflow) (*v1alpha1.Workflow, error) {
+func (c *FakeBadWorkflowClient) Update(workflow *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
 	return nil, errors.New("failed to update workflow")
 }
 

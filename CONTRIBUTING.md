@@ -96,7 +96,7 @@ PR titles should use the following structure.
 
 Replace the following:
 
-*  **`<type>`**: The PR type describes the reason for the change, such as `fix` to indicate that the PR fixes a bug. More information about PR types is available in the next section. 
+*  **`<type>`**: The PR type describes the reason for the change, such as `fix` to indicate that the PR fixes a bug. More information about PR types is available in the next section.
 *  **`[optional scope]`**: (Optional.) The PR scope describes the part of Kubeflow Pipelines that this PR changes, such as `frontend` to indicate that the change affects the user interface. Choose a scope according to [PR Scope section](#pr-scope).
 *  **`<description>`**: A user friendly description of this change.
 *  **`[ Fixes #<issues-number>]`**: (Optional.) Specifies the issues fixed by this PR.
