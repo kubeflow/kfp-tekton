@@ -17,11 +17,10 @@ package worker
 import (
 	"testing"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/agent/persistence/client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/stretchr/testify/assert"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -31,20 +30,13 @@ func TestReportMetrics_NoCompletedNode_NoOP(t *testing.T) {
 
 	reporter := NewMetricsReporter(pipelineFake)
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
 			UID:       types.UID("run-1"),
 		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeRunning,
-				},
-			},
-		},
+		Status: workflowapi.PipelineRunStatus{},
 	})
 	err := reporter.ReportMetrics(workflow)
 	assert.Nil(t, err)
@@ -56,20 +48,13 @@ func TestReportMetrics_NoRunID_NoOP(t *testing.T) {
 
 	reporter := NewMetricsReporter(pipelineFake)
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
 			UID:       types.UID("run-1"),
 		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-				},
-			},
-		},
+		Status: workflowapi.PipelineRunStatus{},
 	})
 	err := reporter.ReportMetrics(workflow)
 	assert.Nil(t, err)
@@ -82,21 +67,14 @@ func TestReportMetrics_NoArtifact_NoOP(t *testing.T) {
 
 	reporter := NewMetricsReporter(pipelineFake)
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
 			UID:       types.UID("run-1"),
 			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "run-1"},
 		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-				},
-			},
-		},
+		Status: workflowapi.PipelineRunStatus{},
 	})
 	err := reporter.ReportMetrics(workflow)
 	assert.Nil(t, err)
@@ -109,24 +87,14 @@ func TestReportMetrics_NoMetricsArtifact_NoOP(t *testing.T) {
 
 	reporter := NewMetricsReporter(pipelineFake)
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
 			UID:       types.UID("run-1"),
 			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "run-1"},
 		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-					Outputs: &workflowapi.Outputs{
-						Artifacts: []workflowapi.Artifact{{Name: "mlpipeline-ui-metadata"}},
-					},
-				},
-			},
-		},
+		Status: workflowapi.PipelineRunStatus{},
 	})
 	err := reporter.ReportMetrics(workflow)
 	assert.Nil(t, err)
@@ -134,364 +102,16 @@ func TestReportMetrics_NoMetricsArtifact_NoOP(t *testing.T) {
 	assert.Nil(t, pipelineFake.GetReportedMetricsRequest())
 }
 
-func TestReportMetrics_Succeed(t *testing.T) {
-	pipelineFake := client.NewPipelineClientFake()
-	reporter := NewMetricsReporter(pipelineFake)
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "MY_NAMESPACE",
-			Name:      "MY_NAME",
-			UID:       types.UID("run-1"),
-			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "run-1"},
-		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-					Outputs: &workflowapi.Outputs{
-						Artifacts: []workflowapi.Artifact{{Name: "mlpipeline-metrics"}},
-					},
-				},
-			},
-		},
-	})
-	metricsJSON := `{"metrics": [{"name": "accuracy", "numberValue": 0.77}, {"name": "logloss", "numberValue": 1.2}]}`
-	artifactData, _ := util.ArchiveTgz(map[string]string{"file": metricsJSON})
-	pipelineFake.StubArtifact(
-		&api.ReadArtifactRequest{
-			RunId:        "run-1",
-			NodeId:       "node-1",
-			ArtifactName: "mlpipeline-metrics",
-		},
-		&api.ReadArtifactResponse{
-			Data: []byte(artifactData),
-		})
-	pipelineFake.StubReportRunMetrics(&api.ReportRunMetricsResponse{
-		Results: []*api.ReportRunMetricsResponse_ReportRunMetricResult{},
-	}, nil)
+// Removed TestReportMetrics_Succeed - specific to argo artifact spec
 
-	err := reporter.ReportMetrics(workflow)
+// Removed TestReportMetrics_EmptyArchive_Fail - specific to argo artifact spec
 
-	assert.Nil(t, err)
-	expectedMetricsRequest := &api.ReportRunMetricsRequest{
-		RunId: "run-1",
-		Metrics: []*api.RunMetric{
-			{
-				Name:   "accuracy",
-				NodeId: "node-1",
-				Value:  &api.RunMetric_NumberValue{NumberValue: 0.77},
-			},
-			{
-				Name:   "logloss",
-				NodeId: "node-1",
-				Value:  &api.RunMetric_NumberValue{NumberValue: 1.2},
-			},
-		},
-	}
-	assert.Equal(t, expectedMetricsRequest, pipelineFake.GetReportedMetricsRequest())
-}
+// Removed TestReportMetrics_MultipleFilesInArchive_Fail - specific to argo artifact spec
 
-func TestReportMetrics_EmptyArchive_Fail(t *testing.T) {
-	pipelineFake := client.NewPipelineClientFake()
-	reporter := NewMetricsReporter(pipelineFake)
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "MY_NAMESPACE",
-			Name:      "MY_NAME",
-			UID:       types.UID("run-1"),
-			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "run-1"},
-		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-					Outputs: &workflowapi.Outputs{
-						Artifacts: []workflowapi.Artifact{{Name: "mlpipeline-metrics"}},
-					},
-				},
-			},
-		},
-	})
-	artifactData, _ := util.ArchiveTgz(map[string]string{})
-	pipelineFake.StubArtifact(
-		&api.ReadArtifactRequest{
-			RunId:        "run-1",
-			NodeId:       "node-1",
-			ArtifactName: "mlpipeline-metrics",
-		},
-		&api.ReadArtifactResponse{
-			Data: []byte(artifactData),
-		})
+// Removed TestReportMetrics_InvalidMetricsJSON_Fail - specific to argo artifact spec
 
-	err := reporter.ReportMetrics(workflow)
+// Removed TestReportMetrics_InvalidMetricsJSON_PartialFail - specific to argo artifact spec
 
-	assert.NotNil(t, err)
-	assert.True(t, util.HasCustomCode(err, util.CUSTOM_CODE_PERMANENT))
-	// Verify that ReportRunMetrics is not called.
-	assert.Nil(t, pipelineFake.GetReportedMetricsRequest())
-}
+// Removed TestReportMetrics_CorruptedArchiveFile_Fail - specific to argo artifact spec
 
-func TestReportMetrics_MultipleFilesInArchive_Fail(t *testing.T) {
-	pipelineFake := client.NewPipelineClientFake()
-	reporter := NewMetricsReporter(pipelineFake)
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "MY_NAMESPACE",
-			Name:      "MY_NAME",
-			UID:       types.UID("run-1"),
-			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "run-1"},
-		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-					Outputs: &workflowapi.Outputs{
-						Artifacts: []workflowapi.Artifact{{Name: "mlpipeline-metrics"}},
-					},
-				},
-			},
-		},
-	})
-	validMetricsJSON := `{"metrics": [{"name": "accuracy", "numberValue": 0.77}, {"name": "logloss", "numberValue": 1.2}]}`
-	invalidMetricsJSON := `invalid JSON`
-	artifactData, _ := util.ArchiveTgz(map[string]string{"file1": validMetricsJSON, "file2": invalidMetricsJSON})
-	pipelineFake.StubArtifact(
-		&api.ReadArtifactRequest{
-			RunId:        "run-1",
-			NodeId:       "node-1",
-			ArtifactName: "mlpipeline-metrics",
-		},
-		&api.ReadArtifactResponse{
-			Data: []byte(artifactData),
-		})
-
-	err := reporter.ReportMetrics(workflow)
-
-	assert.NotNil(t, err)
-	assert.True(t, util.HasCustomCode(err, util.CUSTOM_CODE_PERMANENT))
-	// Verify that ReportRunMetrics is not called.
-	assert.Nil(t, pipelineFake.GetReportedMetricsRequest())
-}
-
-func TestReportMetrics_InvalidMetricsJSON_Fail(t *testing.T) {
-	pipelineFake := client.NewPipelineClientFake()
-	reporter := NewMetricsReporter(pipelineFake)
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "MY_NAMESPACE",
-			Name:      "MY_NAME",
-			UID:       types.UID("run-1"),
-			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "run-1"},
-		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-					Outputs: &workflowapi.Outputs{
-						Artifacts: []workflowapi.Artifact{{Name: "mlpipeline-metrics"}},
-					},
-				},
-			},
-		},
-	})
-	metricsJSON := `invalid JSON`
-	artifactData, _ := util.ArchiveTgz(map[string]string{"file": metricsJSON})
-	pipelineFake.StubArtifact(
-		&api.ReadArtifactRequest{
-			RunId:        "run-1",
-			NodeId:       "node-1",
-			ArtifactName: "mlpipeline-metrics",
-		},
-		&api.ReadArtifactResponse{
-			Data: []byte(artifactData),
-		})
-
-	err := reporter.ReportMetrics(workflow)
-
-	assert.NotNil(t, err)
-	assert.True(t, util.HasCustomCode(err, util.CUSTOM_CODE_PERMANENT))
-	// Verify that ReportRunMetrics is not called.
-	assert.Nil(t, pipelineFake.GetReportedMetricsRequest())
-}
-
-func TestReportMetrics_InvalidMetricsJSON_PartialFail(t *testing.T) {
-	pipelineFake := client.NewPipelineClientFake()
-	reporter := NewMetricsReporter(pipelineFake)
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "MY_NAMESPACE",
-			Name:      "MY_NAME",
-			UID:       types.UID("run-1"),
-			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "run-1"},
-		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-					Outputs: &workflowapi.Outputs{
-						Artifacts: []workflowapi.Artifact{{Name: "mlpipeline-metrics"}},
-					},
-				},
-				"node-2": workflowapi.NodeStatus{
-					ID:    "node-2",
-					Phase: workflowapi.NodeSucceeded,
-					Outputs: &workflowapi.Outputs{
-						Artifacts: []workflowapi.Artifact{{Name: "mlpipeline-metrics"}},
-					},
-				},
-			},
-		},
-	})
-	validMetricsJSON := `{"metrics": [{"name": "accuracy", "numberValue": 0.77}, {"name": "logloss", "numberValue": 1.2}]}`
-	invalidMetricsJSON := `invalid JSON`
-	validArtifactData, _ := util.ArchiveTgz(map[string]string{"file": validMetricsJSON})
-	invalidArtifactData, _ := util.ArchiveTgz(map[string]string{"file": invalidMetricsJSON})
-	// Stub two artifacts, node-1 is invalid, node-2 is valid.
-	pipelineFake.StubArtifact(
-		&api.ReadArtifactRequest{
-			RunId:        "run-1",
-			NodeId:       "node-1",
-			ArtifactName: "mlpipeline-metrics",
-		},
-		&api.ReadArtifactResponse{
-			Data: []byte(invalidArtifactData),
-		})
-	pipelineFake.StubArtifact(
-		&api.ReadArtifactRequest{
-			RunId:        "run-1",
-			NodeId:       "node-2",
-			ArtifactName: "mlpipeline-metrics",
-		},
-		&api.ReadArtifactResponse{
-			Data: []byte(validArtifactData),
-		})
-
-	err := reporter.ReportMetrics(workflow)
-
-	// Partial failure is reported while valid metrics are reported.
-	assert.NotNil(t, err)
-	assert.True(t, util.HasCustomCode(err, util.CUSTOM_CODE_PERMANENT))
-	expectedMetricsRequest := &api.ReportRunMetricsRequest{
-		RunId: "run-1",
-		Metrics: []*api.RunMetric{
-			&api.RunMetric{
-				Name:   "accuracy",
-				NodeId: "node-2",
-				Value:  &api.RunMetric_NumberValue{NumberValue: 0.77},
-			},
-			&api.RunMetric{
-				Name:   "logloss",
-				NodeId: "node-2",
-				Value:  &api.RunMetric_NumberValue{NumberValue: 1.2},
-			},
-		},
-	}
-	assert.Equal(t, expectedMetricsRequest, pipelineFake.GetReportedMetricsRequest())
-}
-
-func TestReportMetrics_CorruptedArchiveFile_Fail(t *testing.T) {
-	pipelineFake := client.NewPipelineClientFake()
-	reporter := NewMetricsReporter(pipelineFake)
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "MY_NAMESPACE",
-			Name:      "MY_NAME",
-			UID:       types.UID("run-1"),
-			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "run-1"},
-		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-					Outputs: &workflowapi.Outputs{
-						Artifacts: []workflowapi.Artifact{{Name: "mlpipeline-metrics"}},
-					},
-				},
-			},
-		},
-	})
-	pipelineFake.StubArtifact(
-		&api.ReadArtifactRequest{
-			RunId:        "run-1",
-			NodeId:       "node-1",
-			ArtifactName: "mlpipeline-metrics",
-		},
-		&api.ReadArtifactResponse{
-			Data: []byte("invalid tgz content"),
-		})
-
-	err := reporter.ReportMetrics(workflow)
-
-	assert.NotNil(t, err)
-	assert.True(t, util.HasCustomCode(err, util.CUSTOM_CODE_PERMANENT))
-	// Verify that ReportRunMetrics is not called.
-	assert.Nil(t, pipelineFake.GetReportedMetricsRequest())
-}
-
-func TestReportMetrics_MultiplMetricErrors_TransientErrowWin(t *testing.T) {
-	pipelineFake := client.NewPipelineClientFake()
-	reporter := NewMetricsReporter(pipelineFake)
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "MY_NAMESPACE",
-			Name:      "MY_NAME",
-			UID:       types.UID("run-1"),
-			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "run-1"},
-		},
-		Status: workflowapi.WorkflowStatus{
-			Nodes: map[string]workflowapi.NodeStatus{
-				"node-1": workflowapi.NodeStatus{
-					ID:    "node-1",
-					Phase: workflowapi.NodeSucceeded,
-					Outputs: &workflowapi.Outputs{
-						Artifacts: []workflowapi.Artifact{{Name: "mlpipeline-metrics"}},
-					},
-				},
-			},
-		},
-	})
-	metricsJSON :=
-		`{"metrics": [{"name": "accuracy", "numberValue": 0.77}, {"name": "log loss", "numberValue": 1.2}, {"name": "accuracy", "numberValue": 1.2}]}`
-	artifactData, _ := util.ArchiveTgz(map[string]string{"file": metricsJSON})
-	pipelineFake.StubArtifact(
-		&api.ReadArtifactRequest{
-			RunId:        "run-1",
-			NodeId:       "node-1",
-			ArtifactName: "mlpipeline-metrics",
-		},
-		&api.ReadArtifactResponse{
-			Data: []byte(artifactData),
-		})
-	pipelineFake.StubReportRunMetrics(&api.ReportRunMetricsResponse{
-		Results: []*api.ReportRunMetricsResponse_ReportRunMetricResult{
-			&api.ReportRunMetricsResponse_ReportRunMetricResult{
-				MetricNodeId: "node-1",
-				MetricName:   "accuracy",
-				Status:       api.ReportRunMetricsResponse_ReportRunMetricResult_OK,
-			},
-			// Invalid argument error triggers permanent error
-			&api.ReportRunMetricsResponse_ReportRunMetricResult{
-				MetricNodeId: "node-1",
-				MetricName:   "log loss",
-				Status:       api.ReportRunMetricsResponse_ReportRunMetricResult_INVALID_ARGUMENT,
-			},
-			// Internal error triggers transient error
-			&api.ReportRunMetricsResponse_ReportRunMetricResult{
-				MetricNodeId: "node-1",
-				MetricName:   "accuracy",
-				Status:       api.ReportRunMetricsResponse_ReportRunMetricResult_INTERNAL_ERROR,
-			},
-		},
-	}, nil)
-
-	err := reporter.ReportMetrics(workflow)
-
-	assert.NotNil(t, err)
-	assert.True(t, util.HasCustomCode(err, util.CUSTOM_CODE_TRANSIENT))
-}
+// Removed TestReportMetrics_MultiplMetricErrors_TransientErrowWin - specific to argo artifact spec

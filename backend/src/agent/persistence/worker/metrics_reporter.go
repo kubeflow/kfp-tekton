@@ -93,7 +93,7 @@ func (r MetricsReporter) collectNodeMetricsOrNil(
 	[]*api.RunMetric, error) {
 	defer func() {
 		if panicMessage := recover(); panicMessage != nil {
-			log.Info("nodeStatus is not yet created. Panic message: '%v'.", panicMessage)
+			log.Infof("nodeStatus is not yet created. Panic message: '%v'.", panicMessage)
 		}
 	}()
 	if nodeStatus.Status == nil ||

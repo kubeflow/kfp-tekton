@@ -19,10 +19,10 @@ import (
 	"testing"
 	"time"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/kubeflow/pipelines/backend/src/agent/persistence/client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/stretchr/testify/assert"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
@@ -31,7 +31,7 @@ func TestWorkflow_Save_Success(t *testing.T) {
 	workflowFake := client.NewWorkflowClientFake()
 	pipelineFake := client.NewPipelineClientFake()
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
@@ -84,7 +84,7 @@ func TestWorkflow_Save_PermanentFailureWhileReporting(t *testing.T) {
 	pipelineFake.SetError(util.NewCustomError(fmt.Errorf("Error"), util.CUSTOM_CODE_PERMANENT,
 		"My Permanent Error"))
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
@@ -110,7 +110,7 @@ func TestWorkflow_Save_TransientFailureWhileReporting(t *testing.T) {
 	pipelineFake.SetError(util.NewCustomError(fmt.Errorf("Error"), util.CUSTOM_CODE_TRANSIENT,
 		"My Transient Error"))
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
@@ -137,16 +137,19 @@ func TestWorkflow_Save_SkippedDueToFinalStatue(t *testing.T) {
 	pipelineFake.SetError(util.NewCustomError(fmt.Errorf("Error"), util.CUSTOM_CODE_PERMANENT,
 		"My Permanent Error"))
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	currentTime := metav1.Now()
+
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
 			Labels:    map[string]string{util.LabelKeyWorkflowPersistedFinalState: "true"},
 		},
-		Status: workflowapi.WorkflowStatus{
-			FinishedAt: metav1.Now(),
-		},
-	})
+		Status: workflowapi.PipelineRunStatus{
+			PipelineRunStatusFields: workflowapi.PipelineRunStatusFields{
+				CompletionTime: &currentTime,
+			},
+		}})
 
 	workflowFake.Put("MY_NAMESPACE", "MY_NAME", workflow)
 
@@ -166,17 +169,21 @@ func TestWorkflow_Save_FinalStatueNotSkippedDueToExceedTTL(t *testing.T) {
 	pipelineFake.SetError(util.NewCustomError(fmt.Errorf("Error"), util.CUSTOM_CODE_PERMANENT,
 		"My Permanent Error"))
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	currentTime := metav1.Now()
+
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
-			Labels:    map[string]string{
-				util.LabelKeyWorkflowRunId: "MY_UUID",
+			Labels: map[string]string{
+				util.LabelKeyWorkflowRunId:               "MY_UUID",
 				util.LabelKeyWorkflowPersistedFinalState: "true",
 			},
 		},
-		Status: workflowapi.WorkflowStatus{
-			FinishedAt: metav1.Now(),
+		Status: workflowapi.PipelineRunStatus{
+			PipelineRunStatusFields: workflowapi.PipelineRunStatusFields{
+				CompletionTime: &currentTime,
+			},
 		},
 	})
 
@@ -202,7 +209,7 @@ func TestWorkflow_Save_SkippedDDueToMissingRunID(t *testing.T) {
 	pipelineFake.SetError(util.NewCustomError(fmt.Errorf("Error"), util.CUSTOM_CODE_PERMANENT,
 		"My Permanent Error"))
 
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
