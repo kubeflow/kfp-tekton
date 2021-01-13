@@ -179,7 +179,7 @@ build-scheduledworkflow-image: ## Build scheduledworkflow docker image
 	docker build -t ${DOCKER_REGISTRY}/scheduledworkflow -f backend/Dockerfile.scheduledworkflow .
 
 .PHONY: run-go-unittests
-run-go-unittests: run-apiserver-unittests run-common-unittests run-crd-unittests ## Verify go backend unit tests
+run-go-unittests: run-apiserver-unittests run-common-unittests run-crd-unittests run-persistenceagent-unittests ## Verify go backend unit tests
 	@echo "$@: OK"
 
 run-apiserver-unittests: # apiserver golang unit tests
@@ -190,3 +190,6 @@ run-common-unittests: # common golang unit tests
 
 run-crd-unittests: # crd golang unit tests
 	go test -v -cover ./backend/src/crd/...
+
+run-persistenceagent-unittests: # persistestence agent golang unit tests
+	go test -v -cover ./backend/src/agent/...
