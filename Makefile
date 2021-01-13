@@ -191,5 +191,5 @@ run-common-unittests: # common golang unit tests
 run-crd-unittests: # crd golang unit tests
 	go test -v -cover ./backend/src/crd/...
 
-run-persistenceagent-unittests: # persistestence agent golang unit tests
+run-persistenceagent-unittests: # persistence agent golang unit tests
 	go test -v -cover ./backend/src/agent/...
