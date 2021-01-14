@@ -1,0 +1,10 @@
+diff a/frontend/src/lib/CompareUtils.ts b/frontend/src/lib/CompareUtils.ts	(rejected hunks)
+@@ -118,7 +119,7 @@ export default class CompareUtils {
+       xLabels = Array.from(namesToNodesToValues.keys());
+ 
+       rows = Array.from(nodeIds.keys()).map(nodeId => {
+-        yLabels.push((workflow && workflow.status.nodes[nodeId].displayName) || nodeId);
++        yLabels.push(parseTaskDisplayNameByNodeId(nodeId, workflow));
+         return xLabels.map(metricName => namesToNodesToValues.get(metricName)!.get(nodeId) || '');
+       });
+     }

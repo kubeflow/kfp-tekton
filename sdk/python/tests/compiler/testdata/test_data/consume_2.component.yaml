@@ -1,0 +1,18 @@
+# TODO: from KFP 1.3.0, need to implement for kfp_tekton.compiler
+
+name: Consumer
+inputs:
+- {name: Input parameter}
+- {name: Input artifact}
+implementation:
+  container:
+    image: alpine
+    command:
+    - sh
+    - -c
+    - |
+      echo "Input parameter = $0"
+      echo "Input artifact = " && cat "$1"
+    args:
+    - {inputValue: Input parameter}
+    - {inputPath: Input artifact}

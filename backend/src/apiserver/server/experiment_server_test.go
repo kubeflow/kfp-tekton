@@ -37,7 +37,7 @@ func TestCreateExperiment(t *testing.T) {
 func TestCreateExperiment_Failed(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	experiment := &api.Experiment{Name: "ex1", Description: "first experiment"}
 	clientManager.DB().Close()
 	_, err := server.CreateExperiment(nil, &api.CreateExperimentRequest{Experiment: experiment})
@@ -48,7 +48,7 @@ func TestCreateExperiment_Failed(t *testing.T) {
 func TestCreateExperiment_SingleUser_NamespaceNotAllowed(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	resourceReferences := []*api.ResourceReference{
 		{
 			Key:          &api.ResourceKey{Type: api.ResourceType_NAMESPACE, Id: "ns1"},
@@ -73,12 +73,10 @@ func TestCreateExperiment_Unauthorized(t *testing.T) {
 	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 
-	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	clientManager.KfamClientFake = client.NewFakeKFAMClientUnauthorized()
-	resourceManager := resource.NewResourceManager(clientManager)
-	defer clientManager.Close()
+	clients, resourceManager, _ := initWithExperiment_SubjectAccessReview_Unauthorized(t)
+	defer clients.Close()
 
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	experiment := &api.Experiment{
 		Name:        "exp1",
 		Description: "first experiment",
@@ -91,7 +89,19 @@ func TestCreateExperiment_Unauthorized(t *testing.T) {
 
 	_, err := server.CreateExperiment(ctx, &api.CreateExperimentRequest{Experiment: experiment})
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unauthorized access")
+	resourceAttributes := &authorizationv1.ResourceAttributes{
+		Namespace: "ns1",
+		Verb:      common.RbacResourceVerbCreate,
+		Group:     common.RbacPipelinesGroup,
+		Version:   common.RbacPipelinesVersion,
+		Resource:  common.RbacResourceTypeExperiments,
+		Name:      experiment.Name,
+	}
+	assert.EqualError(
+		t,
+		err,
+		wrapFailedAuthzRequestError(wrapFailedAuthzApiResourcesError(getPermissionDeniedError(ctx, resourceAttributes))).Error(),
+	)
 }
 
 func TestCreateExperiment_Multiuser(t *testing.T) {
@@ -102,7 +112,7 @@ func TestCreateExperiment_Multiuser(t *testing.T) {
 
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	resourceReferences := []*api.ResourceReference{
 		{
 			Key:          &api.ResourceKey{Type: api.ResourceType_NAMESPACE, Id: "ns1"},
@@ -131,7 +141,7 @@ func TestCreateExperiment_Multiuser(t *testing.T) {
 func TestGetExperiment(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	experiment := &api.Experiment{Name: "ex1", Description: "first experiment"}
 
 	createResult, err := server.CreateExperiment(nil, &api.CreateExperimentRequest{Experiment: experiment})
@@ -150,7 +160,7 @@ func TestGetExperiment(t *testing.T) {
 func TestGetExperiment_Failed(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	experiment := &api.Experiment{Name: "ex1", Description: "first experiment"}
 
 	createResult, err := server.CreateExperiment(nil, &api.CreateExperimentRequest{Experiment: experiment})
@@ -168,14 +178,26 @@ func TestGetExperiment_Unauthorized(t *testing.T) {
 	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 
-	clients, manager, _ := initWithExperiment_KFAM_Unauthorized(t)
+	clients, manager, experiment := initWithExperiment_SubjectAccessReview_Unauthorized(t)
 	defer clients.Close()
 
-	server := ExperimentServer{manager}
+	server := ExperimentServer{manager, &ExperimentServerOptions{CollectMetrics: false}}
 
-	_, err := server.GetExperiment(ctx, &api.GetExperimentRequest{Id: resource.DefaultFakeUUID})
+	_, err := server.GetExperiment(ctx, &api.GetExperimentRequest{Id: experiment.UUID})
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unauthorized access")
+	resourceAttributes := &authorizationv1.ResourceAttributes{
+		Namespace: "ns1",
+		Verb:      common.RbacResourceVerbGet,
+		Group:     common.RbacPipelinesGroup,
+		Version:   common.RbacPipelinesVersion,
+		Resource:  common.RbacResourceTypeExperiments,
+		Name:      "exp1",
+	}
+	assert.EqualError(
+		t,
+		err,
+		wrapFailedAuthzRequestError(wrapFailedAuthzApiResourcesError(getPermissionDeniedError(ctx, resourceAttributes))).Error(),
+	)
 }
 
 func TestGetExperiment_Multiuser(t *testing.T) {
@@ -186,7 +208,7 @@ func TestGetExperiment_Multiuser(t *testing.T) {
 
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	resourceReferences := []*api.ResourceReference{
 		{
 			Key:          &api.ResourceKey{Type: api.ResourceType_NAMESPACE, Id: "ns1"},
@@ -216,7 +238,7 @@ func TestGetExperiment_Multiuser(t *testing.T) {
 func TestListExperiment(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	experiment := &api.Experiment{Name: "ex1", Description: "first experiment"}
 
 	createResult, err := server.CreateExperiment(nil, &api.CreateExperimentRequest{Experiment: experiment})
@@ -235,7 +257,7 @@ func TestListExperiment(t *testing.T) {
 func TestListExperiment_Failed(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	experiment := &api.Experiment{Name: "ex1", Description: "first experiment"}
 
 	_, err := server.CreateExperiment(nil, &api.CreateExperimentRequest{Experiment: experiment})
@@ -249,7 +271,7 @@ func TestListExperiment_Failed(t *testing.T) {
 func TestListExperiment_SingleUser_NamespaceNotAllowed(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	experiment := &api.Experiment{Name: "ex1", Description: "first experiment"}
 
 	_, err := server.CreateExperiment(nil, &api.CreateExperimentRequest{Experiment: experiment})
@@ -271,10 +293,10 @@ func TestListExperiment_Unauthorized(t *testing.T) {
 	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 
-	clients, manager, _ := initWithExperiment_KFAM_Unauthorized(t)
+	clients, manager, _ := initWithExperiment_SubjectAccessReview_Unauthorized(t)
 	defer clients.Close()
 
-	server := ExperimentServer{manager}
+	server := ExperimentServer{manager, &ExperimentServerOptions{CollectMetrics: false}}
 
 	_, err := server.ListExperiment(ctx, &api.ListExperimentsRequest{
 		ResourceReferenceKey: &api.ResourceKey{

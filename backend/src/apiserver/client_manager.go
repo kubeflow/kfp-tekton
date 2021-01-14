@@ -313,8 +313,8 @@ func initMysql(driverName string, initConnectionTimeout time.Duration) string {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = initConnectionTimeout
 	//err = backoff.Retry(operation, b)
-	backoff.RetryNotify(operation,b, func(e error, duration time.Duration) {
-		glog.Errorf("%v",e)
+	backoff.RetryNotify(operation, b, func(e error, duration time.Duration) {
+		glog.Errorf("%v", e)
 	})
 
 	defer db.Close()

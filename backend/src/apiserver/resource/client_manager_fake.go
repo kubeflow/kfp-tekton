@@ -156,8 +156,8 @@ func (f *FakeClientManager) KubernetesCoreClient() client.KubernetesCoreInterfac
 	return f.k8sCoreClientFake
 }
 
-func (f *FakeClientManager) KFAMClient() client.KFAMClientInterface {
-	return f.KfamClientFake
+func (f *FakeClientManager) SubjectAccessReviewClient() client.SubjectAccessReviewInterface {
+	return f.SubjectAccessReviewClientFake
 }
 
 func (f *FakeClientManager) Close() error {

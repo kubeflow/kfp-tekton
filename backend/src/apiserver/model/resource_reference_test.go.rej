@@ -1,0 +1,13 @@
+diff a/backend/src/apiserver/model/resource_reference_test.go b/backend/src/apiserver/model/resource_reference_test.go	(rejected hunks)
+@@ -15,9 +15,10 @@
+ package model
+ 
+ import (
++	"testing"
++
+ 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
+ 	"github.com/stretchr/testify/assert"
+-	"testing"
+ )
+ 
+ func TestGetNamespaceFromResourceReferencesModel(t *testing.T) {

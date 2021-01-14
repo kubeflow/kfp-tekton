@@ -1,0 +1,10 @@
+diff a/frontend/src/components/SideNav.tsx b/frontend/src/components/SideNav.tsx	(rejected hunks)
+@@ -557,7 +542,7 @@ export class SideNav extends React.Component<SideNavInternalProps, SideNavState>
+           <Tooltip title='Report an Issue' enterDelay={300} placement={'top-start'}>
+             <div className={css.envMetadata}>
+               <a
+-                href='https://github.com/kubeflow/pipelines/issues/new?template=BUG_REPORT.md'
++                href={ExternalLinks.GITHUB_ISSUE}
+                 className={classes(css.link, commonCss.unstyled)}
+                 rel='noopener'
+                 target='_blank'

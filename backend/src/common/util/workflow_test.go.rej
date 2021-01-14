@@ -1,0 +1,10 @@
+diff a/backend/src/common/util/workflow_test.go b/backend/src/common/util/workflow_test.go	(rejected hunks)
+@@ -157,7 +157,7 @@ func TestToStringForStore(t *testing.T) {
+ 		},
+ 	})
+ 	assert.Equal(t,
+-		"{\"metadata\":{\"name\":\"WORKFLOW_NAME\",\"creationTimestamp\":null},\"spec\":{\"templates\":null,\"entrypoint\":\"\",\"arguments\":{}},\"status\":{\"startedAt\":null,\"finishedAt\":null}}",
++		"{\"metadata\":{\"name\":\"WORKFLOW_NAME\",\"creationTimestamp\":null},\"spec\":{\"templates\":null,\"arguments\":{}},\"status\":{\"startedAt\":null,\"finishedAt\":null}}",
+ 		workflow.ToStringForStore())
+ }
+ 

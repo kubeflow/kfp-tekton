@@ -58,7 +58,7 @@ func TestUploadPipeline_YAML(t *testing.T) {
 			CreatedAt string `json:"created_at"`
 		} `json:"default_version"`
 	}{}
-	json.Unmarshal(rr.Body.Bytes(), &parsedResponse)
+	json.Unmarshal(response.Body.Bytes(), &parsedResponse)
 	assert.Equal(t, "1970-01-01T00:00:01Z", parsedResponse.CreatedAt)
 	assert.Equal(t, "1970-01-01T00:00:01Z", parsedResponse.DefaultVersion.CreatedAt)
 
@@ -88,26 +88,20 @@ func TestUploadPipeline_YAML(t *testing.T) {
 				Status:         model.PipelineVersionReady,
 				PipelineId:     resource.DefaultFakeUUID,
 			}}}
-	pkg, total_size, str, err := clientManager.PipelineStore().ListPipelines(opts)
+	pkg, totalSize, str, err := clientManager.PipelineStore().ListPipelines(opts)
 	assert.Nil(t, err)
 	assert.Equal(t, str, "")
-	assert.Equal(t, 1, total_size)
+	assert.Equal(t, 1, totalSize)
 	assert.Equal(t, pkgsExpect, pkg)
 
 	// Upload a new version under this pipeline
 
 	// Set the fake uuid generator with a new uuid to avoid generate a same uuid as above.
-	clientManager.UpdateUUID(util.NewFakeUUIDGeneratorOrFatal(fakeVersionUUID, nil))
-	resourceManager = resource.NewResourceManager(clientManager)
-	server = PipelineUploadServer{resourceManager: resourceManager}
-	req, _ = http.NewRequest("POST", "/apis/v1beta1/pipelines/upload_version?name="+fakeVersionName+"&pipelineid="+resource.DefaultFakeUUID, bytes.NewReader(b.Bytes()))
-	req.Header.Set("Content-Type", w.FormDataContentType())
-	rr = httptest.NewRecorder()
-	handler = http.HandlerFunc(server.UploadPipelineVersion)
-	handler.ServeHTTP(rr, req)
-
-	assert.Equal(t, 200, rr.Code)
-	assert.Contains(t, rr.Body.String(), `"created_at":"1970-01-01T00:00:02Z"`)
+	server = updateClientManager(clientManager, util.NewFakeUUIDGeneratorOrFatal(fakeVersionUUID, nil))
+	response = uploadPipeline("/apis/v1beta1/pipelines/upload_version?name="+fakeVersionName+"&pipelineid="+resource.DefaultFakeUUID,
+		bytes.NewReader(bytesBuffer.Bytes()), writer, server.UploadPipelineVersion)
+	assert.Equal(t, 200, response.Code)
+	assert.Contains(t, response.Body.String(), `"created_at":"1970-01-01T00:00:02Z"`)
 
 	// Verify stored in object store
 	objStore = clientManager.ObjectStore()
@@ -116,6 +110,7 @@ func TestUploadPipeline_YAML(t *testing.T) {
 	assert.NotNil(t, template)
 	opts, err = list.NewOptions(&model.PipelineVersion{}, 2, "", nil)
 	assert.Nil(t, err)
+
 	// Verify metadata in db
 	versionsExpect := []*model.PipelineVersion{
 		{

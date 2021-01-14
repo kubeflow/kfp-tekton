@@ -22,6 +22,7 @@ import WorkflowParser from './WorkflowParser';
 import { logger } from './Utils';
 import RunUtils from './RunUtils';
 import MetricUtils from './MetricUtils';
+import { parseTaskDisplayNameByNodeId } from './ParserUtils';
 
 export default class CompareUtils {
   /**

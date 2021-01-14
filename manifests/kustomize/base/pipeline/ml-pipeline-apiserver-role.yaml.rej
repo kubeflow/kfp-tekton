@@ -1,0 +1,22 @@
+diff a/manifests/kustomize/base/pipeline/ml-pipeline-apiserver-role.yaml b/manifests/kustomize/base/pipeline/ml-pipeline-apiserver-role.yaml	(rejected hunks)
+@@ -9,6 +9,7 @@ rules:
+   - ""
+   resources:
+   - pods
++  - pods/log
+   verbs:
+   - get
+   - list
+@@ -35,4 +36,10 @@ rules:
+   - list
+   - update
+   - patch
+-  - delete
+\ No newline at end of file
++  - delete
++- apiGroups:
++  - authorization.k8s.io
++  resources:
++  - subjectaccessreviews
++  verbs:
++  - create

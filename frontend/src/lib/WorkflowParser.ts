@@ -33,6 +33,7 @@ export enum StorageService {
   HTTPS = 'https',
   MINIO = 'minio',
   S3 = 's3',
+  VOLUME = 'volume',
 }
 
 export interface StoragePath {
@@ -543,6 +544,13 @@ export default class WorkflowParser {
         key: pathParts.slice(1).join('/'),
         source: StorageService.HTTPS,
       };
+    } else if (strPath.startsWith('volume://')) {
+      const pathParts = strPath.substr('volume://'.length).split('/');
+      return {
+        bucket: pathParts[0],
+        key: pathParts.slice(1).join('/'),
+        source: StorageService.VOLUME,
+      };
     } else {
       throw new Error('Unsupported storage path: ' + strPath);
     }
@@ -582,7 +590,10 @@ export default class WorkflowParser {
   // meaningful from a user's perspective.
   public static isVirtual(node: NodeStatus): boolean {
     return (
-      (node.type === 'StepGroup' || node.type === 'DAG' || node.type === 'TaskGroup') &&
+      (node.type === 'StepGroup' ||
+        node.type === 'DAG' ||
+        node.type === 'TaskGroup' ||
+        node.type === 'Retry') &&
       !!node.boundaryID
     );
   }

@@ -11,6 +11,7 @@ go_library(
         "pipeline_server.go",
         "pipeline_upload_server.go",
         "report_server.go",
+        "run_log_server.go",
         "run_metric_util.go",
         "run_server.go",
         "test_util.go",

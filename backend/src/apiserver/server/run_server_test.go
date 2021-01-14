@@ -63,9 +63,9 @@ func TestCreateRun_Unauthorized(t *testing.T) {
 	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 
-	clients, manager, _ := initWithExperiment_KFAM_Unauthorized(t)
+	clients, manager, _ := initWithExperiment_SubjectAccessReview_Unauthorized(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
 		ResourceReferences: validReference,
@@ -76,7 +76,19 @@ func TestCreateRun_Unauthorized(t *testing.T) {
 	}
 	_, err := server.CreateRun(ctx, &api.CreateRunRequest{Run: run})
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unauthorized access")
+	resourceAttributes := &authorizationv1.ResourceAttributes{
+		Namespace: "ns1",
+		Verb:      common.RbacResourceVerbCreate,
+		Group:     common.RbacPipelinesGroup,
+		Version:   common.RbacPipelinesVersion,
+		Resource:  common.RbacResourceTypeRuns,
+		Name:      "run1",
+	}
+	assert.EqualError(
+		t,
+		err,
+		wrapFailedAuthzRequestError(wrapFailedAuthzApiResourcesError(getPermissionDeniedError(ctx, resourceAttributes))).Error(),
+	)
 }
 
 func TestCreateRun_Multiuser(t *testing.T) {
@@ -130,9 +142,9 @@ func TestListRuns_Unauthorized(t *testing.T) {
 	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 
-	clients, manager, _ := initWithExperiment_KFAM_Unauthorized(t)
+	clients, manager, _ := initWithExperiment_SubjectAccessReview_Unauthorized(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	_, err := server.ListRuns(ctx, &api.ListRunsRequest{
 		ResourceReferenceKey: &api.ResourceKey{
 			Type: api.ResourceType_NAMESPACE,
@@ -148,7 +160,7 @@ func TestListRuns_Unauthorized(t *testing.T) {
 func TestValidateCreateRunRequest(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
 		ResourceReferences: validReference,
@@ -164,7 +176,7 @@ func TestValidateCreateRunRequest(t *testing.T) {
 func TestValidateCreateRunRequest_WithPipelineVersionReference(t *testing.T) {
 	clients, manager, _ := initWithExperimentAndPipelineVersion(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
 		ResourceReferences: validReferencesOfExperimentAndPipelineVersion,
@@ -176,7 +188,7 @@ func TestValidateCreateRunRequest_WithPipelineVersionReference(t *testing.T) {
 func TestValidateCreateRunRequest_EmptyName(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		ResourceReferences: validReference,
 		PipelineSpec: &api.PipelineSpec{
@@ -189,10 +201,23 @@ func TestValidateCreateRunRequest_EmptyName(t *testing.T) {
 	assert.Contains(t, err.Error(), "The run name is empty")
 }
 
+func TestValidateCreateRunRequest_InvalidPipelineVersionReference(t *testing.T) {
+	clients, manager, _ := initWithExperiment(t)
+	defer clients.Close()
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
+	run := &api.Run{
+		Name:               "run1",
+		ResourceReferences:referencesOfExperimentAndInvalidPipelineVersion,
+	}
+	err := server.validateCreateRunRequest(&api.CreateRunRequest{Run: run})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Get pipelineVersionId failed.")
+}
+
 func TestValidateCreateRunRequest_NoExperiment(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
 		ResourceReferences: nil,
@@ -205,23 +230,58 @@ func TestValidateCreateRunRequest_NoExperiment(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestValidateCreateRunRequest_EmptyPipelineSpecAndEmptyPipelineVersion(t *testing.T) {
+func TestValidateCreateRunRequest_NilPipelineSpecAndEmptyPipelineVersion(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
 		ResourceReferences: validReference,
 	}
 	err := server.validateCreateRunRequest(&api.CreateRunRequest{Run: run})
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Neither pipeline spec nor pipeline version is valid")
+	assert.Contains(t, err.Error(), "Please specify a pipeline by providing a (workflow manifest) or (pipeline id or/and pipeline version).")
+}
+
+func TestValidateCreateRunRequest_WorkflowManifestAndPipelineVersion(t *testing.T) {
+	clients, manager, _ := initWithExperimentAndPipelineVersion(t)
+	defer clients.Close()
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
+	run := &api.Run{
+		Name:               "run1",
+		ResourceReferences: validReferencesOfExperimentAndPipelineVersion,
+		PipelineSpec: &api.PipelineSpec{
+			WorkflowManifest: testWorkflow.ToStringForStore(),
+			Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
+		},
+	}
+	err := server.validateCreateRunRequest(&api.CreateRunRequest{Run: run})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Please don't specify a pipeline version or pipeline ID when you specify a workflow manifest.")
+}
+
+func TestValidateCreateRunRequest_InvalidPipelineSpec(t *testing.T) {
+	clients, manager, _ := initWithExperiment(t)
+	defer clients.Close()
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
+	run := &api.Run{
+		Name:               "run1",
+		ResourceReferences: validReference,
+		PipelineSpec: &api.PipelineSpec{
+			PipelineId: resource.DefaultFakeUUID,
+			WorkflowManifest: testWorkflow.ToStringForStore(),
+			Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
+		},
+	}
+	err := server.validateCreateRunRequest(&api.CreateRunRequest{Run: run})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Please don't specify a pipeline version or pipeline ID when you specify a workflow manifest.")
 }
 
 func TestValidateCreateRunRequest_TooMuchParameters(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 
 	var params []*api.Parameter
 	// Create a long enough parameter string so it exceed the length limit of parameter.
@@ -249,7 +309,7 @@ func TestReportRunMetrics_RunNotFound(t *testing.T) {
 
 	clientManager, resourceManager, _ := initWithOneTimeRun(t)
 	defer clientManager.Close()
-	runServer := RunServer{resourceManager: resourceManager}
+	runServer := RunServer{resourceManager: resourceManager, options: &RunServerOptions{CollectMetrics: false}}
 
 	_, err := runServer.ReportRunMetrics(context.Background(), &api.ReportRunMetricsRequest{
 		RunId: "1",
@@ -264,7 +324,7 @@ func TestReportRunMetrics_Succeed(t *testing.T) {
 
 	clientManager, resourceManager, runDetails := initWithOneTimeRun(t)
 	defer clientManager.Close()
-	runServer := RunServer{resourceManager: resourceManager}
+	runServer := RunServer{resourceManager: resourceManager, options: &RunServerOptions{CollectMetrics: false}}
 
 	metric := &api.RunMetric{
 		Name:   "metric-1",
@@ -304,7 +364,7 @@ func TestReportRunMetrics_PartialFailures(t *testing.T) {
 
 	clientManager, resourceManager, runDetail := initWithOneTimeRun(t)
 	defer clientManager.Close()
-	runServer := RunServer{resourceManager: resourceManager}
+	runServer := RunServer{resourceManager: resourceManager, options: &RunServerOptions{CollectMetrics: false}}
 
 	validMetric := &api.RunMetric{
 		Name:   "metric-1",

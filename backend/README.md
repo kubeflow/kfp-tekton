@@ -44,11 +44,12 @@ docker build -f backend/Dockerfile . --tag $API_SERVER_IMAGE
 
 After making changes to proto files, the Go client libraries and swagger files
 need to be regenerated and checked-in. The `backend/api/generate_api.sh` script
-takes care of this. It should be noted that this requires [Bazel](https://bazel.build/), version 0.24.0` 
+takes care of this. It should be noted that this requires
+[Bazel](https://bazel.build/), version `0.24.0` 
 
 ## Updating python dependencies
 
 [pip-tools](https://github.com/jazzband/pip-tools) is used to manage python
 dependencies. To update dependencies, edit [requirements.in](requirements.in)
-and run `./update_requirements.sh <requirements.in >requirements.txt` to update and pin the transitive
-dependencies.
+and run `./update_requirements.sh <requirements.in >requirements.txt` to update
+and pin the transitive dependencies.

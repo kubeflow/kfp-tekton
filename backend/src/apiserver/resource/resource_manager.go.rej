@@ -1,0 +1,117 @@
+diff a/backend/src/apiserver/resource/resource_manager.go b/backend/src/apiserver/resource/resource_manager.go	(rejected hunks)
+@@ -17,6 +17,7 @@ package resource
+ import (
+ 	"encoding/json"
+ 	"fmt"
++	"io"
+ 	"strconv"
+ 
+ 	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
+@@ -24,6 +25,7 @@ import (
+ 	"github.com/cenkalti/backoff"
+ 	"github.com/golang/glog"
+ 	api "github.com/kubeflow/pipelines/backend/api/go_client"
++	"github.com/kubeflow/pipelines/backend/src/apiserver/archive"
+ 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
+ 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
+ 	"github.com/kubeflow/pipelines/backend/src/apiserver/list"
+@@ -33,8 +35,12 @@ import (
+ 	scheduledworkflow "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
+ 	scheduledworkflowclient "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned/typed/scheduledworkflow/v1beta1"
+ 	"github.com/pkg/errors"
++	"github.com/prometheus/client_golang/prometheus"
++	"github.com/prometheus/client_golang/prometheus/promauto"
++	authorizationv1 "k8s.io/api/authorization/v1"
++	corev1 "k8s.io/api/core/v1"
++	apierrors "k8s.io/apimachinery/pkg/api/errors"
+ 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+-
+ 	"k8s.io/apimachinery/pkg/types"
+ )
+ 
+@@ -57,44 +72,47 @@ type ClientManagerInterface interface {
+ 	ArgoClient() client.ArgoClientInterface
+ 	SwfClient() client.SwfClientInterface
+ 	KubernetesCoreClient() client.KubernetesCoreInterface
+-	KFAMClient() client.KFAMClientInterface
++	SubjectAccessReviewClient() client.SubjectAccessReviewInterface
++	LogArchive() archive.LogArchiveInterface
+ 	Time() util.TimeInterface
+ 	UUID() util.UUIDGeneratorInterface
+ }
+ 
+ type ResourceManager struct {
+-	experimentStore        storage.ExperimentStoreInterface
+-	pipelineStore          storage.PipelineStoreInterface
+-	jobStore               storage.JobStoreInterface
+-	runStore               storage.RunStoreInterface
+-	resourceReferenceStore storage.ResourceReferenceStoreInterface
+-	dBStatusStore          storage.DBStatusStoreInterface
+-	defaultExperimentStore storage.DefaultExperimentStoreInterface
+-	objectStore            storage.ObjectStoreInterface
+-	argoClient             client.ArgoClientInterface
+-	swfClient              client.SwfClientInterface
+-	k8sCoreClient          client.KubernetesCoreInterface
+-	kfamClient             client.KFAMClientInterface
+-	time                   util.TimeInterface
+-	uuid                   util.UUIDGeneratorInterface
++	experimentStore           storage.ExperimentStoreInterface
++	pipelineStore             storage.PipelineStoreInterface
++	jobStore                  storage.JobStoreInterface
++	runStore                  storage.RunStoreInterface
++	resourceReferenceStore    storage.ResourceReferenceStoreInterface
++	dBStatusStore             storage.DBStatusStoreInterface
++	defaultExperimentStore    storage.DefaultExperimentStoreInterface
++	objectStore               storage.ObjectStoreInterface
++	argoClient                client.ArgoClientInterface
++	swfClient                 client.SwfClientInterface
++	k8sCoreClient             client.KubernetesCoreInterface
++	subjectAccessReviewClient client.SubjectAccessReviewInterface
++	logArchive                archive.LogArchiveInterface
++	time                      util.TimeInterface
++	uuid                      util.UUIDGeneratorInterface
+ }
+ 
+ func NewResourceManager(clientManager ClientManagerInterface) *ResourceManager {
+ 	return &ResourceManager{
+-		experimentStore:        clientManager.ExperimentStore(),
+-		pipelineStore:          clientManager.PipelineStore(),
+-		jobStore:               clientManager.JobStore(),
+-		runStore:               clientManager.RunStore(),
+-		resourceReferenceStore: clientManager.ResourceReferenceStore(),
+-		dBStatusStore:          clientManager.DBStatusStore(),
+-		defaultExperimentStore: clientManager.DefaultExperimentStore(),
+-		objectStore:            clientManager.ObjectStore(),
+-		argoClient:             clientManager.ArgoClient(),
+-		swfClient:              clientManager.SwfClient(),
+-		k8sCoreClient:          clientManager.KubernetesCoreClient(),
+-		kfamClient:             clientManager.KFAMClient(),
+-		time:                   clientManager.Time(),
+-		uuid:                   clientManager.UUID(),
++		experimentStore:           clientManager.ExperimentStore(),
++		pipelineStore:             clientManager.PipelineStore(),
++		jobStore:                  clientManager.JobStore(),
++		runStore:                  clientManager.RunStore(),
++		resourceReferenceStore:    clientManager.ResourceReferenceStore(),
++		dBStatusStore:             clientManager.DBStatusStore(),
++		defaultExperimentStore:    clientManager.DefaultExperimentStore(),
++		objectStore:               clientManager.ObjectStore(),
++		argoClient:                clientManager.ArgoClient(),
++		swfClient:                 clientManager.SwfClient(),
++		k8sCoreClient:             clientManager.KubernetesCoreClient(),
++		subjectAccessReviewClient: clientManager.SubjectAccessReviewClient(),
++		logArchive:                clientManager.LogArchive(),
++		time:                      clientManager.Time(),
++		uuid:                      clientManager.UUID(),
+ 	}
+ }
+ 
+@@ -383,7 +398,7 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
+ 		return nil, err
+ 	}
+ 
+-	// Create argo workflow CRD resource
++	// Create argo workflow CR resource
+ 	newWorkflow, err := r.getWorkflowClient(namespace).Create(workflow.Get())
+ 	if err != nil {
+ 		return nil, util.NewInternalServerError(err, "Failed to create a workflow for (%s)", workflow.Name)

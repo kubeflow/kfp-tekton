@@ -130,3 +130,12 @@ func (c *PipelineClientFake) ListAll(params *pipelineparams.ListPipelinesParams,
 	maxResultSize int) ([]*pipelinemodel.APIPipeline, error) {
 	return listAllForPipeline(c, params, maxResultSize)
 }
+
+func (c *PipelineClientFake) UpdateDefaultVersion(params *params.UpdatePipelineDefaultVersionParams) error {
+	switch params.PipelineID {
+	case PipelineForClientErrorTest:
+		return fmt.Errorf(ClientErrorString)
+	default:
+		return nil
+	}
+}
