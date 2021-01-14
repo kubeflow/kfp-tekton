@@ -84,4 +84,4 @@ Once the pipeline done, you can go to the S3 path specified in `output` to check
 ## Components source
 
 RoboMaker Create Simulation Application:
-  [source code](https://github.com/kubeflow/pipelines/tree/master/components/aws/sagemaker/create_simulation_application/src)
+  [source code](https://github.com/kubeflow/pipelines/tree/master/components/aws/sagemaker/create_simulation_app/src)

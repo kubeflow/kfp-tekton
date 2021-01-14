@@ -55,7 +55,7 @@ This example illustrates a simple tabular data use case built on [demographic fe
 
  * KFServing Income Classification Model with deployed explainer and outlier detector
     * [Kale annotated Jupyter Notebook](./kfserving_e2e_adult.ipynb)
-    * [Pipeline](./kfserving_e2e_adult.kale.nfs.py)
+    * [Pipeline](./kfserving_e2e_adult.kale.gcp.py)
       * Assumes `storage_class="nfs-client"`
     * [Pipeline](./kfserving_e2e_adult.kale.default.py)
       * Assumes a ReadWriteMany PVC will succeed on your cluster
