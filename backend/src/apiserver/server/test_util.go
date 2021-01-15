@@ -17,21 +17,29 @@ package server
 import (
 	"testing"
 
+	"context"
+
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"google.golang.org/grpc/codes"
+	authorizationv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
 // Removed conflicted v1alpha1.workflowspec.
+
+const (
+	invalidPipelineVersionId = "not_exist_pipeline_version"
+)
 
 var testWorkflow = util.NewWorkflow(&v1beta1.PipelineRun{
 	TypeMeta:   v1.TypeMeta{APIVersion: "tekton.dev/v1beta1", Kind: "PipelineRun"},
@@ -167,7 +175,7 @@ func initWithExperimentAndPipelineVersion(t *testing.T) (*resource.FakeClientMan
 			},
 		},
 	},
-		[]byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
+		[]byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"), true)
 
 	return clientManager, resourceManager, experiment
 }

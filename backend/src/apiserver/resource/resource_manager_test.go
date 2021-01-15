@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"google.golang.org/grpc/codes"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

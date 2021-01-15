@@ -25,6 +25,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,11 +37,10 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/server"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -137,11 +137,11 @@ func startHttpProxy(resourceManager *resource.ResourceManager) {
 	// multipart upload is only supported in HTTP. In long term, we should have gRPC endpoints that
 	// accept pipeline url for importing.
 	// https://github.com/grpc-ecosystem/grpc-gateway/issues/410
-	pipelineUploadServer := server.NewPipelineUploadServer(resourceManager)
+	pipelineUploadServer := server.NewPipelineUploadServer(resourceManager, &server.PipelineUploadServerOptions{CollectMetrics: *collectMetricsFlag})
 	topMux.HandleFunc("/apis/v1beta1/pipelines/upload", pipelineUploadServer.UploadPipeline)
 	topMux.HandleFunc("/apis/v1beta1/pipelines/upload_version", pipelineUploadServer.UploadPipelineVersion)
 	topMux.HandleFunc("/apis/v1beta1/healthz", func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, `{"commit_sha":"`+common.GetStringConfigWithDefault("COMMIT_SHA", "unknown")+`", "tag_name":"`+common.GetStringConfigWithDefault("TAG_NAME", "unknown")+`"}`)
+		io.WriteString(w, `{"commit_sha":"`+common.GetStringConfigWithDefault("COMMIT_SHA", "unknown")+`", "tag_name":"`+common.GetStringConfigWithDefault("TAG_NAME", "unknown")+`", "multi_user":`+strconv.FormatBool(common.IsMultiUserMode())+`}`)
 	})
 
 	// log streaming is provided via HTTP.
@@ -149,6 +149,9 @@ func startHttpProxy(resourceManager *resource.ResourceManager) {
 	topMux.HandleFunc("/apis/v1beta1/runs/{run_id}/nodes/{node_id}/log", runLogServer.ReadRunLog)
 
 	topMux.PathPrefix("/apis/").Handler(runtimeMux)
+
+	// Register a handler for Prometheus to poll.
+	topMux.Handle("/metrics", promhttp.Handler())
 
 	http.ListenAndServe(*httpPortFlag, topMux)
 	glog.Info("Http Proxy started")

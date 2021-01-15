@@ -19,11 +19,12 @@ import * as zlib from 'zlib';
 import { ApiTrigger } from '../apis/job';
 import { isFunction } from 'lodash';
 import { hasFinished, NodePhase } from './StatusUtils';
-import { ListRequest } from './Apis';
+import { ListRequest, Apis } from './Apis';
 import { Row, Column, ExpandState } from '../components/CustomTable';
 import { padding } from '../Css';
 import { classes } from 'typestyle';
 import { CustomTableRow, css } from '../components/CustomTableRow';
+import { StorageService } from './WorkflowParser';
 
 export const logger = {
   error: (...args: any[]) => {

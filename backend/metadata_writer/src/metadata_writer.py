@@ -255,6 +255,17 @@ while True:
                     run_id=pipeline_name, # We can switch to internal run IDs once backend starts adding them
                 )
 
+                # Saving input paramater arguments
+                execution_custom_properties = {}
+                if KFP_PARAMETER_ARGUMENTS_ANNOTATION_KEY in obj.metadata.annotations:
+                    parameter_arguments_json = obj.metadata.annotations[KFP_PARAMETER_ARGUMENTS_ANNOTATION_KEY]
+                    try:
+                        parameter_arguments = json.loads(parameter_arguments_json)
+                        for paramater_name, parameter_value in parameter_arguments.items():
+                            execution_custom_properties['input:' + paramater_name] = parameter_value
+                    except Exception:
+                        pass
+
                 # Adding new execution to the database
                 execution = create_new_execution_in_existing_run_context(
                     store=mlmd_store,
@@ -264,6 +275,7 @@ while True:
                     pipeline_name=pipeline_name,
                     run_id=pipeline_name,
                     instance_id=component_name,
+                    custom_properties=execution_custom_properties
                 )
 
                 input_artifacts = template.get('inputs', {}).get('artifacts', [])
@@ -378,7 +390,7 @@ while True:
                         if art_name.startswith(output_prefix):
                             art_name = art_name[len(output_prefix):]
                         pipeline_output_artifacts[art_name] = artifact
-                    
+
                     output_artifacts = []
                     for name, art in pipeline_output_artifacts.items():
                         artifact_uri = artifact_to_uri(art)
@@ -419,7 +431,7 @@ while True:
                         METADATA_OUTPUT_ARTIFACT_IDS_ANNOTATION_KEY: json.dumps(artifact_ids),
                     },
                 }
-                
+
                 patch_pod_metadata(
                     namespace=obj.metadata.namespace,
                     pod_name=obj.metadata.name,

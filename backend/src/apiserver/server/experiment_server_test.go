@@ -7,19 +7,19 @@ import (
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
-	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
+	authorizationv1 "k8s.io/api/authorization/v1"
 )
 
 func TestCreateExperiment(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
-	server := ExperimentServer{resourceManager: resourceManager}
+	server := ExperimentServer{resourceManager: resourceManager, options: &ExperimentServerOptions{CollectMetrics: false}}
 	experiment := &api.Experiment{Name: "ex1", Description: "first experiment"}
 
 	result, err := server.CreateExperiment(nil, &api.CreateExperimentRequest{Experiment: experiment})
@@ -305,7 +305,18 @@ func TestListExperiment_Unauthorized(t *testing.T) {
 		},
 	})
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unauthorized access")
+	resourceAttributes := &authorizationv1.ResourceAttributes{
+		Namespace: "ns1",
+		Verb:      common.RbacResourceVerbList,
+		Group:     common.RbacPipelinesGroup,
+		Version:   common.RbacPipelinesVersion,
+		Resource:  common.RbacResourceTypeExperiments,
+	}
+	assert.EqualError(
+		t,
+		err,
+		wrapFailedAuthzApiResourcesError(wrapFailedAuthzApiResourcesError(getPermissionDeniedError(ctx, resourceAttributes))).Error(),
+	)
 }
 
 // Removed "TestListExperiment_Multiuser" test since it was using old k8s auth (0.11)

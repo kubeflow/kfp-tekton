@@ -17,7 +17,8 @@ import (
 // Removed tarball tests that check for argo yaml and old auth dep: "TestDecompressPipelineTarball", "TestDecompressPipelineTarball_NonYamlTarball",
 // "TestDecompressPipelineZip", "TestDecompressPipelineZip_NonYamlZip", "TestDecompressPipelineZip_EmptyZip", "TestReadPipelineFile_YAML",
 // "TestReadPipelineFile_Zip", "TestReadPipelineFile_Zip_AnyExtension", "TestReadPipelineFile_MultifileZip", "TestReadPipelineFile_Tarball",
-// "TestReadPipelineFile_Tarball_AnyExtension", "TestReadPipelineFile_MultifileTarball", "TestReadPipelineFile_UnknownFileFormat"
+// "TestReadPipelineFile_Tarball_AnyExtension", "TestReadPipelineFile_MultifileTarball", "TestReadPipelineFile_UnknownFileFormat",
+// "TestValidatePipelineSpecAndResourceReferences_PipelineIdNotParentOfPipelineVersionId"
 
 func TestGetPipelineName_QueryStringNotEmpty(t *testing.T) {
 	pipelineName, err := GetPipelineName("pipeline%20one", "file one")
@@ -236,17 +237,6 @@ func TestValidatePipelineSpecAndResourceReferences_InvalidPipelineVersionId(t *t
 	err := ValidatePipelineSpecAndResourceReferences(manager, nil, referencesOfInvalidPipelineVersion)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Get pipelineVersionId failed.")
-}
-
-func TestValidatePipelineSpecAndResourceReferences_PipelineIdNotParentOfPipelineVersionId(t *testing.T) {
-	clients, manager, _ := initWithExperimentsAndTwoPipelineVersions(t)
-	manager = resource.NewResourceManager(clients)
-	defer clients.Close()
-	spec := &api.PipelineSpec{
-		PipelineId: resource.NonDefaultFakeUUID}
-	err := ValidatePipelineSpecAndResourceReferences(manager, spec, validReferencesOfExperimentAndPipelineVersion)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "pipeline ID should be parent of pipeline version.")
 }
 
 func TestValidatePipelineSpecAndResourceReferences_ParameterTooLongWithPipelineId(t *testing.T) {

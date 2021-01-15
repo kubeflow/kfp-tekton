@@ -542,7 +542,7 @@ export class SideNav extends React.Component<SideNavInternalProps, SideNavState>
           <Tooltip title='Report an Issue' enterDelay={300} placement={'top-start'}>
             <div className={css.envMetadata}>
               <a
-                href='https://github.com/kubeflow/kfp-tekton/issues/new?template=bug_report.md'
+                href={ExternalLinks.GITHUB_ISSUE}
                 className={classes(css.link, commonCss.unstyled)}
                 rel='noopener'
                 target='_blank'

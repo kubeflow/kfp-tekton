@@ -33,8 +33,11 @@ import (
 	scheduledworkflow "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	scheduledworkflowclient "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned/typed/scheduledworkflow/v1beta1"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	workflowclient "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1beta1"
+	authorizationv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,47 +73,47 @@ type ClientManagerInterface interface {
 	TektonClient() client.TektonClientInterface
 	SwfClient() client.SwfClientInterface
 	KubernetesCoreClient() client.KubernetesCoreInterface
-	KFAMClient() client.KFAMClientInterface
+	SubjectAccessReviewClient() client.SubjectAccessReviewInterface
 	LogArchive() archive.LogArchiveInterface
 	Time() util.TimeInterface
 	UUID() util.UUIDGeneratorInterface
 }
 
 type ResourceManager struct {
-	experimentStore        storage.ExperimentStoreInterface
-	pipelineStore          storage.PipelineStoreInterface
-	jobStore               storage.JobStoreInterface
-	runStore               storage.RunStoreInterface
-	resourceReferenceStore storage.ResourceReferenceStoreInterface
-	dBStatusStore          storage.DBStatusStoreInterface
-	defaultExperimentStore storage.DefaultExperimentStoreInterface
-	objectStore            storage.ObjectStoreInterface
-	tektonClient           client.TektonClientInterface
-	swfClient              client.SwfClientInterface
-	k8sCoreClient          client.KubernetesCoreInterface
-	kfamClient             client.KFAMClientInterface
-	logArchive             archive.LogArchiveInterface
-	time                   util.TimeInterface
-	uuid                   util.UUIDGeneratorInterface
+	experimentStore           storage.ExperimentStoreInterface
+	pipelineStore             storage.PipelineStoreInterface
+	jobStore                  storage.JobStoreInterface
+	runStore                  storage.RunStoreInterface
+	resourceReferenceStore    storage.ResourceReferenceStoreInterface
+	dBStatusStore             storage.DBStatusStoreInterface
+	defaultExperimentStore    storage.DefaultExperimentStoreInterface
+	objectStore               storage.ObjectStoreInterface
+	swfClient                 client.SwfClientInterface
+	k8sCoreClient             client.KubernetesCoreInterface
+	subjectAccessReviewClient client.SubjectAccessReviewInterface
+	logArchive                archive.LogArchiveInterface
+	time                      util.TimeInterface
+	uuid                      util.UUIDGeneratorInterface
+	tektonClient              client.TektonClientInterface
 }
 
 func NewResourceManager(clientManager ClientManagerInterface) *ResourceManager {
 	return &ResourceManager{
-		experimentStore:        clientManager.ExperimentStore(),
-		pipelineStore:          clientManager.PipelineStore(),
-		jobStore:               clientManager.JobStore(),
-		runStore:               clientManager.RunStore(),
-		resourceReferenceStore: clientManager.ResourceReferenceStore(),
-		dBStatusStore:          clientManager.DBStatusStore(),
-		defaultExperimentStore: clientManager.DefaultExperimentStore(),
-		objectStore:            clientManager.ObjectStore(),
-		tektonClient:           clientManager.TektonClient(),
-		swfClient:              clientManager.SwfClient(),
-		k8sCoreClient:          clientManager.KubernetesCoreClient(),
-		kfamClient:             clientManager.KFAMClient(),
-		logArchive:             clientManager.LogArchive(),
-		time:                   clientManager.Time(),
-		uuid:                   clientManager.UUID(),
+		tektonClient:              clientManager.TektonClient(),
+		experimentStore:           clientManager.ExperimentStore(),
+		pipelineStore:             clientManager.PipelineStore(),
+		jobStore:                  clientManager.JobStore(),
+		runStore:                  clientManager.RunStore(),
+		resourceReferenceStore:    clientManager.ResourceReferenceStore(),
+		dBStatusStore:             clientManager.DBStatusStore(),
+		defaultExperimentStore:    clientManager.DefaultExperimentStore(),
+		objectStore:               clientManager.ObjectStore(),
+		swfClient:                 clientManager.SwfClient(),
+		k8sCoreClient:             clientManager.KubernetesCoreClient(),
+		subjectAccessReviewClient: clientManager.SubjectAccessReviewClient(),
+		logArchive:                clientManager.LogArchive(),
+		time:                      clientManager.Time(),
+		uuid:                      clientManager.UUID(),
 	}
 }
 
@@ -562,44 +565,6 @@ func (r *ResourceManager) RetryRun(runId string) error {
 	return nil
 }
 
-func (r *ResourceManager) ReadLog(runId string, nodeId string, dst io.Writer) error {
-	run, err := r.checkRunExist(runId)
-	if err != nil {
-		return util.NewBadRequestError(errors.New("log cannot be read"), "Run does not exist")
-	}
-
-	err = r.readRunLogFromPod(run, nodeId, dst)
-	if err != nil && r.logArchive != nil {
-		err = r.readRunLogFromArchive(run, nodeId, dst)
-	}
-
-	return err
-}
-
-func (r *ResourceManager) readRunLogFromPod(run *model.RunDetail, nodeId string, dst io.Writer) error {
-	logOptions := corev1.PodLogOptions{
-		Container:  "step-main",
-		Timestamps: false,
-	}
-
-	req := r.k8sCoreClient.PodClient(run.Namespace).GetLogs(nodeId, &logOptions)
-	podLogs, err := req.Stream()
-	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			glog.Errorf("Failed to access Pod log: %v", err)
-		}
-		return util.NewInternalServerError(err, "error in opening log stream")
-	}
-	defer podLogs.Close()
-
-	_, err = io.Copy(dst, podLogs)
-	if err != nil && err != io.EOF {
-		return util.NewInternalServerError(err, "error in streaming the log")
-	}
-
-	return nil
-}
-
 func (r *ResourceManager) readRunLogFromArchive(run *model.RunDetail, nodeId string, dst io.Writer) error {
 	workflow := new(util.Workflow)
 
@@ -662,35 +627,6 @@ func (r *ResourceManager) readRunLogFromPod(run *model.RunDetail, nodeId string,
 
 	_, err = io.Copy(dst, podLogs)
 	if err != nil && err != io.EOF {
-		return util.NewInternalServerError(err, "error in streaming the log")
-	}
-
-	return nil
-}
-
-func (r *ResourceManager) readRunLogFromArchive(run *model.RunDetail, nodeId string, dst io.Writer) error {
-	workflow := new(util.Workflow)
-
-	if run.WorkflowRuntimeManifest == "" {
-		return util.NewBadRequestError(errors.New("archived log cannot be read"), "Failed to retrieve the runtime workflow from the run")
-	}
-	if err := json.Unmarshal([]byte(run.WorkflowRuntimeManifest), &workflow); err != nil {
-		return util.NewInternalServerError(err, "Failed to retrieve the runtime pipeline spec from the run")
-	}
-
-	logPath, err := r.logArchive.GetLogObjectKey(workflow, nodeId)
-	if err != nil {
-		return err
-	}
-
-	logContent, err := r.objectStore.GetFile(logPath)
-	if err != nil {
-		return util.NewInternalServerError(err, "Failed to retrieve the log file from archive")
-	}
-
-	err = r.logArchive.CopyLogFromArchive(logContent, dst, archive.ExtractLogOptions{LogFormat: archive.LogFormatText, Timestamps: false})
-
-	if err != nil {
 		return util.NewInternalServerError(err, "error in streaming the log")
 	}
 
@@ -1066,7 +1002,7 @@ func (r *ResourceManager) getWorkflowSpecBytesFromPipelineVersion(references []*
 
 func getWorkflowSpecManifestBytes(pipelineSpec *api.PipelineSpec, resourceReferences *[]*api.ResourceReference, r *ResourceManager) ([]byte, error) {
 	var workflowSpecManifestBytes []byte
-	if pipelineSpec.GetWorkflowManifest()  != "" {
+	if pipelineSpec.GetWorkflowManifest() != "" {
 		workflowSpecManifestBytes = []byte(pipelineSpec.GetWorkflowManifest())
 	} else {
 		err := convertPipelineIdToDefaultPipelineVersion(pipelineSpec, resourceReferences, r)

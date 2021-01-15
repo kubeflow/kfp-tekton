@@ -1,7 +1,0 @@
-diff a/frontend/src/lib/ParserUtils.ts b/frontend/src/lib/ParserUtils.ts	(rejected hunks)
-@@ -1,4 +1,4 @@
--import { Metadata } from 'third_party/argo-ui/argo_template';
-+import { Metadata, Workflow } from 'third_party/argo-ui/argo_template';
- 
- export function parseTaskDisplayName(metadata?: Metadata): string | undefined {
-   if (!metadata?.annotations) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/strfmt"
+	params "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
 	pipelineparams "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
 	pipelinemodel "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_model"
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"

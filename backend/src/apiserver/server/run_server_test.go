@@ -6,11 +6,13 @@ import (
 
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	authorizationv1 "k8s.io/api/authorization/v1"
 )
 
 // Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
@@ -19,7 +21,7 @@ import (
 func TestCreateRun(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
 		ResourceReferences: validReference,
@@ -39,7 +41,7 @@ func TestCreateRun(t *testing.T) {
 func TestCreateRunPatch(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
 		ResourceReferences: validReference,
@@ -102,7 +104,7 @@ func TestCreateRun_Multiuser(t *testing.T) {
 
 	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
 		ResourceReferences: validReference,
@@ -122,7 +124,7 @@ func TestCreateRun_Multiuser(t *testing.T) {
 func TestListRun(t *testing.T) {
 	clients, manager, _ := initWithExperiment(t)
 	defer clients.Close()
-	server := NewRunServer(manager)
+	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
 		ResourceReferences: validReference,
@@ -152,7 +154,20 @@ func TestListRuns_Unauthorized(t *testing.T) {
 		},
 	})
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unauthorized access")
+	resourceAttributes := &authorizationv1.ResourceAttributes{
+		Namespace: "ns1",
+		Verb:      common.RbacResourceVerbList,
+		Group:     common.RbacPipelinesGroup,
+		Version:   common.RbacPipelinesVersion,
+		Resource:  common.RbacResourceTypeRuns,
+	}
+	assert.EqualError(
+		t,
+		err,
+		util.Wrap(
+			wrapFailedAuthzApiResourcesError(getPermissionDeniedError(ctx, resourceAttributes)),
+			"Failed to authorize with namespace resource reference.").Error(),
+	)
 }
 
 // Removed tests with argo spec: "TestListRuns_Multiuser"
@@ -207,7 +222,7 @@ func TestValidateCreateRunRequest_InvalidPipelineVersionReference(t *testing.T) 
 	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
-		ResourceReferences:referencesOfExperimentAndInvalidPipelineVersion,
+		ResourceReferences: referencesOfExperimentAndInvalidPipelineVersion,
 	}
 	err := server.validateCreateRunRequest(&api.CreateRunRequest{Run: run})
 	assert.NotNil(t, err)
@@ -268,7 +283,7 @@ func TestValidateCreateRunRequest_InvalidPipelineSpec(t *testing.T) {
 		Name:               "run1",
 		ResourceReferences: validReference,
 		PipelineSpec: &api.PipelineSpec{
-			PipelineId: resource.DefaultFakeUUID,
+			PipelineId:       resource.DefaultFakeUUID,
 			WorkflowManifest: testWorkflow.ToStringForStore(),
 			Parameters:       []*api.Parameter{{Name: "param1", Value: "world"}},
 		},

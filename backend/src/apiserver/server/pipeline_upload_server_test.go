@@ -36,21 +36,12 @@ const (
 )
 
 func TestUploadPipeline_YAML(t *testing.T) {
-	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	resourceManager := resource.NewResourceManager(clientManager)
-	server := PipelineUploadServer{resourceManager: resourceManager}
-	b := &bytes.Buffer{}
-	w := multipart.NewWriter(b)
-	part, _ := w.CreateFormFile("uploadfile", "hello-world.yaml")
-	io.Copy(part, bytes.NewBufferString("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
-	w.Close()
-	req, _ := http.NewRequest("POST", "/apis/v1beta1/pipelines/upload", bytes.NewReader(b.Bytes()))
-	req.Header.Set("Content-Type", w.FormDataContentType())
-
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(server.UploadPipeline)
-	handler.ServeHTTP(rr, req)
-	assert.Equal(t, 200, rr.Code)
+	clientManager, server := setupClientManagerAndServer()
+	bytesBuffer, writer := setupWriter("")
+	setWriterWithBuffer("uploadfile", "hello-world.yaml", "apiVersion: tekton.dev/v1beta1\nkind: PipelineRun", writer)
+	response := uploadPipeline("/apis/v1beta1/pipelines/upload",
+		bytes.NewReader(bytesBuffer.Bytes()), writer, server.UploadPipeline)
+	assert.Equal(t, 200, response.Code)
 	// Verify time format is RFC3339.
 	parsedResponse := struct {
 		CreatedAt      string `json:"created_at"`
@@ -131,11 +122,48 @@ func TestUploadPipeline_YAML(t *testing.T) {
 		},
 	}
 	// Expect 2 versions, one is created by default when creating pipeline and the other is what we manually created
-	versions, total_size, str, err := clientManager.PipelineStore().ListPipelineVersions(resource.DefaultFakeUUID, opts)
+	versions, totalSize, str, err := clientManager.PipelineStore().ListPipelineVersions(resource.DefaultFakeUUID, opts)
 	assert.Nil(t, err)
 	assert.Equal(t, str, "")
-	assert.Equal(t, 2, total_size)
+	assert.Equal(t, 2, totalSize)
 	assert.Equal(t, versionsExpect, versions)
+}
+
+func updateClientManager(clientManager *resource.FakeClientManager, uuid util.UUIDGeneratorInterface) PipelineUploadServer {
+	clientManager.UpdateUUID(uuid)
+	resourceManager := resource.NewResourceManager(clientManager)
+	server := PipelineUploadServer{resourceManager: resourceManager, options: &PipelineUploadServerOptions{CollectMetrics: false}}
+	return server
+}
+
+func uploadPipeline(url string, body io.Reader, writer *multipart.Writer, uploadFunc func(http.ResponseWriter, *http.Request)) *httptest.ResponseRecorder {
+	req, _ := http.NewRequest("POST", url, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(uploadFunc)
+	handler.ServeHTTP(rr, req)
+	return rr
+}
+
+func setupClientManagerAndServer() (*resource.FakeClientManager, PipelineUploadServer) {
+	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
+	resourceManager := resource.NewResourceManager(clientManager)
+	server := PipelineUploadServer{resourceManager: resourceManager, options: &PipelineUploadServerOptions{CollectMetrics: false}}
+	return clientManager, server
+}
+
+func setupWriter(text string) (*bytes.Buffer, *multipart.Writer) {
+	bytesBuffer := &bytes.Buffer{}
+	if text != "" {
+		bytesBuffer.WriteString(text)
+	}
+	return bytesBuffer, multipart.NewWriter(bytesBuffer)
+}
+
+func setWriterWithBuffer(fieldname string, filename string, buffer string, writer *multipart.Writer) {
+	part, _ := writer.CreateFormFile(fieldname, filename)
+	io.Copy(part, bytes.NewBufferString(buffer))
+	writer.Close()
 }
 
 // Removed TestUploadPipeline tests because it expects argo spec in the tarball file.
