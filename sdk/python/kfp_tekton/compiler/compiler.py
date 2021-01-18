@@ -20,6 +20,7 @@ import itertools
 import zipfile
 import re
 import textwrap
+import yaml
 
 from typing import Callable, List, Text, Dict, Any
 from os import environ as env
@@ -40,6 +41,7 @@ from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8
 from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton.compiler.any_sequencer import generate_any_sequencer
+from kfp_tekton.compiler._tekton_hander import _handle_tekton_pipeline_variables
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
@@ -792,6 +794,8 @@ class TektonCompiler(Compiler):
           'Internal compiler error: Found unresolved PipelineParam. '
           'Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues '
           'attaching the pipeline DSL code and the pipeline YAML.')
+
+    yaml_text = dump_yaml(_handle_tekton_pipeline_variables(yaml.load(yaml_text, Loader=yaml.FullLoader)))
 
     if package_path is None:
       return yaml_text

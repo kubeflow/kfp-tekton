@@ -18,7 +18,8 @@ and test pipelines found in the KFP repository.
     - [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations)
     - [ImagePullSecrets](#imagepullsecrets)
     - [Exit Handler](#exit-handler)
-    - [Any sequencer](#any-sequencer)
+    - [Any Sequencer](#any-sequencer)
+    - [Tekton Pipeline Variables](#tekton-pipeline-variables)
 - [Pipeline DSL Features with a Custom Tekton Implementation](#pipeline-dsl-features-with-a-custom-tekton-implementation)
   - [Features with the Same Behavior as Argo](#features-with-the-same-behavior-as-argo)
     - [InitContainers](#initcontainers)
@@ -126,7 +127,7 @@ the [exit_handler](/sdk/python/tests/compiler/testdata/exit_handler.py) compiler
 
 The `finally` syntax is supported since Tekton version `0.14.0`.
 
-### Any sequencer
+### Any Sequencer
 
 When any one of the task dependencies complete successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym). 
 
@@ -141,6 +142,17 @@ dsl.ContainerOp(
 ```
 
 Please note that the service account of the `Any Sequencer` needs 'get' premission to watch the status of the sepecified `taskRun`.
+
+### Tekton Pipeline Variables
+
+Some [Tekton Pipeline Variables](https://github.com/tektoncd/pipeline/blob/master/docs/variables.md#variables-available-in-a-pipeline) that cannot be used in ContainerOps directly, and must be passed by `params`. The _KFP-Tekton_ compiler supports user using the variables in ContainerOps, the relative params will be added automatically when compiling. See the [example](python/tests/compiler/testdata/tekton_pipeline_variables.py).
+Supported variables list:
+```
+$(context.pipeline.name)
+$(context.pipelineRun.name)
+$(context.pipelineRun.namespace)
+$(context.pipelineRun.uid)
+```
 
 # Pipeline DSL Features with a Custom Tekton Implementation
 
