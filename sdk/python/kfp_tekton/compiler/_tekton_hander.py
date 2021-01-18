@@ -40,15 +40,15 @@ def _handle_tekton_pipeline_variables(pipeline_run):
             if val in task_str:
                 task_str = task_str.replace(val, '$(params.' + key + ')')
                 task['taskSpec']['steps'] = json.loads(task_str)
-                if key not in json.dumps(task.get('params', '')):
-                    if task.get('params', ''):
+                if task.get('params', ''):
+                    if {'name': key, 'value': val} not in task['params']:
                         task['params'].append({'name': key, 'value': val})
-                    else:
-                        task['params'] = [{'name': key, 'value': val}]
-                if key not in task['taskSpec'].get('params', ''):
-                    if task['taskSpec'].get('params', ''):
+                else:
+                    task['params'] = [{'name': key, 'value': val}]
+                if task['taskSpec'].get('params', ''):
+                    if {'name': key} not in task['taskSpec']['params']:
                         task['taskSpec']['params'].append({'name': key})
-                    else:
-                        task['taskSpec']['params'] = [{'name': key}]
+                else:
+                    task['taskSpec']['params'] = [{'name': key}]
 
     return pipeline_run

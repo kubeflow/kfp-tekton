@@ -41,33 +41,16 @@ def generate_any_sequencer(task_list):
     '''
     any_sequencer = {
         "name": "any-sequencer-" + str(uuid.uuid4().hex[:5]),
-        "params": [
-            {
-                "name": "pipelineRun-namespace",
-                "value": "$(context.pipelineRun.namespace)"
-            },
-            {
-                "name": "pipelineRun-name",
-                "value": "$(context.pipelineRun.name)"
-            },
-        ],
+        "params": [],
         "taskSpec": {
-            "params": [
-                {
-                    "name": "pipelineRun-namespace"
-                },
-                {
-                    "name": "pipelineRun-name"
-                }
-            ],
             "steps": [
                 {
                     "name": "main",
                     "args": [
                         "-namespace",
-                        "$(params.pipelineRun-namespace)",
+                        "$(context.pipelineRun.namespace)",
                         "-prName",
-                        "$(params.pipelineRun-name)",
+                        "$(context.pipelineRun.name)",
                         "-taskList",
                         task_list
                     ],
