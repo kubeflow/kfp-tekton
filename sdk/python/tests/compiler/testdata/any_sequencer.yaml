@@ -78,14 +78,14 @@ spec:
       timeout: 0s
     - name: any-sequencer-4b2c9
       params:
-      - name: pipelineRun-namespace
-        value: $(context.pipelineRun.namespace)
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)
+      - name: pipelineRun-namespace
+        value: $(context.pipelineRun.namespace)
       taskSpec:
         params:
-        - name: pipelineRun-namespace
         - name: pipelineRun-name
+        - name: pipelineRun-namespace
         steps:
         - args:
           - -namespace
