@@ -166,7 +166,7 @@ func TestConvertPipelineIdToDefaultPipelineVersion(t *testing.T) {
 				Relationship: api.Relationship_OWNER,
 			},
 		},
-	}, []byte(testWorkflow.ToStringForStore()))
+	}, []byte(testWorkflow.ToStringForStore()), true)
 	assert.Nil(t, err)
 
 	// Create a run of the latest pipeline version, but by specifying the pipeline id.
@@ -198,7 +198,7 @@ func TestConvertPipelineIdToDefaultPipelineVersion(t *testing.T) {
 			},
 		},
 	}
-	err = ConvertPipelineIdToDefaultPipelineVersion(apiRun.PipelineSpec, &apiRun.ResourceReferences, manager)
+	err = convertPipelineIdToDefaultPipelineVersion(apiRun.PipelineSpec, &apiRun.ResourceReferences, manager)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedApiRun, apiRun)
 }
@@ -224,7 +224,7 @@ func TestConvertPipelineIdToDefaultPipelineVersion_NoOp(t *testing.T) {
 				Relationship: api.Relationship_OWNER,
 			},
 		},
-	}, []byte(testWorkflow.ToStringForStore()))
+	}, []byte(testWorkflow.ToStringForStore()), true)
 	assert.Nil(t, err)
 	// FakeUUID is the new default version's id.
 	assert.NotEqual(t, oldVersionId, FakeUUIDOne)
@@ -263,7 +263,7 @@ func TestConvertPipelineIdToDefaultPipelineVersion_NoOp(t *testing.T) {
 			},
 		},
 	}
-	err = ConvertPipelineIdToDefaultPipelineVersion(apiRun.PipelineSpec, &apiRun.ResourceReferences, manager)
+	err = convertPipelineIdToDefaultPipelineVersion(apiRun.PipelineSpec, &apiRun.ResourceReferences, manager)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedApiRun, apiRun)
 }

@@ -15,66 +15,87 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: any-sequencer
   annotations:
-    tekton.dev/output_artifacts: '{}'
-    tekton.dev/input_artifacts: '{}'
+    anyConditions: '{"any-sequencer-4b2c9": ["task1", "task2", "task3"]}'
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Any Sequencer Component
+      Demo", "name": "Any Sequencer"}'
+    sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"task1": [], "task2": [], "task3": [], "task4": []}'
-    sidecar.istio.io/inject: "false"
-    anyConditions: '{"any-sequencer-2e071": ["task1", "task2", "task3"]}'
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "Any Sequencer Component
-      Demo", "name": "Any Sequencer"}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: any-sequencer
 spec:
   pipelineSpec:
     tasks:
     - name: task1
       taskSpec:
         steps:
-        - name: main
-          args: [sleep 15]
-          command: [/bin/bash, -c]
+        - args:
+          - sleep 15
+          command:
+          - /bin/bash
+          - -c
           image: registry.access.redhat.com/ubi8/ubi-minimal
+          name: main
       timeout: 0s
     - name: task2
       taskSpec:
         steps:
-        - name: main
-          args: [sleep 200]
-          command: [/bin/bash, -c]
+        - args:
+          - sleep 200
+          command:
+          - /bin/bash
+          - -c
           image: registry.access.redhat.com/ubi8/ubi-minimal
+          name: main
       timeout: 0s
     - name: task3
       taskSpec:
         steps:
-        - name: main
-          args: [sleep 300]
-          command: [/bin/bash, -c]
+        - args:
+          - sleep 300
+          command:
+          - /bin/bash
+          - -c
           image: registry.access.redhat.com/ubi8/ubi-minimal
+          name: main
       timeout: 0s
     - name: task4
+      runAfter:
+      - any-sequencer-4b2c9
       taskSpec:
         steps:
-        - name: main
-          args: [sleep 30]
-          command: [/bin/bash, -c]
+        - args:
+          - sleep 30
+          command:
+          - /bin/bash
+          - -c
           image: registry.access.redhat.com/ubi8/ubi-minimal
+          name: main
       timeout: 0s
-      runAfter: [any-sequencer-2e071]
-    - name: any-sequencer-2e071
-      taskSpec:
-        steps:
-        - name: main
-          args: [-namespace, $(params.pipelineRun-namespace), -prName, $(params.pipelineRun-name),
-            -taskList, 'task1,task2,task3']
-          command: [any-taskrun]
-          image: dspipelines/any-sequencer:latest
-        params:
-        - {name: pipelineRun-name}
-        - {name: pipelineRun-namespace}
+    - name: any-sequencer-4b2c9
       params:
-      - {name: pipelineRun-name, value: $(context.pipelineRun.name)}
-      - {name: pipelineRun-namespace, value: $(context.pipelineRun.namespace)}
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
+      - name: pipelineRun-namespace
+        value: $(context.pipelineRun.namespace)
+      taskSpec:
+        params:
+        - name: pipelineRun-name
+        - name: pipelineRun-namespace
+        steps:
+        - args:
+          - -namespace
+          - $(params.pipelineRun-namespace)
+          - -prName
+          - $(params.pipelineRun-name)
+          - -taskList
+          - task1,task2,task3
+          command:
+          - any-taskrun
+          image: dspipelines/any-sequencer:latest
+          name: main
   timeout: 0s

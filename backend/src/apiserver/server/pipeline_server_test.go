@@ -27,7 +27,7 @@ func TestListPipelineVersion_NoResourceKey(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
 
-	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client()}
+	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client(), options: &PipelineServerOptions{CollectMetrics: false}}
 
 	_, err := pipelineServer.ListPipelineVersions(context.Background(), &api.ListPipelineVersionsRequest{
 		ResourceKey: nil,

@@ -1,4 +1,5 @@
 SUCCESS: add_pod_env.py
+SUCCESS: artifact_passing_using_volume.py
 SUCCESS: basic.py
 SUCCESS: basic_no_decorator.py
 SUCCESS: coin.py
@@ -6,6 +7,7 @@ SUCCESS: compose.py
 SUCCESS: default_value.py
 SUCCESS: input_artifact_raw_value.py
 FAILURE: loop_over_lightweight_output.py
+SUCCESS: opsgroups.py
 FAILURE: parallelfor_item_argument_resolving.py
 SUCCESS: param_op_transform.py
 SUCCESS: param_substitutions.py
@@ -15,6 +17,7 @@ SUCCESS: recursive_while.py
 SUCCESS: resourceop_basic.py
 SUCCESS: sidecar.py
 SUCCESS: timeout.py
+FAILURE: uri_artifacts.py
 SUCCESS: volume.py
 SUCCESS: volume_snapshotop_rokurl.py
 SUCCESS: volume_snapshotop_sequential.py

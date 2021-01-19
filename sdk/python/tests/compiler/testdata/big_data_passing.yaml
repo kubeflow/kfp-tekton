@@ -58,8 +58,10 @@ spec:
               specified number of times", "implementation": {"container": {"args":
               ["--line", {"inputValue": "line"}, {"if": {"cond": {"isPresent": "count"},
               "then": ["--count", {"inputValue": "count"}]}}, "--output-text", {"outputPath":
-              "output_text"}], "command": ["python3", "-u", "-c", "def _make_parent_dirs_and_return_path(file_path:
-              str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
+              "output_text"}], "command": ["sh", "-ec", "program_path=$(mktemp)\necho
+              -n \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              "def _make_parent_dirs_and_return_path(file_path: str):\n    import
+              os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
               file_path\n\ndef repeat_line(line, output_text_path, count = 10):\n    ''''''Repeat
               the line specified number of times''''''\n    with open(output_text_path,
               ''w'') as writer:\n        for i in range(count):\n            writer.write(line
@@ -82,9 +84,15 @@ spec:
           - --output-text
           - $(workspaces.repeat-line.path)/repeat-line-output_text
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def _make_parent_dirs_and_return_path(file_path: str):\n    import os\n\
             \    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return\
             \ file_path\n\ndef repeat_line(line, output_text_path, count = 10):\n\
@@ -114,7 +122,8 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"description": "Print text",
               "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["python3", "-u", "-c", "def print_text(\n        text_path\n):  #
+              "command": ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
               The \"text\" input is untyped so that any data can be printed\n    ''''''Print
               text''''''\n    with open(text_path, ''r'') as reader:\n        for
               line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
@@ -128,9 +137,15 @@ spec:
           - --text
           - $(workspaces.print-text.path)/repeat-line-output_text
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def print_text(\n        text_path\n):  # The \"text\" input is untyped\
             \ so that any data can be printed\n    '''Print text'''\n    with open(text_path,\
             \ 'r') as reader:\n        for line in reader:\n            print(line,\
@@ -153,7 +168,8 @@ spec:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
               {"args": ["--source", {"inputPath": "source"}, "--odd-lines", {"outputPath":
               "odd_lines"}, "--even-lines", {"outputPath": "even_lines"}], "command":
-              ["python3", "-u", "-c", "def _make_parent_dirs_and_return_path(file_path:
+              ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def _make_parent_dirs_and_return_path(file_path:
               str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
               file_path\n\ndef split_text_lines(source_path,\n                     odd_lines_path,\n                     even_lines_path):\n    with
               open(source_path, ''r'') as reader:\n        with open(odd_lines_path,
@@ -211,9 +227,15 @@ spec:
           - --even-lines
           - $(workspaces.split-text-lines.path)/split-text-lines-even_lines
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def _make_parent_dirs_and_return_path(file_path: str):\n    import os\n\
             \    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return\
             \ file_path\n\ndef split_text_lines(source_path,\n                   \
@@ -252,7 +274,8 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"description": "Print text",
               "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["python3", "-u", "-c", "def print_text(\n        text_path\n):  #
+              "command": ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
               The \"text\" input is untyped so that any data can be printed\n    ''''''Print
               text''''''\n    with open(text_path, ''r'') as reader:\n        for
               line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
@@ -266,9 +289,15 @@ spec:
           - --text
           - $(workspaces.print-text-2.path)/split-text-lines-odd_lines
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def print_text(\n        text_path\n):  # The \"text\" input is untyped\
             \ so that any data can be printed\n    '''Print text'''\n    with open(text_path,\
             \ 'r') as reader:\n        for line in reader:\n            print(line,\
@@ -292,7 +321,8 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"description": "Print text",
               "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["python3", "-u", "-c", "def print_text(\n        text_path\n):  #
+              "command": ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
               The \"text\" input is untyped so that any data can be printed\n    ''''''Print
               text''''''\n    with open(text_path, ''r'') as reader:\n        for
               line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
@@ -306,9 +336,15 @@ spec:
           - --text
           - $(workspaces.print-text-3.path)/split-text-lines-even_lines
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def print_text(\n        text_path\n):  # The \"text\" input is untyped\
             \ so that any data can be printed\n    '''Print text'''\n    with open(text_path,\
             \ 'r') as reader:\n        for line in reader:\n            print(line,\
@@ -332,8 +368,10 @@ spec:
               {"args": [{"if": {"cond": {"isPresent": "start"}, "then": ["--start",
               {"inputValue": "start"}]}}, {"if": {"cond": {"isPresent": "count"},
               "then": ["--count", {"inputValue": "count"}]}}, "--numbers", {"outputPath":
-              "numbers"}], "command": ["python3", "-u", "-c", "def _make_parent_dirs_and_return_path(file_path:
-              str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
+              "numbers"}], "command": ["sh", "-ec", "program_path=$(mktemp)\necho
+              -n \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              "def _make_parent_dirs_and_return_path(file_path: str):\n    import
+              os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
               file_path\n\ndef write_numbers(\n        numbers_path, start = 0, count
               = 10):\n    with open(numbers_path, ''w'') as writer:\n        for i
               in range(start, count):\n            writer.write(str(i) + ''\\n'')\n\nimport
@@ -354,9 +392,15 @@ spec:
           - --numbers
           - $(workspaces.write-numbers.path)/write-numbers-numbers
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def _make_parent_dirs_and_return_path(file_path: str):\n    import os\n\
             \    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return\
             \ file_path\n\ndef write_numbers(\n        numbers_path, start = 0, count\
@@ -385,7 +429,8 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"description": "Print text",
               "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["python3", "-u", "-c", "def print_text(\n        text_path\n):  #
+              "command": ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
               The \"text\" input is untyped so that any data can be printed\n    ''''''Print
               text''''''\n    with open(text_path, ''r'') as reader:\n        for
               line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
@@ -399,9 +444,15 @@ spec:
           - --text
           - $(workspaces.print-text-4.path)/write-numbers-numbers
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def print_text(\n        text_path\n):  # The \"text\" input is untyped\
             \ so that any data can be printed\n    '''Print text'''\n    with open(text_path,\
             \ 'r') as reader:\n        for line in reader:\n            print(line,\
@@ -425,15 +476,17 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
               {"args": ["--numbers", {"inputPath": "numbers"}, "----output-paths",
-              {"outputPath": "Output"}], "command": ["python3", "-u", "-c", "def sum_numbers(numbers_path):\n    sum
-              = 0\n    with open(numbers_path, ''r'') as reader:\n        for line
-              in reader:\n            sum = sum + int(line)\n    return sum\n\ndef
-              _serialize_int(int_value: int) -> str:\n    if isinstance(int_value,
-              str):\n        return int_value\n    if not isinstance(int_value, int):\n        raise
-              TypeError(''Value \"{}\" has type \"{}\" instead of int.''.format(str(int_value),
-              str(type(int_value))))\n    return str(int_value)\n\nimport argparse\n_parser
-              = argparse.ArgumentParser(prog=''Sum numbers'', description='''')\n_parser.add_argument(\"--numbers\",
-              dest=\"numbers_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"----output-paths\",
+              {"outputPath": "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\necho
+              -n \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              "def sum_numbers(numbers_path):\n    sum = 0\n    with open(numbers_path,
+              ''r'') as reader:\n        for line in reader:\n            sum = sum
+              + int(line)\n    return sum\n\ndef _serialize_int(int_value: int) ->
+              str:\n    if isinstance(int_value, str):\n        return int_value\n    if
+              not isinstance(int_value, int):\n        raise TypeError(''Value \"{}\"
+              has type \"{}\" instead of int.''.format(str(int_value), str(type(int_value))))\n    return
+              str(int_value)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Sum
+              numbers'', description='''')\n_parser.add_argument(\"--numbers\", dest=\"numbers_path\",
+              type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"----output-paths\",
               dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args = vars(_parser.parse_args())\n_output_files
               = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = sum_numbers(**_parsed_args)\n\n_outputs
               = [_outputs]\n\n_output_serializers = [\n    _serialize_int,\n\n]\n\nimport
@@ -448,9 +501,15 @@ spec:
           - '----output-paths'
           - $(workspaces.sum-numbers.path)/sum-numbers-Output
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def sum_numbers(numbers_path):\n    sum = 0\n    with open(numbers_path,\
             \ 'r') as reader:\n        for line in reader:\n            sum = sum\
             \ + int(line)\n    return sum\n\ndef _serialize_int(int_value: int) ->\
@@ -484,7 +543,8 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"description": "Print text",
               "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["python3", "-u", "-c", "def print_text(\n        text_path\n):  #
+              "command": ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
               The \"text\" input is untyped so that any data can be printed\n    ''''''Print
               text''''''\n    with open(text_path, ''r'') as reader:\n        for
               line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
@@ -498,9 +558,15 @@ spec:
           - --text
           - $(workspaces.print-text-5.path)/sum-numbers-Output
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def print_text(\n        text_path\n):  # The \"text\" input is untyped\
             \ so that any data can be printed\n    '''Print text'''\n    with open(text_path,\
             \ 'r') as reader:\n        for line in reader:\n            print(line,\
@@ -522,7 +588,8 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
               {"args": ["----output-paths", {"outputPath": "Output"}], "command":
-              ["python3", "-u", "-c", "def gen_params():\n    import random\n    num
+              ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def gen_params():\n    import random\n    num
               = random.randint(0, 9)\n    return num\n\ndef _serialize_int(int_value:
               int) -> str:\n    if isinstance(int_value, str):\n        return int_value\n    if
               not isinstance(int_value, int):\n        raise TypeError(''Value \"{}\"
@@ -544,9 +611,15 @@ spec:
           - '----output-paths'
           - $(results.output.path)
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def gen_params():\n    import random\n    num = random.randint(0, 9)\n\
             \    return num\n\ndef _serialize_int(int_value: int) -> str:\n    if\
             \ isinstance(int_value, str):\n        return int_value\n    if not isinstance(int_value,\
@@ -573,7 +646,8 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
               {"args": ["--numbers-parm", {"inputValue": "numbers_parm"}], "command":
-              ["python3", "-u", "-c", "def print_params(numbers_parm):\n    print(\"The
+              ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def print_params(numbers_parm):\n    print(\"The
               result number is: %d\" % numbers_parm)\n\nimport argparse\n_parser =
               argparse.ArgumentParser(prog=''Print params'', description='''')\n_parser.add_argument(\"--numbers-parm\",
               dest=\"numbers_parm\", type=int, required=True, default=argparse.SUPPRESS)\n_parsed_args
@@ -587,9 +661,15 @@ spec:
           - --numbers-parm
           - $(inputs.params.gen-params-Output)
           command:
-          - python3
-          - -u
-          - -c
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            echo -n "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
           - "def print_params(numbers_parm):\n    print(\"The result number is: %d\"\
             \ % numbers_parm)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Print\
             \ params', description='')\n_parser.add_argument(\"--numbers-parm\", dest=\"\

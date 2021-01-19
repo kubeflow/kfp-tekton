@@ -17,21 +17,29 @@ package server
 import (
 	"testing"
 
+	"context"
+
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"google.golang.org/grpc/codes"
+	authorizationv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
 // Removed conflicted v1alpha1.workflowspec.
+
+const (
+	invalidPipelineVersionId = "not_exist_pipeline_version"
+)
 
 var testWorkflow = util.NewWorkflow(&v1beta1.PipelineRun{
 	TypeMeta:   v1.TypeMeta{APIVersion: "tekton.dev/v1beta1", Kind: "PipelineRun"},
@@ -73,6 +81,27 @@ var validReferencesOfExperimentAndPipelineVersion = []*api.ResourceReference{
 	},
 }
 
+var referencesOfExperimentAndInvalidPipelineVersion = []*api.ResourceReference{
+	{
+		Key: &api.ResourceKey{
+			Type: api.ResourceType_EXPERIMENT,
+			Id:   resource.DefaultFakeUUID,
+		},
+		Relationship: api.Relationship_OWNER,
+	},
+	{
+		Key:          &api.ResourceKey{Type: api.ResourceType_PIPELINE_VERSION, Id: invalidPipelineVersionId},
+		Relationship: api.Relationship_CREATOR,
+	},
+}
+
+var referencesOfInvalidPipelineVersion = []*api.ResourceReference{
+	{
+		Key:          &api.ResourceKey{Type: api.ResourceType_PIPELINE_VERSION, Id: invalidPipelineVersionId},
+		Relationship: api.Relationship_CREATOR,
+	},
+}
+
 // This automatically runs before all the tests.
 func initEnvVars() {
 	viper.Set(common.PodNamespace, "ns1")
@@ -99,10 +128,10 @@ func initWithExperiment(t *testing.T) (*resource.FakeClientManager, *resource.Re
 	return clientManager, resourceManager, experiment
 }
 
-func initWithExperiment_KFAM_Unauthorized(t *testing.T) (*resource.FakeClientManager, *resource.ResourceManager, *model.Experiment) {
+func initWithExperiment_SubjectAccessReview_Unauthorized(t *testing.T) (*resource.FakeClientManager, *resource.ResourceManager, *model.Experiment) {
 	initEnvVars()
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	clientManager.KfamClientFake = client.NewFakeKFAMClientUnauthorized()
+	clientManager.SubjectAccessReviewClientFake = client.NewFakeSubjectAccessReviewClientUnauthorized()
 	resourceManager := resource.NewResourceManager(clientManager)
 	apiExperiment := &api.Experiment{Name: "exp1"}
 	if common.IsMultiUserMode() {
@@ -146,7 +175,7 @@ func initWithExperimentAndPipelineVersion(t *testing.T) (*resource.FakeClientMan
 			},
 		},
 	},
-		[]byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
+		[]byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"), true)
 
 	return clientManager, resourceManager, experiment
 }
@@ -184,4 +213,24 @@ func AssertUserError(t *testing.T, err error, expectedCode codes.Code) {
 	userError, ok := err.(*util.UserError)
 	assert.True(t, ok)
 	assert.Equal(t, expectedCode, userError.ExternalStatusCode())
+}
+
+func getPermissionDeniedError(ctx context.Context, resourceAttributes *authorizationv1.ResourceAttributes) error {
+	// Retrieve request details to compose the expected error
+	userIdentity, _ := getUserIdentity(ctx)
+	return util.NewPermissionDeniedError(
+		errors.New("Unauthorized access"),
+		"User '%s' is not authorized with reason: %s (request: %+v)",
+		userIdentity,
+		"this is not allowed",
+		resourceAttributes,
+	)
+}
+
+func wrapFailedAuthzApiResourcesError(err error) error {
+	return util.Wrap(err, "Failed to authorize with API resource references")
+}
+
+func wrapFailedAuthzRequestError(err error) error {
+	return util.Wrap(err, "Failed to authorize the request")
 }
