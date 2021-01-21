@@ -52,7 +52,7 @@ development stage. Contributions are welcome: {}
 """.format(HOMEPAGE)
 
 REQUIRES = [
-    'kfp==1.0.4',
+    'kfp==1.3.0',
     'kubernetes==11.0.0'
 ]
 

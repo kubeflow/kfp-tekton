@@ -65,6 +65,11 @@ matrix:
       go: 1.15.x
       script:
         - make build-backend
+    - name: "run go unit tests"
+      language: go
+      go: 1.15.x
+      script:
+        - make run-go-unittests
     - name: "Verify api-server, persistenceagent, metadata-writer, and scheduledworkflow docker build"
       services: docker
       env:

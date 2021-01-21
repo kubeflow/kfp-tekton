@@ -95,13 +95,24 @@ spec:
         value: $(tasks.gcs-download-2.results.data)
       - name: gcs-download-data
         value: $(tasks.gcs-download.results.data)
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
+      - name: pipelineRun-namespace
+        value: $(context.pipelineRun.namespace)
+      - name: pipelineRun-uid
+        value: $(context.pipelineRun.uid)
       taskSpec:
         params:
         - name: gcs-download-2-data
         - name: gcs-download-data
+        - name: pipelineRun-name
+        - name: pipelineRun-namespace
+        - name: pipelineRun-uid
         steps:
         - args:
-          - 'echo "Text 1: $0"; echo "Text 2: $1"; echo "$(inputs.params.gcs-download-data)"'
+          - 'echo "Text 1: $0"; echo "Text 2: $1"; echo "$(inputs.params.gcs-download-data)";            echo
+            "$(params.pipelineRun-name); echo "$(params.pipelineRun-namespace)"; echo
+            "$(params.pipelineRun-uid)"'
           - $(inputs.params.gcs-download-data)
           - $(inputs.params.gcs-download-2-data)
           command:

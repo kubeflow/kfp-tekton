@@ -1,0 +1,74 @@
+apiVersion: custom.tekton.dev/v1alpha1
+kind: PipelineLoop
+metadata:
+  name: conditionloop
+spec:
+  pipelineSpec:
+    params:
+    - name: message
+      type: string
+    tasks:
+    - name: task1
+      params:
+      - name: message
+        value: $(params.message)
+      taskSpec:
+        params:
+        - name: message
+          type: string
+        results:
+          - name: output
+        steps:
+          - name: main
+            image: ubuntu
+            imagePullPolicy: IfNotPresent
+            script: |
+              #!/usr/bin/env bash
+              printf "$(params.message)" > $(results.output.path)
+    - name: task-ok
+      runAfter:
+        - task1
+      when:
+        - input: "$(tasks.task1.results.output)"
+          operator: in
+          values: ["B"]
+      taskSpec:
+        steps:
+          - name: main
+            image: ubuntu
+            imagePullPolicy: IfNotPresent
+            script: |
+              #!/bin/sh
+              echo "job start to run..."
+    - name: task-fail
+      runAfter:
+        - task1
+      when:
+        - input: "$(tasks.task1.results.output)"
+          operator: in
+          values: ["A"]
+      taskSpec:
+        steps:
+          - name: main
+            image: ubuntu
+            imagePullPolicy: IfNotPresent
+            script: |
+              #!/bin/sh
+              echo "continue loop"
+  iterateParam: message
+
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Run
+metadata:
+  name: simplepipelinelooprun
+  labels: 
+    last-loop-task: "task-fail"
+spec:
+  params:
+    - name: message
+      value: '["A", "B", "A"]'
+  ref:
+    apiVersion: custom.tekton.dev/v1alpha1
+    kind: PipelineLoop
+    name: conditionloop

@@ -25,6 +25,7 @@ import (
 
 const (
 	MultiUserMode                       string = "MULTIUSER"
+	MultiUserModeSharedReadAccess       string = "MULTIUSER_SHARED_READ"
 	PodNamespace                        string = "POD_NAMESPACE"
 	CacheEnabled                        string = "CacheEnabled"
 	DefaultPipelineRunnerServiceAccount string = "DefaultPipelineRunnerServiceAccount"
@@ -40,7 +41,12 @@ const (
 	ArtifactImage                       string = "ARTIFACT_IMAGE"
 	ArtifactCopyStepTemplate            string = "ARTIFACT_COPY_STEP_TEMPLATE"
 	InjectDefaultScript                 string = "INJECT_DEFAULT_SCRIPT"
+	UpdatePipelineVersionByDefault      string = "AUTO_UPDATE_PIPELINE_DEFAULT_VERSION"
 )
+
+func IsPipelineVersionUpdatedByDefault() bool {
+	return GetBoolConfigWithDefault(UpdatePipelineVersionByDefault, true)
+}
 
 func GetStringConfig(configName string) string {
 	if !viper.IsSet(configName) {
@@ -80,6 +86,10 @@ func GetDurationConfig(configName string) time.Duration {
 		glog.Fatalf("Please specify flag %s", configName)
 	}
 	return viper.GetDuration(configName)
+}
+
+func IsMultiUserSharedReadMode() bool {
+	return GetBoolConfigWithDefault(MultiUserModeSharedReadAccess, false)
 }
 
 func IsMultiUserMode() bool {
