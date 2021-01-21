@@ -15,14 +15,17 @@
 package client
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	authzv1 "k8s.io/api/authorization/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type FakeSubjectAccessReviewClient struct {
 }
 
-func (FakeSubjectAccessReviewClient) Create(*authzv1.SubjectAccessReview) (*authzv1.SubjectAccessReview, error) {
+func (FakeSubjectAccessReviewClient) Create(ctx context.Context, auth *authzv1.SubjectAccessReview, options v1.CreateOptions) (*authzv1.SubjectAccessReview, error) {
 	return &authzv1.SubjectAccessReview{Status: authzv1.SubjectAccessReviewStatus{
 		Allowed:         true,
 		Denied:          false,
@@ -38,7 +41,7 @@ func NewFakeSubjectAccessReviewClient() FakeSubjectAccessReviewClient {
 type FakeSubjectAccessReviewClientUnauthorized struct {
 }
 
-func (FakeSubjectAccessReviewClientUnauthorized) Create(*authzv1.SubjectAccessReview) (*authzv1.SubjectAccessReview, error) {
+func (FakeSubjectAccessReviewClientUnauthorized) Create(ctx context.Context, auth *authzv1.SubjectAccessReview, options v1.CreateOptions) (*authzv1.SubjectAccessReview, error) {
 	return &authzv1.SubjectAccessReview{Status: authzv1.SubjectAccessReviewStatus{
 		Allowed:         false,
 		Denied:          false,
@@ -54,7 +57,7 @@ func NewFakeSubjectAccessReviewClientUnauthorized() FakeSubjectAccessReviewClien
 type FakeSubjectAccessReviewClientError struct {
 }
 
-func (FakeSubjectAccessReviewClientError) Create(*authzv1.SubjectAccessReview) (*authzv1.SubjectAccessReview, error) {
+func (FakeSubjectAccessReviewClientError) Create(ctx context.Context, auth *authzv1.SubjectAccessReview, options v1.CreateOptions) (*authzv1.SubjectAccessReview, error) {
 	return nil, errors.New("failed to create subject access review")
 }
 

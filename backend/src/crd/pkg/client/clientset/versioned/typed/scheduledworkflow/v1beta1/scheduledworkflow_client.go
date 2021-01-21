@@ -17,7 +17,7 @@ package v1beta1
 
 import (
 	v1beta1 "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
-	scheme "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned/scheme"
+	"github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 
