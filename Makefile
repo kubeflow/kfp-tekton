@@ -193,3 +193,6 @@ run-crd-unittests: # crd golang unit tests
 
 run-persistenceagent-unittests: # persistence agent golang unit tests
 	go test -v -cover ./backend/src/agent/...
+
+build-dependabot:
+	python3 hack/create_dependabot.py
