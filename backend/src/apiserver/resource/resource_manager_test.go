@@ -15,6 +15,7 @@
 package resource
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -407,7 +408,7 @@ func TestEnableJob_CustomResourceNotFound(t *testing.T) {
 	defer store.Close()
 	// The swf CR can be missing when user reinstalled KFP using existing DB data.
 	// Explicitly delete it to simulate the situation.
-	manager.getScheduledWorkflowClient(job.Namespace).Delete(job.Name, &v1.DeleteOptions{})
+	manager.getScheduledWorkflowClient(job.Namespace).Delete(context.Background(), job.Name, v1.DeleteOptions{})
 	// When swf CR is missing, enabling the job needs to fail.
 	err := manager.EnableJob(job.UUID, true)
 	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
@@ -422,7 +423,7 @@ func TestDisableJob_CustomResourceNotFound(t *testing.T) {
 
 	// The swf CR can be missing when user reinstalled KFP using existing DB data.
 	// Explicitly delete it to simulate the situation.
-	manager.getScheduledWorkflowClient(job.Namespace).Delete(job.Name, &v1.DeleteOptions{})
+	manager.getScheduledWorkflowClient(job.Namespace).Delete(context.Background(), job.Name, v1.DeleteOptions{})
 	err := manager.EnableJob(job.UUID, false)
 	require.Nil(t, err, "Disabling the job should succeed even when the custom resource is missing.")
 	job, err = manager.GetJob(job.UUID)
@@ -474,7 +475,7 @@ func TestDeleteJob_CustomResourceNotFound(t *testing.T) {
 	defer store.Close()
 	// The swf CR can be missing when user reinstalled KFP using existing DB data.
 	// Explicitly delete it to simulate the situation.
-	manager.getScheduledWorkflowClient(job.Namespace).Delete(job.Name, &v1.DeleteOptions{})
+	manager.getScheduledWorkflowClient(job.Namespace).Delete(context.Background(), job.Name, v1.DeleteOptions{})
 
 	// Now deleting job should still succeed when the swf CR is already deleted.
 	err := manager.DeleteJob(job.UUID)

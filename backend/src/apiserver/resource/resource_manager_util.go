@@ -15,6 +15,7 @@
 package resource
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -182,7 +183,7 @@ func formulateRetryWorkflow(wf *util.Workflow) (*util.Workflow, []string, error)
 
 func deletePods(k8sCoreClient client.KubernetesCoreInterface, podsToDelete []string, namespace string) error {
 	for _, podId := range podsToDelete {
-		err := k8sCoreClient.PodClient(namespace).Delete(podId, &metav1.DeleteOptions{})
+		err := k8sCoreClient.PodClient(namespace).Delete(context.Background(), podId, metav1.DeleteOptions{})
 		if err != nil && !apierr.IsNotFound(err) {
 			return util.NewInternalServerError(err, "Failed to delete pods.")
 		}

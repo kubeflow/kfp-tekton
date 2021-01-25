@@ -15,9 +15,12 @@
 package client
 
 import (
+	"context"
+
 	"github.com/kubeflow/pipelines/backend/src/crd/controller/scheduledworkflow/util"
 	swfclientset "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned"
 	"github.com/kubeflow/pipelines/backend/src/crd/pkg/client/informers/externalversions/scheduledworkflow/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/cache"
 )
@@ -61,6 +64,6 @@ func (p *ScheduledWorkflowClient) Get(namespace string, name string) (*util.Sche
 func (p *ScheduledWorkflowClient) Update(namespace string,
 	schedule *util.ScheduledWorkflow) error {
 	_, err := p.clientSet.ScheduledworkflowV1beta1().ScheduledWorkflows(namespace).
-		Update(schedule.Get())
+		Update(context.Background(), schedule.Get(), metav1.UpdateOptions{})
 	return err
 }

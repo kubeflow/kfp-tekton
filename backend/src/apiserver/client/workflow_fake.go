@@ -15,6 +15,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 
@@ -42,7 +43,7 @@ func NewWorkflowClientFake() *FakeWorkflowClient {
 	}
 }
 
-func (c *FakeWorkflowClient) Create(workflow *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
+func (c *FakeWorkflowClient) Create(ctx context.Context, workflow *v1beta1.PipelineRun, options v1.CreateOptions) (*v1beta1.PipelineRun, error) {
 	if workflow.GenerateName != "" {
 		c.lastGeneratedId += 1
 		workflow.Name = workflow.GenerateName + strconv.Itoa(c.lastGeneratedId)
@@ -52,7 +53,7 @@ func (c *FakeWorkflowClient) Create(workflow *v1beta1.PipelineRun) (*v1beta1.Pip
 	return workflow, nil
 }
 
-func (c *FakeWorkflowClient) Get(name string, options v1.GetOptions) (*v1beta1.PipelineRun, error) {
+func (c *FakeWorkflowClient) Get(ctx context.Context, name string, options v1.GetOptions) (*v1beta1.PipelineRun, error) {
 	workflow, ok := c.workflows[name]
 	if ok {
 		return workflow, nil
@@ -60,21 +61,21 @@ func (c *FakeWorkflowClient) Get(name string, options v1.GetOptions) (*v1beta1.P
 	return nil, k8errors.NewNotFound(k8schema.ParseGroupResource("tekton.dev"), name)
 }
 
-func (c *FakeWorkflowClient) UpdateStatus(workflow *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
+func (c *FakeWorkflowClient) UpdateStatus(ctx context.Context, workflow *v1beta1.PipelineRun, options v1.UpdateOptions) (*v1beta1.PipelineRun, error) {
 	return workflow, nil
 }
 
-func (c *FakeWorkflowClient) List(opts v1.ListOptions) (*v1beta1.PipelineRunList, error) {
+func (c *FakeWorkflowClient) List(ctx context.Context, opts v1.ListOptions) (*v1beta1.PipelineRunList, error) {
 	glog.Error("This fake method is not yet implemented.")
 	return nil, nil
 }
 
-func (c *FakeWorkflowClient) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeWorkflowClient) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	glog.Error("This fake method is not yet implemented.")
 	return nil, nil
 }
 
-func (c *FakeWorkflowClient) Update(workflow *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
+func (c *FakeWorkflowClient) Update(ctx context.Context, workflow *v1beta1.PipelineRun, options v1.UpdateOptions) (*v1beta1.PipelineRun, error) {
 	name := workflow.GetObjectMeta().GetName()
 	_, ok := c.workflows[name]
 	if ok {
@@ -83,7 +84,7 @@ func (c *FakeWorkflowClient) Update(workflow *v1beta1.PipelineRun) (*v1beta1.Pip
 	return nil, k8errors.NewNotFound(k8schema.ParseGroupResource("tekton.dev"), name)
 }
 
-func (c *FakeWorkflowClient) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeWorkflowClient) Delete(ctx context.Context, name string, options v1.DeleteOptions) error {
 	_, ok := c.workflows[name]
 	if ok {
 		return nil
@@ -91,13 +92,13 @@ func (c *FakeWorkflowClient) Delete(name string, options *v1.DeleteOptions) erro
 	return k8errors.NewNotFound(k8schema.ParseGroupResource("tekton.dev"), name)
 }
 
-func (c *FakeWorkflowClient) DeleteCollection(options *v1.DeleteOptions,
+func (c *FakeWorkflowClient) DeleteCollection(ctx context.Context, options v1.DeleteOptions,
 	listOptions v1.ListOptions) error {
 	glog.Error("This fake method is not yet implemented.")
 	return nil
 }
 
-func (c *FakeWorkflowClient) Patch(name string, pt types.PatchType, data []byte,
+func (c *FakeWorkflowClient) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, options v1.PatchOptions,
 	subresources ...string) (*v1beta1.PipelineRun, error) {
 
 	_, ok := c.workflows[name]
@@ -141,18 +142,18 @@ type FakeBadWorkflowClient struct {
 	FakeWorkflowClient
 }
 
-func (FakeBadWorkflowClient) Create(*v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
+func (FakeBadWorkflowClient) Create(ctx context.Context, workflow *v1beta1.PipelineRun, options v1.CreateOptions) (*v1beta1.PipelineRun, error) {
 	return nil, errors.New("some error")
 }
 
-func (FakeBadWorkflowClient) Get(name string, options v1.GetOptions) (*v1beta1.PipelineRun, error) {
+func (FakeBadWorkflowClient) Get(ctx context.Context, name string, options v1.GetOptions) (*v1beta1.PipelineRun, error) {
 	return nil, errors.New("some error")
 }
 
-func (c *FakeBadWorkflowClient) Update(workflow *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
+func (c *FakeBadWorkflowClient) Update(ctx context.Context, workflow *v1beta1.PipelineRun, options v1.UpdateOptions) (*v1beta1.PipelineRun, error) {
 	return nil, errors.New("failed to update workflow")
 }
 
-func (c *FakeBadWorkflowClient) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeBadWorkflowClient) Delete(ctx context.Context, name string, options v1.DeleteOptions) error {
 	return errors.New("failed to delete workflow")
 }
