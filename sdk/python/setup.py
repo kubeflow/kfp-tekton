@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2020-2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@
 #
 # To create a distribution for PyPi run:
 #
-#    $ export KFP_TEKTON_VERSION=0.5.0-rc1
+#    $ export KFP_TEKTON_VERSION=0.6.0-rc1
 #    $ python3 setup.py sdist
 #    $ twine check dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #    $ twine upload --repository pypi dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #
 #   ... or:
 #
-#    $ make distribution KFP_TEKTON_VERSION=0.5.0-rc1
+#    $ make distribution KFP_TEKTON_VERSION=0.6.0-rc1
 #
 # =============================================================================
 
