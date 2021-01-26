@@ -18,5 +18,5 @@ set -ex
 
 SCRIPT_DIR="scripts/deploy"
 
-$SCRIPT_DIR/deploy-tekton.sh && $SCRIPT_DIR//deploy-kfp.sh && $SCRIPT_DIR//undeploy-kfp.sh && $SCRIPT_DIR//undeploy-tekton.sh
+$SCRIPT_DIR/deploy-tekton.sh && $SCRIPT_DIR/deploy-kfp.sh && $SCRIPT_DIR/undeploy-kfp.sh && $SCRIPT_DIR/undeploy-tekton.sh
 

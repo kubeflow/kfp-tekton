@@ -21,7 +21,9 @@ SLEEP_TIME="${SLEEP_TIME:-10}"
 EXIT_CODE=0
 
 TEKTON_NS="${TEKTON_NS:-"tekton-pipelines"}"
-TEKTON_MANIFEST="${TEKTON_MANIFEST:-https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml}"
+# Previous versions use form: "previous/vX.Y.Z"
+TEKTON_VERSION="${TEKTON_VERSION:-"latest"}"
+TEKTON_MANIFEST="${TEKTON_MANIFEST:-https://storage.googleapis.com/tekton-releases/pipeline/${TEKTON_VERSION}/release.yaml}"
 
 source scripts/deploy/helper_functions.sh
 
