@@ -20,7 +20,7 @@ backed by Tekton.
   - [Big data passing workspace configuration](#big-data-passing-workspace-configuration)
   - [Running the Compiled Pipeline on a Tekton Cluster](#running-the-compiled-pipeline-on-a-tekton-cluster)
   - [List of Available Features](#list-of-available-features)
-  - [List of Helper Functions for Python Kubernetes Client](#list-of-helper-functions-python-kubernetes-client)
+  - [List of Helper Functions for Python Kubernetes Client](#list-of-helper-functions-for-python-kubernetes-client)
   - [Tested Pipelines](#tested-pipelines)
   - [Troubleshooting](#troubleshooting)
 
