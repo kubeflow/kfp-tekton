@@ -1,10 +1,10 @@
-# Copyright 2020-2021 kubeflow.org
+# Copyright 2019-2020 kubeflow.org.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#    http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,7 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.6.0'
+from kubernetes import client as k8s_client
 
-from ._client import TektonClient  # noqa F401
-from .k8s_client_helper import env_from_secret  # noqa F401
+
+def env_from_secret(env_name, secret_name, secret_key):
+    return k8s_client.V1EnvVar(
+        name=env_name,
+        value_from=k8s_client.V1EnvVarSource(
+            secret_key_ref=k8s_client.V1SecretKeySelector(
+                name=secret_name,
+                key=secret_key
+            )
+        )
+    )
