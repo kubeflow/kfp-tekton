@@ -23,6 +23,18 @@ EXIT_CODE=0
 MANIFEST_DIR="${MANIFEST_DIR:-"manifests/kustomize/env/platform-agnostic"}"
 KUBEFLOW_NS="${KUBEFLOW_NS:-kubeflow}"
 
+API_SERVER_IMAGE="${API_SERVER_IMAGE:-"docker.io/aipipeline/api-server"}"
+NEW_API_SERVER_IMAGE="${NEW_API_SERVER_IMAGE:-"us.icr.io/kfp-tekton/api-server"}"
+
+METADATA_WRITER_IMAGE="${METADATA_WRITER_IMAGE:-"docker.io/aipipeline/metadata-writer"}"
+NEW_METADATA_WRITER_IMAGE="${NEW_METADATA_WRITER_IMAGE:-"us.icr.io/kfp-tekton/metadata-writer"}"
+
+PERSISTENCEAGENT_IMAGE="${PERSISTENCEAGENT_IMAGE:-"docker.io/aipipeline/persistenceagent"}"
+NEW_PERSISTENCEAGENT_IMAGE="${NEW_PERSISTENCEAGENT_IMAGE:-"us.icr.io/kfp-tekton/persistenceagent"}"
+
+SCHEDULEDWORKFLOW_IMAGE="${SCHEDULEDWORKFLOW_IMAGE:-"docker.io/aipipeline/scheduledworkflow"}"
+NEW_SCHEDULEDWORKFLOW_IMAGE="${NEW_SCHEDULEDWORKFLOW_IMAGE:-"us.icr.io/kfp-tekton/scheduledworkflow"}"
+
 source scripts/deploy/helper_functions.sh
 
 kubectl create ns $KUBEFLOW_NS
@@ -34,6 +46,17 @@ then
   echo "Deploy unsuccessful. \"${KUBEFLOW_NS}\" not found."
   exit $EXIT_CODE
 fi
+
+# Edit image names in kustomize files 
+# No need to build as long as deployed with "kubectl apply -k"
+pushd manifests/kustomize/env/platform-agnostic > /dev/null
+
+kustomize edit set image $API_SERVER_IMAGE=$NEW_API_SERVER_IMAGE
+kustomize edit set image $METADATA_WRITER_IMAGE=$NEW_METADATA_WRITER_IMAGE
+kustomize edit set image $PERSISTENCEAGENT_IMAGE=$NEW_PERSISTENCEAGENT_IMAGE
+kustomize edit set image $SCHEDULEDWORKFLOW_IMAGE=$NEW_SCHEDULEDWORKFLOW_IMAGE
+
+popd > /dev/null
 
 # Deploy manifest
 
