@@ -34,9 +34,9 @@ can be found in the [SDK README](/sdk/README.md)
 ## Development Prerequisites
 
 1. [`Python`](https://www.python.org/downloads/): version `3.5.3` or later (new code must maintain compatibility with `3.5`)
-2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.16` ([required by Kubeflow](https://www.kubeflow.org/docs/started/k8s/overview/) and Tekton 0.16)
+2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.18` ([required by Kubeflow](https://www.kubeflow.org/docs/started/k8s/overview/) and Tekton `0.20`)
 3. [`kubectl` CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/): required to deploy Tekton pipelines to Kubernetes cluster
-4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.15.0/): version `0.16.3` or greater, required for end-to-end testing
+4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.16.3/): version `0.16.3` or greater, required for end-to-end testing
 5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): version `0.11.0` or greater, required for end-to-end testing of Tekton pipelines
 6. [`Kubeflow Pipelines` Deployment](https://www.kubeflow.org/docs/pipelines/installation/overview/): required for some end-to-end tests
 
@@ -48,10 +48,10 @@ by the `kfp_tekton` compiler. The Tekton CLI is useful to start a pipeline and a
 
 #### Tekton Cluster
 
-Follow the instructions listed [here](https://github.com/tektoncd/pipeline/blob/v0.15.0/docs/install.md#installing-tekton-pipelines-on-kubernetes)
+Follow the instructions listed [here](https://github.com/tektoncd/pipeline/blob/v0.20.1/docs/install.md#installing-tekton-pipelines-on-kubernetes)
 or simply run:
 
-    kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.15.0/release.yaml
+    kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.20.1/release.yaml
 
 **Note**, if your container runtime does not support `image-reference:tag@digest` (like cri-o used in OpenShift 4.x),
 use `release.notags.yaml` instead.
@@ -85,7 +85,7 @@ Mac OS users can install the Tekton CLI using the `homebrew` formula:
 
 Follow the installation instructions [here](https://github.com/tektoncd/dashboard/blob/master/docs/install.md), i.e.:
 
-    kubectl apply --filename https://github.com/tektoncd/dashboard/releases/download/v0.10.2/tekton-dashboard-release.yaml
+    kubectl apply --filename https://github.com/tektoncd/dashboard/releases/download/v0.13.0/tekton-dashboard-release.yaml
 
 The Tekton Dashboard can be accessed through its `ClusterIP` service by running `kubectl proxy` or the service can
 be patched to expose a public `NodePort` IP:
@@ -248,7 +248,7 @@ To update the ["Compiler Status Report"](/sdk/python/tests/README.md) use the ou
 All source files should have the following license header. Adjust the year accordingly to reflect the year the file was
 added and the last year it was modified:
 
-    # Copyright 2019-2020 kubeflow.org
+    # Copyright 2019-2021 kubeflow.org
     #
     # Licensed under the Apache License, Version 2.0 (the "License");
     # you may not use this file except in compliance with the License.

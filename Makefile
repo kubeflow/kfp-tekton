@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2020-2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 #  - The help target was derived from https://stackoverflow.com/a/35730328/5601796
 
 VENV ?= .venv
-KFP_TEKTON_RELEASE ?= v0.5.0
+KFP_TEKTON_RELEASE ?= v0.6.0
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 DOCKER_REGISTRY ?= aipipeline

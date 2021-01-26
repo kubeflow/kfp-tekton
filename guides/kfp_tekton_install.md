@@ -2,7 +2,7 @@
 
 ## Table of Contents
 
-- [Installation Targets and Prequisites](#installation-targets-and-prequisites)
+- [Installation Targets and Prerequisites](#installation-targets-and-prerequisites)
   * [IBM Cloud Kubernetes Service (IKS)](#ibm-cloud-kubernetes-service-iks)
   * [OpenShift](#openshift)
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
@@ -10,9 +10,9 @@
 - [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
 - [Troubleshooting](#troubleshooting)
 
-## Installation Targets and Prequisites
+## Installation Targets and Prerequisites
 
-A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
+A Kubernetes cluster `v1.18` that has least 8 vCPU and 16 GB memory.
 
 ### IBM Cloud Kubernetes Service (IKS)
 
@@ -26,21 +26,24 @@ A Kubernetes cluster `v1.16` that has least 8 vCPU and 16 GB memory.
    2. Install Tekton as part of deployment
 
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
+
    Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
 
 ## Standalone Kubeflow Pipelines with Tekton Backend Deployment
-To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
-1. Install [Tekton v0.16.3](https://github.com/tektoncd/pipeline/releases/tag/v0.16.3)
 
-2. Install Kubeflow Pipelines with Tekton backend (kfp-tekton) v0.5.0 [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
+To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
+
+1. Install [Tekton v0.20.1](https://github.com/tektoncd/pipeline/releases/tag/v0.20.1)
+
+2. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.6.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
    > Note: You can ignore the error `no matches for kind "Application" in version "app.k8s.io/v1beta1"` since it's a warning saying `application` CRD is not yet ready.
     ```shell
-    kubectl apply --selector kubeflow/crd-install=true -f install/v0.5.0/kfp-tekton.yaml
+    kubectl apply --selector kubeflow/crd-install=true -f install/v0.6.0/kfp-tekton.yaml
     ```
 
-3. Install Kubeflow Pipelines with Tekton backend (kfp-tekton) v0.5.0 deployment
+3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.6.0` deployment
     ```shell
-    kubectl apply -f install/v0.5.0/kfp-tekton.yaml
+    kubectl apply -f install/v0.6.0/kfp-tekton.yaml
     ```
 
 4. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
@@ -55,16 +58,19 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 ## Kubeflow installation including Kubeflow Pipelines with Tekton Backend
 
-**Important: Please complete the [prequisites](#installation-targets-and-prequisites) before proceeding with the following instructions.**
+**Important: Please complete the [prerequisites](#installation-targets-and-prerequisites) before proceeding with the following instructions.**
 
-1. Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#kubeflow-installation) to install whole Kubeflow stack with the kfp-tekton installation. Kubeflow v1.2.0 uses Tekton v0.14.0 and kfp-tekton v0.4.0.
+1. Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#kubeflow-installation)
+   to install the entire Kubeflow stack with `kfp-tekton`.
+   Kubeflow `1.2.0` uses Tekton `v0.14.0` and `kfp-tekton` `v0.4.0`. <!-- TODO update-->
 
-1. Visit [KFP Tekton User Guide](/guides/kfp-user-guide) and start learning how to use Kubeflow pipeline.
+2. Visit [KFP Tekton User Guide](/guides/kfp-user-guide) and start learning how to use Kubeflow pipeline.
 
-1. Visit [KFP Tekton Admin Guide](/guides/kfp-admin-guide.md) for how to configure kfp-tekton with different settings.
+3. Visit [KFP Tekton Admin Guide](/guides/kfp-admin-guide.md) for how to configure kfp-tekton with different settings.
 
 
 ## Troubleshooting
+
  - (For IBM Cloud IKS users) If you accidentally deployed Kubeflow with IBM Cloud File Storage, run the below commands to remove the existing pvc. The below commands are for removing resources in multi-user, so you can ignore any missing pvc or rollout error if you are doing this for single user.
     ```shell
     kubectl delete pvc -n kubeflow katib-mysql metadata-mysql minio-pv-claim minio-pvc mysql-pv-claim
