@@ -89,23 +89,24 @@ wait_for_pods () {
 }
 
 deploy_with_retries () {
-    if [[ $# -ne 3 ]]
+    if [[ $# -ne 4 ]]
     then
-        echo "Usage: deploy_with_retries manifest max_retries sleep_time"
+        echo "Usage: deploy_with_retries (-f FILENAME | -k DIRECTORY) manifest max_retries sleep_time"
         return 1
     fi 
 
-    local manifest=$1
-    local max_retries=$2
-    local sleep_time=$3
-
+    local flag="$1"
+    local manifest="$2"
+    local max_retries="$3"
+    local sleep_time="$4"
+    
     local i=0
 
     while [[ $i -lt $max_retries ]]
     do
         local exit_code=0
 
-        kubectl apply -k $manifest || exit_code=$?
+        kubectl apply $flag $manifest || exit_code=$?
 
         if [[ $exit_code -eq 0 ]]
         then

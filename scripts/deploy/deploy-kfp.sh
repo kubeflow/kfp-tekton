@@ -20,7 +20,8 @@ MAX_RETRIES="${MAX_RETRIES:-5}"
 SLEEP_TIME="${SLEEP_TIME:-10}"
 EXIT_CODE=0
 
-MANIFEST_DIR="${MANIFEST_DIR:-"manifests/kustomize/env/platform-agnostic"}"
+KUSTOMIZE_DIR="${KUSTOMIZE_DIR:-"manifests/kustomize/env/platform-agnostic"}"
+MANIFEST="${MANIFEST:-"install/latest-kfp-tekton.yaml"}"
 KUBEFLOW_NS="${KUBEFLOW_NS:-kubeflow}"
 
 API_SERVER_IMAGE="${API_SERVER_IMAGE:-"docker.io/aipipeline/api-server"}"
@@ -49,7 +50,7 @@ fi
 
 # Edit image names in kustomize files 
 # No need to build as long as deployed with "kubectl apply -k"
-pushd manifests/kustomize/env/platform-agnostic > /dev/null
+pushd $KUSTOMIZE_DIR > /dev/null
 
 kustomize edit set image $API_SERVER_IMAGE=$NEW_API_SERVER_IMAGE
 kustomize edit set image $METADATA_WRITER_IMAGE=$NEW_METADATA_WRITER_IMAGE
@@ -58,15 +59,18 @@ kustomize edit set image $SCHEDULEDWORKFLOW_IMAGE=$NEW_SCHEDULEDWORKFLOW_IMAGE
 
 popd > /dev/null
 
-# Deploy manifest
+# Build manifest
+kustomize build $KUSTOMIZE_DIR -o $MANIFEST
 
-deploy_with_retries $MANIFEST_DIR $MAX_RETRIES $SLEEP_TIME || EXIT_CODE=$?
+# Deploy manifest
+deploy_with_retries "-f" $MANIFEST $MAX_RETRIES $SLEEP_TIME || EXIT_CODE=$?
 
 if [[ $EXIT_CODE -ne 0 ]]
 then
-  echo "Deploy unsuccessful. Failure applying $MANIFEST_DIR."
+  echo "Deploy unsuccessful. Failure applying $KUSTOMIZE_DIR."
   exit 1
 fi
+
 
 # Check if all pods are running - allow 60 retries (10 minutes)
 

@@ -16,10 +16,10 @@
 
 set -ex
 
-MANIFEST_DIR="${MANIFEST_DIR:-"manifests/kustomize/env/platform-agnostic"}"
+MANIFEST="${MANIFEST:-"install/latest-kfp-tekton.yaml"}"
 KUBEFLOW_NS="${KUBEFLOW_NS:-kubeflow}"
 
-kubectl delete -k $MANIFEST_DIR || true
+kubectl delete -f $MANIFEST || true
 
 kubectl delete MutatingWebhookConfiguration cache-webhook-kubeflow || true
 
