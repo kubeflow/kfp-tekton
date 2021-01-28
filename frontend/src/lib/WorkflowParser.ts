@@ -80,7 +80,10 @@ export default class WorkflowParser {
     for (const task of tasks) {
       if (!statusMap.get(task['name'])) {
         for (const condition of task['when'] || []) {
-          const param = this.decodeParam(condition['Input']);
+          console.log("param:")
+          console.log(task)
+          console.log(condition)
+          const param = this.decodeParam(condition['input']);
           if (param && param.task) {
             if (statusMap.get(param.task)) {
               conditionTasks.push(task['name']);
@@ -117,7 +120,7 @@ export default class WorkflowParser {
 
         // Add all of this Task's conditional dependencies as Task dependencies
         for (const condition of task['when'] || []) {
-          const param = this.decodeParam(condition['Input']);
+          const param = this.decodeParam(condition['input']);
           if (param && param.task) {
             if (statusMap.get(param.task)) {
               const parentId = statusMap.get(param.task)!['status']['podName'];
