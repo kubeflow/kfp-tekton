@@ -32,7 +32,8 @@ def echo2_op(text1, text2):
         name='echo',
         image='library/bash:4.4.23',
         command=['sh', '-c'],
-        arguments=['echo "Text 1: $0"; echo "Text 2: $1"; echo "{{inputs.parameters.gcs-download-data}}"', text1, text2]
+        arguments=['echo "Text 1: $0"; echo "Text 2: $1"; echo "{{inputs.parameters.gcs-download-data}}";\
+            echo "{{workflow.name}}; echo "{{workflow.namespace}}"; echo "{{workflow.uid}}"', text1, text2]
     )
 
 

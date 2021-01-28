@@ -1,0 +1,41 @@
+apiVersion: custom.tekton.dev/v1alpha1
+kind: PipelineLoop
+metadata:
+  name: echoloop
+spec:
+  pipelineSpec:
+    params:
+    - name: message
+      type: string
+    tasks:
+    - name: echo-good-morning
+      params:
+      - name: message
+        value: $(params.message)
+      taskSpec:
+        params:
+        - name: message
+          type: string
+        steps:
+          - name: echo
+            image: ubuntu
+            imagePullPolicy: IfNotPresent
+            script: |
+              #!/usr/bin/env bash
+              echo "$(params.message)"
+  iterateParam: message
+
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Run
+metadata:
+  name: simplepipelinelooprun
+spec:
+  params:
+    - name: message
+      value: '["I am the first one", "I am the second one", "I am the third one"]'
+  ref:
+    apiVersion: custom.tekton.dev/v1alpha1
+    kind: PipelineLoop
+    name: echoloop
+

@@ -16,14 +16,13 @@ package util
 
 import (
 	"math"
-	"strconv"
 	"testing"
 	"time"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	"github.com/stretchr/testify/assert"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -478,7 +477,7 @@ func TestScheduledWorkflow_GetNextScheduledEpoch_UpdateStatus_WithWorkflow(t *te
 	status3 := createStatus("WORKFLOW3", 7)
 	status4 := createStatus("WORKFLOW4", 4)
 
-	workflow := commonutil.NewWorkflow(&workflowapi.Workflow{})
+	workflow := commonutil.NewWorkflow(&workflowapi.PipelineRun{})
 
 	schedule.UpdateStatus(
 		updatedEpoch,
@@ -530,151 +529,5 @@ func TestScheduledWorkflow_GetNextScheduledEpoch_UpdateStatus_WithWorkflow(t *te
 	assert.Equal(t, expected, schedule.Get())
 }
 
-func TestScheduledWorkflow_NewWorkflow(t *testing.T) {
-	// Must run now
-	scheduledEpoch := int64(10 * hour)
-	nowEpoch := int64(11 * hour)
-	creationTimestamp := metav1.NewTime(time.Unix(9*hour, 0).UTC())
-
-	schedule := ScheduledWorkflow{&swfapi.ScheduledWorkflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:              "SCHEDULE1",
-			CreationTimestamp: creationTimestamp,
-		},
-		Spec: swfapi.ScheduledWorkflowSpec{
-			Enabled:        true,
-			MaxConcurrency: commonutil.Int64Pointer(int64(10)),
-			Trigger: swfapi.Trigger{
-				PeriodicSchedule: &swfapi.PeriodicSchedule{
-					IntervalSecond: int64(60),
-				},
-			},
-			Workflow: &swfapi.WorkflowResource{
-				Parameters: []swfapi.Parameter{
-					{Name: "PARAM1", Value: "NEW_VALUE1"},
-					{Name: "PARAM3", Value: "NEW_VALUE3"},
-				},
-				Spec: workflowapi.WorkflowSpec{
-					ServiceAccountName: "SERVICE_ACCOUNT",
-					Arguments: workflowapi.Arguments{
-						Parameters: []workflowapi.Parameter{
-							{Name: "PARAM1", Value: commonutil.StringPointer("VALUE1")},
-							{Name: "PARAM2", Value: commonutil.StringPointer("VALUE2")},
-						},
-					},
-				},
-			},
-		},
-	}, commonutil.NewFakeUUIDGeneratorOrFatal("123e4567-e89b-12d3-a456-426655440001", nil)}
-
-	result, err := schedule.NewWorkflow(scheduledEpoch, nowEpoch)
-	assert.Nil(t, err)
-
-	expected := &workflowapi.Workflow{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Workflow",
-			APIVersion: "argoproj.io/v1alpha1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "SCHEDULE1-1-3321103997",
-			Labels: map[string]string{
-				"pipeline/runid": "123e4567-e89b-12d3-a456-426655440001",
-				"scheduledworkflows.kubeflow.org/isOwnedByScheduledWorkflow": "true",
-				"scheduledworkflows.kubeflow.org/scheduledWorkflowName":      "SCHEDULE1",
-				"scheduledworkflows.kubeflow.org/workflowEpoch":              strconv.Itoa(int(scheduledEpoch)),
-				"scheduledworkflows.kubeflow.org/workflowIndex":              "1"},
-			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion:         "kubeflow.org/v1beta1",
-				Kind:               "ScheduledWorkflow",
-				Name:               "SCHEDULE1",
-				UID:                "",
-				Controller:         commonutil.BooleanPointer(true),
-				BlockOwnerDeletion: commonutil.BooleanPointer(true)}},
-		},
-		Spec: workflowapi.WorkflowSpec{
-			ServiceAccountName: "SERVICE_ACCOUNT",
-			Arguments: workflowapi.Arguments{
-				Parameters: []workflowapi.Parameter{
-					{Name: "PARAM1", Value: commonutil.StringPointer("NEW_VALUE1")},
-					{Name: "PARAM2", Value: commonutil.StringPointer("VALUE2")},
-				},
-			},
-		},
-	}
-
-	assert.Equal(t, expected, result.Get())
-}
-
-func TestScheduledWorkflow_NewWorkflow_Parameterized(t *testing.T) {
-	// Must run now
-	scheduledEpoch := int64(10 * hour)
-	nowEpoch := int64(11 * hour)
-	creationTimestamp := metav1.NewTime(time.Unix(9*hour, 0).UTC())
-
-	schedule := ScheduledWorkflow{&swfapi.ScheduledWorkflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:              "SCHEDULE1",
-			CreationTimestamp: creationTimestamp,
-		},
-		Spec: swfapi.ScheduledWorkflowSpec{
-			Enabled:        true,
-			MaxConcurrency: commonutil.Int64Pointer(int64(10)),
-			Trigger: swfapi.Trigger{
-				PeriodicSchedule: &swfapi.PeriodicSchedule{
-					IntervalSecond: int64(60),
-				},
-			},
-			Workflow: &swfapi.WorkflowResource{
-				Parameters: []swfapi.Parameter{
-					{Name: "PARAM1", Value: "NEW_VALUE1_[[ScheduledTime]]"},
-					{Name: "PARAM2", Value: "NEW_VALUE2_[[Index]]"},
-				},
-				Spec: workflowapi.WorkflowSpec{
-					ServiceAccountName: "SERVICE_ACCOUNT",
-					Arguments: workflowapi.Arguments{
-						Parameters: []workflowapi.Parameter{
-							{Name: "PARAM1", Value: commonutil.StringPointer("VALUE1")},
-							{Name: "PARAM2", Value: commonutil.StringPointer("VALUE2")},
-						},
-					},
-				},
-			},
-		},
-	}, commonutil.NewFakeUUIDGeneratorOrFatal("123e4567-e89b-12d3-a456-426655440001", nil)}
-
-	result, err := schedule.NewWorkflow(scheduledEpoch, nowEpoch)
-	assert.Nil(t, err)
-	expected := &workflowapi.Workflow{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Workflow",
-			APIVersion: "argoproj.io/v1alpha1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "SCHEDULE1-1-3321103997",
-			Labels: map[string]string{
-				"pipeline/runid": "123e4567-e89b-12d3-a456-426655440001",
-				"scheduledworkflows.kubeflow.org/isOwnedByScheduledWorkflow": "true",
-				"scheduledworkflows.kubeflow.org/scheduledWorkflowName":      "SCHEDULE1",
-				"scheduledworkflows.kubeflow.org/workflowEpoch":              strconv.Itoa(int(scheduledEpoch)),
-				"scheduledworkflows.kubeflow.org/workflowIndex":              "1"},
-			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion:         "kubeflow.org/v1beta1",
-				Kind:               "ScheduledWorkflow",
-				Name:               "SCHEDULE1",
-				UID:                "",
-				Controller:         commonutil.BooleanPointer(true),
-				BlockOwnerDeletion: commonutil.BooleanPointer(true)}},
-		},
-		Spec: workflowapi.WorkflowSpec{
-			ServiceAccountName: "SERVICE_ACCOUNT",
-			Arguments: workflowapi.Arguments{
-				Parameters: []workflowapi.Parameter{
-					{Name: "PARAM1", Value: commonutil.StringPointer("NEW_VALUE1_19700101100000")},
-					{Name: "PARAM2", Value: commonutil.StringPointer("NEW_VALUE2_1")},
-				},
-			},
-		},
-	}
-
-	assert.Equal(t, expected, result.Get())
-}
+// Removed "TestScheduledWorkflow_NewWorkflow" and "TestScheduledWorkflow_NewWorkflow_Parameterized"
+// because it uses Argo specific spec and Tekton spec is still constantly changing.

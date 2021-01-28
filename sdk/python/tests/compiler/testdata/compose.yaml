@@ -66,6 +66,7 @@ spec:
           - -c
           image: google/cloud-sdk
           name: main
+      timeout: 0s
     - name: get-frequent
       params:
       - name: download-downloaded
@@ -86,6 +87,7 @@ spec:
           - -c
           image: python:3.5-jessie
           name: main
+      timeout: 0s
     - name: save
       params:
       - name: get-frequent-word
@@ -105,3 +107,5 @@ spec:
           - -c
           image: google/cloud-sdk
           name: main
+      timeout: 0s
+  timeout: 0s
