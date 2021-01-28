@@ -14,28 +14,15 @@
 
 from kfp import dsl
 import kfp
-from kubernetes import client as k8s_client
 from kfp.components import func_to_container_op
 from kfp import onprem
-import os
+from kfp_tekton.k8s_client_helper import env_from_secret
 
 
 @func_to_container_op
 def write_file(output_text_path: str):
     with open(output_text_path, 'w') as writer:
         writer.write('hello world')
-
-
-def env_from_secret(env_name, secret_name, secret_key):
-    return k8s_client.V1EnvVar(
-        name=env_name,
-        value_from=k8s_client.V1EnvVarSource(
-            secret_key_ref=k8s_client.V1SecretKeySelector(
-                name=secret_name,
-                key=secret_key
-            )
-        )
-    )
 
 
 email_op = kfp.components.load_component_from_file('component.yaml')

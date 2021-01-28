@@ -20,6 +20,7 @@ backed by Tekton.
   - [Big data passing workspace configuration](#big-data-passing-workspace-configuration)
   - [Running the Compiled Pipeline on a Tekton Cluster](#running-the-compiled-pipeline-on-a-tekton-cluster)
   - [List of Available Features](#list-of-available-features)
+  - [List of Helper Functions for Python Kubernetes Client](#list-of-helper-functions-for-python-kubernetes-client)
   - [Tested Pipelines](#tested-pipelines)
   - [Troubleshooting](#troubleshooting)
 
@@ -186,6 +187,13 @@ Once the Tekton Pipeline is running, the logs should start streaming:
 
 To understand how each feature is implemented and its current status, please visit
 the [FEATURES](FEATURES.md) doc.
+
+
+## List of Helper Functions for Python Kubernetes Client
+
+KFP Tekton provides a list of common Kubernetes client helper functions to simplify
+the process of creating certain Kubernetes resources. please visit the
+[K8S_CLIENT_HELPER](K8S_CLIENT_HELPER.md) doc for more details.
 
 
 ## Tested Pipelines
