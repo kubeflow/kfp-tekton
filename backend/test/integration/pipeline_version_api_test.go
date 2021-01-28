@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	params "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
@@ -16,6 +15,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 // This test suit tests various methods to import pipeline to pipeline system, including
@@ -291,7 +291,7 @@ func (s *PipelineVersionApiTest) TestPipelineVersionAPI() {
 	assert.Nil(t, err)
 	expected, err := ioutil.ReadFile("../resources/arguments-parameters.yaml")
 	assert.Nil(t, err)
-	var expectedWorkflow v1alpha1.Workflow
+	var expectedWorkflow v1beta1.PipelineRun
 	err = yaml.Unmarshal(expected, &expectedWorkflow)
 	assert.Equal(t, expectedWorkflow, *template)
 }

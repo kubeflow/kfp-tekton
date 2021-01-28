@@ -28,7 +28,7 @@ If you would like to do it in development mode, or if you already have a Kubeflo
 ## Prerequisites
 
 1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes).
-    - Minimum version: `0.16.0`
+    - Minimum version: `0.20.1`
 2. Clone this repository
     ```
     git clone https://github.com/kubeflow/kfp-tekton.git
@@ -58,7 +58,7 @@ If you would like to do it in development mode, or if you already have a Kubeflo
     kubectl patch svc ml-pipeline-ui -n kubeflow -p '{"spec": {"type": "LoadBalancer"}}'
     kubectl get service ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
     ```
-    
+
     Now that you have deployed Kubeflow Pipelines with Tekton, install the [KFP-Tekton SDK](/sdk/README.md) and follow
     the [KFP Tekton User Guide](/guides/kfp-user-guide) to start building your own pipelines.
 
@@ -78,8 +78,8 @@ npm run docker
 ```
 
 ### Backend
-The KFP backend with Tekton uses a modified version of Kubeflow Pipelines api-server, persistent agent, and metadata writer. 
-1. To build these two images, clone this repository under the [GOPATH](https://golang.org/doc/gopath_code.html#GOPATH) and rename it to `pipelines`. 
+The KFP backend with Tekton uses a modified version of Kubeflow Pipelines api-server, persistent agent, and metadata writer.
+1. To build these two images, clone this repository under the [GOPATH](https://golang.org/doc/gopath_code.html#GOPATH) and rename it to `pipelines`.
     ```shell
     cd $GOPATH/src/go/github.com/kubeflow
     git clone https://github.com/kubeflow/kfp-tekton.git
@@ -106,7 +106,7 @@ The KFP backend with Tekton uses a modified version of Kubeflow Pipelines api-se
    ```
 
 4. Push the images to registry and modify the Kustomization to use your own built images.
-    
+
    Modify the `newName` under the `images` section in `manifests/kustomize/base/kustomization.yaml`.
 
    Now you can follow the [Install Tekton KFP with pre-built images](#install-tekton-kfp-with-pre-built-images) instructions to install your own KFP backend.
