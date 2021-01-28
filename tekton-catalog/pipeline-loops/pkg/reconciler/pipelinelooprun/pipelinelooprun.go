@@ -25,6 +25,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-multierror"
+
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
+	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
+	pipelineloopclientset "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/clientset/versioned"
+	listerspipelineloop "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/listers/pipelineloop/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -34,10 +39,6 @@ import (
 	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/pkg/names"
 	"github.com/tektoncd/pipeline/pkg/reconciler/events"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
-	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
-	pipelineloopclientset "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/clientset/versioned"
-	listerspipelineloop "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/listers/pipelineloop/v1alpha1"
 	"go.uber.org/zap"
 	"gomodules.xyz/jsonpatch/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -452,7 +453,14 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 				// Transfer p.Value to Array.
 				var strings []string
 				if err := json.Unmarshal([]byte(p.Value.StringVal), &strings); err != nil {
-					return 0, fmt.Errorf("The value of the iterate parameter %q can not transfer to array", tls.IterateParam)
+					strings = []string{}
+					var ints []int
+					if err := json.Unmarshal([]byte(p.Value.StringVal), &ints); err != nil {
+						return 0, fmt.Errorf("The value of the iterate parameter %q can not transfer to array", tls.IterateParam)
+					}
+					for _, a := range ints {
+						strings = append(strings, strconv.Itoa(a))
+					}
 				}
 				numberOfIterations = len(strings)
 				break
@@ -492,7 +500,14 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 				}
 				if p.Value.Type == v1beta1.ParamTypeString {
 					var strings []string
-					_ = json.Unmarshal([]byte(p.Value.StringVal), &strings)
+					if err := json.Unmarshal([]byte(p.Value.StringVal), &strings); err != nil {
+						strings = []string{}
+						var ints []int
+						_ = json.Unmarshal([]byte(p.Value.StringVal), &ints)
+						for _, a := range ints {
+							strings = append(strings, strconv.Itoa(a))
+						}
+					}
 					out = append(out, v1beta1.Param{
 						Name:  p.Name,
 						Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strings[iteration-1]},
@@ -541,7 +556,7 @@ func Find(slice []string, val string) (int, bool) {
 func getPipelineRunLabels(run *v1alpha1.Run, iterationStr string) map[string]string {
 	// Propagate labels from Run to PipelineRun.
 	labels := make(map[string]string, len(run.ObjectMeta.Labels)+1)
-	ignnoreLabelsKey := []string{"tekton.dev/pipelineRun", "tekton.dev/pipelineTask", "tekton.dev/pipeline"}
+	ignnoreLabelsKey := []string{"tekton.dev/pipelineRun", "tekton.dev/pipelineTask", "tekton.dev/pipeline", "custom.tekton.dev/pipelineLoopIteration"}
 	for key, val := range run.ObjectMeta.Labels {
 		if _, found := Find(ignnoreLabelsKey, key); !found {
 			labels[key] = val

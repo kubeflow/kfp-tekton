@@ -18,6 +18,7 @@ and test pipelines found in the KFP repository.
     - [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations)
     - [ImagePullSecrets](#imagepullsecrets)
     - [Exit Handler](#exit-handler)
+    - [Pipeline Loops](#pipeline-loops)
     - [Any Sequencer](#any-sequencer)
     - [Tekton Pipeline Variables](#tekton-pipeline-variables)
 - [Pipeline DSL Features with a Custom Tekton Implementation](#pipeline-dsl-features-with-a-custom-tekton-implementation)
@@ -29,7 +30,6 @@ and test pipelines found in the KFP repository.
     - [Input Artifacts](#input-artifacts)
     - [Output Artifacts](#output-artifacts)
   - [Features with Limitations](#features-with-limitations)
-    - [ParallelFor](#parallelfor)
     - [Variable Substitutions](#variable-substitutions)
   - [Features with a Different Behavior than Argo](#features-with-a-different-behavior-than-argo)
     - [Sidecars](#sidecars)
@@ -127,6 +127,16 @@ the [exit_handler](/sdk/python/tests/compiler/testdata/exit_handler.py) compiler
 
 The `finally` syntax is supported since Tekton version `0.14.0`.
 
+### Pipeline Loops
+
+PipelineLoops is a feature for running the same component tasks multiple times. right now Tekton support the loop pipeline/tasks via custom tasks. The controller we named as "PipelineLoop", about the usage of the controller, you can refer to the examples [here](/tekton-catalog/pipeline-loops/examples).
+
+To use this feature, please ensure Tekton version >= v0.19, and "data.enable-custom-tasks" is "true" in feature-flags configmap:
+`kubectl edit cm feature-flags -n tekton-pipelines`
+
+For the python sdk to use this feature, refer to the examples:
+[loop_static](/sdk/python/tests/compiler/testdata/loop_static.py), [withparam_global](/sdk/python/tests/compiler/testdata/withparam_global.py), [withitem_nested](/sdk/python/tests/compiler/testdata/withitem_nested.py)
+
 ### Any Sequencer
 
 When any one of the task dependencies complete successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym). 
@@ -211,16 +221,6 @@ via a Kubernetes configmap.
 ## Features with Limitations
 
 Below are the features that have certain limitation in the current Tekton release.
-
-### ParallelFor
-
-[Tracking issue #2050][ParallelFor]
-
-ParallelFor is a feature for running the same component multiple times in parallel. Because Tekton has no looping or recursion feature for running tasks, right now the ParallelFor pipelines are flattened into multiple same components when using static parameters. The
-[loop_static](/sdk/python/tests/compiler/testdata/loop_static.py) python test is an example of how to use this feature.
-
-However, when using dynamic parameters, the number of parallel tasks is determined during runtime. Therefore, we are tracking the
-[looping support issue](https://github.com/tektoncd/pipeline/issues/2050) in Tekton and implement ParallelFor with dynamic parameters once ready.
 
 ### Variable Substitutions
 
