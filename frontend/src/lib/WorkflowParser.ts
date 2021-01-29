@@ -120,7 +120,7 @@ export default class WorkflowParser {
           const param = this.decodeParam(condition['input']);
           if (param && param.task) {
             if (statusMap.get(param.task)) {
-              const parentId = statusMap.get(param.task)!['status']['podName'];
+              const parentId = statusMap.get(param.task)!['status']['podName'] || statusMap.get(param.task)!['pipelineTaskName'];
               edges.push({ parent: parentId, child: taskId });
             }
           }
@@ -208,7 +208,8 @@ export default class WorkflowParser {
         const paramName = splitParam.param;
         if (
           statusMap.get(parentTask) &&
-          statusMap.get(parentTask)!['status']['conditions'][0]['type'] === 'Succeeded'
+          statusMap.get(parentTask)['status']['conditions'] &&
+          statusMap.get(parentTask)['status']['conditions'][0]['type'] === 'Succeeded'
         ) {
           const parentId = statusMap.get(parentTask)!['status']['podName'];
           edges.push({ parent: parentId, child: ownerTask === '' ? componentId : ownerTask });
@@ -259,7 +260,10 @@ export default class WorkflowParser {
   }
 
   public static getStatus(execStatus: any): NodePhase {
-    return execStatus!.status.conditions[0].reason;
+    if (execStatus && execStatus.status && execStatus.status.conditions) {
+      return execStatus!.status!.conditions![0].reason;
+    }
+    return NodePhase.PENDING
   }
 
   public static getParameters(workflow?: any): Parameter[] {
