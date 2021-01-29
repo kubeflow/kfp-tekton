@@ -6,9 +6,9 @@ SUCCESS: coin.py
 SUCCESS: compose.py
 SUCCESS: default_value.py
 SUCCESS: input_artifact_raw_value.py
-FAILURE: loop_over_lightweight_output.py
+SUCCESS: loop_over_lightweight_output.py
 SUCCESS: opsgroups.py
-FAILURE: parallelfor_item_argument_resolving.py
+SUCCESS: parallelfor_item_argument_resolving.py
 SUCCESS: param_op_transform.py
 SUCCESS: param_substitutions.py
 SUCCESS: pipelineparams.py
@@ -27,7 +27,7 @@ SUCCESS: volumeop_parallel.py
 SUCCESS: volumeop_sequential.py
 SUCCESS: withitem_basic.py
 SUCCESS: withitem_nested.py
-FAILURE: withparam_global.py
-FAILURE: withparam_global_dict.py
-FAILURE: withparam_output.py
-FAILURE: withparam_output_dict.py
+SUCCESS: withparam_global.py
+SUCCESS: withparam_global_dict.py
+SUCCESS: withparam_output.py
+SUCCESS: withparam_output_dict.py

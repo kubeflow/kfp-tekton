@@ -121,7 +121,7 @@ class TestTektonCompiler(unittest.TestCase):
       pipeline,
       'loop_static.yaml',
       normalize_compiler_output_function=lambda f: re.sub(
-          "loop-item-param-.*-subvar", "loop-item-param-subvar", f))
+          "(loop-item-param-[a-z 0-9]*|for-loop-for-loop-[a-z 0-9]*)", "with-item-name", f))
 
   def test_withitem_nested_workflow(self):
     """
@@ -129,6 +129,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.withitem_nested import pipeline
     self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
+
+  def test_withparam_global_workflow(self):
+    """
+    Test compiling a withparam global in workflow.
+    """
+    from .testdata.withparam_global import pipeline
+    self._test_pipeline_workflow(pipeline, 'withparam_global.yaml')
 
   def test_pipelineparams_workflow(self):
     """
