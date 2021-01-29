@@ -25,7 +25,7 @@ def write_file(output_text_path: str):
         writer.write('hello world')
 
 
-email_op = kfp.components.load_component_from_file('component.yaml')
+email_op = kfp.components.load_component_from_file('../../components/notification/component.yaml')
 # pvc mount point has to be string, not pipeline param.
 attachment_path = "/tmp/data"
 
@@ -35,24 +35,24 @@ attachment_path = "/tmp/data"
     description='email pipeline'
 )
 def email_pipeline(
-    server="server-secret",
+    server_secret="server-secret",
     subject="Hi, again!",
     body="Tekton email",
     sender="me@myserver.com",
     recipients="him@hisserver.com, her@herserver.com",
     attachment_filepath="/tmp/data/output.txt"
 ):
-    email = email_op(server=server,
+    email = email_op(server_secret=server_secret,
                      subject=subject,
                      body=body,
                      sender=sender,
                      recipients=recipients,
                      attachment_path=attachment_filepath)
-    email.add_env_variable(env_from_secret('USER', '$(params.server)', 'user'))
-    email.add_env_variable(env_from_secret('PASSWORD', '$(params.server)', 'password'))
-    email.add_env_variable(env_from_secret('TLS', '$(params.server)', 'tls'))
-    email.add_env_variable(env_from_secret('SERVER', '$(params.server)', 'url'))
-    email.add_env_variable(env_from_secret('PORT', '$(params.server)', 'port'))
+    email.add_env_variable(env_from_secret('USER', '$(params.server_secret)', 'user'))
+    email.add_env_variable(env_from_secret('PASSWORD', '$(params.server_secret)', 'password'))
+    email.add_env_variable(env_from_secret('TLS', '$(params.server_secret)', 'tls'))
+    email.add_env_variable(env_from_secret('SERVER', '$(params.server_secret)', 'url'))
+    email.add_env_variable(env_from_secret('PORT', '$(params.server_secret)', 'port'))
     email.apply(onprem.mount_pvc('shared-pvc', 'shared-pvc', attachment_path))
 
     with dsl.ExitHandler(email):
