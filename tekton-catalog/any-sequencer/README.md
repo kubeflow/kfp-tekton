@@ -4,7 +4,7 @@
 
 This implements a `taskRun` status watcher task to watch the list of `taskRun` it depends on (using Kubernetes RBAC). If one or more is completed, it exits the watching task and continues moving forward with Pipeline run. This status watcher task can be implemented in the same way as our “condition” task to make it “dependable”. 
 
-Note that the service account of `Any Sequencer` needs `get` premission to watch the status of the sepecified `taskRun`.
+Note that the service account of `Any Sequencer` needs `get` permission to watch the status of the specified `taskRun`.
  
 ### How to build binary
 
@@ -17,4 +17,3 @@ make build-linux
 ```
 make image
 ```
-
