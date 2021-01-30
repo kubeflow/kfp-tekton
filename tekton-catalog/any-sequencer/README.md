@@ -1,10 +1,10 @@
 ## Any Sequencer
 
-The `Any Sequencer` is going to handle the requirement: If Job4 depends on Job1, Job2 and Job3, when any one of the Job1, job2 or job3 complete successfully, Job4 will be started. Order doesn’t matter, but the `Any Sequencer` don’t wait for all the job status.
+`Any Sequencer`: When any one of the task dependencies complete successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, e.g. if Job4 depends on Job1, Job2 and Job3, and when any one of the Job1, Job2 or Job3 complete successfully, Job4 will be started. Order doesn’t matter, and `Any Sequencer` doesn’t wait for all the job completions.
 
-Implement an `taskRun` status watcher task to watch the list of `taskRun` it depends on (using kubenertes RBAC), if one or more is completed, we exit the watching task and continue our workload. This status watcher task can be implemented in the same way as our “condition” task to make it “dependable”. 
+This implements a `taskRun` status watcher task to watch the list of `taskRun` it depends on (using kubenertes RBAC). If one or more is completed, it exits the watching task and continues moving forward with Pipeline run. This status watcher task can be implemented in the same way as our “condition” task to make it “dependable”. 
 
-Note that the service account of the `Any Sequencer` need get premission to watch the status of sepecified `taskRun`.
+Note that the service account of `Any Sequencer` needs `get` premission to watch the status of the sepecified `taskRun`.
 
 ### How to build binary
 
