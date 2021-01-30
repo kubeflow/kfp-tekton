@@ -1,17 +1,21 @@
 # Custom Task: Pipeline Loops
 
-`Pipeline Loops` is implements based on [Tekton Custom Task](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) and the template of [Knative sample controller](https://github.com/knative-sandbox/sample-controller)
+`Pipeline Loops` implementation is based on [Tekton Custom Task](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) and the template of [Knative sample controller](https://github.com/knative-sandbox/sample-controller)
 
 # Goal
-`Pipeline Loops` is trying to provide a pipeline level loops to handle withItems loop in `Pipeline`(Tekton).
+`Pipeline Loops` is trying to provide pipeline level loops to handle `withItems` loop in `Pipeline`(Tekton).
 
 # Installation
-## Optional-1 install by KO
-- Install&config [KO](https://github.com/google/ko)
+
+## Option One: Install using KO
+
+- Install and configure [KO](https://github.com/google/ko)
 - Install pipelineloop controller
   `ko apply -f config/`
-## Optional-2 install by building your own docker images
-- Modify `Makefile` by changing `registry-name` to your docker hub name
+  
+## Option Two: Install by building your own Docker images
+
+- Modify `Makefile` by changing `registry-name` to your Docker hub name
 
 - Run `make images` to build the docker image of yours.
 
@@ -41,9 +45,9 @@
   - `kubectl apply -f examples/pipelinespec-with-run-iterate-numeric.yaml`
   - `kubectl apply -f examples/pipelinespec-with-run-condition.yaml`
 
-# E2E case
+# End to end example
 - Install Tekton version >= v0.19
 - Edit feature-flags configmap, ensure "data.enable-custom-tasks" is "true":
 `kubectl edit cm feature-flags -n tekton-pipelines`
 
-- Run the E2E cases: `kubectl apply -f examples/loop-example-basic.yaml`
+- Run the E2E example: `kubectl apply -f examples/loop-example-basic.yaml`
