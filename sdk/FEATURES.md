@@ -129,13 +129,15 @@ The `finally` syntax is supported since Tekton version `0.14.0`.
 
 ### Pipeline Loops
 
-PipelineLoops is a feature for running the same component tasks multiple times. right now Tekton support the loop pipeline/tasks via custom tasks. The controller we named as "PipelineLoop", about the usage of the controller, you can refer to the examples [here](/tekton-catalog/pipeline-loops/examples).
+PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) controller named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops. 
 
 To use this feature, please ensure Tekton version >= v0.19, and "data.enable-custom-tasks" is "true" in feature-flags configmap:
 `kubectl edit cm feature-flags -n tekton-pipelines`
 
-For the python sdk to use this feature, refer to the examples:
-[loop_static](/sdk/python/tests/compiler/testdata/loop_static.py), [withparam_global](/sdk/python/tests/compiler/testdata/withparam_global.py), [withitem_nested](/sdk/python/tests/compiler/testdata/withitem_nested.py)
+To see how the Python SDK provides this feature, refer to the examples below:
+- [loop_static](/sdk/python/tests/compiler/testdata/loop_static.py)
+- [withparam_global](/sdk/python/tests/compiler/testdata/withparam_global.py)
+- [withitem_nested](/sdk/python/tests/compiler/testdata/withitem_nested.py)
 
 ### Any Sequencer
 
