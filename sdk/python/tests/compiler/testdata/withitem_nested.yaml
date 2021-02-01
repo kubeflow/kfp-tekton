@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,240 +15,40 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: my-pipeline
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
-      "optional": true, "type": "Integer"}], "name": "my-pipeline"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"my-in-coop1": [], "my-in-coop2": [], "my-inner-inner-coop":
       [], "my-out-cop": []}'
-    tekton.dev/input_artifacts: '{"my-in-coop1": [{"name": "loop-item-param-00000001-subvar-a",
-      "parent_task": null}], "my-in-coop2": [{"name": "loop-item-param-00000001-subvar-b",
-      "parent_task": null}], "my-inner-inner-coop": [{"name": "loop-item-param-00000001-subvar-a",
-      "parent_task": null}, {"name": "loop-item-param-00000002", "parent_task": null}]}'
-    tekton.dev/output_artifacts: '{}'
-  name: my-pipeline
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
+      "optional": true, "type": "Integer"}], "name": "my-pipeline"}'
 spec:
   params:
-  - name: my_pipe_param
-    value: '10'
+  - {name: my_pipe_param, value: '10'}
   pipelineSpec:
     params:
-    - default: '10'
-      name: my_pipe_param
+    - {name: my_pipe_param, default: '10'}
     tasks:
-    - name: my-in-coop1-loop-item-0
+    - name: my-out-cop
       params:
-      - name: loop-item-param-00000001-subvar-a
-        value: '1'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
+      - {name: my_pipe_param, value: $(params.my_pipe_param)}
       taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-a
-        - name: my_pipe_param
         steps:
-        - args:
-          - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.my_pipe_param)
-          command:
-          - sh
-          - -c
+        - name: main
+          args: [echo $(inputs.params.my_pipe_param)]
+          command: [sh, -c]
           image: library/bash:4.4.23
-          name: main
-    - name: my-in-coop1-loop-item-1
+        params:
+        - {name: my_pipe_param}
+      timeout: 0s
+    - name: for-loop-for-loop-00000001-1
+      taskRef: {apiVersion: custom.tekton.dev/v1alpha1, kind: PipelineLoop, name: for-loop-for-loop-00000001-1}
       params:
-      - name: loop-item-param-00000001-subvar-a
-        value: '10'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
-      taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-a
-        - name: my_pipe_param
-        steps:
-        - args:
-          - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.my_pipe_param)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
-    - name: my-inner-inner-coop-loop-item-0
-      params:
-      - name: loop-item-param-00000001-subvar-a
-        value: '1'
-      - name: loop-item-param-00000002
-        value: '100'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
-      taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-a
-        - name: loop-item-param-00000002
-        - name: my_pipe_param
-        steps:
-        - args:
-          - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.loop-item-param-00000002)
-            $(inputs.params.my_pipe_param)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
-    - name: my-inner-inner-coop-loop-item-1
-      params:
-      - name: loop-item-param-00000001-subvar-a
-        value: '1'
-      - name: loop-item-param-00000002
-        value: '200'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
-      taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-a
-        - name: loop-item-param-00000002
-        - name: my_pipe_param
-        steps:
-        - args:
-          - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.loop-item-param-00000002)
-            $(inputs.params.my_pipe_param)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
-    - name: my-inner-inner-coop-loop-item-2
-      params:
-      - name: loop-item-param-00000001-subvar-a
-        value: '1'
-      - name: loop-item-param-00000002
-        value: '300'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
-      taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-a
-        - name: loop-item-param-00000002
-        - name: my_pipe_param
-        steps:
-        - args:
-          - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.loop-item-param-00000002)
-            $(inputs.params.my_pipe_param)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
-    - name: my-inner-inner-coop-loop-item-3
-      params:
-      - name: loop-item-param-00000001-subvar-a
-        value: '10'
-      - name: loop-item-param-00000002
-        value: '100'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
-      taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-a
-        - name: loop-item-param-00000002
-        - name: my_pipe_param
-        steps:
-        - args:
-          - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.loop-item-param-00000002)
-            $(inputs.params.my_pipe_param)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
-    - name: my-inner-inner-coop-loop-item-4
-      params:
-      - name: loop-item-param-00000001-subvar-a
-        value: '10'
-      - name: loop-item-param-00000002
-        value: '200'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
-      taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-a
-        - name: loop-item-param-00000002
-        - name: my_pipe_param
-        steps:
-        - args:
-          - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.loop-item-param-00000002)
-            $(inputs.params.my_pipe_param)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
-    - name: my-inner-inner-coop-loop-item-5
-      params:
-      - name: loop-item-param-00000001-subvar-a
-        value: '10'
-      - name: loop-item-param-00000002
-        value: '300'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
-      taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-a
-        - name: loop-item-param-00000002
-        - name: my_pipe_param
-        steps:
-        - args:
-          - echo op1 $(inputs.params.loop-item-param-00000001-subvar-a) $(inputs.params.loop-item-param-00000002)
-            $(inputs.params.my_pipe_param)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
-    - name: my-in-coop2-loop-item-0
-      params:
-      - name: loop-item-param-00000001-subvar-b
-        value: '2'
-      taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-b
-        steps:
-        - args:
-          - echo op2 $(inputs.params.loop-item-param-00000001-subvar-b)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
-    - name: my-in-coop2-loop-item-1
-      params:
-      - name: loop-item-param-00000001-subvar-b
-        value: '20'
-      taskSpec:
-        params:
-        - name: loop-item-param-00000001-subvar-b
-        steps:
-        - args:
-          - echo op2 $(inputs.params.loop-item-param-00000001-subvar-b)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
-    - name: my-out-cop-loop-item-0
-      params:
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
-      taskSpec:
-        params:
-        - name: my_pipe_param
-        steps:
-        - args:
-          - echo $(inputs.params.my_pipe_param)
-          command:
-          - sh
-          - -c
-          image: library/bash:4.4.23
-          name: main
+      - {name: loop-item-param-00000001, value: '[1, 2]'}
+      - {name: my_pipe_param, value: $(params.my_pipe_param)}
+  timeout: 0s

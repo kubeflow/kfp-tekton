@@ -22,6 +22,7 @@ import WorkflowParser from './WorkflowParser';
 import { logger } from './Utils';
 import RunUtils from './RunUtils';
 import MetricUtils from './MetricUtils';
+import { parseTaskDisplayNameByNodeId } from './ParserUtils';
 
 export default class CompareUtils {
   /**
@@ -119,6 +120,7 @@ export default class CompareUtils {
 
       rows = Array.from(nodeIds.keys()).map(nodeId => {
         yLabels.push(nodeId);
+        //yLabels.push(parseTaskDisplayNameByNodeId(nodeId, workflow));
         return xLabels.map(metricName => namesToNodesToValues.get(metricName)!.get(nodeId) || '');
       });
     }

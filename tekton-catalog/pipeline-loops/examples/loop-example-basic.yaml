@@ -1,0 +1,71 @@
+apiVersion: custom.tekton.dev/v1alpha1
+kind: PipelineLoop
+metadata:
+  name: pipelineloop
+spec:
+  pipelineSpec:
+    params:
+    - name: message
+      type: string
+    tasks:
+    - name: echo-loop-task
+      params:
+      - name: message
+        value: $(params.message)
+      taskSpec:
+        params:
+        - name: message
+          type: string
+        steps:
+          - name: echo
+            image: ubuntu
+            imagePullPolicy: IfNotPresent
+            script: |
+              #!/usr/bin/env bash
+              echo "$(params.message)"
+  iterateParam: message
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    tekton.dev/example-loop-pipeline: '{"spec":{"pipelineSpec":{"params":[{"name":"message","type":"string"}],"tasks":[{"name":"echo-loop-task","params":[{"name":"message","value":"$(params.message)"}],"taskSpec":{"params":[{"name":"message","type":"string"}],"steps":[{"name":"echo","image":"ubuntu","imagePullPolicy":"IfNotPresent","script":"#!/usr/bin/env bash\necho \"$(params.message)\"\n"}]}}]},"iterateParam":"message"}}'
+  name: pr-loop-example
+  labels:
+    mylooplabels: mylooplabels
+spec:
+  pipelineSpec:
+    tasks:
+      - name: first-task
+        taskSpec:
+          steps:
+            - name: echo
+              image: ubuntu
+              imagePullPolicy: IfNotPresent
+              script: |
+                #!/usr/bin/env bash
+                echo "I am the first task before the loop task"
+      - name: loop-task
+        runAfter:
+          - first-task
+        params:
+          - name: message
+            value:
+              - I am the first one
+              - I am the second one
+              - I am the third one
+        taskRef:
+          apiVersion: custom.tekton.dev/v1alpha1
+          kind: PipelineLoop
+          name: pipelineloop
+      - name: last-task
+        runAfter:
+          - loop-task
+        taskSpec:
+          steps:
+            - name: echo
+              image: ubuntu
+              imagePullPolicy: IfNotPresent
+              script: |
+                #!/usr/bin/env bash
+                echo "I am the last task after the loop task"

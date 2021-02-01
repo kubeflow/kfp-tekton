@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -13,10 +12,14 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc/codes"
 )
 
-func TestCreatePipeline_YAML(t *testing.T) {
+// Remove argo yaml test:
+// "TestCreatePipeline_YAML", "TestCreatePipeline_Tarball", "TestCreatePipeline_InvalidYAML",
+// "TestCreatePipeline_InvalidURL", "TestCreatePipelineVersion_YAML", "TestCreatePipelineVersion_InvalidYAML",
+// "TestCreatePipelineVersion_Tarball", "TestCreatePipelineVersion_InvalidURL"
+
+func TestListPipelineVersion_NoResourceKey(t *testing.T) {
 	httpServer := getMockServer(t)
 	// Close the server when test finishes
 	defer httpServer.Close()
@@ -24,242 +27,15 @@ func TestCreatePipeline_YAML(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	resourceManager := resource.NewResourceManager(clientManager)
 
-	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client()}
-	pipeline, err := pipelineServer.CreatePipeline(context.Background(), &api.CreatePipelineRequest{
-		Pipeline: &api.Pipeline{
-			Url:  &api.Url{PipelineUrl: httpServer.URL + "/arguments-parameters.yaml"},
-			Name: "argument-parameters",
-			Description: "pipeline description",
-		}})
-
-	assert.Nil(t, err)
-	assert.NotNil(t, pipeline)
-	assert.Equal(t, "argument-parameters", pipeline.Name)
-	newPipeline, err := resourceManager.GetPipeline(pipeline.Id)
-	assert.Nil(t, err)
-	assert.NotNil(t, newPipeline)
-	var params []api.Parameter
-	err = json.Unmarshal([]byte(newPipeline.Parameters), &params)
-	assert.Nil(t, err)
-	assert.Equal(t, []api.Parameter{{Name: "param1", Value: "hello"}, {Name: "param2"}}, params)
-	assert.Equal(t, "pipeline description", newPipeline.Description)
-}
-
-func TestCreatePipeline_Tarball(t *testing.T) {
-	httpServer := getMockServer(t)
-	// Close the server when test finishes
-	defer httpServer.Close()
-
-	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	resourceManager := resource.NewResourceManager(clientManager)
-
-	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client()}
-	pipeline, err := pipelineServer.CreatePipeline(context.Background(), &api.CreatePipelineRequest{
-		Pipeline: &api.Pipeline{
-			Url:  &api.Url{PipelineUrl: httpServer.URL + "/arguments_tarball/arguments.tar.gz"},
-			Name: "argument-parameters",
-			Description: "pipeline description",
-		}})
-
-	assert.Nil(t, err)
-	assert.NotNil(t, pipeline)
-	assert.Equal(t, "argument-parameters", pipeline.Name)
-	newPipeline, err := resourceManager.GetPipeline(pipeline.Id)
-	assert.Nil(t, err)
-	assert.NotNil(t, newPipeline)
-	var params []api.Parameter
-	err = json.Unmarshal([]byte(newPipeline.Parameters), &params)
-	assert.Nil(t, err)
-	assert.Equal(t, []api.Parameter{{Name: "param1", Value: "hello"}, {Name: "param2"}}, params)
-	assert.Equal(t, "pipeline description", newPipeline.Description)
-}
-
-func TestCreatePipeline_InvalidYAML(t *testing.T) {
-	httpServer := getMockServer(t)
-	// Close the server when test finishes
-	defer httpServer.Close()
-
-	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	resourceManager := resource.NewResourceManager(clientManager)
-
-	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client()}
-	_, err := pipelineServer.CreatePipeline(context.Background(), &api.CreatePipelineRequest{
-		Pipeline: &api.Pipeline{
-			Url:  &api.Url{PipelineUrl: httpServer.URL + "/invalid-workflow.yaml"},
-			Name: "argument-parameters",
-		}})
-
-	assert.NotNil(t, err)
-	assert.Equal(t, codes.InvalidArgument, err.(*util.UserError).ExternalStatusCode())
-	assert.Contains(t, err.Error(), "Unexpected resource type")
-}
-
-func TestCreatePipeline_InvalidURL(t *testing.T) {
-	httpServer := getBadMockServer()
-	// Close the server when test finishes
-	defer httpServer.Close()
-
-	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	resourceManager := resource.NewResourceManager(clientManager)
-
-	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client()}
-	_, err := pipelineServer.CreatePipeline(context.Background(), &api.CreatePipelineRequest{
-		Pipeline: &api.Pipeline{
-			Url:  &api.Url{PipelineUrl: httpServer.URL + "/invalid-workflow.yaml"},
-			Name: "argument-parameters",
-		}})
-	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
-}
-
-func TestCreatePipelineVersion_YAML(t *testing.T) {
-	httpServer := getMockServer(t)
-	// Close the server when test finishes
-	defer httpServer.Close()
-
-	clientManager := resource.NewFakeClientManagerOrFatal(
-		util.NewFakeTimeForEpoch())
-	resourceManager := resource.NewResourceManager(clientManager)
-
-	pipelineServer := PipelineServer{
-		resourceManager: resourceManager, httpClient: httpServer.Client()}
-	pipelineVersion, err := pipelineServer.CreatePipelineVersion(
-		context.Background(), &api.CreatePipelineVersionRequest{
-			Version: &api.PipelineVersion{
-				PackageUrl: &api.Url{
-					PipelineUrl: httpServer.URL + "/arguments-parameters.yaml"},
-				Name: "argument-parameters",
-				ResourceReferences: []*api.ResourceReference{
-					&api.ResourceReference{
-						Key: &api.ResourceKey{
-							Id:   "pipeline",
-							Type: api.ResourceType_PIPELINE,
-						},
-						Relationship: api.Relationship_OWNER,
-					}}}})
-
-	assert.Nil(t, err)
-	assert.NotNil(t, pipelineVersion)
-	assert.Equal(t, "argument-parameters", pipelineVersion.Name)
-	newPipelineVersion, err := resourceManager.GetPipelineVersion(
-		pipelineVersion.Id)
-	assert.Nil(t, err)
-	assert.NotNil(t, newPipelineVersion)
-	var params []api.Parameter
-	err = json.Unmarshal([]byte(newPipelineVersion.Parameters), &params)
-	assert.Nil(t, err)
-	assert.Equal(t, []api.Parameter{
-		{Name: "param1", Value: "hello"}, {Name: "param2"}}, params)
-}
-
-func TestCreatePipelineVersion_InvalidYAML(t *testing.T) {
-	httpServer := getMockServer(t)
-	// Close the server when test finishes
-	defer httpServer.Close()
-
-	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	resourceManager := resource.NewResourceManager(clientManager)
-
-	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client()}
-	_, err := pipelineServer.CreatePipelineVersion(
-		context.Background(), &api.CreatePipelineVersionRequest{
-			Version: &api.PipelineVersion{
-				PackageUrl: &api.Url{
-					PipelineUrl: httpServer.URL + "/invalid-workflow.yaml"},
-				Name: "argument-parameters",
-				ResourceReferences: []*api.ResourceReference{
-					&api.ResourceReference{
-						Key: &api.ResourceKey{
-							Id:   "pipeline",
-							Type: api.ResourceType_PIPELINE,
-						},
-						Relationship: api.Relationship_OWNER,
-					}}}})
-
-	assert.NotNil(t, err)
-	assert.Equal(t, codes.InvalidArgument, err.(*util.UserError).ExternalStatusCode())
-	assert.Contains(t, err.Error(), "Unexpected resource type")
-}
-
-func TestCreatePipelineVersion_Tarball(t *testing.T) {
-	httpServer := getMockServer(t)
-	// Close the server when test finishes
-	defer httpServer.Close()
-
-	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	resourceManager := resource.NewResourceManager(clientManager)
-
-	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client()}
-	pipelineVersion, err := pipelineServer.CreatePipelineVersion(
-		context.Background(), &api.CreatePipelineVersionRequest{
-			Version: &api.PipelineVersion{
-				PackageUrl: &api.Url{
-					PipelineUrl: httpServer.URL +
-						"/arguments_tarball/arguments.tar.gz"},
-				Name: "argument-parameters",
-				ResourceReferences: []*api.ResourceReference{
-					&api.ResourceReference{
-						Key: &api.ResourceKey{
-							Id:   "pipeline",
-							Type: api.ResourceType_PIPELINE,
-						},
-						Relationship: api.Relationship_OWNER,
-					}}}})
-
-	assert.Nil(t, err)
-	assert.NotNil(t, pipelineVersion)
-	assert.Equal(t, "argument-parameters", pipelineVersion.Name)
-	newPipelineVersion, err := resourceManager.GetPipelineVersion(pipelineVersion.Id)
-	assert.Nil(t, err)
-	assert.NotNil(t, newPipelineVersion)
-	var params []api.Parameter
-	err = json.Unmarshal([]byte(newPipelineVersion.Parameters), &params)
-	assert.Nil(t, err)
-	assert.Equal(t, []api.Parameter{{Name: "param1", Value: "hello"}, {Name: "param2"}}, params)
-}
-
-func TestCreatePipelineVersion_InvalidURL(t *testing.T) {
-	// Use a bad mock server
-	httpServer := getBadMockServer()
-	// Close the server when test finishes
-	defer httpServer.Close()
-
-	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	resourceManager := resource.NewResourceManager(clientManager)
-
-	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client()}
-	_, err := pipelineServer.CreatePipelineVersion(context.Background(), &api.CreatePipelineVersionRequest{
-		Version: &api.PipelineVersion{
-			PackageUrl: &api.Url{
-				PipelineUrl: httpServer.URL + "/invalid-workflow.yaml"},
-			Name: "argument-parameters",
-			ResourceReferences: []*api.ResourceReference{
-				&api.ResourceReference{
-					Key: &api.ResourceKey{
-						Id:   "pipeline",
-						Type: api.ResourceType_PIPELINE,
-					},
-					Relationship: api.Relationship_OWNER,
-				}}}})
-
-	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
-}
-
-func TestListPipelineVersion_NoResourceKey(t *testing.T){
-	httpServer := getMockServer(t)
-	// Close the server when test finishes
-	defer httpServer.Close()
-
-	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	resourceManager := resource.NewResourceManager(clientManager)
-
-	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client()}
-
+	pipelineServer := PipelineServer{resourceManager: resourceManager, httpClient: httpServer.Client(), options: &PipelineServerOptions{CollectMetrics: false}}
 
 	_, err := pipelineServer.ListPipelineVersions(context.Background(), &api.ListPipelineVersionsRequest{
 		ResourceKey: nil,
-		PageSize: 20,
+		PageSize:    20,
 	})
 	assert.Equal(t, "Invalid input error: ResourceKey must be set in the input", err.Error())
+
+	//removed "pipelineServer.CreatePipeline" since the yaml spec is based on Argo yaml spec
 }
 
 func getMockServer(t *testing.T) *httptest.Server {

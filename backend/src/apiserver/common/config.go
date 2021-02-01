@@ -20,10 +20,12 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
 	MultiUserMode                       string = "MULTIUSER"
+	MultiUserModeSharedReadAccess       string = "MULTIUSER_SHARED_READ"
 	PodNamespace                        string = "POD_NAMESPACE"
 	CacheEnabled                        string = "CacheEnabled"
 	DefaultPipelineRunnerServiceAccount string = "DefaultPipelineRunnerServiceAccount"
@@ -37,8 +39,14 @@ const (
 	ArtifactEndpointScheme              string = "ARTIFACT_ENDPOINT_SCHEME"
 	ArtifactScript                      string = "ARTIFACT_SCRIPT"
 	ArtifactImage                       string = "ARTIFACT_IMAGE"
+	ArtifactCopyStepTemplate            string = "ARTIFACT_COPY_STEP_TEMPLATE"
 	InjectDefaultScript                 string = "INJECT_DEFAULT_SCRIPT"
+	UpdatePipelineVersionByDefault      string = "AUTO_UPDATE_PIPELINE_DEFAULT_VERSION"
 )
+
+func IsPipelineVersionUpdatedByDefault() bool {
+	return GetBoolConfigWithDefault(UpdatePipelineVersionByDefault, true)
+}
 
 func GetStringConfig(configName string) string {
 	if !viper.IsSet(configName) {
@@ -80,6 +88,10 @@ func GetDurationConfig(configName string) time.Duration {
 	return viper.GetDuration(configName)
 }
 
+func IsMultiUserSharedReadMode() bool {
+	return GetBoolConfigWithDefault(MultiUserModeSharedReadAccess, false)
+}
+
 func IsMultiUserMode() bool {
 	return GetBoolConfigWithDefault(MultiUserMode, false)
 }
@@ -106,6 +118,14 @@ func GetPodNamespace() string {
 
 func GetArtifactImage() string {
 	return GetStringConfigWithDefault(ArtifactImage, DefaultArtifactImage)
+}
+
+func GetCopyStepTemplate() *corev1.Container {
+	var tpl corev1.Container
+	if err := viper.UnmarshalKey(ArtifactCopyStepTemplate, &tpl); err != nil {
+		glog.Fatalf("Invalid '%s', %v", ArtifactCopyStepTemplate, err)
+	}
+	return &tpl
 }
 
 func GetBoolFromStringWithDefault(value string, defaultValue bool) bool {

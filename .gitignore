@@ -98,3 +98,5 @@ docs/_build
 # sed backups
 *.bak
 
+# virtualenv
+.venv/

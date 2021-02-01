@@ -32,17 +32,30 @@ spec:
     tasks:
     - name: print
       taskSpec:
+        metadata:
+          annotations:
+            hobby: football
+          labels:
+            hobby: football
         steps:
         - command:
           - echo
           - hey, what are you up to?
           image: alpine:3.6
           name: main
+      timeout: 0s
     - name: print-2
       taskSpec:
+        metadata:
+          annotations:
+            hobby: football
+          labels:
+            hobby: football
         steps:
         - command:
           - echo
           - train my model.
           image: alpine:3.6
           name: main
+      timeout: 0s
+  timeout: 0s

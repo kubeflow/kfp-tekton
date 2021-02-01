@@ -48,6 +48,7 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
     params:
     - default: gs://ml-pipeline-playground/shakespeare1.txt
       name: url
@@ -72,6 +73,7 @@ spec:
           - -c
           image: google/cloud-sdk:279.0.0
           name: main
+      timeout: 0s
     - name: echo-2
       params:
       - name: gcs-download-data
@@ -88,3 +90,5 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
+  timeout: 0s
