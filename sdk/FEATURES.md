@@ -18,8 +18,10 @@ and test pipelines found in the KFP repository.
     - [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations)
     - [ImagePullSecrets](#imagepullsecrets)
     - [Exit Handler](#exit-handler)
+    - [Pipeline Loops](#pipeline-loops)
     - [Any Sequencer](#any-sequencer)
     - [Tekton Pipeline Variables](#tekton-pipeline-variables)
+    - [Sidecars](#sidecars)
 - [Pipeline DSL Features with a Custom Tekton Implementation](#pipeline-dsl-features-with-a-custom-tekton-implementation)
   - [Features with the Same Behavior as Argo](#features-with-the-same-behavior-as-argo)
     - [InitContainers](#initcontainers)
@@ -29,10 +31,7 @@ and test pipelines found in the KFP repository.
     - [Input Artifacts](#input-artifacts)
     - [Output Artifacts](#output-artifacts)
   - [Features with Limitations](#features-with-limitations)
-    - [ParallelFor](#parallelfor)
     - [Variable Substitutions](#variable-substitutions)
-  - [Features with a Different Behavior than Argo](#features-with-a-different-behavior-than-argo)
-    - [Sidecars](#sidecars)
 
 
 # Pipeline DSL Features with Native Tekton Implementation
@@ -99,7 +98,7 @@ Tekton task name is the same as the containerOp name whereas the step name is al
 
 ### Affinity, Node Selector, and Tolerations
 
-Affinity, Node Selector, and Tolerations are Kubernetes spec for selecting which node should run the component based on
+Affinity, Node Selector, and Tolerations are Kubernetes specs for selecting which node should run the component based on
 user-defined constraints. They are implemented with Tekton's [PipelineRunTaskSpec](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md#specifying-task-run-specs)
 features under Tekton PipelineRun.
 The [affinity](/sdk/python/tests/compiler/testdata/affinity.py),
@@ -127,9 +126,21 @@ the [exit_handler](/sdk/python/tests/compiler/testdata/exit_handler.py) compiler
 
 The `finally` syntax is supported since Tekton version `0.14.0`.
 
+### Pipeline Loops
+
+PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) controller named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops. 
+
+To use this feature, please ensure Tekton version >= v0.19, and "data.enable-custom-tasks" is "true" in feature-flags configmap:
+`kubectl edit cm feature-flags -n tekton-pipelines`
+
+To see how the Python SDK provides this feature, refer to the examples below:
+- [loop_static](/sdk/python/tests/compiler/testdata/loop_static.py)
+- [withparam_global](/sdk/python/tests/compiler/testdata/withparam_global.py)
+- [withitem_nested](/sdk/python/tests/compiler/testdata/withitem_nested.py)
+
 ### Any Sequencer
 
-When any one of the task dependencies complete successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym). 
+When any one of the task dependencies completes successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym). 
 
 For example:
 
@@ -141,7 +152,7 @@ dsl.ContainerOp(
 ).apply(after_any(([containerOps]))
 ```
 
-Please note that the service account of the `Any Sequencer` needs 'get' premission to watch the status of the sepecified `taskRun`.
+Please note that the service account of the `Any Sequencer` needs 'get' permission to watch the status of the specified `taskRun`.
 
 ### Tekton Pipeline Variables
 
@@ -154,6 +165,20 @@ $(context.pipelineRun.namespace)
 $(context.pipelineRun.uid)
 ```
 
+### Sidecars
+
+Sidecars are containers that are executed in parallel with the main component within the same pod. It is implemented with Tekton's
+[task sidecars](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#using-a-sidecar-in-a-task) features under Tekton Task. The
+[sidecar](/sdk/python/tests/compiler/testdata/sidecar.py) python test is an example of how to use this feature.
+
+**Note:** Tekton's current `Sidecar` implementation contains a bug.
+Tekton uses a container image named `nop` to terminate `Sidecars`.
+That image is configured by passing a flag to the Tekton controller.
+If the configured `nop` image contains the exact command the `Sidecar`
+was executing before receiving a "stop" signal, the `Sidecar` keeps
+running, eventually causing the `TaskRun` to time out with an error.
+For more information, see [Tekton issue 1347](https://github.com/tektoncd/pipeline/issues/1347).
+
 # Pipeline DSL Features with a Custom Tekton Implementation
 
 ## Features with the Same Behavior as Argo
@@ -163,7 +188,7 @@ extra custom processing code or workaround within the compiler.
 
 ### InitContainers
 
-InitContainers are containers that executed before the main component within the same pod. Since Tekton already has the concept of task
+InitContainers are containers that are executed before the main component within the same pod. Since Tekton already has the concept of task
 steps, initContainers are placed as [steps](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#defining-steps) before the
 main component task under Tekton Task. The [init_container](/sdk/python/tests/compiler/testdata/init_container.py) python test
 is an example of how to use this feature.
@@ -212,16 +237,6 @@ via a Kubernetes configmap.
 
 Below are the features that have certain limitation in the current Tekton release.
 
-### ParallelFor
-
-[Tracking issue #2050][ParallelFor]
-
-ParallelFor is a feature for running the same component multiple times in parallel. Because Tekton has no looping or recursion feature for running tasks, right now the ParallelFor pipelines are flattened into multiple same components when using static parameters. The
-[loop_static](/sdk/python/tests/compiler/testdata/loop_static.py) python test is an example of how to use this feature.
-
-However, when using dynamic parameters, the number of parallel tasks is determined during runtime. Therefore, we are tracking the
-[looping support issue](https://github.com/tektoncd/pipeline/issues/2050) in Tekton and implement ParallelFor with dynamic parameters once ready.
-
 ### Variable Substitutions
 
 [Tracking issue #2322][VarSub]
@@ -239,26 +254,6 @@ argo -> tekton
 
 [parallel_join_with_argo_vars](/sdk/python/tests/compiler/testdata/parallel_join_with_argo_vars.py) is an example of how Argo variables are
 used and it can still be converted to Tekton variables with our Tekton compiler. However, other Argo variables will throw out an error because those Argo variables are very unique to Argo's pipeline system.
-
-
-## Features with a Different Behavior than Argo
-
-Below are the KFP-Tekton features with different behavior than Argo.
-
-### Sidecars
-
-[Tracking issue #1347][Sidecars]
-
-Sidecars are containers that are executed in parallel with the main component within the same pod. It is implemented with Tekton's
-[task sidecars](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#using-a-sidecar-in-a-task) features under Tekton Task. The
-[sidecar](/sdk/python/tests/compiler/testdata/sidecar.py) python test is an example of how to use this feature.
-
-However, when you run kfp-tekton pipeline with sidecars, you may notice a completed pod and a sidecar pod with an error. There are known issues with the existing implementation of sidecars:
-
-When the nop image does provide the sidecar's command, the sidecar will continue to run even after nop has been swapped into the sidecar container's image field. Until this issue is resolved the best way to avoid it is to avoid overriding the nop image when deploying the tekton controller, or ensuring that the overridden nop image contains as few commands as possible.
-
-`kubectl get pods` will show a 'Completed' pod when a sidecar exits successfully but an _Error_ when the sidecar exits with an error. This is only apparent when using `kubectl` to get the pods of a TaskRun, not when describing the Pod using `kubectl describe pod ...` nor when looking at the TaskRun, but can be quite confusing. However, it has no functional impact.
-[Tekton pipeline readme](https://github.com/tektoncd/pipeline/blob/master/docs/developers/README.md#handling-of-injected-sidecars) has documented this limitation.
 
 
 <!-- Issue and PR links-->

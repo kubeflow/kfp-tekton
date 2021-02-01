@@ -29,37 +29,30 @@ dsl.ParallelFor._get_unique_id_code = Coder().get_code
 
 
 @dsl.pipeline(name='my-pipeline')
-def pipeline(my_pipe_param: int = 10):
-    loop_args = [1, 2]
-    with dsl.ParallelFor(loop_args) as item:
+def pipeline(loopidy_doop: list = [3, 5, 7, 9]):
+    op0 = dsl.ContainerOp(
+        name="my-out-cop0",
+        image='python:alpine3.6',
+        command=["sh", "-c"],
+        arguments=[
+            'python -c "import json; import sys; json.dump([i for i in range(20, 31)], open(\'/tmp/out.json\', \'w\'))"'],
+        file_outputs={'out': '/tmp/out.json'},
+    )
+
+    with dsl.ParallelFor(loopidy_doop) as item:
         op1 = dsl.ContainerOp(
-            name="my-in-coop1",
+            name="my-in-cop1",
             image="library/bash:4.4.23",
             command=["sh", "-c"],
-            arguments=["echo op1 %s %s" % (item, my_pipe_param)],
-        )
-
-        with dsl.ParallelFor([100, 200, 300]) as inner_item:
-            op11 = dsl.ContainerOp(
-                name="my-inner-inner-coop",
-                image="library/bash:4.4.23",
-                command=["sh", "-c"],
-                arguments=["echo op1 %s %s %s" % (item, inner_item, my_pipe_param)],
-            )
-
-        op2 = dsl.ContainerOp(
-            name="my-in-coop2",
-            image="library/bash:4.4.23",
-            command=["sh", "-c"],
-            arguments=["echo op2 %s" % item],
-        )
+            arguments=["echo no output global op1, item: %s" % item],
+        ).after(op0)
 
     op_out = dsl.ContainerOp(
-        name="my-out-cop",
+        name="my-out-cop2",
         image="library/bash:4.4.23",
         command=["sh", "-c"],
-        arguments=["echo %s" % my_pipe_param],
-    )
+        arguments=["echo no output global op2, outp: %s" % op0.output],
+    ).after(op1)
 
 
 if __name__ == '__main__':

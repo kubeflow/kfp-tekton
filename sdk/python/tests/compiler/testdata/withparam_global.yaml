@@ -1,0 +1,68 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: my-pipeline
+  annotations:
+    tekton.dev/output_artifacts: '{"my-out-cop0": [{"key": "artifacts/$PIPELINERUN/my-out-cop0/out.tgz",
+      "name": "my-out-cop0-out", "path": "/tmp/out.json"}]}'
+    tekton.dev/input_artifacts: '{"my-out-cop2": [{"name": "my-out-cop0-out", "parent_task":
+      "my-out-cop0"}]}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"my-in-cop1": [], "my-out-cop0": [["out", "$(results.out.path)"]],
+      "my-out-cop2": []}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[3, 5, 7, 9]",
+      "name": "loopidy_doop", "optional": true, "type": "JsonArray"}], "name": "my-pipeline"}'
+spec:
+  params:
+  - {name: loopidy_doop, value: '[3, 5, 7, 9]'}
+  pipelineSpec:
+    params:
+    - {name: loopidy_doop, default: '[3, 5, 7, 9]'}
+    tasks:
+    - name: my-out-cop0
+      taskSpec:
+        steps:
+        - name: main
+          args: ['python -c "import json; import sys; json.dump([i for i in range(20,
+              31)], open(''$(results.out.path)'', ''w''))"']
+          command: [sh, -c]
+          image: python:alpine3.6
+        results:
+        - {name: out, description: /tmp/out.json}
+      timeout: 0s
+    - name: my-out-cop2
+      params:
+      - {name: my-out-cop0-out, value: $(tasks.my-out-cop0.results.out)}
+      taskSpec:
+        steps:
+        - name: main
+          args: ['echo no output global op2, outp: $(inputs.params.my-out-cop0-out)']
+          command: [sh, -c]
+          image: library/bash:4.4.23
+        params:
+        - {name: my-out-cop0-out}
+      runAfter: [for-loop-for-loop-00000001-1]
+      timeout: 0s
+    - runAfter: [my-out-cop0]
+      name: for-loop-for-loop-00000001-1
+      taskRef: {apiVersion: custom.tekton.dev/v1alpha1, kind: PipelineLoop, name: for-loop-for-loop-00000001-1}
+      params:
+      - {name: loopidy_doop-loop-item, value: $(params.loopidy_doop)}
+  timeout: 0s
