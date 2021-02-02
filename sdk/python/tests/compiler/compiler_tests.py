@@ -137,6 +137,20 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.withparam_global import pipeline
     self._test_pipeline_workflow(pipeline, 'withparam_global.yaml')
 
+  def test_loop_over_lightweight_output_workflow(self):
+    """
+    Test compiling a loop over lightweight output in workflow.
+    """
+    from .testdata.loop_over_lightweight_output import pipeline
+    self._test_pipeline_workflow(pipeline, 'loop_over_lightweight_output.yaml')
+
+  def test_withparam_output_workflow(self):
+    """
+    Test compiling a withparam output in workflow.
+    """
+    from .testdata.withparam_output import pipeline
+    self._test_pipeline_workflow(pipeline, 'withparam_output.yaml')
+
   def test_pipelineparams_workflow(self):
     """
     Test compiling a pipelineparams workflow.

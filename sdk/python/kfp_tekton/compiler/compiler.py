@@ -191,8 +191,7 @@ class TektonCompiler(Compiler):
         if pipeline_param.op_name is None:
           withparam_value = '$(params.%s)' % pipeline_param.name
         else:
-          param_name = '%s-%s' % (
-            sanitize_k8s_name(pipeline_param.op_name), pipeline_param.name)
+          param_name = sanitize_k8s_name(pipeline_param.name)
           withparam_value = '$(tasks.%s.results.%s)' % (
             sanitize_k8s_name(pipeline_param.op_name),
             param_name)
