@@ -1,0 +1,102 @@
+name: sendmail
+description: |
+  This task sends a simple email to receivers via SMTP server
+inputs:
+  - {name: server_secret, description: 'secret name for SMTP server information (url, port, password)'}
+  - {name: subject, description: 'plain text email subject'}
+  - {name: body, description: 'plain text email body'}
+  - {name: sender, description: 'sender email address'}
+  - {name: recipients, description: 'recipient email addresses (comma delimited list)'}
+  - {name: attachment_path, description: 'email attachment file path'}
+implementation:
+  container:
+    image: registry.access.redhat.com/ubi8/python-38
+    command:
+    - python3
+    - -u
+    - -c
+    - |
+      #!/usr/bin/env python3
+      import sys
+      import os
+      import ssl
+      import smtplib
+      from email import encoders
+      from email.utils import COMMASPACE, formatdate
+      from email.mime.text import MIMEText
+      from email.mime.base import MIMEBase
+      from email.mime.multipart import MIMEMultipart
+      from pathlib import Path
+      import argparse
+      import logging
+      logging.basicConfig(
+          level=logging.INFO,
+          format='%(asctime)s  %(levelname)s  %(message)s'
+      )
+
+      _parser = argparse.ArgumentParser('sendmail inputs')
+      _parser.add_argument("--server-secret", type=str, required=True)
+      _parser.add_argument("--subject", type=str, required=True)
+      _parser.add_argument("--body", type=str, required=True)
+      _parser.add_argument("--sender", type=str, required=True)
+      _parser.add_argument("--recipients", type=str, required=True,
+                           help='The comma delimited recipients.')
+      _parser.add_argument("--attachment-path", type=str,
+                           help='The comma delimited file list.')
+      _parsed_args = _parser.parse_args()
+
+      smtp_server = os.getenv('SERVER')
+      port = os.getenv('PORT')
+      user = os.getenv('USER')
+      password = os.getenv('PASSWORD')
+      tls = os.getenv('TLS')
+      sender_email = _parsed_args.sender
+      receiver_emails = _parsed_args.recipients
+
+      msg = MIMEMultipart()
+      msg['From'] = sender_email
+      msg['To'] = receiver_emails
+      msg['Subject'] = _parsed_args.subject
+      msg.attach(MIMEText(_parsed_args.body))
+      try:
+          if tls == 'True':
+              context = ssl.create_default_context()
+              server = smtplib.SMTP_SSL(smtp_server, port, context=context)
+          else:
+              server = smtplib.SMTP(smtp_server, port)
+      except:
+          logging.error("Failed to connect to server, check server url and port in secret {}.".format(
+              _parsed_args.server_secret))
+          sys.exit(1)
+      if password != '':
+          try:
+              server.login(user, password)
+          except:
+              logging.error("Authentication failed, check user and password in secret {}.".format(
+                  _parsed_args.server_secret))
+              sys.exit(1)
+      if _parsed_args.attachment_path:
+          attachments = _parsed_args.attachment_path.split(',')
+          for path in attachments:
+              part = MIMEBase('application', "octet-stream")
+              with open(path, 'rb') as file:
+                  part.set_payload(file.read())
+              encoders.encode_base64(part)
+              part.add_header('Content-Disposition',
+                              'attachment; filename="{}"'.format(Path(path).name))
+              msg.attach(part)
+      logging.info("Sending Email to {}".format(receiver_emails))
+      server.sendmail(sender_email, receiver_emails.split(","), msg.as_string())
+      server.quit()
+      logging.info("Notification finished.")
+    args: [
+      --server-secret, {inputValue: server_secret},
+      --subject, {inputValue: subject},
+      --body, {inputValue: body},
+      --sender, {inputValue: sender},
+      --recipients, {inputValue: recipients},
+      --attachment-path, {inputValue: attachment_path},
+    ]
+
+
+
