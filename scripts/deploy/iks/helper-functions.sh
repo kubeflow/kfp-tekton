@@ -14,13 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+retry() {
+  local max=$1; shift
+  local interval=$1; shift
+
+  until "$@"; do
+    echo "trying.."
+    max=$((max-1))
+    if [[ "$max" -eq 0 ]]; then
+      return 1
+    fi
+    sleep "$interval"
+  done
+}
+
 wait_for_namespace () {
     if [[ $# -ne 3 ]]
     then
         echo "Usage: wait_for_namespace namespace max_retries sleep_time"
         return 1
-    fi 
-    
+    fi
+
     local namespace=$1
     local max_retries=$2
     local sleep_time=$3
@@ -29,14 +43,13 @@ wait_for_namespace () {
 
     while [[ $i -lt $max_retries ]]
     do
-        local namespaces=$(kubectl get ns)
-        if [[ -n `echo ${namespaces[@]} | grep -ow $namespace` ]]
+        if kubectl get ns | grep -qow "$namespace"
         then
             return 0
         fi
         echo "$namespace not found. Checking again in ${sleep_time}s."
-        sleep $sleep_time
-        i=$(($i+1))
+        sleep "$sleep_time"
+        i=$((i+1))
     done
 
     return 1
@@ -57,7 +70,11 @@ wait_for_pods () {
 
     while [[ $i -lt $max_retries ]]
     do
-        local pods=$(kubectl get pod -n $namespace)
+        local pods
+        local statuses
+        local num_pods
+        local num_running
+        pods=$(kubectl get pod -n "$namespace")
 
         if [[ -z $pods ]]
         then
@@ -68,9 +85,9 @@ wait_for_pods () {
         # Using quotations around variables to keep column format in echo
         # Remove 1st line (header line) -> trim whitespace -> cut statuses column (3rd column)
         # Might be overkill to parse down to specific columns :).
-        local statuses=$(echo "$pods" | tail -n +2 | tr -s ' '  | cut -d ' ' -f 3)
-        local num_pods=$(echo "$statuses" | wc -l | xargs)
-        local num_running=$(echo "$statuses" | grep -ow "Running\|Completed" | wc -l | xargs)
+        statuses=$(echo "$pods" | tail -n +2 | tr -s ' '  | cut -d ' ' -f 3)
+        num_pods=$(echo "$statuses" | wc -l | xargs)
+        num_running=$(echo "$statuses" | grep -ow "Running\|Completed" | wc -l | xargs)
 
         local msg="${num_running}/${num_pods} pods running in \"${namespace}\"."
 
@@ -78,11 +95,11 @@ wait_for_pods () {
         then
             echo "$msg Checking again in ${sleep_time}s."
         else
-            echo $msg
+            echo "$msg"
             return 0
         fi
-        sleep $sleep_time
-        i=$(($i+1))
+        sleep "$sleep_time"
+        i=$((i+1))
     done
 
     return 1
@@ -106,7 +123,7 @@ deploy_with_retries () {
     do
         local exit_code=0
 
-        kubectl apply $flag $manifest || exit_code=$?
+        kubectl apply "$flag" "$manifest" || exit_code=$?
 
         if [[ $exit_code -eq 0 ]]
         then
@@ -114,8 +131,8 @@ deploy_with_retries () {
         fi
         
         echo "Deploy unsuccessful with error code $exit_code. Trying again in ${sleep_time}s."
-        sleep $sleep_time
-        i=$(($i+1))
+        sleep "$sleep_time"
+        i=$((i+1))
     done
 
     return 1
