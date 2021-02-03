@@ -119,8 +119,7 @@ export default class CompareUtils {
       xLabels = Array.from(namesToNodesToValues.keys());
 
       rows = Array.from(nodeIds.keys()).map(nodeId => {
-        yLabels.push(nodeId);
-        //yLabels.push(parseTaskDisplayNameByNodeId(nodeId, workflow));
+        yLabels.push(parseTaskDisplayNameByNodeId(nodeId, workflow));
         return xLabels.map(metricName => namesToNodesToValues.get(metricName)!.get(nodeId) || '');
       });
     }

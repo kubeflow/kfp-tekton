@@ -40,7 +40,7 @@ Then, upload the `email_pipeline.yaml` file to the Kubeflow pipeline dashboard w
 
 ### Pipeline parameters
 
-* **server**: The name of the secret that has the SMTP server information
+* **server_secret**: The name of the secret that has the SMTP server information
 
 * **subject**: Email subject (plain text)
 
@@ -48,6 +48,6 @@ Then, upload the `email_pipeline.yaml` file to the Kubeflow pipeline dashboard w
 
 * **sender**: Email sender email address
 
-* **recipients**: Email recipients email addresses (comma space delimited)
+* **recipients**: Email recipients email addresses (comma delimited)
 
 * **attachment_path**: Optional attachment path from the previous path
