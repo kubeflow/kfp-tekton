@@ -151,6 +151,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.withparam_output import pipeline
     self._test_pipeline_workflow(pipeline, 'withparam_output.yaml')
 
+  def test_conditions_with_global_params_workflow(self):
+    """
+    Test conditions with global params in workflow.
+    """
+    from .testdata.conditions_with_global_params import conditions_with_global_params
+    self._test_pipeline_workflow(conditions_with_global_params, 'conditions_with_global_params.yaml')
+
   def test_pipelineparams_workflow(self):
     """
     Test compiling a pipelineparams workflow.
