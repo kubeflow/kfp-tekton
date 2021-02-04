@@ -36,13 +36,19 @@ var (
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{
-				ArgoWorkflowNodeName: "test_node",
-				ArgoWorkflowTemplate: `{"name": "Does not matter","container":{"command":["echo", "Hello"],"image":"python:3.7"}}`,
+				ArgoWorkflowNodeName:  "test_node",
+				TektonTaskrunTemplate: `{"name": "Does not matter","container":{"command":["echo", "Hello"],"image":"python:3.7"}}`,
 			},
 			Labels: map[string]string{
 				ArgoCompleteLabelKey:    "true",
 				KFPCacheEnabledLabelKey: KFPCacheEnabledLabelValue,
+				PipelineName:            "test-pipelinerun",
+				Generation:              "0",
 			},
+			OwnerReferences: []metav1.OwnerReference{{
+				Kind:       TektonTaskKind,
+				APIVersion: TektonGroup,
+			}},
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -50,6 +56,7 @@ var (
 					Name:    "main",
 					Image:   "test_image",
 					Command: []string{"python"},
+					Args:    []string{"-entrypoint", "/bin/bash", "--", "-c", "printf '200'"},
 				},
 			},
 		},
@@ -135,9 +142,9 @@ func TestMutatePodIfCached(t *testing.T) {
 
 func TestMutatePodIfCachedWithCacheEntryExist(t *testing.T) {
 	executionCache := &model.ExecutionCache{
-		ExecutionCacheKey: "f5fe913be7a4516ebfe1b5de29bcb35edd12ecc776b2f33f10ca19709ea3b2f0",
-		ExecutionOutput:   "testOutput",
-		ExecutionTemplate: `{"container":{"command":["echo", "Hello"],"image":"python:3.7"}}`,
+		ExecutionCacheKey: "8c623f608410644024522153da8c8bffd5a801ceecacb12cd582b4cb0e1b3e76",
+		ExecutionOutput:   `{"pipelines.kubeflow.org/metadata_execution_id": "8c623f608410644024522153da8c8bffd5a801ceecacb12cd582b4cb0e1b3e76", "tekton.dev/outputs": "[{\"name\":\"test\",\"value\":\"test\"}]"}`,
+		ExecutionTemplate: `{"Spec":{"serviceAccountName":"","status":"TaskRunCancelled"},"TaskName":"","PipelineName":"test-pipelinerun","Generation":"0"}`,
 		MaxCacheStaleness: -1,
 	}
 	fakeClientManager.CacheStore().CreateExecutionCache(executionCache)
@@ -161,7 +168,7 @@ func TestMutatePodIfCachedWithTeamplateCleanup(t *testing.T) {
 	fakeClientManager.CacheStore().CreateExecutionCache(executionCache)
 
 	pod := *fakePod.DeepCopy()
-	pod.ObjectMeta.Annotations[ArgoWorkflowTemplate] = `{
+	pod.ObjectMeta.Annotations[TektonTaskrunTemplate] = `{
 		"name": "Does not matter",
 		"metadata": "anything",
 		"container": {
