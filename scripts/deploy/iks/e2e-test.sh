@@ -61,10 +61,25 @@ retry() {
   done
 }
 
+check_kfp_pipeline() {
+  kubectl get pod -n "$KUBEFLOW_NS"
+  until kubectl get pod -l app=ml-pipeline -n "$KUBEFLOW_NS" | grep -q  '1/1'; do
+    sleep 10; echo 'wait for 10s';
+  done
+}
+
 # Set up kubernetes config
 retry 3 3 ibmcloud login --apikey "${IBM_CLOUD_API_KEY}" --no-region
 retry 3 3 ibmcloud target -r "$REGION" -o "$ORG" -s "$SPACE" -g "$RESOURCE_GROUP"
 retry 3 3 ibmcloud ks cluster config -c "$PIPELINE_KUBERNETES_CLUSTER_NAME"
+
+# make sure ml-pipeline is up and running
+check_kfp_pipeline
+
+POD_NAME=$(kubectl get pod -n kubeflow -l app=ml-pipeline -o json | jq -r '.items[] | .metadata.name ')
+kubectl port-forward -n "$KUBEFLOW_NS" "$POD_NAME" 8888:8888 &
+# wait for the port-forward
+sleep 5
 
 # Prepare python venv and install sdk
 python3 -m venv .venv
@@ -84,16 +99,16 @@ run_flip_coin_example() {
 
   echo " =====   flip coin sample  ====="
   python3 samples/flip-coin/condition.py
-  kfp pipeline upload -p e2e-flip-coin samples/flip-coin/condition.yaml || :
-  PIPELINE_ID=$(kfp pipeline list | grep 'e2e-flip-coin' | awk '{print $2}')
+  retry 3 3 kfp --endpoint http://localhost:8888 pipeline upload -p e2e-flip-coin samples/flip-coin/condition.yaml || :
+  PIPELINE_ID=$(kfp --endpoint http://localhost:8888  pipeline list | grep 'e2e-flip-coin' | awk '{print $2}')
   if [[ -z "$PIPELINE_ID" ]]; then
     echo "Failed to upload pipeline"
     return "$REV"
   fi
 
   local RUN_NAME="e2e-flip-coin-run-$((RANDOM%10000+1))"
-  kfp run submit -e exp-e2e-flip-coin -r "$RUN_NAME" -p "$PIPELINE_ID" || :
-  RUN_ID=$(kfp run list | grep "$RUN_NAME" | awk '{print $2}')
+  retry 3 3 kfp --endpoint http://localhost:8888 run submit -e exp-e2e-flip-coin -r "$RUN_NAME" -p "$PIPELINE_ID" || :
+  RUN_ID=$(kfp --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
   if [[ -z "$RUN_ID" ]]; then
     echo "Failed to submit a run for flip coin pipeline"
     return "$REV"
@@ -102,7 +117,7 @@ run_flip_coin_example() {
   local RUN_STATUS
   ENDTIME=$(date -ud "$DURATION minute" +%s)
   while [[ "$(date -u +%s)" -le "$ENDTIME" ]]; do
-    RUN_STATUS=$(kfp run list | grep "$RUN_NAME" | awk '{print $6}')
+    RUN_STATUS=$(kfp --endpoint http://localhost:8888 run list | grep "$RUN_NAME" | awk '{print $6}')
     if [[ "$RUN_STATUS" == "Completed" ]]; then
       REV=0
       break;
@@ -124,14 +139,18 @@ RESULT=0
 run_flip_coin_example 10 || RESULT=$?
 
 # check if doi is integrated in this toolchain
-if jq -e '.services[] | select(.service_id=="draservicebroker")' _toolchain.json; then
-  PUBLISH_BUILD_STATUS=pass
-  if [[ "$RESULT" -ne 0 ]]; then
-    PUBLISH_BUILD_STATUS=fail
+if [ -e _toolchain.json ]; then
+  if jq -e '.services[] | select(.service_id=="draservicebroker")' _toolchain.json; then
+    PUBLISH_BUILD_STATUS=pass
+    if [[ "$RESULT" -ne 0 ]]; then
+      PUBLISH_BUILD_STATUS=fail
+    fi
+    ibmcloud doi publishbuildrecord --branch "${GIT_BRANCH}" --repositoryurl "${GIT_URL}" --commitid "${GIT_COMMIT}" \
+      --buildnumber "${BUILD_NUMBER}" --logicalappname "kfp-tekton" --status "$PUBLISH_BUILD_STATUS"
   fi
-  ibmcloud doi publishbuildrecord --branch "${GIT_BRANCH}" --repositoryurl "${GIT_URL}" --commitid "${GIT_COMMIT}" \
-    --buildnumber "${BUILD_NUMBER}" --logicalappname "kfp-tekton" --status "$PUBLISH_BUILD_STATUS"
 fi
+
+kill %1
 
 if [[ "$RESULT" -ne 0 ]]; then
   echo "e2e test FAILED"

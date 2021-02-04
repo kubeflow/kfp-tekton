@@ -128,7 +128,7 @@ artificat_for_next_stage() {
 check_container_registry() {
   echo "=========================================================="
   echo "Checking registry current plan and quota"
-  ibmcloud cr login
+  retry 3 3  ibmcloud cr login
   ibmcloud cr plan || true
   ibmcloud cr quota || true
   echo "If needed, discard older images using: ibmcloud cr image-rm"
