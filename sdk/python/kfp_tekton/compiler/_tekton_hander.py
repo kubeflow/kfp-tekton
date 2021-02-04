@@ -98,7 +98,6 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict):
         task_list.extend(custom_task[custom_task_key]['task_list'])
         # generate custom task cr
         custom_task_cr_tasks = []
-        custom_task_cr_params = []
         for task in tasks:
             if task['name'] in custom_task[custom_task_key]['task_list']:
                 for param in task.get('taskSpec', {}).get('params', []):
@@ -110,11 +109,6 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict):
                 if task.get('runAfter', []):
                     task['runAfter'] = run_after_task_list
                 custom_task_cr_tasks.append(task)
-                for param in task.get('params', []):
-                    if '$(params.' in param['value'] and param not in custom_task_cr_params:
-                        custom_task_cr_params.append(param)
-                    if '$(tasks.' in param['value'] and param not in custom_task_cr_params:
-                        custom_task_cr_params.append(param)
         # generator custom task cr
         custom_task_cr = {
             "apiVersion": "custom.tekton.dev/v1alpha1",
@@ -127,7 +121,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict):
                     "params": [{
                         "name": parm['name'],
                         'type': 'string'
-                    } for parm in custom_task_cr_params],
+                    } for parm in custom_task[custom_task_key]['spec']['params']],
                     "tasks": custom_task_cr_tasks
                 }
             }
@@ -136,10 +130,10 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict):
         if custom_task[custom_task_key]['kind'] == 'loops':
             custom_task_cr['kind'] = 'PipelineLoop'
             custom_task_cr['spec']['iterateParam'] = custom_task[custom_task_key]['loop_args']
-            for param in custom_task_cr_params:
-                if param['name'] != custom_task[custom_task_key]['loop_args']:
-                    custom_task[custom_task_key]['spec']['params'].append(param)
-
+            for custom_task_param in custom_task[custom_task_key]['spec']['params']:
+                if custom_task_param['name'] != custom_task[custom_task_key]['loop_args'] and '$(tasks.' in custom_task_param['value']:
+                    custom_task_cr = json.loads(
+                        json.dumps(custom_task_cr).replace(custom_task_param['value'], '$(params.%s)' % custom_task_param['name']))
         custom_task_crs.append(custom_task_cr)
         tasks.append(custom_task[custom_task_key]['spec'])
 
