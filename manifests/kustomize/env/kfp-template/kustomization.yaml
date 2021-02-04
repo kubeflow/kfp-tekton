@@ -23,3 +23,5 @@ images:
     newTag: 0.6.0
   - name: docker.io/aipipeline/scheduledworkflow
     newTag: 0.6.0
+  - name: docker.io/aipipeline/cache-server
+    newTag: 0.6.0

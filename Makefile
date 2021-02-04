@@ -138,7 +138,7 @@ build-release-template: ## Build KFP Tekton release deployment templates
 	@kustomize build manifests/kustomize/env/kfp-template -o install/$(KFP_TEKTON_RELEASE)/kfp-tekton.yaml
 
 .PHONY: build-backend
-build-backend: build-apiserver build-agent build-workflow ## Verify apiserver, agent, and workflow build
+build-backend: build-apiserver build-agent build-workflow build-cacheserver ## Verify apiserver, agent, and workflow build
 	@echo "$@: OK"
 
 .PHONY: build-apiserver
@@ -153,12 +153,17 @@ build-agent: ## Build agent
 build-workflow: ## Build workflow
 	go build -o workflow ./backend/src/crd/controller/scheduledworkflow/*.go
 
+.PHONY: build-cacheserver
+build-cacheserver: ## Build cache
+	go build -o cache ./backend/src/cache/*.go
+
 .PHONY: build-backend-images
 build-backend-images: \
 	build-api-server-image \
 	build-persistenceagent-image \
 	build-metadata-writer-image \
 	build-scheduledworkflow-image \
+	build-cacheserver-image \
 	## Build backend docker images
 	@echo "$@: OK"
 
@@ -178,8 +183,18 @@ build-metadata-writer-image: ## Build metadata-writer docker image
 build-scheduledworkflow-image: ## Build scheduledworkflow docker image
 	docker build -t ${DOCKER_REGISTRY}/scheduledworkflow -f backend/Dockerfile.scheduledworkflow .
 
+.PHONY: build-cacheserver-image
+build-cacheserver-image: ## Build cacheserver docker image
+	docker build -t ${DOCKER_REGISTRY}/cache-server -f backend/Dockerfile.cacheserver .
+
 .PHONY: run-go-unittests
-run-go-unittests: run-apiserver-unittests run-common-unittests run-crd-unittests run-persistenceagent-unittests ## Verify go backend unit tests
+run-go-unittests: \
+	run-apiserver-unittests \
+	run-common-unittests \
+	run-crd-unittests \
+	run-persistenceagent-unittests \
+	run-cacheserver-unittests \
+	## Verify go backend unit tests
 	@echo "$@: OK"
 
 run-apiserver-unittests: # apiserver golang unit tests
@@ -193,3 +208,6 @@ run-crd-unittests: # crd golang unit tests
 
 run-persistenceagent-unittests: # persistence agent golang unit tests
 	go test -v -cover ./backend/src/agent/...
+
+run-cacheserver-unittests: # cache golang unit tests
+	go test -v -cover ./backend/src/cache/...
