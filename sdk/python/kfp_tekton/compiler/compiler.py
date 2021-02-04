@@ -438,7 +438,6 @@ class TektonCompiler(Compiler):
             }]
           condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
         most_recent_condition = cur_opsgroup.name
-
       opsgroup_stack.extend(cur_opsgroup.groups)
       condition_stack.extend([most_recent_condition for x in range(len(cur_opsgroup.groups))])
     # add task dependencies and add condition refs to the task ref that depends on the condition
