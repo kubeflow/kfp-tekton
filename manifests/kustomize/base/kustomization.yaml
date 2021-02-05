@@ -28,6 +28,9 @@ images:
   - name: gcr.io/ml-pipeline/scheduledworkflow
     newName: docker.io/aipipeline/scheduledworkflow
     newTag: latest
+  - name: gcr.io/ml-pipeline/cache-server
+    newName: docker.io/aipipeline/cache-server
+    newTag: latest
 
 # Used by Kustomize
 configMapGenerator:
