@@ -128,6 +128,20 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict):
         }
         # handle loop special case
         if custom_task[custom_task_key]['kind'] == 'loops':
+            # if subvar exist, this is dict loop parameters
+            # remove the loop_arg and add subvar args to the cr params
+            if custom_task[custom_task_key]['loop_sub_args'] != []:
+                refesh_cr_params = []
+                for param in custom_task_cr['spec']['pipelineSpec']['params']:
+                    if param['name'] != custom_task[custom_task_key]['loop_args']:
+                        refesh_cr_params.append(param)
+                custom_task_cr['spec']['pipelineSpec']['params'] = refesh_cr_params
+                custom_task_cr['spec']['pipelineSpec']['params'].extend([{
+                    "name": sub_param,
+                    'type': 'string'
+                } for sub_param in custom_task[custom_task_key]['loop_sub_args']])
+
+            # add loop special filed
             custom_task_cr['kind'] = 'PipelineLoop'
             custom_task_cr['spec']['iterateParam'] = custom_task[custom_task_key]['loop_args']
             for custom_task_param in custom_task[custom_task_key]['spec']['params']:
@@ -135,6 +149,8 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict):
                     custom_task_cr = json.loads(
                         json.dumps(custom_task_cr).replace(custom_task_param['value'], '$(params.%s)' % custom_task_param['name']))
         custom_task_crs.append(custom_task_cr)
+        custom_task[custom_task_key]['spec']['params'] = sorted(custom_task[custom_task_key]['spec']['params'],
+                                                                          key=lambda k: k['name'])
         tasks.append(custom_task[custom_task_key]['spec'])
 
     # handle the nested custom task case

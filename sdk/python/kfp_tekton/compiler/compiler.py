@@ -166,14 +166,19 @@ class TektonCompiler(Compiler):
       self.loops_pipeline[group_name] = {
         'kind': 'loops',
         'loop_args': sub_group.loop_args.full_name,
+        'loop_sub_args': [],
         'task_list': [],
         'spec': {},
         'depends': []
       }
+      for subvarName in sub_group.loop_args.referenced_subvar_names:
+        if subvarName != '__iter__':
+          self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + subvarName)
       # get the dependencies tasks rely on the loop task.
       for depend in dependencies.keys():
         if depend == sub_group.name:
           self.loops_pipeline[group_name]['spec']['runAfter'] = [task for task in dependencies[depend]]
+          self.loops_pipeline[group_name]['spec']['runAfter'].sort()
         if sub_group.name in dependencies[depend]:
           self.loops_pipeline[group_name]['depends'].append({'org': depend, 'runAfter': group_name})
       for op in sub_group.groups + sub_group.ops:
@@ -223,14 +228,16 @@ class TektonCompiler(Compiler):
       for input in inputs.keys():
         if input == sub_group.name:
           for param in inputs[input]:
-            if param[0] != sub_group.loop_args.full_name and param[1]:
+            if param[0] != sub_group.loop_args.full_name and param[1] and param[0] not in self.loops_pipeline[group_name][
+              'loop_sub_args']:
               replace_str = param[1] + '-'
               self.loops_pipeline[group_name]['spec']['params'].append({
                 'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
                   param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
                 )
               })
-            if param[0] != sub_group.loop_args.full_name and not param[1]:
+            if param[0] != sub_group.loop_args.full_name and not param[1] and param[0] not in self.loops_pipeline[group_name][
+              'loop_sub_args']:
               self.loops_pipeline[group_name]['spec']['params'].append({
                 'name': param[0], 'value': '$(params.%s)' % param[0]
               })
@@ -454,6 +461,9 @@ class TektonCompiler(Compiler):
     # process input parameters from upstream tasks
     pipeline_param_names = [p['name'] for p in params]
     loop_args = [self.loops_pipeline[key]['loop_args'] for key in self.loops_pipeline.keys()]
+    for key in self.loops_pipeline.keys():
+      if self.loops_pipeline[key]['loop_sub_args'] != []:
+        loop_args.extend(self.loops_pipeline[key]['loop_sub_args'])
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       for tp in task.get('params', []):
