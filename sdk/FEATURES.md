@@ -137,6 +137,7 @@ To see how the Python SDK provides this feature, refer to the examples below:
 - [loop_static](/sdk/python/tests/compiler/testdata/loop_static.py)
 - [withparam_global](/sdk/python/tests/compiler/testdata/withparam_global.py)
 - [withitem_nested](/sdk/python/tests/compiler/testdata/withitem_nested.py)
+- [parallelfor_item_argument_resolving](/sdk/python/tests/compiler/testdata/parallelfor_item_argument_resolving.py)
 
 ### Any Sequencer
 

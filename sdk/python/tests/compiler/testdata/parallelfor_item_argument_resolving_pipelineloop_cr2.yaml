@@ -1,0 +1,98 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: custom.tekton.dev/v1alpha1
+kind: PipelineLoop
+metadata: {name: for-loop-for-loop-00000002-2}
+spec:
+  pipelineSpec:
+    params:
+    - {name: produce-list-of-ints-Output-loop-item, type: string}
+    - {name: produce-list-of-ints-Output, type: string}
+    tasks:
+    - name: consume-4
+      params:
+      - {name: produce-list-of-ints-Output, value: $(params.produce-list-of-ints-Output)}
+      taskSpec:
+        steps:
+        - name: main
+          args: [--param1, $(inputs.params.produce-list-of-ints-Output)]
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            echo -n "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def consume(param1):
+                print(param1)
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Consume', description='')
+            _parser.add_argument("--param1", dest="param1", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = consume(**_parsed_args)
+          image: python:3.7
+        params:
+        - {name: produce-list-of-ints-Output, type: string}
+        metadata:
+          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
+              {"container": {"args": ["--param1", {"inputValue": "param1"}], "command":
+              ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def consume(param1):\n    print(param1)\n\nimport
+              argparse\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
+              dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "param1"}], "name": "Consume"}'}
+      timeout: 0s
+    - name: consume-5
+      params:
+      - {name: produce-list-of-ints-Output-loop-item, value: $(params.produce-list-of-ints-Output-loop-item)}
+      taskSpec:
+        steps:
+        - name: main
+          args: [--param1, $(inputs.params.produce-list-of-ints-Output-loop-item)]
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            echo -n "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def consume(param1):
+                print(param1)
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Consume', description='')
+            _parser.add_argument("--param1", dest="param1", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = consume(**_parsed_args)
+          image: python:3.7
+        params:
+        - {name: produce-list-of-ints-Output-loop-item, type: string}
+        metadata:
+          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
+              {"container": {"args": ["--param1", {"inputValue": "param1"}], "command":
+              ["sh", "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def consume(param1):\n    print(param1)\n\nimport
+              argparse\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
+              dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "param1"}], "name": "Consume"}'}
+      timeout: 0s
+  iterateParam: produce-list-of-ints-Output-loop-item

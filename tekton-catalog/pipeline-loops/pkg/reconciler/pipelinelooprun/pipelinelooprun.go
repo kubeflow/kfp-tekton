@@ -452,18 +452,30 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 			if p.Value.Type == v1beta1.ParamTypeString {
 				// Transfer p.Value to Array.
 				var strings []string
-				if err := json.Unmarshal([]byte(p.Value.StringVal), &strings); err != nil {
-					strings = []string{}
-					var ints []int
-					if err := json.Unmarshal([]byte(p.Value.StringVal), &ints); err != nil {
-						return 0, fmt.Errorf("The value of the iterate parameter %q can not transfer to array", tls.IterateParam)
-					}
-					for _, a := range ints {
-						strings = append(strings, strconv.Itoa(a))
-					}
+				var ints []int
+				var dictsString []map[string]string
+				var dictsInt []map[string]int
+				errString := json.Unmarshal([]byte(p.Value.StringVal), &strings)
+				errInt := json.Unmarshal([]byte(p.Value.StringVal), &ints)
+				errDictString := json.Unmarshal([]byte(p.Value.StringVal), &dictsString)
+				errDictInt := json.Unmarshal([]byte(p.Value.StringVal), &dictsInt)
+				if errString != nil && errInt != nil && errDictString != nil && errDictInt != nil {
+					return 0, fmt.Errorf("The value of the iterate parameter %q can not transfer to array", tls.IterateParam)
 				}
-				numberOfIterations = len(strings)
-				break
+
+				if errString == nil {
+					numberOfIterations = len(strings)
+					break
+				} else if errInt == nil {
+					numberOfIterations = len(ints)
+					break
+				} else if errDictString == nil {
+					numberOfIterations = len(dictsString)
+					break
+				} else if errDictInt == nil {
+					numberOfIterations = len(dictsInt)
+					break
+				}
 			}
 			if p.Value.Type == v1beta1.ParamTypeArray {
 				numberOfIterations = len(p.Value.ArrayVal)
@@ -500,18 +512,38 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 				}
 				if p.Value.Type == v1beta1.ParamTypeString {
 					var strings []string
-					if err := json.Unmarshal([]byte(p.Value.StringVal), &strings); err != nil {
-						strings = []string{}
-						var ints []int
-						_ = json.Unmarshal([]byte(p.Value.StringVal), &ints)
-						for _, a := range ints {
-							strings = append(strings, strconv.Itoa(a))
+					var ints []int
+					var dictsString []map[string]string
+					var dictsInt []map[string]int
+					errString := json.Unmarshal([]byte(p.Value.StringVal), &strings)
+					errInt := json.Unmarshal([]byte(p.Value.StringVal), &ints)
+					errDictString := json.Unmarshal([]byte(p.Value.StringVal), &dictsString)
+					errDictInt := json.Unmarshal([]byte(p.Value.StringVal), &dictsInt)
+					if errString == nil {
+						out = append(out, v1beta1.Param{
+							Name:  p.Name,
+							Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strings[iteration-1]},
+						})
+					} else if errInt == nil {
+						out = append(out, v1beta1.Param{
+							Name:  p.Name,
+							Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(ints[iteration-1])},
+						})
+					} else if errDictString == nil {
+						for dictParam := range dictsString[iteration-1] {
+							out = append(out, v1beta1.Param{
+								Name:  p.Name + "-subvar-" + dictParam,
+								Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: dictsString[iteration-1][dictParam]},
+							})
+						}
+					} else if errDictInt == nil {
+						for dictParam := range dictsInt[iteration-1] {
+							out = append(out, v1beta1.Param{
+								Name:  p.Name + "-subvar-" + dictParam,
+								Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(dictsInt[iteration-1][dictParam])},
+							})
 						}
 					}
-					out = append(out, v1beta1.Param{
-						Name:  p.Name,
-						Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strings[iteration-1]},
-					})
 				}
 			} else {
 				out = append(out, run.Spec.Params[i])

@@ -148,6 +148,27 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.withparam_global import pipeline
     self._test_pipeline_workflow(pipeline, 'withparam_global.yaml')
 
+  def test_withparam_global_dict_workflow(self):
+    """
+    Test compiling a withparam global dict in workflow.
+    """
+    from .testdata.withparam_global_dict import pipeline
+    self._test_pipeline_workflow(pipeline, 'withparam_global_dict.yaml')
+
+  def test_withparam_output_dict_workflow(self):
+    """
+    Test compiling a withparam output dict in workflow.
+    """
+    from .testdata.withparam_output_dict import pipeline
+    self._test_pipeline_workflow(pipeline, 'withparam_output_dict.yaml')
+
+  def test_parallelfor_item_argument_resolving_workflow(self):
+    """
+    Test compiling a parallelfor item argument resolving in workflow.
+    """
+    from .testdata.parallelfor_item_argument_resolving import parallelfor_item_argument_resolving
+    self._test_pipeline_workflow(parallelfor_item_argument_resolving, 'parallelfor_item_argument_resolving.yaml')
+
   def test_loop_over_lightweight_output_workflow(self):
     """
     Test compiling a loop over lightweight output in workflow.
