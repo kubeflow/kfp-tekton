@@ -14,24 +14,24 @@
 
 matrix:
   include:
-    - name: "Unit tests, Python 3.5"
-      language: python
-      python: "3.5"
-      env: TOXENV=py35
-      install: &0
-        - python3 -m pip install -e sdk/python
-      script: &1
-        - VENV=$VIRTUAL_ENV make unit_test
     - name: "Unit tests, Python 3.6"
       language: python
       python: "3.6"
       env: TOXENV=py36
-      install: *0
-      script: *1
+      install: &0
+        - python3 -m pip install -e sdk/python
+      script: &1
+        - VENV=$VIRTUAL_ENV make unit_test
     - name: "Unit tests, Python 3.7"
       language: python
       python: "3.7"
       env: TOXENV=py37
+      install: *0
+      script: *1
+    - name: "Unit tests, Python 3.8"
+      language: python
+      python: "3.8"
+      env: TOXENV=py38
       install: *0
       script: *1
     - name: "Progress report on compiling KFP DSL test scripts"
