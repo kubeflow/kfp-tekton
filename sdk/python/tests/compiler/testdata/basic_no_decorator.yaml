@@ -47,7 +47,7 @@ spec:
           command:
           - sh
           - -c
-          image: python:3.5-jessie
+          image: python:3.6-jessie
           name: main
       timeout: 0s
     params:
@@ -73,7 +73,7 @@ spec:
           command:
           - sh
           - -c
-          image: python:3.5-jessie
+          image: python:3.6-jessie
           name: main
           resources:
             requests:
