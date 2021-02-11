@@ -5,6 +5,8 @@ This page introduces different ways to compile, upload, and execute Kubeflow Pip
 In this tutorial, we use the below single step pipeline as our example
 ```python
 from kfp import dsl
+
+
 def echo_op():
     return dsl.ContainerOp(
         name='echo',
@@ -13,13 +15,14 @@ def echo_op():
         arguments=['echo "Got scheduled"']
     )
 
+
 @dsl.pipeline(
     name='echo',
     description='echo pipeline'
 )
-def echo_pipeline(
-):
-    echo = echo_op()
+def echo_pipeline():
+    echo_op()
+
 ```
 
 
