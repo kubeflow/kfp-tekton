@@ -40,6 +40,12 @@ spec:
     - name: kubeflow-ns
       description: kubeflow namespace
       default: kubeflow
+    - name: slack-webhook
+      description: webhook URL
+      default: ""
+    - name: slack-channel
+      description: slack channel
+      default: ""
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -94,6 +100,10 @@ spec:
           value: $(params.kubernetes-cluster)
         - name: kubeflow-ns
           value: $(params.kubeflow-ns)
+        - name: slack-webhook
+          value: $(params.slack-webhook)
+        - name: slack-channel
+          value: $(params.slack-channel)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: TriggerBinding

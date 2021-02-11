@@ -39,6 +39,12 @@ spec:
       default: kubeflow
     - name: kubernetes-cluster
       description: cluster name
+    - name: slack-webhook
+      description: webhook URL
+      default: ""
+    - name: slack-channel
+      description: slack channel
+      default: ""
   workspaces:
   - name: pipeline-pvc
   tasks:
@@ -246,6 +252,10 @@ spec:
           value: $(params.kubernetes-cluster)
         - name: kubeflow-ns
           value: $(params.kubeflow-ns)
+        - name: slack-webhook
+          value: $(params.slack-webhook)
+        - name: slack-channel
+          value: $(params.slack-channel)
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
