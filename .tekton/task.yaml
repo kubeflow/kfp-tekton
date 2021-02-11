@@ -225,6 +225,12 @@ spec:
     - name: archive-dir
       description: archive directory
       default: "."
+    - name: slack-webhook
+      description: webhook URL
+      default: ""
+    - name: slack-channel
+      description: slack channel
+      default: ""
   workspaces:
   - name: task-pvc
     mountPath: /artifacts
@@ -240,6 +246,18 @@ spec:
           value: $(params.archive-dir)
         - name: KUBEFLOW_NS
           value: $(params.kubeflow-ns)
+        - name: SLACK_WEBHOOK
+          value: $(params.slack-webhook)
+        - name: SLACK_CHANNEL
+          value: $(params.slack-channel)
+        - name: PIPELINE_URL
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['devops.cloud.ibm.com/pipeline-run-url']
+        - name: BUILD_NUMBER
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['devops.cloud.ibm.com/build-number']
       command: ["/bin/bash", "-c"]
       args:
         - set -ex;
