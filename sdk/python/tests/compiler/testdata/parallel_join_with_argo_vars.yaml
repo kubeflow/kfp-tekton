@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2020-2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -111,8 +111,8 @@ spec:
         steps:
         - args:
           - 'echo "Text 1: $0"; echo "Text 2: $1"; echo "$(inputs.params.gcs-download-data)";            echo
-            "$(params.pipelineRun-name); echo "$(params.pipelineRun-namespace)"; echo
-            "$(params.pipelineRun-uid)"'
+            "$(params.pipelineRun-name)"; echo "$(params.pipelineRun-namespace)";
+            echo "$(params.pipelineRun-uid)"'
           - $(inputs.params.gcs-download-data)
           - $(inputs.params.gcs-download-2-data)
           command:

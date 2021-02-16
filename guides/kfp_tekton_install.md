@@ -17,7 +17,7 @@ A Kubernetes cluster `v1.18` that has least 8 vCPU and 16 GB memory.
 ### IBM Cloud Kubernetes Service (IKS)
 
    1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://github.com/kubeflow/website/blob/master/content/en/docs/ibm/create-cluster.md#connecting-to-an-existing-cluster)
-   2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup)
+   2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#ibm-cloud-block-storage-setup)
 
 ### OpenShift
 
@@ -60,7 +60,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 **Important: Please complete the [prerequisites](#installation-targets-and-prerequisites) before proceeding with the following instructions.**
 
-1. Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#kubeflow-installation)
+1. Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#kubeflow-installation)
    to install the entire Kubeflow stack with `kfp-tekton`.
    Kubeflow `1.2.0` uses Tekton `v0.14.0` and `kfp-tekton` `v0.4.0`. <!-- TODO update-->
 
@@ -79,7 +79,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
     kubectl rollout restart -n istio-system statefulset/authservice
     ```
 
-    Then, redo the [Kubeflow install](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#kubeflow-installation) section to redeploy Kubeflow with the [block storageclass](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow/#ibm-cloud-block-storage-setup).
+    Then, redo the [Kubeflow install](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#kubeflow-installation) section to redeploy Kubeflow with the [block storageclass](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#ibm-cloud-block-storage-setup).
 
 - If you redeploy Kubeflow and some components are not showing up, it was due to the [dynamic created webhook issue](https://github.com/kubeflow/manifests/issues/1379). This issue will be [fixed](https://github.com/kubeflow/pipelines/pull/4429) in the next release of KFP.
     ```shell

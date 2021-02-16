@@ -3,9 +3,12 @@
 [gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
 
 [echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-[echo : main] 
+[echo : main]
 [echo : main] Text 2: I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
-[echo : main] 
+[echo : main]
 [echo : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
-[echo : main] 
+[echo : main]
+[echo : main] parallel-pipeline-with-argo-vars
+[echo : main] kubeflow
+[echo : main] 7af44c31-799f-4651-b476-746fbe6bd095
 
