@@ -90,7 +90,7 @@ def generate_trial_template():
 def experiment_search_params():
     # Experiment search space.
     # In this example we tune learning rate, number of layers and optimizer(sgd/adam/ftrl).
-    parameters = [
+    return [
         V1beta1ParameterSpec(
             name="lr",
             parameter_type="double",
@@ -119,13 +119,14 @@ def experiment_search_params():
 
 def algorithm_spec():
     # Algorithm specification.
-    V1beta1AlgorithmSpec(
+    return V1beta1AlgorithmSpec(
         algorithm_name="random"
     )
 
+
 def objective_spec(goal):
     # Objective specification.
-    objective = V1beta1ObjectiveSpec(
+    return V1beta1ObjectiveSpec(
         type="maximize",
         goal=goal,
         objective_metric_name="Validation-accuracy",
@@ -145,13 +146,12 @@ def mnist_hpo(
         max_trial_count=12,
         experiment_timeout_minutes=60,
         delete_after_done=True):
-    max_failed_trial_count = 3
 
     experiment_spec = V1beta1ExperimentSpec(
-        max_trial_count=12,
+        max_trial_count=max_trial_count,
         max_failed_trial_count=3,
-        parallel_trial_count=3,
-        objective=objective_spec(0.99),
+        parallel_trial_count=parallel_trial_count,
+        objective=objective_spec(goal),
         algorithm=algorithm_spec(),
         parameters=experiment_search_params(),
         trial_template=generate_trial_template()
