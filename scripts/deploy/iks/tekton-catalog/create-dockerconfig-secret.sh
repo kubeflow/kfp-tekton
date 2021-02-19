@@ -22,6 +22,7 @@ DOCKER_CONFIG_DIR="${DOCKER_CONFIG_DIR:="~/.docker"}"
 SECRET_NAME="${SECRET_NAME:="registry-dockerconfig-secret"}"
 
 # Create secret if not found
+# NOTE - Could hold old credentials if created from a previous run
 if ! kubectl get secret $SECRET_NAME
 then
     echo "Creating docker-registry secret: $SECRET_NAME"

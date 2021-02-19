@@ -36,5 +36,8 @@ kubectl delete -f sdk/python/tests/compiler/testdata/any_sequencer.yaml || true
 # Kubectl Wrapper
 kubectl delete -f sdk/python/tests/compiler/testdata/resourceop_basic.yaml || true
 
+# Delete dockerhub credentials secret 
+kubectl delete secret registry-dockerconfig-secret || true
+
 # Jobs run in default namespace
 kubectl delete job --all -n default
