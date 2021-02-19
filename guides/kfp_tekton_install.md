@@ -33,7 +33,7 @@ A Kubernetes cluster `v1.18` that has least 8 vCPU and 16 GB memory.
 
 To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
 
-1. Install [Tekton v0.20.1](https://github.com/tektoncd/pipeline/releases/tag/v0.20.1)
+1. Install [Tekton v0.21.0](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0)
 
 2. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.6.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
    > Note: You can ignore the error `no matches for kind "Application" in version "app.k8s.io/v1beta1"` since it's a warning saying `application` CRD is not yet ready.

@@ -28,7 +28,7 @@ If you would like to do it in development mode, or if you already have a Kubeflo
 ## Prerequisites
 
 1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes).
-    - Minimum version: `0.20.1`
+    - Minimum version: `0.21.0`
 2. Clone this repository
     ```
     git clone https://github.com/kubeflow/kfp-tekton.git
