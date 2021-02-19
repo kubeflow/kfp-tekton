@@ -13,7 +13,6 @@
 
 # Note: You have to install kfp>=1.1.1 SDK and kubeflow-katib>=0.10.1 SDK to run this example.
 
-import kfp
 import kfp.dsl as dsl
 from kfp import components
 
@@ -28,29 +27,18 @@ from kubeflow.katib import V1beta1TrialTemplate
 from kubeflow.katib import V1beta1TrialParameterSpec
 
 
-@dsl.pipeline(
-    name="Launch Katib MPIJob Experiment",
-    description="An example to launch Katib Experiment with MPIJob"
-)
-def horovod_mnist_hpo():
-    # Experiment name and namespace.
-    experiment_name = "mpi-horovod-mnist"
-    experiment_namespace = "anonymous"
-
-    # Trial count specification.
-    max_trial_count = 6
-    max_failed_trial_count = 3
-    parallel_trial_count = 2
-
+def objective_spec():
     # Objective specification.
-    objective = V1beta1ObjectiveSpec(
+    return V1beta1ObjectiveSpec(
         type="minimize",
         goal=0.01,
         objective_metric_name="loss",
     )
 
+
+def algorithm_spec():
     # Algorithm specification.
-    algorithm = V1beta1AlgorithmSpec(
+    return V1beta1AlgorithmSpec(
         algorithm_name="bayesianoptimization",
         algorithm_settings=[
             V1beta1AlgorithmSetting(
@@ -60,9 +48,11 @@ def horovod_mnist_hpo():
         ]
     )
 
+
+def search_params():
     # Experiment search space.
     # In this example we tune learning rate and number of training steps.
-    parameters = [
+    return [
         V1beta1ParameterSpec(
             name="lr",
             parameter_type="double",
@@ -82,6 +72,8 @@ def horovod_mnist_hpo():
         ),
     ]
 
+
+def generate_trial_spec():
     # JSON template specification for the Trial's Worker Kubeflow MPIJob.
     trial_spec = {
         "apiVersion": "kubeflow.org/v1",
@@ -192,16 +184,28 @@ def horovod_mnist_hpo():
         ],
         trial_spec=trial_spec
     )
+    return trial_template
+
+
+@dsl.pipeline(
+    name="Launch Katib MPIJob Experiment",
+    description="An example to launch Katib Experiment with MPIJob"
+)
+def horovod_mnist_hpo(
+        name="mpi-horovod-mnist",
+        namespace="anonymous",
+        experiment_timeout=60,
+        delete_after_done=True):
 
     # Create Experiment specification.
     experiment_spec = V1beta1ExperimentSpec(
-        max_trial_count=max_trial_count,
-        max_failed_trial_count=max_failed_trial_count,
-        parallel_trial_count=parallel_trial_count,
-        objective=objective,
-        algorithm=algorithm,
-        parameters=parameters,
-        trial_template=trial_template
+        max_trial_count=6,
+        max_failed_trial_count=3,
+        parallel_trial_count=2,
+        objective=objective_spec(),
+        algorithm=algorithm_spec(),
+        parameters=search_params(),
+        trial_template=generate_trial_spec()
     )
 
     # Get the Katib launcher.
@@ -216,19 +220,21 @@ def horovod_mnist_hpo():
     # Experiment Spec should be serialized to a valid Kubernetes object.
     # The Experiment is deleted after the Pipeline is finished.
     op = katib_experiment_launcher_op(
-        experiment_name=experiment_name,
-        experiment_namespace=experiment_namespace,
+        experiment_name=name,
+        experiment_namespace=namespace,
         experiment_spec=ApiClient().sanitize_for_serialization(experiment_spec),
-        experiment_timeout_minutes=60)
+        experiment_timeout_minutes=experiment_timeout,
+        delete_finished_experiment=delete_after_done)
 
     # Output container to print the results.
     dsl.ContainerOp(
         name="best-hp",
         image="library/bash:4.4.23",
         command=["sh", "-c"],
-        arguments=["echo Best HyperParameters: %s" % op.output],
+        arguments=["echo best HyperParameters: %s" % op.output],
     )
 
 
 if __name__ == "__main__":
-    kfp.compiler.Compiler().compile(horovod_mnist_hpo, __file__ + ".tar.gz")
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(horovod_mnist_hpo, __file__ + ".tar.gz")
