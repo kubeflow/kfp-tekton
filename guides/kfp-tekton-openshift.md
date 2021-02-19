@@ -12,7 +12,7 @@
 
 * Install Tekton Pipelines CLI
 
-  Follow this [link](https://github.com/tektoncd/cli) to install Tekton Pipelines CLI. 'X' is your version number. We recommend version v0.14 and above, and ideally Tekton v0.16
+  Follow this [link](https://github.com/tektoncd/cli) to install Tekton Pipelines CLI. 'X' is your version number. We recommend version v0.14 and above, and ideally Tekton v0.21
 
   ```shell
   # Get the tar.gz
@@ -32,9 +32,9 @@
   ```
 
   If the `Pipeline version` in the output is `unknown` or >=`v0.14.0`, then continue to next step.
-  
+
   Otherwise, the existing version won't work with the Kubeflow kfp-tekton project, which requires a minimum Tekton version of v0.14.0. Remove it from your cluster before proceeding further.
-  
+
 * Set up default StorageClass
 
   A default storageclass is required to deploy Kubeflow. To check if your cluster has a default storageclass, run

@@ -17,7 +17,7 @@ has Steps. Please look for more details in [Tekton repo](https://github.com/tekt
 ## Kubeflow Pipeline with Tekton Backend
 
 We are currently using [Kubeflow Pipelines 1.3.0](https://github.com/kubeflow/pipelines/releases/tag/1.3.0) and
-[Tekton >= 0.20.1](https://github.com/tektoncd/pipeline/releases/tag/v0.20.1) for this project.
+[Tekton >= 0.21.0](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0) for this project.
 
 ![kfp-tekton](images/kfp-tekton.png)
 
