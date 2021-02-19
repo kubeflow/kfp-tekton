@@ -1,6 +1,35 @@
 # ==========================================================
 # Shared Tasks
 # ==========================================================
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-binaries
+spec:
+  params:
+    - name: directory-name
+      description: Repository directory
+      default: kfp-tekton
+    - name: build-dir
+      description: directory with makefile
+      default: tekton-catalog/feature
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: build-binaries
+      image: docker.io/aipipeline/pipeline-base-image:1.0
+      env:
+        - name: BUILD_DIR
+          value: $(params.build-dir)
+      command:
+        - /bin/bash
+        - '-c'
+      args: 
+        - >
+          cd artifacts/$(params.directory-name);
+          source scripts/deploy/iks/tekton-catalog/build-binaries.sh;
+---
 # Stolen and modified from https://github.com/open-toolchain/tekton-catalog/blob/master/container-registry/task-execute-in-dind.yaml
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -105,7 +134,6 @@ spec:
           name: steps-volume
     - name: run-docker-commands
       image: docker.io/aipipeline/pipeline-base-image:1.0
-      # workingDir: /artifacts
       env:
         - name: DOCKER_HOST
           value: "tcp://localhost:2376"
@@ -245,30 +273,6 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: build-pipeline-loops-binaries
-spec:
-  params:
-    - name: directory-name
-      description: Repository directory
-      default: kfp-tekton
-  workspaces:
-  - name: task-pvc
-    mountPath: /artifacts
-  steps:
-    - name: build-binaries
-      image: docker.io/aipipeline/pipeline-base-image:1.0
-      env: null
-      command:
-        - /bin/bash
-        - '-c'
-      args: 
-        - >
-          cd artifacts/$(params.directory-name);
-          source scripts/deploy/iks/tekton-catalog/build-pipeline-loops-binaries.sh;
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
   name: setup-pipeline-loops-deploy
 spec:
   params:
@@ -307,57 +311,10 @@ spec:
 # ==========================================================
 # Any Sequencer Tasks
 # ==========================================================
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: build-any-sequencer-binaries
-spec:
-  params:
-    - name: directory-name
-      description: Repository directory
-      default: kfp-tekton
-  workspaces:
-  - name: task-pvc
-    mountPath: /artifacts
-  steps:
-    - name: build-binaries
-      image: docker.io/aipipeline/pipeline-base-image:1.0
-      env: null
-      command:
-        - /bin/bash
-        - '-c'
-      args: 
-        - >
-          cd artifacts/$(params.directory-name);
-          source scripts/deploy/iks/tekton-catalog/build-any-sequencer-binaries.sh;
+
 # ==========================================================
 # Kubectl Wrapper Tasks
 # ==========================================================
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: build-kubectl-wrapper-binaries
-spec:
-  params:
-    - name: directory-name
-      description: Repository directory
-      default: kfp-tekton
-  workspaces:
-  - name: task-pvc
-    mountPath: /artifacts
-  steps:
-    - name: build-binaries
-      image: docker.io/aipipeline/pipeline-base-image:1.0
-      env: null
-      command:
-        - /bin/bash
-        - '-c'
-      args: 
-        - >
-          cd artifacts/$(params.directory-name);
-          source scripts/deploy/iks/tekton-catalog/build-kubectl-wrapper-binaries.sh;
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task

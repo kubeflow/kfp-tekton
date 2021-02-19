@@ -90,9 +90,14 @@ spec:
     # ==========================================================
     - name: build-pipeline-loops-binaries
       taskRef:
-        name: build-pipeline-loops-binaries
+        name: build-binaries
       runAfter:
         - git-clone
+      params:
+        - name: directory-name
+          value: $(params.directory-name)
+        - name: build-dir
+          value: tekton-catalog/pipeline-loops
       workspaces:
         - name: task-pvc
           workspace: pipeline-ws
@@ -245,9 +250,14 @@ spec:
     # ==========================================================
     - name: build-any-sequencer-binaries
       taskRef:
-        name: build-any-sequencer-binaries
+        name: build-binaries
       runAfter:
         - git-clone
+      params:
+        - name: directory-name
+          value: $(params.directory-name)
+        - name: build-dir
+          value: tekton-catalog/any-sequencer
       workspaces:
         - name: task-pvc
           workspace: pipeline-ws
@@ -349,9 +359,14 @@ spec:
     # ==========================================================
     - name: build-kubectl-wrapper-binaries
       taskRef:
-        name: build-kubectl-wrapper-binaries
+        name: build-binaries
       runAfter:
         - git-clone
+      params:
+        - name: directory-name
+          value: $(params.directory-name)
+        - name: build-dir
+          value: tekton-catalog/kubectl-wrapper
       workspaces:
         - name: task-pvc
           workspace: pipeline-ws

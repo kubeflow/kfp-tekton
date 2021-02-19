@@ -16,10 +16,11 @@
 
 set -euxo pipefail
 
-BUILD_DIR="tekton-catalog/pipeline-loops"
+BUILD_DIR="${BUILD_DIR:="tekton-catalog/feature"}"
 
 pushd $BUILD_DIR > /dev/null
 
 make build-linux
 
 popd > /dev/null
+
