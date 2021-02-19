@@ -141,17 +141,14 @@ def objective_spec(goal):
 def mnist_hpo(
         name="mnist",
         namespace="anonymous",
-        goal=0.99,
-        parallel_trial_count=3,
-        max_trial_count=12,
         experiment_timeout_minutes=60,
         delete_after_done=True):
 
     experiment_spec = V1beta1ExperimentSpec(
-        max_trial_count=max_trial_count,
+        max_trial_count=12,
         max_failed_trial_count=3,
-        parallel_trial_count=parallel_trial_count,
-        objective=objective_spec(goal),
+        parallel_trial_count=3,
+        objective=objective_spec(0.99),
         algorithm=algorithm_spec(),
         parameters=experiment_search_params(),
         trial_template=generate_trial_template()
