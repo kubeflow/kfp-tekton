@@ -27,7 +27,7 @@ A Kubernetes cluster `v1.18` that has least 8 vCPU and 16 GB memory.
 
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
 
-   Visit [Kubeflow Cloud Installation](https://www.kubeflow.org/docs/started/cloud/) for setting up the preferred environment to deploy Kubeflow.
+   Visit [Kubeflow Installation](https://www.kubeflow.org/docs/started/) for setting up the preferred environment to deploy Kubeflow.
 
 ## Standalone Kubeflow Pipelines with Tekton Backend Deployment
 
