@@ -31,7 +31,8 @@ RUN apt-get -q update  \
 	&& apt-get -q clean  \
 	&& apt-get -q install -y sudo apt-transport-https zip unzip bzip2 xz-utils git \
 	dnsutils gettext wget build-essential openssl locales make docker-ce python3-pip \
-	python3.8 python3.8-venv && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 9 \
+	python3.8 python3.8-venv \
+	&& update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 9 \
 	&& update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 \
 	&& curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash  \
 	&& apt-get -q install git-lfs  \
@@ -39,6 +40,8 @@ RUN apt-get -q update  \
 	&& apt-get -q clean  \
 	&& rm -rf /var/lib/apt/lists  \
 	&& locale-gen en_US.UTF-8
+RUN wget https://github.com/mikefarah/yq/releases/download/v4.5.1/yq_linux_amd64.tar.gz -O - | \
+	tar xz && mv yq_linux_amd64 /usr/bin/yq
 ENV LANG=en_US.UTF-8
 RUN git config --global http.sslverify false  \
 	&& git config --global url."https://".insteadOf git://  \

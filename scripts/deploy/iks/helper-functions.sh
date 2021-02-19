@@ -137,3 +137,72 @@ deploy_with_retries () {
 
     return 1
 }
+
+wait_for_pod () {
+    local namespace=$1
+    local pod_name=$2
+    local max_tries=$3
+    local sleep_time=$4
+
+    until pod_is_running "$namespace" "$pod_name"; do
+        max_tries=$((max_tries-1))
+        if [[ "$max_tries" -eq 0 ]]; then
+            return 1
+        fi
+        echo "Checking again in $sleep_time"
+        sleep "$sleep_time"
+    done
+
+    return 0
+}
+
+pod_is_running () {
+    local namespace=$1
+    local pod_name=$2
+
+    local pod_status
+
+    # May have unexpected results if pod_name has multiple matches
+    pod_status=$(kubectl get pod -n "$namespace" | grep "$pod_name*" | head -1 | awk '{print $3}')
+
+    if [ "$pod_status" = "Running" ]; then
+        return 0
+    fi
+
+    return 1
+}
+
+wait_for_pipeline_run () {
+    local run_name=$1
+    local max_tries=$2
+    local sleep_time=$3
+
+    until pipeline_run_is_success "$run_name"; do
+        max_tries=$((max_tries-1))
+        if [[ "$max_tries" -eq 0 ]]; then
+            return 1
+        fi
+        echo "Checking pipeline run again in $sleep_time"
+        sleep "$sleep_time"
+    done
+
+    return 0
+}
+
+pipeline_run_is_success () {
+    local run_name=$1
+
+    local run_status
+
+    # May have unexpected results if run_status has multiple matches
+    run_status=$(kubectl get pipelineruns "$run_name" | tail -1 | awk '{print $2}')
+
+    if [ "$run_status" = "True" ]; then
+        return 0
+    elif [ "$run_status" = "False" ]; then
+        echo "Run Failed"
+        exit 1
+    fi
+
+    return 1
+}
