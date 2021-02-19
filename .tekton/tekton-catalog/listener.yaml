@@ -1,0 +1,110 @@
+apiVersion: tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: trigger-template
+spec:
+  params:
+    # Passed in through secure-properties: apikey, dockerhub-token
+    - name: repository
+      description: git repository url
+      default: https://github.com/kubeflow/kfp-tekton
+    - name: branch
+      description: repository branch
+      default: master
+    - name: directory-name
+      description: Directory to clone repository into
+      default: kfp-tekton
+    - name: registry-region
+      description: The IBM Cloud region for image registry
+    - name: registry-namespace
+      description: Container registry namespace
+    - name: dev-region
+      default: ibm:yp:us-south
+    - name: dev-resource-group
+      default: default
+    - name: cluster-name
+      description: the name of the cluster to target
+      default: iks-cluster
+    - name: push-to-dockerhub
+      description: flag to signal if images should be pushed to dockerhub
+      default: '1'
+    - name: dockerhub-username
+      description: Dockerhub username
+      default: kfptektonbot
+    - name: docker-namespace
+      description: Image namespace
+      default: aipipeline
+    - name: image-tag
+      description: Tag for all images pushed to dockerhub/ibmcloud
+      default: nightly
+    - name: pipeline-debug
+      description: Flag used by tekton-catalog tasks
+      default: '0'
+  resourcetemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: pipelinerun-$(uid)-pvc
+      spec:
+        resources:
+          requests:
+            storage: 5Gi
+        volumeMode: Filesystem
+        accessModes:
+          - ReadWriteOnce
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        name: pipelinerun-$(uid)
+      spec:
+        pipelineRef:
+          name: tekton-catalog-publish-pipeline
+        params:
+          - name: repository
+            value: $(params.repository)
+          - name: branch
+            value: $(params.branch)
+          - name: directory-name
+            value: $(params.directory-name)
+          - name: registry-region
+            value: $(params.registry-region)
+          - name: registry-namespace
+            value: $(params.registry-namespace)
+          - name: dev-region
+            value: $(params.dev-region)
+          - name: dev-resource-group
+            value: $(params.dev-resource-group)
+          - name: cluster-name
+            value: $(params.cluster-name)
+          - name: push-to-dockerhub
+            value: $(params.push-to-dockerhub)
+          - name: dockerhub-username
+            value: $(params.dockerhub-username)
+          - name: docker-namespace
+            value: $(params.docker-namespace)
+          - name: image-tag
+            value: $(params.image-tag)
+          - name: pipeline-debug
+            value: $(params.pipeline-debug)
+        workspaces:
+          - name: pipeline-ws
+            persistentVolumeClaim:
+              claimName: pipelinerun-$(uid)-pvc
+---
+apiVersion: tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: trigger-binding-manual
+spec:
+  params: null
+---
+apiVersion: tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: manual-run
+spec:
+  triggers:
+    - binding:
+        name: trigger-binding-manual
+      template:
+        name: trigger-template
