@@ -35,18 +35,31 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 1. Install [Tekton v0.21.0](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0)
 
-2. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.6.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
+2. Enable custom task and other feature flags for kfp-tekton
+   ```shell
+    kubectl patch cm feature-flags -n tekton-pipelines \
+        -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true", "enable-custom-tasks": "true"}}'
+   ```
+
+3. Install the Condtion custom task controller for computing runtime conditions. Make sure to setup GOPATH and [ko](https://github.com/google/ko) before running the commands below.
+   ```shell
+   git clone https://github.com/Tomcli/experimental/
+   cd experimental/cel
+   ko apply -f config/
+   ```
+
+4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.6.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
    > Note: You can ignore the error `no matches for kind "Application" in version "app.k8s.io/v1beta1"` since it's a warning saying `application` CRD is not yet ready.
     ```shell
     kubectl apply --selector kubeflow/crd-install=true -f install/v0.6.0/kfp-tekton.yaml
     ```
 
-3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.6.0` deployment
+5. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.6.0` deployment
     ```shell
     kubectl apply -f install/v0.6.0/kfp-tekton.yaml
     ```
 
-4. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
+6. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
     ```shell
     kubectl patch svc ml-pipeline-ui -n kubeflow -p '{"spec": {"type": "LoadBalancer"}}'
     ```

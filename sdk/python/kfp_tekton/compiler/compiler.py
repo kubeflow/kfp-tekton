@@ -84,6 +84,16 @@ def _get_super_condition_template():
   return template
 
 
+def _get_cel_condition_template():
+  template = {
+    "name": "cel_condition",
+    "apiVersion": "cel.tekton.dev/v1alpha1",
+    "kind": "CEL"
+  }
+
+  return template
+
+
 class TektonCompiler(Compiler):
   """DSL Compiler to generate Tekton YAML.
 
@@ -373,15 +383,26 @@ class TektonCompiler(Compiler):
     condition_task_refs = {}
     for template in raw_templates:
       if template['kind'] == 'Condition':
-        condition_task_ref = [{
-            'name': template['metadata']['name'],
-            'params': [{
-                'name': p['name'],
-                'value': p.get('value', '')
-              } for p in template['spec'].get('params', [])
-            ],
-            'taskSpec': _get_super_condition_template(),
-        }]
+        if env.get('DISABLE_CEL_CONDITION', 'false').lower() == "true":
+          condition_task_ref = [{
+              'name': template['metadata']['name'],
+              'params': [{
+                  'name': p['name'],
+                  'value': p.get('value', '')
+                } for p in template['spec'].get('params', [])
+              ],
+              'taskSpec': _get_super_condition_template(),
+          }]
+        else:
+          condition_task_ref = [{
+              'name': template['metadata']['name'],
+              'params': [{
+                  'name': p['name'],
+                  'value': p.get('value', '')
+                } for p in template['spec'].get('params', [])
+              ],
+              'taskRef': _get_cel_condition_template()
+          }]
         condition_refs[template['metadata']['name']] = [
             {
               'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
@@ -444,6 +465,16 @@ class TektonCompiler(Compiler):
                 'values': ['true']
             }]
           condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
+        if env.get('DISABLE_CEL_CONDITION', 'false').lower() != "true":
+          # Type processing are done on the CEL controller since v1 SDK doesn't have value type for conditions.
+          # For v2 SDK, it would be better to process the condition value type in the backend compiler.
+          var1 = condition_task_ref['params'][0]['value']
+          var2 = condition_task_ref['params'][1]['value']
+          op = condition_task_ref['params'][2]['value']
+          condition_task_ref['params'] = [{
+                  'name': "status",
+                  'value': " ".join([var1, op, var2])
+                }]
         most_recent_condition = cur_opsgroup.name
       opsgroup_stack.extend(cur_opsgroup.groups)
       condition_stack.extend([most_recent_condition for x in range(len(cur_opsgroup.groups))])

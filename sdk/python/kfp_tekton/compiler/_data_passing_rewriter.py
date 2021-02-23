@@ -76,7 +76,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
     resource_templates = []
     for task in tasks:
         resource_params = [
-            param.get('name') for param in task["taskSpec"].get('params', [])
+            param.get('name') for param in task.get("taskSpec", {}).get('params', [])
             if param.get('name') == 'action'
             or param.get('name') == 'success-condition'
         ]
@@ -174,7 +174,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
     # Searching for artifact input consumers in container template inputs
     for template in container_templates:
         template_name = template['name']
-        for input_artifact in template['taskSpec'].get('artifacts', {}):
+        for input_artifact in template.get("taskSpec", {}).get('artifacts', {}):
             raw_data = input_artifact['raw'][
                 'data']  # The structure must exist
             # The raw data must be a single input parameter reference. Otherwise (e.g. it's a string
@@ -485,12 +485,12 @@ def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
             workspaces_parameter = '$(workspaces.%s.path)/%s-%s' % (
                 task_name, task_name, task_output.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
-                task['taskSpec'], placeholder, workspaces_parameter)
+                task.get("taskSpec", {}), placeholder, workspaces_parameter)
             pipelinerun_template['metadata']['annotations'] = replace_big_data_placeholder(
                 pipelinerun_template['metadata']['annotations'], placeholder, workspaces_parameter)
 
     # Remove artifacts outputs from results
-    task['taskSpec']['results'] = [
+    task.get("taskSpec", {})['results'] = [
         result for result in task_outputs
         if (task_name, result.get('name')) not in outputs_tasks
     ]
@@ -522,7 +522,7 @@ def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
             task = input_artifacts_tasks(task, task_artifact)
 
     # Remove artifacts parameter from params
-    task['taskSpec']['params'] = [
+    task.get("taskSpec", {})['params'] = [
         param for param in task_spec.get('params', [])
         if (task_name, param.get('name')) not in inputs_tasks
     ]
