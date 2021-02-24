@@ -25,11 +25,10 @@ def echo_op():
 
 
 @dsl.pipeline(
-    name='echo',
+    name='set-display-name',
     description='echo pipeline'
 )
-def echo_pipeline(
-):
+def echo_pipeline():
     echo = echo_op().set_display_name('Hello World')
 
 

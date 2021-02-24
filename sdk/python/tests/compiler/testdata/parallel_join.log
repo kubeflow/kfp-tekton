@@ -1,6 +1,18 @@
 [gcs-download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
+[gcs-download : copy-artifacts] Added `storage` successfully.
+[gcs-download : copy-artifacts] tar: removing leading '/' from member names
+[gcs-download : copy-artifacts] tekton/results/data
+[gcs-download : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline/gcs-download/data.tgz`
+[gcs-download : copy-artifacts] Total: 0 B, Transferred: 194 B, Speed: 2.83 KiB/s
+
 [gcs-download-2 : main] I find thou art no less than fame hath bruited And more than may be gatherd by thy shape Let my presumption not provoke thy wrath
+
+[gcs-download-2 : copy-artifacts] Added `storage` successfully.
+[gcs-download-2 : copy-artifacts] tar: removing leading '/' from member names
+[gcs-download-2 : copy-artifacts] tekton/results/data
+[gcs-download-2 : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/parallel-pipeline/gcs-download-2/data.tgz`
+[gcs-download-2 : copy-artifacts] Total: 0 B, Transferred: 203 B, Speed: 6.46 KiB/s
 
 [echo : main] Text 1: With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 [echo : main] 

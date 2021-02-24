@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2020-2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 
 import kfp
 import os
+from kfp import dsl
 from kfp.components import create_component_from_func, OutputPath
 
 cwd = os.path.dirname(__file__)
@@ -27,7 +28,8 @@ list_item_op_2 = kfp.components.load_component_from_file(
     os.path.join(cwd, 'create_component_from_func_component.yaml'))
 
 
-def test_pipeline():
+@dsl.pipeline(name='Create component from function')
+def create_component_pipeline():
     @create_component_from_func
     def produce_dir_with_files_python_op(output_dir_path: OutputPath(), num_files: int = 10):
         import os
@@ -60,5 +62,4 @@ def test_pipeline():
 # General by kfp-tekton
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(test_pipeline,
-                             __file__.replace('.py', '.yaml'))
+    TektonCompiler().compile(create_component_pipeline, __file__.replace('.py', '.yaml'))

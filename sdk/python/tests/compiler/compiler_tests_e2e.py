@@ -83,17 +83,28 @@ if GENERATE_GOLDEN_E2E_LOGS:
         "Test cases will (re)generate the 'golden' log files instead of verifying "
         "the logs produced by running the Tekton YAML on a Kubernetes cluster.")
 
-# when USE_LOGS_FROM_PREVIOUS_RUN=True, the logs from the previous pipeline run
+# When USE_LOGS_FROM_PREVIOUS_RUN=True, the logs from the previous pipeline run
 # will be used for log verification or for regenerating "golden" log files:
 #    USE_LOGS_FROM_PREVIOUS_RUN=True sdk/python/tests/run_e2e_tests.sh
 # or:
 #    make e2e_test USE_LOGS_FROM_PREVIOUS_RUN=True
+#
 # NOTE: this is problematic since multiple test cases (YAML files) use the same
 #   pipelinerun name, so `tkn pipelinerun logs <pipelinerun-name>` will always
 #   return the logs of the last test case running a pipeline with that name
-#   TODO: make sure each YAML file has a unique pipelinerun name
+#
+# TODO: make sure each YAML file has a unique pipelinerun name, i.e.
+#   cd sdk/python/tests/compiler/testdata; \
+#       (echo "PIPELINE_NAME FILE"; grep -E "^  name: "  *.yaml | \
+#           sed -e 's/ name: //g' | sed -e 's/\(.*\): \(.*\)/\2 \1/g' | sort ) | \
+#       column -t
+#
+# TODO: TestCompilerE2E.pr_name_map needs to be built from `tkn pipelinerun list`
+#   tkn pipelinerun list -n kubeflow -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | head
+#
 # ALSO: once we delete pipelineruns after success, logs won't be available after
 #   that test execution
+#
 USE_LOGS_FROM_PREVIOUS_RUN = env.get("USE_LOGS_FROM_PREVIOUS_RUN", "False") == "True"
 
 # let the user know we are using the logs produced during a previous test run
@@ -181,15 +192,43 @@ if RERUN_FAILED_TESTS_ONLY:
 #  than one "golden" log file to match either of the desired possible outputs
 ignored_yaml_files = [
     "big_data_passing.yaml",    # does not complete in a reasonable time frame
+    "create_component_from_func_component.yaml",  # not a Tekton PipelineRun
+    "create_component_from_func.yaml",  # need to investigate, keeps Running
     "katib.yaml",               # service account needs Katib permission, takes too long doing 9 trail runs
+    "parallel_join_with_logging.yaml",  # experimental feature, requires S3 (Minio)
     "retry.yaml",               # designed to occasionally fail (randomly) if number of retries exceeded
     "timeout.yaml",             # random failure (by design) ... would need multiple golden log files to compare to
     "tolerations.yaml",         # designed to fail, test show only how to add the toleration to the pod
     "volume.yaml",              # need to rework the credentials part
     "volume_op.yaml",           # need to delete PVC before/after test run
     "volume_snapshot_op.yaml",  # only works on Minikube, K8s alpha feature, requires a feature gate from K8s master
-    "parallel_join_with_logging.yaml"  # need to work with S3(minio) avaibale, and this is an experimental feature.
+
+    # the following tests require tekton-pipelines feature-flag data.enable-custom-tasks=true
+    # TODO: apply the _cr*.yaml files "apiVersion: custom.tekton.dev/v1alpha1, kind: PipelineLoop"
+    #  for f in sdk/python/tests/compiler/testdata/*_cr*.yaml; do \
+    #     echo "=== ${f} ==="; \
+    #     kubectl apply -f "${f}" -n kubeflow && \
+    #     echo OK || echo FAILED; \
+    #   done
+    "conditions_and_loops.yaml",
+    "loop_over_lightweight_output.yaml",
+    "loop_static.yaml",
+    "parallelfor_item_argument_resolving.yaml",
+    "withitem_nested.yaml",
+    "withparam_global.yaml",
+    "withparam_global_dict.yaml",
+    "withparam_output.yaml",
+    "withparam_output_dict.yaml",
+
+    # TODO: remove the following from ignored list
+    # "any_sequencer.yaml",       # takes 5 min
+    # "basic_no_decorator.yaml",  # takes 2 min
+    # "compose.yaml",             # takes 2 min
 ]
+
+if ignored_yaml_files:
+    logging.warning("Ignoring the following pipelines: {}".format(
+        ", ".join(ignored_yaml_files)))
 
 # run pipelines in "kubeflow" namespace as some E2E tests depend on Minio
 # for artifact storage in order to access secrets:
@@ -216,6 +255,22 @@ rbac = textwrap.dedent("""\
       name: cluster-admin
       apiGroup: rbac.authorization.k8s.io
     """.format(namespace))
+
+# TODO: enable feature flag for custom tasks to enable E2E tests for loops
+#   $ kubectl get configmap feature-flags -n tekton-pipelines -o jsonpath='{.data.enable-custom-tasks}'
+#   false
+#   $ kubectl patch configmap feature-flags -n tekton-pipelines -p '{"data": {"enable-custom-tasks": "true"}}'
+#   configmap/feature-flags patched
+#
+# test_loop_over_lightweight_output
+# test_loop_static
+# test_parallel_join_with_argo_vars
+# test_parallelfor_item_argument_resolving
+# test_withitem_nested
+# test_withparam_global
+# test_withparam_global_dict
+# test_withparam_output
+# test_withparam_output_dict
 
 
 # =============================================================================
@@ -331,7 +386,7 @@ class TestCompilerE2E(unittest.TestCase):
                                       timeout=10, check=False)
                 if tkn_status_proc.returncode == 0:
                     status = tkn_status_proc.stdout.decode("utf-8").strip("'")
-                    if status in ["Succeeded", "Completed", "Failed"]:
+                    if status in ["Succeeded", "Completed", "Failed", "CouldntGetTask"]:
                         return status
                     logging.debug("tkn pipelinerun '{}' status: {} ({}/{})".format(
                         pr_name, status, i + 1, retries))
@@ -396,9 +451,10 @@ class TestCompilerE2E(unittest.TestCase):
         # to test run, like the progress output of file copy operations or a
         # server process receiving a termination signal
         lines_to_remove = [
-            "Pipeline still running ...",
+            "still running",
             "Server is listening on",
             "Unknown signal terminated",
+            "Exiting...",
             r"Total: .+, Transferred: .+, Speed: .+",
             r"localhost:.*GET / HTTP",
         ]
@@ -407,13 +463,13 @@ class TestCompilerE2E(unittest.TestCase):
         replacements = [
             (self.pr_name_map[name], name),
             (r"(-[-0-9a-z]{3}-[-0-9a-z]{5})(?=[ -/\]\"]|$)", r"-XXX-XXXXX"),
-            (r"uid:[0-9a-z]{8}(-[0-9a-z]{4}){3}-[0-9a-z]{12}",
-             "uid:{}-{}-{}-{}-{}".format("X" * 8, "X" * 4, "X" * 4, "X" * 4, "X" * 12)),
+            (r"[0-9a-z]{8}(-[0-9a-z]{4}){3}-[0-9a-z]{12}",
+             "{}-{}-{}-{}-{}".format("X" * 8, "X" * 4, "X" * 4, "X" * 4, "X" * 12)),
             (r"resourceVersion:[0-9]+ ", "resourceVersion:-------- "),
             (r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", "DATETIME"),
             (r"{}".format("|".join(_MONTHNAMES)), "MONTH"),
             (r"{}".format("|".join(_DAYNAMES)), "DAY"),
-            (r"\d", "-"),
+            (r"\d+", "-"),
             (r" +$", ""),
             (r" +\r", r"\n"),
             (r"^$\n", ""),
@@ -514,11 +570,12 @@ def _generate_test_list(file_name_expr="*.yaml") -> [dict]:
     for yaml_file in yaml_files:
         with open(yaml_file, 'r') as f:
             pipeline_run = yaml.safe_load(f)
-        pipeline_runs.append({
-            "name": pipeline_run["metadata"]["name"],
-            "yaml_file": yaml_file,
-            "log_file": yaml_file.replace(".yaml", ".log")
-        })
+        if pipeline_run.get("kind") == "PipelineRun":
+            pipeline_runs.append({
+                "name": pipeline_run["metadata"]["name"],
+                "yaml_file": yaml_file,
+                "log_file": yaml_file.replace(".yaml", ".log")
+            })
     return pipeline_runs
 
 

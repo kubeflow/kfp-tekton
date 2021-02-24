@@ -15,7 +15,7 @@
 import kfp.dsl as dsl
 
 
-@dsl.pipeline(name='my-loop-pipeline')
+@dsl.pipeline(name='static-loop-pipeline')
 def pipeline(my_pipe_param='10'):
     loop_args = [1, 2, 3]
     with dsl.ParallelFor(loop_args) as item:

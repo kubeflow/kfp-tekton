@@ -28,7 +28,7 @@ class Coder:
 dsl.ParallelFor._get_unique_id_code = Coder().get_code
 
 
-@dsl.pipeline(name='my-pipeline')
+@dsl.pipeline(name='withitem-nested')
 def pipeline(my_pipe_param: int = 10):
     loop_args = [1, 2]
     with dsl.ParallelFor(loop_args) as item:

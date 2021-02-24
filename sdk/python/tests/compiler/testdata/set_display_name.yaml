@@ -17,7 +17,7 @@ kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "echo pipeline", "name":
-      "echo"}'
+      "set-display-name"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -25,7 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{"echo": []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: echo
+  name: set-display-name
 spec:
   pipelineSpec:
     tasks:
