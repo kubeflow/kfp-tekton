@@ -46,22 +46,22 @@ if not KUBECONFIG:
 else:
     logging.warning("KUBECONFIG={}".format(KUBECONFIG))
 
-# set or override the minimum required Tekton Pipeline version, default "v0.14.0":
-#    TKN_PIPELINE_MIN_VERSION=v0.14 sdk/python/tests/run_e2e_tests.sh
+# set or override the minimum required Tekton Pipeline version, default "v0.20.1":
+#    TKN_PIPELINE_MIN_VERSION=v0.20 sdk/python/tests/run_e2e_tests.sh
 # or:
-#    make e2e_test TKN_PIPELINE_MIN_VERSION=v0.14
-TKN_PIPELINE_MIN_VERSION = env.get("TKN_PIPELINE_MIN_VERSION", "v0.14.0")
+#    make e2e_test TKN_PIPELINE_MIN_VERSION=v0.20
+TKN_PIPELINE_MIN_VERSION = env.get("TKN_PIPELINE_MIN_VERSION", "v0.20.1")
 
 # let the user know the expected Tekton Pipeline version
 if env.get("TKN_PIPELINE_MIN_VERSION"):
     logging.warning("The environment variable 'TKN_PIPELINE_MIN_VERSION' was set to '{}'"
                     .format(TKN_PIPELINE_MIN_VERSION))
 
-# set or override the minimum required Tekton CLI version, default "0.11.0":
-#    TKN_CLIENT_MIN_VERSION=0.11 sdk/python/tests/run_e2e_tests.sh
+# set or override the minimum required Tekton CLI version, default "0.15.0":
+#    TKN_CLIENT_MIN_VERSION=0.15 sdk/python/tests/run_e2e_tests.sh
 # or:
-#    make e2e_test TKN_CLIENT_MIN_VERSION=0.11
-TKN_CLIENT_MIN_VERSION = env.get("TKN_CLIENT_MIN_VERSION", "0.11.0")
+#    make e2e_test TKN_CLIENT_MIN_VERSION=0.15
+TKN_CLIENT_MIN_VERSION = env.get("TKN_CLIENT_MIN_VERSION", "0.15.0")
 
 # let the user know the expected Tekton CLI version
 if env.get("TKN_CLIENT_MIN_VERSION"):
