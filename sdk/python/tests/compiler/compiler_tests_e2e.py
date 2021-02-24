@@ -204,8 +204,10 @@ ignored_yaml_files = [
     "volume_snapshot_op.yaml",  # only works on Minikube, K8s alpha feature, requires a feature gate from K8s master
 
     # the following tests require tekton-pipelines feature-flag data.enable-custom-tasks=true
+    #   kubectl patch cm feature-flags -n tekton-pipelines \
+    #     -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true", "enable-custom-tasks": "true"}}'
     # TODO: apply the _cr*.yaml files "apiVersion: custom.tekton.dev/v1alpha1, kind: PipelineLoop"
-    #  for f in sdk/python/tests/compiler/testdata/*_cr*.yaml; do \
+    #   for f in sdk/python/tests/compiler/testdata/*_cr*.yaml; do \
     #     echo "=== ${f} ==="; \
     #     kubectl apply -f "${f}" -n kubeflow && \
     #     echo OK || echo FAILED; \
@@ -525,19 +527,48 @@ class TestCompilerE2E(unittest.TestCase):
 #  dynamically generate test cases from Tekton YAML files in compiler testdata
 # =============================================================================
 
+def _skip_test_and_why(yaml_file_path):
+
+    yaml_file_name = os.path.basename(yaml_file_path)
+    test_name = 'test_{0}'.format(os.path.splitext(yaml_file_name)[0])
+
+    is_ignored = yaml_file_name in ignored_yaml_files
+    is_excluded = test_name in EXCLUDE_TESTS
+    not_included = INCLUDE_TESTS and test_name not in INCLUDE_TESTS
+    not_was_failed_if_rerun_failed_only = RERUN_FAILED_TESTS_ONLY \
+        and test_name not in previously_failed_tests
+
+    if not_was_failed_if_rerun_failed_only:
+        return (True, f"{test_name} NOT in 'previously_failed_tests'")
+
+    if not_included:
+        return (True, f"{test_name} not in 'INCLUDE_TESTS'")
+
+    if is_excluded:
+        return (True, f"{test_name} in 'EXCLUDE_TESTS'")
+
+    if is_ignored:
+        return (True, f"{yaml_file_name} in 'ignored_yaml_files'")
+
+    return (False, "not skipped")
+
+
 def _generate_test_cases(pipeline_runs: [dict]):
 
     def create_test_function__validate_yaml(test_name, yaml_file):
+        @unittest.skipIf(*_skip_test_and_why(yaml_file))
         def test_function(self):
             self._run_test__validate_tekton_yaml(test_name, yaml_file)
         return test_function
 
-    def create_test_function__check_run_status(test_name):
+    def create_test_function__check_run_status(test_name, yaml_file):
+        @unittest.skipIf(*_skip_test_and_why(yaml_file))
         def test_function(self):
             self._run_test__verify_pipelinerun_success(test_name)
         return test_function
 
-    def create_test_function__verify_logs(test_name, log_file):
+    def create_test_function__verify_logs(test_name, yaml_file, log_file):
+        @unittest.skipIf(*_skip_test_and_why(yaml_file))
         def test_function(self):
             self._run_test__verify_pipelinerun_logs(test_name, log_file)
         return test_function
@@ -553,30 +584,18 @@ def _generate_test_cases(pipeline_runs: [dict]):
         # 2. check pipelineRun status
         setattr(TestCompilerE2E,
                 'test_{0}.ii_check_run_success'.format(yaml_file_name),
-                create_test_function__check_run_status(p["name"]))
+                create_test_function__check_run_status(p["name"], p["yaml_file"]))
 
         # 3. verify pipelineRun log output
         setattr(TestCompilerE2E,
                 'test_{0}.iii_verify_logs'.format(yaml_file_name),
-                create_test_function__verify_logs(p["name"], p["log_file"]))
+                create_test_function__verify_logs(p["name"], p["yaml_file"], p["log_file"]))
 
 
 def _generate_test_list(file_name_expr="*.yaml") -> [dict]:
 
-    def is_yaml_file_included(yaml_file_path):
-        yaml_file_name = os.path.basename(yaml_file_path)
-        test_name = 'test_{0}'.format(os.path.splitext(yaml_file_name)[0])
-
-        is_ignored = yaml_file_name in ignored_yaml_files
-        is_excluded = test_name in EXCLUDE_TESTS
-        is_included = not INCLUDE_TESTS or test_name in INCLUDE_TESTS
-        was_failed_if_rerun_failed_only = test_name in previously_failed_tests \
-            or not RERUN_FAILED_TESTS_ONLY
-
-        return not is_ignored and not is_excluded and is_included and was_failed_if_rerun_failed_only
-
     testdata_dir = os.path.join(os.path.dirname(__file__), "testdata")
-    yaml_files = sorted(filter(is_yaml_file_included, glob(os.path.join(testdata_dir, file_name_expr))))
+    yaml_files = sorted(glob(os.path.join(testdata_dir, file_name_expr)))
     pipeline_runs = []
 
     for yaml_file in yaml_files:
