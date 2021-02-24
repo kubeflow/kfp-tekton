@@ -327,8 +327,7 @@ class TestCompilerE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # TODO: set up RBAC and other pre test requirements
-        logging.warning("Ignoring the following pipelines: {}".format(
-            ", ".join(ignored_yaml_files)))
+        cls._delete_all_pipelineruns()
 
     @classmethod
     def tearDownClass(cls):
@@ -350,6 +349,19 @@ class TestCompilerE2E(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
             if result.failures or result.errors:
                 self.failed_tests.add(self._testMethodName.split(".")[0])
+
+    @classmethod
+    def _delete_all_pipelineruns(cls):
+        logging.warning("Deleting previous '{}' pipeline runs".format(experiment_name))
+        try:
+            experiment = cls.client.get_experiment(experiment_name=experiment_name)
+            e2e_test_runs = cls.client.list_runs(experiment_id=experiment.id, page_size=100)
+            for r in e2e_test_runs.runs:
+                cls.client._run_api.delete_run(id=r.id)
+                # del_cmd = "tkn pipelinerun delete -f {} -n {}".format(name, namespace)
+                # run(del_cmd.split(), capture_output=True, timeout=10, check=False)
+        except ValueError as e:
+            logging.warning(str(e))
 
     def _delete_pipelinerun(self, name):
         pr_name = self.pr_name_map[name]
