@@ -51,4 +51,3 @@ webhooks:
   failurePolicy: Fail
   sideEffects: None
   name: webhook.pipelineloop.custom.tekton.dev
-
