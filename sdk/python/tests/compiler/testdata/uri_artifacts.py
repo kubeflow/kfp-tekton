@@ -41,7 +41,7 @@ name: Write to GCS
 inputs:
 - {name: text, type: String, description: 'Content to be written to GCS'}
 outputs:
-- {name: output_gcs_path, type: GCSPath, description: 'GCS file path'}
+- {name: output_gcs_path, type: String, description: 'GCS file path'}
 implementation:
   container:
     image: google/cloud-sdk:slim
@@ -58,7 +58,7 @@ implementation:
 read_from_gcs = components.load_component_from_text("""
 name: Read from GCS
 inputs:
-- {name: input_gcs_path, type: GCSPath, description: 'GCS file path'}
+- {name: input_gcs_path, type: String, description: 'GCS file path'}
 implementation:
   container:
     image: google/cloud-sdk:slim
@@ -86,7 +86,7 @@ def flip_coin_op():
 
 @dsl.pipeline(
     name='uri-artifact-pipeline',
-    output_directory='gs://my-bucket/my-output-dir')
+    pipeline_root='gs://my-bucket/my-output-dir')
 def uri_artifact(text='Hello world!'):
   task_1 = write_to_gcs(text=text)
   task_2 = read_from_gcs(

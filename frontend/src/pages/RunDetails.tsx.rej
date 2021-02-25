@@ -1,0 +1,41 @@
+diff a/frontend/src/pages/RunDetails.tsx b/frontend/src/pages/RunDetails.tsx	(rejected hunks)
+@@ -63,7 +63,7 @@ import Buttons, { ButtonKeys } from '../lib/Buttons';
+ import CompareUtils from '../lib/CompareUtils';
+ import { OutputArtifactLoader } from '../lib/OutputArtifactLoader';
+ import RunUtils from '../lib/RunUtils';
+-import { KeyValue } from '../lib/StaticGraphParser';
++import { KeyValue, transitiveReduction, compareGraphEdges } from '../lib/StaticGraphParser';
+ import { hasFinished, NodePhase } from '../lib/StatusUtils';
+ import {
+   errorToMessage,
+@@ -135,6 +139,7 @@ interface RunDetailsState {
+   workflow?: Workflow;
+   mlmdRunContext?: Context;
+   mlmdExecutions?: Execution[];
++  showReducedGraph?: boolean;
+ }
+ 
+ export const css = stylesheet({
+@@ -730,6 +758,13 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
+         workflow && workflow.status && workflow.status.nodes
+           ? WorkflowParser.createRuntimeGraph(workflow)
+           : undefined;
++      let reducedGraph = graph
++        ? // copy graph before removing edges
++          transitiveReduction(graph)
++        : undefined;
++      if (graph && reducedGraph && compareGraphEdges(graph, reducedGraph)) {
++        reducedGraph = undefined; // disable reduction switch
++      }
+ 
+       const breadcrumbs: Array<{ displayName: string; href: string }> = [];
+       // If this is an archived run, only show Archive in breadcrumbs, otherwise show
+@@ -857,6 +893,8 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
+     return !workflow.status
+       ? []
+       : [
++          ['Run ID', runMetadata?.id || '-'],
++          ['Workflow name', workflow.metadata?.name || '-'],
+           ['Status', workflow.status.phase],
+           ['Description', runMetadata ? runMetadata!.description! : ''],
+           [

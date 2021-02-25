@@ -103,7 +103,8 @@ func NewController(
 		workflowClient: client.NewWorkflowClient(workflowClientSet, workflowInformer),
 		workqueue: workqueue.NewNamedRateLimitingQueue(
 			workqueue.NewItemExponentialFailureRateLimiter(DefaultJobBackOff, MaxJobBackOff), swfregister.Kind),
-		time: time,
+		time:     time,
+		location: location,
 	}
 
 	log.Info("Setting up event handlers")

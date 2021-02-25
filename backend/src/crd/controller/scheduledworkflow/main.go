@@ -34,9 +34,11 @@ var (
 	masterURL  string
 	kubeconfig string
 	namespace  string
+	location   *time.Location
 )
 
 func main() {
+	initEnv()
 	flag.Parse()
 
 	// set up signals so we handle the first shutdown signal gracefully
@@ -78,7 +80,8 @@ func main() {
 		workflowClient,
 		scheduleInformerFactory,
 		workflowInformerFactory,
-		commonutil.NewRealTime())
+		commonutil.NewRealTime(),
+		location)
 
 	go scheduleInformerFactory.Start(stopCh)
 	go workflowInformerFactory.Start(stopCh)
