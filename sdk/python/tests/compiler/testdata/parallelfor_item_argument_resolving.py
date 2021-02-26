@@ -37,17 +37,17 @@ def produce_str() -> str:
 
 @func_to_container_op
 def produce_list_of_dicts() -> list:
-    return ({"aaa": "aaa1", "bbb": "bbb1"}, {"aaa": "aaa2", "bbb": "bbb2"})
+    return ([{"aaa": "aaa1", "bbb": "bbb1"}, {"aaa": "aaa2", "bbb": "bbb2"}],)
 
 
 @func_to_container_op
 def produce_list_of_strings() -> list:
-    return ("a", "z")
+    return (["a", "z"],)
 
 
 @func_to_container_op
 def produce_list_of_ints() -> list:
-    return (1234567890, 987654321)
+    return ([1234567890, 987654321],)
 
 
 @func_to_container_op
@@ -75,6 +75,11 @@ def parallelfor_item_argument_resolving():
         consume(produce_list_of_dicts_task.output)
         # consume(loop_item) # Cannot use the full loop item when it's a dict
         consume(loop_item.aaa)
+
+    loop_args = [{'a': 1, 'b': 2}, {'a': 10, 'b': 20}]
+    with kfp.dsl.ParallelFor(loop_args) as loop_item:
+        consume(loop_args)
+        consume(loop_item)
 
 
 if __name__ == '__main__':

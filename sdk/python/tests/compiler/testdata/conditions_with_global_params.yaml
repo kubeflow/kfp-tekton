@@ -61,8 +61,8 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
               {"args": ["--a", {"inputValue": "a"}, "--b", {"inputValue": "b"}, "----output-paths",
-              {"outputPath": "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\necho
-              -n \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              {"outputPath": "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def add_numbers(a, b):\n    print(a + b)\n    return a + b\n\ndef _serialize_int(int_value:
               int) -> str:\n    if isinstance(int_value, str):\n        return int_value\n    if
               not isinstance(int_value, int):\n        raise TypeError(''Value \"{}\"
@@ -98,7 +98,7 @@ spec:
           - -ec
           - 'program_path=$(mktemp)
 
-            echo -n "$0" > "$program_path"
+            printf "%s" "$0" > "$program_path"
 
             python3 -u "$program_path" "$@"
 
@@ -131,8 +131,8 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
               {"args": ["--a", {"inputValue": "a"}, "----output-paths", {"outputPath":
-              "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\necho -n
-              \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def print_number(a):\n    print(a)\n    return a\n\ndef _serialize_int(int_value:
               int) -> str:\n    if isinstance(int_value, str):\n        return int_value\n    if
               not isinstance(int_value, int):\n        raise TypeError(''Value \"{}\"
@@ -163,7 +163,7 @@ spec:
           - -ec
           - 'program_path=$(mktemp)
 
-            echo -n "$0" > "$program_path"
+            printf "%s" "$0" > "$program_path"
 
             python3 -u "$program_path" "$@"
 
@@ -190,8 +190,8 @@ spec:
         metadata:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\necho
-              -n \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def notify_success():\n    print(''SUCCESS!'')\n\nimport argparse\n_parser
               = argparse.ArgumentParser(prog=''Notify success'', description='''')\n_parsed_args
               = vars(_parser.parse_args())\n\n_outputs = notify_success(**_parsed_args)\n"],
@@ -202,7 +202,7 @@ spec:
           - -ec
           - 'program_path=$(mktemp)
 
-            echo -n "$0" > "$program_path"
+            printf "%s" "$0" > "$program_path"
 
             python3 -u "$program_path" "$@"
 
@@ -223,8 +223,8 @@ spec:
         metadata:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\necho
-              -n \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def notify_failure():\n    print(''FAILED!'')\n\nimport argparse\n_parser
               = argparse.ArgumentParser(prog=''Notify failure'', description='''')\n_parsed_args
               = vars(_parser.parse_args())\n\n_outputs = notify_failure(**_parsed_args)\n"],
@@ -235,7 +235,7 @@ spec:
           - -ec
           - 'program_path=$(mktemp)
 
-            echo -n "$0" > "$program_path"
+            printf "%s" "$0" > "$program_path"
 
             python3 -u "$program_path" "$@"
 
