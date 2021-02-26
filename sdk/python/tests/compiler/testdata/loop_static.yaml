@@ -1,4 +1,4 @@
-# Copyright 2021 kubeflow.org
+# Copyright 2020 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,40 +15,51 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: my-loop-pipeline
   annotations:
-    tekton.dev/output_artifacts: '{}'
-    tekton.dev/input_artifacts: '{}'
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
+      "optional": true}], "name": "my-loop-pipeline"}'
+    sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"my-in-coop1": [], "my-in-coop2": [], "my-out-cop":
       []}'
-    sidecar.istio.io/inject: "false"
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
-      "optional": true}], "name": "my-loop-pipeline"}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: my-loop-pipeline
 spec:
   params:
-  - {name: my_pipe_param, value: '10'}
+  - name: my_pipe_param
+    value: '10'
   pipelineSpec:
     params:
-    - {name: my_pipe_param, default: '10'}
+    - default: '10'
+      name: my_pipe_param
     tasks:
     - name: my-out-cop
       params:
-      - {name: my_pipe_param, value: $(params.my_pipe_param)}
+      - name: my_pipe_param
+        value: $(params.my_pipe_param)
       taskSpec:
-        steps:
-        - name: main
-          args: [echo $(inputs.params.my_pipe_param)]
-          command: [sh, -c]
-          image: library/bash:4.4.23
         params:
-        - {name: my_pipe_param}
+        - name: my_pipe_param
+        steps:
+        - args:
+          - echo $(inputs.params.my_pipe_param)
+          command:
+          - sh
+          - -c
+          image: library/bash:4.4.23
+          name: main
       timeout: 0s
     - name: with-item-name-1
-      taskRef: {apiVersion: custom.tekton.dev/v1alpha1, kind: PipelineLoop, name: with-item-name-1}
       params:
-      - {name: with-item-name, value: '[1, 2, 3]'}
-      - {name: my_pipe_param, value: $(params.my_pipe_param)}
+      - name: with-item-name
+        value: '[1, 2, 3]'
+      - name: my_pipe_param
+        value: $(params.my_pipe_param)
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: with-item-name-1
   timeout: 0s

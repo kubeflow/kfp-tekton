@@ -21,6 +21,7 @@ import (
 
 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	core "k8s.io/api/core/v1"
@@ -618,7 +619,7 @@ func TestScheduledWorkflow_GetNextScheduledEpoch_UpdateStatus_WithWorkflow(t *te
 		workflow, /* no workflow created during this run */
 		scheduledEpoch,
 		[]swfapi.WorkflowStatus{*status1, *status2, *status3},
-		[]swfapi.WorkflowStatus{*status1, *status2, *status3, *status4})
+		[]swfapi.WorkflowStatus{*status1, *status2, *status3, *status4}, &time.Location{})
 
 	expected := &swfapi.ScheduledWorkflow{
 		ObjectMeta: metav1.ObjectMeta{
