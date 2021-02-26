@@ -24,10 +24,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"my-in-coop1": [], "my-in-coop2": [], "my-inner-inner-coop":
       [], "my-out-cop": []}'
-    tekton.dev/input_artifacts: '{"my-in-coop1": [{"name": "loop-item-param-1-subvar-a",
-      "parent_task": null}], "my-in-coop2": [{"name": "loop-item-param-1-subvar-b",
-      "parent_task": null}], "my-inner-inner-coop": [{"name": "loop-item-param-1-subvar-a",
-      "parent_task": null}]}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
   name: my-pipeline
 spec:
@@ -58,11 +55,7 @@ spec:
     - name: for-loop-2
       params:
       - name: loop-item-param-1
-        value: '[{''a'': 1, ''b'': 2}, {''a'': 10, ''b'': 20}]'
-      - name: loop-item-param-1-subvar-a
-        value: $(params.loop-item-param-1-subvar-a)
-      - name: loop-item-param-1-subvar-b
-        value: $(params.loop-item-param-1-subvar-b)
+        value: '[1, 2]'
       - name: my_pipe_param
         value: $(params.my_pipe_param)
       taskRef:

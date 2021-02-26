@@ -16,9 +16,9 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[{\"a\": 1, \"b\":
-      2}, {\"a\": 10, \"b\": 20}]", "name": "loopidy_doop", "optional": true, "type":
-      "JsonObject"}], "name": "my-pipeline"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[{\"a\": \"1\",
+      \"b\": \"2\"}, {\"a\": \"10\", \"b\": \"20\"}]", "name": "loopidy_doop", "optional":
+      true, "type": "JsonObject"}], "name": "my-pipeline"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -33,10 +33,10 @@ metadata:
 spec:
   params:
   - name: loopidy_doop
-    value: '[{"a": 1, "b": 2}, {"a": 10, "b": 20}]'
+    value: '[{"a": "1", "b": "2"}, {"a": "10", "b": "20"}]'
   pipelineSpec:
     params:
-    - default: '[{"a": 1, "b": 2}, {"a": 10, "b": 20}]'
+    - default: '[{"a": "1", "b": "2"}, {"a": "10", "b": "20"}]'
       name: loopidy_doop
     tasks:
     - name: my-out-cop0

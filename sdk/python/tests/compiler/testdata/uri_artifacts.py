@@ -86,7 +86,7 @@ def flip_coin_op():
 
 @dsl.pipeline(
     name='uri-artifact-pipeline',
-    pipeline_root='gs://my-bucket/my-output-dir')
+    output_directory='gs://my-bucket/my-output-dir')
 def uri_artifact(text='Hello world!'):
   task_1 = write_to_gcs(text=text)
   task_2 = read_from_gcs(

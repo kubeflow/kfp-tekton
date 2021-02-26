@@ -22,10 +22,10 @@ metadata:
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"consume": [], "consume-2": [], "consume-3": [],
-      "consume-4": [], "consume-5": [], "consume-6": [], "consume-7": [], "consume-8":
-      [], "consume-9": [], "produce-list-of-dicts": [["Output", "$(results.output.path)"]],
-      "produce-list-of-ints": [["Output", "$(results.output.path)"]], "produce-list-of-strings":
-      [["Output", "$(results.output.path)"]], "produce-str": [["Output", "$(results.output.path)"]]}'
+      "consume-4": [], "consume-5": [], "consume-6": [], "consume-7": [], "produce-list-of-dicts":
+      [["Output", "$(results.output.path)"]], "produce-list-of-ints": [["Output",
+      "$(results.output.path)"]], "produce-list-of-strings": [["Output", "$(results.output.path)"]],
+      "produce-str": [["Output", "$(results.output.path)"]]}'
     tekton.dev/input_artifacts: '{"consume": [{"name": "produce-list-of-strings-Output",
       "parent_task": "produce-list-of-strings"}], "consume-3": [{"name": "produce-str-Output",
       "parent_task": "produce-str"}], "consume-4": [{"name": "produce-list-of-ints-Output",
@@ -103,7 +103,7 @@ spec:
               {"args": ["----output-paths", {"outputPath": "Output"}], "command":
               ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
               -u \"$program_path\" \"$@\"\n", "def produce_list_of_strings():\n    return
-              ([\"a\", \"z\"],)\n\ndef _serialize_json(obj) -> str:\n    if isinstance(obj,
+              (\"a\", \"z\")\n\ndef _serialize_json(obj) -> str:\n    if isinstance(obj,
               str):\n        return obj\n    import json\n    def default_serializer(obj):\n        if
               hasattr(obj, ''to_struct''):\n            return obj.to_struct()\n        else:\n            raise
               TypeError(\"Object of type ''%s'' is not JSON serializable and does
@@ -135,7 +135,7 @@ spec:
             python3 -u "$program_path" "$@"
 
             '
-          - "def produce_list_of_strings():\n    return ([\"a\", \"z\"],)\n\ndef _serialize_json(obj)\
+          - "def produce_list_of_strings():\n    return (\"a\", \"z\")\n\ndef _serialize_json(obj)\
             \ -> str:\n    if isinstance(obj, str):\n        return obj\n    import\
             \ json\n    def default_serializer(obj):\n        if hasattr(obj, 'to_struct'):\n\
             \            return obj.to_struct()\n        else:\n            raise\
@@ -162,7 +162,7 @@ spec:
               {"args": ["----output-paths", {"outputPath": "Output"}], "command":
               ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
               -u \"$program_path\" \"$@\"\n", "def produce_list_of_ints():\n    return
-              ([1234567890, 987654321],)\n\ndef _serialize_json(obj) -> str:\n    if
+              (1234567890, 987654321)\n\ndef _serialize_json(obj) -> str:\n    if
               isinstance(obj, str):\n        return obj\n    import json\n    def
               default_serializer(obj):\n        if hasattr(obj, ''to_struct''):\n            return
               obj.to_struct()\n        else:\n            raise TypeError(\"Object
@@ -194,10 +194,10 @@ spec:
             python3 -u "$program_path" "$@"
 
             '
-          - "def produce_list_of_ints():\n    return ([1234567890, 987654321],)\n\n\
-            def _serialize_json(obj) -> str:\n    if isinstance(obj, str):\n     \
-            \   return obj\n    import json\n    def default_serializer(obj):\n  \
-            \      if hasattr(obj, 'to_struct'):\n            return obj.to_struct()\n\
+          - "def produce_list_of_ints():\n    return (1234567890, 987654321)\n\ndef\
+            \ _serialize_json(obj) -> str:\n    if isinstance(obj, str):\n       \
+            \ return obj\n    import json\n    def default_serializer(obj):\n    \
+            \    if hasattr(obj, 'to_struct'):\n            return obj.to_struct()\n\
             \        else:\n            raise TypeError(\"Object of type '%s' is not\
             \ JSON serializable and does not have .to_struct() method.\" % obj.__class__.__name__)\n\
             \    return json.dumps(obj, default=default_serializer, sort_keys=True)\n\
@@ -221,8 +221,8 @@ spec:
               {"args": ["----output-paths", {"outputPath": "Output"}], "command":
               ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
               -u \"$program_path\" \"$@\"\n", "def produce_list_of_dicts():\n    return
-              ([{\"aaa\": \"aaa1\", \"bbb\": \"bbb1\"}, {\"aaa\": \"aaa2\", \"bbb\":
-              \"bbb2\"}],)\n\ndef _serialize_json(obj) -> str:\n    if isinstance(obj,
+              ({\"aaa\": \"aaa1\", \"bbb\": \"bbb1\"}, {\"aaa\": \"aaa2\", \"bbb\":
+              \"bbb2\"})\n\ndef _serialize_json(obj) -> str:\n    if isinstance(obj,
               str):\n        return obj\n    import json\n    def default_serializer(obj):\n        if
               hasattr(obj, ''to_struct''):\n            return obj.to_struct()\n        else:\n            raise
               TypeError(\"Object of type ''%s'' is not JSON serializable and does
@@ -254,8 +254,8 @@ spec:
             python3 -u "$program_path" "$@"
 
             '
-          - "def produce_list_of_dicts():\n    return ([{\"aaa\": \"aaa1\", \"bbb\"\
-            : \"bbb1\"}, {\"aaa\": \"aaa2\", \"bbb\": \"bbb2\"}],)\n\ndef _serialize_json(obj)\
+          - "def produce_list_of_dicts():\n    return ({\"aaa\": \"aaa1\", \"bbb\"\
+            : \"bbb1\"}, {\"aaa\": \"aaa2\", \"bbb\": \"bbb2\"})\n\ndef _serialize_json(obj)\
             \ -> str:\n    if isinstance(obj, str):\n        return obj\n    import\
             \ json\n    def default_serializer(obj):\n        if hasattr(obj, 'to_struct'):\n\
             \            return obj.to_struct()\n        else:\n            raise\
@@ -313,12 +313,4 @@ spec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         name: for-loop-3
-    - name: for-loop-5
-      params:
-      - name: loop-item-param-4
-        value: '[{''a'': 1, ''b'': 2}, {''a'': 10, ''b'': 20}]'
-      taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        name: for-loop-5
   timeout: 0s

@@ -29,13 +29,12 @@ dsl.ParallelFor._get_unique_id_code = Coder().get_code
 
 
 @dsl.pipeline(name='my-pipeline')
-def pipeline(loopidy_doop: dict = [{'a': 1, 'b': 2}, {'a': 10, 'b': 20}]):
+def pipeline(loopidy_doop: dict = [{'a': '1', 'b': '2'}, {'a': '10', 'b': '20'}]):
     op0 = dsl.ContainerOp(
         name="my-out-cop0",
         image='python:alpine3.6',
         command=["sh", "-c"],
-        arguments=[
-            'python -c "import json; import sys; json.dump([i for i in range(20, 31)], open(\'/tmp/out.json\', \'w\'))"'],
+        arguments=['python -c "import json; import sys; json.dump([i for i in range(20, 31)], open(\'/tmp/out.json\', \'w\'))"'],
         file_outputs={'out': '/tmp/out.json'},
     )
 
@@ -44,7 +43,7 @@ def pipeline(loopidy_doop: dict = [{'a': 1, 'b': 2}, {'a': 10, 'b': 20}]):
             name="my-in-cop1",
             image="library/bash:4.4.23",
             command=["sh", "-c"],
-            arguments=["echo no output global op1, item.a: %s" % item.a],
+            arguments=["echo no output global op1, item.a: %s, item.b: %s" % (item.a, item.b)],
         ).after(op0)
 
     op_out = dsl.ContainerOp(

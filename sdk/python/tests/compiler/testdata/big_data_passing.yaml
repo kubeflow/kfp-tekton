@@ -16,7 +16,7 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"name": "File passing pipelines"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "Big data passing"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -46,7 +46,7 @@ metadata:
       "name": "sum-numbers-Output", "path": "/tmp/outputs/Output/data"}], "write-numbers":
       [{"key": "artifacts/$PIPELINERUN/write-numbers/numbers.tgz", "name": "write-numbers-numbers",
       "path": "/tmp/outputs/numbers/data"}]}'
-  name: file-passing-pipelines
+  name: big-data-passing
 spec:
   pipelineSpec:
     tasks:
@@ -113,7 +113,7 @@ spec:
       timeout: 0s
       workspaces:
       - name: repeat-line
-        workspace: file-passing-pipelines
+        workspace: big-data-passing
     - name: print-text
       runAfter:
       - repeat-line
@@ -160,7 +160,7 @@ spec:
       timeout: 0s
       workspaces:
       - name: print-text
-        workspace: file-passing-pipelines
+        workspace: big-data-passing
     - name: split-text-lines
       taskSpec:
         metadata:
@@ -265,7 +265,7 @@ spec:
       timeout: 0s
       workspaces:
       - name: split-text-lines
-        workspace: file-passing-pipelines
+        workspace: big-data-passing
     - name: print-text-2
       runAfter:
       - split-text-lines
@@ -312,7 +312,7 @@ spec:
       timeout: 0s
       workspaces:
       - name: print-text-2
-        workspace: file-passing-pipelines
+        workspace: big-data-passing
     - name: print-text-3
       runAfter:
       - split-text-lines
@@ -359,7 +359,7 @@ spec:
       timeout: 0s
       workspaces:
       - name: print-text-3
-        workspace: file-passing-pipelines
+        workspace: big-data-passing
     - name: write-numbers
       taskSpec:
         metadata:
@@ -420,7 +420,7 @@ spec:
       timeout: 0s
       workspaces:
       - name: write-numbers
-        workspace: file-passing-pipelines
+        workspace: big-data-passing
     - name: print-text-4
       runAfter:
       - write-numbers
@@ -467,7 +467,7 @@ spec:
       timeout: 0s
       workspaces:
       - name: print-text-4
-        workspace: file-passing-pipelines
+        workspace: big-data-passing
     - name: sum-numbers
       runAfter:
       - write-numbers
@@ -534,7 +534,7 @@ spec:
       timeout: 0s
       workspaces:
       - name: sum-numbers
-        workspace: file-passing-pipelines
+        workspace: big-data-passing
     - name: print-text-5
       runAfter:
       - sum-numbers
@@ -581,7 +581,7 @@ spec:
       timeout: 0s
       workspaces:
       - name: print-text-5
-        workspace: file-passing-pipelines
+        workspace: big-data-passing
     - name: gen-params
       taskSpec:
         metadata:
@@ -679,10 +679,10 @@ spec:
           name: main
       timeout: 0s
     workspaces:
-    - name: file-passing-pipelines
+    - name: big-data-passing
   timeout: 0s
   workspaces:
-  - name: file-passing-pipelines
+  - name: big-data-passing
     volumeClaimTemplate:
       spec:
         accessModes:
