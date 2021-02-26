@@ -59,7 +59,7 @@ import Buttons, { ButtonKeys } from '../lib/Buttons';
 import CompareUtils from '../lib/CompareUtils';
 import { OutputArtifactLoader } from '../lib/OutputArtifactLoader';
 import RunUtils from '../lib/RunUtils';
-import { KeyValue } from '../lib/StaticGraphParser';
+import { KeyValue, transitiveReduction, compareGraphEdges } from '../lib/StaticGraphParser';
 import { hasFinished, NodePhase, statusToPhase } from '../lib/StatusUtils';
 import {
   errorToMessage,
@@ -135,6 +135,7 @@ interface RunDetailsState {
   workflow?: any;
   mlmdRunContext?: Context;
   mlmdExecutions?: Execution[];
+  showReducedGraph?: boolean;
 }
 
 export const css = stylesheet({
@@ -754,6 +755,14 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       let templateString = workflow;
       const graph = WorkflowParser.createRuntimeGraph(templateString);
 
+      let reducedGraph = graph
+        ? // copy graph before removing edges
+          transitiveReduction(graph)
+        : undefined;
+      if (graph && reducedGraph && compareGraphEdges(graph, reducedGraph)) {
+        reducedGraph = undefined; // disable reduction switch
+      }
+
       const breadcrumbs: Array<{ displayName: string; href: string }> = [];
       // If this is an archived run, only show Archive in breadcrumbs, otherwise show
       // the full path, including the experiment if any.
@@ -881,6 +890,8 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     return !workflow.status
       ? []
       : [
+          ['Run ID', runMetadata?.id || '-'],
+          ['Workflow name', workflow.metadata?.name || '-'],
           ['Status', workflow.status.conditions ? workflow.status.conditions[0].reason : 'Pending'],
           ['Description', runMetadata ? runMetadata!.description! : ''],
           [
@@ -893,17 +904,25 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
         ];
   }
 
-  private _getTaskDetailsFields(workflow: Workflow, nodeId: string): Array<KeyValue<string>> {
-    return workflow?.status?.nodes?.[nodeId]
-      ? [
-          ['Task ID', workflow.status.nodes[nodeId].id || '-'],
-          ['Task name', workflow.status.nodes[nodeId].displayName || '-'],
-          ['Status', workflow.status.nodes[nodeId].phase || '-'],
-          ['Started at', formatDateString(workflow.status.nodes[nodeId].startedAt) || '-'],
-          ['Finished at', formatDateString(workflow.status.nodes[nodeId].finishedAt) || '-'],
+  private _getTaskDetailsFields(workflow: any, nodeId: string): Array<KeyValue<string>> {
+    for (const taskRunId of Object.getOwnPropertyNames(workflow.status?.taskRuns || [])) {
+      const taskRun = workflow.status.taskRuns[taskRunId];
+      if (taskRun.status && taskRun.status.podName === nodeId) {
+        let status = NodePhase.PENDING;
+        if (taskRun && taskRun.status && taskRun.status.conditions) {
+          status = taskRun.status.conditions[0].reason;
+        }
+        return [
+          ['Task ID', taskRun.taskRunId || '-'],
+          ['Task name', taskRun.pipelineTaskName || '-'],
+          ['Status', statusToPhase(status) || '-'],
+          ['Started at', formatDateString(taskRun.status?.startTime) || '-'],
+          ['Finished at', formatDateString(taskRun.status?.completionTime) || '-'],
           ['Duration', getRunDurationFromNode(workflow, nodeId) || '-'],
-        ]
-      : [];
+        ];
+      }
+    }
+    return [];
   }
 
   private async _selectNode(id: string): Promise<void> {
