@@ -383,26 +383,22 @@ class TektonCompiler(Compiler):
     condition_task_refs = {}
     for template in raw_templates:
       if template['kind'] == 'Condition':
-        if env.get('DISABLE_CEL_CONDITION', 'false').lower() == "true":
-          condition_task_ref = [{
-              'name': template['metadata']['name'],
-              'params': [{
-                  'name': p['name'],
-                  'value': p.get('value', '')
-                } for p in template['spec'].get('params', [])
-              ],
-              'taskSpec': _get_super_condition_template(),
-          }]
+        disable_cel = env.get('DISABLE_CEL_CONDITION', 'false').lower() == "true"
+        if disable_cel:
+          condition_task_spec = _get_super_condition_template()
         else:
-          condition_task_ref = [{
-              'name': template['metadata']['name'],
-              'params': [{
-                  'name': p['name'],
-                  'value': p.get('value', '')
-                } for p in template['spec'].get('params', [])
-              ],
-              'taskRef': _get_cel_condition_template()
-          }]
+          condition_task_spec = _get_cel_condition_template()
+
+        condition_task_ref = [{
+            'name': template['metadata']['name'],
+            'params': [{
+                'name': p['name'],
+                'value': p.get('value', '')
+              } for p in template['spec'].get('params', [])
+            ],
+
+            'taskSpec' if disable_cel else 'taskRef': condition_task_spec
+        }]
         condition_refs[template['metadata']['name']] = [
             {
               'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
