@@ -3,6 +3,7 @@ kind: Kustomization
 
 bases:
   - ../platform-agnostic
+  - ./tekton
 
 resources:
   - namespace.yaml
