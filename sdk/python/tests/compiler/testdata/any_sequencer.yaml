@@ -16,7 +16,7 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    anyConditions: '{"any-sequencer-4b2c9": ["task1", "task2", "task3"]}'
+    anyConditions: '{"any-sequencer-79117": ["task1", "task2", "task3"]}'
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Any Sequencer Component
       Demo", "name": "Any Sequencer"}'
     sidecar.istio.io/inject: 'false'
@@ -65,7 +65,7 @@ spec:
       timeout: 0s
     - name: task4
       runAfter:
-      - any-sequencer-4b2c9
+      - any-sequencer-79117
       taskSpec:
         steps:
         - args:
@@ -76,7 +76,7 @@ spec:
           image: registry.access.redhat.com/ubi8/ubi-minimal
           name: main
       timeout: 0s
-    - name: any-sequencer-4b2c9
+    - name: any-sequencer-79117
       params:
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)

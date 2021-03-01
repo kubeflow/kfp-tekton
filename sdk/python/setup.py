@@ -52,8 +52,14 @@ development stage. Contributions are welcome: {}
 """.format(HOMEPAGE)
 
 REQUIRES = [
-    'kfp==1.3.0'
+    'kfp==1.4.0'
 ]
+
+TESTS_REQUIRE = [
+    'mock',
+    'kubernetes==11.0.0',
+]
+
 
 logging.basicConfig()
 logger = logging.getLogger("kfp_tekton/setup.py")
@@ -173,6 +179,7 @@ setup(
     license=LICENSE,
     url=HOMEPAGE,
     install_requires=REQUIRES,
+    tests_require=TESTS_REQUIRE,
     packages=[
         'kfp_tekton',
         'kfp_tekton.compiler',

@@ -1,0 +1,144 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: artifact-passing-pipeline
+  annotations:
+    tekton.dev/output_artifacts: '{"processor": [{"key": "artifacts/$PIPELINERUN/processor/Output-1.tgz",
+      "name": "processor-Output-1", "path": "/tmp/outputs/Output_1/data"}, {"key":
+      "artifacts/$PIPELINERUN/processor/Output-2.tgz", "name": "processor-Output-2",
+      "path": "/tmp/outputs/Output_2/data"}], "producer": [{"key": "artifacts/$PIPELINERUN/producer/Output-1.tgz",
+      "name": "producer-Output-1", "path": "/tmp/outputs/Output_1/data"}, {"key":
+      "artifacts/$PIPELINERUN/producer/Output-2.tgz", "name": "producer-Output-2",
+      "path": "/tmp/outputs/Output_2/data"}]}'
+    tekton.dev/input_artifacts: '{"consumer": [{"name": "processor-Output-1", "parent_task":
+      "processor"}, {"name": "processor-Output-2", "parent_task": "processor"}], "processor":
+      [{"name": "producer-Output-1", "parent_task": "producer"}, {"name": "producer-Output-2",
+      "parent_task": "producer"}]}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"consumer": [], "processor": [["Output-1", "$(results.output-1.path)"],
+      ["Output-2", "$(workspaces.producer.path)/producer-Output-2"]], "producer":
+      [["Output-1", "$(results.output-1.path)"], ["Output-2", "$(workspaces.producer.path)/producer-Output-2"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "Artifact passing pipeline"}'
+spec:
+  pipelineSpec:
+    tasks:
+    - name: producer
+      taskSpec:
+        steps:
+        - name: main
+          args: [$(results.output-1.path), $(workspaces.producer.path)/producer-Output-2]
+          command:
+          - sh
+          - -c
+          - |
+            mkdir -p "$(dirname "$0")"
+            mkdir -p "$(dirname "$1")"
+            echo "Data 1" > $0
+            echo "Data 2" > $1
+          image: alpine
+        results:
+        - {name: output-1, description: /tmp/outputs/Output_1/data}
+        metadata:
+          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
+              {"container": {"args": [{"outputPath": "Output 1"}, {"outputPath": "Output
+              2"}], "command": ["sh", "-c", "mkdir -p \"$(dirname \"$0\")\"\nmkdir
+              -p \"$(dirname \"$1\")\"\necho \"Data 1\" > $0\necho \"Data 2\" > $1\n"],
+              "image": "alpine"}}, "name": "Producer", "outputs": [{"name": "Output
+              1"}, {"name": "Output 2"}]}'}
+        workspaces:
+        - {name: producer}
+      timeout: 0s
+      workspaces:
+      - {name: producer, workspace: artifact-passing-pipeline}
+    - name: processor
+      params:
+      - {name: producer-Output-1, value: $(tasks.producer.results.output-1)}
+      taskSpec:
+        steps:
+        - name: main
+          args: [$(inputs.params.producer-Output-1), $(workspaces.processor.path)/producer-Output-2,
+            $(results.output-1.path), $(workspaces.processor.path)/processor-Output-2]
+          command:
+          - sh
+          - -c
+          - |
+            mkdir -p "$(dirname "$2")"
+            mkdir -p "$(dirname "$3")"
+            echo "$0" > "$2"
+            cp "$1" "$3"
+          image: alpine
+        params:
+        - {name: producer-Output-1}
+        results:
+        - {name: output-1, description: /tmp/outputs/Output_1/data}
+        metadata:
+          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
+              {"container": {"args": [{"inputValue": "Input parameter"}, {"inputPath":
+              "Input artifact"}, {"outputPath": "Output 1"}, {"outputPath": "Output
+              2"}], "command": ["sh", "-c", "mkdir -p \"$(dirname \"$2\")\"\nmkdir
+              -p \"$(dirname \"$3\")\"\necho \"$0\" > \"$2\"\ncp \"$1\" \"$3\"\n"],
+              "image": "alpine"}}, "inputs": [{"name": "Input parameter"}, {"name":
+              "Input artifact"}], "name": "Processor", "outputs": [{"name": "Output
+              1"}, {"name": "Output 2"}]}'}
+        workspaces:
+        - {name: processor}
+      timeout: 0s
+      workspaces:
+      - {name: processor, workspace: artifact-passing-pipeline}
+      runAfter: [producer]
+    - name: consumer
+      params:
+      - {name: processor-Output-1, value: $(tasks.processor.results.output-1)}
+      taskSpec:
+        steps:
+        - name: main
+          args: [$(inputs.params.processor-Output-1), $(workspaces.consumer.path)/processor-Output-2]
+          command:
+          - sh
+          - -c
+          - |
+            echo "Input parameter = $0"
+            echo "Input artifact = " && cat "$1"
+          image: alpine
+        params:
+        - {name: processor-Output-1}
+        metadata:
+          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
+              {"container": {"args": [{"inputValue": "Input parameter"}, {"inputPath":
+              "Input artifact"}], "command": ["sh", "-c", "echo \"Input parameter
+              = $0\"\necho \"Input artifact = \" && cat \"$1\"\n"], "image": "alpine"}},
+              "inputs": [{"name": "Input parameter"}, {"name": "Input artifact"}],
+              "name": "Consumer"}'}
+        workspaces:
+        - {name: consumer}
+      timeout: 0s
+      workspaces:
+      - {name: consumer, workspace: artifact-passing-pipeline}
+      runAfter: [processor]
+    workspaces:
+    - {name: artifact-passing-pipeline}
+  timeout: 0s
+  workspaces:
+  - name: artifact-passing-pipeline
+    volumeClaimTemplate:
+      spec:
+        accessModes: [ReadWriteMany]
+        resources:
+          requests: {storage: 2Gi}

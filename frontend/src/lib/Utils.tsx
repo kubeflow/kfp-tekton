@@ -126,6 +126,27 @@ export function getRunDurationFromWorkflow(workflow?: any): string {
   return getDuration(new Date(workflow.status.startTime), new Date(workflow.status.completionTime));
 }
 
+/**
+ * Calculate the time duration a task has taken as a node in workflow. If start time or end time
+ * is not available, return '-'.
+ *
+ * @param workflow
+ * @param nodeId
+ */
+export function getRunDurationFromNode(workflow: any, nodeId: string): string {
+
+  for (const taskRunId of Object.getOwnPropertyNames(workflow.status?.taskRuns || [])) {
+    const taskRun = workflow.status.taskRuns[taskRunId];
+    if (taskRun.status && taskRun.status.podName === nodeId) {
+      return getDuration(
+        new Date(taskRun.status?.startTime),
+        new Date(taskRun.status?.completionTime),
+      );
+    }
+  }
+  return '-';
+}
+
 export function s(items: any[] | number): string {
   const length = Array.isArray(items) ? items.length : items;
   return length === 1 ? '' : 's';
