@@ -13,7 +13,6 @@
 
 # Note: You have to install kfp>=1.1.1 SDK and kubeflow-katib>=0.10.1 SDK to run this example.
 
-import kfp
 import kfp.dsl as dsl
 from kfp import components
 
@@ -32,10 +31,9 @@ from kubeflow.katib import V1beta1TrialParameterSpec
     name="Launch Katib MPIJob Experiment",
     description="An example to launch Katib Experiment with MPIJob"
 )
-def horovod_mnist_hpo():
-    # Experiment name and namespace.
-    experiment_name = "mpi-horovod-mnist"
-    experiment_namespace = "anonymous"
+def horovod_mnist_hpo(
+        experiment_name = "mpi-horovod-mnist",
+        experiment_namespace = "anonymous"):
 
     # Trial count specification.
     max_trial_count = 6
@@ -226,9 +224,10 @@ def horovod_mnist_hpo():
         name="best-hp",
         image="library/bash:4.4.23",
         command=["sh", "-c"],
-        arguments=["echo Best HyperParameters: %s" % op.output],
+        arguments=["echo best HyperParameters: %s" % op.output],
     )
 
 
 if __name__ == "__main__":
-    kfp.compiler.Compiler().compile(horovod_mnist_hpo, __file__ + ".tar.gz")
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(horovod_mnist_hpo, __file__ + ".tar.gz")
