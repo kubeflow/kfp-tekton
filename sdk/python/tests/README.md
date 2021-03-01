@@ -27,17 +27,20 @@ You should see an output similar to the one below, outlining which test scripts 
 which are failing:
 
 ```YAML
-KFP version: 1.0.0
+KFP version: 1.4.0
 
 SUCCESS: add_pod_env.py
+SUCCESS: artifact_passing_using_volume.py
 SUCCESS: basic.py
 SUCCESS: basic_no_decorator.py
 SUCCESS: coin.py
 SUCCESS: compose.py
 SUCCESS: default_value.py
 SUCCESS: input_artifact_raw_value.py
-FAILURE: loop_over_lightweight_output.py
-FAILURE: parallelfor_item_argument_resolving.py
+SUCCESS: loop_over_lightweight_output.py
+SUCCESS: opsgroups.py
+SUCCESS: parallelfor_item_argument_resolving.py
+FAILURE: parallelfor_pipeline_param_in_items_resolving.py
 SUCCESS: param_op_transform.py
 SUCCESS: param_substitutions.py
 SUCCESS: pipelineparams.py
@@ -46,6 +49,7 @@ SUCCESS: recursive_while.py
 SUCCESS: resourceop_basic.py
 SUCCESS: sidecar.py
 SUCCESS: timeout.py
+FAILURE: uri_artifacts.py
 SUCCESS: volume.py
 SUCCESS: volume_snapshotop_rokurl.py
 SUCCESS: volume_snapshotop_sequential.py
@@ -55,18 +59,18 @@ SUCCESS: volumeop_parallel.py
 SUCCESS: volumeop_sequential.py
 SUCCESS: withitem_basic.py
 SUCCESS: withitem_nested.py
-FAILURE: withparam_global.py
-FAILURE: withparam_global_dict.py
-FAILURE: withparam_output.py
-FAILURE: withparam_output_dict.py
+SUCCESS: withparam_global.py
+SUCCESS: withparam_global_dict.py
+SUCCESS: withparam_output.py
+SUCCESS: withparam_output_dict.py
 
 Compilation status for testdata DSL scripts:
 
-  Success: 24
-  Failure: 6
-  Total:   30
+  Success: 32
+  Failure: 2
+  Total:   34
 
-Overall success rate: 24/30 = 80%
+Overall success rate: 32/34 = 94%
 
 Compilation status report:   sdk/python/tests/test_kfp_samples_report.txt
 Accumulated compiler logs:   temp/test_kfp_samples_output.txt
@@ -136,5 +140,5 @@ Occurences of other Errors:
 
 ## Disclaimer
 
-**Note:** The reports above were created for the pipeline scripts found in KFP version `1.3.0` since
-the `kfp_tekton` compiler code is currently based on the `kfp` SDK compiler version `1.3.0`.
+**Note:** The reports above were created for the pipeline scripts found in KFP version `1.4.0` since
+the `kfp_tekton` compiler code is currently based on the `kfp` SDK compiler version `1.4.0`.

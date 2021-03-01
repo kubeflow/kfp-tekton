@@ -14,7 +14,7 @@
 
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
-metadata: {name: with-item-name-1}
+metadata: {name: for-loop-1}
 spec:
   pipelineSpec:
     params:
@@ -34,7 +34,7 @@ spec:
           - -ec
           - |
             program_path=$(mktemp)
-            echo -n "$0" > "$program_path"
+            printf "%s" "$0" > "$program_path"
             python3 -u "$program_path" "$@"
           - |
             def add_numbers(a, b):
@@ -82,7 +82,7 @@ spec:
           annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
               {"container": {"args": ["--a", {"inputValue": "a"}, "--b", {"inputValue":
               "b"}, "----output-paths", {"outputPath": "Output"}], "command": ["sh",
-              "-ec", "program_path=$(mktemp)\necho -n \"$0\" > \"$program_path\"\npython3
+              "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
               -u \"$program_path\" \"$@\"\n", "def add_numbers(a, b):\n    print(a
               + b)\n    return a + b\n\ndef _serialize_int(int_value: int) -> str:\n    if
               isinstance(int_value, str):\n        return int_value\n    if not isinstance(int_value,
@@ -113,7 +113,7 @@ spec:
           - -ec
           - |
             program_path=$(mktemp)
-            echo -n "$0" > "$program_path"
+            printf "%s" "$0" > "$program_path"
             python3 -u "$program_path" "$@"
           - |
             def print_number(a):
@@ -159,8 +159,8 @@ spec:
         metadata:
           annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
               {"container": {"args": ["--a", {"inputValue": "a"}, "----output-paths",
-              {"outputPath": "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\necho
-              -n \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              {"outputPath": "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def print_number(a):\n    print(a)\n    return a\n\ndef _serialize_int(int_value:
               int) -> str:\n    if isinstance(int_value, str):\n        return int_value\n    if
               not isinstance(int_value, int):\n        raise TypeError(''Value \"{}\"
@@ -185,7 +185,7 @@ spec:
           - -ec
           - |
             program_path=$(mktemp)
-            echo -n "$0" > "$program_path"
+            printf "%s" "$0" > "$program_path"
             python3 -u "$program_path" "$@"
           - |
             def notify_success():
@@ -199,8 +199,8 @@ spec:
           image: python:3.7
         metadata:
           annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\necho
-              -n \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              {"container": {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def notify_success():\n    print(''SUCCESS!'')\n\nimport argparse\n_parser
               = argparse.ArgumentParser(prog=''Notify success'', description='''')\n_parsed_args
               = vars(_parser.parse_args())\n\n_outputs = notify_success(**_parsed_args)\n"],
@@ -220,7 +220,7 @@ spec:
           - -ec
           - |
             program_path=$(mktemp)
-            echo -n "$0" > "$program_path"
+            printf "%s" "$0" > "$program_path"
             python3 -u "$program_path" "$@"
           - |
             def notify_failure():
@@ -234,8 +234,8 @@ spec:
           image: python:3.7
         metadata:
           annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\necho
-              -n \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              {"container": {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def notify_failure():\n    print(''FAILED!'')\n\nimport argparse\n_parser
               = argparse.ArgumentParser(prog=''Notify failure'', description='''')\n_parsed_args
               = vars(_parser.parse_args())\n\n_outputs = notify_failure(**_parsed_args)\n"],

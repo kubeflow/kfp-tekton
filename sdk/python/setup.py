@@ -20,14 +20,14 @@
 #
 # To create a distribution for PyPi run:
 #
-#    $ export KFP_TEKTON_VERSION=0.6.0-rc1
+#    $ export KFP_TEKTON_VERSION=0.7.0-rc1
 #    $ python3 setup.py sdist
 #    $ twine check dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #    $ twine upload --repository pypi dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #
 #   ... or:
 #
-#    $ make distribution KFP_TEKTON_VERSION=0.6.0-rc1
+#    $ make distribution KFP_TEKTON_VERSION=0.7.0-rc1
 #
 # =============================================================================
 
@@ -52,8 +52,14 @@ development stage. Contributions are welcome: {}
 """.format(HOMEPAGE)
 
 REQUIRES = [
-    'kfp==1.3.0'
+    'kfp==1.4.0'
 ]
+
+TESTS_REQUIRE = [
+    'mock',
+    'kubernetes==11.0.0',
+]
+
 
 logging.basicConfig()
 logger = logging.getLogger("kfp_tekton/setup.py")
@@ -173,6 +179,7 @@ setup(
     license=LICENSE,
     url=HOMEPAGE,
     install_requires=REQUIRES,
+    tests_require=TESTS_REQUIRE,
     packages=[
         'kfp_tekton',
         'kfp_tekton.compiler',
