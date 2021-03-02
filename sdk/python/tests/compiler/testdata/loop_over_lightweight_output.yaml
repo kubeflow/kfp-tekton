@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ spec:
           image: busybox
           name: main
       timeout: 0s
-    - name: for-loop-1
+    - name: loop-over-lightweight-output-for-loop-1
       params:
       - name: produce-list-data_list-loop-item
         value: $(tasks.produce-list.results.data-list)
@@ -60,5 +60,5 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: for-loop-1
+        name: loop-over-lightweight-output-for-loop-1
   timeout: 0s

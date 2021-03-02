@@ -13,6 +13,15 @@
 # limitations under the License.
 
 import kfp.dsl as dsl
+from kfp_tekton.compiler import TektonCompiler
+
+
+class Coder:
+    def empty(self):
+        return ""
+
+
+TektonCompiler._get_unique_id_code = Coder.empty
 
 
 @dsl.pipeline(name='my-loop-pipeline')

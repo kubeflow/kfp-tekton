@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -274,7 +274,7 @@ spec:
           image: python:3.7
           name: main
       timeout: 0s
-    - name: for-loop-1
+    - name: parallelfor-item-argument-resolving-for-loop-1
       params:
       - name: produce-list-of-strings-Output
         value: $(tasks.produce-list-of-strings.results.output)
@@ -288,8 +288,8 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: for-loop-1
-    - name: for-loop-2
+        name: parallelfor-item-argument-resolving-for-loop-1
+    - name: parallelfor-item-argument-resolving-for-loop-2
       params:
       - name: produce-list-of-ints-Output
         value: $(tasks.produce-list-of-ints.results.output)
@@ -300,8 +300,8 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: for-loop-2
-    - name: for-loop-3
+        name: parallelfor-item-argument-resolving-for-loop-2
+    - name: parallelfor-item-argument-resolving-for-loop-3
       params:
       - name: produce-list-of-dicts-Output
         value: $(tasks.produce-list-of-dicts.results.output)
@@ -312,5 +312,5 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: for-loop-3
+        name: parallelfor-item-argument-resolving-for-loop-3
   timeout: 0s

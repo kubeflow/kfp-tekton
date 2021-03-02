@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -117,7 +117,7 @@ spec:
           image: python:3.7
           name: main
       timeout: 0s
-    - name: for-loop-1
+    - name: conditions-and-loops-for-loop-1
       params:
       - name: produce-numbers-Output-loop-item
         value: $(tasks.produce-numbers.results.output)
@@ -128,5 +128,5 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: for-loop-1
+        name: conditions-and-loops-for-loop-1
   timeout: 0s

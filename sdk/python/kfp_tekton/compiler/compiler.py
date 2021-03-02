@@ -20,6 +20,7 @@ import re
 import textwrap
 import yaml
 import os
+import uuid
 
 from typing import Callable, List, Text, Dict, Any
 from os import environ as env
@@ -108,6 +109,7 @@ class TektonCompiler(Compiler):
     self.output_artifacts = {}
     self.artifact_items = {}
     self.loops_pipeline = {}
+    self.uuid = self._get_unique_id_code()
     super().__init__(**kwargs)
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
@@ -132,14 +134,20 @@ class TektonCompiler(Compiler):
     else:
       return str(value_or_reference)
 
-  def _group_to_dag_template(self, group, inputs, outputs, dependencies):
+  @staticmethod
+  def _get_unique_id_code():
+    return uuid.uuid4().hex[:5]
+
+  def _group_to_dag_template(self, group, inputs, outputs, dependencies, pipeline_name, group_type):
     """Generate template given an OpsGroup.
     inputs, outputs, dependencies are all helper dicts.
     """
-
     # Generate GroupOp template
     sub_group = group
-    group_name = sanitize_k8s_name(sub_group.name)
+    _group_names = [pipeline_name, sanitize_k8s_name(sub_group.name)]
+    if self.uuid:
+      _group_names.insert(1, self.uuid)
+    group_name = '-'.join(_group_names) if group_type == "loop" else group.name
     template = {
       'metadata': {
         'name': group_name,
@@ -301,10 +309,10 @@ class TektonCompiler(Compiler):
     for opsgroup in opsgroups.keys():
       # Conditions and loops will get templates in Tekton
       if opsgroups[opsgroup].type == 'condition':
-        template = self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies)
+        template = self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "condition")
         templates.append(template)
       if opsgroups[opsgroup].type == 'for_loop':
-        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies)
+        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "loop")
 
     for op in pipeline.ops.values():
       templates.extend(op_to_steps_handler(op))
