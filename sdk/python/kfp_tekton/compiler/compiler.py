@@ -147,6 +147,7 @@ class TektonCompiler(Compiler):
     _group_names = [pipeline_name, sanitize_k8s_name(sub_group.name)]
     if self.uuid:
       _group_names.insert(1, self.uuid)
+    # We need to insert unique uuid for loops because Tekton 0.21.0 doesn't allow custom taskSpec defined in PipelineRun scope
     group_name = '-'.join(_group_names) if group_type == "loop" else group.name
     template = {
       'metadata': {
