@@ -1,7 +1,5 @@
-import json
 from kfp import components
 import kfp.dsl as dsl
-
 
 fairness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/Trusted-AI/AIF360/master/mlops/kubeflow/bias_detector_pytorch/component.yaml')
 robustness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/Trusted-AI/adversarial-robustness-toolbox/main/utils/mlops/kubeflow/robustness_evaluation_fgsm_pytorch/component.yaml')
@@ -12,7 +10,6 @@ robustness_check_ops = components.load_component_from_url('https://raw.githubuse
     description="An example for trusted-ai integration."
 )
 def trusted_ai(
-        exp_name="trusted-ai",
         namespace="anonymous",
         fgsm_attack_epsilon='0.2',
         model_class_file='PyTorchModel.py',
@@ -29,15 +26,15 @@ def trusted_ai(
         clip_values='(0, 1)',
         nb_classes='2',
         input_shape='(1,3,64,64)'):
-    job_name = exp_name.name + "-train"
     job_manifest = {
         "apiVersion": "batch/v1",
         "kind": "Job",
         "metadata": {
-            "name": "train-job",
+            "name": "trusted-ai-train-job",
             "namespace": namespace
         },
         "spec": {
+            "ttlSecondsAfterFinished": 100,
             "template": {
                 "metadata": {
                     "annotations": {
@@ -60,9 +57,12 @@ def trusted_ai(
             }
         }
     }
-    train_step = dsl.ResourceOp(name=job_name,
-                                k8s_resource=job_manifest,
-                                action='create')
+    train_step = dsl.ResourceOp(
+        name="trust-ai-train-step",
+        k8s_resource=job_manifest,
+        action='create',
+        success_condition='status.succeeded > 0',
+        failure_condition='status.failed > 0')
 
     fairness_check = fairness_check_ops(model_id='training-example',
                                         model_class_file=model_class_file,
@@ -89,6 +89,7 @@ def trusted_ai(
                                             input_shape=input_shape,
                                             data_bucket_name='mlpipeline',
                                             result_bucket_name='mlpipeline').after(train_step).set_image_pull_policy("Always")
+
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
