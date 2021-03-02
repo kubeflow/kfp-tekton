@@ -14,6 +14,6 @@ Check the following examples:
   [Kubeflow MPIJob and Horovod training container](mpi-job-horovod.py).
 
 Please note that katib currently does not support k8s version 1.19.x,
-it currently being worked on at https://github.com/kubeflow/katib/pull/1450.
+it is currently being worked on at https://github.com/kubeflow/katib/pull/1450.
 
 Note: We need to install [MPIjob controller](https://github.com/kubeflow/mpi-operator), for this example to work.
