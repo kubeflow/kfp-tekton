@@ -37,6 +37,7 @@ type ClientManager struct {
 	db            *storage.DB
 	cacheStore    storage.ExecutionCacheStoreInterface
 	k8sCoreClient client.KubernetesCoreInterface
+	tektonClient  client.TektonInterface
 	time          util.TimeInterface
 }
 
@@ -46,6 +47,10 @@ func (c *ClientManager) CacheStore() storage.ExecutionCacheStoreInterface {
 
 func (c *ClientManager) KubernetesCoreClient() client.KubernetesCoreInterface {
 	return c.k8sCoreClient
+}
+
+func (c *ClientManager) TektonClient() client.TektonInterface {
+	return c.tektonClient
 }
 
 func (c *ClientManager) Close() {
@@ -60,6 +65,7 @@ func (c *ClientManager) init(params WhSvrDBParameters) {
 	c.db = db
 	c.cacheStore = storage.NewExecutionCacheStore(db, c.time)
 	c.k8sCoreClient = client.CreateKubernetesCoreOrFatal(timeoutDuration)
+	c.tektonClient = client.CreateTektonClientOrFatal(timeoutDuration)
 }
 
 func initDBClient(params WhSvrDBParameters, initConnectionTimeout time.Duration) *storage.DB {

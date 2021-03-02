@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,13 +30,13 @@ dsl.ParallelFor._get_unique_id_code = Coder().get_code
 
 @dsl.pipeline(name='my-pipeline')
 def pipeline(my_pipe_param: int = 10):
-    loop_args = [{'a': 1, 'b': 2}, {'a': 10, 'b': 20}]
+    loop_args = [1, 2]
     with dsl.ParallelFor(loop_args) as item:
         op1 = dsl.ContainerOp(
             name="my-in-coop1",
             image="library/bash:4.4.23",
             command=["sh", "-c"],
-            arguments=["echo op1 %s %s" % (item.a, my_pipe_param)],
+            arguments=["echo op1 %s %s" % (item, my_pipe_param)],
         )
 
         with dsl.ParallelFor([100, 200, 300]) as inner_item:
@@ -44,14 +44,14 @@ def pipeline(my_pipe_param: int = 10):
                 name="my-inner-inner-coop",
                 image="library/bash:4.4.23",
                 command=["sh", "-c"],
-                arguments=["echo op1 %s %s %s" % (item.a, inner_item, my_pipe_param)],
+                arguments=["echo op1 %s %s %s" % (item, inner_item, my_pipe_param)],
             )
 
         op2 = dsl.ContainerOp(
             name="my-in-coop2",
             image="library/bash:4.4.23",
             command=["sh", "-c"],
-            arguments=["echo op2 %s" % item.b],
+            arguments=["echo op2 %s" % item],
         )
 
     op_out = dsl.ContainerOp(

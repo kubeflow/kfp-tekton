@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2020-2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,13 +16,15 @@
 #  - The help target was derived from https://stackoverflow.com/a/35730328/5601796
 
 VENV ?= .venv
+KFP_TEKTON_RELEASE ?= v0.7.0
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
+DOCKER_REGISTRY ?= aipipeline
 
 .PHONY: help
 help: ## Display the Make targets
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: venv
 venv: $(VENV)/bin/activate ## Create and activate virtual environment
@@ -90,7 +92,7 @@ check_license: ## Check for license header in source files
 
 .PHONY: check_mdtoc
 check_mdtoc: ## Check Markdown files for valid the Table of Contents
-	@find samples sdk *.md -type f -name '*.md' -exec \
+	@find guides samples sdk *.md -type f -name '*.md' -exec \
 		grep -l -i 'Table of Contents' {} \; | sort | \
 		while read -r md_file; do \
 			grep -oE '^ *[-+*] \[[^]]+\]\(#[^)]+\)' "$${md_file}" |  sed -e 's/[-+*] /- /g' > md_file_toc; \
@@ -100,8 +102,14 @@ check_mdtoc: ## Check Markdown files for valid the Table of Contents
 		done | grep . && echo "Run './tools/mdtoc.sh <md-file>' to update the 'Table of Contents' in the Markdown files reported above." && exit 1 || \
 		echo "$@: OK"
 
+.PHONY: check_doc_links
+check_doc_links: ## Check Markdown files for valid links
+	@pip3 show requests > /dev/null || pip install requests
+	@python3 tools/python/verify_doc_links.py
+	@echo "$@: OK"
+
 .PHONY: verify
-verify: check_license check_mdtoc lint unit_test report ## Run all verification targets: check_license, check_mdtoc, lint, unit_test, report
+verify: check_license check_mdtoc check_doc_links lint unit_test report ## Run all verification targets: check_license, check_mdtoc, lint, unit_test, report
 	@echo "$@: OK"
 
 .PHONY: distribution
@@ -123,3 +131,83 @@ build: ## Create GO vendor directories with all dependencies
 	licext --mode merge --source vendor/ --target third_party/license.txt --overwrite
 	# Delete vendor directory
 	rm -rf vendor
+
+.PHONY: build-release-template
+build-release-template: ## Build KFP Tekton release deployment templates
+	@mkdir -p install/$(KFP_TEKTON_RELEASE)
+	@kustomize build manifests/kustomize/env/kfp-template -o install/$(KFP_TEKTON_RELEASE)/kfp-tekton.yaml
+
+.PHONY: build-backend
+build-backend: build-apiserver build-agent build-workflow build-cacheserver ## Verify apiserver, agent, and workflow build
+	@echo "$@: OK"
+
+.PHONY: build-apiserver
+build-apiserver: ## Build apiserver
+	go build -o apiserver ./backend/src/apiserver
+
+.PHONY: build-agent
+build-agent: ## Build agent
+	go build -o agent ./backend/src/agent/persistence
+
+.PHONY: build-workflow
+build-workflow: ## Build workflow
+	go build -o workflow ./backend/src/crd/controller/scheduledworkflow/*.go
+
+.PHONY: build-cacheserver
+build-cacheserver: ## Build cache
+	go build -o cache ./backend/src/cache/*.go
+
+.PHONY: build-backend-images
+build-backend-images: \
+	build-api-server-image \
+	build-persistenceagent-image \
+	build-metadata-writer-image \
+	build-scheduledworkflow-image \
+	build-cacheserver-image \
+	## Build backend docker images
+	@echo "$@: OK"
+
+.PHONY: build-api-server-image
+build-api-server-image: ## Build api-server docker image
+	docker build -t ${DOCKER_REGISTRY}/api-server -f backend/Dockerfile .
+
+.PHONY: build-persistenceagent-image
+build-persistenceagent-image: ## Build persistenceagent docker image
+	docker build -t ${DOCKER_REGISTRY}/persistenceagent -f backend/Dockerfile.persistenceagent .
+
+.PHONY: build-metadata-writer-image
+build-metadata-writer-image: ## Build metadata-writer docker image
+	docker build -t ${DOCKER_REGISTRY}/metadata-writer -f backend/metadata_writer/Dockerfile .
+
+.PHONY: build-scheduledworkflow-image
+build-scheduledworkflow-image: ## Build scheduledworkflow docker image
+	docker build -t ${DOCKER_REGISTRY}/scheduledworkflow -f backend/Dockerfile.scheduledworkflow .
+
+.PHONY: build-cacheserver-image
+build-cacheserver-image: ## Build cacheserver docker image
+	docker build -t ${DOCKER_REGISTRY}/cache-server -f backend/Dockerfile.cacheserver .
+
+.PHONY: run-go-unittests
+run-go-unittests: \
+	run-apiserver-unittests \
+	run-common-unittests \
+	run-crd-unittests \
+	run-persistenceagent-unittests \
+	run-cacheserver-unittests \
+	## Verify go backend unit tests
+	@echo "$@: OK"
+
+run-apiserver-unittests: # apiserver golang unit tests
+	go test -v -cover ./backend/src/apiserver/...
+
+run-common-unittests: # common golang unit tests
+	go test -v -cover ./backend/src/common/...
+
+run-crd-unittests: # crd golang unit tests
+	go test -v -cover ./backend/src/crd/...
+
+run-persistenceagent-unittests: # persistence agent golang unit tests
+	go test -v -cover ./backend/src/agent/...
+
+run-cacheserver-unittests: # cache golang unit tests
+	go test -v -cover ./backend/src/cache/...

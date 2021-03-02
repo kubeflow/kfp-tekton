@@ -1,4 +1,4 @@
-# Copyright 2019-2020 kubeflow.org.
+# Copyright 2019-2021 kubeflow.org.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,35 +15,37 @@
 import inspect
 import json
 import tarfile
-import yaml
-import copy
-import itertools
 import zipfile
 import re
 import textwrap
+import yaml
+import os
 
 from typing import Callable, List, Text, Dict, Any
 from os import environ as env
+from distutils.util import strtobool
 
 # Kubeflow Pipeline imports
 from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env  # , add_pod_labels, get_default_telemetry_labels
 from kfp.compiler.compiler import Compiler
-# from kfp.components._yaml_utils import dump_yaml
 from kfp.components.structures import InputSpec
-from kfp.dsl._for_loop import LoopArguments, LoopArgumentVariable
+from kfp.dsl._for_loop import LoopArguments
 from kfp.dsl._metadata import _extract_pipeline_metadata
 
 # KFP-Tekton imports
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
-from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name
+from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
-
+from kfp_tekton.compiler.yaml_utils import dump_yaml
+from kfp_tekton.compiler.any_sequencer import generate_any_sequencer
+from kfp_tekton.compiler._tekton_hander import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
+TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
 
 
 def _get_super_condition_template():
@@ -57,26 +59,26 @@ def _get_super_condition_template():
       input2=int(input2)
     except:
       input1=str(input1)
-    sys.exit(0) if (input1 $(params.operator) input2) else sys.exit(1)' ''')
+    status="true" if (input1 $(inputs.params.operator) input2) else "false"
+    f = open("/tekton/results/status", "w")
+    f.write(status)
+    f.close()' ''')
 
-  # TODO Change to tekton_api_version once Conditions are out of v1alpha1
   template = {
-    'apiVersion': 'tekton.dev/v1alpha1',
-    'kind': 'Condition',
-    'metadata': {
-      'name': 'super-condition'
-    },
-    'spec': {
-      'params': [
-        {'name': 'operand1'},
-        {'name': 'operand2'},
-        {'name': 'operator'}
-      ],
-      'check': {
-        'script': 'python -c ' + python_script + "'$(params.operand1)' '$(params.operand2)'",
-        'image': 'python:alpine3.6',
-      }
-    }
+    'results': [
+      {'name': 'status',
+       'description': 'Conditional task status'
+       }
+    ],
+    'params': [
+      {'name': 'operand1'},
+      {'name': 'operand2'},
+      {'name': 'operator'}
+    ],
+    'steps': [{
+      'script': 'python -c ' + python_script + "'$(inputs.params.operand1)' '$(inputs.params.operand2)'",
+      'image': 'python:alpine3.6',
+    }]
   }
 
   return template
@@ -101,65 +103,12 @@ class TektonCompiler(Compiler):
   def __init__(self, **kwargs):
     # Input and output artifacts are hash maps for metadata tracking.
     # artifact_items is the artifact dependency map
+    # loops_pipeline recorde the loop tasks information for each loops
     self.input_artifacts = {}
     self.output_artifacts = {}
     self.artifact_items = {}
+    self.loops_pipeline = {}
     super().__init__(**kwargs)
-
-  def _get_loop_task(self, task: Dict, op_name_to_for_loop_op):
-    """Get the list of task references which will flatten the loop parameters defined in pipeline.
-
-    Args:
-      task: ops template in pipeline.
-      op_name_to_for_loop_op: a dictionary of ospgroup
-    """
-    # Get all the params in the task
-    task_params_list = []
-    for tp in task.get('params', []):
-      task_params_list.append(tp)
-    # Get the loop values for each param
-    for tp in task_params_list:
-      for loop_param in op_name_to_for_loop_op.values():
-        loop_args = loop_param.loop_args
-        if loop_args.name in tp['name']:
-          lpn = tp['name'].replace(loop_args.name, '').replace(LoopArgumentVariable.SUBVAR_NAME_DELIMITER, '')
-          if lpn:
-            tp['loop-value'] = [value[lpn] for value in loop_args.items_or_pipeline_param]
-          else:
-            tp['loop-value'] = loop_args.items_or_pipeline_param
-    # Get the task params list
-    # 1. Get the task_params list without loop first
-    loop_value = [p['loop-value'] for p in task_params_list if p.get('loop-value')]
-    task_params_without_loop = [p for p in task_params_list if not p.get('loop-value')]
-    # 2. Get the task_params list with loop
-    loop_params = [p for p in task_params_list if p.get('loop-value')]
-    for param in loop_params:
-      del param['loop-value']
-      del param['value']
-
-    value_iter = list(itertools.product(*loop_value))
-    value_iter_list = []
-    for values in value_iter:
-      opt = []
-      for value in values:
-        opt.append({"value": str(value)})
-      value_iter_list.append(opt)
-    {value[i].update(loop_params[i]) for i in range(len(loop_params)) for value in value_iter_list}
-    task_params_with_loop = value_iter_list
-    # 3. combine task params
-    list(a.extend(task_params_without_loop) for a in task_params_with_loop)
-    task_params_all = task_params_with_loop
-    # Get the task list based on params list
-    task_list = []
-    del task['params']
-    task_name_suffix_length = len(LoopArguments.LOOP_ITEM_NAME_BASE) + LoopArguments.NUM_CODE_CHARS + 2
-    task_old_name = sanitize_k8s_name(task['name'], suffix_space=task_name_suffix_length)
-    for i in range(len(task_params_all)):
-      task['params'] = task_params_all[i]
-      task['name'] = '%s-%s-%d' % (task_old_name, LoopArguments.LOOP_ITEM_NAME_BASE, i)
-      task_list.append(copy.deepcopy(task))
-      del task['params']
-    return task_list
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -190,10 +139,10 @@ class TektonCompiler(Compiler):
 
     # Generate GroupOp template
     sub_group = group
+    group_name = sanitize_k8s_name(sub_group.name)
     template = {
-      'apiVersion': tekton_api_version,
       'metadata': {
-        'name': sanitize_k8s_name(sub_group.name),
+        'name': group_name,
       },
       'spec': {}
     }
@@ -213,6 +162,85 @@ class TektonCompiler(Compiler):
         {'name': 'operand2', 'value': operand2_value},
         {'name': 'operator', 'value': str(condition.operator)}
       ]
+    if isinstance(sub_group, dsl.ParallelFor):
+      self.loops_pipeline[group_name] = {
+        'kind': 'loops',
+        'loop_args': sub_group.loop_args.full_name,
+        'loop_sub_args': [],
+        'task_list': [],
+        'spec': {},
+        'depends': []
+      }
+      for subvarName in sub_group.loop_args.referenced_subvar_names:
+        if subvarName != '__iter__':
+          self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + subvarName)
+      # get the dependencies tasks rely on the loop task.
+      for depend in dependencies.keys():
+        if depend == sub_group.name:
+          self.loops_pipeline[group_name]['spec']['runAfter'] = [task for task in dependencies[depend]]
+          self.loops_pipeline[group_name]['spec']['runAfter'].sort()
+        if sub_group.name in dependencies[depend]:
+          self.loops_pipeline[group_name]['depends'].append({'org': depend, 'runAfter': group_name})
+      for op in sub_group.groups + sub_group.ops:
+        self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(op.name))
+        if hasattr(op, 'type') and op.type == 'condition' and op.ops:
+          for condition_op in op.ops:
+            self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
+      self.loops_pipeline[group_name]['spec']['name'] = group_name
+      self.loops_pipeline[group_name]['spec']['taskRef'] = {
+        "apiVersion": "custom.tekton.dev/v1alpha1",
+        "kind": "PipelineLoop",
+        "name": group_name
+      }
+      if sub_group.items_is_pipeline_param:
+        # these loop args are a 'dynamic param' rather than 'static param'.
+        # i.e., rather than a static list, they are either the output of another task or were input
+        # as global pipeline parameters
+        pipeline_param = sub_group.loop_args.items_or_pipeline_param
+        if pipeline_param.op_name is None:
+          withparam_value = '$(params.%s)' % pipeline_param.name
+        else:
+          param_name = sanitize_k8s_name(pipeline_param.name)
+          withparam_value = '$(tasks.%s.results.%s)' % (
+            sanitize_k8s_name(pipeline_param.op_name),
+            param_name)
+        self.loops_pipeline[group_name]['spec']['params'] = [{
+          "name": sub_group.loop_args.full_name,
+          "value": withparam_value
+        }]
+      else:
+        # Need to sanitize the dict keys for consistency.
+        loop_arg_value = sub_group.loop_args.to_list_for_task_yaml()
+        sanitized_tasks = []
+        if isinstance(loop_arg_value[0], dict):
+          for argument_set in loop_arg_value:
+            c_dict = {}
+            for k, v in argument_set.items():
+              c_dict[sanitize_k8s_name(k, True)] = v
+            sanitized_tasks.append(c_dict)
+        else:
+          sanitized_tasks = loop_arg_value
+        self.loops_pipeline[group_name]['spec']['params'] = [{
+          "name": sub_group.loop_args.full_name,
+          "value": str(sanitized_tasks)
+        }]
+      # get other input params
+      for input in inputs.keys():
+        if input == sub_group.name:
+          for param in inputs[input]:
+            if param[0] != sub_group.loop_args.full_name and param[1] and param[0] not in self.loops_pipeline[group_name][
+              'loop_sub_args']:
+              replace_str = param[1] + '-'
+              self.loops_pipeline[group_name]['spec']['params'].append({
+                'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
+                  param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
+                )
+              })
+            if param[0] != sub_group.loop_args.full_name and not param[1] and param[0] not in self.loops_pipeline[group_name][
+              'loop_sub_args']:
+              self.loops_pipeline[group_name]['spec']['params'].append({
+                'name': param[0], 'value': '$(params.%s)' % param[0]
+              })
 
     return template
 
@@ -251,13 +279,14 @@ class TektonCompiler(Compiler):
     op_name_to_parent_groups = self._get_groups_for_ops(root_group)
     opgroup_name_to_parent_groups = self._get_groups_for_opsgroups(root_group)
     condition_params = self._get_condition_params_for_ops(root_group)
+    op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
     inputs, outputs = self._get_inputs_outputs(
       pipeline,
       root_group,
       op_name_to_parent_groups,
       opgroup_name_to_parent_groups,
       condition_params,
-      {}
+      op_name_to_for_loop_op
     )
     dependencies = self._get_dependencies(
       pipeline,
@@ -270,10 +299,12 @@ class TektonCompiler(Compiler):
 
     templates = []
     for opsgroup in opsgroups.keys():
-      # Only Conditions get templates in Tekton
+      # Conditions and loops will get templates in Tekton
       if opsgroups[opsgroup].type == 'condition':
         template = self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies)
         templates.append(template)
+      if opsgroups[opsgroup].type == 'for_loop':
+        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies)
 
     for op in pipeline.ops.values():
       templates.extend(op_to_steps_handler(op))
@@ -337,28 +368,31 @@ class TektonCompiler(Compiler):
     # generate task and condition reference list for the Tekton Pipeline
     condition_refs = {}
 
-    # TODO
     task_refs = []
     templates = []
-    condition_added = False
+    condition_task_refs = {}
     for template in raw_templates:
-      # TODO Allow an opt-out for the condition_template
       if template['kind'] == 'Condition':
-        if not condition_added:
-          templates.append(_get_super_condition_template())
-          condition_added = True
-        condition_refs[template['metadata']['name']] = [{
-          'conditionRef': 'super-condition',
-          'params': [{
-              'name': param['name'],
-              'value': param['value']
-            } for param in template['spec'].get('params', [])
-          ]
+        condition_task_ref = [{
+            'name': template['metadata']['name'],
+            'params': [{
+                'name': p['name'],
+                'value': p.get('value', '')
+              } for p in template['spec'].get('params', [])
+            ],
+            'taskSpec': _get_super_condition_template(),
         }]
+        condition_refs[template['metadata']['name']] = [
+            {
+              'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
+              'operator': 'in',
+              'values': ['true']
+            }
+          ]
+        condition_task_refs[template['metadata']['name']] = condition_task_ref
       else:
         templates.append(template)
-        task_refs.append(
-          {
+        task_ref = {
             'name': template['metadata']['name'],
             'params': [{
                 'name': p['name'],
@@ -367,7 +401,14 @@ class TektonCompiler(Compiler):
             ],
             'taskSpec': template['spec'],
           }
-        )
+
+        if template['metadata'].get('labels', None):
+          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+          task_ref['taskSpec']['metadata']['labels'] = template['metadata']['labels']
+        if template['metadata'].get('annotations', None):
+          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+          task_ref['taskSpec']['metadata']['annotations'] = template['metadata']['annotations']
+        task_refs.append(task_ref)
 
     # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
     opsgroup_stack = [pipeline.groups[0]]
@@ -377,34 +418,35 @@ class TektonCompiler(Compiler):
       most_recent_condition = condition_stack.pop()
 
       if cur_opsgroup.type == 'condition':
-        condition_ref = condition_refs[cur_opsgroup.name][0]
+        condition_task_ref = condition_task_refs[cur_opsgroup.name][0]
         condition = cur_opsgroup.condition
         input_params = []
 
         # Process input parameters if needed
         if isinstance(condition.operand1, dsl.PipelineParam):
           if condition.operand1.op_name:
-            operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + condition.operand1.name + ')'
+            operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + sanitize_k8s_name(condition.operand1.name) + ')'
           else:
             operand_value = '$(params.' + condition.operand1.name + ')'
           input_params.append(operand_value)
         if isinstance(condition.operand2, dsl.PipelineParam):
           if condition.operand2.op_name:
-            operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + condition.operand2.name + ')'
+            operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + sanitize_k8s_name(condition.operand2.name) + ')'
           else:
             operand_value = '$(params.' + condition.operand2.name + ')'
           input_params.append(operand_value)
         for param_iter in range(len(input_params)):
-          condition_ref['params'][param_iter]['value'] = input_params[param_iter]
-
-        # Add ancestor conditions to the current condition ref
-        if most_recent_condition:
-          condition_refs[cur_opsgroup.name].extend(condition_refs[most_recent_condition])
+          # Add ancestor conditions to the current condition ref
+          if most_recent_condition:
+            condition_task_ref['when'] = [{
+                'input': '$(tasks.%s.results.status)' % most_recent_condition,
+                'operator': 'in',
+                'values': ['true']
+            }]
+          condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
         most_recent_condition = cur_opsgroup.name
-
       opsgroup_stack.extend(cur_opsgroup.groups)
       condition_stack.extend([most_recent_condition for x in range(len(cur_opsgroup.groups))])
-
     # add task dependencies and add condition refs to the task ref that depends on the condition
     op_name_to_parent_groups = self._get_groups_for_ops(pipeline.groups[0])
     for task in task_refs:
@@ -412,24 +454,20 @@ class TektonCompiler(Compiler):
       parent_group = op_name_to_parent_groups.get(task['name'], [])
       if parent_group:
         if condition_refs.get(parent_group[-2], []):
-          task['conditions'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2], [])
+          task['when'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2], [])
       if op.dependent_names:
-        for dependent_name in op.dependent_names:
-          if condition_refs.get(dependent_name, []):
-            # Prompt an error here because Tekton condition cannot be a dependency.
-            raise TypeError(textwrap.dedent("""\
-         '%s' cannot run after the Tekton condition '%s'.
-          A Tekton task is only allowed to run 'after' another Tekton task (ContainerOp).
-          Tekton doc: https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#using-the-runafter-parameter
-          """ % (task['name'], dependent_name)))
         task['runAfter'] = op.dependent_names
 
     # process input parameters from upstream tasks
     pipeline_param_names = [p['name'] for p in params]
+    loop_args = [self.loops_pipeline[key]['loop_args'] for key in self.loops_pipeline.keys()]
+    for key in self.loops_pipeline.keys():
+      if self.loops_pipeline[key]['loop_sub_args'] != []:
+        loop_args.extend(self.loops_pipeline[key]['loop_sub_args'])
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       for tp in task.get('params', []):
-        if tp['name'] in pipeline_param_names:
+        if tp['name'] in pipeline_param_names + loop_args:
           tp['value'] = '$(params.%s)' % tp['name']
         else:
           for pp in op.inputs:
@@ -455,7 +493,7 @@ class TektonCompiler(Compiler):
     # add timeout params to task_refs, instead of task.
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if op.timeout:
+      if not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout:
         task['timeout'] = '%ds' % op.timeout
 
     # handle resourceOp cases in pipeline
@@ -469,20 +507,26 @@ class TektonCompiler(Compiler):
         finally_tasks.append(task)
     task_refs = [task for task in task_refs if not pipeline.ops.get(task['name']).is_exit_handler]
 
-    # process loop parameters, keep this section in the behind of other processes, ahead of gen pipeline
-    root_group = pipeline.groups[0]
-    op_name_to_for_loop_op = self._get_for_loop_ops(root_group)
-    if op_name_to_for_loop_op:
-      for loop_param in op_name_to_for_loop_op.values():
-        if loop_param.items_is_pipeline_param is True:
-          raise NotImplementedError("dynamic params are not yet implemented")
-      include_loop_task_refs = []
-      for task in task_refs:
-        with_loop_task = self._get_loop_task(task, op_name_to_for_loop_op)
-        include_loop_task_refs.extend(with_loop_task)
-      task_refs = include_loop_task_refs
+    # Flatten condition task
+    condition_task_refs_temp = []
+    for condition_task_ref in condition_task_refs.values():
+      for ref in condition_task_ref:
+        condition_task_refs_temp.append(ref)
+    condition_task_refs = condition_task_refs_temp
 
-    # TODO: generate the PipelineRun template
+    # Inject any sequencer condition task.
+    any_sequencer_taskrefs = []
+    any_sequencer_annotations = {}
+    for task in task_refs:
+      op = pipeline.ops.get(task['name'])
+      if hasattr(op, 'any_sequencer'):
+        any_sequencer_task = generate_any_sequencer(op.any_sequencer['tasks_list'])
+        any_sequencer_taskrefs.append(any_sequencer_task)
+        run_after = task.get('runAfter', [])
+        run_after.append(any_sequencer_task['name'])
+        task['runAfter'] = run_after
+        any_sequencer_annotations[any_sequencer_task['name']] = op.any_sequencer['tasks_list'].split(",")
+
     pipeline_run = {
       'apiVersion': tekton_api_version,
       'kind': 'PipelineRun',
@@ -506,13 +550,14 @@ class TektonCompiler(Compiler):
           } for p in params],
         'pipelineSpec': {
           'params': params,
-          'tasks': task_refs,
+          'tasks': task_refs + condition_task_refs + any_sequencer_taskrefs,
           'finally': finally_tasks
         }
       }
     }
 
-    # TODO: pipelineRun additions
+    if any_sequencer_annotations:
+      pipeline_run['metadata']['annotations']['anyConditions'] = json.dumps(any_sequencer_annotations)
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []
@@ -541,7 +586,7 @@ class TektonCompiler(Compiler):
       pipeline_run['spec']['taskRunSpecs'] = task_run_spec
 
     # add workflow level timeout to pipeline run
-    if pipeline.conf.timeout:
+    if not TEKTON_GLOBAL_DEFAULT_TIMEOUT or pipeline.conf.timeout:
       pipeline_run['spec']['timeout'] = '%ds' % pipeline.conf.timeout
 
     # generate the Tekton podTemplate for image pull secret
@@ -583,6 +628,8 @@ class TektonCompiler(Compiler):
           sanitized_attribute_outputs[sanitize_k8s_name(key, True)] = \
             op.attribute_outputs[key]
         op.attribute_outputs = sanitized_attribute_outputs
+      if isinstance(op, dsl.ContainerOp) and op.container is not None:
+        sanitize_k8s_object(op.container)
       sanitized_ops[sanitized_name] = op
     pipeline.ops = sanitized_ops
 
@@ -721,9 +768,7 @@ class TektonCompiler(Compiler):
       package_path: file path to be written. If not specified, a yaml_text string
         will be returned.
     """
-    # yaml_text = dump_yaml(workflow)
-    yaml.Dumper.ignore_aliases = lambda *args: True
-    yaml_text = yaml.dump(workflow, default_flow_style=False)  # Tekton change
+    yaml_text = dump_yaml(workflow)
 
     # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
     # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
@@ -738,6 +783,22 @@ class TektonCompiler(Compiler):
         {
           'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}',
           'tekton_rule': '$(results.\g<1>.path)'
+        },
+        {
+          'argo_rule': '{{workflow.uid}}',
+          'tekton_rule': '$(context.pipelineRun.uid)'
+        },
+        {
+          'argo_rule': '{{workflow.name}}',
+          'tekton_rule': '$(context.pipelineRun.name)'
+        },
+        {
+          'argo_rule': '{{workflow.namespace}}',
+          'tekton_rule': '$(context.pipelineRun.namespace)'
+        },
+        {
+          'argo_rule': '{{workflow.parameters.([^ \t\n.:,;{}]+)}}',
+          'tekton_rule': '$(params.\g<1>)'
         }
     ]
     for regex_rule in tekton_var_regex_rules:
@@ -752,6 +813,8 @@ class TektonCompiler(Compiler):
           'Internal compiler error: Found unresolved PipelineParam. '
           'Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues '
           'attaching the pipeline DSL code and the pipeline YAML.')
+
+    yaml_text = dump_yaml(_handle_tekton_pipeline_variables(yaml.load(yaml_text, Loader=yaml.FullLoader)))
 
     if package_path is None:
       return yaml_text
@@ -792,7 +855,15 @@ class TektonCompiler(Compiler):
         pipeline_description,
         params_list,
         pipeline_conf)
-    TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
+    # Separate loop workflow from the main workflow
+    if self.loops_pipeline:
+      pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow)
+      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
+      for i in range(len(pipeline_loop_crs)):
+        TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
+                                       package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
+    else:
+      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
     _validate_workflow(workflow)
 
 

@@ -1,0 +1,2 @@
+
+[my-out-cop2 : main] do output op2, outp: [{a: 1, b: 2}, {a: 10, b: 20}]

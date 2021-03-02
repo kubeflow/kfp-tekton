@@ -47,8 +47,9 @@ spec:
           command:
           - sh
           - -c
-          image: python:3.5-jessie
+          image: python:3.6-jessie
           name: main
+      timeout: 0s
     params:
     - default: When flies fly behind flies
       name: message
@@ -72,11 +73,12 @@ spec:
           command:
           - sh
           - -c
-          image: python:3.5-jessie
+          image: python:3.6-jessie
           name: main
           resources:
             requests:
               memory: 200M
+      timeout: 0s
     - name: save
       params:
       - name: get-frequent-word
@@ -99,8 +101,10 @@ spec:
           resources:
             limits:
               cpu: '0.5'
+      timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: save
     taskPodTemplate:
       nodeSelector:
         kubernetes.io/os: linux
+  timeout: 0s

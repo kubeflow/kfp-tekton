@@ -1,16 +1,41 @@
-import { Metadata } from 'third_party/argo-ui/argo_template';
-
-export function parseTaskDisplayName(metadata?: Metadata): string | undefined {
-  if (!metadata?.annotations) {
+export function parseTaskDisplayName(taskSpec?: any): string | undefined {
+  const metadata = taskSpec['metadata'] || {};
+  const annotations = metadata['annotations'] || false;
+  if (!annotations) {
     return undefined;
   }
-  const taskDisplayName = metadata.annotations['pipelines.kubeflow.org/task_display_name'];
+  const taskDisplayName = annotations['pipelines.kubeflow.org/task_display_name'];
   let componentDisplayName: string | undefined;
   try {
-    componentDisplayName = JSON.parse(metadata.annotations['pipelines.kubeflow.org/component_spec'])
+    componentDisplayName = JSON.parse(annotations['pipelines.kubeflow.org/component_spec'])
       .name;
   } catch (err) {
     // Expected error: metadata is missing or malformed
   }
   return taskDisplayName || componentDisplayName;
+}
+
+export function parseTaskDisplayNameByNodeId(nodeId: string, workflow?: any): string {
+  let node: any;
+  for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
+    const taskRun = workflow.status.taskRuns[taskRunId];
+    if (taskRun.status && taskRun.pipelineTaskName === nodeId) {
+      node = taskRun;
+    }
+  }
+
+  if (!node) {
+    return nodeId;
+  }
+
+  const workflowName = workflow?.metadata?.name || '';
+  let displayName = node.displayName || node.id;
+  if (node.name === `${workflowName}.onExit`) {
+    displayName = `onExit - ${node.templateName}`;
+  }
+  if (workflow?.spec && workflow?.spec.pipelineSpec.tasks) {
+    const tmpl = workflow.spec.pipelineSpec.tasks.find((t: any) => {console.log(t); return t?.name === nodeId});
+    displayName = parseTaskDisplayName(tmpl?.taskSpec) || displayName;
+  }
+  return displayName;
 }

@@ -11,16 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM ubuntu:16.04
 
-RUN apt-get update -y && \
-    apt-get install --no-install-recommends -y -q ca-certificates python-dev python-setuptools wget && \
-    easy_install pip && \
-    pip install pyyaml==3.12 kubernetes
+FROM python:3.6
+
+RUN pip install --no-cache-dir pyyaml kubernetes
 
 ADD build /ml
-
-RUN mkdir /usr/licenses && \
-    /ml/license.sh /ml/third_party_licenses.csv /usr/licenses
 
 ENTRYPOINT ["python", "/ml/launch_tfjob.py"]

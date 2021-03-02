@@ -70,6 +70,7 @@ spec:
           - -c
           image: busybox:$(inputs.params.tag)
           name: main
+      timeout: 0s
     - name: echo
       params:
       - name: download-downloaded_resultOutput
@@ -88,3 +89,5 @@ spec:
             value: 'pipelineParams: '
           image: library/bash
           name: main
+      timeout: 0s
+  timeout: 0s

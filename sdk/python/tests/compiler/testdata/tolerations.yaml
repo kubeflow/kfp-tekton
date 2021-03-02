@@ -43,6 +43,7 @@ spec:
           - -c
           image: busybox
           name: main
+      timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: download
     taskPodTemplate:
@@ -51,3 +52,4 @@ spec:
         key: gpu
         operator: Equal
         value: run
+  timeout: 0s

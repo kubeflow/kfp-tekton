@@ -66,6 +66,7 @@ spec:
           - -c
           image: google/cloud-sdk:279.0.0
           name: main
+      timeout: 0s
     - name: gcs-download-2
       params:
       - name: url2
@@ -86,6 +87,7 @@ spec:
           - -c
           image: google/cloud-sdk:279.0.0
           name: main
+      timeout: 0s
     - name: echo
       params:
       - name: gcs-download-2-data
@@ -106,3 +108,5 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
+  timeout: 0s

@@ -7,7 +7,6 @@ bases:
 - metadata
 - cache
 - cache-deployer
-- tekton
 
 resources:
   - pipeline-application.yaml
@@ -27,6 +26,9 @@ images:
     newTag: latest
   - name: gcr.io/ml-pipeline/scheduledworkflow
     newName: docker.io/aipipeline/scheduledworkflow
+    newTag: latest
+  - name: gcr.io/ml-pipeline/cache-server
+    newName: docker.io/aipipeline/cache-server
     newTag: latest
 
 # Used by Kustomize
@@ -65,5 +67,12 @@ vars:
     apiVersion: v1
   fieldref:
     fieldpath: data.bucketName
+- name: kfp-container-runtime-executor
+  objref:
+    kind: ConfigMap
+    name: pipeline-install-config
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.containerRuntimeExecutor
 configurations:
 - params.yaml

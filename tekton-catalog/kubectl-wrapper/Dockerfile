@@ -1,8 +1,10 @@
 FROM gcr.io/cloud-builders/kubectl
 
+ARG bin_dir=_output/bin
+
 WORKDIR /
 
-COPY _output/bin/kubeclient /usr/local/bin
+COPY ${bin_dir}/kubeclient /usr/local/bin
 
 ENTRYPOINT []
 CMD ["kubeclient"]

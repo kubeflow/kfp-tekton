@@ -1,10 +1,1 @@
-[my-in-coop1-loop-item-0 : main] op1 1 10
-
-[my-in-coop1-loop-item-1 : main] op1 10 10
-
-[my-in-coop2-loop-item-0 : main] op2 2
-
-[my-in-coop2-loop-item-1 : main] op2 20
-
-[my-out-cop-loop-item-0 : main] 10
-
+[my-out-cop : main] 10

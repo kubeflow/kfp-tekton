@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2020 kubeflow.org
+# Copyright 2020-2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ while (( $# > 0 )); do
   case "$1" in
     -v|--kfp-version)          KFP_VERSION="$2";            shift 2 ;;  # KFP SDK version, default: 1.0.0
     -a|--include-all-samples)  ALL_SAMPLES="TRUE";          shift 1 ;;  # Compile all DSL scripts in KFP repo
-    -s|--dont-list-files)      SKIP_FILES="TRUE";           shift 1 ;;  # Suppress compile status for each DSL file
+    -s|--dont-list-files)       SKIP_FILES="TRUE";           shift 1 ;;  # Suppress compile status for each DSL file
     -e|--print-error-details)  PRINT_ERRORS="TRUE";         shift 1 ;;  # Print summary of compilation errors
     -h|--help)                 help;                        exit 0  ;;  # Show this help message
     -*)                        echo "Unknown option '$1'";  exit 1  ;;
@@ -63,7 +63,7 @@ while (( $# > 0 )); do
 done
 
 # define global variables
-KFP_VERSION=${KFP_VERSION:-1.0.0}
+KFP_VERSION=${KFP_VERSION:-1.4.0}
 KFP_REPO_URL="https://github.com/kubeflow/pipelines.git"
 SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)"
 PROJECT_DIR="${TRAVIS_BUILD_DIR:-$(cd "${SCRIPT_DIR%/sdk/python/tests}"; pwd)}"

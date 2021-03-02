@@ -36,13 +36,19 @@ var (
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{
-				ArgoWorkflowNodeName: "test_node",
-				ArgoWorkflowTemplate: `{"name": "test_template"}`,
+				ArgoWorkflowNodeName:  "test_node",
+				TektonTaskrunTemplate: `{"name": "Does not matter","container":{"command":["echo", "Hello"],"image":"python:3.7"}}`,
 			},
 			Labels: map[string]string{
 				ArgoCompleteLabelKey:    "true",
 				KFPCacheEnabledLabelKey: KFPCacheEnabledLabelValue,
+				PipelineName:            "test-pipelinerun",
+				Generation:              "0",
 			},
+			OwnerReferences: []metav1.OwnerReference{{
+				Kind:       TektonTaskKind,
+				APIVersion: TektonGroup,
+			}},
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -50,6 +56,7 @@ var (
 					Name:    "main",
 					Image:   "test_image",
 					Command: []string{"python"},
+					Args:    []string{"-entrypoint", "/bin/bash", "--", "-c", "printf '200'"},
 				},
 			},
 		},
@@ -108,7 +115,7 @@ func TestMutatePodIfCachedWithDecodeError(t *testing.T) {
 }
 
 func TestMutatePodIfCachedWithCacheDisabledPod(t *testing.T) {
-	cacheDisabledPod := *fakePod
+	cacheDisabledPod := *fakePod.DeepCopy()
 	cacheDisabledPod.ObjectMeta.Labels[KFPCacheEnabledLabelKey] = "false"
 	patchOperation, err := MutatePodIfCached(GetFakeRequestFromPod(&cacheDisabledPod), fakeClientManager)
 	assert.Nil(t, patchOperation)
@@ -116,7 +123,7 @@ func TestMutatePodIfCachedWithCacheDisabledPod(t *testing.T) {
 }
 
 func TestMutatePodIfCachedWithTFXPod(t *testing.T) {
-	tfxPod := *fakePod
+	tfxPod := *fakePod.DeepCopy()
 	mainContainerCommand := append(tfxPod.Spec.Containers[0].Command, "/tfx-src/"+TFXPodSuffix)
 	tfxPod.Spec.Containers[0].Command = mainContainerCommand
 	patchOperation, err := MutatePodIfCached(GetFakeRequestFromPod(&tfxPod), fakeClientManager)
@@ -135,14 +142,45 @@ func TestMutatePodIfCached(t *testing.T) {
 
 func TestMutatePodIfCachedWithCacheEntryExist(t *testing.T) {
 	executionCache := &model.ExecutionCache{
-		ExecutionCacheKey: "f98b62e4625b9f96bac478ac72d88181a37e4f1d6bfd3bd5f53e29286b2ca034",
-		ExecutionOutput:   "testOutput",
-		ExecutionTemplate: `{"name": "test_template"}`,
+		ExecutionCacheKey: "8c623f608410644024522153da8c8bffd5a801ceecacb12cd582b4cb0e1b3e76",
+		ExecutionOutput:   `{"pipelines.kubeflow.org/metadata_execution_id": "8c623f608410644024522153da8c8bffd5a801ceecacb12cd582b4cb0e1b3e76", "tekton.dev/outputs": "[{\"name\":\"test\",\"value\":\"test\"}]"}`,
+		ExecutionTemplate: `{"Spec":{"serviceAccountName":"","status":"TaskRunCancelled"},"TaskName":"","PipelineName":"test-pipelinerun","Generation":"0"}`,
 		MaxCacheStaleness: -1,
 	}
 	fakeClientManager.CacheStore().CreateExecutionCache(executionCache)
 
 	patchOperation, err := MutatePodIfCached(&fakeAdmissionRequest, fakeClientManager)
+	assert.Nil(t, err)
+	require.NotNil(t, patchOperation)
+	require.Equal(t, 3, len(patchOperation))
+	require.Equal(t, patchOperation[0].Op, OperationTypeReplace)
+	require.Equal(t, patchOperation[1].Op, OperationTypeAdd)
+	require.Equal(t, patchOperation[2].Op, OperationTypeAdd)
+}
+
+func TestMutatePodIfCachedWithTeamplateCleanup(t *testing.T) {
+	executionCache := &model.ExecutionCache{
+		ExecutionCacheKey: "f5fe913be7a4516ebfe1b5de29bcb35edd12ecc776b2f33f10ca19709ea3b2f0",
+		ExecutionOutput:   "testOutput",
+		ExecutionTemplate: `Cache key was calculated from this: {"container":{"command":["echo", "Hello"],"image":"python:3.7"}}`,
+		MaxCacheStaleness: -1,
+	}
+	fakeClientManager.CacheStore().CreateExecutionCache(executionCache)
+
+	pod := *fakePod.DeepCopy()
+	pod.ObjectMeta.Annotations[TektonTaskrunTemplate] = `{
+		"name": "Does not matter",
+		"metadata": "anything",
+		"container": {
+			"image": "python:3.7",
+			"command": ["echo", "Hello"]
+		},
+		"outputs": "anything",
+		"foo": "bar"
+	}`
+	request := GetFakeRequestFromPod(&pod)
+
+	patchOperation, err := MutatePodIfCached(request, fakeClientManager)
 	assert.Nil(t, err)
 	require.NotNil(t, patchOperation)
 	require.Equal(t, 3, len(patchOperation))

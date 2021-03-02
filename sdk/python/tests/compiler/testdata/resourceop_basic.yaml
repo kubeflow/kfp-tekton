@@ -89,3 +89,5 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
+  timeout: 0s

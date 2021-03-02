@@ -14,14 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# usage: `./hack/run_unit_tests_backend.sh` to run backend unit tests once
-#        `WATCH=true ./hack/run_unit_tests_backend.sh` to watch code changes and auto rerun tests
-# Note: ibazel can be downloaded from https://github.com/bazelbuild/bazel-watcher
+# Fail the entire script when any command fails.
+set -ex
 
-COMMAND="bazel"
-if [ -n "$WATCH" ]; then
-  COMMAND="ibazel"
-fi
-$COMMAND --host_jvm_args=-Xmx500m --host_jvm_args=-Xms500m test \
-  --noshow_progress --noshow_loading_progress --define=grpc_no_ares=true \
-  --test_output=all //backend/...
+# The current directory is /home/prow/go/src/github.com/kubeflow/pipelines
+# TODO(Bobgy): we should use golang image instead, to skip installing go manually.
+# 1. install go in /home/prow/go1.13.3
+cd /home/prow
+mkdir go1.13.3
+cd go1.13.3
+wget --quiet https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz
+tar -xf go1.13.3.linux-amd64.tar.gz
+GO_CMD=/home/prow/go1.13.3/go/bin/go
+cd /home/prow/go/src/github.com/kubeflow/pipelines
+# 2. Check go modules are tidy
+# Reference: https://github.com/golang/go/issues/27005#issuecomment-564892876
+${GO_CMD} mod download
+${GO_CMD} mod tidy
+git diff --exit-code -- go.mod go.sum || (echo "go modules are not tidy, run 'go mod tidy'." && exit 1)
+# 3. run test in project directory
+${GO_CMD} test -v -cover ./backend/...

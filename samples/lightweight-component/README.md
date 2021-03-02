@@ -14,6 +14,11 @@ Once you have completed all the prerequisites for this example, then you can sta
 python -m jupyter notebook
 ```
 
+Or, you can compile the pipeline directly with:
+```
+python calc_pipeline.py
+```
+
 ## Acknowledgements
 
 Thanks [Jiaxiao Zheng](https://github.com/numerology) for creating the original Lightweight_component notebook.
