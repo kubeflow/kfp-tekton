@@ -454,6 +454,11 @@ class TestTektonCompiler(unittest.TestCase):
     Tests if the compiled workflow matches the golden yaml.
     """
     if GENERATE_GOLDEN_YAML:
+      # TODO: generate the pipelineloop CRD files akin to ...
+      #   for f in testdata/*_pipelineloop_cr*.yaml; do \
+      #     echo ${f/_pipelineloop_cr*.yaml/.py}; done | sort -u | while read f; do \
+      #     echo $f; dsl-compile-tekton --py $f --output ${f/.py/.yaml}; \
+      #   done
       with open(golden_yaml_file, 'w') as f:
         f.write(LICENSE_HEADER)
       with open(golden_yaml_file, 'a+') as f:

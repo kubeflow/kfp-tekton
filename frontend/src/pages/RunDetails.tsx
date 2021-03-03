@@ -59,7 +59,7 @@ import Buttons, { ButtonKeys } from '../lib/Buttons';
 import CompareUtils from '../lib/CompareUtils';
 import { OutputArtifactLoader } from '../lib/OutputArtifactLoader';
 import RunUtils from '../lib/RunUtils';
-import { KeyValue } from '../lib/StaticGraphParser';
+import { KeyValue, transitiveReduction, compareGraphEdges } from '../lib/StaticGraphParser';
 import { hasFinished, NodePhase, statusToPhase } from '../lib/StatusUtils';
 import {
   errorToMessage,
@@ -68,17 +68,20 @@ import {
   logger,
   serviceErrorToString,
   decodeCompressedNodes,
+  getRunDurationFromNode,
 } from '../lib/Utils';
 import WorkflowParser from '../lib/WorkflowParser';
 import { ExecutionDetailsContent } from './ExecutionDetails';
 import { Page, PageProps } from './Page';
 import { statusToIcon } from './Status';
 import { ExternalLink } from 'src/atoms/ExternalLink';
+import ReduceGraphSwitch from '../components/ReduceGraphSwitch';
 
 enum SidePaneTab {
   INPUT_OUTPUT,
   VISUALIZATIONS,
   ML_METADATA,
+  TASK_DETAILS,
   VOLUMES,
   LOGS,
   POD,
@@ -121,6 +124,7 @@ interface RunDetailsState {
   logsBannerMessage: string;
   logsBannerMode: Mode;
   graph?: dagre.graphlib.Graph;
+  reducedGraph?: dagre.graphlib.Graph;
   runFinished: boolean;
   runMetadata?: ApiRun;
   selectedTab: number;
@@ -131,6 +135,7 @@ interface RunDetailsState {
   workflow?: any;
   mlmdRunContext?: Context;
   mlmdExecutions?: Execution[];
+  showReducedGraph?: boolean;
 }
 
 export const css = stylesheet({
@@ -180,6 +185,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     sidepanelSelectedTab: SidePaneTab.INPUT_OUTPUT,
     mlmdRunContext: undefined,
     mlmdExecutions: undefined,
+    showReducedGraph: false,
   };
 
   private readonly AUTO_REFRESH_INTERVAL = 5000;
@@ -230,7 +236,6 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     const {
       allArtifactConfigs,
       allowCustomVisualizations,
-      graph,
       isGeneratingVisualization,
       runFinished,
       runMetadata,
@@ -240,6 +245,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       sidepanelSelectedTab,
       workflow,
       mlmdExecutions,
+      showReducedGraph,
     } = this.state;
     const { projectId, clusterName } = this.props.gkeMetadata;
     const selectedNodeId = selectedNodeDetails?.id || '';
@@ -273,6 +279,10 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       collapsedInitially: true,
     };
 
+    const graphToShow =
+      this.state.showReducedGraph && this.state.reducedGraph
+        ? this.state.reducedGraph
+        : this.state.graph;
     return (
       <div className={classes(commonCss.page, padding(20, 't'))}>
         {!!workflow && (
@@ -286,15 +296,23 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
               {/* Graph tab */}
               {selectedTab === 0 && (
                 <div className={classes(commonCss.page, css.graphPane)}>
-                  {graph && (
+                  {graphToShow && (
                     <div className={commonCss.page}>
                       <Graph
-                        graph={graph}
+                        graph={graphToShow}
                         selectedNodeId={selectedNodeId}
                         onClick={id => this._selectNode(id)}
                         onError={(message, additionalInfo) =>
                           this.props.updateBanner({ message, additionalInfo, mode: 'error' })
                         }
+                      />
+
+                      <ReduceGraphSwitch
+                        disabled={!this.state.reducedGraph}
+                        checked={showReducedGraph}
+                        onChange={_ => {
+                          this.setState({ showReducedGraph: !this.state.showReducedGraph });
+                        }}
                       />
 
                       <SidePanel
@@ -317,6 +335,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
                                   'Input/Output',
                                   'Visualizations',
                                   'ML Metadata',
+                                  'Details',
                                   'Volumes',
                                   'Logs',
                                   'Pod',
@@ -393,6 +412,15 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
                                       valueComponentProps={{
                                         namespace: this.state.workflow?.metadata?.namespace,
                                       }}
+                                    />
+                                  </div>
+                                )}
+
+                                {sidepanelSelectedTab === SidePaneTab.TASK_DETAILS && (
+                                  <div className={padding(20)}>
+                                    <DetailsTable
+                                      title='Task Details'
+                                      fields={this._getTaskDetailsFields(workflow, selectedNodeId)}
                                     />
                                   </div>
                                 )}
@@ -533,7 +561,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
                       </div>
                     </div>
                   )}
-                  {!graph && (
+                  {!graphToShow && (
                     <div>
                       {runFinished && <span style={{ margin: '40px auto' }}>No graph to show</span>}
                       {!runFinished && (
@@ -727,6 +755,14 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       let templateString = workflow;
       const graph = WorkflowParser.createRuntimeGraph(templateString);
 
+      let reducedGraph = graph
+        ? // copy graph before removing edges
+          transitiveReduction(graph)
+        : undefined;
+      if (graph && reducedGraph && compareGraphEdges(graph, reducedGraph)) {
+        reducedGraph = undefined; // disable reduction switch
+      }
+
       const breadcrumbs: Array<{ displayName: string; href: string }> = [];
       // If this is an archived run, only show Archive in breadcrumbs, otherwise show
       // the full path, including the experiment if any.
@@ -781,6 +817,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       this.setStateSafe({
         experiment,
         graph,
+        reducedGraph,
         runFinished,
         runMetadata,
         workflow,
@@ -853,6 +890,8 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     return !workflow.status
       ? []
       : [
+          ['Run ID', runMetadata?.id || '-'],
+          ['Workflow name', workflow.metadata?.name || '-'],
           ['Status', workflow.status.conditions ? workflow.status.conditions[0].reason : 'Pending'],
           ['Description', runMetadata ? runMetadata!.description! : ''],
           [
@@ -863,6 +902,27 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
           ['Finished at', formatDateString(workflow.status.completionTime)],
           ['Duration', getRunDurationFromWorkflow(workflow)],
         ];
+  }
+
+  private _getTaskDetailsFields(workflow: any, nodeId: string): Array<KeyValue<string>> {
+    for (const taskRunId of Object.getOwnPropertyNames(workflow.status?.taskRuns || [])) {
+      const taskRun = workflow.status.taskRuns[taskRunId];
+      if (taskRun.status && taskRun.status.podName === nodeId) {
+        let status = NodePhase.PENDING;
+        if (taskRun && taskRun.status && taskRun.status.conditions) {
+          status = taskRun.status.conditions[0].reason;
+        }
+        return [
+          ['Task ID', taskRun.taskRunId || '-'],
+          ['Task name', taskRun.pipelineTaskName || '-'],
+          ['Status', statusToPhase(status) || '-'],
+          ['Started at', formatDateString(taskRun.status?.startTime) || '-'],
+          ['Finished at', formatDateString(taskRun.status?.completionTime) || '-'],
+          ['Duration', getRunDurationFromNode(workflow, nodeId) || '-'],
+        ];
+      }
+    }
+    return [];
   }
 
   private async _selectNode(id: string): Promise<void> {

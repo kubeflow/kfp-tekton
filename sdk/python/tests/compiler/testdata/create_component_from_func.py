@@ -15,6 +15,7 @@
 
 import kfp
 import os
+from kfp import dsl
 from kfp.components import create_component_from_func, OutputPath
 
 cwd = os.path.dirname(__file__)
@@ -27,6 +28,7 @@ list_item_op_2 = kfp.components.load_component_from_file(
     os.path.join(cwd, 'create_component_from_func_component.yaml'))
 
 
+@dsl.pipeline(name='Create component from function')
 def test_pipeline():
     @create_component_from_func
     def produce_dir_with_files_python_op(output_dir_path: OutputPath(), num_files: int = 10):

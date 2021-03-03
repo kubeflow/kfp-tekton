@@ -14,19 +14,20 @@
 
 import kfp
 from kfp.components import func_to_container_op
+import kfp.dsl as dsl
+from kfp.dsl import _for_loop
 
 
-# Stabilizing the test output
-class StableIDGenerator:
+class Coder:
     def __init__(self, ):
-        self._index = 0
+        self._code_id = 0
 
-    def get_next_id(self, ):
-        self._index += 1
-        return '{code:0{num_chars:}d}'.format(code=self._index, num_chars=kfp.dsl._for_loop.LoopArguments.NUM_CODE_CHARS)
+    def get_code(self, ):
+        self._code_id += 1
+        return '{code:0{num_chars:}d}'.format(code=self._code_id, num_chars=_for_loop.LoopArguments.NUM_CODE_CHARS)
 
 
-kfp.dsl.ParallelFor._get_unique_id_code = StableIDGenerator().get_next_id
+dsl.ParallelFor._get_unique_id_code = Coder().get_code
 
 
 @func_to_container_op
