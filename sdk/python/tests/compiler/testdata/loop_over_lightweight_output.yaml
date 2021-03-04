@@ -55,8 +55,6 @@ spec:
       params:
       - name: produce-list-data_list-loop-item
         value: $(tasks.produce-list.results.data-list)
-      runAfter:
-      - produce-list
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop

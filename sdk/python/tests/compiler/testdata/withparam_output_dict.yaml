@@ -66,8 +66,6 @@ spec:
       params:
       - name: my-out-cop0-out-loop-item
         value: $(tasks.my-out-cop0.results.out)
-      runAfter:
-      - my-out-cop0
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop

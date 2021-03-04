@@ -121,10 +121,6 @@ spec:
       params:
       - name: produce-numbers-Output-loop-item
         value: $(tasks.produce-numbers.results.output)
-      - name: threshold
-        value: $(params.threshold)
-      runAfter:
-      - produce-numbers
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop

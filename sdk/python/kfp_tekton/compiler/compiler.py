@@ -110,6 +110,7 @@ class TektonCompiler(Compiler):
     self.artifact_items = {}
     self.loops_pipeline = {}
     self.uuid = self._get_unique_id_code()
+    self._group_names = []
     super().__init__(**kwargs)
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
@@ -144,11 +145,10 @@ class TektonCompiler(Compiler):
     """
     # Generate GroupOp template
     sub_group = group
-    _group_names = [pipeline_name, sanitize_k8s_name(sub_group.name)]
+    self._group_names = [pipeline_name, sanitize_k8s_name(sub_group.name)]
     if self.uuid:
-      _group_names.insert(1, self.uuid)
-    # We need to insert unique uuid for loops because Tekton 0.21.0 doesn't allow custom taskSpec defined in PipelineRun scope
-    group_name = '-'.join(_group_names) if group_type == "loop" else group.name
+      self._group_names.insert(1, self.uuid)
+    group_name = '-'.join(self._group_names) if group_type == "loop" else sub_group.name
     template = {
       'metadata': {
         'name': group_name,
@@ -159,7 +159,7 @@ class TektonCompiler(Compiler):
     # Generates a pseudo-template unique to conditions due to the catalog condition approach
     # where every condition is an extension of one super-condition
     if isinstance(sub_group, dsl.OpsGroup) and sub_group.type == 'condition':
-      subgroup_inputs = inputs.get(sub_group.name, [])
+      subgroup_inputs = inputs.get(group_name, [])
       condition = sub_group.condition
 
       operand1_value = self._resolve_value_or_reference(condition.operand1, subgroup_inputs)
@@ -185,10 +185,10 @@ class TektonCompiler(Compiler):
           self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + subvarName)
       # get the dependencies tasks rely on the loop task.
       for depend in dependencies.keys():
-        if depend == sub_group.name:
+        if depend == group_name:
           self.loops_pipeline[group_name]['spec']['runAfter'] = [task for task in dependencies[depend]]
           self.loops_pipeline[group_name]['spec']['runAfter'].sort()
-        if sub_group.name in dependencies[depend]:
+        if group_name in dependencies[depend]:
           self.loops_pipeline[group_name]['depends'].append({'org': depend, 'runAfter': group_name})
       for op in sub_group.groups + sub_group.ops:
         self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(op.name))
@@ -235,7 +235,7 @@ class TektonCompiler(Compiler):
         }]
       # get other input params
       for input in inputs.keys():
-        if input == sub_group.name:
+        if input == group_name:
           for param in inputs[input]:
             if param[0] != sub_group.loop_args.full_name and param[1] and param[0] not in self.loops_pipeline[group_name][
               'loop_sub_args']:
@@ -866,7 +866,7 @@ class TektonCompiler(Compiler):
         pipeline_conf)
     # Separate loop workflow from the main workflow
     if self.loops_pipeline:
-      pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow)
+      pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self._group_names)
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
       for i in range(len(pipeline_loop_crs)):
         TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],

@@ -56,8 +56,6 @@ spec:
       params:
       - name: with-item-name
         value: '[1, 2, 3]'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop

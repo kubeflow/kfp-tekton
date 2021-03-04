@@ -56,7 +56,7 @@ def _handle_tekton_pipeline_variables(pipeline_run):
     return pipeline_run
 
 
-def _handle_tekton_custom_task(custom_task: dict, workflow: dict):
+def _handle_tekton_custom_task(custom_task: dict, workflow: dict, group_names: list):
     """
     Separate custom task's workflow from the main workflow, return a tuple result of custom task cr definitions
     and a new workflow
@@ -70,6 +70,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict):
         'depends': []
       }
       workflow: a workflow without loop pipeline separeted.
+      group_names: List of name constructions for creating custom loop crd names.
 
     Returns:
       A tuple (custom_task_crs, workflow).
@@ -158,8 +159,9 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict):
     custom_task_crs_namelist = [custom_task_key for custom_task_key in custom_task.keys()]
     for custom_task_key in custom_task.keys():
         for inner_task_name in custom_task[custom_task_key]['task_list']:
-            if inner_task_name in custom_task_crs_namelist:
-                nested_custom_tasks.append({"main_ct": custom_task_key, "nested_custom_task": inner_task_name})
+            inner_task_cr_name = '-'.join(group_names[:-1] + [inner_task_name])
+            if inner_task_cr_name in custom_task_crs_namelist:
+                nested_custom_tasks.append({"main_ct": custom_task_key, "nested_custom_task": inner_task_cr_name})
     for nested_custom_task in nested_custom_tasks:
         for custom_task_cr in custom_task_crs:
             if custom_task_cr['metadata']['name'] == nested_custom_task['main_ct']:
