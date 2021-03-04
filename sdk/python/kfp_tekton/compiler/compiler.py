@@ -185,10 +185,10 @@ class TektonCompiler(Compiler):
           self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + subvarName)
       # get the dependencies tasks rely on the loop task.
       for depend in dependencies.keys():
-        if depend == group_name:
+        if depend == sub_group.name:
           self.loops_pipeline[group_name]['spec']['runAfter'] = [task for task in dependencies[depend]]
           self.loops_pipeline[group_name]['spec']['runAfter'].sort()
-        if group_name in dependencies[depend]:
+        if sub_group.name in dependencies[depend]:
           self.loops_pipeline[group_name]['depends'].append({'org': depend, 'runAfter': group_name})
       for op in sub_group.groups + sub_group.ops:
         self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(op.name))
@@ -235,7 +235,7 @@ class TektonCompiler(Compiler):
         }]
       # get other input params
       for input in inputs.keys():
-        if input == group_name:
+        if input == sub_group.name:
           for param in inputs[input]:
             if param[0] != sub_group.loop_args.full_name and param[1] and param[0] not in self.loops_pipeline[group_name][
               'loop_sub_args']:

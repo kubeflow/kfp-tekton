@@ -5,10 +5,11 @@ spec:
   pipelineSpec:
     params:
     - {name: produce-list-of-ints-Output-loop-item, type: string}
+    - {name: produce-list-of-ints-Output, type: string}
     tasks:
     - name: consume-4
       params:
-      - {name: produce-list-of-ints-Output, value: $(tasks.produce-list-of-ints.results.output)}
+      - {name: produce-list-of-ints-Output, value: $(params.produce-list-of-ints-Output)}
       taskSpec:
         steps:
         - name: main

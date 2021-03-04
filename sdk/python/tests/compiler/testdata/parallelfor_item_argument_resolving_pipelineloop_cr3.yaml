@@ -4,11 +4,12 @@ metadata: {name: parallelfor-item-argument-resolving-for-loop-3}
 spec:
   pipelineSpec:
     params:
+    - {name: produce-list-of-dicts-Output, type: string}
     - {name: produce-list-of-dicts-Output-loop-item-subvar-aaa, type: string}
     tasks:
     - name: consume-6
       params:
-      - {name: produce-list-of-dicts-Output, value: $(tasks.produce-list-of-dicts.results.output)}
+      - {name: produce-list-of-dicts-Output, value: $(params.produce-list-of-dicts-Output)}
       taskSpec:
         steps:
         - name: main

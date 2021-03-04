@@ -5,6 +5,7 @@ spec:
   pipelineSpec:
     params:
     - {name: loop-item-param-1, type: string}
+    - {name: my_pipe_param, type: string}
     tasks:
     - name: my-in-coop1
       params:
@@ -35,5 +36,7 @@ spec:
     - name: my-pipeline-for-loop-4
       taskRef: {apiVersion: custom.tekton.dev/v1alpha1, kind: PipelineLoop, name: my-pipeline-for-loop-4}
       params:
+      - {name: loop-item-param-1, value: $(params.loop-item-param-1)}
       - {name: loop-item-param-3, value: '[100, 200, 300]'}
+      - {name: my_pipe_param, value: $(params.my_pipe_param)}
   iterateParam: loop-item-param-1

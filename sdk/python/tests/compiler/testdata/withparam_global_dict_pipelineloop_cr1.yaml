@@ -21,6 +21,6 @@ spec:
         params:
         - {name: loopidy_doop-loop-item-subvar-a, type: string}
         - {name: loopidy_doop-loop-item-subvar-b, type: string}
-      runAfter: [my-out-cop0]
+      runAfter: []
       timeout: 0s
   iterateParam: loopidy_doop-loop-item

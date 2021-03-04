@@ -5,6 +5,7 @@ spec:
   pipelineSpec:
     params:
     - {name: produce-numbers-Output-loop-item, type: string}
+    - {name: threshold, type: string}
     tasks:
     - name: add-numbers
       params:

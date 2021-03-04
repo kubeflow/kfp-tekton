@@ -58,7 +58,7 @@ spec:
       - name: my-out-cop0-out
         value: $(tasks.my-out-cop0.results.out)
       runAfter:
-      - my-in-cop1
+      - my-pipeline-for-loop-1
       taskSpec:
         params:
         - name: my-out-cop0-out
@@ -75,6 +75,8 @@ spec:
       params:
       - name: loopidy_doop-loop-item
         value: $(params.loopidy_doop)
+      runAfter:
+      - my-out-cop0
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop

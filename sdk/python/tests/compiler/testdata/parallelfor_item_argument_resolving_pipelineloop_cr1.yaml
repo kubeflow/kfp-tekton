@@ -5,10 +5,12 @@ spec:
   pipelineSpec:
     params:
     - {name: produce-list-of-strings-Output-loop-item, type: string}
+    - {name: produce-list-of-strings-Output, type: string}
+    - {name: produce-str-Output, type: string}
     tasks:
     - name: consume
       params:
-      - {name: produce-list-of-strings-Output, value: $(tasks.produce-list-of-strings.results.output)}
+      - {name: produce-list-of-strings-Output, value: $(params.produce-list-of-strings-Output)}
       taskSpec:
         steps:
         - name: main
@@ -82,7 +84,7 @@ spec:
       timeout: 0s
     - name: consume-3
       params:
-      - {name: produce-str-Output, value: $(tasks.produce-str.results.output)}
+      - {name: produce-str-Output, value: $(params.produce-str-Output)}
       taskSpec:
         steps:
         - name: main
