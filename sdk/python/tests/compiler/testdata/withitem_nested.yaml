@@ -62,16 +62,4 @@ spec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         name: my-pipeline-for-loop-2
-    - name: my-pipeline-for-loop-4
-      params:
-      - name: loop-item-param-1
-        value: $(params.loop-item-param-1)
-      - name: loop-item-param-3
-        value: '[100, 200, 300]'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
-      taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        name: my-pipeline-for-loop-4
   timeout: 0s

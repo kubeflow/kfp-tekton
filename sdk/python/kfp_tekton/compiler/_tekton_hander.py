@@ -168,8 +168,9 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, group_names: l
                 custom_task_cr['spec']['pipelineSpec']['tasks'].append(custom_task[nested_custom_task['nested_custom_task']]['spec'])
 
     # remove the tasks belong to custom task from main workflow
+    task_name_prefix = '-'.join(group_names[:-1] + [""])
     for task in tasks:
-        if task['name'] not in task_list:
+        if task['name'].replace(task_name_prefix, "") not in task_list:
             new_tasks.append(task)
     workflow['spec']['pipelineSpec']['tasks'] = new_tasks
     return custom_task_crs, workflow
