@@ -312,8 +312,8 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test compiling a creating component from func workflow.
     """
-    from .testdata.create_component_from_func import test_pipeline
-    self._test_pipeline_workflow(test_pipeline, 'create_component_from_func.yaml')
+    from .testdata.create_component_from_func import create_component_pipeline
+    self._test_pipeline_workflow(create_component_pipeline, 'create_component_from_func.yaml')
 
   def test_katib_workflow(self):
     """

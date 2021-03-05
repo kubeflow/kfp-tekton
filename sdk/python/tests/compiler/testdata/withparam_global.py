@@ -28,7 +28,7 @@ class Coder:
 dsl.ParallelFor._get_unique_id_code = Coder().get_code
 
 
-@dsl.pipeline(name='my-pipeline')
+@dsl.pipeline(name='withparam-global')
 def pipeline(loopidy_doop: list = [3, 5, 7, 9]):
     op0 = dsl.ContainerOp(
         name="my-out-cop0",

@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
       "inputs": [{"default": "heads", "name": "forced_result1", "optional": true,
       "type": "String"}, {"default": "tails", "name": "forced_result2", "optional":
-      true, "type": "String"}], "name": "Flip Coin Example Pipeline"}'
+      true, "type": "String"}], "name": "Flip Coin with Dependency"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -32,7 +32,7 @@ metadata:
     tekton.dev/output_artifacts: '{"flip": [{"key": "artifacts/$PIPELINERUN/flip/output.tgz",
       "name": "flip-output", "path": "/tmp/output"}], "flip-again": [{"key": "artifacts/$PIPELINERUN/flip-again/output.tgz",
       "name": "flip-again-output", "path": "/tmp/output"}]}'
-  name: flip-coin-example-pipeline
+  name: flip-coin-with-dependency
 spec:
   params:
   - name: forced_result1
