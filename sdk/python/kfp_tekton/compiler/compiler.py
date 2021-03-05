@@ -41,7 +41,7 @@ from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8
 from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton.compiler.any_sequencer import generate_any_sequencer
-from kfp_tekton.compiler._tekton_hander import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
+from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
