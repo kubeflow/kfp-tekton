@@ -16,46 +16,32 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline includes
-      two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).",
-      "name": "Retry random failures"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "echo pipeline", "name":
+      "echo"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"random-failure": [], "random-failure-2": []}'
+    tekton.dev/artifact_items: '{"echo": []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: retry-random-failures
+    test: annotation
+  labels:
+    test: label
+    test2: label2
+  name: echo
 spec:
   pipelineSpec:
     tasks:
-    - name: random-failure
-      retries: 10
+    - name: echo
       taskSpec:
         steps:
         - args:
-          - import random; import sys; exit_code = random.choice([int(i) for i in
-            sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
-          - 0,1,2,3
+          - echo "Got scheduled"
           command:
-          - python
+          - sh
           - -c
-          image: python:alpine3.6
-          name: main
-      timeout: 0s
-    - name: random-failure-2
-      retries: 5
-      taskSpec:
-        steps:
-        - args:
-          - import random; import sys; exit_code = random.choice([int(i) for i in
-            sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
-          - 0,1
-          command:
-          - python
-          - -c
-          image: python:alpine3.6
+          image: busybox
           name: main
       timeout: 0s
   timeout: 0s
