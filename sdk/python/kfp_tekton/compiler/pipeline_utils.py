@@ -14,9 +14,9 @@
 
 from kfp import dsl
 
-TEKTON_PIPELINE_ANNOTATIONS = ['tekton.dev/output_artifacts', 'tekton.dev/input_artifacts', 'tekton.dev/artifact_bucket',
+TEKTON_PIPELINE_ANNOTATIONS = ['anyConditions', 'sidecar.istio.io/inject', 'tekton.dev/artifact_bucket',
                                'tekton.dev/artifact_endpoint', 'tekton.dev/artifact_endpoint_scheme',
-                               'tekton.dev/artifact_items', 'sidecar.istio.io/inject', 'anyConditions']
+                               'tekton.dev/artifact_items', 'tekton.dev/input_artifacts', 'tekton.dev/output_artifacts']
 
 
 class TektonPipelineConf(dsl.PipelineConf):
