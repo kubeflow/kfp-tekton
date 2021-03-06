@@ -17,7 +17,7 @@ kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
-      "optional": true}], "name": "my-loop-pipeline"}'
+      "optional": true}], "name": "static-loop-pipeline"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -26,7 +26,7 @@ metadata:
       []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: my-loop-pipeline
+  name: static-loop-pipeline
 spec:
   params:
   - name: my_pipe_param

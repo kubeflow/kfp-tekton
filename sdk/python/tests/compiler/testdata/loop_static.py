@@ -24,7 +24,7 @@ class Coder:
 TektonCompiler._get_unique_id_code = Coder.empty
 
 
-@dsl.pipeline(name='my-loop-pipeline')
+@dsl.pipeline(name='static-loop-pipeline')
 def pipeline(my_pipe_param='10'):
     loop_args = [1, 2, 3]
     with dsl.ParallelFor(loop_args) as item:

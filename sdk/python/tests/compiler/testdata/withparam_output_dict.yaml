@@ -16,7 +16,7 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"name": "my-pipeline"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "withparam-output-dict"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -27,7 +27,7 @@ metadata:
       "my-out-cop0"}]}'
     tekton.dev/output_artifacts: '{"my-out-cop0": [{"key": "artifacts/$PIPELINERUN/my-out-cop0/out.tgz",
       "name": "my-out-cop0-out", "path": "/tmp/out.json"}]}'
-  name: my-pipeline
+  name: withparam-output-dict
 spec:
   pipelineSpec:
     tasks:

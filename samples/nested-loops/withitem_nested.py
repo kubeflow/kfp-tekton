@@ -13,18 +13,9 @@
 # limitations under the License.
 
 import kfp.dsl as dsl
-from kfp_tekton.compiler import TektonCompiler
 
 
-class Coder:
-    def empty(self):
-        return ""
-
-
-TektonCompiler._get_unique_id_code = Coder.empty
-
-
-@dsl.pipeline(name='withitem-nested')
+@dsl.pipeline(name='my-pipeline')
 def pipeline(my_pipe_param: int = 10):
     loop_args = [1, 2]
     with dsl.ParallelFor(loop_args) as item:

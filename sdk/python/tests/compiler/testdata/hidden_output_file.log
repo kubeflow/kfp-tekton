@@ -4,6 +4,20 @@
 [download-file : copy-results] + cp /tmp/results.txt /tekton/results/underscore-test
 [download-file : copy-results] + cp /tmp/results.txt /tekton/results/multiple-underscore-test
 
+[download-file : copy-artifacts] Added `storage` successfully.
+[download-file : copy-artifacts] tar: removing leading '/' from member names
+[download-file : copy-artifacts] tekton/results/data
+[download-file : copy-artifacts] `data.tgz` -> `storage/mlpipeline/artifacts/hidden-output-file-pipeline/download-file/data.tgz`
+[download-file : copy-artifacts] Total: 0 B, Transferred: 121 B, Speed: 3.15 KiB/s
+[download-file : copy-artifacts] tar: removing leading '/' from member names
+[download-file : copy-artifacts] tekton/results/multiple-underscore-test
+[download-file : copy-artifacts] `multiple_underscore_test.tgz` -> `storage/mlpipeline/artifacts/hidden-output-file-pipeline/download-file/multiple_underscore_test.tgz`
+[download-file : copy-artifacts] Total: 0 B, Transferred: 138 B, Speed: 3.38 KiB/s
+[download-file : copy-artifacts] tar: removing leading '/' from member names
+[download-file : copy-artifacts] tekton/results/underscore-test
+[download-file : copy-artifacts] `underscore_test.tgz` -> `storage/mlpipeline/artifacts/hidden-output-file-pipeline/download-file/underscore_test.tgz`
+[download-file : copy-artifacts] Total: 0 B, Transferred: 131 B, Speed: 3.12 KiB/s
+
 [echo : main] Text 1: hello world
 [echo : main] 
 

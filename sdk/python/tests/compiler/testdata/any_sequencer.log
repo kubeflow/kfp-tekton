@@ -1,0 +1,7 @@
+
+
+
+
+[any-sequencer-4b2c9 : main] time="2021-02-20T08:00:28Z" level=info msg="Starting to watch taskrun for 'task1,task2,task3' in kubeflow/any-sequencer."
+[any-sequencer-4b2c9 : main] time="2021-02-20T08:00:46Z" level=info msg="The TaskRun of task1 succeeded."
+

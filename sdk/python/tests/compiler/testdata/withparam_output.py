@@ -24,7 +24,7 @@ class Coder:
 TektonCompiler._get_unique_id_code = Coder.empty
 
 
-@dsl.pipeline(name='my-pipeline')
+@dsl.pipeline(name='withparam-output')
 def pipeline():
     op0 = dsl.ContainerOp(
         name="my-out-cop0",

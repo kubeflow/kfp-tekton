@@ -2,28 +2,22 @@
 
 [flip : copy-artifacts] Added `storage` successfully.
 [flip : copy-artifacts] tar: removing leading '/' from member names
-[flip : copy-artifacts] tekton/results/output-value
-[flip : copy-artifacts] `output_value.tgz` -> `storage/mlpipeline/artifacts/flip-coin-example-pipeline/flip/output_value.tgz`
-[flip : copy-artifacts] Total: 0 B, Transferred: 122 B, Speed: 4.12 KiB/s
-
-[flip3 : main] heads
-
-[flip3 : copy-artifacts] Added `storage` successfully.
-[flip3 : copy-artifacts] tar: removing leading '/' from member names
-[flip3 : copy-artifacts] tekton/results/output-value
-[flip3 : copy-artifacts] `output_value.tgz` -> `storage/mlpipeline/artifacts/flip-coin-example-pipeline/flip3/output_value.tgz`
-[flip3 : copy-artifacts] Total: 0 B, Transferred: 122 B, Speed: 2.09 KiB/s
+[flip : copy-artifacts] tekton/results/output
+[flip : copy-artifacts] `output.tgz` -> `storage/mlpipeline/artifacts/flip-coin-with-dependency/flip/output.tgz`
+[flip : copy-artifacts] Total: 0 B, Transferred: 116 B, Speed: 2.39 KiB/s
 
 [flip-again : main] tails
 
 [flip-again : copy-artifacts] Added `storage` successfully.
+[flip-again : copy-artifacts] tekton/results/output
 [flip-again : copy-artifacts] tar: removing leading '/' from member names
-[flip-again : copy-artifacts] tekton/results/output-value
-[flip-again : copy-artifacts] `output_value.tgz` -> `storage/mlpipeline/artifacts/flip-coin-example-pipeline/flip-again/output_value.tgz`
-[flip-again : copy-artifacts] Total: 0 B, Transferred: 122 B, Speed: 2.37 KiB/s
+[flip-again : copy-artifacts] `output.tgz` -> `storage/mlpipeline/artifacts/flip-coin-with-dependency/flip-again/output.tgz`
+[flip-again : copy-artifacts] Total: 0 B, Transferred: 116 B, Speed: 3.29 KiB/s
 
 [print1 : main] tails
 [print1 : main] 
+
+[print3 : main] done
 
 [condition-1 : unnamed-0] + python -c import sys
 [condition-1 : unnamed-0] input1=str.rstrip(sys.argv[1])
@@ -65,19 +59,5 @@
 [condition-3 : unnamed-0] f = open("/tekton/results/status", "w")
 [condition-3 : unnamed-0] f.write(status)
 [condition-3 : unnamed-0] f.close() heads
-[condition-3 : unnamed-0]  heads
-
-[condition-4 : unnamed-0] + python -c import sys
-[condition-4 : unnamed-0] input1=str.rstrip(sys.argv[1])
-[condition-4 : unnamed-0] input2=str.rstrip(sys.argv[2])
-[condition-4 : unnamed-0] try:
-[condition-4 : unnamed-0]   input1=int(input1)
-[condition-4 : unnamed-0]   input2=int(input2)
-[condition-4 : unnamed-0] except:
-[condition-4 : unnamed-0]   input1=str(input1)
-[condition-4 : unnamed-0] status="true" if (input1 == input2) else "false"
-[condition-4 : unnamed-0] f = open("/tekton/results/status", "w")
-[condition-4 : unnamed-0] f.write(status)
-[condition-4 : unnamed-0] f.close() heads
-[condition-4 : unnamed-0]  tails
+[condition-3 : unnamed-0]  tails
 

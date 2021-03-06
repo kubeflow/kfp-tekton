@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from kfp import dsl
+import kfp_tekton
 
 
 def echo_op():
@@ -25,13 +26,19 @@ def echo_op():
 
 
 @dsl.pipeline(
-    name='set-display-name',
+    name='echo',
     description='echo pipeline'
 )
 def echo_pipeline():
-    echo = echo_op().set_display_name('Hello World')
+    echo_op()
 
 
-if __name__ == '__main__':
+pipeline_conf = kfp_tekton.compiler.pipeline_utils.TektonPipelineConf()
+pipeline_conf.add_pipeline_label('test', 'label')
+pipeline_conf.add_pipeline_label('test2', 'label2')
+pipeline_conf.add_pipeline_annotation('test', 'annotation')
+
+
+if __name__ == "__main__":
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(echo_pipeline, 'echo_pipeline.yaml')
+    TektonCompiler().compile(echo_pipeline, 'echo_pipeline.yaml', tekton_pipeline_conf=pipeline_conf)
