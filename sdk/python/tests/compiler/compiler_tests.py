@@ -362,6 +362,17 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.exit_handler import download_and_print
     self._test_pipeline_workflow(download_and_print, 'exit_handler.yaml')
 
+  def test_tekton_pipeline_conf(self):
+    """
+    Test applying Tekton pipeline config to a workflow
+    """
+    from .testdata.tekton_pipeline_conf import echo_pipeline
+    pipeline_conf = compiler.pipeline_utils.TektonPipelineConf()
+    pipeline_conf.add_pipeline_label('test', 'label')
+    pipeline_conf.add_pipeline_label('test2', 'label2')
+    pipeline_conf.add_pipeline_annotation('test', 'annotation')
+    self._test_pipeline_workflow(echo_pipeline, 'tekton_pipeline_conf.yaml', tekton_pipeline_conf=pipeline_conf)
+
   def test_compose(self):
     """
     Test compiling a simple workflow, and a bigger one composed from a simple one.
@@ -391,14 +402,16 @@ class TestTektonCompiler(unittest.TestCase):
   def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
-                              normalize_compiler_output_function=None):
+                              normalize_compiler_output_function=None,
+                              tekton_pipeline_conf=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
     try:
       compiler.TektonCompiler().compile(pipeline_function,
-                                        compiled_yaml_file)
+                                        compiled_yaml_file,
+                                        tekton_pipeline_conf=tekton_pipeline_conf)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f

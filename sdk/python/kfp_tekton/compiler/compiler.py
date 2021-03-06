@@ -40,6 +40,7 @@ from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8
 from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton.compiler.any_sequencer import generate_any_sequencer
+from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler._tekton_hander import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
@@ -108,7 +109,13 @@ class TektonCompiler(Compiler):
     self.output_artifacts = {}
     self.artifact_items = {}
     self.loops_pipeline = {}
+    self.pipeline_labels = {}
+    self.pipeline_annotations = {}
     super().__init__(**kwargs)
+
+  def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
+    self.pipeline_labels = tekton_pipeline_conf.pipeline_labels
+    self.pipeline_annotations = tekton_pipeline_conf.pipeline_annotations
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -532,7 +539,7 @@ class TektonCompiler(Compiler):
       'kind': 'PipelineRun',
       'metadata': {
         'name': sanitize_k8s_name(pipeline.name or 'Pipeline', suffix_space=4),
-        # 'labels': get_default_telemetry_labels(),
+        # Reflect the list of Tekton pipeline annotations at the top
         'annotations': {
           'tekton.dev/output_artifacts': json.dumps(self.output_artifacts, sort_keys=True),
           'tekton.dev/input_artifacts': json.dumps(self.input_artifacts, sort_keys=True),
@@ -558,6 +565,14 @@ class TektonCompiler(Compiler):
 
     if any_sequencer_annotations:
       pipeline_run['metadata']['annotations']['anyConditions'] = json.dumps(any_sequencer_annotations)
+
+    if self.pipeline_labels:
+      pipeline_run['metadata']['labels'] = pipeline_run['metadata'].setdefault('labels', {})
+      pipeline_run['metadata']['labels'].update(self.pipeline_labels)
+
+    if self.pipeline_annotations:
+      pipeline_run['metadata']['annotations'] = pipeline_run['metadata'].setdefault('annotations', {})
+      pipeline_run['metadata']['annotations'].update(self.pipeline_annotations)
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []
@@ -746,7 +761,8 @@ class TektonCompiler(Compiler):
               pipeline_func,
               package_path,
               type_check=True,
-              pipeline_conf: dsl.PipelineConf = None):
+              pipeline_conf: dsl.PipelineConf = None,
+              tekton_pipeline_conf: TektonPipelineConf = None):
     """Compile the given pipeline function into workflow yaml.
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.
@@ -756,6 +772,8 @@ class TektonCompiler(Compiler):
                      image pull secrets and other pipeline-level configuration options.
                      Overrides any configuration that may be set by the pipeline.
     """
+    if tekton_pipeline_conf:
+      self._set_pipeline_conf(tekton_pipeline_conf)
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
