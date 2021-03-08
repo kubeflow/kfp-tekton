@@ -14,7 +14,7 @@
 
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
-metadata: {name: my-pipeline-for-loop-2}
+metadata: {name: withitem-nested-for-loop-2}
 spec:
   pipelineSpec:
     params:
@@ -47,8 +47,8 @@ spec:
         params:
         - {name: loop-item-param-1, type: string}
       timeout: 0s
-    - name: my-pipeline-for-loop-4
-      taskRef: {apiVersion: custom.tekton.dev/v1alpha1, kind: PipelineLoop, name: my-pipeline-for-loop-4}
+    - name: withitem-nested-for-loop-4
+      taskRef: {apiVersion: custom.tekton.dev/v1alpha1, kind: PipelineLoop, name: withitem-nested-for-loop-4}
       params:
       - {name: loop-item-param-1, value: $(params.loop-item-param-1)}
       - {name: loop-item-param-3, value: '[100, 200, 300]'}

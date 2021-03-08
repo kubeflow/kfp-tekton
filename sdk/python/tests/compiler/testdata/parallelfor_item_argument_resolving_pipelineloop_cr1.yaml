@@ -19,8 +19,8 @@ spec:
   pipelineSpec:
     params:
     - {name: produce-list-of-strings-Output-loop-item, type: string}
-    - {name: produce-list-of-strings-Output, type: string}
     - {name: produce-str-Output, type: string}
+    - {name: produce-list-of-strings-Output, type: string}
     tasks:
     - name: consume
       params:

@@ -14,13 +14,13 @@
 
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
-metadata: {name: my-pipeline-for-loop-4}
+metadata: {name: withitem-nested-for-loop-4}
 spec:
   pipelineSpec:
     params:
     - {name: loop-item-param-3, type: string}
-    - {name: my_pipe_param, type: string}
     - {name: loop-item-param-1, type: string}
+    - {name: my_pipe_param, type: string}
     tasks:
     - name: my-inner-inner-coop
       params:

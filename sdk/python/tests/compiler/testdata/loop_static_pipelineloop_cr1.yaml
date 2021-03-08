@@ -14,7 +14,7 @@
 
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
-metadata: {name: my-loop-pipeline-for-loop-2}
+metadata: {name: static-loop-pipeline-for-loop-2}
 spec:
   pipelineSpec:
     params:

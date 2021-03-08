@@ -52,7 +52,7 @@ spec:
           image: library/bash:4.4.23
           name: main
       timeout: 0s
-    - name: my-loop-pipeline-for-loop-2
+    - name: static-loop-pipeline-for-loop-2
       params:
       - name: with-item-name
         value: '[1, 2, 3]'
@@ -61,5 +61,5 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: my-loop-pipeline-for-loop-2
+        name: static-loop-pipeline-for-loop-2
   timeout: 0s
