@@ -15,10 +15,10 @@
  */
 
 import * as dagre from 'dagre';
+import { graphlib } from 'dagre';
 import { color } from '../Css';
 import { Constants } from './Constants';
 import { parseTaskDisplayName } from './ParserUtils';
-import { graphlib } from 'dagre';
 
 export type nodeType = 'container' | 'resource' | 'dag' | 'unknown';
 
@@ -87,7 +87,13 @@ export function createGraph(workflow: any): dagre.graphlib.Graph {
   return graph;
 }
 
-function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
+function buildTektonDag(
+  graph: dagre.graphlib.Graph,
+  template: any,
+  startloop: string = '',
+  endloop: string = '',
+  lastlooptask: string = '',
+): void {
   const pipeline = template;
   const tasks = (pipeline['spec']['pipelineSpec']['tasks'] || []).concat(
     pipeline['spec']['pipelineSpec']['finally'] || [],
@@ -97,7 +103,8 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
     (pipeline['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
       return element['name'];
     }) || [];
-  // Collect the anyConditions from 'metadata.annotations.anyConditions'
+  let loopNumber = 1;
+  let loopTaskList: string[] = [];
   let anyConditions = {};
   if (
     pipeline['metadata'] &&
@@ -114,9 +121,11 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
     // on task output being passed in as parameters
     if (task['runAfter'])
       task['runAfter'].forEach((depTask: any) => {
+        if (loopTaskList.includes(depTask)) {
+          depTask = depTask + '-end';
+        }
         graph.setEdge(depTask, taskName);
       });
-    // Adds dependencies for anySequencers from 'anyCondition' annotation
     if (anyTasks.includes(task['name'])) {
       for (const depTask of anyConditions[task['name']]) {
         graph.setEdge(depTask, taskName);
@@ -128,8 +137,10 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
       const input = condition['input'];
       if (input.substring(0, 8) === '$(tasks.' && input.substring(input.length - 1) === ')') {
         const paramSplit = input.split('.');
-        const parentTask = paramSplit[1];
-
+        let parentTask = paramSplit[1];
+        if (loopTaskList.includes(parentTask)) {
+          parentTask = parentTask + '-end';
+        }
         graph.setEdge(parentTask, taskName);
       }
     }
@@ -143,21 +154,36 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
           condParam['value'].substring(condParam['value'].length - 1) === ')'
         ) {
           const paramSplit = condParam['value'].split('.');
-          const parentTask = paramSplit[1];
-
+          let parentTask = paramSplit[1];
+          if (loopTaskList.includes(parentTask)) {
+            parentTask = parentTask + '-end';
+          }
           graph.setEdge(parentTask, taskName);
         }
       }
     }
 
     for (const param of task['params'] || []) {
-      if (
-        param['value'].substring(0, 8) === '$(tasks.' &&
-        param['value'].substring(param['value'].length - 1) === ')'
-      ) {
-        const paramSplit = param['value'].split('.');
-        const parentTask = paramSplit[1];
-        graph.setEdge(parentTask, taskName);
+      if (typeof param['value'] === 'string') {
+        if (
+          param['value'].substring(0, 8) === '$(tasks.' &&
+          param['value'].substring(param['value'].length - 1) === ')'
+        ) {
+          const paramSplit = param['value'].split('.');
+          const parentTask = paramSplit[1];
+          graph.setEdge(parentTask, taskName);
+        }
+      } else if (typeof param['value'] === 'object') {
+        for (const paramValue of param['value'] || []) {
+          if (
+            paramValue.substring(0, 8) === '$(tasks.' &&
+            paramValue.substring(param['value'].length - 1) === ')'
+          ) {
+            const paramSplit = paramValue.split('.');
+            const parentTask = paramSplit[1];
+            graph.setEdge(parentTask, taskName);
+          }
+        }
       }
     }
 
@@ -172,13 +198,66 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
       ? 'cornsilk'
       : undefined;
 
-    graph.setNode(taskName, {
-      bgColor: bgColor,
-      height: Constants.NODE_HEIGHT,
-      info,
-      label: parseTaskDisplayName(task['taskSpec']) || label,
-      width: Constants.NODE_WIDTH,
-    });
+    if (task['taskSpec']) {
+      graph.setNode(taskName, {
+        bgColor: bgColor,
+        height: Constants.NODE_HEIGHT,
+        info,
+        label: parseTaskDisplayName(task['taskSpec']) || label,
+        width: Constants.NODE_WIDTH,
+      });
+    } else if (task['taskRef'] && task['taskRef']['kind'] === 'PipelineLoop') {
+      // handle the case of loop pipelines
+      graph.setNode(taskName, {
+        bgColor: bgColor,
+        height: Constants.NODE_HEIGHT,
+        info,
+        label: 'start-loop-' + loopNumber,
+        width: Constants.NODE_WIDTH,
+      });
+      const loopPipelineName = task['taskRef']['name'];
+      if (
+        pipeline['metadata'] &&
+        pipeline['metadata']['annotations'] &&
+        pipeline['metadata']['annotations']['tekton.dev/' + loopPipelineName]
+      ) {
+        const loopPipeline = JSON.parse(
+          pipeline['metadata']['annotations']['tekton.dev/' + loopPipelineName],
+        );
+        const endLoopName = taskName + '-end';
+        loopTaskList.push(taskName);
+        graph.setNode(endLoopName, {
+          bgColor: bgColor,
+          height: Constants.NODE_HEIGHT,
+          info,
+          label: 'end-loop-' + loopNumber++,
+          width: Constants.NODE_WIDTH,
+        });
+        let lastLoopTask = '';
+        if (
+          pipeline['metadata'] &&
+          pipeline['metadata']['labels'] &&
+          pipeline['metadata']['labels']['last-loop-task']
+        ) {
+          lastLoopTask = pipeline['metadata']['labels']['last-loop-task'];
+        }
+        buildTektonDag(graph, loopPipeline, taskName, endLoopName, lastLoopTask);
+      }
+    }
+  }
+  if (startloop && endloop) {
+    if (lastlooptask) {
+      graph.setEdge(lastlooptask, endloop);
+    }
+    for (const looptask of tasks) {
+      const loopTaskName = looptask['name'];
+      if (graph.inEdges(loopTaskName)?.length === 0) {
+        graph.setEdge(startloop, loopTaskName);
+      }
+      if (lastlooptask === '' && graph.outEdges(loopTaskName)?.length === 0) {
+        graph.setEdge(loopTaskName, endloop);
+      }
+    }
   }
 }
 
