@@ -17,6 +17,14 @@ from kfp_tekton.compiler import TektonCompiler
 from kfp import components
 
 
+class Coder:
+    def empty(self):
+        return ""
+
+
+TektonCompiler._get_unique_id_code = Coder.empty
+
+
 @components.func_to_container_op
 def add_numbers(a: int, b: int) -> int:
     print(a + b)

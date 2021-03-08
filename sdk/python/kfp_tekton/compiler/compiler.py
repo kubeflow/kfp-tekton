@@ -20,6 +20,7 @@ import re
 import textwrap
 import yaml
 import os
+import uuid
 
 from typing import Callable, List, Text, Dict, Any
 from os import environ as env
@@ -41,7 +42,7 @@ from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton.compiler.any_sequencer import generate_any_sequencer
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
-from kfp_tekton.compiler._tekton_hander import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
+from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
@@ -109,6 +110,8 @@ class TektonCompiler(Compiler):
     self.output_artifacts = {}
     self.artifact_items = {}
     self.loops_pipeline = {}
+    self.uuid = self._get_unique_id_code()
+    self._group_names = []
     self.pipeline_labels = {}
     self.pipeline_annotations = {}
     super().__init__(**kwargs)
@@ -139,14 +142,20 @@ class TektonCompiler(Compiler):
     else:
       return str(value_or_reference)
 
-  def _group_to_dag_template(self, group, inputs, outputs, dependencies):
+  @staticmethod
+  def _get_unique_id_code():
+    return uuid.uuid4().hex[:5]
+
+  def _group_to_dag_template(self, group, inputs, outputs, dependencies, pipeline_name, group_type):
     """Generate template given an OpsGroup.
     inputs, outputs, dependencies are all helper dicts.
     """
-
     # Generate GroupOp template
     sub_group = group
-    group_name = sanitize_k8s_name(sub_group.name)
+    self._group_names = [pipeline_name, sanitize_k8s_name(sub_group.name)]
+    if self.uuid:
+      self._group_names.insert(1, self.uuid)
+    group_name = '-'.join(self._group_names) if group_type == "loop" else sub_group.name
     template = {
       'metadata': {
         'name': group_name,
@@ -157,7 +166,7 @@ class TektonCompiler(Compiler):
     # Generates a pseudo-template unique to conditions due to the catalog condition approach
     # where every condition is an extension of one super-condition
     if isinstance(sub_group, dsl.OpsGroup) and sub_group.type == 'condition':
-      subgroup_inputs = inputs.get(sub_group.name, [])
+      subgroup_inputs = inputs.get(group_name, [])
       condition = sub_group.condition
 
       operand1_value = self._resolve_value_or_reference(condition.operand1, subgroup_inputs)
@@ -308,10 +317,10 @@ class TektonCompiler(Compiler):
     for opsgroup in opsgroups.keys():
       # Conditions and loops will get templates in Tekton
       if opsgroups[opsgroup].type == 'condition':
-        template = self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies)
+        template = self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "condition")
         templates.append(template)
       if opsgroups[opsgroup].type == 'for_loop':
-        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies)
+        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "loop")
 
     for op in pipeline.ops.values():
       templates.extend(op_to_steps_handler(op))
@@ -875,7 +884,7 @@ class TektonCompiler(Compiler):
         pipeline_conf)
     # Separate loop workflow from the main workflow
     if self.loops_pipeline:
-      pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow)
+      pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self._group_names)
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
       for i in range(len(pipeline_loop_crs)):
         TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
