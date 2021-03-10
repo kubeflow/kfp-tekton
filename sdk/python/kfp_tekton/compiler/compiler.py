@@ -190,6 +190,10 @@ class TektonCompiler(Compiler):
       for subvarName in sub_group.loop_args.referenced_subvar_names:
         if subvarName != '__iter__':
           self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + subvarName)
+      if isinstance(sub_group.loop_args.items_or_pipeline_param, list) and isinstance(
+        sub_group.loop_args.items_or_pipeline_param[0], dict):
+        for key in sub_group.loop_args.items_or_pipeline_param[0]:
+          self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + key)
       # get the dependencies tasks rely on the loop task.
       for depend in dependencies.keys():
         if depend == sub_group.name:
@@ -227,6 +231,7 @@ class TektonCompiler(Compiler):
       else:
         # Need to sanitize the dict keys for consistency.
         loop_arg_value = sub_group.loop_args.to_list_for_task_yaml()
+        loop_args_str_value = ''
         sanitized_tasks = []
         if isinstance(loop_arg_value[0], dict):
           for argument_set in loop_arg_value:
@@ -234,11 +239,13 @@ class TektonCompiler(Compiler):
             for k, v in argument_set.items():
               c_dict[sanitize_k8s_name(k, True)] = v
             sanitized_tasks.append(c_dict)
+          loop_args_str_value = json.dumps(sanitized_tasks, sort_keys=True)
         else:
-          sanitized_tasks = loop_arg_value
+          loop_args_str_value = str(loop_arg_value)
+        
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": sub_group.loop_args.full_name,
-          "value": str(sanitized_tasks)
+          "value": loop_args_str_value
         }]
       # get other input params
       for input in inputs.keys():
