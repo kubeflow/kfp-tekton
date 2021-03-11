@@ -246,6 +246,8 @@ def _process_parameters(processed_op: BaseOp,
                             need_copy_step = False
                         args.append(a)
                     s['args'] = args
+                if path == '/tekton/results/' + sanitize_k8s_name(name):
+                    need_copy_step = False
             # If file output path cannot be found/replaced, use emptyDir to copy it to the tekton/results path
             if need_copy_step:
                 copy_results_step['script'] = copy_results_step['script'] + 'cp ' + path + ' $(results.%s.path);' \
