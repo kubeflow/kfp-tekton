@@ -50,6 +50,7 @@ export enum NodePhase {
 
 export function hasFinished(status?: NodePhase): boolean {
   switch (status) {
+    case NodePhase.COMPLETED: // Fall through
     case NodePhase.SUCCEEDED: // Fall through
     case NodePhase.CACHED: // Fall through
     case NodePhase.FAILED: // Fall through
