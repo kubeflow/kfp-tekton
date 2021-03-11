@@ -99,10 +99,9 @@ function getDuration(start: Date, end: Date): string {
 export function getRunDuration(run?: any): string {
   if (
     !run ||
-    !run.status ||
-    !run.status.startTime ||
-    !run.status.completionTime ||
-    !hasFinished(run.status.condition[0].reason as NodePhase)
+    !run.created_at ||
+    !run.finished_at ||
+    !hasFinished(run.status as NodePhase)
   ) {
     return '-';
   }
@@ -110,7 +109,7 @@ export function getRunDuration(run?: any): string {
   // A bug in swagger-codegen causes the API to indicate that created_at and finished_at are Dates,
   // as they should be, when in reality they are transferred as strings.
   // See: https://github.com/swagger-api/swagger-codegen/issues/2776
-  return getDuration(new Date(run.status.startTime), new Date(run.status.completionTime));
+  return getDuration(new Date(run.created_at), new Date(run.finished_at));
 }
 
 export function getRunDurationFromWorkflow(workflow?: any): string {

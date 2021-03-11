@@ -57,7 +57,7 @@ func ValidatePipelineRun(template []byte) (*tektonV1Beta1.PipelineRun, error) {
 		return nil, NewInvalidInputErrorWithDetails(err, "Failed to parse the parameter.")
 	}
 	if wf.APIVersion != tektonVersion {
-		return nil, NewInvalidInputError("Unsupported argo version. Expected: %v. Received: %v", tektonVersion, wf.APIVersion)
+		return nil, NewInvalidInputError("Unsupported tekton version. Expected: %v. Received: %v", tektonVersion, wf.APIVersion)
 	}
 	if wf.Kind != tektonK8sResource {
 		return nil, NewInvalidInputError("Unexpected resource type. Expected: %v. Received: %v", tektonK8sResource, wf.Kind)
