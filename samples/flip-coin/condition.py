@@ -14,6 +14,7 @@
 
 import kfp
 from kfp import dsl
+from kfp_tekton.compiler.cel_condition import CELParam, CELCondition, CELTemplate
 
 
 def random_num_op(low, high):
@@ -46,7 +47,7 @@ def print_op(msg):
         image='alpine:3.6',
         command=['echo', msg],
     )
-    
+
 
 @dsl.pipeline(
     name='Conditional execution pipeline',
@@ -54,7 +55,9 @@ def print_op(msg):
 )
 def flipcoin_pipeline():
     flip = flip_coin_op()
-    with dsl.Condition(flip.output == 'heads'):
+    cel_task = CELTemplate(name='test')
+    test = CELParam(name="test_cel_task", value="data")
+    with CELCondition(test != "heads", cel_task=cel_task.template()):
         random_num_head = random_num_op(0, 9)
         with dsl.Condition(random_num_head.output > 5):
             print_op('heads and %s > 5!' % random_num_head.output)
