@@ -14,7 +14,7 @@
 
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
-metadata: {name: for-loop-2}
+metadata: {name: parallelfor-item-argument-resolving-for-loop-2}
 spec:
   pipelineSpec:
     params:

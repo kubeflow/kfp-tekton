@@ -13,22 +13,18 @@
 # limitations under the License.
 
 import kfp.dsl as dsl
-from kfp.dsl import _for_loop
+from kfp_tekton.compiler import TektonCompiler
 
 
 class Coder:
-    def __init__(self, ):
-        self._code_id = 0
-
-    def get_code(self, ):
-        self._code_id += 1
-        return '{code:0{num_chars:}d}'.format(code=self._code_id, num_chars=_for_loop.LoopArguments.NUM_CODE_CHARS)
+    def empty(self):
+        return ""
 
 
-dsl.ParallelFor._get_unique_id_code = Coder().get_code
+TektonCompiler._get_unique_id_code = Coder.empty
 
 
-@dsl.pipeline(name='my-pipeline')
+@dsl.pipeline(name='withparam-output-dict')
 def pipeline():
     op0 = dsl.ContainerOp(
         name="my-out-cop0",

@@ -13,30 +13,26 @@
 # limitations under the License.
 
 import kfp.dsl as dsl
-from kfp.dsl import _for_loop
+from kfp_tekton.compiler import TektonCompiler
 
 
 class Coder:
-    def __init__(self, ):
-        self._code_id = 0
-
-    def get_code(self, ):
-        self._code_id += 1
-        return '{code:0{num_chars:}d}'.format(code=self._code_id, num_chars=_for_loop.LoopArguments.NUM_CODE_CHARS)
+    def empty(self):
+        return ""
 
 
-dsl.ParallelFor._get_unique_id_code = Coder().get_code
+TektonCompiler._get_unique_id_code = Coder.empty
 
 
 @dsl.pipeline(name='my-pipeline')
 def pipeline(my_pipe_param: int = 10):
-    loop_args = [1, 2]
+    loop_args = [{'a': 1, 'b': 2}, {'a': 10, 'b': 20}]
     with dsl.ParallelFor(loop_args) as item:
         op1 = dsl.ContainerOp(
             name="my-in-coop1",
             image="library/bash:4.4.23",
             command=["sh", "-c"],
-            arguments=["echo op1 %s %s" % (item, my_pipe_param)],
+            arguments=["echo op1 %s %s" % (item.a, my_pipe_param)],
         )
 
         with dsl.ParallelFor([100, 200, 300]) as inner_item:
@@ -44,14 +40,14 @@ def pipeline(my_pipe_param: int = 10):
                 name="my-inner-inner-coop",
                 image="library/bash:4.4.23",
                 command=["sh", "-c"],
-                arguments=["echo op1 %s %s %s" % (item, inner_item, my_pipe_param)],
+                arguments=["echo op1 %s %s %s" % (item.a, inner_item, my_pipe_param)],
             )
 
         op2 = dsl.ContainerOp(
             name="my-in-coop2",
             image="library/bash:4.4.23",
             command=["sh", "-c"],
-            arguments=["echo op2 %s" % item],
+            arguments=["echo op2 %s" % item.b],
         )
 
     op_out = dsl.ContainerOp(

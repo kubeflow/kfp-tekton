@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2020-2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ class PrintOp(dsl.ContainerOp):
 
 
 @dsl.pipeline(
-    name='Flip Coin Example Pipeline',
+    name='Flip Coin with Dependency',
     description='Shows how to use dsl.Condition.'
 )
 def flipcoin(forced_result1: str = 'heads', forced_result2: str = 'tails'):
@@ -60,4 +60,3 @@ def flipcoin(forced_result1: str = 'heads', forced_result2: str = 'tails'):
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(flipcoin, __file__.replace('.py', '.yaml'))
-

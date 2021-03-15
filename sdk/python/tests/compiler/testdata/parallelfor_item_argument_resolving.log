@@ -1,0 +1,30 @@
+Pipeline still running ...
+PipelineRun is still running: Tasks Completed: 4 (Failed: 0, Cancelled 0), Incomplete: 3, Skipped: 0
+
+[produce-str : copy-artifacts] Added `storage` successfully.
+[produce-str : copy-artifacts] tekton/results/output
+[produce-str : copy-artifacts] tar: removing leading '/' from member names
+[produce-str : copy-artifacts] `Output.tgz` -> `storage/mlpipeline/artifacts/parallelfor-item-argument-resolving-4b31a/produce-str/Output.tgz`
+[produce-str : copy-artifacts] Total: 0 B, Transferred: 116 B, Speed: 2.98 KiB/s
+
+
+[produce-list-of-strings : copy-artifacts] Added `storage` successfully.
+[produce-list-of-strings : copy-artifacts] tekton/results/output
+[produce-list-of-strings : copy-artifacts] tar: removing leading '/' from member names
+[produce-list-of-strings : copy-artifacts] `Output.tgz` -> `storage/mlpipeline/artifacts/parallelfor-item-argument-resolving-4b31a/produce-list-of-strings/Output.tgz`
+[produce-list-of-strings : copy-artifacts] Total: 0 B, Transferred: 124 B, Speed: 1.85 KiB/s
+
+
+[produce-list-of-ints : copy-artifacts] Added `storage` successfully.
+[produce-list-of-ints : copy-artifacts] tar: removing leading '/' from member names
+[produce-list-of-ints : copy-artifacts] tekton/results/output
+[produce-list-of-ints : copy-artifacts] `Output.tgz` -> `storage/mlpipeline/artifacts/parallelfor-item-argument-resolving-4b31a/produce-list-of-ints/Output.tgz`
+[produce-list-of-ints : copy-artifacts] Total: 0 B, Transferred: 134 B, Speed: 6.49 KiB/s
+
+
+[produce-list-of-dicts : copy-artifacts] Added `storage` successfully.
+[produce-list-of-dicts : copy-artifacts] tekton/results/output
+[produce-list-of-dicts : copy-artifacts] tar: removing leading '/' from member names
+[produce-list-of-dicts : copy-artifacts] `Output.tgz` -> `storage/mlpipeline/artifacts/parallelfor-item-argument-resolving-4b31a/produce-list-of-dicts/Output.tgz`
+[produce-list-of-dicts : copy-artifacts] Total: 0 B, Transferred: 147 B, Speed: 2.33 KiB/s
+
