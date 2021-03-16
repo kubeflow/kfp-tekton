@@ -146,11 +146,11 @@ When any one of the task dependencies completes successfully, the dependent task
 For example:
 
 ```
-from kfp_tekton.compiler.any_sequencer import after_any
+from kfp_tekton.dsl._any_seqencer import after_any
 
 dsl.ContainerOp(
   ...
-).apply(after_any(([containerOps]))
+).apply(after_any([containerOps], "any_sequencer_name"))
 ```
 
 Please note that the service account of the `Any Sequencer` needs 'get' permission to watch the status of the specified `taskRun`.
