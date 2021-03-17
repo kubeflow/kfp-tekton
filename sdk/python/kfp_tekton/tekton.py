@@ -29,7 +29,6 @@ class AnySequencer(ContainerOp):
         any: List of `Conditional` containerOps that deploy together with the `main`
                 containerOp.
     """
-
     def __init__(self,
                  any: List[dsl.ContainerOp],
                  name: str = None,):
