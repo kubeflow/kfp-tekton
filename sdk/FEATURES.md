@@ -146,7 +146,7 @@ When any one of the task dependencies completes successfully, the dependent task
 For example:
 
 ```
-from kfp_tekton.dsl._any_sequencer import after_any
+from kfp_tekton.tekton import after_any
 
 dsl.ContainerOp(
   ...
