@@ -20,7 +20,8 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
 
 class AnySequencer(ContainerOp):
-    """A containerOp that will proceed when any dependent condition met
+    """A containerOp that will proceed when any of the dependent containerOps completed
+       successfully
 
     Args:
         name: The name of the containerOp. It does not have to be unique within a pipeline
