@@ -1,8 +1,21 @@
 [download : main] With which he yoketh your rebellious necks Razeth your cities and subverts your towns And in a moment makes them desolate
 
+[download : copy-artifacts] Added `storage` successfully.
+[download : copy-artifacts] tar: removing leading '/' from member names
+[download : copy-artifacts] tekton/results/downloaded
+[download : copy-artifacts] `downloaded.tgz` -> `storage/mlpipeline/artifacts/download-and-save-most-frequent/download/downloaded.tgz`
+[download : copy-artifacts] Total: 0 B, Transferred: 197 B, Speed: 7.04 KiB/s
+
 [get-frequent : main] your
 
+[get-frequent : copy-artifacts] Added `storage` successfully.
+[get-frequent : copy-artifacts] tar: removing leading '/' from member names
+[get-frequent : copy-artifacts] tekton/results/word
+[get-frequent : copy-artifacts] `word.tgz` -> `storage/mlpipeline/artifacts/download-and-save-most-frequent/get-frequent/word.tgz`
+[get-frequent : copy-artifacts] Total: 0 B, Transferred: 115 B, Speed: 3.35 KiB/s
+
 [save : main] Copying file:///tmp/results.txt...
-[save : main] / [0 files][    0.0 B/    6.0 B]                                                / [1 files][    6.0 B/    6.0 B]                                                
+[save : main] / [0 files][    0.0 B/    6.0 B]                                                
+/ [1 files][    6.0 B/    6.0 B]                                                
 [save : main] Operation completed over 1 objects/6.0 B.                                        
 

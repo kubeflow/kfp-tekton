@@ -24,7 +24,7 @@ RUN curl -sSL -o /usr/local/bin/argo https://github.com/argoproj/argo/releases/d
  && chmod +x /usr/local/bin/argo
 
 # Copy conda environment early to avoid cache busting
-COPY ./sagemaker/tests/integration_tests/environment.yml environment.yml
+COPY ./components/aws/sagemaker/tests/integration_tests/environment.yml environment.yml
 
 # Create conda environment for running tests and set as start-up environment
 RUN conda env create -f environment.yml
@@ -34,10 +34,14 @@ ENV PATH "/opt/conda/envs/kfp_test_env/bin":$PATH
 # Environment variables to be used by tests
 ENV REGION="us-west-2"
 ENV SAGEMAKER_EXECUTION_ROLE_ARN="arn:aws:iam::1234567890:role/sagemaker-role"
+ENV ROBOMAKER_EXECUTION_ROLE_ARN="arn:aws:iam::1234567890:role/robomaker-role"
 ENV S3_DATA_BUCKET="kfp-test-data"
 ENV MINIO_LOCAL_PORT=9000
 ENV KFP_NAMESPACE="kubeflow"
 
-COPY ./sagemaker/ .
+RUN mkdir pipelines
+COPY ./ ./pipelines/
 
-ENTRYPOINT [ "/bin/bash", "./tests/integration_tests/scripts/run_integration_tests" ]
+WORKDIR /pipelines/components/aws/sagemaker/tests/integration_tests/scripts/
+
+ENTRYPOINT [ "/bin/bash", "./run_integration_tests" ]

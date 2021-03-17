@@ -1,6 +1,6 @@
 # TFX On-Prem Demo
 
-This Demo is based on the [TFX taxi oss example](https://github.com/kubeflow/pipelines/blob/master/samples/contrib/parameterized_tfx_oss/parameterized_tfx_oss.py) and designed to run the TFX Chicago Taxi example on-prem without any GCS/GCP dependency.
+This Demo is based on the [TFX taxi oss example](https://github.com/kubeflow/pipelines/blob/master/samples/core/parameterized_tfx_oss/parameterized_tfx_oss.py) and designed to run the TFX Chicago Taxi example on-prem without any GCS/GCP dependency.
 
 ## Prerequisites
 1. Provision a Kubernetes or OpenShift cluster.

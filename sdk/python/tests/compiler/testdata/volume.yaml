@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,6 +57,7 @@ spec:
         - name: gcp-credentials
           secret:
             secretName: user-gcp-sa
+      timeout: 0s
     - name: echo
       params:
       - name: download-downloaded
@@ -72,3 +73,5 @@ spec:
           - -c
           image: library/bash
           name: main
+      timeout: 0s
+  timeout: 0s

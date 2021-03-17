@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -66,6 +66,7 @@ spec:
           - -c
           image: google/cloud-sdk
           name: main
+      timeout: 0s
     - name: get-frequent
       params:
       - name: download-downloaded
@@ -84,8 +85,9 @@ spec:
           command:
           - sh
           - -c
-          image: python:3.5-jessie
+          image: python:3.6-jessie
           name: main
+      timeout: 0s
     - name: save
       params:
       - name: get-frequent-word
@@ -105,3 +107,5 @@ spec:
           - -c
           image: google/cloud-sdk
           name: main
+      timeout: 0s
+  timeout: 0s

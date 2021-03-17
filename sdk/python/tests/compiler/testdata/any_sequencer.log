@@ -1,0 +1,2 @@
+time="2021-03-16T08:52:05Z" level=info msg="Starting to watch taskrun for 'task1,task2,task3' in kubeflow/any-sequencer."
+time="2021-03-16T08:52:21Z" level=info msg="The TaskRun of task1 succeeded."

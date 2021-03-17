@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ spec:
           - -c
           image: busybox
           name: main
+      timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: echo
     taskPodTemplate:
@@ -51,3 +52,4 @@ spec:
                 operator: In
                 values:
                 - linux
+  timeout: 0s

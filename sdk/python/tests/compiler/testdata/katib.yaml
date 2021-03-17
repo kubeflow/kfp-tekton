@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -138,6 +138,7 @@ spec:
           - $(inputs.params.experimentTimeoutMinutes)
           image: liuhougangxa/katib-experiment-launcher:latest
           name: main
+      timeout: 0s
     - name: my-out-cop
       params:
       - name: mnist-hpo-bestHyperParameter
@@ -153,3 +154,5 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
+  timeout: 0s

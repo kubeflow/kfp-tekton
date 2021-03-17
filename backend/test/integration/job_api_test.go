@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"context"
 	"io/ioutil"
 	"sort"
 	"testing"
@@ -17,11 +18,14 @@ import (
 	uploadParams "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_upload_client/pipeline_upload_service"
 	runParams "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client/run_service"
 	"github.com/kubeflow/pipelines/backend/api/go_http_client/run_model"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -40,6 +44,7 @@ type JobApiTestSuite struct {
 	pipelineUploadClient *api_server.PipelineUploadClient
 	runClient            *api_server.RunClient
 	jobClient            *api_server.JobClient
+	swfClient            client.SwfClientInterface
 }
 
 type JobResourceReferenceSorter []*job_model.APIResourceReference
@@ -84,6 +89,7 @@ func (s *JobApiTestSuite) SetupTest() {
 	if err != nil {
 		glog.Exitf("Failed to get job client. Error: %s", err.Error())
 	}
+	s.swfClient = client.NewScheduledWorkflowClientOrFatal(time.Second * 30)
 
 	s.cleanUp()
 }
@@ -137,6 +143,9 @@ func (s *JobApiTestSuite) TestJobApis() {
 	assert.Nil(t, err)
 
 	/* ---------- Create a new argument parameter job by uploading workflow manifest ---------- */
+	// Make sure the job is created at least 1 second later than the first one,
+	// because sort by created_at has precision of 1 second.
+	time.Sleep(1 * time.Second)
 	argParamsBytes, err := ioutil.ReadFile("../resources/arguments-parameters.yaml")
 	assert.Nil(t, err)
 	argParamsBytes, err = yaml.ToJSON(argParamsBytes)
@@ -334,6 +343,7 @@ func (s *JobApiTestSuite) TestJobApis_noCatchupOption() {
 	_, runsWhenCatchupTrue, _, err = s.runClient.List(&runParams.ListRunsParams{
 		ResourceReferenceKeyType: util.StringPointer(string(run_model.APIResourceTypeEXPERIMENT)),
 		ResourceReferenceKeyID:   util.StringPointer(cronCatchupTrueExperiment.ID)})
+	assert.Equal(t, 2, runsWhenCatchupTrue)
 
 	/* ---------- Assert number of runs when catchup = false ---------- */
 	_, runsWhenCatchupFalse, _, err := s.runClient.List(&runParams.ListRunsParams{
@@ -414,6 +424,43 @@ func (s *JobApiTestSuite) checkArgParamsJob(t *testing.T, job *job_model.APIJob,
 	}
 
 	assert.Equal(t, expectedJob, job)
+}
+
+func (s *JobApiTestSuite) TestJobApis_SwfNotFound() {
+	t := s.T()
+
+	/* ---------- Upload pipelines YAML ---------- */
+	pipeline, err := s.pipelineUploadClient.UploadFile("../resources/hello-world.yaml", uploadParams.NewUploadPipelineParams())
+	require.Nil(t, err)
+
+	/* ---------- Create a new hello world job by specifying pipeline ID ---------- */
+	createJobRequest := &jobparams.CreateJobParams{Body: &job_model.APIJob{
+		Name: "test-swf-not-found",
+		PipelineSpec: &job_model.APIPipelineSpec{
+			PipelineID: pipeline.ID,
+		},
+		MaxConcurrency: 10,
+		Enabled:        false,
+	}}
+	job, err := s.jobClient.Create(createJobRequest)
+	require.Nil(t, err)
+
+	// Delete all ScheduledWorkflow custom resources to simulate the situation
+	// that after reinstalling KFP with managed storage, only KFP DB is kept,
+	// but all KFP custom resources are gone.
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	err = s.swfClient.ScheduledWorkflow(s.namespace).DeleteCollection(ctx, v1.DeleteOptions{}, v1.ListOptions{})
+	require.Nil(t, err)
+
+	err = s.jobClient.Delete(&jobparams.DeleteJobParams{ID: job.ID})
+	require.Nil(t, err)
+
+	/* ---------- Get job ---------- */
+	_, err = s.jobClient.Get(&jobparams.GetJobParams{ID: job.ID})
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "not found")
 }
 
 func (s *JobApiTestSuite) checkHelloWorldRun(t *testing.T, run *run_model.APIRun, experimentID string, experimentName string, jobID string, jobName string) {

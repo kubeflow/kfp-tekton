@@ -1,0 +1,63 @@
+[flip : main] heads
+
+[flip : copy-artifacts] Added `storage` successfully.
+[flip : copy-artifacts] tar: removing leading '/' from member names
+[flip : copy-artifacts] tekton/results/output
+[flip : copy-artifacts] `output.tgz` -> `storage/mlpipeline/artifacts/flip-coin-with-dependency/flip/output.tgz`
+[flip : copy-artifacts] Total: 0 B, Transferred: 116 B, Speed: 2.39 KiB/s
+
+[flip-again : main] tails
+
+[flip-again : copy-artifacts] Added `storage` successfully.
+[flip-again : copy-artifacts] tekton/results/output
+[flip-again : copy-artifacts] tar: removing leading '/' from member names
+[flip-again : copy-artifacts] `output.tgz` -> `storage/mlpipeline/artifacts/flip-coin-with-dependency/flip-again/output.tgz`
+[flip-again : copy-artifacts] Total: 0 B, Transferred: 116 B, Speed: 3.29 KiB/s
+
+[print1 : main] tails
+[print1 : main] 
+
+[print3 : main] done
+
+[condition-1 : unnamed-0] + python -c import sys
+[condition-1 : unnamed-0] input1=str.rstrip(sys.argv[1])
+[condition-1 : unnamed-0] input2=str.rstrip(sys.argv[2])
+[condition-1 : unnamed-0] try:
+[condition-1 : unnamed-0]   input1=int(input1)
+[condition-1 : unnamed-0]   input2=int(input2)
+[condition-1 : unnamed-0] except:
+[condition-1 : unnamed-0]   input1=str(input1)
+[condition-1 : unnamed-0] status="true" if (input1 == input2) else "false"
+[condition-1 : unnamed-0] f = open("/tekton/results/status", "w")
+[condition-1 : unnamed-0] f.write(status)
+[condition-1 : unnamed-0] f.close() heads
+[condition-1 : unnamed-0]  heads
+
+[condition-2 : unnamed-0] + python -c import sys
+[condition-2 : unnamed-0] input1=str.rstrip(sys.argv[1])
+[condition-2 : unnamed-0] input2=str.rstrip(sys.argv[2])
+[condition-2 : unnamed-0] try:
+[condition-2 : unnamed-0]   input1=int(input1)
+[condition-2 : unnamed-0]   input2=int(input2)
+[condition-2 : unnamed-0] except:
+[condition-2 : unnamed-0]   input1=str(input1)
+[condition-2 : unnamed-0] status="true" if (input1 == input2) else "false"
+[condition-2 : unnamed-0] f = open("/tekton/results/status", "w")
+[condition-2 : unnamed-0] f.write(status)
+[condition-2 : unnamed-0] f.close() tails
+[condition-2 : unnamed-0]  tails
+
+[condition-3 : unnamed-0] + python -c import sys
+[condition-3 : unnamed-0] input1=str.rstrip(sys.argv[1])
+[condition-3 : unnamed-0] input2=str.rstrip(sys.argv[2])
+[condition-3 : unnamed-0] try:
+[condition-3 : unnamed-0]   input1=int(input1)
+[condition-3 : unnamed-0]   input2=int(input2)
+[condition-3 : unnamed-0] except:
+[condition-3 : unnamed-0]   input1=str(input1)
+[condition-3 : unnamed-0] status="true" if (input1 == input2) else "false"
+[condition-3 : unnamed-0] f = open("/tekton/results/status", "w")
+[condition-3 : unnamed-0] f.write(status)
+[condition-3 : unnamed-0] f.close() heads
+[condition-3 : unnamed-0]  tails
+
