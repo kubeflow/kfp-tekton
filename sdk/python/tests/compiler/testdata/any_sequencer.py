@@ -14,7 +14,7 @@
 
 from kfp import dsl
 from kfp_tekton.compiler import TektonCompiler
-from kfp_tekton.compiler.any_sequencer import after_any
+from kfp_tekton.dsl._any_seqencer import after_any
 
 
 @dsl.pipeline(
@@ -49,8 +49,8 @@ def any_sequence_pipeline(
         image="registry.access.redhat.com/ubi8/ubi-minimal",
         command=["/bin/bash", "-c"],
         arguments=["sleep 30"]
-    ).apply(after_any([task1, task2, task3]))
-
+    ).apply(after_any([task1, task2, task3], "any_test"))
+    
 
 if __name__ == "__main__":
     TektonCompiler().compile(any_sequence_pipeline, "any_sequencer" + ".yaml")
