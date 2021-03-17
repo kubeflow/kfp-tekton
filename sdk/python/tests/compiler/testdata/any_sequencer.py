@@ -14,7 +14,7 @@
 
 from kfp import dsl
 from kfp_tekton.compiler import TektonCompiler
-from kfp_tekton.dsl._any_sequencer import after_any
+from kfp_tekton.tekton import after_any
 
 
 @dsl.pipeline(
