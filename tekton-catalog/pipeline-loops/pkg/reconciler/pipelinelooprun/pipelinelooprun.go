@@ -33,6 +33,8 @@ import (
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+
+	runv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/run/v1alpha1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
 	listersalpha "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1alpha1"
@@ -237,7 +239,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 					// Mark run successful and stop the loop pipelinerun
 					run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 						"PipelineRuns completed successfully with the conditions are met")
-					run.Status.Results = []v1beta1.TaskRunResult{{
+					run.Status.Results = []runv1alpha1.RunResult{{
 						Name:  "condition",
 						Value: "pass",
 					}}
@@ -253,7 +255,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if nextIteration > totalIterations {
 		run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 			"All PipelineRuns completed successfully")
-		run.Status.Results = []v1beta1.TaskRunResult{{
+		run.Status.Results = []runv1alpha1.RunResult{{
 			Name:  "condition",
 			Value: "fail",
 		}}
