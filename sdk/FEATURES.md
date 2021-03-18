@@ -128,7 +128,7 @@ The `finally` syntax is supported since Tekton version `0.14.0`.
 
 ### Pipeline Loops
 
-PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) controller named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops. 
+PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks Controller](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops.
 
 To use this feature, please ensure Tekton version >= v0.19, and "data.enable-custom-tasks" is "true" in feature-flags configmap:
 `kubectl edit cm feature-flags -n tekton-pipelines`
@@ -141,12 +141,12 @@ To see how the Python SDK provides this feature, refer to the examples below:
 
 ### Any Sequencer
 
-When any one of the task dependencies completes successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym). 
+When any one of the task dependencies completes successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym).
 
 For example:
 
 ```
-from kfp_tekton.dsl._any_seqencer import after_any
+from kfp_tekton.tekton import after_any
 
 dsl.ContainerOp(
   ...
