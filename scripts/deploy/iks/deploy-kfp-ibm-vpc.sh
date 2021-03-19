@@ -29,17 +29,13 @@ USER_STR=$(echo $USER | LC_ALL=C tr -cd 'a-z0-9' | head -c 8)
 
 # These are reasonable defaults, actual values will be passed on from the ./deploy-ibm-vpc.sh script.
 # Ideally, BASE_DIR will be the name of $HOME/VPC and KF_NAME will match the name of the cluster.
-export KF_NAME=${KF_NAME:-"kf-${USER_STR}-${RAND_STR}"}
-
-export BASE_DIR=${BASE_DIR:-"$HOME/VPC_NAME"}
-export KF_DIR=${KF_DIR:-"${BASE_DIR}/${KF_NAME}"}
 
 # Set the configuration file to use, such as:
-export CONFIG_FILE=kfctl_ibm.yaml
-export CONFIG_URI="https://raw.githubusercontent.com/kubeflow/manifests/v1.2-branch/kfdef/kfctl_ibm.v1.2.0.yaml"
+export KF_CONFIG_FILE=kfctl_ibm.yaml
+export KF_CONFIG_URI="https://raw.githubusercontent.com/kubeflow/manifests/v1.2-branch/kfdef/kfctl_ibm.v1.2.0.yaml"
 
 function download_kfctl() {
-  cd $KF_DIR
+  cd $KF_INSTALL_DIR
   if [[ "$OSTYPE" == "darwin"* ]]; then
     curl -s -L https://github.com/kubeflow/kfctl/releases/download/v1.2.0/kfctl_v1.2.0-0-gbc038f9_darwin.tar.gz -o kfctl.tar.gz
   elif [[ "$OSTYPE" == "linux"* ]]; then
@@ -53,7 +49,7 @@ function download_kfctl() {
 
 function assert_gt() {
   if [[ $# -ne 3 ]]; then
-        echo "Usage: assert val1 val2 msg# Where val1 is asserted to be greater than val2."
+        echo "Usage: assert val1 val2 msg # Where val1 is asserted to be greater than val2."
         return 1
   fi
   local val1 = $1
@@ -64,7 +60,7 @@ function assert_gt() {
     return 0
   fi
 
-  echo "Assert failed:, $val1 is not greater than $val2. $msg"
+  echo "ERROR: Assert failed:, $val1 is not greater than $val2. $msg"
   return 2
 }
 
@@ -73,9 +69,9 @@ function usage() {
   echo ""
   echo "./deploy-kfp-ibm-vpc.sh"
   echo -e "\t-h --help"
-  echo -e "\t--kf-dir=${KF_DIR} (default value :BASE_DIR/KF_NAME)"
-  echo -e "\t--kf-name=${KF_NAME} (Suitable name for the kf delpoyment. Usually same as the name of the cluster)"
-  echo -e "\t--base-dir=${BASE_DIR} (Directory where the installation related files will be cached. HOME/VPC_NAME)"
+  echo -e "\t--kf-dir=${KF_INSTALL_DIR} (default value :BASE_DIR/KF_NAME)"
+  echo -e "\t--kf-name=${KF_INSTALL_NAME} (Suitable name for the kf delpoyment. Usually same as the name of the cluster)"
+  echo -e "\t--base-dir=${BASE_KF_DIR} (Directory where the installation related files will be cached. HOME/VPC_NAME)"
   echo ""
 }
 
@@ -88,13 +84,13 @@ while [ "$1" != "" ]; do
     exit
     ;;
   --kf-dir)
-    KF_DIR=$VALUE
+    KF_INSTALL_DIR=$VALUE
     ;;
   --kf-name)
-    KF_NAME=$VALUE
+    KF_INSTALL_NAME=$VALUE
     ;;
   --base-dir)
-    BASE_DIR=$VALUE
+    BASE_KF_DIR=$VALUE
     ;;
   *)
     echo "ERROR: unknown parameter \"$PARAM\""
@@ -104,25 +100,32 @@ while [ "$1" != "" ]; do
   esac
   shift
 done
+export KF_INSTALL_NAME=${KF_INSTALL_NAME:-"kf-${USER_STR}-${RAND_STR}"}
+
+export BASE_KF_DIR=${BASE_KF_DIR:-"$HOME/kubeflow_install"}
+export KF_INSTALL_DIR=${KF_INSTALL_DIR:-"${BASE_KF_DIR}/${KF_INSTALL_NAME}"}
 
 # Generate Kubeflow:
-mkdir -p ${KF_DIR}
-cd ${KF_DIR}
-curl -L ${CONFIG_URI} >${CONFIG_FILE}
+rm -rf ${KF_INSTALL_DIR}
+mkdir -p ${KF_INSTALL_DIR}
+cd ${KF_INSTALL_DIR}
+curl -L ${KF_CONFIG_URI} >${KF_CONFIG_FILE}
 
-# Download kfct script, if not already.
-if [[ ! -x "$KF_DIR/kfctl" ]]; then
+# Download the kfctl script, if not already.
+if [[ ! -x "${KF_INSTALL_DIR}/kfctl" ]]; then
   download_kfctl
 fi
 
-# Deploy Kubeflow. You can customize the CONFIG_FILE if needed.
-./kfctl apply -V -f ${CONFIG_FILE}
+"${KF_INSTALL_DIR}/kfctl" build -V -f ${KF_CONFIG_FILE}
+# Deploy Kubeflow. You can customize the KF_CONFIG_FILE if needed.
+"${KF_INSTALL_DIR}/kfctl" apply -V -f ${KF_CONFIG_FILE}
 
 # Check if kubeflow pods appear after install.
 if [[ -x `which kubectl` ]]; then
   echo "Waiting for pods to appear !"
-  value=$(kubectl -n kubeflow wait --for=condition=Ready --all pods | wc -l | xargs)
-  assert_gt "$value" "10" "kubeflow successful install should have more than 10 pods in \`Ready\` state."
+  sleep 60s
+  value=$(kubectl -n kubeflow wait --for=condition=Ready --timeout 300s --all pods | wc -l | xargs)
+  assert_gt "$value" "20" "kubeflow successful install should have more than 20 pods in \`Ready\` state."
 else
   echo "kubectl command not found, exiting ..."
   exit 1

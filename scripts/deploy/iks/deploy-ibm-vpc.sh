@@ -17,12 +17,12 @@
 
 # A script to deploy kubernetes cluster to IBM Cloud IKS.
 # Goals:
-# 1. Provide CLI options to start a IBM Cloud vpc-gen2 IKS cluster, in just one step.
+# 1. Provide CLI options to start a IBM Cloud vpc-gen2 IKS cluster with kubeflow deployed, in just one step.
 # 2. Reasonable defaults for every option, allowing the user to spend least amount of time understanding how it works.
 # 3. Takes care of complete cleanup of resources or just delete the cluster.
 # 4. A cluster may be deployed in an existing VPC.
 # 5. Store the cluster state, so that next run remembers the resources and perform delete/ or start new cluster operation in the previously created VPC.
-
+# 6. If a run crashes, allow for resuming where it left off, when re-run with same CLI options as previous run.
 # Non Goals:
 # 1. Managing user login. i.e. before running the script, user should be logged in or script will exit with suitable error.
 
@@ -40,10 +40,13 @@
 # 3. Delete a cluster, that was previously started.
 # ./deploy-ibm-vpc.sh --delete-cluster="cluster"
 #
-# 4. Start again deleted cluster.
+# 4. Start again cluster.
 # ./deploy-ibm-vpc.sh
 # ... (wait for finish.) A cluster with same specification will be started as specified in previous run.
-
+# 5. Completely delete cluster and associated resources.
+# ./deploy-ibm-vpc.sh --delete-cluster="full"
+# (It takes a while for the cluster to get deleted and all the resources released. You may run
+# the script again with same option (i.e.  --delete-cluster="full") to reattempt delete.
 # More options: 
 
 ## Set up the environment variables.
@@ -134,7 +137,7 @@ function complete_delete_cluster() {
     ibmcloud is subnetd -f -q $SUBNET_ID || true
     ibmcloud is pubgwd -f -q $GATEWAY_ID || true
     ibmcloud is vpcd -f -q $VPC_ID || true
-    if [[ "$?" -eq 0 ]]; then
+    if [ "$?" -eq 0 ] || [ "x$VPC_ID" == "x" ] ; then
         echo "Complete delete successful."
         rm $CONFIG_FILE_IKS_DEPLOY
     else
@@ -156,11 +159,22 @@ function cluster_name_to_cluster_id() {
     echo $value_cluster_id
 }
 
+function vpc_name_to_subnet_ids_without_pg() {
+    # Current APIS do not have way to determine SUBNET ID of a vpc-gen2 cluster.
+    # One way is to determine all the IPs of the nodes in the cluster and then match each subnets' CIDR block
+    # to see if the subnet may contain that IP. Still it can be challenging if two different subnets exist in two
+    # two different zones and have same vpc-prefixes (not sure if IBM Cloud allows this.).
+    # But for our purposes, we just list all subnets in a particular VPC and see if it has a public gateway.
+    existence_check "VPC_NAME" "vpc-name"
+    local subnets_of_vpc_without_pg=$(ibmcloud is subnets -q | grep "\s${VPC_NAME}\s" | awk '{ if ($7 == "-") print $1 }' )
+    echo $subnets_of_vpc_without_pg
+}
+
 function delete_cluster() {
     existence_check "CLUSTER_NAME" "cluster-name"
     local CLUSTER_ID=$(cluster_name_to_cluster_id)
     set -xe
-    ibmcloud ks cluster rm --force-delete-storage -c ${CLUSTER_NAME} || true
+    ibmcloud ks cluster rm -q -f --force-delete-storage -c ${CLUSTER_NAME} || true
     kubectl config delete-cluster "${CLUSTER_NAME}/$CLUSTER_ID" || true
     kubectl config delete-context "${CLUSTER_NAME}/$CLUSTER_ID" || true
 }
@@ -179,7 +193,7 @@ function vpc_name_to_subnet_ids() {
 
 function get_cluster_status() {
     local cluster_name="$1"
-    if [[ "x${cluster_name}" -eq "x" ]]; then
+    if [[ "x${cluster_name}" == "x" ]]; then
         local cluster_status=$(ibmcloud ks cluster ls -q --provider vpc-gen2 | grep "${cluster_name}\s" | awk '{print $3}')
         echo "$cluster_status"
     else
@@ -245,6 +259,7 @@ done
 
 echo -e "Environment variables for cluster ..."
 echo -e "$(current_env)"
+record_current_env
 
 if [[ "x$DELETE_CLUSTER" != "x" ]]; then
     if [[ "x${DELETE_CLUSTER}" == "xfull" ]]; then
@@ -298,16 +313,8 @@ else
     echo "Created VPC: $VPC_NAME with ID: $VPC_ID"
 fi
 
-#4. Subnet 
-if [[ "x${SUBNET_ID}" != "x" ]]; then
-    echo "Using an existing SUBNET: $SUBNET_ID for VPC with vpc-id: ${VPC_ID}."
-else
-    SUBNET_NAME="kf-${USER_STR}-${RAND_STR}-sub"
-    SUBNET_ID=$(ibmcloud is subnet-create $SUBNET_NAME $VPC_ID --ipv4-address-count 16 --zone $CLUSTER_ZONE -q | grep "^ID\b\s" | awk '{print $2}')
-    echo "Created subnet with name: $SUBNET_NAME and ID: $SUBNET_ID."
-fi
-
-#5. Create cluster.
+#4. Subnet
+# If cluster already exists, then we should try to get the subnet ID it is on.
 if [[ "x$CLUSTER_NAME" != "x" ]]; then
     CLUSTER_ID=$(cluster_name_to_cluster_id)
     if [[ "x$CLUSTER_ID" != "x" ]]; then
@@ -317,6 +324,25 @@ if [[ "x$CLUSTER_NAME" != "x" ]]; then
 else
     CLUSTER_NAME="kf-${USER_STR}-${RAND_STR}"
 fi
+
+if [[ "x${SUBNET_ID}" != "x" ]]; then
+    echo "Using an existing SUBNET: $SUBNET_ID for VPC with vpc-id: ${VPC_ID}."
+else
+    if [[ "x${CREATE_CLUSTER}" == "xfalse" ]]; then
+      if [[ "x${GATEWAY_ID}" == "x" ]]; then
+        SUBNET_ID=$(vpc_name_to_subnet_ids_without_pg)
+      else
+        echo "ERROR: A GATEWAY_ID is set to $GATEWAY_ID, but SUBNET_ID:$SUBNET_ID is unset."
+        exit 1
+      fi
+    else
+      SUBNET_NAME="kf-${USER_STR}-${RAND_STR}-sub"
+      SUBNET_ID=$(ibmcloud is subnet-create $SUBNET_NAME $VPC_ID --ipv4-address-count 16 --zone $CLUSTER_ZONE -q | grep "^ID\b\s" | awk '{print $2}')
+      echo "Created subnet with name: $SUBNET_NAME and ID: $SUBNET_ID."
+    fi
+fi
+
+#5. Create cluster.
 
 if [[ "x$CREATE_CLUSTER" != "xfalse" ]]; then
   echo "Creating cluster with name: $CLUSTER_NAME"
@@ -354,11 +380,11 @@ ibmcloud ks cluster config --cluster ${CLUSTER_NAME}
 echo "The cluster: $CLUSTER_NAME in zone: $CLUSTER_ZONE, is ready."
 
 if [ -x `which kubectl` ]; then
-    kubectl get nodes -o wide
+    kubectl wait --for=condition=Ready --timeout=200s --all nodes
 fi
 
-sleep 60
 ./deploy-kfp-ibm-vpc.sh --kf-name="$CLUSTER_NAME" --base-dir="$HOME/$VPC_NAME"
+
 # Test cases:
 # 1. ./deploy-ibm-vpc.sh
 #
