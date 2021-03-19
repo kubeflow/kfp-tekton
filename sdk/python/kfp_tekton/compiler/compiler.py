@@ -430,6 +430,14 @@ class TektonCompiler(Compiler):
         if template['metadata'].get('annotations', None):
           task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
           task_ref['taskSpec']['metadata']['annotations'] = template['metadata']['annotations']
+        if not hasattr(self, 'enable_cache') or self.enable_cache:
+          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+          task_ref['taskSpec']['metadata']['annotations'] = task_ref['taskSpec']['metadata'].get('annotations', {})
+          task_ref['taskSpec']['metadata']['labels'] = task_ref['taskSpec']['metadata'].get('labels', {})
+          task_ref['taskSpec']['metadata']['annotations']['tekton.dev/template'] = ""
+          task_ref['taskSpec']['metadata']['labels']['pipelines.kubeflow.org/cache_enabled'] = 'true'
+          task_ref['taskSpec']['metadata']['labels']['pipelines.kubeflow.org/pipelinename'] = ''
+          task_ref['taskSpec']['metadata']['labels']['pipelines.kubeflow.org/generation'] = ''
         task_refs.append(task_ref)
 
     # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
@@ -760,6 +768,7 @@ class TektonCompiler(Compiler):
               pipeline_func,
               package_path,
               type_check=True,
+              enable_cache=True,
               pipeline_conf: dsl.PipelineConf = None,
               tekton_pipeline_conf: TektonPipelineConf = None):
     """Compile the given pipeline function into workflow yaml.
@@ -773,6 +782,7 @@ class TektonCompiler(Compiler):
     """
     if tekton_pipeline_conf:
       self._set_pipeline_conf(tekton_pipeline_conf)
+    self.enable_cache = enable_cache
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
