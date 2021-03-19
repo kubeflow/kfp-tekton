@@ -41,6 +41,13 @@ spec:
       - name: my_pipe_param
         value: $(params.my_pipe_param)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: my_pipe_param
         steps:

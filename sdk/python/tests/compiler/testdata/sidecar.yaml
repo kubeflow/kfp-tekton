@@ -34,6 +34,13 @@ spec:
     tasks:
     - name: download
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/results.txt
           name: downloaded
@@ -56,6 +63,13 @@ spec:
       - name: download-downloaded
         value: $(tasks.download.results.downloaded)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: download-downloaded
         steps:

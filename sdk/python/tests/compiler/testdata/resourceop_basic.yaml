@@ -38,6 +38,13 @@ spec:
       - name: set-ownerreference
         value: 'false'
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - description: Action on the resource
           name: action

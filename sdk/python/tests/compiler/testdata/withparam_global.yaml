@@ -40,6 +40,13 @@ spec:
     tasks:
     - name: my-out-cop0
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/out.json
           name: out
@@ -60,6 +67,13 @@ spec:
       runAfter:
       - withparam-global-for-loop-1
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: my-out-cop0-out
         steps:

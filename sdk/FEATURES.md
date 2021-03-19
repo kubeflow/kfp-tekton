@@ -22,6 +22,7 @@ and test pipelines found in the KFP repository.
     - [Any Sequencer](#any-sequencer)
     - [Tekton Pipeline Variables](#tekton-pipeline-variables)
     - [Sidecars](#sidecars)
+    - [Caching](#caching)
 - [Pipeline DSL Features with a Custom Tekton Implementation](#pipeline-dsl-features-with-a-custom-tekton-implementation)
   - [Features with the Same Behavior as Argo](#features-with-the-same-behavior-as-argo)
     - [InitContainers](#initcontainers)
@@ -179,6 +180,12 @@ If the configured `nop` image contains the exact command the `Sidecar`
 was executing before receiving a "stop" signal, the `Sidecar` keeps
 running, eventually causing the `TaskRun` to time out with an error.
 For more information, see [Tekton issue 1347](https://github.com/tektoncd/pipeline/issues/1347).
+
+### Caching
+
+By default compiling a pipeline will add metadata annotations and labels so that results from tasks within a pipeline run can be re-used if that task is reused in a new pipeline run. This saves the pipeline run from re-executing the task when the results are already known. In order to compile a pipeline that doesn't use caching, the `--disable-cache` flag should be added to compilation statement; e.g. `dsl-compile-tekton --py pipeline.py --output pipeline.yaml --disable-cache`.
+
+The specific annotations and labels that are added to the task spec metadata are: `annotations={'tekton.dev/template': ""}` and `labels={'pipelines.kubeflow.org/cache_enabled': 'true', 'pipelines.kubeflow.org/pipelinename': '', 'pipelines.kubeflow.org/generation': ''}`.
 
 # Pipeline DSL Features with a Custom Tekton Implementation
 

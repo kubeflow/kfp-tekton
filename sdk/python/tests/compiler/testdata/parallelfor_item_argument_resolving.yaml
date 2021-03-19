@@ -63,6 +63,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Produce str", "outputs": [{"name":
               "Output", "type": "String"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Output/data
           name: output
@@ -118,6 +123,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Produce list of strings", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Output/data
           name: output
@@ -177,6 +187,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Produce list of ints", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Output/data
           name: output
@@ -237,6 +252,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Produce list of dicts", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Output/data
           name: output

@@ -51,6 +51,13 @@ spec:
       - name: tag
         value: $(params.tag)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: sleep_ms
         - name: tag
@@ -76,6 +83,13 @@ spec:
       - name: download-downloaded_resultOutput
         value: $(tasks.download.results.downloaded-resultoutput)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: download-downloaded_resultOutput
         steps:

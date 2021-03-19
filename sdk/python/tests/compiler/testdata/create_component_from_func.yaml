@@ -65,6 +65,11 @@ spec:
               "inputs": [{"default": "10", "name": "num_files", "optional": true,
               "type": "Integer"}], "name": "Produce dir with files python op", "outputs":
               [{"name": "output_dir"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - --num-files
@@ -115,6 +120,11 @@ spec:
               "Subdir"}], "image": "alpine"}}, "inputs": [{"name": "Directory", "type":
               "Directory"}, {"name": "Subpath", "type": "String"}], "name": "Get subdirectory",
               "outputs": [{"name": "Subdir", "type": "Directory"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - command:
           - sh
@@ -148,6 +158,11 @@ spec:
               \"$0\" > \"$1\"\nls -A -R \"$0\" > \"$1\"\n", {"inputPath": "Directory"},
               {"outputPath": "Items"}], "image": "alpine"}}, "inputs": [{"name": "Directory",
               "type": "Directory"}], "name": "List items", "outputs": [{"name": "Items"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Items/data
           name: items
@@ -188,6 +203,11 @@ spec:
               [{"name": "Directory1", "type": "Directory"}, {"name": "Directory2",
               "type": "Directory"}], "name": "List items 2", "outputs": [{"name":
               "Items"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Items/data
           name: items
