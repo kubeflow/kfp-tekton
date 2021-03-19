@@ -14,52 +14,118 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 # Install kubeflow with all the common operators and components on IBM Cloud IKS vpc-gen2 cluster.
+# This script should run as part of ./deploy-ibm-vpc, but can be used stand alone as well.
+
 set -o pipefail
 
 # cat /dev/urandom produces an exit code other than 0.
-RAND_STR=$(cat -v /dev/urandom  | LC_ALL=C tr -cd 'a-z0-9' | head -c 4)
+RAND_STR=$(cat -v /dev/urandom | LC_ALL=C tr -cd 'a-z0-9' | head -c 4)
 
 set -e
 
 # Convert a user name string to a trimmed and normalized (i.e. lower case alphanumeric string).
 USER_STR=$(echo $USER | LC_ALL=C tr -cd 'a-z0-9' | head -c 8)
 
-# These are reasonable defaults, these values will be passed on from the ./deploy-ibm-vpc.sh script.
-# Ideally, BASE_DIR will be the name of VPC and KF_NAME will match the name of the cluster.
+# These are reasonable defaults, actual values will be passed on from the ./deploy-ibm-vpc.sh script.
+# Ideally, BASE_DIR will be the name of $HOME/VPC and KF_NAME will match the name of the cluster.
 export KF_NAME=${KF_NAME:-"kf-${USER_STR}-${RAND_STR}"}
 
-export BASE_DIR=${BASE_DIR:-"$HOME"}
+export BASE_DIR=${BASE_DIR:-"$HOME/VPC_NAME"}
 export KF_DIR=${KF_DIR:-"${BASE_DIR}/${KF_NAME}"}
 
 # Set the configuration file to use, such as:
 export CONFIG_FILE=kfctl_ibm.yaml
 export CONFIG_URI="https://raw.githubusercontent.com/kubeflow/manifests/v1.2-branch/kfdef/kfctl_ibm.v1.2.0.yaml"
 
-
-function usage() {
-    echo -e "Deploy Kubeflow to vpc-gen2 cluster."
-    echo ""
-    echo "./deploy-kfp-ibm-vpc.sh"
-    echo -e "\t-h --help"
-    echo -e "\t--kf-dir=${KF_DIR}"
-    echo -e "\t--kf-name=${CLUSTER_NAME} (A cluster name must be unique across the zone.)"
-    echo -e "\t--k8s-version=${KUBERNETES_VERSION} (default)"
-    echo -e "\t--subnet-id=${SUBNET_ID} (auto created if not set)."
-    echo -e "\t--vpc-name=${VPC_NAME} (auto created if not set)."
-    echo -e "\t--worker-count=${WORKER_COUNT}."
-    echo -e "\t--worker-node-flavor=${WORKER_NODE_FLAVOR}."
-    echo -e "\t--delete-cluster=(full|cluster) pass \`full\` to also delete all the associated resources e.g. VPC, subnet, public gateway."
-    echo -e "\t--config-file=$CONFIG_FILE_IKS_DEPLOY (default) Location of the file that stores configuration."
-    echo ""
+function download_kfctl() {
+  cd $KF_DIR
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    curl -s -L https://github.com/kubeflow/kfctl/releases/download/v1.2.0/kfctl_v1.2.0-0-gbc038f9_darwin.tar.gz -o kfctl.tar.gz
+  elif [[ "$OSTYPE" == "linux"* ]]; then
+    curl -s -L https://github.com/kubeflow/kfctl/releases/download/v1.2.0/kfctl_v1.2.0-0-gbc038f9_linux.tar.gz -o kfctl.tar.gz
+  else
+    echo "Operating not supported. exiting..."
+    exit 2
+  fi
+  tar -xf kfctl.tar.gz
 }
 
+function assert_gt() {
+  if [[ $# -ne 3 ]]; then
+        echo "Usage: assert val1 val2 msg# Where val1 is asserted to be greater than val2."
+        return 1
+  fi
+  local val1 = $1
+  local val2 = $2
+  local msg = $3
+
+  if [[ "$val1" -gt "$val2" ]]; then
+    return 0
+  fi
+
+  echo "Assert failed:, $val1 is not greater than $val2. $msg"
+  return 2
+}
+
+function usage() {
+  echo -e "Deploy Kubeflow to vpc-gen2 cluster."
+  echo ""
+  echo "./deploy-kfp-ibm-vpc.sh"
+  echo -e "\t-h --help"
+  echo -e "\t--kf-dir=${KF_DIR} (default value :BASE_DIR/KF_NAME)"
+  echo -e "\t--kf-name=${KF_NAME} (Suitable name for the kf delpoyment. Usually same as the name of the cluster)"
+  echo -e "\t--base-dir=${BASE_DIR} (Directory where the installation related files will be cached. HOME/VPC_NAME)"
+  echo ""
+}
+
+while [ "$1" != "" ]; do
+  PARAM=$(echo $1 | awk -F= '{print $1}')
+  VALUE=$(echo $1 | awk -F= '{print $2}')
+  case $PARAM in
+  -h | --help)
+    usage
+    exit
+    ;;
+  --kf-dir)
+    KF_DIR=$VALUE
+    ;;
+  --kf-name)
+    KF_NAME=$VALUE
+    ;;
+  --base-dir)
+    BASE_DIR=$VALUE
+    ;;
+  *)
+    echo "ERROR: unknown parameter \"$PARAM\""
+    usage
+    exit 1
+    ;;
+  esac
+  shift
+done
 
 # Generate Kubeflow:
 mkdir -p ${KF_DIR}
 cd ${KF_DIR}
-curl -L ${CONFIG_URI} > ${CONFIG_FILE}
+curl -L ${CONFIG_URI} >${CONFIG_FILE}
+
+# Download kfct script, if not already.
+if [[ ! -x "$KF_DIR/kfctl" ]]; then
+  download_kfctl
+fi
 
 # Deploy Kubeflow. You can customize the CONFIG_FILE if needed.
-kfctl apply -V -f ${CONFIG_FILE}
+./kfctl apply -V -f ${CONFIG_FILE}
+
+# Check if kubeflow pods appear after install.
+if [[ -x `which kubectl` ]]; then
+  echo "Waiting for pods to appear !"
+  value=$(kubectl -n kubeflow wait --for=condition=Ready --all pods | wc -l | xargs)
+  assert_gt "$value" "10" "kubeflow successful install should have more than 10 pods in \`Ready\` state."
+else
+  echo "kubectl command not found, exiting ..."
+  exit 1
+fi
+echo "Open http://127.0.0.1:7080/ in a browser."
+kubectl -n istio-system port-forward service/istio-ingressgateway 7080:http2

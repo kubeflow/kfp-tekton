@@ -308,24 +308,32 @@ else
 fi
 
 #5. Create cluster.
-if [[ "x$CLUSTER_NAME" == "x" ]]; then
+if [[ "x$CLUSTER_NAME" != "x" ]]; then
+    CLUSTER_ID=$(cluster_name_to_cluster_id)
+    if [[ "x$CLUSTER_ID" != "x" ]]; then
+       echo "A Cluster with name: $CLUSTER_NAME and ID: $CLUSTER_ID, is already running. Not creating."
+       CREATE_CLUSTER="false"
+    fi
+else
     CLUSTER_NAME="kf-${USER_STR}-${RAND_STR}"
 fi
 
-echo "creating cluster with name: $CLUSTER_NAME"
+if [[ "x$CREATE_CLUSTER" != "xfalse" ]]; then
+  echo "Creating cluster with name: $CLUSTER_NAME"
 
-ibmcloud ks cluster create vpc-gen2 \
-         --name $CLUSTER_NAME \
-         --zone $CLUSTER_ZONE \
-         --version ${KUBERNETES_VERSION} \
-         --flavor ${WORKER_NODE_FLAVOR} \
-         --vpc-id ${VPC_ID} \
-         --subnet-id ${SUBNET_ID} \
-         --workers ${WORKER_COUNT}
+  ibmcloud ks cluster create vpc-gen2 \
+           --name $CLUSTER_NAME \
+           --zone $CLUSTER_ZONE \
+           --version ${KUBERNETES_VERSION} \
+           --flavor ${WORKER_NODE_FLAVOR} \
+           --vpc-id ${VPC_ID} \
+           --subnet-id ${SUBNET_ID} \
+           --workers ${WORKER_COUNT}
 
-echo "Cluster usually takes about 15 to 30 minutes to deploy."
+  echo "Cluster usually takes about 15 to 30 minutes to deploy."
 
-wait_for_cluster_start "$CLUSTER_NAME"
+  wait_for_cluster_start "$CLUSTER_NAME"
+fi
 #6. Attach a public gateway.
 
 # Check if the public gateway is already attached to VPC
@@ -349,10 +357,12 @@ if [ -x `which kubectl` ]; then
     kubectl get nodes -o wide
 fi
 
+sleep 60
+./deploy-kfp-ibm-vpc.sh --kf-name="$CLUSTER_NAME" --base-dir="$HOME/$VPC_NAME"
 # Test cases:
 # 1. ./deploy-ibm-vpc.sh
 #
-# value=$(kubectl get nodes | wc -l )
+# value=$(kubectl get nodes | wc -l | xargs)
 # assert [[ value == 2 ]]
 #
 # 2. ./deploy-ibm-vpc.sh --delete-cluster=full
@@ -364,6 +374,6 @@ fi
 # assert [[ ibmcloud is vpcs -q | wc -l  -eq 0 ]]
 # 3. ./deploy-ibm-vpc.sh --vpc-name="xyz-test" --cluster-name="abc-test"
 #
-# value=$(ibmcloud ks clusters -q | grep "abc-test" | wc -l)
+# value=$(ibmcloud ks clusters -q | grep "abc-test" | wc -l | xargs)
 # assert [[ value -eq "1" ]]
 #
