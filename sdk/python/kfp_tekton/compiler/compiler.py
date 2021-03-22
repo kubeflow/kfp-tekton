@@ -429,10 +429,9 @@ class TektonCompiler(Compiler):
         task_metadata['labels'] = template['metadata'].get('labels', {})
         task_metadata['labels']['pipelines.kubeflow.org/pipelinename'] = task_metadata['labels'].get('pipelines.kubeflow.org/pipelinename', '')
         task_metadata['labels']['pipelines.kubeflow.org/generation'] = task_metadata['labels'].get('pipelines.kubeflow.org/generation', '')
-        # Enable caching by default if a task label does not exist and caching at the pipeline level has not been disabled
-        if not task_metadata['labels'].get('pipelines.kubeflow.org/cache_enabled', None) and (not hasattr(self, 'enable_cache') or self.enable_cache):
-          task_metadata['labels']['pipelines.kubeflow.org/cache_enabled'] = 'true'
-
+        task_metadata['labels']['pipelines.kubeflow.org/cache_enabled'] = task_metadata['labels'].get('pipelines.kubeflow.org/cache_enabled', 'true')
+        if self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', None):
+          print("Warning: PipelineRun and Task level cache 'pipelines.kubeflow.org/cache_enabled' flag set. Task level flag may get overwritten.")
         task_metadata['annotations'] = template['metadata'].get('annotations', {})
         task_metadata['annotations']['tekton.dev/template'] = task_metadata['annotations'].get('tekton.dev/template', '')
         
@@ -766,7 +765,6 @@ class TektonCompiler(Compiler):
               pipeline_func,
               package_path,
               type_check=True,
-              enable_cache=True,
               pipeline_conf: dsl.PipelineConf = None,
               tekton_pipeline_conf: TektonPipelineConf = None):
     """Compile the given pipeline function into workflow yaml.
@@ -780,7 +778,6 @@ class TektonCompiler(Compiler):
     """
     if tekton_pipeline_conf:
       self._set_pipeline_conf(tekton_pipeline_conf)
-    self.enable_cache = enable_cache
     super().compile(pipeline_func, package_path, type_check, pipeline_conf=pipeline_conf)
 
   @staticmethod
