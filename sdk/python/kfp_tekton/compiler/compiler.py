@@ -424,20 +424,18 @@ class TektonCompiler(Compiler):
             'taskSpec': template['spec'],
           }
 
-        if template['metadata'].get('labels', None):
-          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
-          task_ref['taskSpec']['metadata']['labels'] = template['metadata']['labels']
-        if template['metadata'].get('annotations', None):
-          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
-          task_ref['taskSpec']['metadata']['annotations'] = template['metadata']['annotations']
-        if not hasattr(self, 'enable_cache') or self.enable_cache:
-          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
-          task_ref['taskSpec']['metadata']['annotations'] = task_ref['taskSpec']['metadata'].get('annotations', {})
-          task_ref['taskSpec']['metadata']['labels'] = task_ref['taskSpec']['metadata'].get('labels', {})
-          task_ref['taskSpec']['metadata']['annotations']['tekton.dev/template'] = ""
-          task_ref['taskSpec']['metadata']['labels']['pipelines.kubeflow.org/cache_enabled'] = 'true'
-          task_ref['taskSpec']['metadata']['labels']['pipelines.kubeflow.org/pipelinename'] = ''
-          task_ref['taskSpec']['metadata']['labels']['pipelines.kubeflow.org/generation'] = ''
+        task_metadata = task_ref['taskSpec'].get('metadata', {})
+        task_ref['taskSpec']['metadata'] = task_metadata
+        task_metadata['labels'] = template['metadata'].get('labels', {})
+        task_metadata['labels']['pipelines.kubeflow.org/pipelinename'] = task_metadata['labels'].get('pipelines.kubeflow.org/pipelinename', '')
+        task_metadata['labels']['pipelines.kubeflow.org/generation'] = task_metadata['labels'].get('pipelines.kubeflow.org/generation', '')
+        # Enable caching by default if a task label does not exist and caching at the pipeline level has not been disabled
+        if not task_metadata['labels'].get('pipelines.kubeflow.org/cache_enabled', None) and (not hasattr(self, 'enable_cache') or self.enable_cache):
+          task_metadata['labels']['pipelines.kubeflow.org/cache_enabled'] = 'true'
+
+        task_metadata['annotations'] = template['metadata'].get('annotations', {})
+        task_metadata['annotations']['tekton.dev/template'] = task_metadata['annotations'].get('tekton.dev/template', '')
+        
         task_refs.append(task_ref)
 
     # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
