@@ -237,9 +237,9 @@ via a Kubernetes configmap.
 
 ### Caching
 
-By default compiling a pipeline will add metadata annotations and labels so that results from tasks within a pipeline run can be re-used if that task is reused in a new pipeline run. This saves the pipeline run from re-executing the task when the results are already known. In order to compile a pipeline that doesn't use caching, the `--disable-cache` flag should be added to compilation statement; e.g. `dsl-compile-tekton --py pipeline.py --output pipeline.yaml --disable-cache`.
+By default compiling a pipeline will add metadata annotations and labels so that results from tasks within a pipeline run can be re-used if that task is reused in a new pipeline run. This saves the pipeline run from re-executing the task when the results are already known. 
 
-The specific annotations and labels that are added to the task spec metadata are: `annotations={'tekton.dev/template': ""}` and `labels={'pipelines.kubeflow.org/cache_enabled': 'true', 'pipelines.kubeflow.org/pipelinename': '', 'pipelines.kubeflow.org/generation': ''}`.
+The specific annotations and labels that are added to the task spec metadata to enable caching are: `annotations={'tekton.dev/template': ""}` and `labels={'pipelines.kubeflow.org/cache_enabled': 'true', 'pipelines.kubeflow.org/pipelinename': '', 'pipelines.kubeflow.org/generation': ''}`.
 
 ## Features with Limitations
 
