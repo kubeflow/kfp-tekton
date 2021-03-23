@@ -19,12 +19,12 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/golang/glog"
 
+	"github.com/ghodss/yaml"
 	"github.com/golang/protobuf/jsonpb"
-
-	"encoding/json"
 
 	pb "github.com/kubeflow/pipelines/api/v2alpha1/go"
 )
@@ -63,13 +63,21 @@ func main() {
 	// fmt.Println(a)
 	workflow, err := CompilePipelineSpec(spec, deploymentConfig)
 	if err != nil {
-		glog.Fatalf("Failed to compile pipeline IR to argo workflow: %v", err)
+		glog.Fatalf("Failed to compile pipeline IR to Tekton workflow: %v", err)
 	}
-	workflowInJson, err := json.MarshalIndent(workflow, "", "  ")
+
+	yamls, err := marshalPipelineCRDSet(workflow)
 	if err != nil {
-		glog.Fatalf("Could not marshal the workflow: %v", err)
+		glog.Fatalf("Failed to output Tekton workflow YAMLs: %v", err)
 	}
-	fmt.Println(string(workflowInJson))
+
+	fmt.Println(yamls)
+
+	// workflowInJson, err := json.MarshalIndent(workflow, "", "  ")
+	// if err != nil {
+	// 	glog.Fatalf("Could not marshal the workflow: %v", err)
+	// }
+	// fmt.Println(string(workflowInJson))
 	glog.Flush()
 }
 
@@ -86,4 +94,25 @@ func unmarshalDeploymentConfig(spec *pb.PipelineSpec) (*pb.PipelineDeploymentCon
 		return nil, err
 	}
 	return deploymentConfig, nil
+}
+
+func marshalPipelineCRDSet(pipelines *PipelineCRDSet) (string, error) {
+	var rev = []string{}
+	for _, task := range *pipelines.Tasks {
+		str, err := yaml.Marshal(task)
+		if err != nil {
+			return "", err
+		}
+		rev = append(rev, string(str))
+	}
+
+	for _, pipeline := range *pipelines.PipelineRuns {
+		str, err := yaml.Marshal(pipeline)
+		if err != nil {
+			return "", err
+		}
+		rev = append(rev, string(str))
+	}
+
+	return strings.Join(rev, "---\n"), nil
 }

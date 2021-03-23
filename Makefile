@@ -162,6 +162,26 @@ build-workflow: ## Build workflow
 build-cacheserver: ## Build cache
 	go build -o cache ./backend/src/cache/*.go
 
+.PHONY: build-v2-backend
+build-v2-backend: build-v2-compiler build-v2-driver build-v2-executor build-v2-publisher
+	@echo "$@: OK"
+
+.PHONY: build-v2-compiler
+build-v2-compiler:
+	go build -o v2-compiler ./backend/src/v2/compiler/*.go
+
+.PHONY: build-v2-driver
+build-v2-driver:
+	go build -o v2-driver ./backend/src/v2/driver/*.go
+
+.PHONY: build-v2-executor
+build-v2-executor:
+	go build -o v2-executor ./backend/src/v2/entrypoint/*.go
+
+.PHONY: build-v2-publisher
+build-v2-publisher:
+	go build -o v2-publisher ./backend/src/v2/publisher/*.go
+
 .PHONY: build-backend-images
 build-backend-images: \
 	build-api-server-image \

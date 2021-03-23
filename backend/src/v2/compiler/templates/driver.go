@@ -15,17 +15,16 @@
 package templates
 
 import (
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	k8sv1 "k8s.io/api/core/v1"
 )
 
 // TODO(Bobgy): make image configurable
 // gcr.io/gongyuan-pipeline-test/kfp-driver:latest
 const (
-	driverImage     = "gcr.io/gongyuan-pipeline-test/kfp-driver"
-	driverImageRef  = "@sha256:d3fa780ffc59a22253eb4b4460e89f722811dfdd2ded277d3606f1fce323af87"
-	driverImageFull = driverImage + driverImageRef
+	driverImage     = "docker.io/yihongwang/kfp-driver-dev"
+	driverImageRef  = "0.8"
+	driverImageFull = driverImage + ":" + driverImageRef
 )
 
 const (
@@ -52,73 +51,76 @@ var (
 	mlmdExecutionName = "kfp-executor-{{pod.name}}"
 )
 
-// TODO(Bobgy): parameters is no longer needed.
-// TODO(Bobgy): reuse existing templates if they are the same.
-func Driver(isDag bool) *workflowapi.Template {
-	driver := &workflowapi.Template{}
-	// driver.Name is not set, it should be set after calling this method.
-	driver.Container = &k8sv1.Container{}
-	driver.Container.Image = driverImageFull
-	driver.Container.Command = []string{"/bin/kfp-driver"}
-	driver.Inputs.Parameters = []workflowapi.Parameter{
-		{Name: DriverParamParentContextName},
-		{Name: DriverParamExecutionName, Value: v1alpha1.AnyStringPtr(mlmdExecutionName)},
-		{Name: DriverParamDriverType},
-		{Name: DriverParamTaskSpec},
+// Driver get Task template
+func Driver(isDag bool) *workflowapi.Task {
+	driver := &workflowapi.Task{}
+	driver.APIVersion = "tekton.dev/v1beta1"
+	driver.Kind = "Task"
+
+	var spec workflowapi.TaskSpec
+
+	params := []workflowapi.ParamSpec{
+		{Name: "kfp-task-spec", Type: "string"},
+		{Name: DriverParamParentContextName, Type: "string",
+			Default: &workflowapi.ArrayOrString{Type: "string", StringVal: ""}},
+		{Name: "kfp-execution-name", Type: "string"},
 	}
-	driver.Outputs.Parameters = []workflowapi.Parameter{
-		{Name: DriverParamExecutionId, ValueFrom: &workflowapi.ValueFrom{
-			Path: "/kfp/outputs/internal/execution-id",
-		}},
+
+	results := []workflowapi.TaskResult{
+		{Name: "execution-id", Description: "execution id"},
 	}
-	driver.Container.Args = []string{
-		"--logtostderr",
-		// TODO(Bobgy): make this configurable
-		"--mlmd_url=metadata-grpc-service.kubeflow.svc.cluster.local:8080",
-		"--parent_context_name={{inputs.parameters." + DriverParamParentContextName + "}}",
-		"--execution_name={{inputs.parameters." + DriverParamExecutionName + "}}",
-		"--driver_type={{inputs.parameters." + DriverParamDriverType + "}}",
-		"--task_spec={{inputs.parameters." + DriverParamTaskSpec + "}}",
-		"--output_path_execution_id={{outputs.parameters." + DriverParamExecutionId + ".path}}",
+
+	spec.Steps = []workflowapi.Step{
+		{Container: k8sv1.Container{Image: driverImageFull,
+			Command: []string{"/bin/kfp-driver"}}},
 	}
+
 	if isDag {
-		driver.Container.Args = append(
-			driver.Container.Args,
-			"--output_path_context_name={{outputs.parameters."+DriverParamContextName+".path}}",
-		)
-		driver.Outputs.Parameters = append(
-			driver.Outputs.Parameters,
-			workflowapi.Parameter{
-				Name: DriverParamContextName,
-				ValueFrom: &workflowapi.ValueFrom{
-					Path: "/kfp/outputs/internal/context-name",
-				},
-			},
+		spec.Steps[0].Container.Name = "dag-driver-main"
+		spec.Steps[0].Container.Args = []string{
+			"--logtostderr",
+			"--driver_type=DAG",
+			"--mlmd_url=metadata-grpc-service.kubeflow.svc.cluster.local:8080",
+			"--parent_context_name=$(params.kfp-parent-context-name)",
+			"--execution_name=kfp-$(params.kfp-execution-name)",
+			"--output_path_execution_id=$(results.execution-id.path)",
+			"--output_path_context_name=$(results.context-name.path)",
+			"--task_spec=$(params.kfp-task-spec)",
+		}
+
+		results = append(results,
+			workflowapi.TaskResult{Name: "context-name", Description: "context name"},
 		)
 	} else {
-		// input executor spec
-		driver.Container.Args = append(
-			driver.Container.Args,
-			"--executor_spec={{inputs.parameters."+DriverParamExecutorSpec+"}}",
+		spec.Steps[0].Container.Name = "executor-driver-main"
+		spec.Steps[0].Container.Args = []string{
+			"--logtostderr",
+			"--driver_type=EXECUTOR",
+			"--mlmd_url=metadata-grpc-service.kubeflow.svc.cluster.local:8080",
+			"--parent_context_name=$(params.kfp-parent-context-name)",
+			"--execution_name=kfp-$(params.kfp-execution-name)",
+			"--output_path_execution_id=$(results.execution-id.path)",
+			"--task_spec=$(params.kfp-task-spec)",
+			"--executor_spec=$(params.kfp-executor-spec)",
+			"--output_path_pod_spec_patch=$(results.pod-spec-patch.path)",
+			"--task_template_namespace=$(params.kfp-executor-template-namespace)",
+			"--task_template_name=$(params.kfp-executor-template-name)",
+		}
+
+		params = append(params,
+			workflowapi.ParamSpec{Name: "kfp-executor-spec", Type: "string"},
+			workflowapi.ParamSpec{Name: "kfp-executor-template-name", Type: "string"},
+			workflowapi.ParamSpec{Name: "kfp-executor-template-namespace", Type: "string"},
 		)
-		driver.Inputs.Parameters = append(
-			driver.Inputs.Parameters,
-			workflowapi.Parameter{Name: DriverParamExecutorSpec},
-		)
-		// output pod spec patch
-		driver.Container.Args = append(
-			driver.Container.Args,
-			"--output_path_pod_spec_patch="+outputPathPodSpecPatch,
-		)
-		driver.Outputs.Parameters = append(
-			driver.Outputs.Parameters,
-			workflowapi.Parameter{
-				Name: DriverParamPodSpecPatch,
-				ValueFrom: &workflowapi.ValueFrom{
-					Path: outputPathPodSpecPatch,
-				},
-			},
+
+		results = append(results,
+			workflowapi.TaskResult{Name: "pod-spec-patch", Description: "pod spec patch"},
 		)
 	}
+
+	spec.Params = params
+	spec.Results = results
+	driver.Spec = spec
+
 	return driver
 }

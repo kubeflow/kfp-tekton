@@ -15,121 +15,129 @@
 package main
 
 import (
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
+	"strconv"
+
+	"github.com/google/uuid"
 	pb "github.com/kubeflow/pipelines/api/v2alpha1/go"
-	"github.com/kubeflow/pipelines/backend/src/v2/common"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler/templates"
 	"github.com/pkg/errors"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 const (
 	rootDagDriverTaskName = "driver-kfp-root"
+	rootDagTaskName       = "kfp-dag-root-main"
 )
 
 const (
 	templateNameExecutorDriver    = "kfp-executor-driver"
 	templateNameDagDriver         = "kfp-dag-driver"
 	templateNameExecutorPublisher = "kfp-executor-publisher"
+	rootDagTaskSpec               = "root-dag-task-spec"
+	paramExecutionName            = "kfp-execution-name"
 )
 
+// PipelineCRDSet contains PipelineRuns and Tasks
+type PipelineCRDSet struct {
+	PipelineRuns *[]*workflowapi.PipelineRun
+	Tasks        *[]*workflowapi.Task
+}
+
+// CompilePipelineSpec convert PipelineSpec to CRDs
 func CompilePipelineSpec(
 	pipelineSpec *pb.PipelineSpec,
 	deploymentConfig *pb.PipelineDeploymentConfig,
-) (*workflowapi.Workflow, error) {
+) (*PipelineCRDSet, error) {
 
 	// validation
 	if pipelineSpec.GetPipelineInfo().GetName() == "" {
 		return nil, errors.New("Name is empty")
 	}
 
-	// initialization
-	var workflow workflowapi.Workflow
-	workflow.APIVersion = "argoproj.io/v1alpha1"
-	workflow.Kind = "Workflow"
-	workflow.GenerateName = pipelineSpec.GetPipelineInfo().GetName() + "-"
-
-	spec, err := generateSpec(pipelineSpec, deploymentConfig)
+	rev, err := generateCRDs(pipelineSpec, deploymentConfig)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to generate workflow spec")
 	}
-	workflow.Spec = *spec
 
-	return &workflow, nil
+	return rev, nil
 }
 
-func generateSpec(
+func generateCRDs(
 	pipelineSpec *pb.PipelineSpec,
 	deploymentConfig *pb.PipelineDeploymentConfig,
-) (*workflowapi.WorkflowSpec, error) {
+) (*PipelineCRDSet, error) {
+
+	var revTasks []*workflowapi.Task
+	var revPipelineRuns []*workflowapi.PipelineRun
+	var uID = uuid.New().String()
+	var executorTaskMap = make(map[string]string)
+	var pipelineName = pipelineSpec.GetPipelineInfo().GetName()
+	var labels = map[string]string{
+		"pipeline-uid": uID,
+	}
+
 	tasks := pipelineSpec.GetTasks()
-	var spec workflowapi.WorkflowSpec
+	// replace the tasks list with the tasks in a DAG
+	if pipelineSpec.Root.GetDag() != nil {
+		var dagTasks []*pb.PipelineTaskSpec
+		for _, task := range pipelineSpec.Root.GetDag().GetTasks() {
+			dagTasks = append(dagTasks, task)
+		}
+		tasks = dagTasks
+	}
 
 	// generate helper templates
+	// dag driver and executor driver are fixed task template, should be
+	// able to directly create them during installation
 	executorDriver := templates.Driver(false)
 	executorDriver.Name = templateNameExecutorDriver
 	dagDriver := templates.Driver(true)
 	dagDriver.Name = templateNameDagDriver
-	executorPublisher := templates.Publisher(common.PublisherType_EXECUTOR)
-	executorPublisher.Name = templateNameExecutorPublisher
-	executorTemplates := templates.Executor(templateNameExecutorDriver, templateNameExecutorPublisher)
 
-	// generate root template
-	var root workflowapi.Template
-	root.Name = "kfp-root"
-	rootDag := initRootDag(&spec, templateNameDagDriver)
-	root.DAG = rootDag
-	// TODO: make a generic default value
-	defaultTaskSpec := `{"taskInfo":{"name":"hello-world-dag"},"inputs":{"parameters":{"text":{"runtimeValue":{"constantValue":{"stringValue":"Hello, World!"}}}}}}`
+	revTasks = append(revTasks, dagDriver, executorDriver)
 
-	spec.Arguments.Parameters = []workflowapi.Parameter{
-		{Name: "task-spec", Value: v1alpha1.AnyStringPtr(defaultTaskSpec)},
+	// generate executor tasks' CRDs
+	for idx, task := range tasks {
+		executorTemplate := templates.Executor()
+		executorTemplate.Name = "task-" + strconv.Itoa(idx) + "-" + uID
+		executorTemplate.Labels = labels
+		executorTaskMap[task.TaskInfo.Name] = executorTemplate.Name
+		revTasks = append(revTasks, executorTemplate)
 	}
 
-	subDag, err := templates.Dag(&templates.DagArgs{
-		Tasks:                &tasks,
-		DeploymentConfig:     deploymentConfig,
-		ExecutorTemplateName: templates.TemplateNameExecutor,
+	// executorPublisher := templates.Publisher(common.PublisherType_EXECUTOR)
+	// executorPublisher.Name = templateNameExecutorPublisher
+	// executorTemplates := templates.Executor(templateNameExecutorDriver, templateNameExecutorPublisher)
+
+	// root.PipelineSpec = rootDag
+	// TODO: make a generic default value
+
+	root, err := templates.Dag(&templates.DagArgs{
+		IRComponentMap:             pipelineSpec.Components,
+		IRTasks:                    &tasks,
+		DeploymentConfig:           deploymentConfig,
+		TaskToTaskTemplate:         executorTaskMap,
+		RootDagDriverTaskName:      rootDagTaskName,
+		DagDriverTemplateName:      templateNameDagDriver,
+		ExecutorDriverTemplateName: templateNameExecutorDriver,
+		ExecutorTemplateName:       templates.TemplateNameExecutor,
+		UID:                        uID,
+		Labels:                     labels,
+		PipelineName:               pipelineName,
 	})
 	if err != nil {
 		return nil, err
 	}
-	parentContextName := "{{tasks." + rootDagDriverTaskName + ".outputs.parameters." + templates.DriverParamContextName + "}}"
-	root.DAG.Tasks = append(root.DAG.Tasks, workflowapi.DAGTask{
-		Name:         "sub-dag",
-		Template:     subDag.Name,
-		Dependencies: []string{rootDagDriverTaskName},
-		Arguments: workflowapi.Arguments{
-			Parameters: []workflowapi.Parameter{
-				{Name: templates.DagParamContextName, Value: v1alpha1.AnyStringPtr(parentContextName)},
-			},
-		},
-	})
 
-	spec.Templates = []workflowapi.Template{root, *subDag, *executorDriver, *dagDriver, *executorPublisher}
-	for _, template := range executorTemplates {
-		spec.Templates = append(spec.Templates, *template)
-	}
-	spec.Entrypoint = root.Name
-	return &spec, nil
-}
+	revPipelineRuns = append(revPipelineRuns, root)
 
-func initRootDag(spec *workflowapi.WorkflowSpec, templateNameDagDriver string) *workflowapi.DAGTemplate {
-	root := &workflowapi.DAGTemplate{}
-	// TODO(Bobgy): shall we pass a lambda "addTemplate()" here instead?
-	driverTask := &workflowapi.DAGTask{}
-	driverTask.Name = rootDagDriverTaskName
-	driverTask.Template = templateNameDagDriver
-	rootExecutionName := "kfp-root-{{workflow.name}}"
-	workflowParameterTaskSpec := "{{workflow.parameters.task-spec}}"
-	driverType := "DAG"
-	parentContextName := "" // root has no parent
-	driverTask.Arguments.Parameters = []workflowapi.Parameter{
-		{Name: templates.DriverParamExecutionName, Value: v1alpha1.AnyStringPtr(rootExecutionName)},
-		{Name: templates.DriverParamTaskSpec, Value: v1alpha1.AnyStringPtr(workflowParameterTaskSpec)},
-		{Name: templates.DriverParamDriverType, Value: v1alpha1.AnyStringPtr(driverType)},
-		{Name: templates.DriverParamParentContextName, Value: v1alpha1.AnyStringPtr(parentContextName)},
-	}
-	root.Tasks = append(root.Tasks, *driverTask)
-	return root
+	//parentContextName := "{{tasks." + rootDagDriverTaskName + ".outputs.parameters." + templates.DriverParamContextName + "}}"
+	//root.PipelineSpec.Tasks = append(root.PipelineSpec.Tasks, subDag.Tasks...)
+
+	// []workflowapi.Template{root, *subDag, *executorDriver, *dagDriver, *executorPublisher}
+	// for _, template := range executorTemplates {
+	// 	spec.PipelineSpec.Tasks = append(spec.PipelineSpec.Tasks, *template)
+	// }
+
+	return &PipelineCRDSet{&revPipelineRuns, &revTasks}, nil
 }

@@ -87,7 +87,7 @@ func main() {
 		glog.Fatal(err)
 	}
 	if driverType == driverTypeExecutor {
-		err = driveExecutor(executorSpec, taskSpec.GetOutputs(), execution, outputPathPodSpecPatch)
+		err = driveExecutor(ctx, executorSpec, taskSpec.GetOutputs(), execution, outputPathPodSpecPatch)
 		if err != nil {
 			glog.Fatal(err)
 		}
@@ -408,6 +408,7 @@ func initExecution(
 }
 
 func driveExecutor(
+	ctx context.Context,
 	executorSpec *pb.PipelineDeploymentConfig_ExecutorSpec,
 	outputsSpec *pb.TaskOutputsSpec,
 	execution *mlmdPb.Execution,
@@ -443,6 +444,12 @@ func driveExecutor(
 	}
 	mainContainer.Args = append(executorSpec.GetContainer().GetCommand(), executorSpec.GetContainer().GetArgs()...)
 	fillPlaceholdersForArray(&mainContainer.Args, execution, outputsSpec)
+
+	tektonClient := CreateTektonClientOrFatal(taskTemplateNameSpace)
+	_, err = tektonClient.PatchTaskContainer(ctx, taskTemplateName, 1, *mainContainer)
+	if err != nil {
+		glog.Fatalln(err)
+	}
 
 	// write pod spec patch to output path
 	podSpecPatchJsonBytes, err := json.Marshal(podSpec)

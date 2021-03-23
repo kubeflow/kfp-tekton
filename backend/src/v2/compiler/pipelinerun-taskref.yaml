@@ -1,0 +1,182 @@
+apiVersion: tekton.dev/v1beta1
+kind: task
+metadata:
+  name: executor-template-1
+spec:
+  stepTemplate:
+    volumeMounts:
+    - mountPath: /kfp/entrypoint
+      name: data
+  volumes:
+  - emptyDir: {}
+    name: data
+  steps:
+  - name: entrypoint-init
+    image: yihongwang/kfp-entrypoint-dev:0.8
+    command: ["cp"]
+    args: ["/bin/kfp-entrypoint", "/kfp/entrypoint/entrypoint"]
+  - name: task-executor
+    image: yihongwang/kfp-driver-dev:0.1
+    command: ["/bin/sh", "-c"]
+---
+apiVersion: tekton.dev/v1beta1
+kind: task
+metadata:
+  name: executor-template-2
+spec:
+  stepTemplate:
+    volumeMounts:
+    - mountPath: /kfp/entrypoint
+      name: data
+  volumes:
+  - emptyDir: {}
+    name: data
+  steps:
+  - name: entrypoint-init
+    image: yihongwang/kfp-entrypoint-dev:0.8
+    command: ["cp"]
+    args: ["/bin/kfp-entrypoint", "/kfp/entrypoint/entrypoint"]
+  - name: task-executor
+    image: yihongwang/kfp-driver-dev:0.1
+    command: ["/bin/sh", "-c"]
+---
+apiVersion: tekton.dev/v1beta1
+kind: task
+metadata:
+  name: dag-driver
+spec:
+  params:
+  - name: kfp-task-spec
+    type: string
+    description: task spec
+  - name: kfp-parent-context-name
+    type: string
+    description: context name
+    default: ""
+  - name: kfp-execution-name
+    type: string
+  results:
+    - name: execution-id
+      description: execution id
+    - name: context-name
+      description: context name
+  steps:
+  - name: dag-driver-main
+    image: yihongwang/kfp-driver-dev:0.8
+    command: ["/bin/kfp-driver"]
+    args:
+      - "--logtostderr"
+      - "--driver_type=DAG"
+      - "--mlmd_url=metadata-grpc-service.kubeflow.svc.cluster.local:8080"
+      - "--parent_context_name=$(params.kfp-parent-context-name)"
+      - "--execution_name=kfp-$(params.kfp-execution-name)"
+      - "--output_path_execution_id=$(results.execution-id.path)"
+      - "--output_path_context_name=$(results.context-name.path)"
+      - "--task_spec=$(params.kfp-task-spec)"
+---
+apiVersion: tekton.dev/v1beta1
+kind: task
+metadata:
+  name: executor-driver
+spec:
+  params:
+  - name: kfp-task-spec
+    type: string
+    description: task spec
+  - name: kfp-parent-context-name
+    type: string
+  - name: kfp-execution-name
+    type: string
+  - name: kfp-executor-spec
+    type: string
+    description: executor spec
+  - name: kfp-executor-template-name
+    type: string
+    description: executor template name
+  - name: kfp-executor-template-namespace
+    type: string
+    description: namespace of task template
+  results:
+    - name: execution-id
+      description: execution id
+    - name: pod-spec-patch
+      description: pod spec patch
+  steps:
+  - name: executor-driver-main
+    image: yihongwang/kfp-driver-dev:0.8
+    command: ["/bin/kfp-driver"]
+    args:
+      - "--logtostderr"
+      - "--driver_type=EXECUTOR"
+      - "--mlmd_url=metadata-grpc-service.kubeflow.svc.cluster.local:8080"
+      - "--parent_context_name=$(params.kfp-parent-context-name)"
+      - "--execution_name=kfp-$(params.kfp-execution-name)"
+      - "--output_path_execution_id=$(results.execution-id.path)"
+      - "--task_spec=$(params.kfp-task-spec)"
+      - "--executor_spec=$(params.kfp-executor-spec)"
+      - "--output_path_pod_spec_patch=$(results.pod-spec-patch.path)"
+      - "--task_template_namespace=$(params.kfp-executor-template-namespace)"
+      - "--task_template_name=$(params.kfp-executor-template-name)"
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: kfp-poc-pipeline
+spec:
+  serviceAccountNames:
+    - taskName: executor-driver-1
+      serviceAccountName: kfp-tekton
+    - taskName: executor-driver-2
+      serviceAccountName: kfp-tekton
+  pipelineSpec:
+    tasks:
+      - name: dag-driver-1
+        taskRef:
+          name: dag-driver
+        params:
+        - name: kfp-execution-name
+          value: dag-driver-1-$(context.pipelineRun.uid)
+        - name: kfp-task-spec
+          value: "{\"taskInfo\":{\"name\":\"hello-world-dag\"},\"inputs\":{\"parameters\":{\"text\":{\"runtimeValue\":{\"constantValue\":{\"stringValue\":\"Hello, World!\"}}}}}}"
+      - name: executor-driver-1
+        runAfter: [dag-driver-1]
+        taskRef:
+          name: executor-driver
+        params:
+        - name: kfp-execution-name
+          value: executor-driver-1-$(context.pipelineRun.uid)
+        - name: kfp-parent-context-name
+          value: $(tasks.dag-driver-1.results.context-name)
+        - name: kfp-executor-template-name
+          value: "executor-template-1"
+        - name: kfp-executor-template-namespace
+          value: "$(context.pipelineRun.namespace)"
+        - name: kfp-task-spec
+          value: "{\"taskInfo\":{\"name\":\"Producer\"},\"inputs\":{\"parameters\":{\"text\":{\"componentInputParameter\":\"text\"}}},\"outputs\":{\"parameters\":{\"output_value\":{\"type\":\"STRING\"}}},\"executorLabel\":\"Producer\"}"
+        - name: kfp-executor-spec
+          value: "{\"container\":{\"image\":\"google/cloud-sdk:latest\",\"command\":[\"sh\",\"-c\",\"set -e -x\\necho \\\"$0, this is an output parameter\\\" | gsutil cp - \\\"$1\\\"\\n\",\"{{$.inputs.parameters['text']}}\",\"{{$.outputs.parameters['output_value'].output_file}}\"]}}"
+      - name: executor-1
+        runAfter: [executor-driver-1]
+        taskRef:
+          name: executor-template-1
+      - name: executor-driver-2
+        runAfter: [executor-1]
+        taskRef:
+          name: executor-driver
+        params:
+        - name: kfp-execution-name
+          value: executor-driver-2-$(context.pipelineRun.uid)
+        - name: kfp-parent-context-name
+          value: $(tasks.dag-driver-1.results.context-name)
+        - name: kfp-executor-template-name
+          value: "executor-template-2"
+        - name: kfp-executor-template-namespace
+          value: "$(context.pipelineRun.namespace)"
+        - name: kfp-task-spec
+          value: "{\"taskInfo\":{\"name\":\"Consumer\"},\"inputs\":{\"parameters\":{\"input_value\":{\"taskOutputParameter\":{\"producerTask\":\"Producer\",\"outputParameterKey\":\"output_value\"}}}},\"executorLabel\":\"Consumer\"}"
+        - name: kfp-executor-spec
+          value: "{\"container\":{\"image\":\"google/cloud-sdk:latest\",\"command\":[\"sh\",\"-c\",\"set -e -x\\necho \\\"Read from an input parameter: \\\" \\u0026\\u0026 echo \\\"$0\\\"\\n\",\"{{$.inputs.parameters['input_value']}}\"]}}"
+      - name: executor-2
+        runAfter: [executor-driver-2]
+        taskRef:
+          name: executor-template-2

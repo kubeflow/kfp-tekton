@@ -35,6 +35,8 @@ const (
 	argumentOutputPathParameters   = "output_path_parameters"
 	argumentOutputPathPodSpecPatch = "output_path_pod_spec_patch"
 	argumentParentContextName      = "parent_context_name"
+	argumentTaskTemplateName       = "task_template_name"
+	argumentTaskTemplateNameSpace  = "task_template_namespace"
 )
 
 // command line variables
@@ -49,6 +51,8 @@ var (
 	outputPathContextName  string
 	outputPathParameters   string
 	outputPathPodSpecPatch string
+	taskTemplateName       string
+	taskTemplateNameSpace  string
 )
 
 // driver type enum
@@ -74,6 +78,8 @@ func initFlags() {
 	// TODO(Bobgy): this will not be used most likely, keep it here for now.
 	flag.StringVar(&outputPathParameters, argumentOutputPathParameters, "", "Output path where parameters should be written to.")
 	flag.StringVar(&outputPathPodSpecPatch, argumentOutputPathPodSpecPatch, "", "Output path where pod spec patch should be written to. Required when driver type is EXECUTOR.")
+	flag.StringVar(&taskTemplateName, argumentTaskTemplateName, "", "Name of the corresponding executor task template.")
+	flag.StringVar(&taskTemplateNameSpace, argumentTaskTemplateNameSpace, "", "Namespace of the corresponding executor task template")
 
 	flag.Parse()
 	glog.Infof("Driver arguments: %v", os.Args)
@@ -112,6 +118,13 @@ func validateFlagsOrFatal() {
 		// Pod spec patch is only produced when driver type is EXECUTOR.
 		if outputPathPodSpecPatch == "" {
 			glog.Fatalf("%s is empty. Required when driver type is %s.", argumentOutputPathPodSpecPatch, driverTypeExecutor)
+		}
+		// Need to know the executor task's task name and its namespace
+		if taskTemplateName == "" {
+			glog.Fatalln(argumentTaskTemplateName + " is empty.")
+		}
+		if taskTemplateNameSpace == "" {
+			glog.Fatalln(argumentTaskTemplateNameSpace + " is empty.")
 		}
 	}
 }

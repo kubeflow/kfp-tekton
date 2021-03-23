@@ -16,29 +16,43 @@ package templates
 
 import (
 	"fmt"
+	"strconv"
 
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/golang/protobuf/jsonpb"
 	pb "github.com/kubeflow/pipelines/api/v2alpha1/go"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler/util"
 	"github.com/pkg/errors"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 const (
 	// Dag Inputs
 	DagParamContextName = paramPrefixKfpInternal + "context-name"
+
+	ParamDagTaskSpec   = DriverParamTaskSpec
+	ParamExecutionName = "kfp-execution-name"
+
+	ExecutorDriverServiceAccount = "kfp-tekton"
 )
 
 // Const can not be refered via string pointers, so we use var here.
 var (
 	argoVariablePodName = "{{pod.name}}"
+	pipelineCounter     = 0
 )
 
 type DagArgs struct {
-	Tasks                *[]*pb.PipelineTaskSpec
-	DeploymentConfig     *pb.PipelineDeploymentConfig
-	ExecutorTemplateName string
+	IRComponentMap             map[string]*pb.ComponentSpec
+	IRTasks                    *[]*pb.PipelineTaskSpec
+	DeploymentConfig           *pb.PipelineDeploymentConfig
+	TaskToTaskTemplate         map[string]string
+	DagDriverTemplateName      string
+	RootDagDriverTaskName      string
+	ExecutorDriverTemplateName string
+	ExecutorTemplateName       string
+	UID                        string
+	Labels                     map[string]string
+	PipelineName               string
 }
 
 type taskData struct {
@@ -46,18 +60,52 @@ type taskData struct {
 	// we may need more stuff put here
 }
 
-func Dag(args *DagArgs) (*workflowapi.Template, error) {
+func Dag(args *DagArgs) (*workflowapi.PipelineRun, error) {
 	// convenient local variables
-	tasks := args.Tasks
+	tasks := args.IRTasks
 	deploymentConfig := args.DeploymentConfig
 	executors := deploymentConfig.GetExecutors()
+	var serviceAccountNames []workflowapi.PipelineRunSpecServiceAccountName
 
-	var dag workflowapi.Template
-	dag.Name = getUniqueDagName()
-	dag.DAG = &workflowapi.DAGTemplate{}
-	dag.Inputs.Parameters = []workflowapi.Parameter{
-		{Name: DagParamContextName},
+	// fill up basic data and dag-driver
+	root := &workflowapi.PipelineRun{}
+	root.APIVersion = "tekton.dev/v1beta1"
+	root.Kind = "PipelineRun"
+
+	root.Name = "pipelinerun-" + strconv.Itoa(pipelineCounter) + "-" + args.UID
+	root.Labels = args.Labels
+	pipelineCounter++
+
+	defaultTaskSpec := `{"taskInfo":{"name":"hello-world-dag"},"inputs":{"parameters":{"text":{"runtimeValue":{"constantValue":{"stringValue":"Hello, World!"}}}}}}`
+	root.Spec.Params = []workflowapi.Param{
+		{Name: ParamDagTaskSpec,
+			Value: workflowapi.ArrayOrString{
+				Type:      workflowapi.ParamTypeString,
+				StringVal: defaultTaskSpec,
+			},
+		},
 	}
+
+	dag := workflowapi.PipelineSpec{}
+	root.Spec.PipelineSpec = &dag
+
+	dag.Params = []workflowapi.ParamSpec{{Name: ParamDagTaskSpec, Type: "string"}}
+
+	// Always need a dag-driver to prepare the context for child tasks
+	dag.Tasks = []workflowapi.PipelineTask{
+		{Name: args.RootDagDriverTaskName, TaskRef: &workflowapi.TaskRef{Name: args.DagDriverTemplateName},
+			Params: []workflowapi.Param{
+				{Name: ParamExecutionName,
+					Value: workflowapi.ArrayOrString{Type: "string", StringVal: "root-dag-driver-$(context.pipelineRun.uid)"},
+				},
+				{Name: ParamDagTaskSpec,
+					Value: workflowapi.ArrayOrString{Type: "string", StringVal: fmt.Sprintf("$(params.%s)", ParamDagTaskSpec)},
+				},
+			},
+		},
+	}
+
+	// pipelineTasks := dag.Tasks
 	taskMap := make(map[string]*taskData)
 	for index, task := range *tasks {
 		name := task.GetTaskInfo().GetName()
@@ -74,14 +122,15 @@ func Dag(args *DagArgs) (*workflowapi.Template, error) {
 	}
 
 	// generate tasks
-	for _, task := range *tasks {
+	for idx, task := range *tasks {
+		// TODO(yhwang): need to check if this is a DAG task
 		// TODO(Bobgy): Move executor template generation out as a separate file.
 		executorLabel := task.GetExecutorLabel()
 		executorSpec := executors[executorLabel]
 		if executorSpec == nil {
 			return nil, errors.Errorf("Executor with label '%v' cannot be found in deployment config", executorLabel)
 		}
-		var executor workflowapi.Template
+		var executor workflowapi.PipelineTask
 		executor.Name = util.SanitizeK8sName(executorLabel)
 
 		argoTaskName := util.SanitizeK8sName(task.GetTaskInfo().GetName())
@@ -100,16 +149,18 @@ func Dag(args *DagArgs) (*workflowapi.Template, error) {
 			// For tasks without outputs spec, marshal an emtpy outputs spec.
 			outputsSpec = &pb.TaskOutputsSpec{}
 		}
-		outputsSpecInJson, err := marshaler.MarshalToString(outputsSpec)
-		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to marshal outputs spec to JSON: %s", task.GetOutputs().String())
-		}
-		parentContextNameValue := "{{inputs.parameters." + DagParamContextName + "}}"
+		// outputsSpecInJson, err := marshaler.MarshalToString(outputsSpec)
+		// if err != nil {
+		// 	return nil, errors.Wrapf(err, "Failed to marshal outputs spec to JSON: %s", task.GetOutputs().String())
+		// }
+		// parentContextNameValue := "{{inputs.parameters." + DagParamContextName + "}}"
 
 		dependencies, err := getTaskDependencies(task.GetInputs())
+
 		if err != nil {
 			return nil, errors.Wrapf(err, "Failed to get task dependencies for task: %s", task.String())
 		}
+
 		// Convert dependency names to sanitized ones and check validity.
 		for index, dependency := range *dependencies {
 			sanitizedDependencyName := util.SanitizeK8sName(dependency)
@@ -124,23 +175,42 @@ func Dag(args *DagArgs) (*workflowapi.Template, error) {
 			(*dependencies)[index] = sanitizedDependencyName
 		}
 
-		dag.DAG.Tasks = append(
-			dag.DAG.Tasks,
-			workflowapi.DAGTask{
-				Name:         argoTaskName,
-				Template:     args.ExecutorTemplateName,
-				Dependencies: *dependencies,
-				Arguments: workflowapi.Arguments{
-					Parameters: []workflowapi.Parameter{
-						{Name: ExecutorParamTaskSpec, Value: v1alpha1.AnyStringPtr(taskSpecInJson)},
-						{Name: ExecutorParamContextName, Value: v1alpha1.AnyStringPtr(parentContextNameValue)},
-						{Name: ExecutorParamExecutorSpec, Value: v1alpha1.AnyStringPtr(executorSpecInJson)},
-						{Name: ExecutorParamOutputsSpec, Value: v1alpha1.AnyStringPtr(outputsSpecInJson)},
-					},
+		// first task need to wait for the DAG driver
+		if idx == 0 {
+			*dependencies = append(*dependencies, args.RootDagDriverTaskName)
+		}
+
+		dag.Tasks = append(
+			dag.Tasks,
+			workflowapi.PipelineTask{
+				Name:     argoTaskName + "-executor-driver",
+				TaskRef:  &workflowapi.TaskRef{Name: args.ExecutorDriverTemplateName},
+				RunAfter: *dependencies,
+				Params: []workflowapi.Param{
+					{Name: ParamExecutionName, Value: workflowapi.ArrayOrString{Type: workflowapi.ParamTypeString, StringVal: argoTaskName + "-executor-driver-$(context.pipelineRun.uid)"}},
+					{Name: DriverParamParentContextName, Value: workflowapi.ArrayOrString{Type: workflowapi.ParamTypeString, StringVal: "$(tasks." + args.RootDagDriverTaskName + ".results.context-name)"}},
+					{Name: ExecutorParamTemplateNameSpace, Value: workflowapi.ArrayOrString{Type: workflowapi.ParamTypeString, StringVal: "$(context.pipelineRun.namespace)"}},
+					{Name: ExecutorParamTemplateName, Value: workflowapi.ArrayOrString{Type: workflowapi.ParamTypeString, StringVal: args.TaskToTaskTemplate[task.GetTaskInfo().GetName()]}},
+					{Name: ExecutorParamTaskSpec, Value: workflowapi.ArrayOrString{Type: workflowapi.ParamTypeString, StringVal: taskSpecInJson}},
+					{Name: ExecutorParamExecutorSpec, Value: workflowapi.ArrayOrString{Type: workflowapi.ParamTypeString, StringVal: executorSpecInJson}},
 				},
+			},
+			workflowapi.PipelineTask{
+				Name:     argoTaskName,
+				TaskRef:  &workflowapi.TaskRef{Name: args.TaskToTaskTemplate[task.TaskInfo.Name]},
+				RunAfter: []string{argoTaskName + "-executor-driver"},
+			},
+		)
+
+		serviceAccountNames = append(serviceAccountNames,
+			workflowapi.PipelineRunSpecServiceAccountName{TaskName: argoTaskName + "-executor-driver",
+				ServiceAccountName: ExecutorDriverServiceAccount,
 			})
 	}
-	return &dag, nil
+
+	root.Spec.ServiceAccountNames = serviceAccountNames
+
+	return root, nil
 }
 
 func getTaskDependencies(inputsSpec *pb.TaskInputsSpec) (*[]string, error) {
@@ -154,7 +224,7 @@ func getTaskDependencies(inputsSpec *pb.TaskInputsSpec) (*[]string, error) {
 			dependencies[producerTask] = true
 		}
 	}
-	dependencyList := make([]string, 0, len(dependencies))
+	dependencyList := make([]string, 0, len(dependencies)+1)
 	for dependency := range dependencies {
 		dependencyList = append(dependencyList, dependency)
 	}
