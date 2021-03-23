@@ -424,16 +424,17 @@ class TektonCompiler(Compiler):
             'taskSpec': template['spec'],
           }
 
-        task_metadata = task_ref['taskSpec'].get('metadata', {})
-        task_ref['taskSpec']['metadata'] = task_metadata
-        task_metadata['labels'] = template['metadata'].get('labels', {})
-        task_metadata['labels']['pipelines.kubeflow.org/pipelinename'] = task_metadata['labels'].get('pipelines.kubeflow.org/pipelinename', '')
-        task_metadata['labels']['pipelines.kubeflow.org/generation'] = task_metadata['labels'].get('pipelines.kubeflow.org/generation', '')
-        task_metadata['labels']['pipelines.kubeflow.org/cache_enabled'] = task_metadata['labels'].get('pipelines.kubeflow.org/cache_enabled', 'true')
-        if self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', None):
-          print("Warning: PipelineRun and Task level cache 'pipelines.kubeflow.org/cache_enabled' flag set. Task level flag may get overwritten.")
-        task_metadata['annotations'] = template['metadata'].get('annotations', {})
-        task_metadata['annotations']['tekton.dev/template'] = task_metadata['annotations'].get('tekton.dev/template', '')
+        task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+        task_labels = template['metadata'].get('labels', {})
+        task_ref['taskSpec']['metadata']['labels'] = task_labels
+        task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
+        task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
+        cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
+        task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
+
+        task_annotations = template['metadata'].get('annotations', {})
+        task_ref['taskSpec']['metadata']['annotations'] = task_annotations
+        task_annotations['tekton.dev/template'] = task_annotations.get('tekton.dev/template', '')
         
         task_refs.append(task_ref)
 
@@ -573,6 +574,8 @@ class TektonCompiler(Compiler):
     if self.pipeline_labels:
       pipeline_run['metadata']['labels'] = pipeline_run['metadata'].setdefault('labels', {})
       pipeline_run['metadata']['labels'].update(self.pipeline_labels)
+      # Remove pipeline level label for 'pipelines.kubeflow.org/cache_enabled' as it overwrites task level label
+      pipeline_run['metadata']['labels'].pop('pipelines.kubeflow.org/cache_enabled', None)
 
     if self.pipeline_annotations:
       pipeline_run['metadata']['annotations'] = pipeline_run['metadata'].setdefault('annotations', {})

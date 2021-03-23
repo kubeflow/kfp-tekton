@@ -362,6 +362,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.exit_handler import download_and_print
     self._test_pipeline_workflow(download_and_print, 'exit_handler.yaml')
 
+  def test_cache_workflow(self):
+    """
+    Test compiling a workflow with two tasks one with caching enabled and the other disabled.
+    """
+    from .testdata.cache import cache_pipeline
+    self._test_pipeline_workflow(cache_pipeline, 'cache.yaml')
+
   def test_tekton_pipeline_conf(self):
     """
     Test applying Tekton pipeline config to a workflow
