@@ -38,5 +38,6 @@ def cache_pipeline(
     )
     task2.add_pod_label('pipelines.kubeflow.org/cache_enabled', 'false')
 
+
 if __name__ == "__main__":
-    TektonCompiler().compile(any_sequence_pipeline, "cache" + ".yaml")
+    TektonCompiler().compile(cache_pipeline, "cache" + ".yaml")
