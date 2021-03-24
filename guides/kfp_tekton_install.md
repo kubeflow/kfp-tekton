@@ -16,7 +16,7 @@ A Kubernetes cluster `v1.18` that has least 8 vCPU and 16 GB memory.
 
 ### IBM Cloud Kubernetes Service (IKS)
 
-   1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://github.com/kubeflow/website/blob/master/content/en/docs/ibm/create-cluster.md#connecting-to-an-existing-cluster)
+   1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://master.kubeflow.org/docs/distributions/ibm/create-cluster/#connecting-to-an-existing-cluster)
    2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#ibm-cloud-block-storage-setup)
 
 ### OpenShift
