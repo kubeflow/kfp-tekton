@@ -41,6 +41,13 @@ spec:
     finally:
     - name: exiting
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - echo exit!
@@ -61,6 +68,13 @@ spec:
       - name: message
         value: $(params.message)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: message
         results:
@@ -86,6 +100,13 @@ spec:
       - name: outputpath
         value: $(params.outputpath)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: get-frequent-word
         - name: outputpath

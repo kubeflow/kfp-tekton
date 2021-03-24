@@ -424,12 +424,18 @@ class TektonCompiler(Compiler):
             'taskSpec': template['spec'],
           }
 
-        if template['metadata'].get('labels', None):
-          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
-          task_ref['taskSpec']['metadata']['labels'] = template['metadata']['labels']
-        if template['metadata'].get('annotations', None):
-          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
-          task_ref['taskSpec']['metadata']['annotations'] = template['metadata']['annotations']
+        task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+        task_labels = template['metadata'].get('labels', {})
+        task_ref['taskSpec']['metadata']['labels'] = task_labels
+        task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
+        task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
+        cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
+        task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
+
+        task_annotations = template['metadata'].get('annotations', {})
+        task_ref['taskSpec']['metadata']['annotations'] = task_annotations
+        task_annotations['tekton.dev/template'] = task_annotations.get('tekton.dev/template', '')
+        
         task_refs.append(task_ref)
 
     # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
@@ -568,6 +574,8 @@ class TektonCompiler(Compiler):
     if self.pipeline_labels:
       pipeline_run['metadata']['labels'] = pipeline_run['metadata'].setdefault('labels', {})
       pipeline_run['metadata']['labels'].update(self.pipeline_labels)
+      # Remove pipeline level label for 'pipelines.kubeflow.org/cache_enabled' as it overwrites task level label
+      pipeline_run['metadata']['labels'].pop('pipelines.kubeflow.org/cache_enabled', None)
 
     if self.pipeline_annotations:
       pipeline_run['metadata']['annotations'] = pipeline_run['metadata'].setdefault('annotations', {})

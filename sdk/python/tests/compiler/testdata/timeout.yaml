@@ -31,6 +31,13 @@ spec:
     tasks:
     - name: random-failure
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - import random; import sys; exit_code = random.choice([0,1,2,3]); print(exit_code);
@@ -43,6 +50,13 @@ spec:
       timeout: 20s
     - name: random-failure-2
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - import random; import sys; exit_code = random.choice([0,1]); print(exit_code);
