@@ -20,16 +20,16 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
 
 class AnySequencer(ContainerOp):
-    """Represents an op present that will proceed when any denpendent condition met
+    """A containerOp that will proceed when any of the dependent containerOps completed
+       successfully
 
     Args:
-        name: the name of the op. It does not have to be unique within a pipeline
-            because the pipeline will generates a unique new name in case of conflicts.
+        name: The name of the containerOp. It does not have to be unique within a pipeline
+                because the pipeline will generate a unique new name in case of conflicts.
 
-        any: the list of `Sidecar` objects describing the sidecar containers to deploy
-                together with the `main` container.
+        any: List of `Conditional` containerOps that deploy together with the `main`
+                containerOp.
     """
-
     def __init__(self,
                  any: List[dsl.ContainerOp],
                  name: str = None,):
