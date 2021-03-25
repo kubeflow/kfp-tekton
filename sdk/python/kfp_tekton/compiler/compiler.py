@@ -436,7 +436,7 @@ class TektonCompiler(Compiler):
         task_annotations = template['metadata'].get('annotations', {})
         task_ref['taskSpec']['metadata']['annotations'] = task_annotations
         task_annotations['tekton.dev/template'] = task_annotations.get('tekton.dev/template', '')
-        
+
         task_refs.append(task_ref)
 
     # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
@@ -571,7 +571,7 @@ class TektonCompiler(Compiler):
         }
       }
     }
-    
+
     if self.pipeline_labels:
       pipeline_run['metadata']['labels'] = pipeline_run['metadata'].setdefault('labels', {})
       pipeline_run['metadata']['labels'].update(self.pipeline_labels)
@@ -891,7 +891,7 @@ class TektonCompiler(Compiler):
                                          package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
         else:
           pipeline_loop_cr = TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i])
-          loop_package_annotations = '\n'.join([loop_package_annotations,'---\n' + pipeline_loop_cr])
+          loop_package_annotations = '\n'.join([loop_package_annotations, '---\n' + pipeline_loop_cr])
       if loop_package_annotations:
         workflow['metadata']['annotations']['tekton.dev/resource_templates'] = loop_package_annotations
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
