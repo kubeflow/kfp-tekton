@@ -63,6 +63,9 @@ The following scripts are used within the pipeline:
   - Deletes the kubeflow deployment and cleans up any related resources.
 - `undeploy-tekton.sh`
   - Deletes the tekton deployment and cleans up any related resources.
+- `deploy-ibm-vpc.sh` and `./deploy-kfp-ibm-vpc.sh` 
+  - Please see the section [A script to deploy kubernetes cluster to IBM Cloud IKS.](#a-script-to-deploy-kubernetes-cluster-to-ibm-cloud-iks), 
+    for usage guide.
 
 These scripts store variables into ${ARCHIVE_DIR}/build.properties which could be used
 by the subsequent jobs in the next stage. You need to specify `build.properties` as a
@@ -78,3 +81,87 @@ The toolchain executes every XXX.
 
 The toolchain outputs job updates to [this](https://ibm-cloudplatform.slack.com/archives/G01LD87L81Z) slack channel.
 
+## A script to deploy kubernetes cluster to IBM Cloud IKS.
+
+### Goals:
+
+1. Provide CLI options to start a IBM Cloud vpc-gen2 IKS cluster with kubeflow deployed, in just one step.
+2. Reasonable defaults for every option, allowing the user to spend least amount of time understanding how it works.
+3. Takes care of complete cleanup of resources or just delete the cluster.
+4. A cluster may be deployed in an existing VPC.
+5. Store the cluster state, so that next run remembers the resources and perform delete/ or start new cluster operation
+   in the previously created VPC.
+6. If a run crashes, allow for resuming where it left off, when re-run with same CLI options as previous run.
+
+### Non Goals:
+1. Managing user login. i.e. before running the script, user should be logged in or script will exit with suitable error.
+
+### User guide
+Know more about the CLI options (and the defaults) by executing: 
+`./deploy-ibm-vpc.sh --help`
+
+*Please note, the script stores all the CLI options passed as configuration for future run. The next run
+will load those values as default values for the specified CLI options. The location of the config can be specified by,
+--config-file="/path/config-file"*
+
+1. Deploy cluster with just defaults.
+
+  ```shell
+    ./deploy-ibm-vpc.sh
+    ... (wait for finish.)
+    kubectl get nodes
+    kubectl -n kubeflow get pods
+    ... (should list all the pods as running.)
+  ```
+   __The above run does not provide any CLI options (e.g. --cluster-name/--vpc-name). The script above can either
+   generate a cluster-name and vpc-name on it's own or load these values from config-file.__
+
+2. Deploy cluster with cluster-name and vpc-name provided.
+
+  ```shell
+  ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc"
+   ... (wait for finish.)
+  kubectl get nodes
+  kubectl -n kubeflow get pods
+  ```
+3. Delete a cluster, that was previously started.
+  
+   ```shell
+   ./deploy-ibm-vpc.sh --delete-cluster="cluster"
+   ```
+  
+   __The above step, deletes a cluster by looking up previously stored state in config file
+   (i.e. the option --config-file=`/path/value`)__
+
+4. Start again cluster.
+   
+   ```shell
+   ./deploy-ibm-vpc.sh
+    ... (wait for finish.) A cluster with same specification will be started as specified in previous run.
+   ```
+5. Delete a cluster by specifying it's name and name of the VPC where it is running.
+  
+  ```shell
+  ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc" --delete-cluster="cluster"
+  ```
+
+6. Completely delete cluster and associated resources.
+
+  Please note that, a subnet cannot be deleted unless it is released by VNIC that is attached to the instance. This can
+  only, happen when that instance is deleted. At the moment there is no mechanism provided by cloud API to detach a VNIC
+  from a subnet.
+  
+  Similarly, a VPC can only be delete when all it's resources are released. When a cluster is deleted it takes more
+  than 40 mins, to completely release it's resources. And, it is not a great user experience if the scripts hangs for
+  40 mins to await a complete delete of the cluster. The other alternative is to prompt the user to run the same delete
+  command again, once the cluster is deleted. Second attempt of delete will make sure any lingering resources are also
+  released.
+  
+    ```shell 
+    ./deploy-ibm-vpc.sh --delete-cluster="full"
+     (It takes a while for the cluster to get deleted and all the resources released. You may run
+     the script again with same option (i.e.  --delete-cluster="full") to reattempt delete.
+    ```
+  
+  __A "full" delete also deletes the config-file, the stored state (i.e. VPC id/subnets/clusters etc.) of a vpc is
+  irrelevant once the VPC is deleted.__
