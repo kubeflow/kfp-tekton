@@ -16,14 +16,14 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    anyConditions: '{"any-sequencer-79117": ["task1", "task2", "task3"]}'
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Any Sequencer Component
       Demo", "name": "Any Sequencer"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"task1": [], "task2": [], "task3": [], "task4": []}'
+    tekton.dev/artifact_items: '{"any-test": [], "task1": [], "task2": [], "task3":
+      [], "task4": []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
   name: any-sequencer
@@ -32,6 +32,13 @@ spec:
     tasks:
     - name: task1
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - sleep 15
@@ -43,6 +50,13 @@ spec:
       timeout: 0s
     - name: task2
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - sleep 200
@@ -54,6 +68,13 @@ spec:
       timeout: 0s
     - name: task3
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - sleep 300
@@ -65,8 +86,15 @@ spec:
       timeout: 0s
     - name: task4
       runAfter:
-      - any-sequencer-79117
+      - any-test
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - sleep 30
@@ -76,13 +104,20 @@ spec:
           image: registry.access.redhat.com/ubi8/ubi-minimal
           name: main
       timeout: 0s
-    - name: any-sequencer-79117
+    - name: any-test
       params:
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)
       - name: pipelineRun-namespace
         value: $(context.pipelineRun.namespace)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace
@@ -98,4 +133,5 @@ spec:
           - any-taskrun
           image: dspipelines/any-sequencer:latest
           name: main
+      timeout: 0s
   timeout: 0s

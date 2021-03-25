@@ -42,8 +42,8 @@ metadata:
     tekton.dev/resource_templates: "\n---\napiVersion: custom.tekton.dev/v1alpha1\n\
       kind: PipelineLoop\nmetadata: {name: parallelfor-item-argument-resolving-for-loop-1}\n\
       spec:\n  pipelineSpec:\n    params:\n    - {name: produce-list-of-strings-Output-loop-item,\
-      \ type: string}\n    - {name: produce-str-Output, type: string}\n    - {name:\
-      \ produce-list-of-strings-Output, type: string}\n    tasks:\n    - name: consume\n\
+      \ type: string}\n    - {name: produce-list-of-strings-Output, type: string}\n\
+      \    - {name: produce-str-Output, type: string}\n    tasks:\n    - name: consume\n\
       \      params:\n      - {name: produce-list-of-strings-Output, value: $(params.produce-list-of-strings-Output)}\n\
       \      taskSpec:\n        steps:\n        - name: main\n          args: [--param1,\
       \ $(inputs.params.produce-list-of-strings-Output)]\n          command:\n   \
@@ -56,20 +56,22 @@ metadata:
       \            _parsed_args = vars(_parser.parse_args())\n\n            _outputs\
       \ = consume(**_parsed_args)\n          image: python:3.7\n        params:\n\
       \        - {name: produce-list-of-strings-Output, type: string}\n        metadata:\n\
-      \          annotations: {pipelines.kubeflow.org/component_spec: '{\"implementation\"\
-      :\n              {\"container\": {\"args\": [\"--param1\", {\"inputValue\":\
-      \ \"param1\"}], \"command\":\n              [\"sh\", \"-ec\", \"program_path=$(mktemp)\\\
-      nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\\npython3\n          \
-      \    -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def consume(param1):\\n   \
-      \ print(param1)\\n\\nimport\n              argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',\
+      \          labels:\n            pipelines.kubeflow.org/pipelinename: ''\n  \
+      \          pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {pipelines.kubeflow.org/component_spec: '{\"\
+      implementation\":\n              {\"container\": {\"args\": [\"--param1\", {\"\
+      inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\", \"\
+      program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\
+      \\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def consume(param1):\\\
+      n    print(param1)\\n\\nimport\n              argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',\
       \ description='''')\\n_parser.add_argument(\\\"--param1\\\",\n             \
       \ dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\\
       n_parsed_args\n              = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\\
       n\"],\n              \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"\
-      param1\"}], \"name\": \"Consume\"}'}\n      timeout: 0s\n    - name: consume-2\n\
-      \      params:\n      - {name: produce-list-of-strings-Output-loop-item, value:\
-      \ $(params.produce-list-of-strings-Output-loop-item)}\n      taskSpec:\n   \
-      \     steps:\n        - name: main\n          args: [--param1, $(inputs.params.produce-list-of-strings-Output-loop-item)]\n\
+      param1\"}], \"name\": \"Consume\"}',\n            tekton.dev/template: ''}\n\
+      \      timeout: 0s\n    - name: consume-2\n      params:\n      - {name: produce-list-of-strings-Output-loop-item,\
+      \ value: $(params.produce-list-of-strings-Output-loop-item)}\n      taskSpec:\n\
+      \        steps:\n        - name: main\n          args: [--param1, $(inputs.params.produce-list-of-strings-Output-loop-item)]\n\
       \          command:\n          - sh\n          - -ec\n          - |\n      \
       \      program_path=$(mktemp)\n            printf \"%s\" \"$0\" > \"$program_path\"\
       \n            python3 -u \"$program_path\" \"$@\"\n          - |\n         \
@@ -79,18 +81,20 @@ metadata:
       \ default=argparse.SUPPRESS)\n            _parsed_args = vars(_parser.parse_args())\n\
       \n            _outputs = consume(**_parsed_args)\n          image: python:3.7\n\
       \        params:\n        - {name: produce-list-of-strings-Output-loop-item,\
-      \ type: string}\n        metadata:\n          annotations: {pipelines.kubeflow.org/component_spec:\
-      \ '{\"implementation\":\n              {\"container\": {\"args\": [\"--param1\"\
-      , {\"inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\"\
-      , \"program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\
-      \"\\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def\
-      \ consume(param1):\\n    print(param1)\\n\\nimport\n              argparse\\\
-      n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\
-      \"--param1\\\",\n              dest=\\\"param1\\\", type=str, required=True,\
-      \ default=argparse.SUPPRESS)\\n_parsed_args\n              = vars(_parser.parse_args())\\\
-      n\\n_outputs = consume(**_parsed_args)\\n\"],\n              \"image\": \"python:3.7\"\
-      }}, \"inputs\": [{\"name\": \"param1\"}], \"name\": \"Consume\"}'}\n      timeout:\
-      \ 0s\n    - name: consume-3\n      params:\n      - {name: produce-str-Output,\
+      \ type: string}\n        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {pipelines.kubeflow.org/component_spec: '{\"\
+      implementation\":\n              {\"container\": {\"args\": [\"--param1\", {\"\
+      inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\", \"\
+      program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\
+      \\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def consume(param1):\\\
+      n    print(param1)\\n\\nimport\n              argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',\
+      \ description='''')\\n_parser.add_argument(\\\"--param1\\\",\n             \
+      \ dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\\
+      n_parsed_args\n              = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\\
+      n\"],\n              \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"\
+      param1\"}], \"name\": \"Consume\"}',\n            tekton.dev/template: ''}\n\
+      \      timeout: 0s\n    - name: consume-3\n      params:\n      - {name: produce-str-Output,\
       \ value: $(params.produce-str-Output)}\n      taskSpec:\n        steps:\n  \
       \      - name: main\n          args: [--param1, $(inputs.params.produce-str-Output)]\n\
       \          command:\n          - sh\n          - -ec\n          - |\n      \
@@ -102,22 +106,25 @@ metadata:
       \ default=argparse.SUPPRESS)\n            _parsed_args = vars(_parser.parse_args())\n\
       \n            _outputs = consume(**_parsed_args)\n          image: python:3.7\n\
       \        params:\n        - {name: produce-str-Output, type: string}\n     \
-      \   metadata:\n          annotations: {pipelines.kubeflow.org/component_spec:\
-      \ '{\"implementation\":\n              {\"container\": {\"args\": [\"--param1\"\
-      , {\"inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\"\
-      , \"program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\
-      \"\\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def\
-      \ consume(param1):\\n    print(param1)\\n\\nimport\n              argparse\\\
-      n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\
-      \"--param1\\\",\n              dest=\\\"param1\\\", type=str, required=True,\
-      \ default=argparse.SUPPRESS)\\n_parsed_args\n              = vars(_parser.parse_args())\\\
-      n\\n_outputs = consume(**_parsed_args)\\n\"],\n              \"image\": \"python:3.7\"\
-      }}, \"inputs\": [{\"name\": \"param1\"}], \"name\": \"Consume\"}'}\n      timeout:\
-      \ 0s\n  iterateParam: produce-list-of-strings-Output-loop-item\n\n---\napiVersion:\
-      \ custom.tekton.dev/v1alpha1\nkind: PipelineLoop\nmetadata: {name: parallelfor-item-argument-resolving-for-loop-2}\n\
-      spec:\n  pipelineSpec:\n    params:\n    - {name: produce-list-of-ints-Output-loop-item,\
-      \ type: string}\n    - {name: produce-list-of-ints-Output, type: string}\n \
-      \   tasks:\n    - name: consume-4\n      params:\n      - {name: produce-list-of-ints-Output,\
+      \   metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {pipelines.kubeflow.org/component_spec: '{\"\
+      implementation\":\n              {\"container\": {\"args\": [\"--param1\", {\"\
+      inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\", \"\
+      program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\
+      \\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def consume(param1):\\\
+      n    print(param1)\\n\\nimport\n              argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',\
+      \ description='''')\\n_parser.add_argument(\\\"--param1\\\",\n             \
+      \ dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\\
+      n_parsed_args\n              = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\\
+      n\"],\n              \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"\
+      param1\"}], \"name\": \"Consume\"}',\n            tekton.dev/template: ''}\n\
+      \      timeout: 0s\n  iterateParam: produce-list-of-strings-Output-loop-item\n\
+      \n---\napiVersion: custom.tekton.dev/v1alpha1\nkind: PipelineLoop\nmetadata:\
+      \ {name: parallelfor-item-argument-resolving-for-loop-2}\nspec:\n  pipelineSpec:\n\
+      \    params:\n    - {name: produce-list-of-ints-Output-loop-item, type: string}\n\
+      \    - {name: produce-list-of-ints-Output, type: string}\n    tasks:\n    -\
+      \ name: consume-4\n      params:\n      - {name: produce-list-of-ints-Output,\
       \ value: $(params.produce-list-of-ints-Output)}\n      taskSpec:\n        steps:\n\
       \        - name: main\n          args: [--param1, $(inputs.params.produce-list-of-ints-Output)]\n\
       \          command:\n          - sh\n          - -ec\n          - |\n      \
@@ -129,18 +136,20 @@ metadata:
       \ default=argparse.SUPPRESS)\n            _parsed_args = vars(_parser.parse_args())\n\
       \n            _outputs = consume(**_parsed_args)\n          image: python:3.7\n\
       \        params:\n        - {name: produce-list-of-ints-Output, type: string}\n\
-      \        metadata:\n          annotations: {pipelines.kubeflow.org/component_spec:\
-      \ '{\"implementation\":\n              {\"container\": {\"args\": [\"--param1\"\
-      , {\"inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\"\
-      , \"program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\
-      \"\\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def\
-      \ consume(param1):\\n    print(param1)\\n\\nimport\n              argparse\\\
-      n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\
-      \"--param1\\\",\n              dest=\\\"param1\\\", type=str, required=True,\
-      \ default=argparse.SUPPRESS)\\n_parsed_args\n              = vars(_parser.parse_args())\\\
-      n\\n_outputs = consume(**_parsed_args)\\n\"],\n              \"image\": \"python:3.7\"\
-      }}, \"inputs\": [{\"name\": \"param1\"}], \"name\": \"Consume\"}'}\n      timeout:\
-      \ 0s\n    - name: consume-5\n      params:\n      - {name: produce-list-of-ints-Output-loop-item,\
+      \        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {pipelines.kubeflow.org/component_spec: '{\"\
+      implementation\":\n              {\"container\": {\"args\": [\"--param1\", {\"\
+      inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\", \"\
+      program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\
+      \\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def consume(param1):\\\
+      n    print(param1)\\n\\nimport\n              argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',\
+      \ description='''')\\n_parser.add_argument(\\\"--param1\\\",\n             \
+      \ dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\\
+      n_parsed_args\n              = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\\
+      n\"],\n              \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"\
+      param1\"}], \"name\": \"Consume\"}',\n            tekton.dev/template: ''}\n\
+      \      timeout: 0s\n    - name: consume-5\n      params:\n      - {name: produce-list-of-ints-Output-loop-item,\
       \ value: $(params.produce-list-of-ints-Output-loop-item)}\n      taskSpec:\n\
       \        steps:\n        - name: main\n          args: [--param1, $(inputs.params.produce-list-of-ints-Output-loop-item)]\n\
       \          command:\n          - sh\n          - -ec\n          - |\n      \
@@ -152,46 +161,50 @@ metadata:
       \ default=argparse.SUPPRESS)\n            _parsed_args = vars(_parser.parse_args())\n\
       \n            _outputs = consume(**_parsed_args)\n          image: python:3.7\n\
       \        params:\n        - {name: produce-list-of-ints-Output-loop-item, type:\
-      \ string}\n        metadata:\n          annotations: {pipelines.kubeflow.org/component_spec:\
-      \ '{\"implementation\":\n              {\"container\": {\"args\": [\"--param1\"\
-      , {\"inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\"\
-      , \"program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\
-      \"\\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def\
-      \ consume(param1):\\n    print(param1)\\n\\nimport\n              argparse\\\
-      n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\
-      \"--param1\\\",\n              dest=\\\"param1\\\", type=str, required=True,\
-      \ default=argparse.SUPPRESS)\\n_parsed_args\n              = vars(_parser.parse_args())\\\
-      n\\n_outputs = consume(**_parsed_args)\\n\"],\n              \"image\": \"python:3.7\"\
-      }}, \"inputs\": [{\"name\": \"param1\"}], \"name\": \"Consume\"}'}\n      timeout:\
-      \ 0s\n  iterateParam: produce-list-of-ints-Output-loop-item\n\n---\napiVersion:\
-      \ custom.tekton.dev/v1alpha1\nkind: PipelineLoop\nmetadata: {name: parallelfor-item-argument-resolving-for-loop-3}\n\
-      spec:\n  pipelineSpec:\n    params:\n    - {name: produce-list-of-dicts-Output,\
-      \ type: string}\n    - {name: produce-list-of-dicts-Output-loop-item-subvar-aaa,\
-      \ type: string}\n    tasks:\n    - name: consume-6\n      params:\n      - {name:\
-      \ produce-list-of-dicts-Output, value: $(params.produce-list-of-dicts-Output)}\n\
-      \      taskSpec:\n        steps:\n        - name: main\n          args: [--param1,\
-      \ $(inputs.params.produce-list-of-dicts-Output)]\n          command:\n     \
-      \     - sh\n          - -ec\n          - |\n            program_path=$(mktemp)\n\
-      \            printf \"%s\" \"$0\" > \"$program_path\"\n            python3 -u\
-      \ \"$program_path\" \"$@\"\n          - |\n            def consume(param1):\n\
-      \                print(param1)\n\n            import argparse\n            _parser\
-      \ = argparse.ArgumentParser(prog='Consume', description='')\n            _parser.add_argument(\"\
-      --param1\", dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n\
-      \            _parsed_args = vars(_parser.parse_args())\n\n            _outputs\
-      \ = consume(**_parsed_args)\n          image: python:3.7\n        params:\n\
-      \        - {name: produce-list-of-dicts-Output, type: string}\n        metadata:\n\
-      \          annotations: {pipelines.kubeflow.org/component_spec: '{\"implementation\"\
-      :\n              {\"container\": {\"args\": [\"--param1\", {\"inputValue\":\
-      \ \"param1\"}], \"command\":\n              [\"sh\", \"-ec\", \"program_path=$(mktemp)\\\
-      nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\\npython3\n          \
-      \    -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def consume(param1):\\n   \
-      \ print(param1)\\n\\nimport\n              argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',\
+      \ string}\n        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {pipelines.kubeflow.org/component_spec: '{\"\
+      implementation\":\n              {\"container\": {\"args\": [\"--param1\", {\"\
+      inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\", \"\
+      program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\
+      \\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def consume(param1):\\\
+      n    print(param1)\\n\\nimport\n              argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',\
       \ description='''')\\n_parser.add_argument(\\\"--param1\\\",\n             \
       \ dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\\
       n_parsed_args\n              = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\\
       n\"],\n              \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"\
-      param1\"}], \"name\": \"Consume\"}'}\n      timeout: 0s\n    - name: consume-7\n\
-      \      params:\n      - {name: produce-list-of-dicts-Output-loop-item-subvar-aaa,\
+      param1\"}], \"name\": \"Consume\"}',\n            tekton.dev/template: ''}\n\
+      \      timeout: 0s\n  iterateParam: produce-list-of-ints-Output-loop-item\n\n\
+      ---\napiVersion: custom.tekton.dev/v1alpha1\nkind: PipelineLoop\nmetadata: {name:\
+      \ parallelfor-item-argument-resolving-for-loop-3}\nspec:\n  pipelineSpec:\n\
+      \    params:\n    - {name: produce-list-of-dicts-Output, type: string}\n   \
+      \ - {name: produce-list-of-dicts-Output-loop-item-subvar-aaa, type: string}\n\
+      \    tasks:\n    - name: consume-6\n      params:\n      - {name: produce-list-of-dicts-Output,\
+      \ value: $(params.produce-list-of-dicts-Output)}\n      taskSpec:\n        steps:\n\
+      \        - name: main\n          args: [--param1, $(inputs.params.produce-list-of-dicts-Output)]\n\
+      \          command:\n          - sh\n          - -ec\n          - |\n      \
+      \      program_path=$(mktemp)\n            printf \"%s\" \"$0\" > \"$program_path\"\
+      \n            python3 -u \"$program_path\" \"$@\"\n          - |\n         \
+      \   def consume(param1):\n                print(param1)\n\n            import\
+      \ argparse\n            _parser = argparse.ArgumentParser(prog='Consume', description='')\n\
+      \            _parser.add_argument(\"--param1\", dest=\"param1\", type=str, required=True,\
+      \ default=argparse.SUPPRESS)\n            _parsed_args = vars(_parser.parse_args())\n\
+      \n            _outputs = consume(**_parsed_args)\n          image: python:3.7\n\
+      \        params:\n        - {name: produce-list-of-dicts-Output, type: string}\n\
+      \        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {pipelines.kubeflow.org/component_spec: '{\"\
+      implementation\":\n              {\"container\": {\"args\": [\"--param1\", {\"\
+      inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\", \"\
+      program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\
+      \\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def consume(param1):\\\
+      n    print(param1)\\n\\nimport\n              argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',\
+      \ description='''')\\n_parser.add_argument(\\\"--param1\\\",\n             \
+      \ dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\\
+      n_parsed_args\n              = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\\
+      n\"],\n              \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"\
+      param1\"}], \"name\": \"Consume\"}',\n            tekton.dev/template: ''}\n\
+      \      timeout: 0s\n    - name: consume-7\n      params:\n      - {name: produce-list-of-dicts-Output-loop-item-subvar-aaa,\
       \ value: $(params.produce-list-of-dicts-Output-loop-item-subvar-aaa)}\n    \
       \  taskSpec:\n        steps:\n        - name: main\n          args: [--param1,\
       \ $(inputs.params.produce-list-of-dicts-Output-loop-item-subvar-aaa)]\n    \
@@ -204,18 +217,20 @@ metadata:
       \ default=argparse.SUPPRESS)\n            _parsed_args = vars(_parser.parse_args())\n\
       \n            _outputs = consume(**_parsed_args)\n          image: python:3.7\n\
       \        params:\n        - {name: produce-list-of-dicts-Output-loop-item-subvar-aaa,\
-      \ type: string}\n        metadata:\n          annotations: {pipelines.kubeflow.org/component_spec:\
-      \ '{\"implementation\":\n              {\"container\": {\"args\": [\"--param1\"\
-      , {\"inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\"\
-      , \"program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\
-      \"\\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def\
-      \ consume(param1):\\n    print(param1)\\n\\nimport\n              argparse\\\
-      n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\
-      \"--param1\\\",\n              dest=\\\"param1\\\", type=str, required=True,\
-      \ default=argparse.SUPPRESS)\\n_parsed_args\n              = vars(_parser.parse_args())\\\
-      n\\n_outputs = consume(**_parsed_args)\\n\"],\n              \"image\": \"python:3.7\"\
-      }}, \"inputs\": [{\"name\": \"param1\"}], \"name\": \"Consume\"}'}\n      timeout:\
-      \ 0s\n  iterateParam: produce-list-of-dicts-Output-loop-item\n"
+      \ type: string}\n        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {pipelines.kubeflow.org/component_spec: '{\"\
+      implementation\":\n              {\"container\": {\"args\": [\"--param1\", {\"\
+      inputValue\": \"param1\"}], \"command\":\n              [\"sh\", \"-ec\", \"\
+      program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\
+      \\npython3\n              -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def consume(param1):\\\
+      n    print(param1)\\n\\nimport\n              argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',\
+      \ description='''')\\n_parser.add_argument(\\\"--param1\\\",\n             \
+      \ dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\\
+      n_parsed_args\n              = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\\
+      n\"],\n              \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"\
+      param1\"}], \"name\": \"Consume\"}',\n            tekton.dev/template: ''}\n\
+      \      timeout: 0s\n  iterateParam: produce-list-of-dicts-Output-loop-item\n"
   name: parallelfor-item-argument-resolving
 spec:
   pipelineSpec:
@@ -240,6 +255,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Produce str", "outputs": [{"name":
               "Output", "type": "String"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Output/data
           name: output
@@ -295,6 +315,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Produce list of strings", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Output/data
           name: output
@@ -354,6 +379,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Produce list of ints", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Output/data
           name: output
@@ -414,6 +444,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Produce list of dicts", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Output/data
           name: output

@@ -34,6 +34,11 @@ spec:
         metadata:
           annotations:
             pipelines.kubeflow.org/task_display_name: Hello World
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - echo "Got scheduled"

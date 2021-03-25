@@ -36,15 +36,21 @@ metadata:
       \ - name: main\n          args: [echo op1 $(inputs.params.loop-item-param-1-subvar-a)\
       \ $(inputs.params.my_pipe_param)]\n          command: [sh, -c]\n          image:\
       \ library/bash:4.4.23\n        params:\n        - {name: loop-item-param-1-subvar-a,\
-      \ type: string}\n        - {name: my_pipe_param, type: string}\n      timeout:\
+      \ type: string}\n        - {name: my_pipe_param, type: string}\n        metadata:\n\
+      \          labels:\n            pipelines.kubeflow.org/pipelinename: ''\n  \
+      \          pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {tekton.dev/template: ''}\n      timeout:\
       \ 0s\n    - name: my-in-coop2\n      params:\n      - {name: loop-item-param-1-subvar-b,\
       \ value: $(params.loop-item-param-1-subvar-b)}\n      taskSpec:\n        steps:\n\
       \        - name: main\n          args: [echo op2 $(inputs.params.loop-item-param-1-subvar-b)]\n\
       \          command: [sh, -c]\n          image: library/bash:4.4.23\n       \
       \ params:\n        - {name: loop-item-param-1-subvar-b, type: string}\n    \
-      \  timeout: 0s\n    - name: my-pipeline-for-loop-4\n      taskRef: {apiVersion:\
-      \ custom.tekton.dev/v1alpha1, kind: PipelineLoop, name: my-pipeline-for-loop-4}\n\
-      \      params:\n      - {name: loop-item-param-1-subvar-a, value: $(params.loop-item-param-1-subvar-a)}\n\
+      \    metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {tekton.dev/template: ''}\n      timeout:\
+      \ 0s\n    - name: my-pipeline-for-loop-4\n      taskRef: {apiVersion: custom.tekton.dev/v1alpha1,\
+      \ kind: PipelineLoop, name: my-pipeline-for-loop-4}\n      params:\n      -\
+      \ {name: loop-item-param-1-subvar-a, value: $(params.loop-item-param-1-subvar-a)}\n\
       \      - {name: loop-item-param-3, value: '[100, 200, 300]'}\n      - {name:\
       \ my_pipe_param, value: $(params.my_pipe_param)}\n  iterateParam: loop-item-param-1\n\
       \n---\napiVersion: custom.tekton.dev/v1alpha1\nkind: PipelineLoop\nmetadata:\
@@ -60,7 +66,10 @@ metadata:
       \          command: [sh, -c]\n          image: library/bash:4.4.23\n       \
       \ params:\n        - {name: loop-item-param-1-subvar-a, type: string}\n    \
       \    - {name: loop-item-param-3, type: string}\n        - {name: my_pipe_param,\
-      \ type: string}\n      timeout: 0s\n  iterateParam: loop-item-param-3\n"
+      \ type: string}\n        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {tekton.dev/template: ''}\n      timeout:\
+      \ 0s\n  iterateParam: loop-item-param-3\n"
   name: my-pipeline
 spec:
   params:
@@ -76,6 +85,13 @@ spec:
       - name: my_pipe_param
         value: $(params.my_pipe_param)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: my_pipe_param
         steps:

@@ -75,6 +75,11 @@ spec:
               [{"name": "line", "type": "String"}, {"default": "10", "name": "count",
               "optional": true, "type": "Integer"}], "name": "Repeat line", "outputs":
               [{"name": "output_text", "type": "String"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - --line
@@ -132,6 +137,11 @@ spec:
               = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
               "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
               text"}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - --text
@@ -187,6 +197,11 @@ spec:
               "image": "python:3.7"}}, "inputs": [{"name": "source", "type": "String"}],
               "name": "Split text lines", "outputs": [{"name": "odd_lines", "type":
               "String"}, {"name": "even_lines", "type": "String"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp/inputs/source
@@ -284,6 +299,11 @@ spec:
               = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
               "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
               text"}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - --text
@@ -331,6 +351,11 @@ spec:
               = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
               "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
               text"}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - --text
@@ -385,6 +410,11 @@ spec:
               [{"default": "0", "name": "start", "optional": true, "type": "Integer"},
               {"default": "10", "name": "count", "optional": true, "type": "Integer"}],
               "name": "Write numbers", "outputs": [{"name": "numbers", "type": "String"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - --count
@@ -439,6 +469,11 @@ spec:
               = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
               "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
               text"}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - --text
@@ -494,6 +529,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "inputs": [{"name": "numbers", "type": "String"}],
               "name": "Sum numbers", "outputs": [{"name": "Output", "type": "Integer"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - --numbers
@@ -553,6 +593,11 @@ spec:
               = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
               "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
               text"}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - --text
@@ -603,6 +648,11 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Gen params", "outputs": [{"name":
               "Output", "type": "Integer"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/Output/data
           name: output
@@ -654,6 +704,11 @@ spec:
               = vars(_parser.parse_args())\n\n_outputs = print_params(**_parsed_args)\n"],
               "image": "python:3.7"}}, "inputs": [{"name": "numbers_parm", "type":
               "Integer"}], "name": "Print params"}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: gen-params-Output
         steps:

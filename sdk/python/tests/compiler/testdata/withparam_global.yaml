@@ -35,7 +35,10 @@ metadata:
       \ value: $(params.loopidy_doop-loop-item)}\n      taskSpec:\n        steps:\n\
       \        - name: main\n          args: ['echo no output global op1, item: $(inputs.params.loopidy_doop-loop-item)']\n\
       \          command: [sh, -c]\n          image: library/bash:4.4.23\n       \
-      \ params:\n        - {name: loopidy_doop-loop-item, type: string}\n      runAfter:\
+      \ params:\n        - {name: loopidy_doop-loop-item, type: string}\n        metadata:\n\
+      \          labels:\n            pipelines.kubeflow.org/pipelinename: ''\n  \
+      \          pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations: {tekton.dev/template: ''}\n      runAfter:\
       \ []\n      timeout: 0s\n  iterateParam: loopidy_doop-loop-item\n"
   name: withparam-global
 spec:
@@ -49,6 +52,13 @@ spec:
     tasks:
     - name: my-out-cop0
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/out.json
           name: out
@@ -69,6 +79,13 @@ spec:
       runAfter:
       - withparam-global-for-loop-1
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: my-out-cop0-out
         steps:

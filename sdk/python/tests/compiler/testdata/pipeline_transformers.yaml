@@ -35,8 +35,12 @@ spec:
         metadata:
           annotations:
             hobby: football
+            tekton.dev/template: ''
           labels:
             hobby: football
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - command:
           - echo
@@ -49,8 +53,12 @@ spec:
         metadata:
           annotations:
             hobby: football
+            tekton.dev/template: ''
           labels:
             hobby: football
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - command:
           - echo
