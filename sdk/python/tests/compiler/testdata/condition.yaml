@@ -58,6 +58,13 @@ spec:
       - name: forced_result1
         value: $(params.forced_result1)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: forced_result1
         results:
@@ -80,6 +87,13 @@ spec:
       - name: forced_result3
         value: $(params.forced_result3)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: forced_result3
         results:
@@ -102,6 +116,13 @@ spec:
       - name: forced_result2
         value: $(params.forced_result2)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: forced_result2
         results:
@@ -129,6 +150,13 @@ spec:
       - name: flip-again-output_value
         value: $(tasks.flip-again.results.output-value)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: flip-again-output_value
         steps:
@@ -148,6 +176,13 @@ spec:
       - name: flip-output_value
         value: $(tasks.flip.results.output-value)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: flip-output_value
         steps:

@@ -39,6 +39,11 @@ spec:
               {"command": ["sh", "-c", "echo \"[1, 2, 3]\" > \"$0\"", {"outputPath":
               "data_list"}], "image": "busybox"}}, "name": "Produce list", "outputs":
               [{"name": "data_list"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/data_list/data
           name: data-list

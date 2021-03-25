@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,43 +14,30 @@
 
 from kfp import dsl
 from kfp_tekton.compiler import TektonCompiler
-from kfp_tekton.tekton import after_any
 
 
 @dsl.pipeline(
-    name="Any Sequencer",
-    description="Any Sequencer Component Demo",
+    name="Cache",
+    description="Example of caching",
 )
-def any_sequence_pipeline(
+def cache_pipeline(
 ):
     task1 = dsl.ContainerOp(
-        name="task1",
+        name="cache-enabled",
         image="registry.access.redhat.com/ubi8/ubi-minimal",
         command=["/bin/bash", "-c"],
-        arguments=["sleep 15"]
+        arguments=["sleep 30 | echo 'hello world' | tee /tmp/output"],
+        file_outputs={'output_value': '/tmp/output'}
     )
-
     task2 = dsl.ContainerOp(
-        name="task2",
+        name="cache-disabled ",
         image="registry.access.redhat.com/ubi8/ubi-minimal",
         command=["/bin/bash", "-c"],
-        arguments=["sleep 200"]
+        arguments=["sleep 30 | echo 'hello world' | tee /tmp/output"],
+        file_outputs={'output_value': '/tmp/output'}
     )
-
-    task3 = dsl.ContainerOp(
-        name="task3",
-        image="registry.access.redhat.com/ubi8/ubi-minimal",
-        command=["/bin/bash", "-c"],
-        arguments=["sleep 300"]
-    )
-
-    task4 = dsl.ContainerOp(
-        name="task4",
-        image="registry.access.redhat.com/ubi8/ubi-minimal",
-        command=["/bin/bash", "-c"],
-        arguments=["sleep 30"]
-    ).apply(after_any([task1, task2, task3], "any_test"))
+    task2.add_pod_label('pipelines.kubeflow.org/cache_enabled', 'false')
 
 
 if __name__ == "__main__":
-    TektonCompiler().compile(any_sequence_pipeline, "any_sequencer" + ".yaml")
+    TektonCompiler().compile(cache_pipeline, "cache" + ".yaml")

@@ -30,6 +30,7 @@ and test pipelines found in the KFP repository.
     - [Output Parameters](#output-parameters)
     - [Input Artifacts](#input-artifacts)
     - [Output Artifacts](#output-artifacts)
+    - [Caching](#caching)
   - [Features with Limitations](#features-with-limitations)
     - [Variable Substitutions](#variable-substitutions)
 
@@ -128,7 +129,7 @@ The `finally` syntax is supported since Tekton version `0.14.0`.
 
 ### Pipeline Loops
 
-PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) controller named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops. 
+PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks Controller](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops.
 
 To use this feature, please ensure Tekton version >= v0.19, and "data.enable-custom-tasks" is "true" in feature-flags configmap:
 `kubectl edit cm feature-flags -n tekton-pipelines`
@@ -141,16 +142,16 @@ To see how the Python SDK provides this feature, refer to the examples below:
 
 ### Any Sequencer
 
-When any one of the task dependencies completes successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym). 
+When any one of the task dependencies completes successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym).
 
 For example:
 
 ```
-from kfp_tekton.compiler.any_sequencer import after_any
+from kfp_tekton.tekton import after_any
 
 dsl.ContainerOp(
   ...
-).apply(after_any(([containerOps]))
+).apply(after_any([containerOps], "any_sequencer_name"))
 ```
 
 Please note that the service account of the `Any Sequencer` needs 'get' permission to watch the status of the specified `taskRun`.
@@ -233,6 +234,12 @@ It also includes several annontations, `tekton.dev/input_artifacts` and `tekton.
 
 The current implementation is relying on the existing KFP's minio setup for getting the default credentials. These default credentials can be updated
 via a Kubernetes configmap.
+
+### Caching
+
+By default compiling a pipeline will add metadata annotations and labels so that results from tasks within a pipeline run can be re-used if that task is reused in a new pipeline run. This saves the pipeline run from re-executing the task when the results are already known. In order to disable caching, a label must be added to a task's metadata like in [this sample pipeline](./python/tests/compiler/testdata/cache.py#L39).
+
+The specific annotations and labels that are added to the task spec metadata to enable caching are: `annotations={'tekton.dev/template': ""}` and `labels={'pipelines.kubeflow.org/cache_enabled': 'true', 'pipelines.kubeflow.org/pipelinename': '', 'pipelines.kubeflow.org/generation': ''}`.
 
 ## Features with Limitations
 

@@ -33,6 +33,13 @@ spec:
     - name: random-failure
       retries: 10
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - import random; import sys; exit_code = random.choice([int(i) for i in
@@ -47,6 +54,13 @@ spec:
     - name: random-failure-2
       retries: 5
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - import random; import sys; exit_code = random.choice([int(i) for i in

@@ -34,6 +34,13 @@ spec:
     tasks:
     - name: component-with-inline-input-artifact
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp/inputs/text
@@ -59,6 +66,13 @@ spec:
       timeout: 0s
     - name: component-with-input-artifact
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp/inputs/text
@@ -84,6 +98,13 @@ spec:
       timeout: 0s
     - name: component-with-input-artifact-2
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp/inputs/text
@@ -109,6 +130,13 @@ spec:
       timeout: 0s
     - name: component-with-input-artifact-3
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp/inputs/text

@@ -40,6 +40,11 @@ spec:
               ["echo"], "image": "alpine:latest"}}, "inputs": [{"default": "", "description":
               "Test empty input", "name": "dummy_text"}], "name": "busybox", "outputs":
               [{"description": "Test unused output path", "name": "dummy_output_path"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/outputs/dummy_output_path/data
           name: dummy-output-path

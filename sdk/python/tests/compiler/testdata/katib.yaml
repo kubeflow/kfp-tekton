@@ -86,6 +86,13 @@ spec:
       - name: parallelTrialCount
         value: $(params.parallelTrialCount)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: deleteAfterDone
         - name: experimentTimeoutMinutes
@@ -144,6 +151,13 @@ spec:
       - name: mnist-hpo-bestHyperParameter
         value: $(tasks.mnist-hpo.results.besthyperparameter)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: mnist-hpo-bestHyperParameter
         steps:

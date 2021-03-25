@@ -41,6 +41,13 @@ spec:
     tasks:
     - name: my-out-cop0
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/out.json
           name: out
@@ -59,6 +66,13 @@ spec:
       - name: my-out-cop0-out
         value: $(tasks.my-out-cop0.results.out)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: my-out-cop0-out
         steps:
