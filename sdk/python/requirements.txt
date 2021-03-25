@@ -43,8 +43,6 @@ googleapis-common-protos==1.52.0
     # via google-api-core
 idna==2.9
     # via requests
-importlib-metadata==1.6.1
-    # via jsonschema
 jsonschema==3.2.0
     # via kfp
 kfp-pipeline-spec==0.1.4
@@ -52,7 +50,7 @@ kfp-pipeline-spec==0.1.4
 kfp-server-api==1.2.0
     # via kfp
 kfp==1.4.0
-    # via -r sdk/python/requirements.in
+    # via -r requirements.in
 kubernetes==11.0.0
     # via kfp
 oauthlib==3.1.0
@@ -75,7 +73,7 @@ python-dateutil==2.8.1
     #   kubernetes
 pytz==2020.1
     # via google-api-core
-pyyaml==5.3.1
+pyyaml==5.4
     # via
     #   kfp
     #   kubernetes
@@ -121,8 +119,6 @@ wheel==0.34.2
     # via strip-hints
 wrapt==1.12.1
     # via deprecated
-zipp==3.1.0
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
