@@ -74,6 +74,8 @@ METADATA_CONTEXT_ID_LABEL_KEY = 'pipelines.kubeflow.org/metadata_context_id'
 METADATA_ARTIFACT_IDS_ANNOTATION_KEY = 'pipelines.kubeflow.org/metadata_artifact_ids'
 METADATA_INPUT_ARTIFACT_IDS_ANNOTATION_KEY = 'pipelines.kubeflow.org/metadata_input_artifact_ids'
 METADATA_OUTPUT_ARTIFACT_IDS_ANNOTATION_KEY = 'pipelines.kubeflow.org/metadata_output_artifact_ids'
+KFP_V2_COMPONENT_ANNOTATION_KEY = 'pipelines.kubeflow.org/v2_component'
+KFP_V2_COMPONENT_ANNOTATION_VALUE = 'true'
 
 ARGO_WORKFLOW_LABEL_KEY = 'workflows.argoproj.io/workflow'
 ARGO_COMPLETED_LABEL_KEY = 'workflows.argoproj.io/completed'

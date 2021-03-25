@@ -1,0 +1,39 @@
+diff a/backend/src/apiserver/server/test_util.go b/backend/src/apiserver/server/test_util.go	(rejected hunks)
+@@ -15,7 +15,6 @@
+ package server
+ 
+ import (
+-	"context"
+ 	"testing"
+ 
+ 	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
+@@ -160,7 +159,7 @@ func initWithExperimentAndPipelineVersion(t *testing.T) (*resource.FakeClientMan
+ 	assert.Nil(t, err)
+ 
+ 	// Create a pipeline and then a pipeline version.
+-	_, err = resourceManager.CreatePipeline("pipeline", "", []byte("apiVersion: argoproj.io/v1alpha1\nkind: Workflow"))
++	_, err = resourceManager.CreatePipeline("pipeline", "", "", []byte("apiVersion: argoproj.io/v1alpha1\nkind: Workflow"))
+ 	assert.Nil(t, err)
+ 	_, err = resourceManager.CreatePipelineVersion(&api.PipelineVersion{
+ 		Name: "pipeline_version",
+@@ -190,7 +189,7 @@ func initWithExperimentsAndTwoPipelineVersions(t *testing.T) (*resource.FakeClie
+ 	assert.Nil(t, err)
+ 
+ 	// Create a pipeline and then a pipeline version.
+-	_, err = resourceManager.CreatePipeline("pipeline", "", []byte("apiVersion: argoproj.io/v1alpha1\nkind: Workflow"))
++	_, err = resourceManager.CreatePipeline("pipeline", "", "", []byte("apiVersion: argoproj.io/v1alpha1\nkind: Workflow"))
+ 	assert.Nil(t, err)
+ 	_, err = resourceManager.CreatePipelineVersion(&api.PipelineVersion{
+ 		Name: "pipeline_version",
+@@ -209,9 +208,9 @@ func initWithExperimentsAndTwoPipelineVersions(t *testing.T) (*resource.FakeClie
+ 	clientManager.UpdateUUID(util.NewFakeUUIDGeneratorOrFatal(resource.NonDefaultFakeUUID, nil))
+ 	resourceManager = resource.NewResourceManager(clientManager)
+ 	// Create another pipeline and then pipeline version.
+-	_, err = resourceManager.CreatePipeline("anpther-pipeline", "", []byte("apiVersion: argoproj.io/v1alpha1\nkind: Workflow"))
++	_, err = resourceManager.CreatePipeline("anpther-pipeline", "", "", []byte("apiVersion: argoproj.io/v1alpha1\nkind: Workflow"))
+ 	assert.Nil(t, err)
+-	_, err =  resourceManager.CreatePipelineVersion(&api.PipelineVersion{
++	_, err = resourceManager.CreatePipelineVersion(&api.PipelineVersion{
+ 		Name: "another_pipeline_version",
+ 		ResourceReferences: []*api.ResourceReference{
+ 			&api.ResourceReference{

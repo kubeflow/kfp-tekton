@@ -125,6 +125,12 @@ func MutatePodIfCached(req *v1beta1.AdmissionRequest, clientMgr ClientManagerInt
 		return nil, nil
 	}
 
+	if isV2Pod(&pod) {
+		// KFP v2 handles caching by its driver.
+		log.Printf("This pod %s is created by KFP v2 pipelines.", pod.ObjectMeta.Name)
+		return nil, nil
+	}
+
 	var patches []patchOperation
 	annotations := pod.ObjectMeta.Annotations
 	labels := pod.ObjectMeta.Labels

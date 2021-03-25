@@ -204,7 +204,7 @@ func initWithPipeline(t *testing.T) (*resource.FakeClientManager, *resource.Reso
 	initEnvVars()
 	store := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	manager := resource.NewResourceManager(store)
-	p, err := manager.CreatePipeline("p1", "", []byte(testWorkflow.ToStringForStore()))
+	p, err := manager.CreatePipeline("p1", "", "", []byte(testWorkflow.ToStringForStore()))
 	assert.Nil(t, err)
 	return store, manager, p
 }
@@ -215,9 +215,7 @@ func AssertUserError(t *testing.T, err error, expectedCode codes.Code) {
 	assert.Equal(t, expectedCode, userError.ExternalStatusCode())
 }
 
-func getPermissionDeniedError(ctx context.Context, resourceAttributes *authorizationv1.ResourceAttributes) error {
-	// Retrieve request details to compose the expected error
-	userIdentity, _ := getUserIdentity(ctx)
+func getPermissionDeniedError(userIdentity string, resourceAttributes *authorizationv1.ResourceAttributes) error {
 	return util.NewPermissionDeniedError(
 		errors.New("Unauthorized access"),
 		"User '%s' is not authorized with reason: %s (request: %+v)",

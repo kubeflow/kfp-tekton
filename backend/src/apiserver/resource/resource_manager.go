@@ -25,6 +25,7 @@ import (
 	"github.com/golang/glog"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/archive"
+	kfpauth "github.com/kubeflow/pipelines/backend/src/apiserver/auth"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/list"
@@ -75,9 +76,11 @@ type ClientManagerInterface interface {
 	SwfClient() client.SwfClientInterface
 	KubernetesCoreClient() client.KubernetesCoreInterface
 	SubjectAccessReviewClient() client.SubjectAccessReviewInterface
+	TokenReviewClient() client.TokenReviewInterface
 	LogArchive() archive.LogArchiveInterface
 	Time() util.TimeInterface
 	UUID() util.UUIDGeneratorInterface
+	Authenticators() []kfpauth.Authenticator
 }
 
 type ResourceManager struct {
@@ -112,9 +115,11 @@ func NewResourceManager(clientManager ClientManagerInterface) *ResourceManager {
 		swfClient:                 clientManager.SwfClient(),
 		k8sCoreClient:             clientManager.KubernetesCoreClient(),
 		subjectAccessReviewClient: clientManager.SubjectAccessReviewClient(),
+		tokenReviewClient:         clientManager.TokenReviewClient(),
 		logArchive:                clientManager.LogArchive(),
 		time:                      clientManager.Time(),
 		uuid:                      clientManager.UUID(),
+		authenticators:            clientManager.Authenticators(),
 	}
 }
 
@@ -203,9 +208,9 @@ func (r *ResourceManager) UnarchiveExperiment(experimentId string) error {
 	return r.experimentStore.UnarchiveExperiment(experimentId)
 }
 
-func (r *ResourceManager) ListPipelines(opts *list.Options) (
+func (r *ResourceManager) ListPipelines(filterContext *common.FilterContext, opts *list.Options) (
 	pipelines []*model.Pipeline, total_size int, nextPageToken string, err error) {
-	return r.pipelineStore.ListPipelines(opts)
+	return r.pipelineStore.ListPipelines(filterContext, opts)
 }
 
 func (r *ResourceManager) GetPipeline(pipelineId string) (*model.Pipeline, error) {
@@ -249,7 +254,7 @@ func (r *ResourceManager) UpdatePipelineDefaultVersion(pipelineId string, versio
 	return r.pipelineStore.UpdatePipelineDefaultVersion(pipelineId, versionId)
 }
 
-func (r *ResourceManager) CreatePipeline(name string, description string, pipelineFile []byte) (*model.Pipeline, error) {
+func (r *ResourceManager) CreatePipeline(name string, description string, namespace string, pipelineFile []byte) (*model.Pipeline, error) {
 	// Extract the parameter from the pipeline
 	params, err := util.GetParameters(pipelineFile)
 	if err != nil {
@@ -262,6 +267,7 @@ func (r *ResourceManager) CreatePipeline(name string, description string, pipeli
 		Description: description,
 		Parameters:  params,
 		Status:      model.PipelineCreating,
+		Namespace:   namespace,
 		DefaultVersion: &model.PipelineVersion{
 			Name:       name,
 			Parameters: params,
@@ -334,6 +340,8 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	}
 	runId := uuid.String()
 
+	runAt := r.time.Now().Unix()
+
 	var workflow util.Workflow
 	if err = json.Unmarshal(workflowSpecManifestBytes, &workflow); err != nil {
 		return nil, util.NewInternalServerError(err,
@@ -350,6 +358,13 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	if err = workflow.VerifyParameters(parameters); err != nil {
 		return nil, util.Wrap(err, "Failed to verify parameters.")
 	}
+	// Append provided parameter
+	workflow.OverrideParameters(parameters)
+
+	// Replace macros
+	formatter := util.NewRunParameterFormatter(uuid.String(), runAt)
+	formattedParams := formatter.FormatWorkflowParameters(workflow.GetWorkflowParametersAsMap())
+	workflow.OverrideParameters(formattedParams)
 
 	r.setDefaultServiceAccount(&workflow, apiRun.GetServiceAccount())
 
@@ -360,8 +375,6 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	// on every single step/pod so the cache server can understand.
 	// TODO: Add run_level flag with similar logic by reading flag value from create_run api.
 	workflow.SetLabelsToAllTemplates(util.LabelKeyCacheEnabled, common.IsCacheEnabled())
-	// Append provided parameter
-	workflow.OverrideParameters(parameters)
 
 	err = OverrideParameterWithSystemDefault(workflow, apiRun)
 	if err != nil {
@@ -428,7 +441,7 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	}
 
 	// Assign the create at time.
-	runDetail.CreatedAtInSec = r.time.Now().Unix()
+	runDetail.CreatedAtInSec = runAt
 	return r.runStore.CreateRun(runDetail)
 }
 
@@ -1292,6 +1305,22 @@ func (r *ResourceManager) GetNamespaceFromJobID(jobId string) (string, error) {
 		return "", util.Wrap(err, "Failed to get namespace from Job ID.")
 	}
 	return job.Namespace, nil
+}
+
+func (r *ResourceManager) GetNamespaceFromPipelineID(pipelineId string) (string, error) {
+	pipeline, err := r.GetPipeline(pipelineId)
+	if err != nil {
+		return "", util.Wrap(err, "Failed to get namespace from Pipeline ID")
+	}
+	return pipeline.Namespace, nil
+}
+
+func (r *ResourceManager) GetNamespaceFromPipelineVersion(versionId string) (string, error) {
+	pipelineVersion, err := r.GetPipelineVersion(versionId)
+	if err != nil {
+		return "", util.Wrap(err, "Failed to get namespace from versionId ID")
+	}
+	return r.GetNamespaceFromPipelineID(pipelineVersion.PipelineId)
 }
 
 func (r *ResourceManager) setDefaultServiceAccount(workflow *util.Workflow, serviceAccount string) {

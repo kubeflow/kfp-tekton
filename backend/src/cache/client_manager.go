@@ -170,9 +170,9 @@ func initMysql(params WhSvrDBParameters, initConnectionTimeout time.Duration) st
 	return mysqlConfig.FormatDSN()
 }
 
-func NewClientManager(params WhSvrDBParameters) ClientManager {
+func NewClientManager(params WhSvrDBParameters, clientParams util.ClientParameters) ClientManager {
 	clientManager := ClientManager{}
-	clientManager.init(params)
+	clientManager.init(params, clientParams)
 
 	return clientManager
 }

@@ -62,11 +62,13 @@ func TestCreateRun_Unauthorized(t *testing.T) {
 	viper.Set(common.MultiUserMode, "true")
 	defer viper.Set(common.MultiUserMode, "false")
 
-	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
+	userIdentity := "user@google.com"
+	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + userIdentity})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 
 	clients, manager, _ := initWithExperiment_SubjectAccessReview_Unauthorized(t)
 	defer clients.Close()
+
 	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	run := &api.Run{
 		Name:               "run1",
@@ -89,7 +91,7 @@ func TestCreateRun_Unauthorized(t *testing.T) {
 	assert.EqualError(
 		t,
 		err,
-		wrapFailedAuthzRequestError(wrapFailedAuthzApiResourcesError(getPermissionDeniedError(ctx, resourceAttributes))).Error(),
+		wrapFailedAuthzRequestError(wrapFailedAuthzApiResourcesError(getPermissionDeniedError(userIdentity, resourceAttributes))).Error(),
 	)
 }
 
@@ -141,11 +143,13 @@ func TestListRuns_Unauthorized(t *testing.T) {
 	viper.Set(common.MultiUserMode, "true")
 	defer viper.Set(common.MultiUserMode, "false")
 
-	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
+	userIdentity := "user@google.com"
+	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + userIdentity})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 
 	clients, manager, _ := initWithExperiment_SubjectAccessReview_Unauthorized(t)
 	defer clients.Close()
+
 	server := NewRunServer(manager, &RunServerOptions{CollectMetrics: false})
 	_, err := server.ListRuns(ctx, &api.ListRunsRequest{
 		ResourceReferenceKey: &api.ResourceKey{
@@ -165,7 +169,7 @@ func TestListRuns_Unauthorized(t *testing.T) {
 		t,
 		err,
 		util.Wrap(
-			wrapFailedAuthzApiResourcesError(getPermissionDeniedError(ctx, resourceAttributes)),
+			wrapFailedAuthzApiResourcesError(getPermissionDeniedError(userIdentity, resourceAttributes)),
 			"Failed to authorize with namespace resource reference.").Error(),
 	)
 }

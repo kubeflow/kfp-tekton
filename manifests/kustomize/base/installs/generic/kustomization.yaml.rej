@@ -1,0 +1,29 @@
+diff a/manifests/kustomize/base/installs/generic/kustomization.yaml b/manifests/kustomize/base/installs/generic/kustomization.yaml	(rejected hunks)
+@@ -2,21 +2,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
+ kind: Kustomization
+ namespace: kubeflow
+ bases:
+-- application
+-- argo
+-- pipeline
+-- metadata
+-- cache
+-- cache-deployer
++- ../../pipeline
++- ../../metadata
++- ../../cache
++- ../../cache-deployer
+ resources:
+-- pipeline-application.yaml
+-# Used by Kustomize
+-configMapGenerator:
+-- name: pipeline-install-config
+-  env: params.env
+-secretGenerator:
+-- name: mysql-secret
+-  env: params-db-secret.env
++- pipeline-install-config.yaml
++- mysql-secret.yaml
+ vars:
+ - name: kfp-namespace
+   objref:

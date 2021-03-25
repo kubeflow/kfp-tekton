@@ -99,7 +99,7 @@ func initWithPipeline(t *testing.T) (*FakeClientManager, *ResourceManager, *mode
 	initEnvVars()
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	manager := NewResourceManager(store)
-	p, err := manager.CreatePipeline("p1", "", []byte(testWorkflow.ToStringForStore()))
+	p, err := manager.CreatePipeline("p1", "", "", []byte(testWorkflow.ToStringForStore()))
 	assert.Nil(t, err)
 	return store, manager, p
 }
@@ -121,7 +121,7 @@ func initWithExperimentAndPipeline(t *testing.T) (*FakeClientManager, *ResourceM
 	apiExperiment := &api.Experiment{Name: "e1"}
 	experiment, err := manager.CreateExperiment(apiExperiment)
 	assert.Nil(t, err)
-	pipeline, err := manager.CreatePipeline("p1", "", []byte(testWorkflow.ToStringForStore()))
+	pipeline, err := manager.CreatePipeline("p1", "", "", []byte(testWorkflow.ToStringForStore()))
 	assert.Nil(t, err)
 	return store, manager, experiment, pipeline
 }
@@ -176,7 +176,7 @@ func TestCreatePipeline_GetParametersError(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	defer store.Close()
 	manager := NewResourceManager(store)
-	_, err := manager.CreatePipeline("pipeline1", "", []byte("I am invalid yaml"))
+	_, err := manager.CreatePipeline("pipeline1", "", "", []byte("I am invalid yaml"))
 	assert.Equal(t, codes.InvalidArgument, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "Failed to parse the parameter")
 }
