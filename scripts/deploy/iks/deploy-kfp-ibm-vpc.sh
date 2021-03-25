@@ -26,9 +26,17 @@ set -e
 
 # Convert a user name string to a trimmed and normalized (i.e. lower case alphanumeric string).
 USER_STR=$(echo "$USER" | LC_ALL=C tr -cd 'a-z0-9' | head -c 8)
+# existence check passes if a specified variable is in scope and contains a value else fail.
+function existence_check() {
+    # look up a variable name with the value contained in the passed variable i.e. double eval.
+    local VALUE=$(eval echo "\$$1")
 
+    if [[ "x$VALUE" == "x" ]]; then
+        echo "Variable \`$1\` is not specified, please provide \`--$2=value\` as CLI option."
+        exit 2
+    fi
+}
 # These are reasonable defaults, actual values will be passed on from the ./deploy-ibm-vpc.sh script.
-# Ideally, BASE_DIR will be the name of $HOME/VPC and KF_NAME will match the name of the cluster.
 
 # Set the configuration file to use, such as:
 export KF_CONFIG_FILE=kfctl_ibm.yaml
@@ -45,23 +53,6 @@ function download_kfctl() {
         exit 2
     fi
     tar -xf kfctl.tar.gz
-}
-
-function assert_gt() {
-    if [[ $# -ne 3 ]]; then
-        echo "Usage: assert val1 val2 msg # Where val1 is asserted to be greater than val2."
-        return 1
-    fi
-    local val1="$1"
-    local val2="$2"
-    local msg="$3"
-
-    if [[ "$val1" -gt "$val2" ]]; then
-        return 0
-    fi
-
-    echo "ERROR: Assert failed:, $val1 is not greater than $val2. $msg"
-    return 2
 }
 
 function usage() {
@@ -100,9 +91,9 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
-export KF_INSTALL_NAME=${KF_INSTALL_NAME:-"kf-${USER_STR}-${RAND_STR}"}
+existence_check "KF_INSTALL_NAME" "kf-name"
+existence_check "BASE_KF_DIR" "base-dir"
 
-export BASE_KF_DIR=${BASE_KF_DIR:-"$HOME/kubeflow_install"}
 export KF_INSTALL_DIR=${KF_INSTALL_DIR:-"${BASE_KF_DIR}/${KF_INSTALL_NAME}"}
 
 # Generate Kubeflow:
@@ -125,12 +116,11 @@ if [[ -x $(which kubectl) ]]; then
     echo "Waiting for pods to appear !"
     sleep 60s
     value=$(kubectl -n kubeflow wait --for=condition=Ready --timeout 300s --all pods | wc -l | xargs)
-    assert_gt "$value" "20" "kubeflow successful install should have more than 20 pods in \`Ready\` state."
 else
     echo "kubectl command not found, exiting ..."
     exit 1
 fi
 
-echo "Open http://127.0.0.1:7080/ in a browser."
+echo "Open http://127.0.0.1:7080/ in a browser to view kubeflow dashboard."
 set -x
 kubectl -n istio-system port-forward service/istio-ingressgateway 7080:http2 1>&2 2>/dev/null &
