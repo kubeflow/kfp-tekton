@@ -48,6 +48,7 @@ DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
 TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
+LOOP_RESOURCES_IN_SEPARATE_YAML = strtobool(env.get('LOOP_RESOURCES_IN_SEPARATE_YAML', 'false'))
 
 
 def _get_super_condition_template():
@@ -242,7 +243,7 @@ class TektonCompiler(Compiler):
           loop_args_str_value = json.dumps(sanitized_tasks, sort_keys=True)
         else:
           loop_args_str_value = str(loop_arg_value)
-        
+
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": sub_group.loop_args.full_name,
           "value": loop_args_str_value
@@ -892,10 +893,17 @@ class TektonCompiler(Compiler):
     # Separate loop workflow from the main workflow
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self._group_names)
-      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
+      loop_package_annotations = ""
       for i in range(len(pipeline_loop_crs)):
-        TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
-                                       package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
+        if LOOP_RESOURCES_IN_SEPARATE_YAML:
+          TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
+                                         package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
+        else:
+          pipeline_loop_cr = TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i])
+          loop_package_annotations = '\n'.join([loop_package_annotations,'---\n' + pipeline_loop_cr])
+      if loop_package_annotations:
+        workflow['metadata']['annotations']['tekton.dev/resource_templates'] = loop_package_annotations
+      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
     else:
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
     _validate_workflow(workflow)

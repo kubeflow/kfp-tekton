@@ -33,6 +33,180 @@ metadata:
       [{"key": "artifacts/$PIPELINERUN/print-number/Output.tgz", "name": "print-number-Output",
       "path": "/tmp/outputs/Output/data"}], "produce-numbers": [{"key": "artifacts/$PIPELINERUN/produce-numbers/Output.tgz",
       "name": "produce-numbers-Output", "path": "/tmp/outputs/Output/data"}]}'
+    tekton.dev/resource_templates: "\n---\napiVersion: custom.tekton.dev/v1alpha1\n\
+      kind: PipelineLoop\nmetadata: {name: conditions-and-loops-for-loop-1}\nspec:\n\
+      \  pipelineSpec:\n    params:\n    - {name: produce-numbers-Output-loop-item,\
+      \ type: string}\n    - {name: threshold, type: string}\n    tasks:\n    - name:\
+      \ add-numbers\n      params:\n      - {name: produce-numbers-Output-loop-item,\
+      \ value: $(params.produce-numbers-Output-loop-item)}\n      taskSpec:\n    \
+      \    steps:\n        - name: main\n          args: [--a, $(inputs.params.produce-numbers-Output-loop-item),\
+      \ --b, '10',\n            '----output-paths', $(results.output.path)]\n    \
+      \      command:\n          - sh\n          - -ec\n          - |\n          \
+      \  program_path=$(mktemp)\n            printf \"%s\" \"$0\" > \"$program_path\"\
+      \n            python3 -u \"$program_path\" \"$@\"\n          - |\n         \
+      \   def add_numbers(a, b):\n                print(a + b)\n                return\
+      \ a + b\n\n            def _serialize_int(int_value: int) -> str:\n        \
+      \        if isinstance(int_value, str):\n                    return int_value\n\
+      \                if not isinstance(int_value, int):\n                    raise\
+      \ TypeError('Value \"{}\" has type \"{}\" instead of int.'.format(str(int_value),\
+      \ str(type(int_value))))\n                return str(int_value)\n\n        \
+      \    import argparse\n            _parser = argparse.ArgumentParser(prog='Add\
+      \ numbers', description='')\n            _parser.add_argument(\"--a\", dest=\"\
+      a\", type=int, required=True, default=argparse.SUPPRESS)\n            _parser.add_argument(\"\
+      --b\", dest=\"b\", type=int, required=True, default=argparse.SUPPRESS)\n   \
+      \         _parser.add_argument(\"----output-paths\", dest=\"_output_paths\"\
+      , type=str, nargs=1)\n            _parsed_args = vars(_parser.parse_args())\n\
+      \            _output_files = _parsed_args.pop(\"_output_paths\", [])\n\n   \
+      \         _outputs = add_numbers(**_parsed_args)\n\n            _outputs = [_outputs]\n\
+      \n            _output_serializers = [\n                _serialize_int,\n\n \
+      \           ]\n\n            import os\n            for idx, output_file in\
+      \ enumerate(_output_files):\n                try:\n                    os.makedirs(os.path.dirname(output_file))\n\
+      \                except OSError:\n                    pass\n               \
+      \ with open(output_file, 'w') as f:\n                    f.write(_output_serializers[idx](_outputs[idx]))\n\
+      \          image: python:3.7\n        params:\n        - {name: produce-numbers-Output-loop-item,\
+      \ type: string}\n        results:\n        - {name: output, description: /tmp/outputs/Output/data}\n\
+      \        metadata:\n          annotations: {pipelines.kubeflow.org/component_spec:\
+      \ '{\"implementation\":\n              {\"container\": {\"args\": [\"--a\",\
+      \ {\"inputValue\": \"a\"}, \"--b\", {\"inputValue\":\n              \"b\"},\
+      \ \"----output-paths\", {\"outputPath\": \"Output\"}], \"command\": [\"sh\"\
+      ,\n              \"-ec\", \"program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"\
+      $0\\\" > \\\"$program_path\\\"\\npython3\n              -u \\\"$program_path\\\
+      \" \\\"$@\\\"\\n\", \"def add_numbers(a, b):\\n    print(a\n              +\
+      \ b)\\n    return a + b\\n\\ndef _serialize_int(int_value: int) -> str:\\n \
+      \   if\n              isinstance(int_value, str):\\n        return int_value\\\
+      n    if not isinstance(int_value,\n              int):\\n        raise TypeError(''Value\
+      \ \\\"{}\\\" has type \\\"{}\\\" instead\n              of int.''.format(str(int_value),\
+      \ str(type(int_value))))\\n    return\n              str(int_value)\\n\\nimport\
+      \ argparse\\n_parser = argparse.ArgumentParser(prog=''Add\n              numbers'',\
+      \ description='''')\\n_parser.add_argument(\\\"--a\\\", dest=\\\"a\\\",\n  \
+      \            type=int, required=True, default=argparse.SUPPRESS)\\n_parser.add_argument(\\\
+      \"--b\\\",\n              dest=\\\"b\\\", type=int, required=True, default=argparse.SUPPRESS)\\\
+      n_parser.add_argument(\\\"----output-paths\\\",\n              dest=\\\"_output_paths\\\
+      \", type=str, nargs=1)\\n_parsed_args = vars(_parser.parse_args())\\n_output_files\n\
+      \              = _parsed_args.pop(\\\"_output_paths\\\", [])\\n\\n_outputs =\
+      \ add_numbers(**_parsed_args)\\n\\n_outputs\n              = [_outputs]\\n\\\
+      n_output_serializers = [\\n    _serialize_int,\\n\\n]\\n\\nimport\n        \
+      \      os\\nfor idx, output_file in enumerate(_output_files):\\n    try:\\n\
+      \        os.makedirs(os.path.dirname(output_file))\\n    except\n          \
+      \    OSError:\\n        pass\\n    with open(output_file, ''w'') as f:\\n  \
+      \      f.write(_output_serializers[idx](_outputs[idx]))\\n\"],\n           \
+      \   \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"a\", \"type\": \"\
+      Integer\"},\n              {\"name\": \"b\", \"type\": \"Integer\"}], \"name\"\
+      : \"Add numbers\", \"outputs\":\n              [{\"name\": \"Output\", \"type\"\
+      : \"Integer\"}]}'}\n      timeout: 0s\n    - name: print-number\n      params:\n\
+      \      - {name: add-numbers-Output, value: $(tasks.add-numbers.results.output)}\n\
+      \      taskSpec:\n        steps:\n        - name: main\n          args: [--a,\
+      \ $(inputs.params.add-numbers-Output), '----output-paths', $(results.output.path)]\n\
+      \          command:\n          - sh\n          - -ec\n          - |\n      \
+      \      program_path=$(mktemp)\n            printf \"%s\" \"$0\" > \"$program_path\"\
+      \n            python3 -u \"$program_path\" \"$@\"\n          - |\n         \
+      \   def print_number(a):\n                print(a)\n                return a\n\
+      \n            def _serialize_int(int_value: int) -> str:\n                if\
+      \ isinstance(int_value, str):\n                    return int_value\n      \
+      \          if not isinstance(int_value, int):\n                    raise TypeError('Value\
+      \ \"{}\" has type \"{}\" instead of int.'.format(str(int_value), str(type(int_value))))\n\
+      \                return str(int_value)\n\n            import argparse\n    \
+      \        _parser = argparse.ArgumentParser(prog='Print number', description='')\n\
+      \            _parser.add_argument(\"--a\", dest=\"a\", type=int, required=True,\
+      \ default=argparse.SUPPRESS)\n            _parser.add_argument(\"----output-paths\"\
+      , dest=\"_output_paths\", type=str, nargs=1)\n            _parsed_args = vars(_parser.parse_args())\n\
+      \            _output_files = _parsed_args.pop(\"_output_paths\", [])\n\n   \
+      \         _outputs = print_number(**_parsed_args)\n\n            _outputs =\
+      \ [_outputs]\n\n            _output_serializers = [\n                _serialize_int,\n\
+      \n            ]\n\n            import os\n            for idx, output_file in\
+      \ enumerate(_output_files):\n                try:\n                    os.makedirs(os.path.dirname(output_file))\n\
+      \                except OSError:\n                    pass\n               \
+      \ with open(output_file, 'w') as f:\n                    f.write(_output_serializers[idx](_outputs[idx]))\n\
+      \          image: python:3.7\n        params:\n        - {name: add-numbers-Output,\
+      \ type: string}\n        results:\n        - {name: output, description: /tmp/outputs/Output/data}\n\
+      \        metadata:\n          annotations: {pipelines.kubeflow.org/component_spec:\
+      \ '{\"implementation\":\n              {\"container\": {\"args\": [\"--a\",\
+      \ {\"inputValue\": \"a\"}, \"----output-paths\",\n              {\"outputPath\"\
+      : \"Output\"}], \"command\": [\"sh\", \"-ec\", \"program_path=$(mktemp)\\nprintf\n\
+      \              \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\\npython3 -u \\\
+      \"$program_path\\\" \\\"$@\\\"\\n\",\n              \"def print_number(a):\\\
+      n    print(a)\\n    return a\\n\\ndef _serialize_int(int_value:\n          \
+      \    int) -> str:\\n    if isinstance(int_value, str):\\n        return int_value\\\
+      n    if\n              not isinstance(int_value, int):\\n        raise TypeError(''Value\
+      \ \\\"{}\\\"\n              has type \\\"{}\\\" instead of int.''.format(str(int_value),\
+      \ str(type(int_value))))\\n    return\n              str(int_value)\\n\\nimport\
+      \ argparse\\n_parser = argparse.ArgumentParser(prog=''Print\n              number'',\
+      \ description='''')\\n_parser.add_argument(\\\"--a\\\", dest=\\\"a\\\",\n  \
+      \            type=int, required=True, default=argparse.SUPPRESS)\\n_parser.add_argument(\\\
+      \"----output-paths\\\",\n              dest=\\\"_output_paths\\\", type=str,\
+      \ nargs=1)\\n_parsed_args = vars(_parser.parse_args())\\n_output_files\n   \
+      \           = _parsed_args.pop(\\\"_output_paths\\\", [])\\n\\n_outputs = print_number(**_parsed_args)\\\
+      n\\n_outputs\n              = [_outputs]\\n\\n_output_serializers = [\\n   \
+      \ _serialize_int,\\n\\n]\\n\\nimport\n              os\\nfor idx, output_file\
+      \ in enumerate(_output_files):\\n    try:\\n        os.makedirs(os.path.dirname(output_file))\\\
+      n    except\n              OSError:\\n        pass\\n    with open(output_file,\
+      \ ''w'') as f:\\n        f.write(_output_serializers[idx](_outputs[idx]))\\\
+      n\"],\n              \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"\
+      a\", \"type\": \"Integer\"}],\n              \"name\": \"Print number\", \"\
+      outputs\": [{\"name\": \"Output\", \"type\": \"Integer\"}]}'}\n      timeout:\
+      \ 0s\n    - name: notify-success\n      taskSpec:\n        steps:\n        -\
+      \ name: main\n          command:\n          - sh\n          - -ec\n        \
+      \  - |\n            program_path=$(mktemp)\n            printf \"%s\" \"$0\"\
+      \ > \"$program_path\"\n            python3 -u \"$program_path\" \"$@\"\n   \
+      \       - |\n            def notify_success():\n                print('SUCCESS!')\n\
+      \n            import argparse\n            _parser = argparse.ArgumentParser(prog='Notify\
+      \ success', description='')\n            _parsed_args = vars(_parser.parse_args())\n\
+      \n            _outputs = notify_success(**_parsed_args)\n          image: python:3.7\n\
+      \        metadata:\n          annotations: {pipelines.kubeflow.org/component_spec:\
+      \ '{\"implementation\":\n              {\"container\": {\"args\": [], \"command\"\
+      : [\"sh\", \"-ec\", \"program_path=$(mktemp)\\nprintf\n              \\\"%s\\\
+      \" \\\"$0\\\" > \\\"$program_path\\\"\\npython3 -u \\\"$program_path\\\" \\\"\
+      $@\\\"\\n\",\n              \"def notify_success():\\n    print(''SUCCESS!'')\\\
+      n\\nimport argparse\\n_parser\n              = argparse.ArgumentParser(prog=''Notify\
+      \ success'', description='''')\\n_parsed_args\n              = vars(_parser.parse_args())\\\
+      n\\n_outputs = notify_success(**_parsed_args)\\n\"],\n              \"image\"\
+      : \"python:3.7\"}}, \"name\": \"Notify success\"}'}\n      when:\n      - input:\
+      \ $(tasks.condition-2.results.status)\n        operator: in\n        values:\n\
+      \        - \"true\"\n      timeout: 0s\n    - name: notify-failure\n      taskSpec:\n\
+      \        steps:\n        - name: main\n          command:\n          - sh\n\
+      \          - -ec\n          - |\n            program_path=$(mktemp)\n      \
+      \      printf \"%s\" \"$0\" > \"$program_path\"\n            python3 -u \"$program_path\"\
+      \ \"$@\"\n          - |\n            def notify_failure():\n               \
+      \ print('FAILED!')\n\n            import argparse\n            _parser = argparse.ArgumentParser(prog='Notify\
+      \ failure', description='')\n            _parsed_args = vars(_parser.parse_args())\n\
+      \n            _outputs = notify_failure(**_parsed_args)\n          image: python:3.7\n\
+      \        metadata:\n          annotations: {pipelines.kubeflow.org/component_spec:\
+      \ '{\"implementation\":\n              {\"container\": {\"args\": [], \"command\"\
+      : [\"sh\", \"-ec\", \"program_path=$(mktemp)\\nprintf\n              \\\"%s\\\
+      \" \\\"$0\\\" > \\\"$program_path\\\"\\npython3 -u \\\"$program_path\\\" \\\"\
+      $@\\\"\\n\",\n              \"def notify_failure():\\n    print(''FAILED!'')\\\
+      n\\nimport argparse\\n_parser\n              = argparse.ArgumentParser(prog=''Notify\
+      \ failure'', description='''')\\n_parsed_args\n              = vars(_parser.parse_args())\\\
+      n\\n_outputs = notify_failure(**_parsed_args)\\n\"],\n              \"image\"\
+      : \"python:3.7\"}}, \"name\": \"Notify failure\"}'}\n      when:\n      - input:\
+      \ $(tasks.condition-3.results.status)\n        operator: in\n        values:\n\
+      \        - \"true\"\n      timeout: 0s\n    - name: condition-2\n      params:\n\
+      \      - {name: operand1, value: $(tasks.print-number.results.output)}\n   \
+      \   - {name: operand2, value: $(params.threshold)}\n      - {name: operator,\
+      \ value: '>'}\n      taskSpec:\n        results:\n        - {name: status, description:\
+      \ Conditional task status}\n        params:\n        - {name: operand1, type:\
+      \ string}\n        - {name: operand2, type: string}\n        - {name: operator,\
+      \ type: string}\n        steps:\n        - script: |-\n            python -c\
+      \ 'import sys\n            input1=str.rstrip(sys.argv[1])\n            input2=str.rstrip(sys.argv[2])\n\
+      \            try:\n              input1=int(input1)\n              input2=int(input2)\n\
+      \            except:\n              input1=str(input1)\n            status=\"\
+      true\" if (input1 $(inputs.params.operator) input2) else \"false\"\n       \
+      \     f = open(\"/tekton/results/status\", \"w\")\n            f.write(status)\n\
+      \            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'\n\
+      \          image: python:alpine3.6\n    - name: condition-3\n      params:\n\
+      \      - {name: operand1, value: $(tasks.print-number.results.output)}\n   \
+      \   - {name: operand2, value: $(params.threshold)}\n      - {name: operator,\
+      \ value: <=}\n      taskSpec:\n        results:\n        - {name: status, description:\
+      \ Conditional task status}\n        params:\n        - {name: operand1, type:\
+      \ string}\n        - {name: operand2, type: string}\n        - {name: operator,\
+      \ type: string}\n        steps:\n        - script: |-\n            python -c\
+      \ 'import sys\n            input1=str.rstrip(sys.argv[1])\n            input2=str.rstrip(sys.argv[2])\n\
+      \            try:\n              input1=int(input1)\n              input2=int(input2)\n\
+      \            except:\n              input1=str(input1)\n            status=\"\
+      true\" if (input1 $(inputs.params.operator) input2) else \"false\"\n       \
+      \     f = open(\"/tekton/results/status\", \"w\")\n            f.write(status)\n\
+      \            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'\n\
+      \          image: python:alpine3.6\n  iterateParam: produce-numbers-Output-loop-item\n"
   name: conditions-and-loops
 spec:
   params:

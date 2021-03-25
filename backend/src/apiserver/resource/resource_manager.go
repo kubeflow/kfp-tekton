@@ -15,11 +15,15 @@
 package resource
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
@@ -42,6 +46,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -381,6 +387,31 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 
 	workflow.Name = workflow.Name + "-" + runId[0:5]
 
+	// Add a reference to the default experiment if run does not already have a containing experiment
+	ref, err := r.getDefaultExperimentIfNoExperiment(apiRun.GetResourceReferences())
+	if err != nil {
+		return nil, err
+	}
+	if ref != nil {
+		apiRun.ResourceReferences = append(apiRun.GetResourceReferences(), ref)
+	}
+
+	namespace, err := r.getNamespaceFromExperiment(apiRun.GetResourceReferences())
+	if err != nil {
+		return nil, err
+	}
+
+	// Predefine custom resource if resource_templates are provided and feature flag
+	// is enabled.
+	if strings.ToLower(common.IsApplyTektonCustomResource()) == "true" {
+		if tektonTemplates, ok := workflow.Annotations["tekton.dev/resource_templates"]; ok {
+			err = r.applyCustomResources(workflow, tektonTemplates, namespace)
+			if err != nil {
+				return nil, util.NewInternalServerError(err, "Apply Tekton Custom resource Failed")
+			}
+		}
+	}
+
 	err = r.tektonPreprocessing(workflow)
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Tekton Preprocessing Failed")
@@ -398,20 +429,6 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	// 		}
 	// 	}
 	// }
-
-	// Add a reference to the default experiment if run does not already have a containing experiment
-	ref, err := r.getDefaultExperimentIfNoExperiment(apiRun.GetResourceReferences())
-	if err != nil {
-		return nil, err
-	}
-	if ref != nil {
-		apiRun.ResourceReferences = append(apiRun.GetResourceReferences(), ref)
-	}
-
-	namespace, err := r.getNamespaceFromExperiment(apiRun.GetResourceReferences())
-	if err != nil {
-		return nil, err
-	}
 
 	// Create Tekton pipelineRun CRD resource
 	newWorkflow, err := r.getWorkflowClient(namespace).Create(context.Background(), workflow.Get(), v1.CreateOptions{})
@@ -704,6 +721,31 @@ func (r *ResourceManager) CreateJob(apiJob *api.Job) (*model.Job, error) {
 		},
 	}
 
+	// Add a reference to the default experiment if run does not already have a containing experiment
+	ref, err := r.getDefaultExperimentIfNoExperiment(apiJob.GetResourceReferences())
+	if err != nil {
+		return nil, err
+	}
+	if ref != nil {
+		apiJob.ResourceReferences = append(apiJob.GetResourceReferences(), ref)
+	}
+
+	namespace, err := r.getNamespaceFromExperiment(apiJob.GetResourceReferences())
+	if err != nil {
+		return nil, err
+	}
+
+	// Predefine custom resource if resource_templates are provided and feature flag
+	// is enabled.
+	if strings.ToLower(common.IsApplyTektonCustomResource()) == "true" {
+		if tektonTemplates, ok := workflow.Annotations["tekton.dev/resource_templates"]; ok {
+			err = r.applyCustomResources(workflow, tektonTemplates, namespace)
+			if err != nil {
+				return nil, util.NewInternalServerError(err, "Apply Tekton Custom resource Failed")
+			}
+		}
+	}
+
 	err = r.tektonPreprocessing(workflow)
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Tekton Preprocessing Failed")
@@ -721,20 +763,6 @@ func (r *ResourceManager) CreateJob(apiJob *api.Job) (*model.Job, error) {
 	// 		}
 	// 	}
 	// }
-
-	// Add a reference to the default experiment if run does not already have a containing experiment
-	ref, err := r.getDefaultExperimentIfNoExperiment(apiJob.GetResourceReferences())
-	if err != nil {
-		return nil, err
-	}
-	if ref != nil {
-		apiJob.ResourceReferences = append(apiJob.GetResourceReferences(), ref)
-	}
-
-	namespace, err := r.getNamespaceFromExperiment(apiJob.GetResourceReferences())
-	if err != nil {
-		return nil, err
-	}
 
 	newScheduledWorkflow, err := r.getScheduledWorkflowClient(namespace).Create(context.Background(), scheduledWorkflow, v1.CreateOptions{})
 	if err != nil {
@@ -1495,4 +1523,102 @@ func (r *ResourceManager) getHostPathVolumeSource(name string, path string) core
 			},
 		},
 	}
+}
+
+func (r *ResourceManager) applyCustomResources(workflow util.Workflow, tektonTemplates string, namespace string) error {
+	// Create kubeClient to deploy Tekton custom task crd
+	var config *rest.Config
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		glog.Errorf("error creating client configuration: %v", err)
+		return err
+	}
+	kubeClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		glog.Errorf("Failed to create client: %v", err)
+		return err
+	}
+	var template interface{}
+	// Decode metadata into JSON payload.
+	dec := yaml.NewDecoder(bytes.NewReader([]byte(tektonTemplates)))
+	for dec.Decode(&template) == nil {
+		template = r.convertToJson(template)
+		apiVersion, ok := template.(map[string]interface{})["apiVersion"].(string)
+		if !ok {
+			glog.Errorf("Failed to get Tekton custom task apiVersion")
+			return errors.New("Failed to get Tekton custom task apiVersion")
+		}
+		singlarKind, ok := template.(map[string]interface{})["kind"].(string)
+		if !ok {
+			glog.Errorf("Failed to get Tekton custom task kind")
+			return errors.New("Failed to get Tekton custom task kind")
+		}
+		api := strings.Split(apiVersion, "/")[0]
+		version := strings.Split(apiVersion, "/")[1]
+		resource := strings.ToLower(singlarKind) + "s"
+		name, ok := template.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string)
+		if !ok {
+			glog.Errorf("Failed to get Tekton custom task name")
+			return errors.New("Failed to get Tekton custom task name")
+		}
+		body, err := json.Marshal(template)
+		if err != nil {
+			glog.Errorf("Failed to convert to JSON: %v", err)
+			return err
+		}
+		// Check whether the resource is exist, if yes do a patch
+		// if not do a post(create)
+		_, err = kubeClient.RESTClient().
+			Get().
+			AbsPath("/apis/" + api + "/" + version).
+			Namespace(namespace).
+			Resource(resource).
+			Name(name).
+			DoRaw(context.Background())
+		if err != nil {
+			_, err = kubeClient.RESTClient().Post().
+				AbsPath(fmt.Sprintf("/apis/%s/%s", api, version)).
+				Namespace(namespace).
+				Resource(resource).
+				Body(body).
+				DoRaw(context.Background())
+			if err != nil {
+				glog.Errorf("Failed to create resource for pipeline: %s, %v", workflow.Name, err)
+				return err
+			}
+		} else {
+			_, err = kubeClient.RESTClient().Patch(types.MergePatchType).
+				AbsPath(fmt.Sprintf("/apis/%s/%s", api, version)).
+				Namespace(namespace).
+				Resource(resource).
+				Name(name).
+				Body(body).
+				DoRaw(context.Background())
+			if err != nil {
+				glog.Errorf("Failed to patch resource for pipeline: %s, %v", workflow.Name, err)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (r *ResourceManager) convertToJson(input interface{}) interface{} {
+	switch inputObject := input.(type) {
+	// In input interface is a dictionary, iterate each key
+	// and recursively decode them.
+	case map[interface{}]interface{}:
+		subMap := map[string]interface{}{}
+		for key, value := range inputObject {
+			subMap[key.(string)] = r.convertToJson(value)
+		}
+		return subMap
+	// If input interface is a list, iterate each item
+	// and recusively decode them
+	case []interface{}:
+		for index, value := range inputObject {
+			inputObject[index] = r.convertToJson(value)
+		}
+	}
+	return input
 }

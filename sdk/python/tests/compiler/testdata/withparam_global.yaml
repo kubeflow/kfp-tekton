@@ -28,6 +28,15 @@ metadata:
       "my-out-cop0"}]}'
     tekton.dev/output_artifacts: '{"my-out-cop0": [{"key": "artifacts/$PIPELINERUN/my-out-cop0/out.tgz",
       "name": "my-out-cop0-out", "path": "/tmp/out.json"}]}'
+    tekton.dev/resource_templates: "\n---\napiVersion: custom.tekton.dev/v1alpha1\n\
+      kind: PipelineLoop\nmetadata: {name: withparam-global-for-loop-1}\nspec:\n \
+      \ pipelineSpec:\n    params:\n    - {name: loopidy_doop-loop-item, type: string}\n\
+      \    tasks:\n    - name: my-in-cop1\n      params:\n      - {name: loopidy_doop-loop-item,\
+      \ value: $(params.loopidy_doop-loop-item)}\n      taskSpec:\n        steps:\n\
+      \        - name: main\n          args: ['echo no output global op1, item: $(inputs.params.loopidy_doop-loop-item)']\n\
+      \          command: [sh, -c]\n          image: library/bash:4.4.23\n       \
+      \ params:\n        - {name: loopidy_doop-loop-item, type: string}\n      runAfter:\
+      \ []\n      timeout: 0s\n  iterateParam: loopidy_doop-loop-item\n"
   name: withparam-global
 spec:
   params:
