@@ -109,6 +109,7 @@ class TektonCompiler(Compiler):
     self.output_artifacts = {}
     self.artifact_items = {}
     self.loops_pipeline = {}
+    self.recursive_tasks = []
     self.uuid = self._get_unique_id_code()
     self._group_names = []
     self.pipeline_labels = {}
@@ -141,6 +142,17 @@ class TektonCompiler(Compiler):
     else:
       return str(value_or_reference)
 
+  def _get_groups(self, root_group):
+    """Helper function to get all groups (not including ops) in a pipeline."""
+
+    def _get_groups_helper(group):
+      groups = {group.name: group}
+      for g in group.groups:
+        groups.update(_get_groups_helper(g))
+      return groups
+
+    return _get_groups_helper(root_group)
+
   @staticmethod
   def _get_unique_id_code():
     return uuid.uuid4().hex[:5]
@@ -154,7 +166,7 @@ class TektonCompiler(Compiler):
     self._group_names = [pipeline_name, sanitize_k8s_name(sub_group.name)]
     if self.uuid:
       self._group_names.insert(1, self.uuid)
-    group_name = '-'.join(self._group_names) if group_type == "loop" else sub_group.name
+    group_name = '-'.join(self._group_names) if group_type == "loop" or group_type == "graph" else sub_group.name
     template = {
       'metadata': {
         'name': group_name,
@@ -170,13 +182,111 @@ class TektonCompiler(Compiler):
 
       operand1_value = self._resolve_value_or_reference(condition.operand1, subgroup_inputs)
       operand2_value = self._resolve_value_or_reference(condition.operand2, subgroup_inputs)
-
       template['kind'] = 'Condition'
       template['spec']['params'] = [
         {'name': 'operand1', 'value': operand1_value},
         {'name': 'operand2', 'value': operand2_value},
         {'name': 'operator', 'value': str(condition.operator)}
       ]
+
+    # dsl does not expose Graph so here use sub_group.type to check whether it's graph
+    if sub_group.type == "graph":
+      # for graph now we just support as a pipeline loop with just 1 iteration
+      loop_args_name = "just_one_iteration"
+      loop_args_value = ["1"]
+
+      # Special handling for recursive subgroup
+      if sub_group.recursive_ref:
+        # generate ref graph name
+        tmp_group_names = [pipeline_name, sanitize_k8s_name(sub_group.recursive_ref.name)]
+        if self.uuid:
+          tmp_group_names.insert(1, self.uuid)
+        ref_group_name = '-'.join(tmp_group_names)
+
+        # generate params
+        params = [{
+          "name": loop_args_name,
+          "value": loop_args_value
+        }]
+
+        # get other input params, for recursion need rename the param name to the refrenced one
+        for i in range(len(sub_group.inputs)):
+            input = sub_group.inputs[i]
+            inputRef = sub_group.recursive_ref.inputs[i]
+            if input.op_name:
+              params.append({
+                'name': inputRef.full_name,
+                'value': '$(tasks.%s.results.%s)' % (input.op_name, input.name)
+              })
+            else:
+              params.append({
+                'name': inputRef.full_name, 'value': '$(params.%s)' % input.name
+              })
+            
+        self.recursive_tasks.append({
+          'name': sub_group.name,
+          'taskRef': {
+            'apiVersion': 'custom.tekton.dev/v1alpha1',
+            'kind': 'PipelineLoop',
+            'name': ref_group_name
+          },
+          'params': params
+        })
+      # normal graph logic start from here
+      else:
+        self.loops_pipeline[group_name] = {
+          'kind': 'loops',
+          'loop_args': loop_args_name,
+          'loop_sub_args': [],
+          'task_list': [],
+          'spec': {},
+          'depends': []
+        }
+        # get the dependencies tasks rely on the loop task.
+        for depend in dependencies.keys():
+          if depend == sub_group.name:
+            self.loops_pipeline[group_name]['spec']['runAfter'] = [task for task in dependencies[depend]]
+            self.loops_pipeline[group_name]['spec']['runAfter'].sort()
+          # for items depend on the graph, it will be handled in custom task handler
+          if sub_group.name in dependencies[depend]:
+            dependencies[depend].remove(sub_group.name)
+            self.loops_pipeline[group_name]['depends'].append({'org': depend, 'runAfter': group_name})
+        for op in sub_group.groups + sub_group.ops:
+          self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(op.name))
+          if hasattr(op, 'type') and op.type == 'condition' and op.ops:
+            for condition_op in op.ops:
+              self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
+            for condition_op in op.groups:
+              if condition_op.type == 'graph' and condition_op.recursive_ref:
+                self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
+        self.loops_pipeline[group_name]['spec']['name'] = group_name
+        self.loops_pipeline[group_name]['spec']['taskRef'] = {
+          "apiVersion": "custom.tekton.dev/v1alpha1",
+          "kind": "PipelineLoop",
+          "name": group_name
+        }
+        
+        self.loops_pipeline[group_name]['spec']['params'] = [{
+          "name": loop_args_name,
+          "value": loop_args_value
+        }]
+
+        # get other input params
+        for input in inputs.keys():
+          if input == sub_group.name:
+            for param in inputs[input]:
+              if param[1]:
+                replace_str = param[1] + '-'
+                self.loops_pipeline[group_name]['spec']['params'].append({
+                  'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
+                    param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
+                  )
+                })
+              if not param[1]:
+                self.loops_pipeline[group_name]['spec']['params'].append({
+                  'name': param[0], 'value': '$(params.%s)' % param[0]
+                })
+
     if isinstance(sub_group, dsl.ParallelFor):
       self.loops_pipeline[group_name] = {
         'kind': 'loops',
@@ -327,6 +437,8 @@ class TektonCompiler(Compiler):
         templates.append(template)
       if opsgroups[opsgroup].type == 'for_loop':
         self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "loop")
+      if opsgroups[opsgroup].type == 'graph':
+        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "graph")
 
     for op in pipeline.ops.values():
       templates.extend(op_to_steps_handler(op))
@@ -483,8 +595,16 @@ class TektonCompiler(Compiler):
       if parent_group:
         if condition_refs.get(parent_group[-2], []):
           task['when'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2], [])
-      if op.dependent_names:
+      if op != None and op.dependent_names:
         task['runAfter'] = op.dependent_names
+
+    # add condition refs to the recursive refs that depends on the condition
+    for recursive_task in self.recursive_tasks:
+      parent_group = op_name_to_parent_groups.get(recursive_task['name'], [])
+      if parent_group:
+        if condition_refs.get(parent_group[-2], []):
+          recursive_task['when'] = condition_refs.get(op_name_to_parent_groups[recursive_task['name']][-2], [])
+      recursive_task['name'] = sanitize_k8s_name(recursive_task['name'])
 
     # process input parameters from upstream tasks
     pipeline_param_names = [p['name'] for p in params]
@@ -515,13 +635,13 @@ class TektonCompiler(Compiler):
     # add retries params
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if op.num_retries:
+      if op != None and op.num_retries:
         task['retries'] = op.num_retries
 
     # add timeout params to task_refs, instead of task.
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout:
+      if op != None and (not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout):
         task['timeout'] = '%ds' % op.timeout
 
     # handle resourceOp cases in pipeline
@@ -531,9 +651,9 @@ class TektonCompiler(Compiler):
     finally_tasks = []
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if op.is_exit_handler:
+      if op != None and op.is_exit_handler:
         finally_tasks.append(task)
-    task_refs = [task for task in task_refs if not pipeline.ops.get(task['name']).is_exit_handler]
+    task_refs = [task for task in task_refs if pipeline.ops.get(task['name']) and not pipeline.ops.get(task['name']).is_exit_handler]
 
     # Flatten condition task
     condition_task_refs_temp = []
@@ -882,7 +1002,7 @@ class TektonCompiler(Compiler):
         pipeline_conf)
     # Separate loop workflow from the main workflow
     if self.loops_pipeline:
-      pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self._group_names)
+      pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
       for i in range(len(pipeline_loop_crs)):
         TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],

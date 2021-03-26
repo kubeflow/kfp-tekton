@@ -141,6 +141,13 @@ class TestTektonCompiler(unittest.TestCase):
       normalize_compiler_output_function=lambda f: re.sub(
           "(loop-item-param-[a-z 0-9]*|for-loop-for-loop-[a-z 0-9]*)", "with-item-name", f))
 
+  def test_recursion_while_workflow(self):
+    """
+    Test recursion while workflow.
+    """
+    from .testdata.recursion_while import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'recursion_while.yaml')
+
   def test_withparam_global_workflow(self):
     """
     Test compiling a withparam global in workflow.
