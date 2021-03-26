@@ -411,6 +411,7 @@ class TektonCompiler(Compiler):
     cel_conditions = {}
     condition_when_refs = {}
     condition_task_refs = {}
+    string_condition_refs = {}
     for template in raw_templates:
       if template['kind'] == 'Condition':
         disable_cel = env.get('DISABLE_CEL_CONDITION', 'false').lower() == "true"
@@ -463,15 +464,20 @@ class TektonCompiler(Compiler):
                   'values': ['true']
                 }
               ]
-            # print(template['metadata']['name'])
-            # if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!='):
-            #   condition_refs[template['metadata']['name']] = [
-            #       {
-            #         'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
-            #         'operator': 'in',
-            #         'values': ['true']
-            #       }
-            #     ]
+            if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!='):
+              condition_operator = condition_params[2]
+              condition_operand1 = condition_params[0]
+              condition_operand2 = condition_params[1]
+              map_cel_vars = lambda a: '$(tasks.' + sanitize_k8s_name(a.get('value', '').split('.')[-1]) + '.results.status)' \
+                if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
+              condition_refs[template['metadata']['name']] = [
+                  {
+                    'input': map_cel_vars(condition_operand1),
+                    'operator': 'in' if condition_operator.get('value', '') == '==' else 'notin',
+                    'values': [map_cel_vars(condition_operand2)]
+                  }
+                ]
+              string_condition_refs[template['metadata']['name']] = True
             condition_task_refs[template['metadata']['name']] = condition_task_ref
             condition_when_refs[template['metadata']['name']] = condition_refs[template['metadata']['name']]
       else:
@@ -630,7 +636,8 @@ class TektonCompiler(Compiler):
     condition_task_refs_temp = []
     for condition_task_ref in condition_task_refs.values():
       for ref in condition_task_ref:
-        condition_task_refs_temp.append(ref)
+        if not string_condition_refs.get(ref['name'], False):
+          condition_task_refs_temp.append(ref)
     condition_task_refs = condition_task_refs_temp
 
     pipeline_run = {
