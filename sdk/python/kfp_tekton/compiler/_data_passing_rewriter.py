@@ -497,21 +497,21 @@ def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
 
     # Data passing for task inputs
     task_spec = task.get('taskSpec', {})
-    task_parmas = task_spec.get('params', [])
+    task_params = task_spec.get('params', [])
     task_artifacts = task_spec.get('artifacts', [])
-    for task_parma in task_parmas:
-        if (task_name, task_parma.get('name')) in inputs_tasks:
+    for task_param in task_params:
+        if (task_name, task_param.get('name')) in inputs_tasks:
             if not task_spec.setdefault('workspaces', []):
                 task_spec['workspaces'].append({"name": task_name})
             # Replace the args for the inputs in the task_spec
             # /tmp/inputs/text/data ---->
-            # $(workspaces.task_name.path)/task_parma.get('name')
+            # $(workspaces.task_name.path)/task_param.get('name')
             placeholder = '/tmp/inputs/text/data'
             for task_artifact in task_artifacts:
-                if task_artifact.get('name') == task_parma.get('name'):
+                if task_artifact.get('name') == task_param.get('name'):
                     placeholder = task_artifact.get('path')
             workspaces_parameter = '$(workspaces.%s.path)/%s' % (
-                task_name, task_parma.get('name'))
+                task_name, task_param.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
                 task_spec, placeholder, workspaces_parameter)
             task_spec = task.get('taskSpec', {})

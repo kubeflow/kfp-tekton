@@ -60,8 +60,32 @@ def after_any(any: List[dsl.ContainerOp], name: str = None):
     The function adds a new AnySequencer and connects the given op to it
     '''
     seq = AnySequencer(any, name)
-    
+
     def _after_components(cop):
         cop.after(seq)
         return cop
     return _after_components
+
+
+def CEL_ConditionOp(condition_statement):
+    ConditionOp = dsl.ContainerOp(
+            name="condition-cel",
+            image="cel-reg/cel-task-name:latest",
+            command=["sh", "-c"],
+            arguments=["--apiVersion", "http://cel.tekton.dev/v1alpha1",
+                       "--kind", "CEL",
+                       "--name", "cel_condition",
+                       "--condition_statement", condition_statement],
+            file_outputs={'status': '/tmp/tekton'}
+        )
+    return ConditionOp
+
+
+def cond_after(conditions: List[dsl.ContainerOp], param):
+    def _cond_after(cop):
+        for cond in conditions:
+            cop.after(cond)
+            with dsl.Condition(param == 'true'):
+                cop = cop
+        return cop
+    return _cond_after

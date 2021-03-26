@@ -40,7 +40,6 @@ from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
-from kfp_tekton.compiler.any_sequencer import generate_any_sequencer
 from kfp_tekton.compiler.cel_condition import CELParam
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
@@ -258,7 +257,7 @@ class TektonCompiler(Compiler):
           loop_args_str_value = json.dumps(sanitized_tasks, sort_keys=True)
         else:
           loop_args_str_value = str(loop_arg_value)
-        
+
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": sub_group.loop_args.full_name,
           "value": loop_args_str_value
@@ -464,6 +463,15 @@ class TektonCompiler(Compiler):
                   'values': ['true']
                 }
               ]
+            # print(template['metadata']['name'])
+            # if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!='):
+            #   condition_refs[template['metadata']['name']] = [
+            #       {
+            #         'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
+            #         'operator': 'in',
+            #         'values': ['true']
+            #       }
+            #     ]
             condition_task_refs[template['metadata']['name']] = condition_task_ref
             condition_when_refs[template['metadata']['name']] = condition_refs[template['metadata']['name']]
       else:
@@ -478,18 +486,41 @@ class TektonCompiler(Compiler):
             'taskSpec': template['spec'],
           }
 
-        task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
-        task_labels = template['metadata'].get('labels', {})
-        task_ref['taskSpec']['metadata']['labels'] = task_labels
-        task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
-        task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
-        cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
-        task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
+        for i in template['spec'].get('steps',[]):
+          if i.get('image', '') == "cel-reg/cel-task-name:latest":
+            custom_task_args = {}
+            container_args = i.get('args', [])
+            for index, item in enumerate(container_args):
+              if item.startswith('--'):
+                custom_task_args[item[2:]] = container_args[index+1]
+            non_param_keys = ['name', 'apiVersion', 'kind']
+            task_params = []
+            for key, value in custom_task_args.items():
+              if key not in non_param_keys:
+                task_params.append({'name': key, 'value': value})
+            task_ref = {
+              'name': template['metadata']['name'],
+              'params': task_params,
+              'taskRef': {
+                'name': custom_task_args['name'],
+                'apiVersion': custom_task_args['apiVersion'],
+                'kind': custom_task_args['kind']
+              }
+            }
+            break
+        if task_ref.get('taskSpec', ''):
+          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+          task_labels = template['metadata'].get('labels', {})
+          task_ref['taskSpec']['metadata']['labels'] = task_labels
+          task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
+          task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
+          cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
+          task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
 
-        task_annotations = template['metadata'].get('annotations', {})
-        task_ref['taskSpec']['metadata']['annotations'] = task_annotations
-        task_annotations['tekton.dev/template'] = task_annotations.get('tekton.dev/template', '')
-        
+          task_annotations = template['metadata'].get('annotations', {})
+          task_ref['taskSpec']['metadata']['annotations'] = task_annotations
+          task_annotations['tekton.dev/template'] = task_annotations.get('tekton.dev/template', '')
+
         task_refs.append(task_ref)
 
     # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
@@ -630,7 +661,7 @@ class TektonCompiler(Compiler):
         }
       }
     }
-    
+
     if self.pipeline_labels:
       pipeline_run['metadata']['labels'] = pipeline_run['metadata'].setdefault('labels', {})
       pipeline_run['metadata']['labels'].update(self.pipeline_labels)
