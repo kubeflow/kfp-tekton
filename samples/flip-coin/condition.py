@@ -15,6 +15,7 @@
 import kfp
 from kfp import dsl
 from kfp_tekton.compiler.cel_condition import CELParam, CELCondition, CELTemplate
+from kfp_tekton.tekton import CEL_ConditionOp, cond_after
 
 
 def random_num_op(low, high):
@@ -57,6 +58,7 @@ def flipcoin_pipeline():
     flip = flip_coin_op()
     cel_task = CELTemplate(name='test')
     test = CELParam(name="test_cel_task", value="data")
+    cel_condition = CEL_ConditionOp(flip.output == 'heads')
     with CELCondition(test != "heads", cel_task=cel_task.template()):
         random_num_head = random_num_op(0, 9)
         with dsl.Condition(random_num_head.output > 5):
@@ -64,12 +66,13 @@ def flipcoin_pipeline():
         with dsl.Condition(random_num_head.output <= 5):
             print_op('heads and %s <= 5!' % random_num_head.output)
 
-    with dsl.Condition(flip.output == 'tails'):
+    with dsl.Condition(cel_condition.output == 'tails'):
         random_num_tail = random_num_op(10, 19)
         with dsl.Condition(random_num_tail.output > 15):
-            print_op('tails and %s > 15!' % random_num_tail.output)
+            hey = print_op('tails and %s > 15!' % random_num_tail.output)
         with dsl.Condition(random_num_tail.output <= 15):
             print_op('tails and %s <= 15!' % random_num_tail.output)
+    random_num_head2 = random_num_op(0, 9).after(random_num_head).after(random_num_tail).after(hey)
 
 
 if __name__ == '__main__':
