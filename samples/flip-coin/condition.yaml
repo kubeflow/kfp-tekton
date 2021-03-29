@@ -72,9 +72,10 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations: {tekton.dev/template: ''}
       when:
-      - input: $(tasks.condition-1.results.data)
-        operator: notin
-        values: [heads]
+      - input: $(tasks.condition-cel.results.status)
+        operator: in
+        values:
+        - "true"
       timeout: 0s
     - name: print
       params:
@@ -141,7 +142,8 @@ spec:
       when:
       - input: $(tasks.condition-cel.results.status)
         operator: in
-        values: [tails]
+        values:
+        - "false"
       timeout: 0s
     - name: print-3
       params:
@@ -207,26 +209,24 @@ spec:
           annotations: {tekton.dev/template: ''}
       runAfter: [generate-random-number, generate-random-number-2, print-3]
       timeout: 0s
-    - name: condition-1
-      params:
-      - {name: data, value: $(tasks.flip-coin.results.output) == heads}
-      taskRef: {name: cel_condition, apiVersion: cel.tekton.dev/v1alpha1, kind: CEL}
     - name: condition-2
       params:
       - {name: status, value: $(tasks.generate-random-number.results.output) > 5}
       taskRef: {name: cel_condition, apiVersion: cel.tekton.dev/v1alpha1, kind: CEL}
       when:
-      - input: $(tasks.condition-1.results.data)
-        operator: notin
-        values: [heads]
+      - input: $(tasks.condition-cel.results.status)
+        operator: in
+        values:
+        - "true"
     - name: condition-3
       params:
       - {name: status, value: $(tasks.generate-random-number.results.output) <= 5}
       taskRef: {name: cel_condition, apiVersion: cel.tekton.dev/v1alpha1, kind: CEL}
       when:
-      - input: $(tasks.condition-1.results.data)
-        operator: notin
-        values: [heads]
+      - input: $(tasks.condition-cel.results.status)
+        operator: in
+        values:
+        - "true"
     - name: condition-5
       params:
       - {name: status, value: $(tasks.generate-random-number-2.results.output) > 15}
@@ -234,7 +234,8 @@ spec:
       when:
       - input: $(tasks.condition-cel.results.status)
         operator: in
-        values: [tails]
+        values:
+        - "false"
     - name: condition-6
       params:
       - {name: status, value: $(tasks.generate-random-number-2.results.output) <=
@@ -243,5 +244,6 @@ spec:
       when:
       - input: $(tasks.condition-cel.results.status)
         operator: in
-        values: [tails]
+        values:
+        - "false"
   timeout: 0s

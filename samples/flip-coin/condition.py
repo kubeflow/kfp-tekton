@@ -14,7 +14,6 @@
 
 import kfp
 from kfp import dsl
-from kfp_tekton.compiler.cel_condition import CELParam, CELCondition, CELTemplate
 from kfp_tekton.tekton import CEL_ConditionOp, cond_after
 
 
@@ -56,17 +55,15 @@ def print_op(msg):
 )
 def flipcoin_pipeline():
     flip = flip_coin_op()
-    cel_task = CELTemplate(name='test')
-    test = CELParam(name="test_cel_task", value="data")
     cel_condition = CEL_ConditionOp(flip.output == 'heads')
-    with CELCondition(test != "heads", cel_task=cel_task.template()):
+    with dsl.Condition(cel_condition.output == 'true'):
         random_num_head = random_num_op(0, 9)
         with dsl.Condition(random_num_head.output > 5):
             print_op('heads and %s > 5!' % random_num_head.output)
         with dsl.Condition(random_num_head.output <= 5):
             print_op('heads and %s <= 5!' % random_num_head.output)
 
-    with dsl.Condition(cel_condition.output == 'tails'):
+    with dsl.Condition(cel_condition.output == 'false'):
         random_num_tail = random_num_op(10, 19)
         with dsl.Condition(random_num_tail.output > 15):
             hey = print_op('tails and %s > 15!' % random_num_tail.output)
