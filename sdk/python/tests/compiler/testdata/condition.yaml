@@ -141,10 +141,10 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-1.results.status)
+      - input: $(tasks.flip.results.status)
         operator: in
         values:
-        - 'true'
+        - heads
     - name: print1
       params:
       - name: flip-again-output_value
@@ -167,10 +167,10 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-3.results.status)
+      - input: $(tasks.flip3-output-value.results.status)
         operator: in
         values:
-        - 'true'
+        - heads
     - name: print2
       params:
       - name: flip-output_value
@@ -193,50 +193,8 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-4.results.status)
+      - input: $(tasks.flip.results.status)
         operator: in
         values:
-        - 'true'
-    - name: condition-1
-      params:
-      - name: status
-        value: $(tasks.flip.results.output-value) == heads
-      taskRef:
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
-        name: cel_condition
-    - name: condition-2
-      params:
-      - name: status
-        value: $(tasks.flip-again.results.output-value) == tails
-      taskRef:
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
-        name: cel_condition
-      when:
-      - input: $(tasks.condition-1.results.status)
-        operator: in
-        values:
-        - 'true'
-    - name: condition-3
-      params:
-      - name: status
-        value: $(tasks.flip3.results.output-value) == heads
-      taskRef:
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
-        name: cel_condition
-      when:
-      - input: $(tasks.condition-2.results.status)
-        operator: in
-        values:
-        - 'true'
-    - name: condition-4
-      params:
-      - name: status
-        value: $(tasks.flip.results.output-value) == tails
-      taskRef:
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
-        name: cel_condition
+        - tails
   timeout: 0s

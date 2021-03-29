@@ -75,17 +75,8 @@ def CEL_ConditionOp(condition_statement):
             arguments=["--apiVersion", "http://cel.tekton.dev/v1alpha1",
                        "--kind", "CEL",
                        "--name", "cel_condition",
-                       "--condition_statement", condition_statement],
+                       "--status", condition_statement],
             file_outputs={'status': '/tmp/tekton'}
         )
+    ConditionOp.add_pod_annotation("valid_container","false")
     return ConditionOp
-
-
-def cond_after(conditions: List[dsl.ContainerOp], param):
-    def _cond_after(cop):
-        for cond in conditions:
-            cop.after(cond)
-            with dsl.Condition(param == 'true'):
-                cop = cop
-        return cop
-    return _cond_after

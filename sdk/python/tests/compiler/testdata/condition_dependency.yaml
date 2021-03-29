@@ -105,10 +105,10 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-1.results.status)
+      - input: $(tasks.flip.results.status)
         operator: in
         values:
-        - 'true'
+        - heads
     - name: print1
       params:
       - name: flip-again-output
@@ -131,10 +131,10 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-2.results.status)
+      - input: $(tasks.flip-again.results.status)
         operator: in
         values:
-        - 'true'
+        - tails
     - name: print2
       params:
       - name: flip-output
@@ -157,10 +157,10 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-3.results.status)
+      - input: $(tasks.flip.results.status)
         operator: in
         values:
-        - 'true'
+        - tails
     - name: print3
       runAfter:
       - condition-1
@@ -180,33 +180,4 @@ spec:
           image: alpine:3.6
           name: main
       timeout: 0s
-    - name: condition-1
-      params:
-      - name: status
-        value: $(tasks.flip.results.output) == heads
-      taskRef:
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
-        name: cel_condition
-    - name: condition-2
-      params:
-      - name: status
-        value: $(tasks.flip-again.results.output) == tails
-      taskRef:
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
-        name: cel_condition
-      when:
-      - input: $(tasks.condition-1.results.status)
-        operator: in
-        values:
-        - 'true'
-    - name: condition-3
-      params:
-      - name: status
-        value: $(tasks.flip.results.output) == tails
-      taskRef:
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
-        name: cel_condition
   timeout: 0s

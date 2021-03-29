@@ -40,7 +40,6 @@ from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
-from kfp_tekton.compiler.cel_condition import CELParam
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
 
@@ -183,16 +182,12 @@ class TektonCompiler(Compiler):
       operand2_value = self._resolve_value_or_reference(condition.operand2, subgroup_inputs)
 
       template['kind'] = 'Condition'
-      map_cel_vars = lambda a, b: a.value if type(a) == CELParam else b
       template['spec']['params'] = [
-        {'name': 'operand1', 'value': map_cel_vars(condition.operand1, operand1_value), 'type': type(condition.operand1)},
-        {'name': 'operand2', 'value': map_cel_vars(condition.operand2, operand2_value), 'type': type(condition.operand2)},
+        {'name': 'operand1', 'value': operand1_value, 'type': type(condition.operand1)},
+        {'name': 'operand2', 'value': operand2_value, 'type': type(condition.operand2)},
         {'name': 'operator', 'value': str(condition.operator), 'type': type(condition.operator)}
       ]
-      if hasattr(sub_group, 'cel_task'):
-        template['spec']['cel-template'] = sub_group.cel_task
-      else:
-        template['spec']['cel-template'] = None
+      template['spec']['cel-template'] = None
     if isinstance(sub_group, dsl.ParallelFor):
       self.loops_pipeline[group_name] = {
         'kind': 'loops',
@@ -422,64 +417,40 @@ class TektonCompiler(Compiler):
 
         condition_params = template['spec'].get('params', [])
         if condition_params:
+          condition_task_ref = [{
+              'name': template['metadata']['name'],
+              'params': [{
+                  'name': p['name'],
+                  'value': p.get('value', '')
+                } for p in template['spec'].get('params', [])
+              ],
+
+              'taskSpec' if disable_cel else 'taskRef': condition_task_spec
+          }]
+          condition_refs[template['metadata']['name']] = [
+              {
+                'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
+                'operator': 'in',
+                'values': ['true']
+              }
+            ]
+          # Don't use additional task if it's only doing literal string == and !=
           condition_operator = condition_params[2]
           condition_operand1 = condition_params[0]
           condition_operand2 = condition_params[1]
-          if template['spec'].get('cel-template', None):
-            if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!='):
-              map_cel_vars = lambda a: '$(tasks.' + template['metadata']['name'] + '.results.' + \
-                sanitize_k8s_name(a.get('value', '')) + ')' if a.get('type', '') == CELParam else a.get('value', '')
-              operand1 = map_cel_vars(condition_operand1)
-              operand2 = map_cel_vars(condition_operand2)
-              condition_refs[template['metadata']['name']] = [
-                  {
-                    'input': operand1,
-                    'operator': 'in' if condition_operator.get('value', '') == '==' else 'notin',
-                    'values': [operand2]
-                  }
-                ]
-              condition_task_ref = [template['spec']['cel-template']]
-              condition_task_ref[0]['name'] = template['metadata']['name']
-              condition_task_refs[template['metadata']['name']] = condition_task_ref
-              cel_conditions[template['metadata']['name']] = condition_task_ref
-              condition_when_refs[template['metadata']['name']] = condition_refs[template['metadata']['name']]
-            else:
-              raise("CEL Output condition only support '==' or '!=' condition operator")
-
-          else:
-            condition_task_ref = [{
-                'name': template['metadata']['name'],
-                'params': [{
-                    'name': p['name'],
-                    'value': p.get('value', '')
-                  } for p in template['spec'].get('params', [])
-                ],
-
-                'taskSpec' if disable_cel else 'taskRef': condition_task_spec
-            }]
+          if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!='):
+            map_cel_vars = lambda a: '$(tasks.' + sanitize_k8s_name(a.get('value', '').split('.')[-1]) + '.results.status)' \
+              if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
             condition_refs[template['metadata']['name']] = [
                 {
-                  'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
-                  'operator': 'in',
-                  'values': ['true']
+                  'input': map_cel_vars(condition_operand1),
+                  'operator': 'in' if condition_operator.get('value', '') == '==' else 'notin',
+                  'values': [map_cel_vars(condition_operand2)]
                 }
               ]
-            if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!='):
-              condition_operator = condition_params[2]
-              condition_operand1 = condition_params[0]
-              condition_operand2 = condition_params[1]
-              map_cel_vars = lambda a: '$(tasks.' + sanitize_k8s_name(a.get('value', '').split('.')[-1]) + '.results.status)' \
-                if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
-              condition_refs[template['metadata']['name']] = [
-                  {
-                    'input': map_cel_vars(condition_operand1),
-                    'operator': 'in' if condition_operator.get('value', '') == '==' else 'notin',
-                    'values': [map_cel_vars(condition_operand2)]
-                  }
-                ]
-              string_condition_refs[template['metadata']['name']] = True
-            condition_task_refs[template['metadata']['name']] = condition_task_ref
-            condition_when_refs[template['metadata']['name']] = condition_refs[template['metadata']['name']]
+            string_condition_refs[template['metadata']['name']] = True
+          condition_task_refs[template['metadata']['name']] = condition_task_ref
+          condition_when_refs[template['metadata']['name']] = condition_refs[template['metadata']['name']]
       else:
         templates.append(template)
         task_ref = {
