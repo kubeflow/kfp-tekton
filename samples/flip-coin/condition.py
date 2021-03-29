@@ -66,10 +66,10 @@ def flipcoin_pipeline():
     with dsl.Condition(cel_condition.output == 'false'):
         random_num_tail = random_num_op(10, 19)
         with dsl.Condition(random_num_tail.output > 15):
-            hey = print_op('tails and %s > 15!' % random_num_tail.output)
+            inner_task = print_op('tails and %s > 15!' % random_num_tail.output)
         with dsl.Condition(random_num_tail.output <= 15):
             print_op('tails and %s <= 15!' % random_num_tail.output)
-    random_num_head2 = random_num_op(0, 9).after(random_num_head).after(random_num_tail).after(hey)
+    random_num_head2 = random_num_op(0, 9).after(random_num_head).after(random_num_tail).after(inner_task)
 
 
 if __name__ == '__main__':
