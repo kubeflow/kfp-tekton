@@ -464,6 +464,8 @@ class TektonCompiler(Compiler):
           }
 
         for i in template['spec'].get('steps',[]):
+          # TODO: change the below conditions to map with a label
+          #       or a list of images with optimized actions
           if i.get('image', '') == "cel-reg/cel-task-name:latest":
             custom_task_args = {}
             container_args = i.get('args', [])
