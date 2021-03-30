@@ -480,6 +480,8 @@ class TektonCompiler(Compiler):
             task_ref = {
               'name': template['metadata']['name'],
               'params': task_params,
+              # For processing Tekton parameter mapping later on.
+              'orig_params': task_ref['params'],
               'taskRef': {
                 'name': custom_task_args['name'],
                 'apiVersion': custom_task_args['apiVersion'],
@@ -564,23 +566,52 @@ class TektonCompiler(Compiler):
         loop_args.extend(self.loops_pipeline[key]['loop_sub_args'])
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      for tp in task.get('params', []):
-        if tp['name'] in pipeline_param_names + loop_args:
-          tp['value'] = '$(params.%s)' % tp['name']
-        else:
-          for pp in op.inputs:
-            if tp['name'] == pp.full_name:
-              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
-              # Create input artifact tracking annotation
-              input_annotation = self.input_artifacts.get(task['name'], [])
-              input_annotation.append(
-                  {
-                      'name': tp['name'],
-                      'parent_task': pp.op_name
-                  }
-              )
-              self.input_artifacts[task['name']] = input_annotation
-              break
+      # Substitute self defined CEL Op paramters to the correct mapping.
+      # TODO: refactor with the else logic to reduce code
+      if task.get('orig_params', []):
+        orig_params = [p['name'] for p in task.get('orig_params', [])]
+        for tp in task.get('params', []):
+          pipeline_params = re.findall('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', tp.get('value', ''))
+          pipeline_param = pipeline_params[0] if pipeline_params else ""
+          if pipeline_param in orig_params:
+            if pipeline_param in pipeline_param_names + loop_args:
+              substitute_param = '$(params.%s)' % pipeline_param
+              tp['value'] = re.sub('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', substitute_param, tp.get('value', ''))
+            else:
+              for pp in op.inputs:
+                if pipeline_param == pp.full_name:
+                  substitute_param = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
+                  tp['value'] = re.sub('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', substitute_param, tp.get('value', ''))
+                  # Create input artifact tracking annotation
+                  input_annotation = self.input_artifacts.get(task['name'], [])
+                  input_annotation.append(
+                      {
+                          'name': tp['name'],
+                          'parent_task': pp.op_name
+                      }
+                  )
+                  self.input_artifacts[task['name']] = input_annotation
+                  break
+        # Not necessary for Tekton execution
+        task.pop('orig_params', None)
+      else:
+        for tp in task.get('params', []):
+          if tp['name'] in pipeline_param_names + loop_args:
+            tp['value'] = '$(params.%s)' % tp['name']
+          else:
+            for pp in op.inputs:
+              if tp['name'] == pp.full_name:
+                tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
+                # Create input artifact tracking annotation
+                input_annotation = self.input_artifacts.get(task['name'], [])
+                input_annotation.append(
+                    {
+                        'name': tp['name'],
+                        'parent_task': pp.op_name
+                    }
+                )
+                self.input_artifacts[task['name']] = input_annotation
+                break
 
     # add retries params
     for task in task_refs:
@@ -591,8 +622,10 @@ class TektonCompiler(Compiler):
     # add timeout params to task_refs, instead of task.
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout:
-        task['timeout'] = '%ds' % op.timeout
+      # Custom task doesn't support timeout feature
+      if task.get('taskSpec', ''):
+        if not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout:
+          task['timeout'] = '%ds' % op.timeout
 
     # handle resourceOp cases in pipeline
     self._process_resourceOp(task_refs, pipeline)

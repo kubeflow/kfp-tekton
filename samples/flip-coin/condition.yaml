@@ -12,8 +12,9 @@ metadata:
       "generate-random-number-2-output", "path": "/tmp/output"}], "generate-random-number-3":
       [{"key": "artifacts/$PIPELINERUN/generate-random-number-3/output.tgz", "name":
       "generate-random-number-3-output", "path": "/tmp/output"}]}'
-    tekton.dev/input_artifacts: '{"print": [{"name": "generate-random-number-output",
-      "parent_task": "generate-random-number"}], "print-2": [{"name": "generate-random-number-output",
+    tekton.dev/input_artifacts: '{"condition-cel": [{"name": "status", "parent_task":
+      "flip-coin"}], "print": [{"name": "generate-random-number-output", "parent_task":
+      "generate-random-number"}], "print-2": [{"name": "generate-random-number-output",
       "parent_task": "generate-random-number"}], "print-3": [{"name": "generate-random-number-2-output",
       "parent_task": "generate-random-number-2"}], "print-4": [{"name": "generate-random-number-2-output",
       "parent_task": "generate-random-number-2"}]}'
@@ -50,11 +51,9 @@ spec:
       timeout: 0s
     - name: condition-cel
       params:
-      - {name: condition_statement, value: 'ConditionOperator(operator=''=='', operand1=$(inputs.params.flip-coin-output),
-          operand2=''heads'')'}
+      - {name: status, value: $(tasks.flip-coin.results.output) == 'heads'}
       taskRef: {name: cel_condition, apiVersion: 'http://cel.tekton.dev/v1alpha1',
         kind: CEL}
-      timeout: 0s
     - name: generate-random-number
       taskSpec:
         steps:

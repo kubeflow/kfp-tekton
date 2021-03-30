@@ -14,7 +14,7 @@
 
 import kfp
 from kfp import dsl
-from kfp_tekton.tekton import CEL_ConditionOp, cond_after
+from kfp_tekton.tekton import CEL_ConditionOp
 
 
 def random_num_op(low, high):
@@ -55,7 +55,7 @@ def print_op(msg):
 )
 def flipcoin_pipeline():
     flip = flip_coin_op()
-    cel_condition = CEL_ConditionOp(flip.output == 'heads')
+    cel_condition = CEL_ConditionOp("%s == 'heads'" % flip.output)
     with dsl.Condition(cel_condition.output == 'true'):
         random_num_head = random_num_op(0, 9)
         with dsl.Condition(random_num_head.output > 5):
