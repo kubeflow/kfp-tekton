@@ -194,8 +194,10 @@ class TektonCompiler(Compiler):
       operand2_value = self._resolve_value_or_reference(condition.operand2, subgroup_inputs)
       template['kind'] = 'Condition'
       template['spec']['params'] = [
-        {'name': 'operand1', 'value': operand1_value, 'type': type(condition.operand1)},
-        {'name': 'operand2', 'value': operand2_value, 'type': type(condition.operand2)},
+        {'name': 'operand1', 'value': operand1_value, 'type': type(condition.operand1),
+        'op_name': getattr(condition.operand1, 'op_name', ''), 'output_name': getattr(condition.operand1, 'name', '')},
+        {'name': 'operand2', 'value': operand2_value, 'type': type(condition.operand2),
+        'op_name': getattr(condition.operand2, 'op_name', ''), 'output_name': getattr(condition.operand2, 'name', '')},
         {'name': 'operator', 'value': str(condition.operator), 'type': type(condition.operator)}
       ]
 
@@ -232,7 +234,7 @@ class TektonCompiler(Compiler):
               params.append({
                 'name': inputRef.full_name, 'value': '$(params.%s)' % input.name
               })
-            
+
         self.recursive_tasks.append({
           'name': sub_group.name,
           'taskRef': {
@@ -275,7 +277,7 @@ class TektonCompiler(Compiler):
           "kind": "PipelineLoop",
           "name": group_name
         }
-        
+
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": loop_args_name,
           "value": loop_args_value
@@ -550,8 +552,8 @@ class TektonCompiler(Compiler):
           condition_operand1 = condition_params[0]
           condition_operand2 = condition_params[1]
           if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!='):
-            map_cel_vars = lambda a: '$(tasks.' + sanitize_k8s_name(a.get('value', '').split('.')[-1]) + '.results.status)' \
-              if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
+            map_cel_vars = lambda a: '$(tasks.%s.results.%s)' % (sanitize_k8s_name(a['value'].split('.')[-1]),
+              sanitize_k8s_name(a['output_name'])) if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
             condition_refs[template['metadata']['name']] = [
                 {
                   'input': map_cel_vars(condition_operand1),
@@ -599,6 +601,10 @@ class TektonCompiler(Compiler):
                 'kind': custom_task_args['kind']
               }
             }
+            # Pop custom task artifacts since we have no control of how
+            # custom task controller is handling the container/task execution.
+            self.artifact_items.pop(template['metadata']['name'], None)
+            self.output_artifacts.pop(template['metadata']['name'], None)
             break
         if task_ref.get('taskSpec', ''):
           task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
@@ -701,15 +707,6 @@ class TektonCompiler(Compiler):
                 if pipeline_param == pp.full_name:
                   substitute_param = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
                   tp['value'] = re.sub('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', substitute_param, tp.get('value', ''))
-                  # Create input artifact tracking annotation
-                  input_annotation = self.input_artifacts.get(task['name'], [])
-                  input_annotation.append(
-                      {
-                          'name': tp['name'],
-                          'parent_task': pp.op_name
-                      }
-                  )
-                  self.input_artifacts[task['name']] = input_annotation
                   break
         # Not necessary for Tekton execution
         task.pop('orig_params', None)

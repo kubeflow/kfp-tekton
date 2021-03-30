@@ -76,7 +76,7 @@ def CEL_ConditionOp(condition_statement):
             name="condition-cel",
             image="cel-reg/cel-task-name:latest",
             command=["sh", "-c"],
-            arguments=["--apiVersion", "http://cel.tekton.dev/v1alpha1",
+            arguments=["--apiVersion", "cel.tekton.dev/v1alpha1",
                        "--kind", "CEL",
                        "--name", "cel_condition",
                        "--status", condition_statement],

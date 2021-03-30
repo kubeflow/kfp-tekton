@@ -14,6 +14,7 @@
 
 import kfp
 from kfp import dsl
+from kfp_tekton.tekton import CEL_ConditionOp
 
 
 def random_num_op(low, high):
@@ -54,22 +55,27 @@ def print_op(msg):
 )
 def flipcoin_pipeline():
     flip = flip_coin_op()
-    with dsl.Condition(flip.output == 'heads'):
+    cel_condition = CEL_ConditionOp("%s == 'heads'" % flip.output)
+    with dsl.Condition(cel_condition.output == 'true'):
         random_num_head = random_num_op(0, 9)
         with dsl.Condition(random_num_head.output > 5):
             print_op('heads and %s > 5!' % random_num_head.output)
         with dsl.Condition(random_num_head.output <= 5):
             print_op('heads and %s <= 5!' % random_num_head.output)
 
-    with dsl.Condition(flip.output == 'tails'):
+    with dsl.Condition(cel_condition.output != 'true'):
         random_num_tail = random_num_op(10, 19)
         with dsl.Condition(random_num_tail.output > 15):
-            print_op('tails and %s > 15!' % random_num_tail.output)
+            inner_task = print_op('tails and %s > 15!' % random_num_tail.output)
         with dsl.Condition(random_num_tail.output <= 15):
             print_op('tails and %s <= 15!' % random_num_tail.output)
+    random_num_head2 = random_num_op(0, 9).after(random_num_head).after(random_num_tail).after(inner_task)
 
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(flipcoin_pipeline, __file__.replace('.py', '.yaml'))
+    import kfp_tekton
+    pipeline_conf = kfp_tekton.compiler.pipeline_utils.TektonPipelineConf()
+    pipeline_conf.add_pipeline_label('pipelines.kubeflow.org/cache_enabled', 'false')
+    TektonCompiler().compile(flipcoin_pipeline, __file__.replace('.py', '.yaml'), tekton_pipeline_conf=pipeline_conf)
 
