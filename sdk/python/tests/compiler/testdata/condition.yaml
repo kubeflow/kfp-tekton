@@ -141,7 +141,7 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.flip.results.status)
+      - input: $(tasks.flip.results.output-value)
         operator: in
         values:
         - heads
@@ -167,7 +167,7 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.flip3-output-value.results.status)
+      - input: $(tasks.flip3-output-value.results.output-value)
         operator: in
         values:
         - heads
@@ -193,7 +193,7 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.flip.results.status)
+      - input: $(tasks.flip.results.output-value)
         operator: in
         values:
         - tails
