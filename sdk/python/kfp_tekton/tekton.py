@@ -68,6 +68,10 @@ def after_any(any: List[dsl.ContainerOp], name: str = None):
 
 
 def CEL_ConditionOp(condition_statement):
+    '''
+    A containerOp template for CEL and converts it into Tekton custom task
+    during Tekton compiliation.
+    '''
     ConditionOp = dsl.ContainerOp(
             name="condition-cel",
             image="cel-reg/cel-task-name:latest",
@@ -78,5 +82,5 @@ def CEL_ConditionOp(condition_statement):
                        "--status", condition_statement],
             file_outputs={'status': '/tmp/tekton'}
         )
-    ConditionOp.add_pod_annotation("valid_container","false")
+    ConditionOp.add_pod_annotation("valid_container", "false")
     return ConditionOp

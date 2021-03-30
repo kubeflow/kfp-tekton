@@ -463,7 +463,7 @@ class TektonCompiler(Compiler):
             'taskSpec': template['spec'],
           }
 
-        for i in template['spec'].get('steps',[]):
+        for i in template['spec'].get('steps', []):
           # TODO: change the below conditions to map with a label
           #       or a list of images with optimized actions
           if i.get('image', '') == "cel-reg/cel-task-name:latest":
@@ -471,7 +471,7 @@ class TektonCompiler(Compiler):
             container_args = i.get('args', [])
             for index, item in enumerate(container_args):
               if item.startswith('--'):
-                custom_task_args[item[2:]] = container_args[index+1]
+                custom_task_args[item[2:]] = container_args[index + 1]
             non_param_keys = ['name', 'apiVersion', 'kind']
             task_params = []
             for key, value in custom_task_args.items():
