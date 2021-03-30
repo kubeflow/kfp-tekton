@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp
 from kfp import dsl
 from kfp_tekton.compiler import TektonCompiler
+
 
 class Coder:
     def empty(self):
@@ -22,6 +22,7 @@ class Coder:
 
 
 TektonCompiler._get_unique_id_code = Coder.empty
+
 
 def flip_coin_op():
     """Flip a coin and output heads or tails randomly."""
