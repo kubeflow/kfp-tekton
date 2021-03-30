@@ -63,5 +63,5 @@ def dump_yaml(data: Any, stream: Optional[TextIO] = None, **kwargs) -> Optional[
     # PyYAML doesn't handle bool-like strings properly, so it needs to be fixed.
     # See https://github.com/yaml/pyyaml/issues/247
 
-    return yaml.dump(data, stream, _Dumper, default_flow_style=None, **kwargs)
+    return yaml.dump(data, stream, _Dumper, default_flow_style=False, **kwargs)
 
