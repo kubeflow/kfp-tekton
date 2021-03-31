@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,85 +15,124 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: pipeline-flip-coin
   annotations:
-    tekton.dev/output_artifacts: '{"flip-coin": [{"key": "artifacts/$PIPELINERUN/flip-coin/output.tgz",
-      "name": "flip-coin-output", "path": "/tmp/output"}], "flip-coin-2": [{"key":
-      "artifacts/$PIPELINERUN/flip-coin-2/output.tgz", "name": "flip-coin-2-output",
-      "path": "/tmp/output"}]}'
-    tekton.dev/input_artifacts: '{"print": [{"name": "flip-coin-output", "parent_task":
-      "flip-coin"}], "print-2": [{"name": "flip-coin-output", "parent_task": "flip-coin"}]}'
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use graph_component
+      and recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
+      true}], "name": "pipeline flip coin"}'
+    sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"flip-coin": [["output", "$(results.output.path)"]],
       "flip-coin-2": [["output", "$(results.output.path)"]], "print": [], "print-2":
       []}'
-    sidecar.istio.io/inject: "false"
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use graph_component
-      and recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
-      true}], "name": "pipeline flip coin"}'
+    tekton.dev/input_artifacts: '{"print": [{"name": "flip-coin-output", "parent_task":
+      "flip-coin"}], "print-2": [{"name": "flip-coin-output", "parent_task": "flip-coin"}]}'
+    tekton.dev/output_artifacts: '{"flip-coin": [{"key": "artifacts/$PIPELINERUN/flip-coin/output.tgz",
+      "name": "flip-coin-output", "path": "/tmp/output"}], "flip-coin-2": [{"key":
+      "artifacts/$PIPELINERUN/flip-coin-2/output.tgz", "name": "flip-coin-2-output",
+      "path": "/tmp/output"}]}'
+    tekton.dev/resource_templates: "\n---\napiVersion: custom.tekton.dev/v1alpha1\n\
+      kind: PipelineLoop\nmetadata:\n  name: pipeline-flip-coin-graph-flip-component-1\n\
+      spec:\n  pipelineSpec:\n    params:\n    - name: just_one_iteration\n      type:\
+      \ string\n    - name: flip-coin-output\n      type: string\n    - name: maxVal\n\
+      \      type: string\n    tasks:\n    - name: print\n      params:\n      - name:\
+      \ flip-coin-output\n        value: $(params.flip-coin-output)\n      taskSpec:\n\
+      \        steps:\n        - name: main\n          command:\n          - echo\n\
+      \          - $(inputs.params.flip-coin-output)\n          image: alpine:3.6\n\
+      \        params:\n        - name: flip-coin-output\n          type: string\n\
+      \        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations:\n            tekton.dev/template: ''\n  \
+      \    when:\n      - input: $(tasks.condition-2.results.status)\n        operator:\
+      \ in\n        values:\n        - \"true\"\n      timeout: 0s\n    - name: flip-coin-2\n\
+      \      taskSpec:\n        steps:\n        - name: main\n          args:\n  \
+      \        - python -c \"import random; result = 'heads' if random.randint(0,1)\
+      \ == 0\n            else 'tails'; print(result)\" | tee $(results.output.path)\n\
+      \          command:\n          - sh\n          - -c\n          image: python:alpine3.6\n\
+      \        results:\n        - name: output\n          description: /tmp/output\n\
+      \        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
+      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
+      \ \"true\"\n          annotations:\n            tekton.dev/template: ''\n  \
+      \    when:\n      - input: $(tasks.condition-2.results.status)\n        operator:\
+      \ in\n        values:\n        - \"true\"\n      runAfter:\n      - print\n\
+      \      timeout: 0s\n    - name: condition-2\n      params:\n      - name: operand1\n\
+      \        value: $(params.flip-coin-output)\n      - name: operand2\n       \
+      \ value: heads\n      - name: operator\n        value: ==\n      taskSpec:\n\
+      \        results:\n        - name: status\n          description: Conditional\
+      \ task status\n        params:\n        - name: operand1\n          type: string\n\
+      \        - name: operand2\n          type: string\n        - name: operator\n\
+      \          type: string\n        steps:\n        - script: |-\n            python\
+      \ -c 'import sys\n            input1=str.rstrip(sys.argv[1])\n            input2=str.rstrip(sys.argv[2])\n\
+      \            try:\n              input1=int(input1)\n              input2=int(input2)\n\
+      \            except:\n              input1=str(input1)\n            status=\"\
+      true\" if (input1 $(inputs.params.operator) input2) else \"false\"\n       \
+      \     f = open(\"/tekton/results/status\", \"w\")\n            f.write(status)\n\
+      \            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'\n\
+      \          image: python:alpine3.6\n    - name: flip-component\n      taskRef:\n\
+      \        apiVersion: custom.tekton.dev/v1alpha1\n        kind: PipelineLoop\n\
+      \        name: pipeline-flip-coin-graph-flip-component-1\n      params:\n  \
+      \    - name: just_one_iteration\n        value:\n        - '1'\n      - name:\
+      \ flip-coin-output\n        value: $(tasks.flip-coin-2.results.output)\n   \
+      \   - name: maxVal\n        value: $(params.maxVal)\n      when:\n      - input:\
+      \ $(tasks.condition-2.results.status)\n        operator: in\n        values:\n\
+      \        - \"true\"\n  iterateParam: just_one_iteration\n"
+  name: pipeline-flip-coin
 spec:
   params:
   - name: maxVal
     value: '12'
   pipelineSpec:
     params:
-    - name: maxVal
-      default: '12'
+    - default: '12'
+      name: maxVal
     tasks:
     - name: flip-coin
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        results:
+        - description: /tmp/output
+          name: output
         steps:
-        - name: main
-          args:
+        - args:
           - python -c "import random; result = 'heads' if random.randint(0,1) == 0
             else 'tails'; print(result)" | tee $(results.output.path)
           command:
           - sh
           - -c
           image: python:alpine3.6
-        results:
-        - name: output
-          description: /tmp/output
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
-          annotations:
-            tekton.dev/template: ''
+          name: main
       timeout: 0s
     - name: print-2
       params:
       - name: flip-coin-output
         value: $(tasks.flip-coin.results.output)
+      runAfter:
+      - pipeline-flip-coin-graph-flip-component-1
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        params:
+        - name: flip-coin-output
         steps:
-        - name: main
-          command:
+        - command:
           - echo
           - cool, it is over. $(inputs.params.flip-coin-output)
           image: alpine:3.6
-        params:
-        - name: flip-coin-output
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
-          annotations:
-            tekton.dev/template: ''
-      runAfter:
-      - pipeline-flip-coin-graph-flip-component-1
+          name: main
       timeout: 0s
-    - runAfter:
-      - flip-coin
-      name: pipeline-flip-coin-graph-flip-component-1
-      taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        name: pipeline-flip-coin-graph-flip-component-1
+    - name: pipeline-flip-coin-graph-flip-component-1
       params:
       - name: flip-coin-output
         value: $(tasks.flip-coin.results.output)
@@ -102,4 +141,10 @@ spec:
         - '1'
       - name: maxVal
         value: $(params.maxVal)
+      runAfter:
+      - flip-coin
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: pipeline-flip-coin-graph-flip-component-1
   timeout: 0s

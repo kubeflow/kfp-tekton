@@ -25,6 +25,7 @@ import uuid
 from typing import Callable, List, Text, Dict, Any
 from os import environ as env
 from distutils.util import strtobool
+import collections
 
 # Kubeflow Pipeline imports
 from kfp import dsl
@@ -223,7 +224,7 @@ class TektonCompiler(Compiler):
               params.append({
                 'name': inputRef.full_name, 'value': '$(params.%s)' % input.name
               })
-            
+
         self.recursive_tasks.append({
           'name': sub_group.name,
           'taskRef': {
@@ -266,7 +267,7 @@ class TektonCompiler(Compiler):
           "kind": "PipelineLoop",
           "name": group_name
         }
-        
+
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": loop_args_name,
           "value": loop_args_value
@@ -1010,7 +1011,7 @@ class TektonCompiler(Compiler):
           TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
                                          package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
         else:
-          pipeline_loop_cr = TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i])
+          pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
           loop_package_annotations = '\n'.join([loop_package_annotations, '---\n' + pipeline_loop_cr])
       if loop_package_annotations:
         workflow['metadata']['annotations']['tekton.dev/resource_templates'] = loop_package_annotations
