@@ -6,6 +6,10 @@ This pipeline uses the [UTKface's aligned & cropped faces dataset](https://susan
 
 ## Prerequisites 
 - Install [KFP Tekton prerequisites](/samples/README.md)
+- If you are using the single-user deployment of Kubeflow or the standalone deployment of KFP-Tekton then create this cluster role binding.
+```shell
+kubectl create clusterrolebinding pipeline-runner-extend --clusterrole cluster-admin --serviceaccount=kubeflow:pipeline-runner
+```
 
 ## Instructions
 

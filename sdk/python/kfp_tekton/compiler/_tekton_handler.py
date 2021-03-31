@@ -56,7 +56,7 @@ def _handle_tekton_pipeline_variables(pipeline_run):
     return pipeline_run
 
 
-def _handle_tekton_custom_task(custom_task: dict, workflow: dict, group_names: list):
+def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_tasks: list, group_names: list):
     """
     Separate custom task's workflow from the main workflow, return a tuple result of custom task cr definitions
     and a new workflow
@@ -70,6 +70,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, group_names: l
         'depends': []
       }
       workflow: a workflow without loop pipeline separeted.
+      recursive_tasks: List of recursive_tasks information.
       group_names: List of name constructions for creating custom loop crd names.
 
     Returns:
@@ -90,6 +91,10 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, group_names: l
             if task['name'] == dependency['org']:
                 task_dependencies = [dependency['runAfter']]
                 for dep_task in task.get('runAfter', []):
+                    # should exclude the custom task itself for cases like graph
+                    dep_task_with_prefix = '-'.join(group_names[:-1] + [dep_task])
+                    if dep_task_with_prefix == dependency['runAfter']:
+                        continue
                     if dep_task not in custom_task[dependency['runAfter']]['task_list']:
                         task_dependencies.append(dep_task)
                 task['runAfter'] = task_dependencies
@@ -109,6 +114,10 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, group_names: l
                         run_after_task_list.append(run_after_task)
                 if task.get('runAfter', []):
                     task['runAfter'] = run_after_task_list
+                custom_task_cr_tasks.append(task)
+        # append recursive tasks
+        for task in recursive_tasks:
+            if task['name'] in custom_task[custom_task_key]['task_list']:
                 custom_task_cr_tasks.append(task)
         # generator custom task cr
         custom_task_cr = {
