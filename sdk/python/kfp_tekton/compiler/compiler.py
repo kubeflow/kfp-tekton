@@ -47,6 +47,7 @@ DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
 TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
+DISABLE_CEL_CONDITION = env.get('DISABLE_CEL_CONDITION', 'true').lower() == "true"
 
 
 def _get_super_condition_template():
@@ -522,8 +523,7 @@ class TektonCompiler(Compiler):
     string_condition_refs = {}
     for template in raw_templates:
       if template['kind'] == 'Condition':
-        disable_cel = env.get('DISABLE_CEL_CONDITION', 'false').lower() == "true"
-        if disable_cel:
+        if DISABLE_CEL_CONDITION:
           condition_task_spec = _get_super_condition_template()
         else:
           condition_task_spec = _get_cel_condition_template()
@@ -538,7 +538,7 @@ class TektonCompiler(Compiler):
                 } for p in template['spec'].get('params', [])
               ],
 
-              'taskSpec' if disable_cel else 'taskRef': condition_task_spec
+              'taskSpec' if DISABLE_CEL_CONDITION else 'taskRef': condition_task_spec
           }]
           condition_refs[template['metadata']['name']] = [
               {
@@ -551,7 +551,7 @@ class TektonCompiler(Compiler):
           condition_operator = condition_params[2]
           condition_operand1 = condition_params[0]
           condition_operand2 = condition_params[1]
-          if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!='):
+          if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!=') and not DISABLE_CEL_CONDITION:
             map_cel_vars = lambda a: '$(tasks.%s.results.%s)' % (sanitize_k8s_name(a['value'].split('.')[-1]),
               sanitize_k8s_name(a['output_name'])) if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
             condition_refs[template['metadata']['name']] = [
@@ -651,7 +651,7 @@ class TektonCompiler(Compiler):
           if most_recent_condition:
             condition_task_ref['when'] = condition_when_refs[most_recent_condition]
           condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
-        if env.get('DISABLE_CEL_CONDITION', 'false').lower() != "true" and not cel_conditions.get(condition_task_ref['name'], None):
+        if not DISABLE_CEL_CONDITION and not cel_conditions.get(condition_task_ref['name'], None):
           # Type processing are done on the CEL controller since v1 SDK doesn't have value type for conditions.
           # For v2 SDK, it would be better to process the condition value type in the backend compiler.
           var1 = condition_task_ref['params'][0]['value']

@@ -141,10 +141,10 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.flip.results.output-value)
+      - input: $(tasks.condition-1.results.status)
         operator: in
         values:
-        - heads
+        - 'true'
     - name: print1
       params:
       - name: flip-again-output_value
@@ -167,10 +167,10 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.flip3-output-value.results.output-value)
+      - input: $(tasks.condition-3.results.status)
         operator: in
         values:
-        - heads
+        - 'true'
     - name: print2
       params:
       - name: flip-output_value
@@ -193,8 +193,110 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.flip.results.output-value)
+      - input: $(tasks.condition-4.results.status)
         operator: in
         values:
-        - tails
+        - 'true'
+    - name: condition-1
+      params:
+      - name: operand1
+        value: $(tasks.flip.results.output-value)
+      - name: operand2
+        value: heads
+      - name: operator
+        value: ==
+      taskSpec:
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        results:
+        - description: Conditional task status
+          name: status
+        steps:
+        - image: python:alpine3.6
+          script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+            try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
+            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
+            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
+            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+    - name: condition-2
+      params:
+      - name: operand1
+        value: $(tasks.flip-again.results.output-value)
+      - name: operand2
+        value: tails
+      - name: operator
+        value: ==
+      taskSpec:
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        results:
+        - description: Conditional task status
+          name: status
+        steps:
+        - image: python:alpine3.6
+          script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+            try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
+            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
+            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
+            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+      when:
+      - input: $(tasks.condition-1.results.status)
+        operator: in
+        values:
+        - 'true'
+    - name: condition-3
+      params:
+      - name: operand1
+        value: $(tasks.flip3.results.output-value)
+      - name: operand2
+        value: heads
+      - name: operator
+        value: ==
+      taskSpec:
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        results:
+        - description: Conditional task status
+          name: status
+        steps:
+        - image: python:alpine3.6
+          script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+            try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
+            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
+            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
+            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+      when:
+      - input: $(tasks.condition-2.results.status)
+        operator: in
+        values:
+        - 'true'
+    - name: condition-4
+      params:
+      - name: operand1
+        value: $(tasks.flip.results.output-value)
+      - name: operand2
+        value: tails
+      - name: operator
+        value: ==
+      taskSpec:
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        results:
+        - description: Conditional task status
+          name: status
+        steps:
+        - image: python:alpine3.6
+          script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+            try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
+            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
+            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
+            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
   timeout: 0s
