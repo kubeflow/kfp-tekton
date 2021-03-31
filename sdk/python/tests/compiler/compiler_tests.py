@@ -148,6 +148,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recursion_while import flipcoin
     self._test_pipeline_workflow(flipcoin, 'recursion_while.yaml')
 
+  def test_long_pipeline_name_workflow(self):
+    """
+    Test long pipeline name workflow.
+    """
+    from .testdata.long_pipeline_name import main_fn
+    self._test_pipeline_workflow(main_fn, 'long_pipeline_name.yaml')
+
   def test_withparam_global_workflow(self):
     """
     Test compiling a withparam global in workflow.

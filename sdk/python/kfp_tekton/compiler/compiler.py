@@ -163,7 +163,8 @@ class TektonCompiler(Compiler):
     """
     # Generate GroupOp template
     sub_group = group
-    self._group_names = [pipeline_name, sanitize_k8s_name(sub_group.name)]
+    # For loop and recursion usually append 16-19 characters, so limit the loop/recusion pipeline_name to 44 char
+    self._group_names = [sanitize_k8s_name(pipeline_name, max_length=44), sanitize_k8s_name(sub_group.name)]
     if self.uuid:
       self._group_names.insert(1, self.uuid)
     group_name = '-'.join(self._group_names) if group_type == "loop" or group_type == "graph" else sub_group.name
@@ -222,7 +223,7 @@ class TektonCompiler(Compiler):
               params.append({
                 'name': inputRef.full_name, 'value': '$(params.%s)' % input.name
               })
-            
+
         self.recursive_tasks.append({
           'name': sub_group.name,
           'taskRef': {
@@ -265,7 +266,7 @@ class TektonCompiler(Compiler):
           "kind": "PipelineLoop",
           "name": group_name
         }
-        
+
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": loop_args_name,
           "value": loop_args_value
@@ -351,7 +352,7 @@ class TektonCompiler(Compiler):
           loop_args_str_value = json.dumps(sanitized_tasks, sort_keys=True)
         else:
           loop_args_str_value = str(loop_arg_value)
-        
+
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": sub_group.loop_args.full_name,
           "value": loop_args_str_value
@@ -547,7 +548,7 @@ class TektonCompiler(Compiler):
         task_annotations = template['metadata'].get('annotations', {})
         task_ref['taskSpec']['metadata']['annotations'] = task_annotations
         task_annotations['tekton.dev/template'] = task_annotations.get('tekton.dev/template', '')
-        
+
         task_refs.append(task_ref)
 
     # process input parameters from upstream tasks for conditions and pair conditions with their ancestor conditions
@@ -690,7 +691,7 @@ class TektonCompiler(Compiler):
         }
       }
     }
-    
+
     if self.pipeline_labels:
       pipeline_run['metadata']['labels'] = pipeline_run['metadata'].setdefault('labels', {})
       pipeline_run['metadata']['labels'].update(self.pipeline_labels)
@@ -1001,6 +1002,7 @@ class TektonCompiler(Compiler):
         params_list,
         pipeline_conf)
     # Separate loop workflow from the main workflow
+    print(self.loops_pipeline)
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
