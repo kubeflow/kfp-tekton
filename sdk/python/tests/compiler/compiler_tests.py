@@ -152,8 +152,12 @@ class TestTektonCompiler(unittest.TestCase):
     """
     Test long pipeline name workflow.
     """
-    from .testdata.long_pipeline_name import main_fn
-    self._test_pipeline_workflow(main_fn, 'long_pipeline_name.yaml')
+    # Skip this test for Python 3.6 because 3.6 generates the List[str] type in yaml with different type name.
+    if sys.version_info < (3, 7, 0):
+      logging.warning("Skipping long pipeline name workflow test for Python version < 3.7.0")
+    else:
+      from .testdata.long_pipeline_name import main_fn
+      self._test_pipeline_workflow(main_fn, 'long_pipeline_name.yaml')
 
   def test_withparam_global_workflow(self):
     """
