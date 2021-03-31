@@ -41,10 +41,10 @@ metadata:
       "produce-str-Output", "path": "/tmp/outputs/Output/data"}]}'
     tekton.dev/resource_templates: "\n---\napiVersion: custom.tekton.dev/v1alpha1\n\
       kind: PipelineLoop\nmetadata:\n  name: parallelfor-item-argument-resolving-for-loop-1\n\
-      spec:\n  pipelineSpec:\n    params:\n    - name: produce-list-of-strings-Output-loop-item\n\
-      \      type: string\n    - name: produce-list-of-strings-Output\n      type:\
-      \ string\n    - name: produce-str-Output\n      type: string\n    tasks:\n \
-      \   - name: consume\n      params:\n      - name: produce-list-of-strings-Output\n\
+      spec:\n  pipelineSpec:\n    params:\n    - name: produce-list-of-strings-Output\n\
+      \      type: string\n    - name: produce-list-of-strings-Output-loop-item\n\
+      \      type: string\n    - name: produce-str-Output\n      type: string\n  \
+      \  tasks:\n    - name: consume\n      params:\n      - name: produce-list-of-strings-Output\n\
       \        value: $(params.produce-list-of-strings-Output)\n      taskSpec:\n\
       \        steps:\n        - name: main\n          args:\n          - --param1\n\
       \          - $(inputs.params.produce-list-of-strings-Output)\n          command:\n\
@@ -126,9 +126,9 @@ metadata:
       \    tekton.dev/template: ''\n      timeout: 0s\n  iterateParam: produce-list-of-strings-Output-loop-item\n\
       \n---\napiVersion: custom.tekton.dev/v1alpha1\nkind: PipelineLoop\nmetadata:\n\
       \  name: parallelfor-item-argument-resolving-for-loop-2\nspec:\n  pipelineSpec:\n\
-      \    params:\n    - name: produce-list-of-ints-Output-loop-item\n      type:\
-      \ string\n    - name: produce-list-of-ints-Output\n      type: string\n    tasks:\n\
-      \    - name: consume-4\n      params:\n      - name: produce-list-of-ints-Output\n\
+      \    params:\n    - name: produce-list-of-ints-Output\n      type: string\n\
+      \    - name: produce-list-of-ints-Output-loop-item\n      type: string\n   \
+      \ tasks:\n    - name: consume-4\n      params:\n      - name: produce-list-of-ints-Output\n\
       \        value: $(params.produce-list-of-ints-Output)\n      taskSpec:\n   \
       \     steps:\n        - name: main\n          args:\n          - --param1\n\
       \          - $(inputs.params.produce-list-of-ints-Output)\n          command:\n\

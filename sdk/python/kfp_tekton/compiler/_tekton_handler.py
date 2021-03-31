@@ -131,7 +131,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     "params": [{
                         "name": parm['name'],
                         'type': 'string'
-                    } for parm in custom_task[custom_task_key]['spec']['params']],
+                    } for parm in sorted(custom_task[custom_task_key]['spec']['params'], key=lambda k: k['name'])],
                     "tasks": custom_task_cr_tasks
                 }
             }

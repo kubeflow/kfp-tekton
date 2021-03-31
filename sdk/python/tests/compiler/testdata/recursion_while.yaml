@@ -34,8 +34,8 @@ metadata:
       "path": "/tmp/output"}]}'
     tekton.dev/resource_templates: "\n---\napiVersion: custom.tekton.dev/v1alpha1\n\
       kind: PipelineLoop\nmetadata:\n  name: pipeline-flip-coin-graph-flip-component-1\n\
-      spec:\n  pipelineSpec:\n    params:\n    - name: just_one_iteration\n      type:\
-      \ string\n    - name: flip-coin-output\n      type: string\n    - name: maxVal\n\
+      spec:\n  pipelineSpec:\n    params:\n    - name: flip-coin-output\n      type:\
+      \ string\n    - name: just_one_iteration\n      type: string\n    - name: maxVal\n\
       \      type: string\n    tasks:\n    - name: print\n      params:\n      - name:\
       \ flip-coin-output\n        value: $(params.flip-coin-output)\n      taskSpec:\n\
       \        steps:\n        - name: main\n          command:\n          - echo\n\

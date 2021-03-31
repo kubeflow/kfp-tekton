@@ -684,9 +684,9 @@ class TektonCompiler(Compiler):
         'params': [{
             'name': p['name'],
             'value': p.get('default', '')
-          } for p in sorted(params, key = lambda x: x['name'])],
+          } for p in sorted(params, key=lambda x: x['name'])],
         'pipelineSpec': {
-          'params': sorted(params, key = lambda x: x['name']),
+          'params': sorted(params, key=lambda x: x['name']),
           'tasks': task_refs + condition_task_refs,
           'finally': finally_tasks
         }
