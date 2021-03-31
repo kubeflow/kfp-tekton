@@ -57,9 +57,9 @@ metadata:
       \ $(params.my_pipe_param)\n  iterateParam: loop-item-param-1\n\n---\napiVersion:\
       \ custom.tekton.dev/v1alpha1\nkind: PipelineLoop\nmetadata:\n  name: my-pipeline-for-loop-4\n\
       spec:\n  pipelineSpec:\n    params:\n    - name: loop-item-param-3\n      type:\
-      \ string\n    - name: my_pipe_param\n      type: string\n    - name: loop-item-param-1-subvar-a\n\
-      \      type: string\n    tasks:\n    - name: my-inner-inner-coop\n      params:\n\
-      \      - name: loop-item-param-1-subvar-a\n        value: $(params.loop-item-param-1-subvar-a)\n\
+      \ string\n    - name: loop-item-param-1-subvar-a\n      type: string\n    -\
+      \ name: my_pipe_param\n      type: string\n    tasks:\n    - name: my-inner-inner-coop\n\
+      \      params:\n      - name: loop-item-param-1-subvar-a\n        value: $(params.loop-item-param-1-subvar-a)\n\
       \      - name: loop-item-param-3\n        value: $(params.loop-item-param-3)\n\
       \      - name: my_pipe_param\n        value: $(params.my_pipe_param)\n     \
       \ taskSpec:\n        steps:\n        - name: main\n          args:\n       \

@@ -38,36 +38,36 @@ metadata:
   name: launch-katib-experiment
 spec:
   params:
+  - name: deleteAfterDone
+    value: 'True'
+  - name: experimentTimeoutMinutes
+    value: '60'
+  - name: goal
+    value: '0.99'
+  - name: maxTrialCount
+    value: '12'
   - name: name
     value: mnist
   - name: namespace
     value: kubeflow
-  - name: goal
-    value: '0.99'
   - name: parallelTrialCount
     value: '3'
-  - name: maxTrialCount
-    value: '12'
-  - name: experimentTimeoutMinutes
-    value: '60'
-  - name: deleteAfterDone
-    value: 'True'
   pipelineSpec:
     params:
+    - default: 'True'
+      name: deleteAfterDone
+    - default: '60'
+      name: experimentTimeoutMinutes
+    - default: '0.99'
+      name: goal
+    - default: '12'
+      name: maxTrialCount
     - default: mnist
       name: name
     - default: kubeflow
       name: namespace
-    - default: '0.99'
-      name: goal
     - default: '3'
       name: parallelTrialCount
-    - default: '12'
-      name: maxTrialCount
-    - default: '60'
-      name: experimentTimeoutMinutes
-    - default: 'True'
-      name: deleteAfterDone
     tasks:
     - name: mnist-hpo
       params:

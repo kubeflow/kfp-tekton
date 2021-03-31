@@ -30,16 +30,16 @@ metadata:
   name: sequential-pipeline
 spec:
   params:
-  - name: url
-    value: gs://ml-pipeline-playground/shakespeare1.txt
   - name: path
     value: /tmp/results.txt
+  - name: url
+    value: gs://ml-pipeline-playground/shakespeare1.txt
   pipelineSpec:
     params:
-    - default: gs://ml-pipeline-playground/shakespeare1.txt
-      name: url
     - default: /tmp/results.txt
       name: path
+    - default: gs://ml-pipeline-playground/shakespeare1.txt
+      name: url
     tasks:
     - name: gcs-download
       params:

@@ -37,16 +37,16 @@ metadata:
   name: download-and-save-most-frequent
 spec:
   params:
-  - name: url
-    value: gs://ml-pipeline-playground/shakespeare1.txt
   - name: outputpath
     value: /tmp/output.txt
+  - name: url
+    value: gs://ml-pipeline-playground/shakespeare1.txt
   pipelineSpec:
     params:
-    - default: gs://ml-pipeline-playground/shakespeare1.txt
-      name: url
     - default: /tmp/output.txt
       name: outputpath
+    - default: gs://ml-pipeline-playground/shakespeare1.txt
+      name: url
     tasks:
     - name: download
       params:

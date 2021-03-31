@@ -35,20 +35,20 @@ metadata:
   name: conditions-with-global-params
 spec:
   params:
+  - name: lower_bound
+    value: '15'
   - name: n
     value: '5'
   - name: threshold
     value: '10'
-  - name: lower_bound
-    value: '15'
   pipelineSpec:
     params:
+    - default: '15'
+      name: lower_bound
     - default: '5'
       name: n
     - default: '10'
       name: threshold
-    - default: '15'
-      name: lower_bound
     tasks:
     - name: add-numbers
       params:
