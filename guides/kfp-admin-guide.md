@@ -92,6 +92,6 @@ Although this feature allows users to deploy all the necessary custom resources 
 
 If the admin wants to self manage the creation of Tekton custom resources, this feature can be disabled with:
 ```shell
-kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"apply_tekton_custom_resource":"true"}}'
+kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"apply_tekton_custom_resource":"false"}}'
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 ```
