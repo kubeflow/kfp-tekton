@@ -28,7 +28,7 @@ from distutils.util import strtobool
 
 # Kubeflow Pipeline imports
 from kfp import dsl
-from kfp.compiler._default_transformers import add_pod_env  # , add_pod_labels, get_default_telemetry_labels
+from kfp.compiler._default_transformers import add_pod_env
 from kfp.compiler.compiler import Compiler
 from kfp.components.structures import InputSpec
 from kfp.dsl._for_loop import LoopArguments
@@ -495,8 +495,6 @@ class TektonCompiler(Compiler):
           param['default'] = str(arg.value)
       params.append(param)
 
-    # TODO: task templates?
-
     # generate Tekton tasks from pipeline ops
     raw_templates = self._create_dag_templates(pipeline, op_transformers, params)
 
@@ -851,13 +849,6 @@ class TektonCompiler(Compiler):
 
     op_transformers = [add_pod_env]
 
-    # # By default adds telemetry instruments. Users can opt out toggling
-    # # allow_telemetry.
-    # # Also, TFX pipelines will be bypassed for pipeline compiled by tfx>0.21.4.
-    # if allow_telemetry:
-    #   pod_labels = get_default_telemetry_labels()
-    #   op_transformers.append(add_pod_labels(pod_labels))
-
     op_transformers.extend(pipeline_conf.op_transformers)
 
     workflow = self._create_pipeline_workflow(
@@ -1002,7 +993,6 @@ class TektonCompiler(Compiler):
         params_list,
         pipeline_conf)
     # Separate loop workflow from the main workflow
-    print(self.loops_pipeline)
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
