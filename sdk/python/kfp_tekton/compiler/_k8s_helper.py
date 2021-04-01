@@ -21,7 +21,7 @@ def sanitize_k8s_name(name,
                       allow_capital_underscore=False,
                       allow_dot=False,
                       allow_slash=False,
-                      max_length=63,
+                      max_length=57,
                       suffix_space=0):
     """From _make_kubernetes_name
       sanitize_k8s_name cleans and converts the names in the workflow.
@@ -36,7 +36,7 @@ def sanitize_k8s_name(name,
         in this name (i.e. for parameters)
       allow_dot: whether to allow dots in this name (i.e. for labels)
       allow_slash: whether to allow slash in this name (i.e. for label and annotation keys)
-      max_length: maximum length of K8s name, default: 63
+      max_length: maximum length of K8s name is 63, but KFP will append 6 chars as uuid. Default: 57
       suffix_space: number of characters reserved for a suffix to be appended
 
     Returns:
