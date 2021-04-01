@@ -175,7 +175,8 @@ class TektonCompiler(Compiler):
     """
     # Generate GroupOp template
     sub_group = group
-    self._group_names = [pipeline_name, sanitize_k8s_name(sub_group.name)]
+    # For loop and recursion usually append 16-19 characters, so limit the loop/recusion pipeline_name to 44 char
+    self._group_names = [sanitize_k8s_name(pipeline_name, max_length=44), sanitize_k8s_name(sub_group.name)]
     if self.uuid:
       self._group_names.insert(1, self.uuid)
     group_name = '-'.join(self._group_names) if group_type == "loop" or group_type == "graph" else sub_group.name
@@ -1101,6 +1102,7 @@ class TektonCompiler(Compiler):
         params_list,
         pipeline_conf)
     # Separate loop workflow from the main workflow
+    print(self.loops_pipeline)
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)

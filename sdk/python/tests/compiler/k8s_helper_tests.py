@@ -53,10 +53,10 @@ class TestK8sHelper(unittest.TestCase):
         ]
         self.assertEqual(
             [sanitize_k8s_name(name) for name in names],
-            [name[:63] for name in expected_names])
+            [name[:57] for name in expected_names])
         self.assertEqual(
             [sanitize_k8s_name(sanitize_k8s_name(name)) for name in names],
-            [name[:63] for name in expected_names])
+            [name[:57] for name in expected_names])
 
     def test_sanitize_k8s_labels(self):
         labels = {
@@ -317,13 +317,13 @@ class TestK8sHelper(unittest.TestCase):
                     self.assertIsInstance(e.windows_options.gmsa_credential_spec, str)
                 if e.windows_options.gmsa_credential_spec_name:
                     self.assertIsInstance(e.windows_options.gmsa_credential_spec_name, str)
-            
+
         if op.container.stdin:
             self.assertIsInstance(op.container.stdin, bool)
 
         if op.container.stdin_once:
             self.assertIsInstance(op.container.stdin_once, bool)
-        
+
         if op.container.termination_message_path:
             self.assertIsInstance(op.container.termination_message_path, str)
 
@@ -413,7 +413,7 @@ class TestK8sHelper(unittest.TestCase):
                     windows_options=k8s_client.V1WindowsSecurityContextOptions(
                         gmsa_credential_spec=11, gmsa_credential_spec_name=22)
                 ))
-        
+
         sanitize_k8s_object(check_value_op.container)
 
         self.assertEqual(check_value_op.container.env[0].name, '80')
