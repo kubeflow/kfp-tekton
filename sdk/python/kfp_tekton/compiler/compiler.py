@@ -42,6 +42,7 @@ from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
+from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
@@ -579,7 +580,7 @@ class TektonCompiler(Compiler):
         for i in template['spec'].get('steps', []):
           # TODO: change the below conditions to map with a label
           #       or a list of images with optimized actions
-          if i.get('image', '') == "cel-reg/cel-task-name:latest":
+          if i.get('image', '') in TEKTON_CUSTOM_TASK_IMAGES:
             custom_task_args = {}
             container_args = i.get('args', [])
             for index, item in enumerate(container_args):

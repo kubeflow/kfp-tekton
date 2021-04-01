@@ -19,6 +19,10 @@ from kfp.dsl._container_op import ContainerOp
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
 
+CEL_EVAL_IMAGE = "aipipeline/cel-eval:latest"
+TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE]
+
+
 class AnySequencer(ContainerOp):
     """A containerOp that will proceed when any of the dependent containerOps completed
        successfully
@@ -74,7 +78,7 @@ def CEL_ConditionOp(condition_statement):
     '''
     ConditionOp = dsl.ContainerOp(
             name="condition-cel",
-            image="cel-reg/cel-task-name:latest",
+            image=CEL_EVAL_IMAGE,
             command=["sh", "-c"],
             arguments=["--apiVersion", "cel.tekton.dev/v1alpha1",
                        "--kind", "CEL",
