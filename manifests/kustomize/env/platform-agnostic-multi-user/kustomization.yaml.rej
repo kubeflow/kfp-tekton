@@ -1,0 +1,13 @@
+diff a/manifests/kustomize/env/platform-agnostic-multi-user/kustomization.yaml b/manifests/kustomize/env/platform-agnostic-multi-user/kustomization.yaml	(rejected hunks)
+@@ -3,9 +3,11 @@ kind: Kustomization
+ 
+ bases:
+   - ../../base/installs/multi-user
++  - ../../base/metadata/base
+   - ../../third-party/argo/installs/cluster
+   - ../../third-party/mysql
+   - ../../third-party/minio
++  - ../../third-party/metacontroller/base
+ 
+ # Identifier for application manager to apply ownerReference.
+ # The ownerReference ensures the resources get garbage collected

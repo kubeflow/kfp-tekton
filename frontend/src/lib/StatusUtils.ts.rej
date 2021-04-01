@@ -1,0 +1,9 @@
+diff a/frontend/src/lib/StatusUtils.ts b/frontend/src/lib/StatusUtils.ts	(rejected hunks)
+@@ -38,6 +38,7 @@ export enum NodePhase {
+   TERMINATING = 'Terminating',
+   TERMINATED = 'Terminated',
+   UNKNOWN = 'Unknown',
++  OMITTED = 'Omitted',
+ }
+ 
+ export function hasFinished(status?: NodePhase): boolean {

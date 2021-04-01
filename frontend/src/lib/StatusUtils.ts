@@ -57,6 +57,7 @@ export function hasFinished(status?: NodePhase): boolean {
     case NodePhase.ERROR: // Fall through
     case NodePhase.SKIPPED: // Fall through
     case NodePhase.TERMINATED:
+    case NodePhase.OMITTED:
       return true;
     case NodePhase.PENDING: // Fall through
     case NodePhase.RUNNING: // Fall through
