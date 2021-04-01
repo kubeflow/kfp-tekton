@@ -143,7 +143,26 @@ will load those values as default values for the specified CLI options. The loca
       ./deploy-ibm-vpc.sh --config-file="/path/to/cluster-config"
     ```
 
-6. Completely delete cluster and associated resources.
+6. Refresh an `OAuth` token for an already running cluster.
+    
+    When following error appears, 
+   
+    ```shell
+        $> kubectl get pods
+   
+        Unable to connect to the server: failed to refresh token: oauth2: cannot fetch token: 400 Bad Request
+        Response: {
+        "errorCode": "BXNIM0408E",
+        "errorMessage": "Provided refresh token is expired"
+        }
+    ```
+   the OAuth token can be refreshed as:
+   
+    ```shell
+      ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc" --deploy-kubeflow=false
+    ```
+
+7. Completely delete cluster and associated resources.
 
     Please note that, a subnet cannot be deleted unless it is released when that instance is deleted. At the moment there
     is no mechanism provided by cloud API to detach a VNIC from a subnet.

@@ -49,7 +49,7 @@ function download_kfctl() {
     elif [[ "$OSTYPE" == "linux"* ]]; then
         curl -s -L https://github.com/kubeflow/kfctl/releases/download/v1.2.0/kfctl_v1.2.0-0-gbc038f9_linux.tar.gz -o kfctl.tar.gz
     else
-        echo "Operating not supported. exiting..."
+        echo "Operating system not supported. exiting..."
         exit 2
     fi
     tar -xf kfctl.tar.gz

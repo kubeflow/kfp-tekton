@@ -75,6 +75,7 @@ function usage() {
     echo -e "\t--vpc-name=${VPC_NAME} (required) (Should be a unique lower-cased alpha numeric value)."
     echo -e "\t--worker-count=${WORKER_COUNT} (A positive value greater than one.)"
     echo -e "\t--worker-node-flavor=${WORKER_NODE_FLAVOR}. (One of \`ibmcloud ks flavors --zone <zone>\`)"
+    echo -e "\t--deploy-kubeflow=(true|false) (Whether to deploy kubeflow to the cluster. Default: true)"
     echo -e "\t--delete-cluster=(full|cluster) (pass \`full\` to also delete all the associated resources e.g. VPC, subnet, public gateway.)"
     echo -e "\t--config-file=$CONFIG_FILE_IKS_DEPLOY (Location of the file that stores configuration.)"
     echo ""
@@ -94,29 +95,23 @@ function existence_check() {
 function complete_delete_cluster() {
     delete_cluster
     VPC_ID=$(vpc_name_to_vpc_id)
-    GATEWAY_ID=$(vpc_name_to_gateway_id)
-    SUBNET_ID=$(vpc_name_to_subnet_ids)
-    ibmcloud is subnetd -f -q "$SUBNET_ID" || true
-    ibmcloud is pubgwd -f -q "$GATEWAY_ID" || true
+    if [[ "x$SUBNET_ID" != "x" || "x$GATEWAY_ID" != "x" ]]; then
+        ibmcloud is subnetd -f -q "$SUBNET_ID" || true
+        ibmcloud is pubgwd -f -q "$GATEWAY_ID" || true
+    else
+        echo "SUBNET_ID and GATEWAY_ID is not defined skipping..."
+    fi
     set +e
-    ibmcloud is vpcd -f -q $VPC_ID
+    ibmcloud is vpcd -f -q "$VPC_ID"
     if [[ "$?" == "0" || "x$VPC_ID" == "x" ]] ; then
-        echo "Complete delete successful."
+        echo "VPC $VPC_ID is deleted. Complete delete successful."
         rm "$CONFIG_FILE_IKS_DEPLOY"
     else
-        echo "Delete incomplete, full delete can be done when vpc has no cluster or instances in it."
-        echo "Please wait while cluster is deleted(~45mins), and you need to execute delete command for all clusters."
+        echo "Delete incomplete, full delete can be done when vpc has no cluster/instances/subnets etc... in it."
         echo "A cluster/cloud resource can only be deleted once it's attached resources are released."
         echo "Please try again, after the cluster(s) delete is complete."
     fi
     set -e
-}
-
-function vpc_name_to_gateway_id() {
-    # A VPC may have more than one Gateway attached to it's subnets. So this is not the correct way to detect.
-    existence_check "VPC_NAME" "vpc-name"
-    local value_pubgw_id=$(ibmcloud is pubgws -q | grep "\s${VPC_NAME}\s" | awk '{print $1}')
-    echo "$value_pubgw_id"
 }
 
 function cluster_name_to_cluster_id() {
@@ -128,21 +123,22 @@ function cluster_name_to_cluster_id() {
 function delete_cluster() {
     existence_check "CLUSTER_NAME" "cluster-name"
     local CLUSTER_ID=$(cluster_name_to_cluster_id)
-    ibmcloud ks cluster rm -q -f --force-delete-storage -c "${CLUSTER_NAME}" || true
-    kubectl config delete-cluster "${CLUSTER_NAME}/$CLUSTER_ID" || true
-    kubectl config delete-context "${CLUSTER_NAME}/$CLUSTER_ID" || true
+    set +e
+    ibmcloud ks cluster rm -q -f --force-delete-storage -c "${CLUSTER_NAME}"
+
+    if [[ "$?" != "0" ]] ; then
+        echo "Cluster delete failed."
+    else
+        kubectl config delete-cluster "${CLUSTER_NAME}/$CLUSTER_ID" || true
+        kubectl config delete-context "${CLUSTER_NAME}/$CLUSTER_ID" || true
+    fi
+    set -e
 }
 
 function vpc_name_to_vpc_id() {
     existence_check "VPC_NAME" "vpc-name"
     local value_vpc_id=$(ibmcloud is vpcs -q | grep "\s${VPC_NAME}\s" | awk '{print $1}')
     echo "$value_vpc_id"
-}
-
-function vpc_name_to_subnet_ids() {
-    existence_check "VPC_NAME" "vpc-name"
-    local value_subnet_id=$(ibmcloud is subnets -q | grep "\s${VPC_NAME}\s" | awk '{print $1}')
-    echo "$value_subnet_id"
 }
 
 function get_cluster_status() {
@@ -169,7 +165,7 @@ function wait_for_cluster_start() {
 }
 
 DELETE_CLUSTER=""
-
+DEPLOY_KF="true"
 while [ "$1" != "" ]; do
     PARAM=$(echo "$1" | awk -F= '{print $1}')
     VALUE=$(echo "$1" | awk -F= '{print $2}')
@@ -198,6 +194,12 @@ while [ "$1" != "" ]; do
             ;;
         --worker-node-flavor)
             WORKER_NODE_FLAVOR=$VALUE
+            ;;
+        --deploy-kubeflow)
+            DEPLOY_KF=$VALUE
+            ;;
+        --config-file)
+            CONFIG_FILE_IKS_DEPLOY=$VALUE
             ;;
         --delete-cluster)
             DELETE_CLUSTER=$VALUE
@@ -239,7 +241,7 @@ echo -e "$(current_env)"
 
 # Restore environment created by previous runs if any.
 if [ -f "$CONFIG_FILE_IKS_DEPLOY" ]; then
-    # shellcheck disable=SC1091
+    # shellcheck disable=SC1090
     source "$CONFIG_FILE_IKS_DEPLOY"
 else
     echo "No previous run environment found."
@@ -333,5 +335,6 @@ if [ -x "$(which kubectl)" ]; then
     kubectl wait --for=condition=Ready --timeout=200s --all nodes
 fi
 
-./deploy-kfp-ibm-vpc.sh --kf-name="$CLUSTER_NAME" --base-dir="$PWD/$VPC_NAME"
-
+if [[ "x$DEPLOY_KF" == "xtrue" ]]; then
+  ./deploy-kfp-ibm-vpc.sh --kf-name="$CLUSTER_NAME" --base-dir="$PWD/$VPC_NAME"
+fi
