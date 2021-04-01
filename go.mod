@@ -8,11 +8,11 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-ini/ini v1.62.0 // indirect
-	github.com/go-openapi/errors v0.19.2
-	github.com/go-openapi/runtime v0.19.4
-	github.com/go-openapi/strfmt v0.19.3
+	github.com/go-openapi/errors v0.19.9
+	github.com/go-openapi/runtime v0.19.24
+	github.com/go-openapi/strfmt v0.19.11
 	github.com/go-openapi/swag v0.19.13
-	github.com/go-openapi/validate v0.19.5
+	github.com/go-openapi/validate v0.20.1
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.4.3
@@ -38,7 +38,7 @@ require (
 	google.golang.org/api v0.36.0
 	google.golang.org/genproto v0.0.0-20201211151036-40ec1c210f7a
 	google.golang.org/grpc v1.34.0
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.19.7

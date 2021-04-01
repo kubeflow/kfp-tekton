@@ -42,6 +42,7 @@ const (
 	ArtifactCopyStepTemplate            string = "ARTIFACT_COPY_STEP_TEMPLATE"
 	InjectDefaultScript                 string = "INJECT_DEFAULT_SCRIPT"
 	UpdatePipelineVersionByDefault      string = "AUTO_UPDATE_PIPELINE_DEFAULT_VERSION"
+	TokenReviewAudience                 string = "TOKEN_REVIEW_AUDIENCE"
 )
 
 func IsPipelineVersionUpdatedByDefault() bool {
@@ -160,6 +161,10 @@ func GetKubeflowUserIDHeader() string {
 
 func GetKubeflowUserIDPrefix() string {
 	return GetStringConfigWithDefault(KubeflowUserIDPrefix, GoogleIAPUserIdentityPrefix)
+}
+
+func GetTokenReviewAudience() string {
+	return GetStringConfigWithDefault(TokenReviewAudience, DefaultTokenReviewAudience)
 }
 
 func GetArtifactBucket() string {

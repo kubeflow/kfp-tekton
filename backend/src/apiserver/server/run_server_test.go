@@ -101,7 +101,8 @@ func TestCreateRun_Multiuser(t *testing.T) {
 	defer viper.Set(common.MultiUserMode, "false")
 	defer viper.Set(common.DefaultPipelineRunnerServiceAccount, "pipeline-runner")
 
-	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + "user@google.com"})
+	userIdentity := "user@google.com"
+	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + userIdentity})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 
 	clients, manager, _ := initWithExperiment(t)
@@ -431,4 +432,4 @@ func TestReportRunMetrics_PartialFailures(t *testing.T) {
 	assert.Equal(t, expectedResponse, response)
 }
 
-// Removed tests with old auth spec: "TestCanAccessRun_Unauthorized", "TestCanAccessRun_Authorized"
+// Removed tests with old auth spec: "TestCanAccessRun_Unauthorized", "TestCanAccessRun_Authorized", "TestCanAccessRun_Unauthenticated"

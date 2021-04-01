@@ -20,9 +20,9 @@ FROM python:3.7 as compiler
 RUN apt-get update -y && apt-get install --no-install-recommends -y -q default-jdk python3-setuptools python3-dev jq
 RUN wget https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py
 COPY sdk/python/requirements.txt .
-RUN python3 -m pip install -r requirements.txt
+RUN python3 -m pip install -r requirements.txt --no-cache-dir
 
-# Downloading Argo CLI so that the samples are validated
+# Downloading Argo CLI so that the samples are validated, but doesn't need it for Tekton.
 # ADD  https://github.com/argoproj/argo/releases/download/v2.7.5/argo-linux-amd64 /usr/local/bin/argo
 # RUN chmod +x /usr/local/bin/argo
 

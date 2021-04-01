@@ -186,7 +186,7 @@ func TestCreatePipeline_StorePipelineMetadataError(t *testing.T) {
 	defer store.Close()
 	store.DB().Close()
 	manager := NewResourceManager(store)
-	_, err := manager.CreatePipeline("pipeline1", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
+	_, err := manager.CreatePipeline("pipeline1", "", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
 	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "Failed to start a transaction to create a new pipeline")
 }
@@ -197,7 +197,7 @@ func TestCreatePipeline_CreatePipelineFileError(t *testing.T) {
 	manager := NewResourceManager(store)
 	// Use a bad object store
 	manager.objectStore = &FakeBadObjectStore{}
-	_, err := manager.CreatePipeline("pipeline1", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
+	_, err := manager.CreatePipeline("pipeline1", "", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
 	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "bad object store")
 	// Verify there is a pipeline in DB with status PipelineCreating.

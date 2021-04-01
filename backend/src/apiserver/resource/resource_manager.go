@@ -43,6 +43,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -95,9 +96,11 @@ type ResourceManager struct {
 	swfClient                 client.SwfClientInterface
 	k8sCoreClient             client.KubernetesCoreInterface
 	subjectAccessReviewClient client.SubjectAccessReviewInterface
+	tokenReviewClient         client.TokenReviewInterface
 	logArchive                archive.LogArchiveInterface
 	time                      util.TimeInterface
 	uuid                      util.UUIDGeneratorInterface
+	authenticators            []kfpauth.Authenticator
 	tektonClient              client.TektonClientInterface
 }
 
@@ -322,6 +325,24 @@ func (r *ResourceManager) GetPipelineTemplate(pipelineId string) ([]byte, error)
 	}
 
 	return template, nil
+}
+
+func (r *ResourceManager) AuthenticateRequest(ctx context.Context) (string, error) {
+	if ctx == nil {
+		return "", util.NewUnauthenticatedError(errors.New("Request error: context is nil"), "Request error: context is nil.")
+	}
+
+	// If the request header contains the user identity, requests are authorized
+	// based on the namespace field in the request.
+	var errlist []error
+	for _, auth := range r.authenticators {
+		userIdentity, err := auth.GetUserIdentity(ctx)
+		if err == nil {
+			return userIdentity, nil
+		}
+		errlist = append(errlist, err)
+	}
+	return "", utilerrors.NewAggregate(errlist)
 }
 
 func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {

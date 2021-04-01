@@ -131,6 +131,8 @@ def is_tfx_pod(pod) -> bool:
     main_container = main_containers[0]
     return main_container.command and main_container.command[-1].endswith('tfx/orchestration/kubeflow/container_entrypoint.py')
 
+def is_kfp_v2_pod(pod) -> bool:
+    return pod.metadata.annotations.get(KFP_V2_COMPONENT_ANNOTATION_KEY) == KFP_V2_COMPONENT_ANNOTATION_VALUE
 
 def get_component_template(obj):
     '''
@@ -226,6 +228,10 @@ while True:
 
             # Skip TFX pods - they have their own metadata writers
             if is_tfx_pod(obj):
+                continue
+
+            # Skip KFP v2 pods - they have their own metadat writers
+            if is_kfp_v2_pod(obj):
                 continue
 
             pipeline_name = obj.metadata.labels[PIPELINE_LABEL_KEY] # Should exist due to initial filtering

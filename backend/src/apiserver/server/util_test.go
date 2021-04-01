@@ -1,17 +1,14 @@
 package server
 
 import (
-	"context"
 	"io/ioutil"
 	"strings"
 	"testing"
 
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
-	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc/metadata"
 )
 
 // Removed tarball tests that check for argo yaml and old auth dep: "TestDecompressPipelineTarball", "TestDecompressPipelineTarball_NonYamlTarball",

@@ -34,10 +34,12 @@ import (
 )
 
 var (
-	masterURL  string
-	kubeconfig string
-	namespace  string
-	location   *time.Location
+	masterURL   string
+	kubeconfig  string
+	namespace   string
+	location    *time.Location
+	clientQPS   float64
+	clientBurst int
 )
 
 func initEnv() {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
+	kfpauth "github.com/kubeflow/pipelines/backend/src/apiserver/auth"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
@@ -15,6 +16,31 @@ import (
 	"google.golang.org/grpc/metadata"
 	authorizationv1 "k8s.io/api/authorization/v1"
 )
+
+func TestListExperiment_Unauthenticated(t *testing.T) {
+	viper.Set(common.MultiUserMode, "true")
+	defer viper.Set(common.MultiUserMode, "false")
+
+	md := metadata.New(map[string]string{"no-identity-header": "user"})
+	ctx := metadata.NewIncomingContext(context.Background(), md)
+
+	clients, manager, _ := initWithExperiment(t)
+	defer clients.Close()
+
+	server := ExperimentServer{manager, &ExperimentServerOptions{CollectMetrics: false}}
+	_, err := server.ListExperiment(ctx, &api.ListExperimentsRequest{
+		ResourceReferenceKey: &api.ResourceKey{
+			Type: api.ResourceType_NAMESPACE,
+			Id:   "ns1",
+		},
+	})
+	assert.NotNil(t, err)
+	assert.EqualError(
+		t,
+		err,
+		wrapFailedAuthzApiResourcesError(wrapFailedAuthzApiResourcesError(kfpauth.IdentityHeaderMissingError)).Error(),
+	)
+}
 
 func TestCreateExperiment(t *testing.T) {
 	clientManager := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())

@@ -19,6 +19,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -33,25 +35,29 @@ import (
 )
 
 const (
-	KFPCacheEnabledLabelKey   string = "pipelines.kubeflow.org/cache_enabled"
-	KFPCacheEnabledLabelValue string = "true"
-	KFPCachedLabelKey         string = "pipelines.kubeflow.org/reused_from_cache"
-	KFPCachedLabelValue       string = "true"
-	ArgoWorkflowNodeName      string = "workflows.argoproj.io/node-name"
-	TektonTaskrunTemplate     string = "tekton.dev/template"
-	ExecutionKey              string = "pipelines.kubeflow.org/execution_cache_key"
-	CacheIDLabelKey           string = "pipelines.kubeflow.org/cache_id"
-	TektonTaskrunOutputs      string = "tekton.dev/outputs"
-	MetadataWrittenKey        string = "pipelines.kubeflow.org/metadata_written"
-	AnnotationPath            string = "/metadata/annotations"
-	LabelPath                 string = "/metadata/labels"
-	SpecContainersPath        string = "/spec/containers"
-	SpecInitContainersPath    string = "/spec/initContainers"
-	TFXPodSuffix              string = "tfx/orchestration/kubeflow/container_entrypoint.py"
-	ArchiveLocationKey        string = "archiveLocation"
-	TaskName                  string = "tekton.dev/pipelineTask"
-	PipelineName              string = "pipelines.kubeflow.org/pipelinename"
-	Generation                string = "pipelines.kubeflow.org/generation"
+	KFPCacheEnabledLabelKey    string = "pipelines.kubeflow.org/cache_enabled"
+	KFPCacheEnabledLabelValue  string = "true"
+	KFPCachedLabelKey          string = "pipelines.kubeflow.org/reused_from_cache"
+	KFPCachedLabelValue        string = "true"
+	ArgoWorkflowNodeName       string = "workflows.argoproj.io/node-name"
+	TektonTaskrunTemplate      string = "tekton.dev/template"
+	ExecutionKey               string = "pipelines.kubeflow.org/execution_cache_key"
+	CacheIDLabelKey            string = "pipelines.kubeflow.org/cache_id"
+	TektonTaskrunOutputs       string = "tekton.dev/outputs"
+	MetadataWrittenKey         string = "pipelines.kubeflow.org/metadata_written"
+	AnnotationPath             string = "/metadata/annotations"
+	LabelPath                  string = "/metadata/labels"
+	SpecContainersPath         string = "/spec/containers"
+	SpecInitContainersPath     string = "/spec/initContainers"
+	TFXPodSuffix               string = "tfx/orchestration/kubeflow/container_entrypoint.py"
+	SdkTypeLabel               string = "pipelines.kubeflow.org/pipeline-sdk-type"
+	TfxSdkTypeLabel            string = "tfx"
+	V2ComponentAnnotationKey   string = "pipelines.kubeflow.org/v2_component"
+	V2ComponentAnnotationValue string = "true"
+	ArchiveLocationKey         string = "archiveLocation"
+	TaskName                   string = "tekton.dev/pipelineTask"
+	PipelineName               string = "pipelines.kubeflow.org/pipelinename"
+	Generation                 string = "pipelines.kubeflow.org/generation"
 
 	TektonGroup        string = "tekton.dev/v1beta1"
 	TektonTaskKind     string = "TaskRun"
@@ -268,11 +274,16 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 		}
 	}
 
+	image := "registry.access.redhat.com/ubi8/ubi-minimal"
+	if v, ok := os.LookupEnv("CACHE_IMAGE"); ok {
+		image = v
+	}
+
 	firstOriginalContainer.Args = append(firstOriginalContainer.Args[:argStartFlag-1], "/bin/bash")
 	firstOriginalContainer.Args = append(firstOriginalContainer.Args, "--")
 	firstOriginalContainer.Args = append(firstOriginalContainer.Args, "-c")
 	firstOriginalContainer.Args = append(firstOriginalContainer.Args, replacedArg)
-	firstOriginalContainer.Image = "registry.access.redhat.com/ubi8/ubi-minimal"
+	firstOriginalContainer.Image = image
 
 	dummyContainers = append(dummyContainers, firstOriginalContainer)
 
@@ -349,6 +360,9 @@ func isLabeledCorrect(pod *corev1.Pod, logger *zap.SugaredLogger) bool {
 }
 
 func isTFXPod(pod *corev1.Pod, logger *zap.SugaredLogger) bool {
+	if pod.Labels[SdkTypeLabel] == TfxSdkTypeLabel {
+		return true
+	}
 	containers := pod.Spec.Containers
 	if containers == nil || len(containers) == 0 {
 		logger.Info("This pod container does not exist.")
@@ -375,4 +389,8 @@ func isTaskrunOwn(pod *corev1.Pod) (string, bool) {
 	}
 
 	return "", false
+}
+
+func isV2Pod(pod *corev1.Pod) bool {
+	return pod.Annotations[V2ComponentAnnotationKey] == V2ComponentAnnotationValue
 }

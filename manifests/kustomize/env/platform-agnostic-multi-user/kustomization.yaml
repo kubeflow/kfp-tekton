@@ -3,7 +3,6 @@ kind: Kustomization
 
 bases:
   - ../../base/installs/multi-user
-  - ../../third-party/argo/installs/cluster
   - ../../third-party/mysql
   - ../../third-party/minio
 

@@ -17,6 +17,7 @@ package resource
 import (
 	"github.com/golang/glog"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/archive"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/auth"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/storage"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
@@ -26,8 +27,9 @@ import (
 // Rename argo fake client to tekton fake client
 
 const (
-	DefaultFakeUUID = "123e4567-e89b-12d3-a456-426655440000"
-	FakeUUIDOne     = "123e4567-e89b-12d3-a456-426655440001"
+	DefaultFakeUUID    = "123e4567-e89b-12d3-a456-426655440000"
+	FakeUUIDOne        = "123e4567-e89b-12d3-a456-426655440001"
+	NonDefaultFakeUUID = "123e4567-e89b-12d3-a456-426655441000"
 )
 
 type FakeClientManager struct {
