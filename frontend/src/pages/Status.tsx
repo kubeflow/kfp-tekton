@@ -124,6 +124,10 @@ export function statusToIcon(
       iconColor = color.terminated;
       title = 'TaskRun could not cancel';
       break;
+    case NodePhase.OMITTED:
+      IconComponent = BlockIcon;
+      title = 'Run was omitted because the previous step failed.';
+      break;
     case NodePhase.UNKNOWN:
       break;
     default:

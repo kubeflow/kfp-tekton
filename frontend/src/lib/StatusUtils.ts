@@ -46,6 +46,7 @@ export enum NodePhase {
   TASKRUNCOULDNTCANCEL = 'TaskRunCouldntCancel',
   TERMINATED = 'Terminated',
   UNKNOWN = 'Unknown',
+  OMITTED = 'Omitted',
 }
 
 export function hasFinished(status?: NodePhase): boolean {
