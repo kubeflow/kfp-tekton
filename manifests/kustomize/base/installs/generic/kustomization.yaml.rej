@@ -1,9 +1,0 @@
-diff a/manifests/kustomize/base/installs/generic/kustomization.yaml b/manifests/kustomize/base/installs/generic/kustomization.yaml	(rejected hunks)
-@@ -3,7 +3,6 @@ kind: Kustomization
- namespace: kubeflow
- bases:
- - ../../pipeline
--- ../../metadata
- - ../../cache
- - ../../cache-deployer
- resources:

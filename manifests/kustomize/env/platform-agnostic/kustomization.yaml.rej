@@ -1,9 +1,0 @@
-diff a/manifests/kustomize/env/platform-agnostic/kustomization.yaml b/manifests/kustomize/env/platform-agnostic/kustomization.yaml	(rejected hunks)
-@@ -3,6 +3,7 @@ kind: Kustomization
- 
- bases:
-   - ../../base/installs/generic
-+  - ../../base/metadata/base
-   - ../../third-party/argo/installs/namespace
-   - ../../third-party/minio
-   - ../../third-party/mysql

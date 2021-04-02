@@ -126,6 +126,9 @@ def artifact_to_uri(artifact: dict) -> str:
 
 
 def is_tfx_pod(pod) -> bool:
+    # Later versions of TFX pods do not match the pattern in command line, but now they have this label.
+    if pod.metadata.labels.get(KFP_SDK_TYPE_LABEL_KEY) == TFX_SDK_TYPE_VALUE:
+        return True
     main_step_name = 'step-main' if PIPELINE_RUNTIME == "tekton" else 'main'
     main_containers = [container for container in pod.spec.containers if container.name == main_step_name]
     if len(main_containers) != 1:
