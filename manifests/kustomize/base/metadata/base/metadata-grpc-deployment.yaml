@@ -73,3 +73,4 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 5
           timeoutSeconds: 2
+      serviceAccountName: metadata-grpc-server
