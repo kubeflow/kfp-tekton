@@ -42,6 +42,7 @@ from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
+from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
@@ -535,17 +536,48 @@ class TektonCompiler(Compiler):
             'taskSpec': template['spec'],
           }
 
-        task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
-        task_labels = template['metadata'].get('labels', {})
-        task_ref['taskSpec']['metadata']['labels'] = task_labels
-        task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
-        task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
-        cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
-        task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
+        for i in template['spec'].get('steps', []):
+          # TODO: change the below conditions to map with a label
+          #       or a list of images with optimized actions
+          if i.get('image', '') in TEKTON_CUSTOM_TASK_IMAGES:
+            custom_task_args = {}
+            container_args = i.get('args', [])
+            for index, item in enumerate(container_args):
+              if item.startswith('--'):
+                custom_task_args[item[2:]] = container_args[index + 1]
+            non_param_keys = ['name', 'apiVersion', 'kind']
+            task_params = []
+            for key, value in custom_task_args.items():
+              if key not in non_param_keys:
+                task_params.append({'name': key, 'value': value})
+            task_ref = {
+              'name': template['metadata']['name'],
+              'params': task_params,
+              # For processing Tekton parameter mapping later on.
+              'orig_params': task_ref['params'],
+              'taskRef': {
+                'name': custom_task_args['name'],
+                'apiVersion': custom_task_args['apiVersion'],
+                'kind': custom_task_args['kind']
+              }
+            }
+            # Pop custom task artifacts since we have no control of how
+            # custom task controller is handling the container/task execution.
+            self.artifact_items.pop(template['metadata']['name'], None)
+            self.output_artifacts.pop(template['metadata']['name'], None)
+            break
+        if task_ref.get('taskSpec', ''):
+          task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
+          task_labels = template['metadata'].get('labels', {})
+          task_ref['taskSpec']['metadata']['labels'] = task_labels
+          task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
+          task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
+          cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
+          task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
 
-        task_annotations = template['metadata'].get('annotations', {})
-        task_ref['taskSpec']['metadata']['annotations'] = task_annotations
-        task_annotations['tekton.dev/template'] = task_annotations.get('tekton.dev/template', '')
+          task_annotations = template['metadata'].get('annotations', {})
+          task_ref['taskSpec']['metadata']['annotations'] = task_annotations
+          task_annotations['tekton.dev/template'] = task_annotations.get('tekton.dev/template', '')
 
         task_refs.append(task_ref)
 
@@ -613,23 +645,43 @@ class TektonCompiler(Compiler):
         loop_args.extend(self.loops_pipeline[key]['loop_sub_args'])
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      for tp in task.get('params', []):
-        if tp['name'] in pipeline_param_names + loop_args:
-          tp['value'] = '$(params.%s)' % tp['name']
-        else:
-          for pp in op.inputs:
-            if tp['name'] == pp.full_name:
-              tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
-              # Create input artifact tracking annotation
-              input_annotation = self.input_artifacts.get(task['name'], [])
-              input_annotation.append(
-                  {
-                      'name': tp['name'],
-                      'parent_task': pp.op_name
-                  }
-              )
-              self.input_artifacts[task['name']] = input_annotation
-              break
+      # Substitute Custom task paramters to the correct mapping.
+      if task.get('orig_params', []):
+        orig_params = [p['name'] for p in task.get('orig_params', [])]
+        for tp in task.get('params', []):
+          pipeline_params = re.findall('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', tp.get('value', ''))
+          pipeline_param = pipeline_params[0] if pipeline_params else ""
+          if pipeline_param in orig_params:
+            if pipeline_param in pipeline_param_names + loop_args:
+              substitute_param = '$(params.%s)' % pipeline_param
+              tp['value'] = re.sub('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', substitute_param, tp.get('value', ''))
+            else:
+              for pp in op.inputs:
+                if pipeline_param == pp.full_name:
+                  substitute_param = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
+                  tp['value'] = re.sub('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', substitute_param, tp.get('value', ''))
+                  break
+        # Not necessary for Tekton execution
+        task.pop('orig_params', None)
+      else:
+        op = pipeline.ops.get(task['name'])
+        for tp in task.get('params', []):
+          if tp['name'] in pipeline_param_names + loop_args:
+            tp['value'] = '$(params.%s)' % tp['name']
+          else:
+            for pp in op.inputs:
+              if tp['name'] == pp.full_name:
+                tp['value'] = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
+                # Create input artifact tracking annotation
+                input_annotation = self.input_artifacts.get(task['name'], [])
+                input_annotation.append(
+                    {
+                        'name': tp['name'],
+                        'parent_task': pp.op_name
+                    }
+                )
+                self.input_artifacts[task['name']] = input_annotation
+                break
 
     # add retries params
     for task in task_refs:
@@ -640,8 +692,10 @@ class TektonCompiler(Compiler):
     # add timeout params to task_refs, instead of task.
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if op != None and (not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout):
-        task['timeout'] = '%ds' % op.timeout
+      # Custom task doesn't support timeout feature
+      if task.get('taskSpec', ''):
+        if op != None and (not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout):
+          task['timeout'] = '%ds' % op.timeout
 
     # handle resourceOp cases in pipeline
     self._process_resourceOp(task_refs, pipeline)
