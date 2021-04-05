@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from typing import List
-
 from kfp import dsl
 from kfp.dsl._container_op import ContainerOp
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
@@ -71,11 +70,12 @@ def after_any(any: List[dsl.ContainerOp], name: str = None):
     return _after_components
 
 
-
 def CEL_ConditionOp(condition_statement):
-    '''
-    A containerOp template for CEL and converts it into Tekton custom task
+    '''A containerOp template for CEL and converts it into Tekton custom task
     during Tekton compiliation.
+
+    Args:
+        condition_statement: CEL expression statement using string and/or pipeline params.
     '''
     ConditionOp = dsl.ContainerOp(
             name="condition-cel",
