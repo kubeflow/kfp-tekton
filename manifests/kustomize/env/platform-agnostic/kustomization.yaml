@@ -4,8 +4,8 @@ kind: Kustomization
 bases:
   - ../../base/installs/generic
   - ../../base/metadata/base
-  - ../../third-party/minio
-  - ../../third-party/mysql
+  - ../../third-party/minio/base
+  - ../../third-party/mysql/base
 
 resources:
   - kfp-pipeline-config.yaml
