@@ -13,7 +13,7 @@ This example shows how to define any Tekton Custom Task on KFP-Tekton and handle
    ko apply -f config/
    ```
 
-* Compile the flip-coin pipeline using the compiler inside the python code. The kfp-tekton SDK will produce a Tekton pipeline yaml definition in the same directory called `tekton-custom-task.yaml`.
+2. Compile the flip-coin pipeline using the compiler inside the python code. The kfp-tekton SDK will produce a Tekton pipeline yaml definition in the same directory called `tekton-custom-task.yaml`.
     ```
     # Compile the python code
     python tekton-custom-task.py
