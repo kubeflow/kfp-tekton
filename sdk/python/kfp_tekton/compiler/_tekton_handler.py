@@ -199,6 +199,9 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 custom_task_cr['spec']['pipelineSpec']['params'].extend([
                     {'name': param['name'], 'type': 'string'}for param in nested_custom_task_special_params
                 ])
+                custom_task_cr['spec']['pipelineSpec']['params'] = sorted(
+                    custom_task_cr['spec']['pipelineSpec']['params'], key=lambda k: k['name'])
+
                 if nested_custom_task['ancestors']:
                     for custom_task_cr_again in custom_task_crs:
                         if custom_task_cr_again['metadata']['name'] in nested_custom_task[
@@ -206,12 +209,16 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                             custom_task_cr_again['spec']['pipelineSpec']['params'].extend([
                                 {'name': param['name'], 'type': 'string'}for param in nested_custom_task_special_params
                             ])
+                            custom_task_cr_again['spec']['pipelineSpec']['params'] = sorted(
+                                custom_task_cr_again['spec']['pipelineSpec']['params'], key=lambda k: k['name'])
+                # add children params to the root tasks
                 for task in tasks:
                     if task['name'] == nested_custom_task['root_ct']:
                         task['params'].extend(copy.deepcopy(nested_custom_task_special_params))
                     elif task['name'] in nested_custom_task['ancestors'] or task[
                         'name'] == nested_custom_task['father_ct']:
                         task['params'].extend(nested_custom_task_special_params)
+                    task['params'] = sorted(task['params'], key=lambda k: k['name'])
                 for special_param in nested_custom_task_special_params:
                     for nested_param in nested_custom_task_spec['params']:
                         if nested_param['name'] == special_param['name']:
