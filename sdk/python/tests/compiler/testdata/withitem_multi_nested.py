@@ -26,7 +26,7 @@ TektonCompiler._get_unique_id_code = Coder.empty
 
 
 @dsl.pipeline(name='my-pipeline')
-def pipeline(my_pipe_param: List[int] = [100, 200], my_pipe_param3: List[int] = [1, 2]):
+def pipeline(my_pipe_param: list = [100, 200], my_pipe_param3: list = [1, 2]):
     loop_args = [{'a': 1, 'b': 2}, {'a': 10, 'b': 20}]
     with dsl.ParallelFor(loop_args) as item:
         op1 = dsl.ContainerOp(

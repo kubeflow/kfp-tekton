@@ -19,9 +19,9 @@ metadata:
 spec:
   pipelineSpec:
     params:
-    - name: loop-item-param-4
-      type: string
     - name: loop-item-param-1-subvar-b
+      type: string
+    - name: loop-item-param-4
       type: string
     - name: my_pipe_param3-loop-item
       type: string
