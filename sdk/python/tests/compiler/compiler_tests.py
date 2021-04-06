@@ -130,6 +130,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.withitem_nested import pipeline
     self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
 
+  def test_withitem_multi_nested_workflow(self):
+    """
+    Test compiling a withitem multi nested in workflow.
+    """
+    from .testdata.withitem_multi_nested import pipeline
+    self._test_pipeline_workflow(pipeline, 'withitem_multi_nested.yaml')
+
   def test_conditions_and_loops_workflow(self):
     """
     Test compiling a conditions and loops in workflow.
