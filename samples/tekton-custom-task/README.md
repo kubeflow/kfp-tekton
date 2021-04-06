@@ -8,7 +8,7 @@ This example shows how to define any Tekton Custom Task on KFP-Tekton and handle
 ## Instructions
 1. Install the Condtion custom task controller for computing runtime conditions for this example. Make sure to setup GOPATH and [ko](https://github.com/google/ko) before running the commands below.
    ```shell
-   git clone https://github.com/Tomcli/experimental/
+   git clone https://github.com/tektoncd/experimental/
    cd experimental/cel
    ko apply -f config/
    ```

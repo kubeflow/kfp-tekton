@@ -57,7 +57,7 @@ spec:
     - name: condition-cel
       params:
       - name: status
-        value: $(tasks.flip-coin.results.output) == 'heads'
+        value: '''$(tasks.flip-coin.results.output)'' == ''heads'''
       taskRef:
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
