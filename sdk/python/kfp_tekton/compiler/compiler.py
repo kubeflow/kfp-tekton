@@ -645,25 +645,28 @@ class TektonCompiler(Compiler):
         loop_args.extend(self.loops_pipeline[key]['loop_sub_args'])
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      # Substitute Custom task paramters to the correct mapping.
-      if task.get('orig_params', []):
+      # Substitute task paramters to the correct Tekton variables.
+      # Regular task and custom task have different parameter mapping in Tekton.
+      if task.get('orig_params', []): # custom task
         orig_params = [p['name'] for p in task.get('orig_params', [])]
         for tp in task.get('params', []):
           pipeline_params = re.findall('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', tp.get('value', ''))
-          pipeline_param = pipeline_params[0] if pipeline_params else ""
-          if pipeline_param in orig_params:
-            if pipeline_param in pipeline_param_names + loop_args:
-              substitute_param = '$(params.%s)' % pipeline_param
-              tp['value'] = re.sub('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', substitute_param, tp.get('value', ''))
-            else:
-              for pp in op.inputs:
-                if pipeline_param == pp.full_name:
-                  substitute_param = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
-                  tp['value'] = re.sub('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', substitute_param, tp.get('value', ''))
-                  break
+          # There could be multiple pipeline params in one expression, so we need to map each of them
+          # back to the proper tekton variables.
+          for pipeline_param in pipeline_params:
+            if pipeline_param in orig_params:
+              if pipeline_param in pipeline_param_names + loop_args:
+                substitute_param = '$(params.%s)' % pipeline_param
+                tp['value'] = re.sub('\$\(inputs.params.%s\)' % pipeline_param, substitute_param, tp.get('value', ''))
+              else:
+                for pp in op.inputs:
+                  if pipeline_param == pp.full_name:
+                    substitute_param = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
+                    tp['value'] = re.sub('\$\(inputs.params.%s\)' % pipeline_param, substitute_param, tp.get('value', ''))
+                    break
         # Not necessary for Tekton execution
         task.pop('orig_params', None)
-      else:
+      else: # regular task
         op = pipeline.ops.get(task['name'])
         for tp in task.get('params', []):
           if tp['name'] in pipeline_param_names + loop_args:
