@@ -647,7 +647,7 @@ class TektonCompiler(Compiler):
       op = pipeline.ops.get(task['name'])
       # Substitute task paramters to the correct Tekton variables.
       # Regular task and custom task have different parameter mapping in Tekton.
-      if task.get('orig_params', []): # custom task
+      if task.get('orig_params', []):  # custom task
         orig_params = [p['name'] for p in task.get('orig_params', [])]
         for tp in task.get('params', []):
           pipeline_params = re.findall('\$\(inputs.params.([^ \t\n.:,;{}]+)\)', tp.get('value', ''))
@@ -666,7 +666,7 @@ class TektonCompiler(Compiler):
                     break
         # Not necessary for Tekton execution
         task.pop('orig_params', None)
-      else: # regular task
+      else:  # regular task
         op = pipeline.ops.get(task['name'])
         for tp in task.get('params', []):
           if tp['name'] in pipeline_param_names + loop_args:
