@@ -27,7 +27,5 @@ If you are interested more in the larger list of pipelines samples we are testin
 + [The flip-coin pipeline](/samples/flip-coin)
 + [Nested pipeline example](/samples/nested-pipeline)
 + [Pipeline with Nested loops](/samples/nested-loops)
-
-
-## Alpha feature
++ [Using Tekton Custom Task on KFP](/samples/tekton-custom-task)
 + [The flip-coin pipeline using custom task](/samples/flip-coin-custom-task)

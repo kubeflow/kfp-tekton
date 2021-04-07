@@ -28,7 +28,7 @@ from distutils.util import strtobool
 
 # Kubeflow Pipeline imports
 from kfp import dsl
-from kfp.compiler._default_transformers import add_pod_env  # , add_pod_labels, get_default_telemetry_labels
+from kfp.compiler._default_transformers import add_pod_env
 from kfp.compiler.compiler import Compiler
 from kfp.components.structures import InputSpec
 from kfp.dsl._for_loop import LoopArguments
@@ -510,8 +510,6 @@ class TektonCompiler(Compiler):
           param['default'] = str(arg.value)
       params.append(param)
 
-    # TODO: task templates?
-
     # generate Tekton tasks from pipeline ops
     raw_templates = self._create_dag_templates(pipeline, op_transformers, params)
 
@@ -707,8 +705,7 @@ class TektonCompiler(Compiler):
         loop_args.extend(self.loops_pipeline[key]['loop_sub_args'])
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      # Substitute self defined CEL Op paramters to the correct mapping.
-      # TODO: refactor with the else logic to reduce code
+      # Substitute Custom task paramters to the correct mapping.
       if task.get('orig_params', []):
         orig_params = [p['name'] for p in task.get('orig_params', [])]
         for tp in task.get('params', []):
@@ -727,6 +724,7 @@ class TektonCompiler(Compiler):
         # Not necessary for Tekton execution
         task.pop('orig_params', None)
       else:
+        op = pipeline.ops.get(task['name'])
         for tp in task.get('params', []):
           if tp['name'] in pipeline_param_names + loop_args:
             tp['value'] = '$(params.%s)' % tp['name']
@@ -966,13 +964,6 @@ class TektonCompiler(Compiler):
 
     op_transformers = [add_pod_env]
 
-    # # By default adds telemetry instruments. Users can opt out toggling
-    # # allow_telemetry.
-    # # Also, TFX pipelines will be bypassed for pipeline compiled by tfx>0.21.4.
-    # if allow_telemetry:
-    #   pod_labels = get_default_telemetry_labels()
-    #   op_transformers.append(add_pod_labels(pod_labels))
-
     op_transformers.extend(pipeline_conf.op_transformers)
 
     workflow = self._create_pipeline_workflow(
@@ -1116,7 +1107,6 @@ class TektonCompiler(Compiler):
         params_list,
         pipeline_conf)
     # Separate loop workflow from the main workflow
-    print(self.loops_pipeline)
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
