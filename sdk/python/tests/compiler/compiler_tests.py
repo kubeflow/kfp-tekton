@@ -155,6 +155,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recursion_while import flipcoin
     self._test_pipeline_workflow(flipcoin, 'recursion_while.yaml')
 
+  def test_tekton_custom_task_workflow(self):
+    """
+    Test Tekton custom task workflow.
+    """
+    from .testdata.tekton_custom_task import custom_task_pipeline
+    self._test_pipeline_workflow(custom_task_pipeline, 'tekton_custom_task.yaml')
+
   def test_long_pipeline_name_workflow(self):
     """
     Test long pipeline name workflow.
