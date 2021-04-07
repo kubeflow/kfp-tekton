@@ -55,7 +55,7 @@ def print_op(msg):
 )
 def flipcoin_pipeline():
     flip = flip_coin_op()
-    cel_condition = CEL_ConditionOp("%s == 'heads'" % flip.output)
+    cel_condition = CEL_ConditionOp("'%s' == 'heads'" % flip.output)
     with dsl.Condition(cel_condition.output == 'true'):
         random_num_head = random_num_op(0, 9)
         with dsl.Condition(random_num_head.output > 5):
@@ -69,7 +69,7 @@ def flipcoin_pipeline():
             inner_task = print_op('tails and %s > 15!' % random_num_tail.output)
         with dsl.Condition(random_num_tail.output <= 15):
             print_op('tails and %s <= 15!' % random_num_tail.output)
-    random_num_head2 = random_num_op(0, 9).after(random_num_head).after(random_num_tail).after(inner_task)
+    random_num_head2 = random_num_op(0, 9).after(random_num_head, random_num_tail, inner_task)
 
 
 if __name__ == '__main__':

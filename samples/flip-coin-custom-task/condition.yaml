@@ -56,7 +56,7 @@ spec:
     - name: condition-cel
       params:
       - name: status
-        value: $(tasks.flip-coin.results.output) == 'heads'
+        value: '''$(tasks.flip-coin.results.output)'' == ''heads'''
       taskRef:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
@@ -253,12 +253,35 @@ spec:
       timeout: 0s
     - name: condition-2
       params:
-      - name: status
-        value: $(tasks.generate-random-number.results.output) > 5
-      taskRef:
-        name: cel_condition
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
+      - name: operand1
+        value: $(tasks.generate-random-number.results.output)
+      - name: operand2
+        value: '5'
+      - name: operator
+        value: '>'
+      taskSpec:
+        results:
+        - name: status
+          description: Conditional task status
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        steps:
+        - script: |-
+            python -c 'import sys
+            input1=str.rstrip(sys.argv[1])
+            input2=str.rstrip(sys.argv[2])
+            try:
+              input1=int(input1)
+              input2=int(input2)
+            except:
+              input1=str(input1)
+            status="true" if (input1 $(inputs.params.operator) input2) else "false"
+            f = open("/tekton/results/status", "w")
+            f.write(status)
+            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
+          image: python:alpine3.6
       when:
       - input: $(tasks.condition-cel.results.status)
         operator: in
@@ -266,12 +289,35 @@ spec:
         - "true"
     - name: condition-3
       params:
-      - name: status
-        value: $(tasks.generate-random-number.results.output) <= 5
-      taskRef:
-        name: cel_condition
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
+      - name: operand1
+        value: $(tasks.generate-random-number.results.output)
+      - name: operand2
+        value: '5'
+      - name: operator
+        value: <=
+      taskSpec:
+        results:
+        - name: status
+          description: Conditional task status
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        steps:
+        - script: |-
+            python -c 'import sys
+            input1=str.rstrip(sys.argv[1])
+            input2=str.rstrip(sys.argv[2])
+            try:
+              input1=int(input1)
+              input2=int(input2)
+            except:
+              input1=str(input1)
+            status="true" if (input1 $(inputs.params.operator) input2) else "false"
+            f = open("/tekton/results/status", "w")
+            f.write(status)
+            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
+          image: python:alpine3.6
       when:
       - input: $(tasks.condition-cel.results.status)
         operator: in
@@ -279,12 +325,35 @@ spec:
         - "true"
     - name: condition-5
       params:
-      - name: status
-        value: $(tasks.generate-random-number-2.results.output) > 15
-      taskRef:
-        name: cel_condition
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
+      - name: operand1
+        value: $(tasks.generate-random-number-2.results.output)
+      - name: operand2
+        value: '15'
+      - name: operator
+        value: '>'
+      taskSpec:
+        results:
+        - name: status
+          description: Conditional task status
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        steps:
+        - script: |-
+            python -c 'import sys
+            input1=str.rstrip(sys.argv[1])
+            input2=str.rstrip(sys.argv[2])
+            try:
+              input1=int(input1)
+              input2=int(input2)
+            except:
+              input1=str(input1)
+            status="true" if (input1 $(inputs.params.operator) input2) else "false"
+            f = open("/tekton/results/status", "w")
+            f.write(status)
+            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
+          image: python:alpine3.6
       when:
       - input: $(tasks.condition-cel.results.status)
         operator: notin
@@ -292,12 +361,35 @@ spec:
         - "true"
     - name: condition-6
       params:
-      - name: status
-        value: $(tasks.generate-random-number-2.results.output) <= 15
-      taskRef:
-        name: cel_condition
-        apiVersion: cel.tekton.dev/v1alpha1
-        kind: CEL
+      - name: operand1
+        value: $(tasks.generate-random-number-2.results.output)
+      - name: operand2
+        value: '15'
+      - name: operator
+        value: <=
+      taskSpec:
+        results:
+        - name: status
+          description: Conditional task status
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        steps:
+        - script: |-
+            python -c 'import sys
+            input1=str.rstrip(sys.argv[1])
+            input2=str.rstrip(sys.argv[2])
+            try:
+              input1=int(input1)
+              input2=int(input2)
+            except:
+              input1=str(input1)
+            status="true" if (input1 $(inputs.params.operator) input2) else "false"
+            f = open("/tekton/results/status", "w")
+            f.write(status)
+            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
+          image: python:alpine3.6
       when:
       - input: $(tasks.condition-cel.results.status)
         operator: notin
