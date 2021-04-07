@@ -20,3 +20,11 @@ This example shows how to define any Tekton Custom Task on KFP-Tekton and handle
     ```
 
 Then, upload the `tekton-custom-task.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline.
+
+
+## Troubleshooting
+Make sure the Tekton deployment enabled custom task as instructed in the KFP-Tekton deployment.
+```shell
+kubectl patch cm feature-flags -n tekton-pipelines \
+     -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true", "enable-custom-tasks": "true"}}'
+```
