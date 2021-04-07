@@ -48,7 +48,8 @@ DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
 TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
-DISABLE_CEL_CONDITION = env.get('DISABLE_CEL_CONDITION', 'true').lower() == "true"
+# DISABLE_CEL_CONDITION should be disabled until CEL is officially merged into Tekton main API.
+DISABLE_CEL_CONDITION = True
 
 
 def _get_super_condition_template():
@@ -549,20 +550,33 @@ class TektonCompiler(Compiler):
               }
             ]
           # Don't use additional task if it's only doing literal string == and !=
+          # with CEL custom task output.
           condition_operator = condition_params[2]
           condition_operand1 = condition_params[0]
           condition_operand2 = condition_params[1]
-          if (condition_operator.get('value', '') == '==' or condition_operator.get('value', '') == '!=') and not DISABLE_CEL_CONDITION:
-            map_cel_vars = lambda a: '$(tasks.%s.results.%s)' % (sanitize_k8s_name(a['value'].split('.')[-1]),
-              sanitize_k8s_name(a['output_name'])) if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
-            condition_refs[template['metadata']['name']] = [
-                {
-                  'input': map_cel_vars(condition_operand1),
-                  'operator': 'in' if condition_operator.get('value', '') == '==' else 'notin',
-                  'values': [map_cel_vars(condition_operand2)]
-                }
-              ]
-            string_condition_refs[template['metadata']['name']] = True
+          conditionOp_mapping = {"==": "in", "!=": "notin"}
+          if condition_operator.get('value', '') in conditionOp_mapping.keys():
+            # Check whether the operand is an output from custom task
+            # If so, don't create a new task to verify the condition.
+            def is_custom_task_output(operand) -> bool:
+              if operand['type'] == dsl.PipelineParam:
+                for template in raw_templates:
+                  if operand['op_name'] == template['metadata']['name']:
+                    for step in template['spec']['steps']:
+                      if step['name'] == 'main' and step['image'] in TEKTON_CUSTOM_TASK_IMAGES:
+                        return True
+              return False
+            if is_custom_task_output(condition_operand1) or is_custom_task_output(condition_operand2):
+              map_cel_vars = lambda a: '$(tasks.%s.results.%s)' % (sanitize_k8s_name(a['value'].split('.')[-1]),
+                sanitize_k8s_name(a['output_name'])) if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
+              condition_refs[template['metadata']['name']] = [
+                  {
+                    'input': map_cel_vars(condition_operand1),
+                    'operator': conditionOp_mapping[condition_operator['value']],
+                    'values': [map_cel_vars(condition_operand2)]
+                  }
+                ]
+              string_condition_refs[template['metadata']['name']] = True
           condition_task_refs[template['metadata']['name']] = condition_task_ref
           condition_when_refs[template['metadata']['name']] = condition_refs[template['metadata']['name']]
       else:
