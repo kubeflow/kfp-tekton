@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp
 from kfp import dsl
 from kfp_tekton.tekton import CEL_ConditionOp
 
@@ -58,16 +57,18 @@ def flipcoin_pipeline():
     cel_condition = CEL_ConditionOp("'%s' == 'heads'" % flip.output)
     with dsl.Condition(cel_condition.output == 'true'):
         random_num_head = random_num_op(0, 9)
-        with dsl.Condition(random_num_head.output > 5):
+        cel_condition_2 = CEL_ConditionOp("%s > 5" % random_num_head.output)
+        with dsl.Condition(cel_condition_2.output == 'true'):
             print_op('heads and %s > 5!' % random_num_head.output)
-        with dsl.Condition(random_num_head.output <= 5):
+        with dsl.Condition(cel_condition_2.output != 'true'):
             print_op('heads and %s <= 5!' % random_num_head.output)
 
     with dsl.Condition(cel_condition.output != 'true'):
         random_num_tail = random_num_op(10, 19)
-        with dsl.Condition(random_num_tail.output > 15):
+        cel_condition_3 = CEL_ConditionOp("%s > 15" % random_num_tail.output)
+        with dsl.Condition(cel_condition_3.output == 'true'):
             inner_task = print_op('tails and %s > 15!' % random_num_tail.output)
-        with dsl.Condition(random_num_tail.output <= 15):
+        with dsl.Condition(cel_condition_3.output != 'true'):
             print_op('tails and %s <= 15!' % random_num_tail.output)
     random_num_head2 = random_num_op(0, 9).after(random_num_head, random_num_tail, inner_task)
 
