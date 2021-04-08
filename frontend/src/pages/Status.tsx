@@ -20,6 +20,7 @@ import PendingIcon from '@material-ui/icons/Schedule';
 import RunningIcon from '../icons/statusRunning';
 import SkippedIcon from '@material-ui/icons/SkipNext';
 import SuccessIcon from '@material-ui/icons/CheckCircle';
+import BlockIcon from '@material-ui/icons/Block';
 import CachedIcon from '../icons/statusCached';
 import TerminatedIcon from '../icons/statusTerminated';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -123,6 +124,10 @@ export function statusToIcon(
       iconColor = color.terminated;
       title = 'TaskRun could not cancel';
       break;
+    case NodePhase.OMITTED:
+      IconComponent = BlockIcon;
+      title = 'Run was omitted because the previous step failed.';
+      break;
     case NodePhase.UNKNOWN:
       break;
     default:
@@ -140,7 +145,10 @@ export function statusToIcon(
       }
     >
       <span style={{ height: 18 }}>
-        <IconComponent style={{ color: iconColor, height: 18, width: 18 }} />
+        <IconComponent
+          data-testid='node-status-sign'
+          style={{ color: iconColor, height: 18, width: 18 }}
+        />
       </span>
     </Tooltip>
   );

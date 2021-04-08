@@ -46,6 +46,7 @@ export enum NodePhase {
   TASKRUNCOULDNTCANCEL = 'TaskRunCouldntCancel',
   TERMINATED = 'Terminated',
   UNKNOWN = 'Unknown',
+  OMITTED = 'Omitted',
 }
 
 export function hasFinished(status?: NodePhase): boolean {
@@ -57,6 +58,7 @@ export function hasFinished(status?: NodePhase): boolean {
     case NodePhase.ERROR: // Fall through
     case NodePhase.SKIPPED: // Fall through
     case NodePhase.TERMINATED:
+    case NodePhase.OMITTED:
       return true;
     case NodePhase.PENDING: // Fall through
     case NodePhase.RUNNING: // Fall through

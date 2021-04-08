@@ -3,7 +3,7 @@ Pipelines backend.
 
 ## Building & Testing
 
-To run all unit tests for backend: 
+To run all unit tests for backend:
 
 ```
 go test -v -cover ./backend/...
@@ -34,18 +34,16 @@ speeding up the build. To do so, execute the following command:
 
 ## Building APIServer image locally
 
-The API server image can be built from the root folder of the repo using: 
+The API server image can be built from the root folder of the repo using:
 ```
 export API_SERVER_IMAGE=api_server
 docker build -f backend/Dockerfile . --tag $API_SERVER_IMAGE
 ```
 
-## Building Go client library and swagger files
+## Building client library and swagger files
 
-After making changes to proto files, the Go client libraries and swagger files
-need to be regenerated and checked-in. The `backend/api/generate_api.sh` script
-takes care of this. It should be noted that this requires
-[Bazel](https://bazel.build/), version `0.24.0` 
+After making changes to proto files, the Go client libraries, Python client libraries and swagger files
+need to be regenerated and checked-in. Refer to [backend/api](./api/README.md) for details.
 
 ## Updating python dependencies
 

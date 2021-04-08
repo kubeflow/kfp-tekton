@@ -42,6 +42,7 @@ const (
 	ArtifactCopyStepTemplate            string = "ARTIFACT_COPY_STEP_TEMPLATE"
 	InjectDefaultScript                 string = "INJECT_DEFAULT_SCRIPT"
 	UpdatePipelineVersionByDefault      string = "AUTO_UPDATE_PIPELINE_DEFAULT_VERSION"
+	TokenReviewAudience                 string = "TOKEN_REVIEW_AUDIENCE"
 )
 
 func IsPipelineVersionUpdatedByDefault() bool {
@@ -79,6 +80,20 @@ func GetBoolConfigWithDefault(configName string, value bool) bool {
 		glog.Fatalf("Failed converting string to bool %s", viper.GetString(configName))
 	}
 	return value
+}
+
+func GetFloat64ConfigWithDefault(configName string, value float64) float64 {
+	if !viper.IsSet(configName) {
+		return value
+	}
+	return viper.GetFloat64(configName)
+}
+
+func GetIntConfigWithDefault(configName string, value int) int {
+	if !viper.IsSet(configName) {
+		return value
+	}
+	return viper.GetInt(configName)
 }
 
 func GetDurationConfig(configName string) time.Duration {
@@ -146,6 +161,10 @@ func GetKubeflowUserIDHeader() string {
 
 func GetKubeflowUserIDPrefix() string {
 	return GetStringConfigWithDefault(KubeflowUserIDPrefix, GoogleIAPUserIdentityPrefix)
+}
+
+func GetTokenReviewAudience() string {
+	return GetStringConfigWithDefault(TokenReviewAudience, DefaultTokenReviewAudience)
 }
 
 func GetArtifactBucket() string {

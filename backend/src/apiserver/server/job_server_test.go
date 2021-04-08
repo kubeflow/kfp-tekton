@@ -1,14 +1,63 @@
 package server
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
+	kfpauth "github.com/kubeflow/pipelines/backend/src/apiserver/auth"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 )
+
+func TestListJobs_Unauthenticated(t *testing.T) {
+	viper.Set(common.MultiUserMode, "true")
+	defer viper.Set(common.MultiUserMode, "false")
+
+	md := metadata.New(map[string]string{"no-identity-header": "user"})
+	ctx := metadata.NewIncomingContext(context.Background(), md)
+
+	clients, manager, experiment := initWithExperiment(t)
+	defer clients.Close()
+
+	server := NewJobServer(manager, &JobServerOptions{CollectMetrics: false})
+	_, err := server.ListJobs(ctx, &api.ListJobsRequest{
+		ResourceReferenceKey: &api.ResourceKey{
+			Type: api.ResourceType_EXPERIMENT,
+			Id:   experiment.UUID,
+		},
+	})
+	assert.NotNil(t, err)
+	assert.EqualError(
+		t,
+		err,
+		util.Wrap(
+			wrapFailedAuthzApiResourcesError(kfpauth.IdentityHeaderMissingError),
+			"Failed to authorize with namespace in experiment resource reference.",
+		).Error(),
+	)
+
+	_, err = server.ListJobs(ctx, &api.ListJobsRequest{
+		ResourceReferenceKey: &api.ResourceKey{
+			Type: api.ResourceType_NAMESPACE,
+			Id:   "ns1",
+		},
+	})
+	assert.NotNil(t, err)
+	assert.EqualError(
+		t,
+		err,
+		util.Wrap(
+			wrapFailedAuthzApiResourcesError(kfpauth.IdentityHeaderMissingError),
+			"Failed to authorize with namespace resource reference.",
+		).Error(),
+	)
+}
 
 var (
 	commonApiJob = &api.Job{

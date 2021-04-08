@@ -89,6 +89,11 @@ export function createGraph(workflow: any): dagre.graphlib.Graph {
 
 function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
   const pipeline = template;
+
+  if (!template || !template.spec) {
+    throw new Error("Graph template or template spec doesn't exist.");
+  }
+
   const tasks = (pipeline['spec']['pipelineSpec']['tasks'] || []).concat(
     pipeline['spec']['pipelineSpec']['finally'] || [],
   );
