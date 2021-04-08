@@ -126,7 +126,7 @@ class TektonCompiler(Compiler):
       potential_references(dict{str->str}): a dictionary of parameter names to task names
       """
     if isinstance(value_or_reference, dsl.PipelineParam):
-      parameter_name = self._pipelineparam_full_name(value_or_reference)
+      parameter_name = value_or_reference.full_name
       task_names = [task_name for param_name, task_name in potential_references if param_name == parameter_name]
       if task_names:
         task_name = task_names[0]

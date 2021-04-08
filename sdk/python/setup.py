@@ -54,7 +54,7 @@ development stage. Contributions are welcome: {}
 # NOTICE, after any updates to the following, ./requirements.in should be updated
 # accordingly.
 REQUIRES = [
-    'kfp==1.5.0'
+    "kfp @ git+https://github.com/kubeflow/pipelines.git@1.5.0-rc.2#egg=kfp&subdirectory=sdk/python",
 ]
 
 TESTS_REQUIRE = [
