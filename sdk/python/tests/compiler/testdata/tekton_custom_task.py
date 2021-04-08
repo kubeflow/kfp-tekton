@@ -43,7 +43,8 @@ def print_op(msg):
 )
 def custom_task_pipeline():
     flip = flip_coin_op()
-    cel_condition = CEL_ConditionOp("'%s' == 'heads'" % flip.output)
+    flip2 = flip_coin_op()
+    cel_condition = CEL_ConditionOp("'%s' == '%s'" % (flip.output, flip2.output))
     print_op('Condition output is %s' % cel_condition.output)
 
 
