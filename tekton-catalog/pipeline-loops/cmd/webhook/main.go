@@ -23,7 +23,7 @@ import (
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	defaultconfig "github.com/tektoncd/pipeline/pkg/apis/config"
 	"github.com/tektoncd/pipeline/pkg/contexts"
-	"github.com/tektoncd/pipeline/pkg/system"
+	"knative.dev/pkg/system"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -111,7 +111,7 @@ func main() {
 	}
 
 	// Scope informers to the webhook's namespace instead of cluster-wide
-	ctx := injection.WithNamespaceScope(signals.NewContext(), system.GetNamespace())
+	ctx := injection.WithNamespaceScope(signals.NewContext(), system.Namespace())
 
 	// Set up a signal context with our webhook options
 	ctx = webhook.WithOptions(ctx, webhook.Options{

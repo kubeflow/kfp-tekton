@@ -82,10 +82,14 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	var merr error
 	logger := logging.FromContext(ctx)
 	logger.Infof("Reconciling Run %s/%s at %v", run.Namespace, run.Name, time.Now())
-
+	isBothRefOrSpec := run.Spec.Ref != nil && run.Spec.Spec != nil
+	if isBothRefOrSpec {
+		logger.Errorf("Run %s/%s can either refer an existing PipelineLoop custom CRD or provide it's spec and not both.", run.Namespace, run.Name)
+		return nil
+	}
 	// Check that the Run references a PipelineLoop CRD.  The logic is controller.go should ensure that only this type of Run
 	// is reconciled this controller but it never hurts to do some bullet-proofing.
-	if run.Spec.Ref == nil ||
+	if !isBothRefOrSpec ||
 		run.Spec.Ref.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
 		run.Spec.Ref.Kind != pipelineloop.PipelineLoopControllerName {
 		logger.Errorf("Received control for a Run %s/%s that does not reference a PipelineLoop custom CRD", run.Namespace, run.Name)
@@ -304,6 +308,32 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 		}
 		pipelineLoopMeta = tl.ObjectMeta
 		pipelineLoopSpec = tl.Spec
+	} else if run.Spec.Spec != nil {
+		err := json.Unmarshal(run.Spec.Spec.Spec.Raw, &pipelineLoopSpec)
+		if err != nil {
+			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
+				"Error unmarshal PipelineLoop spec for Run %s/%s: %s",
+				run.Namespace, run.Name, err)
+			return nil, nil, fmt.Errorf("Error unmarshal PipelineLoop spec for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
+		}
+		fmt.Errorf("PipelineLoopSpec unmarshalled as: %v", pipelineLoopSpec)
+		pipelineloopObject := &pipelineloopv1alpha1.PipelineLoop{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       run.Spec.Spec.Kind,
+				APIVersion: run.Spec.Spec.APIVersion,
+			},
+			Spec: pipelineLoopSpec,
+		}
+		tl, err2 := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(run.Namespace).Create(ctx, pipelineloopObject, metav1.CreateOptions{})
+		if err2 != nil {
+			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
+				"Error creating PipelineLoop for Run %s/%s: %s",
+				run.Namespace, run.Name, err2)
+			return nil, nil, fmt.Errorf("Error creating PipelineLoop for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err2)
+		}
+		pipelineLoopMeta = tl.ObjectMeta
+		pipelineLoopSpec = tl.Spec
+		fmt.Errorf("PipelineLoopSpec after creation: %v", pipelineLoopSpec)
 	} else {
 		// Run does not require name but for PipelineLoop it does.
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
