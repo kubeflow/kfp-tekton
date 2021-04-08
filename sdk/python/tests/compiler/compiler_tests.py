@@ -130,6 +130,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.withitem_nested import pipeline
     self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
 
+  def test_withitem_multi_nested_workflow(self):
+    """
+    Test compiling a withitem multi nested in workflow.
+    """
+    from .testdata.withitem_multi_nested import pipeline
+    self._test_pipeline_workflow(pipeline, 'withitem_multi_nested.yaml')
+
   def test_conditions_and_loops_workflow(self):
     """
     Test compiling a conditions and loops in workflow.
@@ -140,6 +147,31 @@ class TestTektonCompiler(unittest.TestCase):
       'conditions_and_loops.yaml',
       normalize_compiler_output_function=lambda f: re.sub(
           "(loop-item-param-[a-z 0-9]*|for-loop-for-loop-[a-z 0-9]*)", "with-item-name", f))
+
+  def test_recursion_while_workflow(self):
+    """
+    Test recursion while workflow.
+    """
+    from .testdata.recursion_while import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'recursion_while.yaml')
+
+  def test_tekton_custom_task_workflow(self):
+    """
+    Test Tekton custom task workflow.
+    """
+    from .testdata.tekton_custom_task import custom_task_pipeline
+    self._test_pipeline_workflow(custom_task_pipeline, 'tekton_custom_task.yaml')
+
+  def test_long_pipeline_name_workflow(self):
+    """
+    Test long pipeline name workflow.
+    """
+    # Skip this test for Python 3.6 because 3.6 generates the List[str] type in yaml with different type name.
+    if sys.version_info < (3, 7, 0):
+      logging.warning("Skipping long pipeline name workflow test for Python version < 3.7.0")
+    else:
+      from .testdata.long_pipeline_name import main_fn
+      self._test_pipeline_workflow(main_fn, 'long_pipeline_name.yaml')
 
   def test_withparam_global_workflow(self):
     """

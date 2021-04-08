@@ -42,7 +42,7 @@ import (
 	ktesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/apis"
-	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/configmap/informer"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -68,12 +68,6 @@ func requestCancel(run *v1alpha1.Run) *v1alpha1.Run {
 	runWithCancelStatus := run.DeepCopy()
 	runWithCancelStatus.Spec.Status = v1alpha1.RunSpecStatusCancelled
 	return runWithCancelStatus
-}
-
-func allowRetry(tl *pipelineloopv1alpha1.PipelineLoop) *pipelineloopv1alpha1.PipelineLoop {
-	pipelineLoopWithRetries := tl.DeepCopy()
-	pipelineLoopWithRetries.Spec.Retries = 1
-	return pipelineLoopWithRetries
 }
 
 func running(tr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
@@ -138,7 +132,7 @@ func getPipelineLoopController(t *testing.T, d test.Data, pipelineloops []*pipel
 		}
 	}
 
-	configMapWatcher := configmap.NewInformedWatcher(c.Kube, system.GetNamespace())
+	configMapWatcher := informer.NewInformedWatcher(c.Kube, system.GetNamespace())
 	ctl := NewController(namespace)(ctx, configMapWatcher)
 
 	if la, ok := ctl.Reconciler.(reconciler.LeaderAware); ok {
@@ -1054,7 +1048,7 @@ func TestReconcilePipelineLoopRunFailures(t *testing.T) {
 		reason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
 		wantEvents: []string{
 			"Normal Started ",
-			`Warning Failed Cannot determine number of iterations: The value of the iterate parameter "current-item" is not an array`,
+			`Warning Failed Cannot determine number of iterations: The value of the iterate parameter "current-item" can not transfer to array`,
 		},
 	}}
 
