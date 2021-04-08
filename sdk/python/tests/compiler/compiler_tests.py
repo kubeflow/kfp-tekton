@@ -77,6 +77,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.condition import flipcoin
     self._test_pipeline_workflow(flipcoin, 'condition.yaml')
 
+  def test_condition_custom_task_workflow(self):
+    """
+    Test compiling a conditional workflow with custom task
+    """
+    from .testdata.condition_custom_task import flipcoin_pipeline
+    self._test_pipeline_workflow(flipcoin_pipeline, 'condition_custom_task.yaml')
+
   def test_condition_dependency(self):
     """
     Test dependency on Tekton conditional task.

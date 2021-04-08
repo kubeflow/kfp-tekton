@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ def print_op(msg):
 
 @dsl.pipeline(
     name='Conditional execution pipeline',
-    description='Shows how to use dsl.Condition() and task dependencies on multiple condition branches.'
+    description='Shows how to use dsl.Condition().'
 )
 def flipcoin_pipeline():
     flip = flip_coin_op()
@@ -70,13 +70,9 @@ def flipcoin_pipeline():
             inner_task = print_op('tails and %s > 15!' % random_num_tail.output)
         with dsl.Condition(cel_condition_3.output != 'true'):
             print_op('tails and %s <= 15!' % random_num_tail.output)
-    random_num_head2 = random_num_op(0, 9).after(random_num_head, random_num_tail, inner_task)
 
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    import kfp_tekton
-    pipeline_conf = kfp_tekton.compiler.pipeline_utils.TektonPipelineConf()
-    pipeline_conf.add_pipeline_label('pipelines.kubeflow.org/cache_enabled', 'false')
-    TektonCompiler().compile(flipcoin_pipeline, __file__.replace('.py', '.yaml'), tekton_pipeline_conf=pipeline_conf)
+    TektonCompiler().compile(flipcoin_pipeline, __file__.replace('.py', '.yaml'))
 
