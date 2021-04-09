@@ -25,6 +25,8 @@ E2E_MANIFEST="${E2E_MANIFEST:=examples/loop-example-basic.yaml}"
 pushd $BUILD_DIR > /dev/null
 
 # Note - Copy secret to tekton-pipelines namespace prior to this step: "kubectl get secret all-icr-io -n default -o yaml | sed "s/default/${NAMESPACE}/g” | kubectl apply -f -"
+# ignore the error if the secret already exists
+kubectl get secret all-icr-io -n default -o yaml | sed "s/default/tekton-pipelines/g" | kubectl apply -f - || true
 
 kubectl apply -f config
 

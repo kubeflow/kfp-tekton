@@ -204,6 +204,7 @@ spec:
             set -euxo pipefail
             cd $(params.directory-name)
             source scripts/deploy/iks/tekton-catalog/deploy-pipeline-loops-e2e.sh
+            APP_URL="null"
         - name: pipeline-debug
           value: $(params.pipeline-debug)
       workspaces:
@@ -313,6 +314,7 @@ spec:
             export NEW_IMAGE_URL="$(tasks.containerize-any-sequencer.results.image-repository)"
             export NEW_IMAGE_TAG=$(tasks.containerize-any-sequencer.results.image-tags)
             source scripts/deploy/iks/tekton-catalog/deploy-any-sequencer-e2e.sh
+            APP_URL="null"
         - name: pipeline-debug
           value: $(params.pipeline-debug)
       workspaces:
@@ -435,6 +437,7 @@ spec:
             set -euxo pipefail
             cd $(params.directory-name)
             source scripts/deploy/iks/tekton-catalog/deploy-kubectl-wrapper-e2e.sh
+            APP_URL="null"
         - name: pipeline-debug
           value: $(params.pipeline-debug)
       workspaces:
