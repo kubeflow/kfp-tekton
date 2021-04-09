@@ -8,7 +8,6 @@ existing cluster.
 
 To install Kubeflow Pipelines, you have several options.
 
-- Via [GCP AI Platform UI](http://console.cloud.google.com/ai-platform/pipelines).
 - Via an upcoming commandline tool.
 - Via Kubectl with Kustomize, it's detailed here.
 
@@ -66,6 +65,22 @@ Please following [AWS Instructions](env/aws/README.md) for installation.
 
 Note: Community maintains a repo [e2fyi/kubeflow-aws](https://github.com/e2fyi/kubeflow-aws/tree/master/pipelines) for AWS.
 
+#### Option-5 Install it to IBM Cloud with in-cluster PersistentVolumeClaim storage
+
+It's based on in-cluster PersistentVolumeClaim storage.
+Additionally, it uses the ibm cloud NFS storage with UID support to make sure all pods can run as non-root users.
+
+Please follow the [IKS group ID storage setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#ibm-cloud-group-id-storage-setup)
+before running the below commands.
+
+```bash
+kubectl apply -k cluster-scoped-resources/
+kubectl wait crd/applications.app.k8s.io --for condition=established --timeout=60s
+kubectl apply -k env/platform-agnostic/
+kubectl wait pods -l application-crd-id=kubeflow-pipelines -n kubeflow --for condition=Ready --timeout=1800s
+kubectl port-forward -n kubeflow svc/ml-pipeline-ui 8080:80
+```
+
 ## Uninstall
 
 If the installation is based on CloudSQL/GCS, after the uninstall, the data is still there,
@@ -74,7 +89,7 @@ reinstall a newer version can reuse the data.
 ```bash
 ### 1. namespace scoped
 # Depends on how you installed it:
-kubectl kustomize env/platform-agnostic | kubectl delete -f -
+kubectl kustomize env/platform-agnostic/ | kubectl delete -f -
 # or
 kubectl kustomize env/dev | kubectl delete -f -
 # or
