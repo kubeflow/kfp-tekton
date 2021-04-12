@@ -19,7 +19,7 @@ replace (
 	contrib.go.opencensus.io/exporter/stackdriver => contrib.go.opencensus.io/exporter/stackdriver v0.12.9-0.20191108183826-59d068f8d8ff
 	github.com/Azure/azure-sdk-for-go => github.com/Azure/azure-sdk-for-go v38.2.0+incompatible
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.4.0+incompatible
-	github.com/tektoncd/pipeline => github.com/scrapcodes/pipeline v0.23.1-0.20210412093331-175da6fe56ac
+	github.com/tektoncd/pipeline => github.com/scrapcodes/pipeline v0.23.1-0.20210419124732-3f2ca540366f
 )
 
 // Pin k8s deps to v0.18.8
