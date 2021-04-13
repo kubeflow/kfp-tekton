@@ -30,6 +30,10 @@ spec:
       default: iamapikey
     - name: docker-password
       description: iam api key
+    - name: dockerhub-username
+      description: username for docker hub
+    - name: dockerhub-password
+      description: dockerhub password/token
     - name: tekton-version
       description: tekton version
     - name: tekton-ns
@@ -46,6 +50,15 @@ spec:
     - name: slack-channel
       description: slack channel
       default: ""
+    - name: publish-to-dockerhub
+      description: publish images to dockerhub
+      default: "0"
+    - name: image-tag
+      description: image tag
+      default: "nightly"
+    - name: dockerhub-namespace
+      description: dockerhub namespace
+      default: aipipeline
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -86,6 +99,10 @@ spec:
           value: $(params.docker-username)
         - name: docker-password
           value: $(params.docker-password)
+        - name: dockerhub-username
+          value: $(params.dockerhub-username)
+        - name: dockerhub-password
+          value: $(params.dockerhub-password)
         - name: resource-group
           value: $(params.resource-group)
         - name: org
@@ -104,6 +121,12 @@ spec:
           value: $(params.slack-webhook)
         - name: slack-channel
           value: $(params.slack-channel)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: dockerhub-namespace
+          value: $(params.dockerhub-namespace)
+        - name: publish-to-dockerhub
+          value: $(params.publish-to-dockerhub)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: TriggerBinding

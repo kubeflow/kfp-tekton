@@ -45,6 +45,7 @@ ORG=${ORG:-"dev-advo"}
 SPACE=${SPACE:-"dev"}
 IMAGE_TAG="${BUILD_NUMBER}-${GIT_COMMIT_SHORT}"
 RUN_TASK=${RUN_TASK:-"artifact"}
+BUILD_ARG_LIST=${BUILD_ARG_LIST:-""}
 
 retry() {
   local max=$1; shift
@@ -80,6 +81,7 @@ print_env_vars() {
   echo "ORG=${ORG}"
   echo "SPACE=${SPACE}"
   echo "RESOURCE_GROUP=${RESOURCE_GROUP}"
+  echo "BUILD_ARG_LIST=${BUILD_ARG_LIST}"
 
   # View build properties
   if [ -f build.properties ]; then
@@ -168,19 +170,12 @@ build_image() {
   echo -e "BUILDING CONTAINER IMAGE: ${IMAGE_NAME}:${IMAGE_TAG}"
   if [ -z "${DOCKER_ROOT}" ]; then DOCKER_ROOT=. ; fi
   if [ -z "${DOCKER_FILE}" ]; then DOCKER_FILE=Dockerfile ; fi
-  if [ -z "$EXTRA_BUILD_ARGS" ]; then
-    echo -e ""
-  else
-    for buildArg in $EXTRA_BUILD_ARGS; do
-      if [ "$buildArg" == "--build-arg" ]; then
-        echo -e ""
-      else
-        BUILD_ARGS="${BUILD_ARGS} --opt build-arg:$buildArg"
-      fi
-    done
-  fi
+  BUILD_ARGS=()
+  for buildArg in $BUILD_ARG_LIST; do
+    BUILD_ARGS+=("--build-arg" "$buildArg")
+  done
 
-  ibmcloud cr build -f "${DOCKER_FILE}" --tag "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" "${DOCKER_ROOT}"
+  ibmcloud cr build "${BUILD_ARGS[@]}" -f "${DOCKER_FILE}" --tag "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" "${DOCKER_ROOT}"
   ibmcloud cr image-inspect "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
   ibmcloud cr images --restrict "${REGISTRY_NAMESPACE}/${IMAGE_NAME}"
 }

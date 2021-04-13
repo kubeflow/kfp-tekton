@@ -20,6 +20,10 @@ spec:
       default: iamapikey
     - name: docker-password
       description: iam api key
+    - name: dockerhub-username
+      description: dockerhub username
+    - name: dockerhub-password
+      description: dockerhub password/token
     - name: resource-group
       description: resource group
       default: default
@@ -45,6 +49,15 @@ spec:
     - name: slack-channel
       description: slack channel
       default: ""
+    - name: publish-to-dockerhub
+      description: publish images to dockerhub
+      default: "0"
+    - name: image-tag
+      description: image tag
+      default: "nightly"
+    - name: dockerhub-namespace
+      description: dockerhub namespace
+      default: aipipeline
   workspaces:
   - name: pipeline-pvc
   tasks:
@@ -214,6 +227,61 @@ spec:
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
+    - name: build-images-cacheserver
+      retries: 1
+      taskRef:
+        name: build-images
+      runAfter:
+        - test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: cache-server
+        - name: docker-root
+          value: .
+        - name: docker-file
+          value: backend/Dockerfile.cacheserver
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-images-frontend
+      taskRef:
+        name: build-images-args
+      runAfter:
+        - test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: frontend
+        - name: docker-root
+          value: .
+        - name: docker-file
+          value: frontend/Dockerfile
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
     - name: deploy
       taskRef:
         name: deploy
@@ -222,6 +290,8 @@ spec:
         - build-images-persistenceagent
         - build-images-metadata-writer
         - build-images-scheduledworkflow
+        - build-images-cacheserver
+        - build-images-frontend
       params:
         - name: apikey
           value: $(params.apikey)
@@ -259,11 +329,49 @@ spec:
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
+    - name: publish-images
+      taskRef:
+        name: publish-images
+      runAfter:
+        - e2e-test
+      when:
+        - input: $(params.publish-to-dockerhub)
+          operator: in
+          values:
+            - '1'
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: $(params.docker-username)
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: dockerhub-username
+          value: $(params.dockerhub-username)
+        - name: dockerhub-password
+          value: $(params.dockerhub-password)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: dockerhub-namespace
+          value: $(params.dockerhub-namespace)
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
   finally:
     - name: undeploy
       taskRef:
         name: undeploy
       params:
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
         - name: apikey
           value: $(params.apikey)
         - name: kubeflow-ns
