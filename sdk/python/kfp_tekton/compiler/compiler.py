@@ -48,6 +48,8 @@ DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
 TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
+# DISABLE_CEL_CONDITION should be True until CEL is officially merged into Tekton main API.
+DISABLE_CEL_CONDITION = True
 
 
 def _get_super_condition_template():
@@ -81,6 +83,16 @@ def _get_super_condition_template():
       'script': 'python -c ' + python_script + "'$(inputs.params.operand1)' '$(inputs.params.operand2)'",
       'image': 'python:alpine3.6',
     }]
+  }
+
+  return template
+
+
+def _get_cel_condition_template():
+  template = {
+    "name": "cel_condition",
+    "apiVersion": "cel.tekton.dev/v1alpha1",
+    "kind": "CEL"
   }
 
   return template
@@ -186,9 +198,11 @@ class TektonCompiler(Compiler):
       operand2_value = self._resolve_value_or_reference(condition.operand2, subgroup_inputs)
       template['kind'] = 'Condition'
       template['spec']['params'] = [
-        {'name': 'operand1', 'value': operand1_value},
-        {'name': 'operand2', 'value': operand2_value},
-        {'name': 'operator', 'value': str(condition.operator)}
+        {'name': 'operand1', 'value': operand1_value, 'type': type(condition.operand1),
+        'op_name': getattr(condition.operand1, 'op_name', ''), 'output_name': getattr(condition.operand1, 'name', '')},
+        {'name': 'operand2', 'value': operand2_value, 'type': type(condition.operand2),
+        'op_name': getattr(condition.operand2, 'op_name', ''), 'output_name': getattr(condition.operand2, 'name', '')},
+        {'name': 'operator', 'value': str(condition.operator), 'type': type(condition.operator)}
       ]
 
     # dsl does not expose Graph so here use sub_group.type to check whether it's graph
@@ -504,26 +518,66 @@ class TektonCompiler(Compiler):
 
     task_refs = []
     templates = []
+    cel_conditions = {}
+    condition_when_refs = {}
     condition_task_refs = {}
+    string_condition_refs = {}
     for template in raw_templates:
       if template['kind'] == 'Condition':
-        condition_task_ref = [{
-            'name': template['metadata']['name'],
-            'params': [{
-                'name': p['name'],
-                'value': p.get('value', '')
-              } for p in template['spec'].get('params', [])
-            ],
-            'taskSpec': _get_super_condition_template(),
-        }]
-        condition_refs[template['metadata']['name']] = [
-            {
-              'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
-              'operator': 'in',
-              'values': ['true']
-            }
-          ]
-        condition_task_refs[template['metadata']['name']] = condition_task_ref
+        if DISABLE_CEL_CONDITION:
+          condition_task_spec = _get_super_condition_template()
+        else:
+          condition_task_spec = _get_cel_condition_template()
+
+        condition_params = template['spec'].get('params', [])
+        if condition_params:
+          condition_task_ref = [{
+              'name': template['metadata']['name'],
+              'params': [{
+                  'name': p['name'],
+                  'value': p.get('value', '')
+                } for p in template['spec'].get('params', [])
+              ],
+
+              'taskSpec' if DISABLE_CEL_CONDITION else 'taskRef': condition_task_spec
+          }]
+          condition_refs[template['metadata']['name']] = [
+              {
+                'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
+                'operator': 'in',
+                'values': ['true']
+              }
+            ]
+          # Don't use additional task if it's only doing literal string == and !=
+          # with CEL custom task output.
+          condition_operator = condition_params[2]
+          condition_operand1 = condition_params[0]
+          condition_operand2 = condition_params[1]
+          conditionOp_mapping = {"==": "in", "!=": "notin"}
+          if condition_operator.get('value', '') in conditionOp_mapping.keys():
+            # Check whether the operand is an output from custom task
+            # If so, don't create a new task to verify the condition.
+            def is_custom_task_output(operand) -> bool:
+              if operand['type'] == dsl.PipelineParam:
+                for template in raw_templates:
+                  if operand['op_name'] == template['metadata']['name']:
+                    for step in template['spec']['steps']:
+                      if step['name'] == 'main' and step['image'] in TEKTON_CUSTOM_TASK_IMAGES:
+                        return True
+              return False
+            if is_custom_task_output(condition_operand1) or is_custom_task_output(condition_operand2):
+              map_cel_vars = lambda a: '$(tasks.%s.results.%s)' % (sanitize_k8s_name(a['value'].split('.')[-1]),
+                sanitize_k8s_name(a['output_name'])) if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
+              condition_refs[template['metadata']['name']] = [
+                  {
+                    'input': map_cel_vars(condition_operand1),
+                    'operator': conditionOp_mapping[condition_operator['value']],
+                    'values': [map_cel_vars(condition_operand2)]
+                  }
+                ]
+              string_condition_refs[template['metadata']['name']] = True
+          condition_task_refs[template['metadata']['name']] = condition_task_ref
+          condition_when_refs[template['metadata']['name']] = condition_refs[template['metadata']['name']]
       else:
         templates.append(template)
         task_ref = {
@@ -592,29 +646,35 @@ class TektonCompiler(Compiler):
         condition_task_ref = condition_task_refs[cur_opsgroup.name][0]
         condition = cur_opsgroup.condition
         input_params = []
-
-        # Process input parameters if needed
-        if isinstance(condition.operand1, dsl.PipelineParam):
-          if condition.operand1.op_name:
-            operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + sanitize_k8s_name(condition.operand1.name) + ')'
-          else:
-            operand_value = '$(params.' + condition.operand1.name + ')'
-          input_params.append(operand_value)
-        if isinstance(condition.operand2, dsl.PipelineParam):
-          if condition.operand2.op_name:
-            operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + sanitize_k8s_name(condition.operand2.name) + ')'
-          else:
-            operand_value = '$(params.' + condition.operand2.name + ')'
-          input_params.append(operand_value)
+        if not cel_conditions.get(condition_task_ref['name'], None):
+          # Process input parameters if needed
+          if isinstance(condition.operand1, dsl.PipelineParam):
+            if condition.operand1.op_name:
+              operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + sanitize_k8s_name(condition.operand1.name) + ')'
+            else:
+              operand_value = '$(params.' + condition.operand1.name + ')'
+            input_params.append(operand_value)
+          if isinstance(condition.operand2, dsl.PipelineParam):
+            if condition.operand2.op_name:
+              operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + sanitize_k8s_name(condition.operand2.name) + ')'
+            else:
+              operand_value = '$(params.' + condition.operand2.name + ')'
+            input_params.append(operand_value)
         for param_iter in range(len(input_params)):
           # Add ancestor conditions to the current condition ref
           if most_recent_condition:
-            condition_task_ref['when'] = [{
-                'input': '$(tasks.%s.results.status)' % most_recent_condition,
-                'operator': 'in',
-                'values': ['true']
-            }]
+            condition_task_ref['when'] = condition_when_refs[most_recent_condition]
           condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
+        if not DISABLE_CEL_CONDITION and not cel_conditions.get(condition_task_ref['name'], None):
+          # Type processing are done on the CEL controller since v1 SDK doesn't have value type for conditions.
+          # For v2 SDK, it would be better to process the condition value type in the backend compiler.
+          var1 = condition_task_ref['params'][0]['value']
+          var2 = condition_task_ref['params'][1]['value']
+          op = condition_task_ref['params'][2]['value']
+          condition_task_ref['params'] = [{
+                  'name': "status",
+                  'value': " ".join([var1, op, var2])
+                }]
         most_recent_condition = cur_opsgroup.name
       opsgroup_stack.extend(cur_opsgroup.groups)
       condition_stack.extend([most_recent_condition for x in range(len(cur_opsgroup.groups))])
@@ -715,7 +775,8 @@ class TektonCompiler(Compiler):
     condition_task_refs_temp = []
     for condition_task_ref in condition_task_refs.values():
       for ref in condition_task_ref:
-        condition_task_refs_temp.append(ref)
+        if not string_condition_refs.get(ref['name'], False):
+          condition_task_refs_temp.append(ref)
     condition_task_refs = condition_task_refs_temp
 
     pipeline_run = {
@@ -1001,7 +1062,6 @@ class TektonCompiler(Compiler):
     unsupported_vars = re.findall(r"{{[^ \t\n.:,;{}]+\.[^ \t\n:,;{}]+}}", yaml_text)
     if unsupported_vars:
       raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
-
     if '{{pipelineparam' in yaml_text:
       raise RuntimeError(
           'Internal compiler error: Found unresolved PipelineParam. '
