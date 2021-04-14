@@ -1,0 +1,9 @@
+Pipeline still running ...
+PipelineRun is still running: Tasks Completed: 1 (Failed: 0, Cancelled 0), Incomplete: 2, Skipped: 0
+
+[my-out-cop0 : copy-artifacts] Added `storage` successfully.
+[my-out-cop0 : copy-artifacts] tar: removing leading '/' from member names
+[my-out-cop0 : copy-artifacts] tekton/results/out
+[my-out-cop0 : copy-artifacts] `out.tgz` -> `storage/mlpipeline/artifacts/withparam-global-b89e2/my-out-cop0/out.tgz`
+[my-out-cop0 : copy-artifacts] Total: 0 B, Transferred: 136 B, Speed: 4.47 KiB/s
+

@@ -8,7 +8,7 @@ allow for rapid development, experimentation, and customization when
 visualizing results. For information about Python based visualizations and how
 to use them, please visit the [documentation page](https://www.kubeflow.org/docs/pipelines/sdk/python-based-visualizations).
 
-Please check the [developer guidelines](https://github.com/kubeflow/pipelines/blob/master/developer_guide.md)
+Please check the [developer guidelines](/guides/developer_guide.md)
 for additional development guidelines.
 
 ## Architecture
@@ -171,3 +171,8 @@ within your cluster.
 		grpc.WithInsecure(),
 	}
     ```
+
+## Update python dependencies
+1. Edit `requirements.in` with additional changes.
+1. Run `./update_requirements.sh` to re-resolve dependencies.
+1. Pinned dependencies are in `requirements.txt`.

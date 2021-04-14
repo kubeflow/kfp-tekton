@@ -38,6 +38,15 @@ func NewWorkflow(workflow *workflowapi.PipelineRun) *Workflow {
 	}
 }
 
+func (w *Workflow) GetWorkflowParametersAsMap() map[string]string {
+	resultAsArray := w.Spec.Params
+	resultAsMap := make(map[string]string)
+	for _, param := range resultAsArray {
+		resultAsMap[param.Name] = param.Value.StringVal
+	}
+	return resultAsMap
+}
+
 // SetServiceAccount Set the service account to run the workflow.
 func (w *Workflow) SetServiceAccount(serviceAccount string) {
 	w.Spec.ServiceAccountName = serviceAccount

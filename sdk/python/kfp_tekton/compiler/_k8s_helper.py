@@ -21,7 +21,7 @@ def sanitize_k8s_name(name,
                       allow_capital_underscore=False,
                       allow_dot=False,
                       allow_slash=False,
-                      max_length=63,
+                      max_length=57,
                       suffix_space=0):
     """From _make_kubernetes_name
       sanitize_k8s_name cleans and converts the names in the workflow.
@@ -36,7 +36,7 @@ def sanitize_k8s_name(name,
         in this name (i.e. for parameters)
       allow_dot: whether to allow dots in this name (i.e. for labels)
       allow_slash: whether to allow slash in this name (i.e. for label and annotation keys)
-      max_length: maximum length of K8s name, default: 63
+      max_length: maximum length of K8s name is 63, but KFP will append 6 chars as uuid. Default: 57
       suffix_space: number of characters reserved for a suffix to be appended
 
     Returns:
@@ -100,7 +100,7 @@ def convert_k8s_obj_to_json(k8s_obj):
       if isinstance(k8s_obj.value, str):
         return k8s_obj.value
       return '$(inputs.params.%s)' % k8s_obj.full_name  # change for Tekton
-    
+
     if isinstance(k8s_obj, dict):
       obj_dict = k8s_obj
     else:
@@ -115,3 +115,86 @@ def convert_k8s_obj_to_json(k8s_obj):
 
     return {key: convert_k8s_obj_to_json(val)
             for key, val in iteritems(obj_dict)}
+
+
+def _to_bool(b):
+    if type(b) == str:
+      b = b.lower()
+      if b != 'true' and b != 'false':
+        raise ValueError(
+          'Invalid boolean string {}. Should be "true" or "false".'.format(b))
+      else:
+        b = b == 'true'
+    elif type(b) != bool:
+      raise ValueError('Invalid value {}. Should be boolean.'.format(b))
+    return b
+
+
+def _to_int(i):
+    try:
+      result = int(i)
+    except ValueError:
+      raise ValueError('Invalid {}. Should be integer.'.format(i))
+    return result
+
+
+def _to_float(f):
+    try:
+      result = float(f)
+    except ValueError:
+      raise ValueError('Invalid {}. Should be float.'.format(f))
+    return result
+
+
+def sanitize_k8s_object(k8s_obj, type=None):
+    """
+    Recursively sanitize and cast k8s object type based on the type definition
+    in kubernetes.client.models.
+
+    Args:
+      k8s_obj: k8s object
+    """
+    from six import text_type, integer_types
+    PRIMITIVE_TYPES = (float, bool, bytes, text_type) + integer_types
+    from datetime import date, datetime
+
+    if k8s_obj is None:
+      return None
+    elif isinstance(k8s_obj, PRIMITIVE_TYPES):
+      if type == 'str':
+        return str(k8s_obj)
+      elif type == 'int':
+        return _to_int(k8s_obj)
+      elif type == 'float':
+        return _to_float(k8s_obj)
+      elif type == 'bool':
+        return _to_bool(k8s_obj)
+      else:
+        return k8s_obj
+    elif isinstance(k8s_obj, list):
+      if type == 'list[str]':
+        return [sanitize_k8s_object(sub_obj, 'str')
+                for sub_obj in k8s_obj]
+      else:
+        return [sanitize_k8s_object(sub_obj, None)
+                for sub_obj in k8s_obj]
+    elif isinstance(k8s_obj, tuple):
+      if type == 'list[str]':
+        return tuple(sanitize_k8s_object(sub_obj, 'str')
+                    for sub_obj in k8s_obj)
+      else:
+        return tuple(sanitize_k8s_object(sub_obj, None)
+                    for sub_obj in k8s_obj)
+    elif isinstance(k8s_obj, (datetime, date)):
+      return k8s_obj
+
+    if isinstance(k8s_obj, dict):
+      return k8s_obj
+    else:
+      for attr in k8s_obj.attribute_map:
+        if getattr(k8s_obj, attr) is not None:
+          type = k8s_obj.openapi_types[attr]
+          value = getattr(k8s_obj, attr)
+          value = sanitize_k8s_object(value, type)
+          setattr(k8s_obj, attr, value)
+      return k8s_obj

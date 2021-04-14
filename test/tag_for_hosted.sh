@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -ex
+
 # It's called in ".cloudbuild.yaml" for each commits to master
 # It's used for Hosted deployment testing but also can be reused for other usages.
 #
@@ -92,8 +94,14 @@ docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA:$SEM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA:$MM_VER
 
 # 3rd-party images
-docker tag gcr.io/tfx-oss-public/ml_metadata_store_server:0.21.1 gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/metadataserver:$SEM_VER
-docker tag gcr.io/tfx-oss-public/ml_metadata_store_server:0.21.1 gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/metadataserver:$MM_VER
+# ! Sync to the same MLMD version:
+# * backend/metadata_writer/requirements.in and requirements.txt
+# * @kubeflow/frontend/src/mlmd/generated
+# * .cloudbuild.yaml and .release.cloudbuild.yaml
+# * manifests/kustomize/base/metadata/base/metadata-grpc-deployment.yaml
+# * test/tag_for_hosted.sh
+docker tag gcr.io/tfx-oss-public/ml_metadata_store_server:0.25.1 gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/metadataserver:$SEM_VER
+docker tag gcr.io/tfx-oss-public/ml_metadata_store_server:0.25.1 gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/metadataserver:$MM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/metadataserver:$SEM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/metadataserver:$MM_VER
 
@@ -102,8 +110,8 @@ docker tag gcr.io/ml-pipeline/minio:RELEASE.2019-08-14T20-37-41Z-license-complia
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/minio:$SEM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/minio:$MM_VER
 
-docker tag gcr.io/ml-pipeline/mysql:5.6 gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/mysql:$SEM_VER
-docker tag gcr.io/ml-pipeline/mysql:5.6 gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/mysql:$MM_VER
+docker tag gcr.io/ml-pipeline/mysql:5.7 gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/mysql:$SEM_VER
+docker tag gcr.io/ml-pipeline/mysql:5.7 gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/mysql:$MM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/mysql:$SEM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/mysql:$MM_VER
 
@@ -112,12 +120,12 @@ docker tag gcr.io/cloudsql-docker/gce-proxy:1.14 gcr.io/$PROJECT_ID/hosted/$COMM
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/cloudsqlproxy:$SEM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/cloudsqlproxy:$MM_VER
 
-docker tag gcr.io/ml-pipeline/argoexec:v2.7.5-license-compliance gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoexecutor:$SEM_VER
-docker tag gcr.io/ml-pipeline/argoexec:v2.7.5-license-compliance gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoexecutor:$MM_VER
+docker tag gcr.io/ml-pipeline/argoexec:v2.12.9-license-compliance gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoexecutor:$SEM_VER
+docker tag gcr.io/ml-pipeline/argoexec:v2.12.9-license-compliance gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoexecutor:$MM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoexecutor:$SEM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoexecutor:$MM_VER
 
-docker tag gcr.io/ml-pipeline/workflow-controller:v2.7.5-license-compliance gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoworkflowcontroller:$SEM_VER
-docker tag gcr.io/ml-pipeline/workflow-controller:v2.7.5-license-compliance gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoworkflowcontroller:$MM_VER
+docker tag gcr.io/ml-pipeline/workflow-controller:v2.12.9-license-compliance gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoworkflowcontroller:$SEM_VER
+docker tag gcr.io/ml-pipeline/workflow-controller:v2.12.9-license-compliance gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoworkflowcontroller:$MM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoworkflowcontroller:$SEM_VER
 docker push gcr.io/$PROJECT_ID/hosted/$COMMIT_SHA/argoworkflowcontroller:$MM_VER

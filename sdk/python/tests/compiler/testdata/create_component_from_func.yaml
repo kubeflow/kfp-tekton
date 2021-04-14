@@ -1,0 +1,248 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "Create component from function"}'
+    sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"get-subdirectory": [["Subdir", "$(workspaces.get-subdirectory.path)/get-subdirectory-Subdir"]],
+      "list-items": [["Items", "$(results.items.path)"]], "list-items-2": [["Items",
+      "$(results.items.path)"]], "produce-dir-with-files-python-op": [["output_dir",
+      "$(workspaces.produce-dir-with-files-python-op.path)/produce-dir-with-files-python-op-output_dir"]]}'
+    tekton.dev/input_artifacts: '{"get-subdirectory": [{"name": "produce-dir-with-files-python-op-output_dir",
+      "parent_task": "produce-dir-with-files-python-op"}], "list-items": [{"name":
+      "get-subdirectory-Subdir", "parent_task": "get-subdirectory"}], "list-items-2":
+      [{"name": "get-subdirectory-Subdir", "parent_task": "get-subdirectory"}, {"name":
+      "produce-dir-with-files-python-op-output_dir", "parent_task": "produce-dir-with-files-python-op"}]}'
+    tekton.dev/output_artifacts: '{"get-subdirectory": [{"key": "artifacts/$PIPELINERUN/get-subdirectory/Subdir.tgz",
+      "name": "get-subdirectory-Subdir", "path": "/tmp/outputs/Subdir/data"}], "list-items":
+      [{"key": "artifacts/$PIPELINERUN/list-items/Items.tgz", "name": "list-items-Items",
+      "path": "/tmp/outputs/Items/data"}], "list-items-2": [{"key": "artifacts/$PIPELINERUN/list-items-2/Items.tgz",
+      "name": "list-items-2-Items", "path": "/tmp/outputs/Items/data"}], "produce-dir-with-files-python-op":
+      [{"key": "artifacts/$PIPELINERUN/produce-dir-with-files-python-op/output_dir.tgz",
+      "name": "produce-dir-with-files-python-op-output_dir", "path": "/tmp/outputs/output_dir/data"}]}'
+  name: create-component-from-function
+spec:
+  pipelineSpec:
+    tasks:
+    - name: produce-dir-with-files-python-op
+      taskSpec:
+        metadata:
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": [{"if": {"cond": {"isPresent": "num_files"}, "then": ["--num-files",
+              {"inputValue": "num_files"}]}}, "--output-dir", {"outputPath": "output_dir"}],
+              "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
+              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def _make_parent_dirs_and_return_path(file_path:
+              str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
+              file_path\n\ndef produce_dir_with_files_python_op(output_dir_path, num_files
+              = 10):\n    import os\n    os.makedirs(os.path.join(output_dir_path,
+              ''subdir''), exist_ok=True)\n    for i in range(num_files):\n        file_path
+              = os.path.join(output_dir_path, ''subdir'', str(i) + ''.txt'')\n        with
+              open(file_path, ''w'') as f:\n            f.write(str(i))\n\nimport
+              argparse\n_parser = argparse.ArgumentParser(prog=''Produce dir with
+              files python op'', description='''')\n_parser.add_argument(\"--num-files\",
+              dest=\"num_files\", type=int, required=False, default=argparse.SUPPRESS)\n_parser.add_argument(\"--output-dir\",
+              dest=\"output_dir_path\", type=_make_parent_dirs_and_return_path, required=True,
+              default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs
+              = produce_dir_with_files_python_op(**_parsed_args)\n"], "image": "python:3.7"}},
+              "inputs": [{"default": "10", "name": "num_files", "optional": true,
+              "type": "Integer"}], "name": "Produce dir with files python op", "outputs":
+              [{"name": "output_dir"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        steps:
+        - args:
+          - --num-files
+          - '15'
+          - --output-dir
+          - $(workspaces.produce-dir-with-files-python-op.path)/produce-dir-with-files-python-op-output_dir
+          command:
+          - sh
+          - -ec
+          - 'program_path=$(mktemp)
+
+            printf "%s" "$0" > "$program_path"
+
+            python3 -u "$program_path" "$@"
+
+            '
+          - "def _make_parent_dirs_and_return_path(file_path: str):\n    import os\n\
+            \    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return\
+            \ file_path\n\ndef produce_dir_with_files_python_op(output_dir_path, num_files\
+            \ = 10):\n    import os\n    os.makedirs(os.path.join(output_dir_path,\
+            \ 'subdir'), exist_ok=True)\n    for i in range(num_files):\n        file_path\
+            \ = os.path.join(output_dir_path, 'subdir', str(i) + '.txt')\n       \
+            \ with open(file_path, 'w') as f:\n            f.write(str(i))\n\nimport\
+            \ argparse\n_parser = argparse.ArgumentParser(prog='Produce dir with files\
+            \ python op', description='')\n_parser.add_argument(\"--num-files\", dest=\"\
+            num_files\", type=int, required=False, default=argparse.SUPPRESS)\n_parser.add_argument(\"\
+            --output-dir\", dest=\"output_dir_path\", type=_make_parent_dirs_and_return_path,\
+            \ required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\
+            \n_outputs = produce_dir_with_files_python_op(**_parsed_args)\n"
+          image: python:3.7
+          name: main
+        workspaces:
+        - name: produce-dir-with-files-python-op
+      timeout: 0s
+      workspaces:
+      - name: produce-dir-with-files-python-op
+        workspace: create-component-from-function
+    - name: get-subdirectory
+      runAfter:
+      - produce-dir-with-files-python-op
+      taskSpec:
+        metadata:
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Get subdirectory
+              from directory.", "implementation": {"container": {"command": ["sh",
+              "-ex", "-c", "mkdir -p \"$(dirname \"$2\")\"\ncp -r \"$0/$1\" \"$2\"\n",
+              {"inputPath": "Directory"}, {"inputValue": "Subpath"}, {"outputPath":
+              "Subdir"}], "image": "alpine"}}, "inputs": [{"name": "Directory", "type":
+              "Directory"}, {"name": "Subpath", "type": "String"}], "name": "Get subdirectory",
+              "outputs": [{"name": "Subdir", "type": "Directory"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        steps:
+        - command:
+          - sh
+          - -ex
+          - -c
+          - 'mkdir -p "$(dirname "$2")"
+
+            cp -r "$0/$1" "$2"
+
+            '
+          - $(workspaces.get-subdirectory.path)/produce-dir-with-files-python-op-output_dir
+          - subdir
+          - $(workspaces.get-subdirectory.path)/get-subdirectory-Subdir
+          image: alpine
+          name: main
+        workspaces:
+        - name: get-subdirectory
+      timeout: 0s
+      workspaces:
+      - name: get-subdirectory
+        workspace: create-component-from-function
+    - name: list-items
+      runAfter:
+      - get-subdirectory
+      taskSpec:
+        metadata:
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Recursively list
+              directory contents.", "implementation": {"container": {"command": ["sh",
+              "-ex", "-c", "mkdir -p \"$(dirname \"$1\")\"\n#ls --almost-all --recursive
+              \"$0\" > \"$1\"\nls -A -R \"$0\" > \"$1\"\n", {"inputPath": "Directory"},
+              {"outputPath": "Items"}], "image": "alpine"}}, "inputs": [{"name": "Directory",
+              "type": "Directory"}], "name": "List items", "outputs": [{"name": "Items"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        results:
+        - description: /tmp/outputs/Items/data
+          name: items
+        steps:
+        - command:
+          - sh
+          - -ex
+          - -c
+          - 'mkdir -p "$(dirname "$1")"
+
+            #ls --almost-all --recursive "$0" > "$1"
+
+            ls -A -R "$0" > "$1"
+
+            '
+          - $(workspaces.list-items.path)/get-subdirectory-Subdir
+          - $(results.items.path)
+          image: alpine
+          name: main
+        workspaces:
+        - name: list-items
+      timeout: 0s
+      workspaces:
+      - name: list-items
+        workspace: create-component-from-function
+    - name: list-items-2
+      runAfter:
+      - get-subdirectory
+      - produce-dir-with-files-python-op
+      taskSpec:
+        metadata:
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Recursively list
+              directory contents.", "implementation": {"container": {"command": ["sh",
+              "-ex", "-c", "mkdir -p \"$(dirname \"$2\")\"\nls -A -R \"$0\" > \"$2\"\nls
+              -A -R \"$1\" >> \"$2\"\n", {"inputPath": "Directory1"}, {"inputPath":
+              "Directory2"}, {"outputPath": "Items"}], "image": "alpine"}}, "inputs":
+              [{"name": "Directory1", "type": "Directory"}, {"name": "Directory2",
+              "type": "Directory"}], "name": "List items 2", "outputs": [{"name":
+              "Items"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        results:
+        - description: /tmp/outputs/Items/data
+          name: items
+        steps:
+        - command:
+          - sh
+          - -ex
+          - -c
+          - 'mkdir -p "$(dirname "$2")"
+
+            ls -A -R "$0" > "$2"
+
+            ls -A -R "$1" >> "$2"
+
+            '
+          - $(workspaces.list-items-2.path)/get-subdirectory-Subdir
+          - $(workspaces.list-items-2.path)/produce-dir-with-files-python-op-output_dir
+          - $(results.items.path)
+          image: alpine
+          name: main
+        workspaces:
+        - name: list-items-2
+      timeout: 0s
+      workspaces:
+      - name: list-items-2
+        workspace: create-component-from-function
+    workspaces:
+    - name: create-component-from-function
+  timeout: 0s
+  workspaces:
+  - name: create-component-from-function
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteMany
+        resources:
+          requests:
+            storage: 2Gi

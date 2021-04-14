@@ -37,6 +37,7 @@ type ClientManager struct {
 	db            *storage.DB
 	cacheStore    storage.ExecutionCacheStoreInterface
 	k8sCoreClient client.KubernetesCoreInterface
+	tektonClient  client.TektonInterface
 	time          util.TimeInterface
 }
 
@@ -48,18 +49,23 @@ func (c *ClientManager) KubernetesCoreClient() client.KubernetesCoreInterface {
 	return c.k8sCoreClient
 }
 
+func (c *ClientManager) TektonClient() client.TektonInterface {
+	return c.tektonClient
+}
+
 func (c *ClientManager) Close() {
 	c.db.Close()
 }
 
-func (c *ClientManager) init(params WhSvrDBParameters) {
+func (c *ClientManager) init(params WhSvrDBParameters, clientParams util.ClientParameters) {
 	timeoutDuration, _ := time.ParseDuration(DefaultConnectionTimeout)
 	db := initDBClient(params, timeoutDuration)
 
 	c.time = util.NewRealTime()
 	c.db = db
 	c.cacheStore = storage.NewExecutionCacheStore(db, c.time)
-	c.k8sCoreClient = client.CreateKubernetesCoreOrFatal(timeoutDuration)
+	c.k8sCoreClient = client.CreateKubernetesCoreOrFatal(timeoutDuration, clientParams)
+	c.tektonClient = client.CreateTektonClientOrFatal(timeoutDuration)
 }
 
 func initDBClient(params WhSvrDBParameters, initConnectionTimeout time.Duration) *storage.DB {
@@ -164,9 +170,9 @@ func initMysql(params WhSvrDBParameters, initConnectionTimeout time.Duration) st
 	return mysqlConfig.FormatDSN()
 }
 
-func NewClientManager(params WhSvrDBParameters) ClientManager {
+func NewClientManager(params WhSvrDBParameters, clientParams util.ClientParameters) ClientManager {
 	clientManager := ClientManager{}
-	clientManager.init(params)
+	clientManager.init(params, clientParams)
 
 	return clientManager
 }

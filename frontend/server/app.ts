@@ -34,6 +34,7 @@ import { getIndexHTMLHandler } from './handlers/index-html';
 
 import proxyMiddleware from './proxy-middleware';
 import { Server } from 'http';
+import { HACK_FIX_HPM_PARTIAL_RESPONSE_HEADERS } from './consts';
 
 function getRegisterHandler(app: Application, basePath: string) {
   return (
@@ -117,13 +118,37 @@ function createUIServer(options: UIConfigs) {
   /** Artifact */
   registerHandler(
     app.get,
-    '/artifacts/get',
+    '/artifacts/*',
     getArtifactsProxyHandler({
       enabled: options.artifacts.proxy.enabled,
       namespacedServiceGetter: getArtifactServiceGetter(options.artifacts.proxy),
     }),
   );
-  registerHandler(app.get, '/artifacts/get', getArtifactsHandler(options.artifacts));
+  // /artifacts/get endpoint tries to extract the artifact to return pure text content
+  registerHandler(
+    app.get,
+    '/artifacts/get',
+    getArtifactsHandler({
+      artifactsConfigs: options.artifacts,
+      useParameter: false,
+      tryExtract: true,
+    }),
+  );
+  // /artifacts/ endpoint downloads the artifact as is, it does not try to unzip or untar.
+  registerHandler(
+    app.get,
+    // The last * represents object key. Key could contain special characters like '/',
+    // so we cannot use `:key` as the placeholder.
+    // It is important to include the original object's key at the end of the url, because
+    // browser automatically determines file extension by the url. A wrong extension may affect
+    // whether the file can be opened by the correct application by default.
+    '/artifacts/:source/:bucket/*',
+    getArtifactsHandler({
+      artifactsConfigs: options.artifacts,
+      useParameter: true,
+      tryExtract: false,
+    }),
+  );
 
   /** Authorize function */
   const authorizeFn = getAuthorizeFn(options.auth, { apiServerAddress });
@@ -181,6 +206,7 @@ function createUIServer(options: UIConfigs) {
       onProxyReq: proxyReq => {
         console.log('Metadata proxied request: ', (proxyReq as any).path);
       },
+      headers: HACK_FIX_HPM_PARTIAL_RESPONSE_HEADERS,
       target: envoyServiceAddress,
     }),
   );
@@ -211,6 +237,7 @@ function createUIServer(options: UIConfigs) {
       onProxyReq: proxyReq => {
         console.log('Proxied request: ', proxyReq.path);
       },
+      headers: HACK_FIX_HPM_PARTIAL_RESPONSE_HEADERS,
       target: apiServerAddress,
     }),
   );
@@ -221,6 +248,7 @@ function createUIServer(options: UIConfigs) {
       onProxyReq: proxyReq => {
         console.log('Proxied request: ', proxyReq.path);
       },
+      headers: HACK_FIX_HPM_PARTIAL_RESPONSE_HEADERS,
       pathRewrite: pathStr =>
         pathStr.startsWith(basePath) ? pathStr.substr(basePath.length, pathStr.length) : pathStr,
       target: apiServerAddress,

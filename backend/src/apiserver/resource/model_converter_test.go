@@ -18,7 +18,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/go-cmp/cmp"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
@@ -146,56 +145,7 @@ func TestToModelRunMetric(t *testing.T) {
 	assert.Equal(t, expectedModelRunMetric, actualModelRunMetric)
 }
 
-func TestToModelRunDetail(t *testing.T) {
-	store, manager, experiment := initWithExperiment(t)
-	defer store.Close()
-
-	apiRun := &api.Run{
-		Id:          "run1",
-		Name:        "name1",
-		Description: "this is a run",
-		PipelineSpec: &api.PipelineSpec{
-			Parameters: []*api.Parameter{{Name: "param2", Value: "world"}},
-		},
-		ResourceReferences: []*api.ResourceReference{
-			{Key: &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID}, Relationship: api.Relationship_OWNER},
-		},
-	}
-	workflow := util.NewWorkflow(&v1alpha1.Workflow{
-		ObjectMeta: v1.ObjectMeta{Name: "workflow-name", UID: "123"},
-		Status:     v1alpha1.WorkflowStatus{Phase: "running"},
-	})
-	modelRunDetail, err := manager.ToModelRunDetail(apiRun, "123", workflow, "workflow spec")
-	assert.Nil(t, err)
-
-	expectedModelRunDetail := &model.RunDetail{
-		Run: model.Run{
-			UUID:           "123",
-			ExperimentUUID: experiment.UUID,
-			DisplayName:    "name1",
-			Name:           "workflow-name",
-			Conditions:     "running",
-			Description:    "this is a run",
-			PipelineSpec: model.PipelineSpec{
-				WorkflowSpecManifest: "workflow spec",
-				Parameters:           `[{"name":"param2","value":"world"}]`,
-			},
-			ResourceReferences: []*model.ResourceReference{
-				{
-					ResourceUUID:  "123",
-					ResourceType:  common.Run,
-					ReferenceUUID: experiment.UUID,
-					ReferenceName: experiment.Name,
-					ReferenceType: common.Experiment,
-					Relationship:  common.Owner},
-			},
-		},
-		PipelineRuntime: model.PipelineRuntime{
-			WorkflowRuntimeManifest: workflow.ToStringForStore(),
-		},
-	}
-	assert.Equal(t, expectedModelRunDetail, modelRunDetail)
-}
+// Remove argo spec test run "TestToModelRunDetail"
 
 func TestToModelJob(t *testing.T) {
 	store, manager, experiment, pipeline := initWithExperimentAndPipeline(t)

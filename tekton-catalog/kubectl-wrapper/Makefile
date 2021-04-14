@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BIN_DIR=_output/bin
+BIN_DIR ?= _output/bin
 
 # If tag not explicitly set in users default to the git sha.
 TAG ?= v0.1.0

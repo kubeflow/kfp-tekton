@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,6 +51,13 @@ spec:
       - name: url1
         value: $(params.url1)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: url1
         results:
@@ -66,11 +73,19 @@ spec:
           - -c
           image: google/cloud-sdk:279.0.0
           name: main
+      timeout: 0s
     - name: gcs-download-2
       params:
       - name: url2
         value: $(params.url2)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: url2
         results:
@@ -86,6 +101,7 @@ spec:
           - -c
           image: google/cloud-sdk:279.0.0
           name: main
+      timeout: 0s
     - name: echo
       params:
       - name: gcs-download-2-data
@@ -93,6 +109,13 @@ spec:
       - name: gcs-download-data
         value: $(tasks.gcs-download.results.data)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: gcs-download-2-data
         - name: gcs-download-data
@@ -106,3 +129,5 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
+  timeout: 0s

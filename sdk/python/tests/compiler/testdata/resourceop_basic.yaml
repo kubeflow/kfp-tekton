@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,6 +38,13 @@ spec:
       - name: set-ownerreference
         value: 'false'
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - description: Action on the resource
           name: action
@@ -89,3 +96,5 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
+  timeout: 0s

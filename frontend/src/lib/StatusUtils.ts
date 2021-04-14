@@ -46,16 +46,19 @@ export enum NodePhase {
   TASKRUNCOULDNTCANCEL = 'TaskRunCouldntCancel',
   TERMINATED = 'Terminated',
   UNKNOWN = 'Unknown',
+  OMITTED = 'Omitted',
 }
 
 export function hasFinished(status?: NodePhase): boolean {
   switch (status) {
+    case NodePhase.COMPLETED: // Fall through
     case NodePhase.SUCCEEDED: // Fall through
     case NodePhase.CACHED: // Fall through
     case NodePhase.FAILED: // Fall through
     case NodePhase.ERROR: // Fall through
     case NodePhase.SKIPPED: // Fall through
     case NodePhase.TERMINATED:
+    case NodePhase.OMITTED:
       return true;
     case NodePhase.PENDING: // Fall through
     case NodePhase.RUNNING: // Fall through
@@ -114,14 +117,13 @@ export function parseNodePhase(node: NodeStatus): NodePhase {
 
 function wasNodeCached(node: NodeStatus): boolean {
   const artifacts = node.outputs?.artifacts;
-  if (!artifacts || !node.id) {
-    return false;
-  }
   // HACK: There is a way to detect the skipped pods based on the WorkflowStatus alone.
   // All output artifacts have the pod name (same as node ID) in the URI. But for skipped
   // pods, the pod name does not match the URIs.
   // (And now there are always some output artifacts since we've enabled log archiving).
-  return artifacts.some(artifact => artifact.s3 && !artifact.s3.key.includes(node.id));
+  return !artifacts || !node.id || node.type !== 'Pod'
+    ? false
+    : artifacts.some(artifact => artifact.s3 && !artifact.s3.key.includes(node.id));
 }
 
 export function statusToPhase(nodeStatus: string | undefined): NodePhase {

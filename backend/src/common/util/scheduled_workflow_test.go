@@ -18,7 +18,6 @@ import (
 	"testing"
 	"time"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	"github.com/stretchr/testify/assert"
 	core "k8s.io/api/core/v1"
@@ -114,43 +113,4 @@ func TestScheduledWorkflow_ConditionSummary(t *testing.T) {
 	assert.Equal(t, "NO_STATUS", workflow.ConditionSummary())
 }
 
-func TestScheduledWorkflow_ParametersAsString(t *testing.T) {
-	// Base case
-	workflow := NewScheduledWorkflow(&swfapi.ScheduledWorkflow{
-		Spec: swfapi.ScheduledWorkflowSpec{
-			Workflow: &swfapi.WorkflowResource{
-				Parameters: []swfapi.Parameter{
-					{Name: "PARAM1", Value: "NEW_VALUE1"},
-					{Name: "PARAM2", Value: "NEW_VALUE2"},
-				},
-				Spec: workflowapi.WorkflowSpec{
-					ServiceAccountName: "SERVICE_ACCOUNT",
-					Arguments: workflowapi.Arguments{
-						Parameters: []workflowapi.Parameter{
-							{Name: "PARAM3", Value: StringPointer("VALUE3")},
-							{Name: "PARAM4", Value: StringPointer("VALUE4")},
-						},
-					},
-				},
-			},
-		},
-	})
-
-	result, err := workflow.ParametersAsString()
-	assert.Nil(t, err)
-
-	assert.Equal(t,
-		"[{\"name\":\"PARAM1\",\"value\":\"NEW_VALUE1\"},{\"name\":\"PARAM2\",\"value\":\"NEW_VALUE2\"}]",
-		result)
-
-	// No params
-	workflow = NewScheduledWorkflow(&swfapi.ScheduledWorkflow{
-		Spec: swfapi.ScheduledWorkflowSpec{},
-	})
-
-	result, err = workflow.ParametersAsString()
-	assert.Nil(t, err)
-
-	assert.Equal(t, "[]", result)
-
-}
+// Removed Argo spec test "TestScheduledWorkflow_ParametersAsString" since Tekton's ArrayorString may subject to change

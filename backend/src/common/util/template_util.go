@@ -16,46 +16,19 @@ package util
 
 import (
 	"encoding/json"
-	"os"
-	"strings"
 
-	// "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/ghodss/yaml"
 
 	tektonV1Beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 const (
-	argoVersion       = "argoproj.io/v1alpha1"
-	argoK8sResource   = "Workflow"
 	tektonVersion     = "tekton.dev/v1beta1"
 	tektonK8sResource = "PipelineRun"
 )
 
 func GetParameters(template []byte) (string, error) {
-	if strings.ToLower(os.Getenv("PIPELINE_RUNTIME")) != "argo" {
-		return GetTektonParameters(template)
-	}
-	return "nil", nil
-
-	// TODOs: create common interface type for both Argo and Tekton.
-	// Commented out Argo type to avoid workflow type conflicts.
-
-	// wf, err := ValidateWorkflow(template)
-	// if err != nil {
-	// 	return "", Wrap(err, "Failed to get parameters from the workflow")
-	// }
-	// if wf.Spec.Arguments.Parameters == nil {
-	// 	return "[]", nil
-	// }
-	// paramBytes, err := json.Marshal(wf.Spec.Arguments.Parameters)
-	// if err != nil {
-	// 	return "", NewInvalidInputErrorWithDetails(err, "Failed to marshal the parameter.")
-	// }
-	// if len(paramBytes) > MaxParameterBytes {
-	// 	return "", NewInvalidInputError("The input parameter length exceed maximum size of %v.", MaxParameterBytes)
-	// }
-	// return string(paramBytes), nil
+	return GetTektonParameters(template)
 }
 
 func GetTektonParameters(template []byte) (string, error) {
@@ -77,21 +50,6 @@ func GetTektonParameters(template []byte) (string, error) {
 	return string(paramBytes), nil
 }
 
-// func ValidateWorkflow(template []byte) (*v1alpha1.Workflow, error) {
-// 	var wf v1alpha1.Workflow
-// 	err := yaml.Unmarshal(template, &wf)
-// 	if err != nil {
-// 		return nil, NewInvalidInputErrorWithDetails(err, "Failed to parse the parameter.")
-// 	}
-// 	if wf.APIVersion != argoVersion {
-// 		return nil, NewInvalidInputError("Unsupported argo version. Expected: %v. Received: %v", argoVersion, wf.APIVersion)
-// 	}
-// 	if wf.Kind != argoK8sResource {
-// 		return nil, NewInvalidInputError("Unexpected resource type. Expected: %v. Received: %v", argoK8sResource, wf.Kind)
-// 	}
-// 	return &wf, nil
-// }
-
 func ValidatePipelineRun(template []byte) (*tektonV1Beta1.PipelineRun, error) {
 	var wf tektonV1Beta1.PipelineRun
 	err := yaml.Unmarshal(template, &wf)
@@ -99,7 +57,7 @@ func ValidatePipelineRun(template []byte) (*tektonV1Beta1.PipelineRun, error) {
 		return nil, NewInvalidInputErrorWithDetails(err, "Failed to parse the parameter.")
 	}
 	if wf.APIVersion != tektonVersion {
-		return nil, NewInvalidInputError("Unsupported argo version. Expected: %v. Received: %v", tektonVersion, wf.APIVersion)
+		return nil, NewInvalidInputError("Unsupported tekton version. Expected: %v. Received: %v", tektonVersion, wf.APIVersion)
 	}
 	if wf.Kind != tektonK8sResource {
 		return nil, NewInvalidInputError("Unexpected resource type. Expected: %v. Received: %v", tektonK8sResource, wf.Kind)

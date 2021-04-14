@@ -1,23 +1,15 @@
-# Hyperparameter tuning using Katib
+# Kubeflow Katib Component Samples
 
-[Katib](https://github.com/kubeflow/katib) is a Kubernetes-based system for Hyperparameter Tuning and Neural Architecture Search. This pipeline demonstrates how to use the Katib component to find the hyperparameter tuning results. 
+The sample demonstrate how to create a Kubeflow Pipeline using
+[Katib](https://github.com/kubeflow/katib).
+The source code for the Katib Pipeline component can be found
+[here](https://github.com/kubeflow/pipelines/blob/master/components/kubeflow/katib-launcher/src/launch_experiment.py).
 
-This pipeline uses the [MNIST dataset](http://yann.lecun.com/exdb/mnist/) to train the model and try to find the best hyperparameters using random search. Learning rate, number of convolutional layers, and the optimizer are the training parameters we want to search. Once the pipeline is completed, the ending step will print out the best hyperparameters in this pipeline experiment and clean up the workspace.
+Check the following examples:
 
-## Prerequisites 
-- Install [KFP Tekton prerequisites](/samples/README.md)
+- Run Pipeline from Jupyter Notebook using Katib Experiment with
+  [random search algorithm and early stopping](early-stopping.ipynb).
 
-## Instructions
+Please note that katib currently does not support k8s version 1.19.x,
+it is currently being worked on at https://github.com/kubeflow/katib/pull/1450.
 
-1. First, go to the Kubeflow dashboard and create a user namespace. The Kubeflow dashboard is the endpoint to your istio-ingressgateway. We will be using the namespace `anonymous` for this example.
-
-2. Compile the Katib pipeline. The kfp-tekton SDK will produce a Tekton pipeline yaml definition in the same directory called `katib.yaml`.
-```shell
-python katib.py
-```
-
-3. Next, upload the `katib.yaml` file to the Kubeflow pipeline dashboard with Tekton Backend to run this pipeline. This pipeline will run for 10 to 15 minutes.
-
-## Acknowledgements
-
-Thanks [Hougang Liu](https://github.com/hougangliu) for creating the original katib example.

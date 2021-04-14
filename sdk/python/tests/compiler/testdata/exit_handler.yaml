@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,6 +39,13 @@ spec:
     finally:
     - name: echo
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - echo "$0"
@@ -48,6 +55,7 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
     params:
     - default: gs://ml-pipeline-playground/shakespeare1.txt
       name: url
@@ -57,6 +65,13 @@ spec:
       - name: url
         value: $(params.url)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: url
         results:
@@ -72,11 +87,19 @@ spec:
           - -c
           image: google/cloud-sdk:279.0.0
           name: main
+      timeout: 0s
     - name: echo-2
       params:
       - name: gcs-download-data
         value: $(tasks.gcs-download.results.data)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: gcs-download-data
         steps:
@@ -88,3 +111,5 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
+  timeout: 0s

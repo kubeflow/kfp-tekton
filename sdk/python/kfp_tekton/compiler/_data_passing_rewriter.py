@@ -76,7 +76,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
     resource_templates = []
     for task in tasks:
         resource_params = [
-            param.get('name') for param in task["taskSpec"].get('params', [])
+            param.get('name') for param in task.get("taskSpec", {}).get('params', [])
             if param.get('name') == 'action'
             or param.get('name') == 'success-condition'
         ]
@@ -174,7 +174,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
     # Searching for artifact input consumers in container template inputs
     for template in container_templates:
         template_name = template['name']
-        for input_artifact in template['taskSpec'].get('artifacts', {}):
+        for input_artifact in template.get("taskSpec", {}).get('artifacts', {}):
             raw_data = input_artifact['raw'][
                 'data']  # The structure must exist
             # The raw data must be a single input parameter reference. Otherwise (e.g. it's a string
@@ -340,15 +340,16 @@ def fix_big_data_passing(workflow: dict) -> dict:
 
     # Remove pipeline task parameters unless they're used downstream
     for task in pipeline_tasks:
-        task['params'] = [
-            parameter_argument
-            for parameter_argument in task.get('params', [])
-            if (task['name'], parameter_argument['name']
-                ) in inputs_consumed_as_parameters and
-            (task['name'],
-             parameter_argument['name']) not in inputs_consumed_as_artifacts
-            or task['name'] in resource_template_names
-        ]
+        if 'condition-' not in task['name']:
+            task['params'] = [
+                parameter_argument
+                for parameter_argument in task.get('params', [])
+                if (task['name'], parameter_argument['name']
+                    ) in inputs_consumed_as_parameters and
+                (task['name'],
+                parameter_argument['name']) not in inputs_consumed_as_artifacts
+                or task['name'] in resource_template_names
+            ]
 
         # tekton results doesn't support underscore
         for argument in task['params']:
@@ -484,35 +485,36 @@ def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
             workspaces_parameter = '$(workspaces.%s.path)/%s-%s' % (
                 task_name, task_name, task_output.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
-                task['taskSpec'], placeholder, workspaces_parameter)
+                task.get("taskSpec", {}), placeholder, workspaces_parameter)
             pipelinerun_template['metadata']['annotations'] = replace_big_data_placeholder(
                 pipelinerun_template['metadata']['annotations'], placeholder, workspaces_parameter)
 
     # Remove artifacts outputs from results
-    task['taskSpec']['results'] = [
+    task.get("taskSpec", {})['results'] = [
         result for result in task_outputs
         if (task_name, result.get('name')) not in outputs_tasks
     ]
 
     # Data passing for task inputs
     task_spec = task.get('taskSpec', {})
-    task_parmas = task_spec.get('params', [])
+    task_params = task_spec.get('params', [])
     task_artifacts = task_spec.get('artifacts', [])
-    for task_parma in task_parmas:
-        if (task_name, task_parma.get('name')) in inputs_tasks:
+    for task_param in task_params:
+        if (task_name, task_param.get('name')) in inputs_tasks:
             if not task_spec.setdefault('workspaces', []):
                 task_spec['workspaces'].append({"name": task_name})
             # Replace the args for the inputs in the task_spec
             # /tmp/inputs/text/data ---->
-            # $(workspaces.task_name.path)/task_parma.get('name')
+            # $(workspaces.task_name.path)/task_param.get('name')
             placeholder = '/tmp/inputs/text/data'
             for task_artifact in task_artifacts:
-                if task_artifact.get('name') == task_parma.get('name'):
+                if task_artifact.get('name') == task_param.get('name'):
                     placeholder = task_artifact.get('path')
             workspaces_parameter = '$(workspaces.%s.path)/%s' % (
-                task_name, task_parma.get('name'))
+                task_name, task_param.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
                 task_spec, placeholder, workspaces_parameter)
+            task_spec = task.get('taskSpec', {})
     # Handle the case of input artifact without dependent the output of other tasks
     for task_artifact in task_artifacts:
         if (task_name, task_artifact.get('name')) not in inputs_tasks:
@@ -520,7 +522,7 @@ def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
             task = input_artifacts_tasks(task, task_artifact)
 
     # Remove artifacts parameter from params
-    task['taskSpec']['params'] = [
+    task.get("taskSpec", {})['params'] = [
         param for param in task_spec.get('params', [])
         if (task_name, param.get('name')) not in inputs_tasks
     ]
