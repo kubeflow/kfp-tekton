@@ -256,7 +256,7 @@ def _process_parameters(processed_op: BaseOp,
                 if mount_path not in mounted_param_paths:
                     _add_mount_path(name, path, mount_path, volume_mount_step_template, volume_template, mounted_param_paths)
             # Record what artifacts are moved to result parameters.
-            parameter_name = sanitize_k8s_name(processed_op.name + '-' + name, allow_capital_underscore=True)
+            parameter_name = sanitize_k8s_name(processed_op.name + '-' + name, allow_capital_underscore=True, max_length=float('Inf'))
             replaced_param_list.append(parameter_name)
             artifact_to_result_mapping[parameter_name] = name
         return copy_results_step
@@ -289,7 +289,7 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
     if outputs_dict.get('artifacts'):
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
-            parameter_name = sanitize_k8s_name(artifact['name'], allow_capital_underscore=True)
+            parameter_name = sanitize_k8s_name(artifact['name'], allow_capital_underscore=True, max_length=float('Inf'))
             artifact_name = artifact_to_result_mapping.get(parameter_name, parameter_name)
             if parameter_name in replaced_param_list:
                 artifact_items.append([artifact_name, "$(results.%s.path)" % sanitize_k8s_name(artifact_name)])
