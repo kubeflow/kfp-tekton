@@ -548,5 +548,9 @@ class TestTektonCompiler(unittest.TestCase):
           obj = yaml.safe_load(f)
         text = yaml.safe_dump(obj)
         self.assertNotRegex(text, "stepTemplate")
+        artifact_items = obj['metadata']['annotations']['tekton.dev/artifact_items']
+        items_for_op0 = list(json.loads(artifact_items).values())[0]
+        names_of_items_for_op0 = set([item[0] for item in items_for_op0])
+        self.assertSetEqual(names_of_items_for_op0, {"incr_i", "sq_i"})
     finally:
       shutil.rmtree(temp_dir)
