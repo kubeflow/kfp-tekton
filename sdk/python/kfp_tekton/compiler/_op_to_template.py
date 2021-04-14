@@ -289,8 +289,9 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
     if outputs_dict.get('artifacts'):
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
-            artifact_name = artifact_to_result_mapping.get(artifact['name'], artifact['name'])
-            if artifact['name'] in replaced_param_list:
+            parameter_name = sanitize_k8s_name(artifact['name'], allow_capital_underscore=True)
+            artifact_name = artifact_to_result_mapping.get(parameter_name, parameter_name)
+            if parameter_name in replaced_param_list:
                 artifact_items.append([artifact_name, "$(results.%s.path)" % sanitize_k8s_name(artifact_name)])
             else:
                 artifact_items.append([artifact_name, artifact['path']])
@@ -298,9 +299,9 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
                     if artifact['path'].rsplit("/", 1)[0] == "":
                         raise ValueError('Undefined volume path or "/" path artifacts are not allowed.')
                     volume_mount_step_template.append({
-                        'name': sanitize_k8s_name(artifact['name']), 'mountPath': artifact['path'].rsplit("/", 1)[0]
+                        'name': parameter_name, 'mountPath': artifact['path'].rsplit("/", 1)[0]
                     })
-                    volume_template.append({'name': sanitize_k8s_name(artifact['name']), 'emptyDir': {}})
+                    volume_template.append({'name': parameter_name, 'emptyDir': {}})
                     mounted_artifact_paths.append(artifact['path'].rsplit("/", 1)[0])
 
 
