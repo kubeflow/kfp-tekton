@@ -24,10 +24,10 @@ init:
 	mkdir -p ${BIN_DIR}
 
 local: init
-	go build -o=${BIN_DIR}/any-taskrun ./cmd
+	go build -o=${BIN_DIR}/any-taskrun
 
 build-linux: init
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/any-taskrun ./cmd
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/any-taskrun
 
 image: build-linux
 	docker build  . -t docker.io/dspipelines/any-sequencer:$(TAG)

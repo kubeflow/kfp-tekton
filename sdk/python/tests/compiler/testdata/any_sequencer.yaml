@@ -22,10 +22,11 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"any-test": [], "task1": [], "task2": [], "task3":
-      [], "task4": []}'
+    tekton.dev/artifact_items: '{"any-test": [], "flipcoin": [["output", "$(results.output.path)"]],
+      "task1": [], "task2": [], "task3": [], "task4": []}'
     tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
+    tekton.dev/output_artifacts: '{"flipcoin": [{"key": "artifacts/$PIPELINERUN/flipcoin/output.tgz",
+      "name": "flipcoin-output", "path": "/tmp/output"}]}'
   name: any-sequencer
 spec:
   pipelineSpec:
@@ -84,6 +85,30 @@ spec:
           image: registry.access.redhat.com/ubi8/ubi-minimal
           name: main
       timeout: 0s
+    - name: flipcoin
+      runAfter:
+      - task2
+      taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        results:
+        - description: /tmp/output
+          name: output
+        steps:
+        - args:
+          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
+            else 'tails'; print(result)" | tee $(results.output.path)
+          command:
+          - sh
+          - -c
+          image: python:alpine3.6
+          name: main
+      timeout: 0s
     - name: task4
       runAfter:
       - any-test
@@ -123,12 +148,14 @@ spec:
         - name: pipelineRun-namespace
         steps:
         - args:
-          - -namespace
+          - --namespace
           - $(params.pipelineRun-namespace)
-          - -prName
+          - --prName
           - $(params.pipelineRun-name)
-          - -taskList
+          - --taskList
           - task1,task2,task3
+          - -c
+          - results_flipcoin_output == 'heads'
           command:
           - any-taskrun
           image: dspipelines/any-sequencer:latest

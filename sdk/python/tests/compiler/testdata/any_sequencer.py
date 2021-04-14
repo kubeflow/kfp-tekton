@@ -17,6 +17,18 @@ from kfp_tekton.compiler import TektonCompiler
 from kfp_tekton.tekton import after_any
 
 
+def flip_coin_op():
+    """Flip a coin and output heads or tails randomly."""
+    return dsl.ContainerOp(
+        name='flipCoin',
+        image='python:alpine3.6',
+        command=['sh', '-c'],
+        arguments=['python -c "import random; result = \'heads\' if random.randint(0,1) == 0 '
+                'else \'tails\'; print(result)" | tee /tmp/output'],
+        file_outputs={'output': '/tmp/output'}
+    )
+
+
 @dsl.pipeline(
     name="Any Sequencer",
     description="Any Sequencer Component Demo",
@@ -44,12 +56,16 @@ def any_sequence_pipeline(
         arguments=["sleep 300"]
     )
 
+    flip_out = flip_coin_op()
+
+    flip_out.after(task2)
+
     task4 = dsl.ContainerOp(
         name="task4",
         image="registry.access.redhat.com/ubi8/ubi-minimal",
         command=["/bin/bash", "-c"],
         arguments=["sleep 30"]
-    ).apply(after_any([task1, task2, task3], "any_test"))
+    ).apply(after_any([task1, task2, task3, flip_out.outputs['output'] == "heads"], "any_test"))
 
 
 if __name__ == "__main__":
