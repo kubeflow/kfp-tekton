@@ -533,3 +533,24 @@ class TestTektonCompiler(unittest.TestCase):
                        msg="\n===[ " + golden_yaml_file.split(os.path.sep)[-1] + " ]===\n"
                            + json.dumps(compiled_workflow, indent=2))
 
+  def test_artifacts_of_ops_with_long_names(self):
+    """
+    Test compiling a pipeline with artifacts of ops with long names.
+
+    No step-templates should be generated for either case.
+    """
+    from .testdata import artifacts_of_ops_with_long_names as py_module
+    temp_dir = tempfile.mkdtemp()
+    try:
+      temp_files = py_module.main(temp_dir)
+      for temp_file in temp_files:
+        with open(temp_file, 'r') as f:
+          obj = yaml.safe_load(f)
+        text = yaml.safe_dump(obj)
+        self.assertNotRegex(text, "stepTemplate")
+        artifact_items = obj['metadata']['annotations']['tekton.dev/artifact_items']
+        items_for_op0 = list(json.loads(artifact_items).values())[0]
+        names_of_items_for_op0 = set([item[0] for item in items_for_op0])
+        self.assertSetEqual(names_of_items_for_op0, {"incr_i", "sq_i"})
+    finally:
+      shutil.rmtree(temp_dir)
