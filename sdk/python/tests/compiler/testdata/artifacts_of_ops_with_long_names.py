@@ -20,6 +20,7 @@ from typing import Optional, List
 from kfp import dsl
 from kfp.components import load_component_from_text
 
+
 def random_chars_of_len(length: int) -> str:
   return ''.join(
     (choice(ascii_lowercase) for i in range(length))
