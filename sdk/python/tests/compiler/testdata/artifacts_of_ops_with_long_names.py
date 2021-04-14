@@ -61,7 +61,9 @@ def pipeline_for_len(op_name_length: int, op_name_base: str = ''):
     op(i)
   return main_pipeline
 
+
 lengths = [20, 55, 80]
+
 
 def main(fdir: Optional[str] = None) -> List[str]:
   fpaths: List[str] = list()
@@ -80,6 +82,7 @@ def main(fdir: Optional[str] = None) -> List[str]:
     fpaths.append(fpath)
 
   return fpaths
+
 
 if __name__ == '__main__':
   main()
