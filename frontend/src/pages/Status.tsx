@@ -80,6 +80,11 @@ export function statusToIcon(
       iconColor = color.success;
       title = 'Executed successfully';
       break;
+    case NodePhase.EVALUATIONSUCCESS:
+      IconComponent = SuccessIcon;
+      iconColor = color.success;
+      title = 'Custom task executed successfully';
+      break;
     case NodePhase.CACHED: // This is not argo native, only applies to node.
       IconComponent = CachedIcon;
       iconColor = color.success;
