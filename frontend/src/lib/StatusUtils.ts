@@ -35,6 +35,7 @@ export enum NodePhase {
   SKIPPED = 'Skipped',
   SUCCEEDED = 'Succeeded',
   COMPLETED = 'Completed',
+  EVALUATIONSUCCESS = 'EvaluationSuccess',
   CACHED = 'Cached',
   TERMINATING = 'Terminating',
   PIPELINERUNTIMEOUT = 'PipelineRunTimeout',
@@ -53,6 +54,7 @@ export function hasFinished(status?: NodePhase): boolean {
   switch (status) {
     case NodePhase.COMPLETED: // Fall through
     case NodePhase.SUCCEEDED: // Fall through
+    case NodePhase.EVALUATIONSUCCESS: // Fall through
     case NodePhase.CACHED: // Fall through
     case NodePhase.FAILED: // Fall through
     case NodePhase.ERROR: // Fall through
@@ -84,6 +86,8 @@ export function statusToBgColor(status?: NodePhase, nodeMessage?: string): strin
     case NodePhase.RUNNING:
       return statusBgColors.running;
     case NodePhase.SUCCEEDED:
+      return statusBgColors.succeeded;
+    case NodePhase.EVALUATIONSUCCESS:
       return statusBgColors.succeeded;
     case NodePhase.CACHED:
       return statusBgColors.cached;
@@ -128,7 +132,8 @@ function wasNodeCached(node: NodeStatus): boolean {
 
 export function statusToPhase(nodeStatus: string | undefined): NodePhase {
   if (!nodeStatus) return 'Unknown' as NodePhase;
-  else if (nodeStatus === 'Completed') return 'Succeeded' as NodePhase;
+  else if (nodeStatus === 'Completed' || nodeStatus === 'EvaluationSuccess')
+    return 'Succeeded' as NodePhase;
   else if (nodeStatus === 'ConditionCheckFailed') return 'Skipped' as NodePhase;
   else if (nodeStatus === 'CouldntGetCondition') return 'Error' as NodePhase;
   else if (

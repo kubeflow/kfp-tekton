@@ -74,6 +74,9 @@ export function _populateInfoFromTask(info: SelectedNodeInfo, task?: any): Selec
     info.outputs = (task['taskSpec']['results'] || []).map((p: any) => {
       return [p['name'], p['description'] || ''];
     });
+  if (task['params']) {
+    info.inputs = (task['params'] || []).map((p: any) => [p['name'], p['value'] || '']);
+  }
 
   return info;
 }
@@ -156,10 +159,7 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
     }
 
     for (const param of task['params'] || []) {
-      if (
-        param['value'].substring(0, 8) === '$(tasks.' &&
-        param['value'].substring(param['value'].length - 1) === ')'
-      ) {
+      if (param['value'].indexOf('$(tasks.') !== -1 && param['value'].indexOf(')') !== -1) {
         const paramSplit = param['value'].split('.');
         const parentTask = paramSplit[1];
         graph.setEdge(parentTask, taskName);
@@ -181,7 +181,7 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
       bgColor: bgColor,
       height: Constants.NODE_HEIGHT,
       info,
-      label: parseTaskDisplayName(task['taskSpec']) || label,
+      label: parseTaskDisplayName(task['taskSpec'] || task['taskRef']) || label,
       width: Constants.NODE_WIDTH,
     });
   }
