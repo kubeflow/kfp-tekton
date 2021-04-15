@@ -71,7 +71,7 @@ export default class WorkflowParser {
 
     // Create a map from task name to status for every status received
     const statusMap = new Map<string, any>();
-    for (const taskRunId of Object.getOwnPropertyNames(status)) {
+    for (const taskRunId of Object.getOwnPropertyNames(status || {})) {
       status[taskRunId]['taskRunId'] = taskRunId;
       if (status[taskRunId]['status'])
         statusMap.set(status[taskRunId]['pipelineTaskName'], status[taskRunId]);
@@ -288,7 +288,7 @@ export default class WorkflowParser {
   }
 
   public static getTaskRunStatusFromPodName(workflow: any, podName: string) {
-    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
+    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns || {})) {
       const taskRun = workflow.status.taskRuns[taskRunId];
       if (taskRun.status && taskRun.status.podName === podName) {
         return taskRun;
@@ -310,7 +310,7 @@ export default class WorkflowParser {
       return { inputParams, outputParams };
     }
 
-    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
+    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns || {})) {
       const taskRun = workflow.status.taskRuns[taskRunId];
       if (taskRun.status && taskRun.status.podName === nodeId) {
         inputParams = taskRun.status.taskSpec.params
@@ -358,7 +358,7 @@ export default class WorkflowParser {
     // Get the task name that corresponds to the nodeId
     let taskName = '';
     let taskStatus: NodePhase = NodePhase.SUCCEEDED;
-    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
+    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns || {})) {
       const taskRun = workflow.status.taskRuns[taskRunId];
       if (taskRun.status && taskRun.status.podName === nodeId) {
         taskName = taskRun.pipelineTaskName;
@@ -436,7 +436,7 @@ export default class WorkflowParser {
     }
 
     // If the matching taskRun for nodeId can be found then return the volumes found in the main step
-    for (const task of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
+    for (const task of Object.getOwnPropertyNames(workflow.status.taskRuns || {})) {
       const taskRun = workflow.status.taskRuns[task];
       if (taskRun.status && taskRun.status.podName === nodeId) {
         const steps = workflow.status.taskRuns[task].status.taskSpec.steps;
