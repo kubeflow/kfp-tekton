@@ -159,10 +159,7 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
     }
 
     for (const param of task['params'] || []) {
-      if (
-        param['value'].indexOf('$(tasks.') !== -1 &&
-        param['value'].indexOf(')') !== -1
-      ) {
+      if (param['value'].indexOf('$(tasks.') !== -1 && param['value'].indexOf(')') !== -1) {
         const paramSplit = param['value'].split('.');
         const parentTask = paramSplit[1];
         graph.setEdge(parentTask, taskName);

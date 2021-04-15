@@ -132,7 +132,8 @@ function wasNodeCached(node: NodeStatus): boolean {
 
 export function statusToPhase(nodeStatus: string | undefined): NodePhase {
   if (!nodeStatus) return 'Unknown' as NodePhase;
-  else if (nodeStatus === 'Completed' || nodeStatus === 'EvaluationSuccess') return 'Succeeded' as NodePhase;
+  else if (nodeStatus === 'Completed' || nodeStatus === 'EvaluationSuccess')
+    return 'Succeeded' as NodePhase;
   else if (nodeStatus === 'ConditionCheckFailed') return 'Skipped' as NodePhase;
   else if (nodeStatus === 'CouldntGetCondition') return 'Error' as NodePhase;
   else if (

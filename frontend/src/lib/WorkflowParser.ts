@@ -60,7 +60,9 @@ export default class WorkflowParser {
       workflow['spec']['pipelineSpec']['finally'] || [],
     );
     const status = workflow['status']['taskRuns'];
-    const skippedTasks : string[] = (workflow['status']['skippedTasks'] || []).map((obj: any) => obj.name);
+    const skippedTasks: string[] = (workflow['status']['skippedTasks'] || []).map(
+      (obj: any) => obj.name,
+    );
     const pipelineParams = workflow['spec']['params'] || [];
     const exitHandlers =
       (workflow['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
@@ -76,10 +78,13 @@ export default class WorkflowParser {
     }
 
     // Add custom tasks to the status map
-    for (const taskRunId of Object.getOwnPropertyNames(workflow['status']['runs'])) {
+    for (const taskRunId of Object.getOwnPropertyNames(workflow['status']['runs'] || {})) {
       workflow['status']['runs'][taskRunId]['taskRunId'] = taskRunId;
       if (workflow['status']['runs'][taskRunId]['status'])
-        statusMap.set(workflow['status']['runs'][taskRunId]['pipelineTaskName'], workflow['status']['runs'][taskRunId]);
+        statusMap.set(
+          workflow['status']['runs'][taskRunId]['pipelineTaskName'],
+          workflow['status']['runs'][taskRunId],
+        );
     }
 
     // Add When-condition tasks to conditionTasks list if it depends on the result of the tasks in statusMap
@@ -113,7 +118,9 @@ export default class WorkflowParser {
       if (statusMap.get(task['name']) || conditionTasks.includes(task['name'])) {
         const conditions = task['conditions'] || [];
         const taskId =
-          statusMap.get(task['name']) && statusMap.get(task['name'])!['status']['podName'] !== '' && statusMap.get(task['name'])!['status']['podName'] !== undefined
+          statusMap.get(task['name']) &&
+          statusMap.get(task['name'])!['status']['podName'] !== '' &&
+          statusMap.get(task['name'])!['status']['podName'] !== undefined
             ? statusMap.get(task['name'])!['status']['podName']
             : task['name'];
         const edges = this.checkParams(statusMap, pipelineParams, task, '');
@@ -127,7 +134,9 @@ export default class WorkflowParser {
           const param = this.decodeParam(condition['input']);
           if (param && param.task) {
             if (statusMap.get(param.task)) {
-              const parentId = statusMap.get(param.task)!['status']['podName'] || statusMap.get(param.task)!['pipelineTaskName'];
+              const parentId =
+                statusMap.get(param.task)!['status']['podName'] ||
+                statusMap.get(param.task)!['pipelineTaskName'];
               edges.push({ parent: parentId, child: taskId });
             }
           }
@@ -160,8 +169,7 @@ export default class WorkflowParser {
         let status = NodePhase.PENDING;
         if (!conditionTasks.includes(task['name'])) {
           status = this.getStatus(statusMap.get(task['name']));
-        }
-        else if(skippedTasks.includes(task['name'])) {
+        } else if (skippedTasks.includes(task['name'])) {
           status = NodePhase.CONDITIONCHECKFAILED;
         }
 
@@ -194,7 +202,7 @@ export default class WorkflowParser {
       ownerTask !== ''
         ? component['conditionRef']
         : statusMap.get(component['name']) &&
-          statusMap.get(component['name'])!['status']['podName'] !== '' && 
+          statusMap.get(component['name'])!['status']['podName'] !== '' &&
           statusMap.get(component['name'])!['status']['podName'] !== undefined
         ? statusMap.get(component['name'])!['status']['podName']
         : component['name'];
@@ -251,10 +259,7 @@ export default class WorkflowParser {
       return { task: '', param: paramName };
     }
     // If the parameters are passed from the parent task's results
-    else if (
-      paramString.indexOf('$(') !== -1 &&
-      paramString.indexOf(')') !== -1
-    ) {
+    else if (paramString.indexOf('$(') !== -1 && paramString.indexOf(')') !== -1) {
       const paramSplit = paramString.split('.');
       const parentTask = paramSplit[1];
       const paramName = paramSplit[paramSplit.length - 1].substring(
@@ -271,7 +276,7 @@ export default class WorkflowParser {
     if (execStatus && execStatus.status && execStatus.status.conditions) {
       return execStatus!.status!.conditions![0].reason;
     }
-    return NodePhase.PENDING
+    return NodePhase.PENDING;
   }
 
   public static getParameters(workflow?: any): Parameter[] {
@@ -318,12 +323,12 @@ export default class WorkflowParser {
     }
 
     // Loop for custom tasks
-    for (const runId of Object.getOwnPropertyNames(workflow.status.runs)) {
+    for (const runId of Object.getOwnPropertyNames(workflow.status.runs || {})) {
       const run = workflow.status.runs[runId];
       if (run.status && run.pipelineTaskName === nodeId) {
         outputParams = run.status.results
-        ? run.status.results.map(({ name, value }: any) => [name, value])
-        : outputParams;
+          ? run.status.results.map(({ name, value }: any) => [name, value])
+          : outputParams;
       }
     }
 
