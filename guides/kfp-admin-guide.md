@@ -9,6 +9,7 @@ This page introduces different ways to configure the kfp-tekton admin settings s
 - [Enable Auto Strip for End of File newlines](#enable-auto-strip-for-end-of-file-newlines)
 - [Customize Artifact Image to do your own post processing](#customize-artifact-image-to-do-your-own-post-processing)
 - [Customize S3 Endpoint for KFP Tekton artifacts](#customize-s3-endpoint-for-kfp-tekton-artifacts)
+- [Disable Caching](#disable-caching)
 
 
 ## Disable Artifact Tracking
@@ -84,3 +85,11 @@ kubectl rollout restart deploy/minio -n kubeflow
 ```
 
 [kfp-tekton-configmap]: /manifests/kustomize/base/pipeline/kfp-pipeline-config.yaml
+
+## Disable Caching
+
+KFP Caching will cache all the workloads that use the same task with the same inputs. It's enabled by default. To disable caching on the server side, run the commands below.
+
+```shell
+kubectl set env -n kubeflow deploy/ml-pipeline CACHE_ENABLED=false
+```

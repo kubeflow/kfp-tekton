@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
@@ -390,12 +391,16 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	r.setDefaultServiceAccount(&workflow, apiRun.GetServiceAccount())
 
 	// Disable istio sidecar injection
-	workflow.SetAnnotationsToAllTemplates(util.AnnotationKeyIstioSidecarInject, util.AnnotationValueIstioSidecarInjectDisabled)
+	workflow.SetAnnotations(util.AnnotationKeyIstioSidecarInject, util.AnnotationValueIstioSidecarInjectDisabled)
 	// Add a KFP specific label for cache service filtering. The cache_enabled flag here is a global control for whether cache server will
 	// receive targeting pods. Since cache server only receives pods in step level, the resource manager here will set this global label flag
 	// on every single step/pod so the cache server can understand.
-	// TODO: Add run_level flag with similar logic by reading flag value from create_run api.
-	workflow.SetLabelsToAllTemplates(util.LabelKeyCacheEnabled, common.IsCacheEnabled())
+
+	// Don't override the cache flag if it's true so that users can flag which task they want to cache.
+	// If it's not true, override the value to disable all caching.
+	if strings.ToLower(common.IsCacheEnabled()) != "true" {
+		workflow.SetLabels(util.LabelKeyCacheEnabled, common.IsCacheEnabled())
+	}
 
 	err = OverrideParameterWithSystemDefault(workflow, apiRun)
 	if err != nil {
@@ -718,7 +723,14 @@ func (r *ResourceManager) CreateJob(apiJob *api.Job) (*model.Job, error) {
 	r.setDefaultServiceAccount(&workflow, apiJob.GetServiceAccount())
 
 	// Disable istio sidecar injection
-	workflow.SetAnnotationsToAllTemplates(util.AnnotationKeyIstioSidecarInject, util.AnnotationValueIstioSidecarInjectDisabled)
+	workflow.SetAnnotations(util.AnnotationKeyIstioSidecarInject, util.AnnotationValueIstioSidecarInjectDisabled)
+
+	// Override cache flag if necessary
+	// Don't override the cache flag if it's true so that users can flag which task they want to cache.
+	// If it's not true, override the value to disable all caching.
+	if strings.ToLower(common.IsCacheEnabled()) != "true" {
+		workflow.SetLabels(util.LabelKeyCacheEnabled, common.IsCacheEnabled())
+	}
 
 	swfGeneratedName, err := toSWFCRDResourceGeneratedName(apiJob.Name)
 	if err != nil {
