@@ -17,8 +17,6 @@ package server
 import (
 	"testing"
 
-	"context"
-
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
@@ -161,7 +159,7 @@ func initWithExperimentAndPipelineVersion(t *testing.T) (*resource.FakeClientMan
 	assert.Nil(t, err)
 
 	// Create a pipeline and then a pipeline version.
-	_, err = resourceManager.CreatePipeline("pipeline", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
+	_, err = resourceManager.CreatePipeline("pipeline", "", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
 	assert.Nil(t, err)
 	_, err = resourceManager.CreatePipelineVersion(&api.PipelineVersion{
 		Name: "pipeline_version",
@@ -204,7 +202,7 @@ func initWithPipeline(t *testing.T) (*resource.FakeClientManager, *resource.Reso
 	initEnvVars()
 	store := resource.NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	manager := resource.NewResourceManager(store)
-	p, err := manager.CreatePipeline("p1", "", []byte(testWorkflow.ToStringForStore()))
+	p, err := manager.CreatePipeline("p1", "", "", []byte(testWorkflow.ToStringForStore()))
 	assert.Nil(t, err)
 	return store, manager, p
 }
@@ -215,9 +213,7 @@ func AssertUserError(t *testing.T, err error, expectedCode codes.Code) {
 	assert.Equal(t, expectedCode, userError.ExternalStatusCode())
 }
 
-func getPermissionDeniedError(ctx context.Context, resourceAttributes *authorizationv1.ResourceAttributes) error {
-	// Retrieve request details to compose the expected error
-	userIdentity, _ := getUserIdentity(ctx)
+func getPermissionDeniedError(userIdentity string, resourceAttributes *authorizationv1.ResourceAttributes) error {
 	return util.NewPermissionDeniedError(
 		errors.New("Unauthorized access"),
 		"User '%s' is not authorized with reason: %s (request: %+v)",

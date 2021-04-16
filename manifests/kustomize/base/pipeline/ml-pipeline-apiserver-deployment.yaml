@@ -12,6 +12,8 @@ spec:
     metadata:
       labels:
         app: ml-pipeline
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     spec:
       containers:
       - env:
@@ -100,4 +102,8 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 5
           timeoutSeconds: 2
+        resources:
+          requests:
+            cpu: 250m
+            memory: 500Mi
       serviceAccountName: ml-pipeline

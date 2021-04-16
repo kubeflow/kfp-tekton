@@ -24,10 +24,7 @@ python3 -m pip install -r "$source_root/sdk/python/requirements.txt"
 pip3 install minio
 pip3 install junit_xml
 # Using Argo to lint all compiled workflows
-export LOCAL_BIN="${HOME}/.local/bin"
-mkdir -p "$LOCAL_BIN"
-export PATH="${PATH}:$LOCAL_BIN" # Unnecessary - Travis already has it in PATH
-wget --quiet -O "${LOCAL_BIN}/argo" https://github.com/argoproj/argo/releases/download/v2.4.3/argo-linux-amd64 && chmod +x "${LOCAL_BIN}/argo"
+"${source_root}/test/install-argo-cli.sh"
 
 pushd $source_root/sdk/python
 python3 -m pip install -e .
@@ -36,7 +33,7 @@ popd # Changing the current directory to the repo root for correct coverall path
 # Test against TFX
 # Compile and setup bazel for compiling the protos
 # Instruction from https://docs.bazel.build/versions/master/install-ubuntu.html
-curl -sSL https://github.com/bazelbuild/bazel/releases/download/3.4.1/bazel-3.4.1-installer-linux-x86_64.sh -o bazel_installer.sh
+curl -sSL https://github.com/bazelbuild/bazel/releases/download/3.7.2/bazel-3.7.2-installer-linux-x86_64.sh -o bazel_installer.sh
 chmod +x bazel_installer.sh
 ./bazel_installer.sh
 

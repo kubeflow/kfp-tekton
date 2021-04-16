@@ -77,6 +77,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.condition import flipcoin
     self._test_pipeline_workflow(flipcoin, 'condition.yaml')
 
+  def test_condition_custom_task_workflow(self):
+    """
+    Test compiling a conditional workflow with custom task
+    """
+    from .testdata.condition_custom_task import flipcoin_pipeline
+    self._test_pipeline_workflow(flipcoin_pipeline, 'condition_custom_task.yaml')
+
   def test_condition_dependency(self):
     """
     Test dependency on Tekton conditional task.
@@ -130,6 +137,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.withitem_nested import pipeline
     self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
 
+  def test_withitem_multi_nested_workflow(self):
+    """
+    Test compiling a withitem multi nested in workflow.
+    """
+    from .testdata.withitem_multi_nested import pipeline
+    self._test_pipeline_workflow(pipeline, 'withitem_multi_nested.yaml')
+
   def test_conditions_and_loops_workflow(self):
     """
     Test compiling a conditions and loops in workflow.
@@ -147,6 +161,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.recursion_while import flipcoin
     self._test_pipeline_workflow(flipcoin, 'recursion_while.yaml')
+
+  def test_tekton_custom_task_workflow(self):
+    """
+    Test Tekton custom task workflow.
+    """
+    from .testdata.tekton_custom_task import custom_task_pipeline
+    self._test_pipeline_workflow(custom_task_pipeline, 'tekton_custom_task.yaml')
 
   def test_long_pipeline_name_workflow(self):
     """
@@ -512,3 +533,24 @@ class TestTektonCompiler(unittest.TestCase):
                        msg="\n===[ " + golden_yaml_file.split(os.path.sep)[-1] + " ]===\n"
                            + json.dumps(compiled_workflow, indent=2))
 
+  def test_artifacts_of_ops_with_long_names(self):
+    """
+    Test compiling a pipeline with artifacts of ops with long names.
+
+    No step-templates should be generated for either case.
+    """
+    from .testdata import artifacts_of_ops_with_long_names as py_module
+    temp_dir = tempfile.mkdtemp()
+    try:
+      temp_files = py_module.main(temp_dir)
+      for temp_file in temp_files:
+        with open(temp_file, 'r') as f:
+          obj = yaml.safe_load(f)
+        text = yaml.safe_dump(obj)
+        self.assertNotRegex(text, "stepTemplate")
+        artifact_items = obj['metadata']['annotations']['tekton.dev/artifact_items']
+        items_for_op0 = list(json.loads(artifact_items).values())[0]
+        names_of_items_for_op0 = set([item[0] for item in items_for_op0])
+        self.assertSetEqual(names_of_items_for_op0, {"incr_i", "sq_i"})
+    finally:
+      shutil.rmtree(temp_dir)

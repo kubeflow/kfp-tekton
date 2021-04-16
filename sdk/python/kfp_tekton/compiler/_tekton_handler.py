@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
+import json, copy
 
 
 def _handle_tekton_pipeline_variables(pipeline_run):
@@ -164,17 +164,67 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
         tasks.append(custom_task[custom_task_key]['spec'])
 
     # handle the nested custom task case
+    # Need to be verified: nested custom task with tasks result as parameters
     nested_custom_tasks = []
     custom_task_crs_namelist = [custom_task_key for custom_task_key in custom_task.keys()]
     for custom_task_key in custom_task.keys():
         for inner_task_name in custom_task[custom_task_key]['task_list']:
             inner_task_cr_name = '-'.join(group_names[:-1] + [inner_task_name])
             if inner_task_cr_name in custom_task_crs_namelist:
-                nested_custom_tasks.append({"main_ct": custom_task_key, "nested_custom_task": inner_task_cr_name})
+                nested_custom_tasks.append({
+                    "father_ct": custom_task_key,
+                    "nested_custom_task": inner_task_cr_name
+                })
+    # Summary out all of the nested tasks relationships.
     for nested_custom_task in nested_custom_tasks:
+        father_ct_name = nested_custom_task['father_ct']
+        relationships = find_ancestors(nested_custom_tasks, father_ct_name, [], father_ct_name)
+        nested_custom_task['ancestors'] = relationships['ancestors']
+        nested_custom_task['root_ct'] = relationships['root_ct']
+
+    for nested_custom_task in nested_custom_tasks:
+        nested_custom_task_spec = custom_task[nested_custom_task['nested_custom_task']]['spec']
         for custom_task_cr in custom_task_crs:
-            if custom_task_cr['metadata']['name'] == nested_custom_task['main_ct']:
-                custom_task_cr['spec']['pipelineSpec']['tasks'].append(custom_task[nested_custom_task['nested_custom_task']]['spec'])
+            if custom_task_cr['metadata']['name'] == nested_custom_task['father_ct']:
+                # handle parameters of nested custom task
+                params_nested_custom_task = nested_custom_task_spec['params']
+                # nested_custom_task_special_params = the global params that doesn't defined in parent custom task
+                nested_custom_task_special_params = [
+                    param for param in params_nested_custom_task
+                    if '$(params.' in param['value'] and not bool([
+                        True for ct_param in custom_task_cr['spec']['pipelineSpec']['params']
+                        if param['name'] in ct_param['name']
+                    ])
+                ]
+                custom_task_cr['spec']['pipelineSpec']['params'].extend([
+                    {'name': param['name'], 'type': 'string'}for param in nested_custom_task_special_params
+                ])
+                custom_task_cr['spec']['pipelineSpec']['params'] = sorted(
+                    custom_task_cr['spec']['pipelineSpec']['params'], key=lambda k: k['name'])
+
+                if nested_custom_task['ancestors']:
+                    for custom_task_cr_again in custom_task_crs:
+                        if custom_task_cr_again['metadata']['name'] in nested_custom_task[
+                            'ancestors'] or custom_task_cr_again['metadata']['name'] == nested_custom_task['root_ct']:
+                            custom_task_cr_again['spec']['pipelineSpec']['params'].extend([
+                                {'name': param['name'], 'type': 'string'}for param in nested_custom_task_special_params
+                            ])
+                            custom_task_cr_again['spec']['pipelineSpec']['params'] = sorted(
+                                custom_task_cr_again['spec']['pipelineSpec']['params'], key=lambda k: k['name'])
+                # add children params to the root tasks
+                for task in tasks:
+                    if task['name'] == nested_custom_task['root_ct']:
+                        task['params'].extend(copy.deepcopy(nested_custom_task_special_params))
+                    elif task['name'] in nested_custom_task['ancestors'] or task[
+                        'name'] == nested_custom_task['father_ct']:
+                        task['params'].extend(nested_custom_task_special_params)
+                    task['params'] = sorted(task['params'], key=lambda k: k['name'])
+                for special_param in nested_custom_task_special_params:
+                    for nested_param in nested_custom_task_spec['params']:
+                        if nested_param['name'] == special_param['name']:
+                            nested_param['value'] = '$(params.%s)' % nested_param['name']
+                # add nested custom task spec to main custom task
+                custom_task_cr['spec']['pipelineSpec']['tasks'].append(nested_custom_task_spec)
 
     # remove the tasks belong to custom task from main workflow
     task_name_prefix = '-'.join(group_names[:-1] + [""])
@@ -183,3 +233,14 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
             new_tasks.append(task)
     workflow['spec']['pipelineSpec']['tasks'] = new_tasks
     return custom_task_crs, workflow
+
+
+def find_ancestors(nested_custom_tasks: list, father_ct_name, ancestors: list, root_ct):
+    relationship = {'ancestors': ancestors, 'root_ct': root_ct}
+    for custom_task in nested_custom_tasks:
+        if father_ct_name == custom_task['nested_custom_task']:
+            father_ct_name = custom_task['father_ct']
+            relationship = find_ancestors(nested_custom_tasks, father_ct_name, ancestors, father_ct_name)
+            if relationship['root_ct'] != father_ct_name:
+                ancestors.append(father_ct_name)
+    return relationship

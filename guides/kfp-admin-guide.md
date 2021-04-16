@@ -1,6 +1,6 @@
 # Kubeflow Pipeline Admin guide for Tekton backend.
 
-This page introduces different ways to configure the kfp-tekton admin settings such as configuring artifacts, log archival, and auto strip EOF newlines for Tekton results. Below are the list of settings for kfp-tekton admin. The default settings for kfp-tekton are located at [here](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml).
+This page introduces different ways to configure the kfp-tekton admin settings such as configuring artifacts, log archival, and auto strip EOF newlines for Tekton results. Below are the list of settings for kfp-tekton admin. The default settings for kfp-tekton are located at [here][kfp-tekton-configmap].
 
 ## Table of Contents
 
@@ -9,7 +9,11 @@ This page introduces different ways to configure the kfp-tekton admin settings s
 - [Enable Auto Strip for End of File newlines](#enable-auto-strip-for-end-of-file-newlines)
 - [Customize Artifact Image to do your own post processing](#customize-artifact-image-to-do-your-own-post-processing)
 - [Customize S3 Endpoint for KFP Tekton artifacts](#customize-s3-endpoint-for-kfp-tekton-artifacts)
+<<<<<<< HEAD
 - [Disable Auto Apply for Tekton Custom Resources](#disable-auto-apply-for-tekton-custom-resources)
+=======
+- [Disable Caching](#disable-caching)
+>>>>>>> upstream/master
 
 
 ## Disable Artifact Tracking
@@ -53,15 +57,15 @@ Since Tekton still has many gaps with handling artifacts, KFP-Tekton allows user
 - `artifact_script`: Entrypoint script for running the artifact image.
 - `inject_default_script`: A set of default script that convert the artifact annotations into `sh` script. We recommend to disable it if using a custom artifact image.
 
-Then update the default [kfp-tekton configmap](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml) and patch it with the commands below:
+Then update the default [kfp-tekton configmap][kfp-tekton-configmap] and patch it with the commands below:
 ```shell
-kubectl apply -f manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml -n kubeflow
+kubectl apply -f /manifests/kustomize/base/pipeline/kfp-pipeline-config.yaml -n kubeflow
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 ```
 
 ## Customize S3 Endpoint for KFP Tekton artifacts
 
-By default, Kubeflow Pipelines store pipeline artifacts to the S3 compatible Minio storage server in the same Kubernetes cluster. To change this storage to an external S3 endpoint, update the default [kfp-tekton configmap](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml) and S3 credential secret then patch them with the commands below.
+By default, Kubeflow Pipelines store pipeline artifacts to the S3 compatible Minio storage server in the same Kubernetes cluster. To change this storage to an external S3 endpoint, update the default [kfp-tekton configmap][kfp-tekton-configmap] and S3 credential secret then patch them with the commands below.
 
 Update the S3 Secret:
 - `accesskey`: S3 Access Key ID
@@ -74,7 +78,7 @@ secretkey=<s3_secret_access_key>
 kubectl create secret generic -n kubeflow mlpipeline-minio-artifact --from-literal=accesskey=${accesskey}  --from-literal=secretkey=${secretkey} --dry-run -o yaml | kubectl apply -f -
 ```
 
-Update the [kfp-tekton configmap](/manifests/kustomize/env/platform-agnostic/kfp-pipeline-config.yaml):
+Update the [kfp-tekton configmap][kfp-tekton-configmap]:
 - `artifact_bucket`: Bucket for storing the artifacts
 - `artifact_endpoint`: S3 Endpoint for storing artifacts
 - `artifact_endpoint_scheme`: HTTP scheme of the above S3 Endpoint
@@ -95,3 +99,13 @@ If the admin wants to self manage the creation of Tekton custom resources, this 
 kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"apply_tekton_custom_resource":"false"}}'
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 ```
+
+## Disable Caching
+
+KFP Caching will cache all the workloads that use the same task with the same inputs. It's enabled by default. To disable caching on the server side, run the commands below.
+
+```shell
+kubectl set env -n kubeflow deploy/ml-pipeline CACHE_ENABLED=false
+```
+
+[kfp-tekton-configmap]: /manifests/kustomize/base/pipeline/kfp-pipeline-config.yaml

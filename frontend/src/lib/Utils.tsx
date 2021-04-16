@@ -97,12 +97,7 @@ function getDuration(start: Date, end: Date): string {
 }
 
 export function getRunDuration(run?: any): string {
-  if (
-    !run ||
-    !run.created_at ||
-    !run.finished_at ||
-    !hasFinished(run.status as NodePhase)
-  ) {
+  if (!run || !run.created_at || !run.finished_at || !hasFinished(run.status as NodePhase)) {
     return '-';
   }
 
@@ -133,7 +128,6 @@ export function getRunDurationFromWorkflow(workflow?: any): string {
  * @param nodeId
  */
 export function getRunDurationFromNode(workflow: any, nodeId: string): string {
-
   for (const taskRunId of Object.getOwnPropertyNames(workflow.status?.taskRuns || [])) {
     const taskRun = workflow.status.taskRuns[taskRunId];
     if (taskRun.status && taskRun.status.podName === nodeId) {

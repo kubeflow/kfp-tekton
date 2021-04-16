@@ -1,10 +1,11 @@
 syntax = "proto3";
 
-option go_package = "github.com/kubeflow/pipelines/api/v2alpha1/go";
 package ml_pipelines;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/struct.proto";
+
+option go_package = "github.com/kubeflow/pipelines/api/v2alpha1/go";
 
 // The spec of a pipeline job.
 message PipelineJob {
@@ -198,8 +199,13 @@ message ComponentOutputsSpec {
   // Definition of an artifact output.
   message ArtifactSpec {
     ArtifactTypeSchema artifact_type = 1;
-    map<string, ValueOrRuntimeParameter> properties = 2;
-    map<string, ValueOrRuntimeParameter> custom_properties = 3;
+    // Deprecated. Use [ArtifactSpec.metadata][] instead.
+    map<string, ValueOrRuntimeParameter> properties = 2 [deprecated = true];
+    // Deprecated. Use [ArtifactSpec.metadata][] instead.
+    map<string, ValueOrRuntimeParameter> custom_properties = 3
+        [deprecated = true];
+    // Properties of the Artifact.
+    google.protobuf.Struct metadata = 4;
   }
   // Definition of a parameter output.
   message ParameterSpec {
@@ -259,6 +265,15 @@ message TaskInputsSpec {
       // The key of [TaskOutputsSpec.parameters][] map of the producer task.
       string output_parameter_key = 2;
     }
+
+    // Represents an upstream task's final status. The field can only be set if
+    // the schema version is `2.0.0`. The resolved input parameter will be a
+    // json payload in string type.
+    message TaskFinalStatus {
+      // The name of the upsteram task where the final status is coming from.
+      string producer_task = 1;
+    }
+
     oneof kind {
       // Output parameter from an upstream task.
       TaskOutputParameterSpec task_output_parameter = 1;
@@ -266,8 +281,36 @@ message TaskInputsSpec {
       ValueOrRuntimeParameter runtime_value = 2;
       // Pass the input parameter from parent component input parameter.
       string component_input_parameter = 3;
+      // The final status of an uptream task.
+      TaskFinalStatus task_final_status = 5;
     }
-    reserved 4;
+
+    // Selector expression of Common Expression Language (CEL)
+    // that applies to the parameter found from above kind.
+    //
+    // The expression is applied to the Value type
+    // [Value][].  For example,
+    // 'size(string_value)' will return the size of the Value.string_value.
+    //
+    // After applying the selection, the parameter will be returned as a
+    // [Value][].  The type of the Value is either deferred from the input
+    // definition in the corresponding
+    // [ComponentSpec.input_definitions.parameters][], or if not found,
+    // automatically deferred as either string value or double value.
+    //
+    // In addition to the builtin functions in CEL, The value.string_value can
+    // be treated as a json string and parsed to the [google.protobuf.Value][]
+    // proto message. Then, the CEL expression provided in this field will be
+    // used to get the requested field. For examples,
+    //  - if Value.string_value is a json array of "[1.1, 2.2, 3.3]",
+    //  'parseJson(string_value)[i]' will pass the ith parameter from the list
+    //  to the current task, or
+    //  - if the Value.string_value is a json map of "{"a": 1.1, "b": 2.2,
+    //  "c": 3.3}, 'parseJson(string_value)[key]' will pass the map value from
+    //  the struct map to the current task.
+    //
+    // If unset, the value will be passed directly to the current task.
+    string parameter_expression_selector = 4;
   }
 
   // A map of input parameters which are small values, stored by the system and
@@ -382,6 +425,29 @@ message PipelineTaskSpec {
     // - `inputs.artifacts['model'][0].properties['accuracy']*100 > 90`
     // - `inputs.parameters['type'] == 'foo' && inputs.parameters['num'] == 1`
     string condition = 1;
+
+    // An enum defines the trigger strategy of when the task will be ready to be
+    // triggered.
+    // ALL_UPSTREAM_TASKS_SUCCEEDED - all upstream tasks in succeeded state.
+    // ALL_UPSTREAM_TASKS_COMPLETED - all upstream tasks in any final state.
+    // (Note that CANCELLED is also a final state but job will not trigger new
+    // tasks when job is in CANCELLING state, so that the task with the trigger
+    // policy at ALL_UPSTREAM_TASKS_COMPLETED will not start when job
+    // cancellation is in progress.)
+    enum TriggerStrategy {
+      // Unspecified.  Behave the same as ALL_UPSTREAM_TASKS_SUCCEEDED.
+      TRIGGER_STRATEGY_UNSPECIFIED = 0;
+      // Specifies that all upstream tasks are in succeeded state.
+      ALL_UPSTREAM_TASKS_SUCCEEDED = 1;
+      // Specifies that all upstream tasks are in any final state.
+      ALL_UPSTREAM_TASKS_COMPLETED = 2;
+    }
+    // The trigger strategy of this task.  The `strategy` and `condition` are
+    // in logic "AND", as a task will only be tested for the `condition` when
+    // the `strategy` is meet.
+    // Unset or set to default value of TRIGGER_STATEGY_UNDEFINED behaves the
+    // same as ALL_UPSTREAM_TASKS_SUCCEEDED.
+    TriggerStrategy strategy = 2;
   }
   // Trigger policy of the task.
   TriggerPolicy trigger_policy = 8;
@@ -581,10 +647,16 @@ message PipelineDeploymentConfig {
     ArtifactTypeSchema type_schema = 2;
 
     // The properties of the artifact.
-    map<string, ValueOrRuntimeParameter> properties = 3;
+    // Deprecated. Use [ImporterSpec.metadata][] instead.
+    map<string, ValueOrRuntimeParameter> properties = 3 [deprecated = true];
 
     // The custom properties of the artifact.
-    map<string, ValueOrRuntimeParameter> custom_properties = 4;
+    // Deprecated. Use [ImporterSpec.metadata][] instead.
+    map<string, ValueOrRuntimeParameter> custom_properties = 4
+        [deprecated = true];
+
+    // Properties of the Artifact.
+    google.protobuf.Struct metadata = 6;
 
     // Whether or not import an artifact regardless it has been imported before.
     bool reimport = 5;
@@ -642,7 +714,7 @@ message PipelineDeploymentConfig {
       // Resolves an existing artifact.
       ResolverSpec resolver = 3;
       // Starts a Google Cloud AI Platform CustomJob.
-      AIPlatformCustomJobSpec custom_job = 4;
+      AIPlatformCustomJobSpec custom_job = 4 [deprecated = true];
     }
   }
   // Map from executor label to executor spec.
@@ -673,10 +745,15 @@ message RuntimeArtifact {
   string uri = 3;
 
   // The properties of the artifact.
-  map<string, Value> properties = 4;
+  // Deprecated. Use [RuntimeArtifact.metadata][] instead.
+  map<string, Value> properties = 4 [deprecated = true];
 
   // The custom properties of the artifact.
-  map<string, Value> custom_properties = 5;
+  // Deprecated. Use [RuntimeArtifact.metadata][] instead.
+  map<string, Value> custom_properties = 5 [deprecated = true];
+
+  // Properties of the Artifact.
+  google.protobuf.Struct metadata = 6;
 }
 
 // Message that represents a list of artifacts.
@@ -711,7 +788,6 @@ message ArtifactList {
 // output file and executor output metadata files are set by the container, the
 // output metadata file will have higher precedence to set output parameters.
 message ExecutorInput {
-
   // The runtime inputs data of the execution.
   message Inputs {
     // Input parameters of the execution.

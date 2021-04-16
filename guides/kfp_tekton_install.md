@@ -35,7 +35,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 1. Install [Tekton v0.21.0](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0)
 
-2. Enable custom task for pipeline loops and other feature flags for kfp-tekton
+2. Enable custom task controller and other feature flags for kfp-tekton
    ```shell
     kubectl patch cm feature-flags -n tekton-pipelines \
         -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true", "enable-custom-tasks": "true"}}'

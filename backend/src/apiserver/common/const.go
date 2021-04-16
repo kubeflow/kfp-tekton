@@ -44,6 +44,7 @@ const (
 	RbacResourceTypeVisualizations = "visualizations"
 
 	RbacResourceVerbArchive   = "archive"
+	RbacResourceVerbUpdate    = "update"
 	RbacResourceVerbCreate    = "create"
 	RbacResourceVerbDelete    = "delete"
 	RbacResourceVerbDisable   = "disable"
@@ -61,9 +62,13 @@ const (
 )
 
 const (
-	GoogleIAPUserIdentityHeader string = "x-goog-authenticated-user-email"
-	GoogleIAPUserIdentityPrefix string = "accounts.google.com:"
+	GoogleIAPUserIdentityHeader    string = "x-goog-authenticated-user-email"
+	GoogleIAPUserIdentityPrefix    string = "accounts.google.com:"
+	AuthorizationBearerTokenHeader string = "Authorization"
+	AuthorizationBearerTokenPrefix string = "Bearer "
 )
+
+const DefaultTokenReviewAudience string = "pipelines.kubeflow.org"
 
 const (
 	DefaultArtifactBucket         string = "mlpipeline"

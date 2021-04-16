@@ -23,6 +23,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/list"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
@@ -79,7 +80,7 @@ func TestUploadPipeline_YAML(t *testing.T) {
 				Status:         model.PipelineVersionReady,
 				PipelineId:     resource.DefaultFakeUUID,
 			}}}
-	pkg, totalSize, str, err := clientManager.PipelineStore().ListPipelines(opts)
+	pkg, totalSize, str, err := clientManager.PipelineStore().ListPipelines(&common.FilterContext{}, opts)
 	assert.Nil(t, err)
 	assert.Equal(t, str, "")
 	assert.Equal(t, 1, totalSize)

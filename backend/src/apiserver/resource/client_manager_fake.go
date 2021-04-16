@@ -17,6 +17,7 @@ package resource
 import (
 	"github.com/golang/glog"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/archive"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/auth"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/storage"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
@@ -26,8 +27,9 @@ import (
 // Rename argo fake client to tekton fake client
 
 const (
-	DefaultFakeUUID = "123e4567-e89b-12d3-a456-426655440000"
-	FakeUUIDOne     = "123e4567-e89b-12d3-a456-426655440001"
+	DefaultFakeUUID    = "123e4567-e89b-12d3-a456-426655440000"
+	FakeUUIDOne        = "123e4567-e89b-12d3-a456-426655440001"
+	NonDefaultFakeUUID = "123e4567-e89b-12d3-a456-426655441000"
 )
 
 type FakeClientManager struct {
@@ -44,9 +46,11 @@ type FakeClientManager struct {
 	swfClientFake                 *client.FakeSwfClient
 	k8sCoreClientFake             *client.FakeKuberneteCoreClient
 	SubjectAccessReviewClientFake client.SubjectAccessReviewInterface
+	tokenReviewClientFake         client.TokenReviewInterface
 	logArchive                    archive.LogArchiveInterface
 	time                          util.TimeInterface
 	uuid                          util.UUIDGeneratorInterface
+	AuthenticatorsFake            []auth.Authenticator
 }
 
 func NewFakeClientManager(time util.TimeInterface, uuid util.UUIDGeneratorInterface) (
@@ -81,9 +85,11 @@ func NewFakeClientManager(time util.TimeInterface, uuid util.UUIDGeneratorInterf
 		swfClientFake:                 client.NewFakeSwfClient(),
 		k8sCoreClientFake:             client.NewFakeKuberneteCoresClient(),
 		SubjectAccessReviewClientFake: client.NewFakeSubjectAccessReviewClient(),
+		tokenReviewClientFake:         client.NewFakeTokenReviewClient(),
 		logArchive:                    archive.NewLogArchive("/logs", "main.log"),
 		time:                          time,
 		uuid:                          uuid,
+		AuthenticatorsFake:            auth.GetAuthenticators(client.NewFakeTokenReviewClient()),
 	}, nil
 }
 
@@ -158,6 +164,14 @@ func (f *FakeClientManager) KubernetesCoreClient() client.KubernetesCoreInterfac
 
 func (f *FakeClientManager) SubjectAccessReviewClient() client.SubjectAccessReviewInterface {
 	return f.SubjectAccessReviewClientFake
+}
+
+func (f *FakeClientManager) TokenReviewClient() client.TokenReviewInterface {
+	return f.tokenReviewClientFake
+}
+
+func (f *FakeClientManager) Authenticators() []auth.Authenticator {
+	return f.AuthenticatorsFake
 }
 
 func (f *FakeClientManager) Close() error {

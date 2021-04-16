@@ -13,10 +13,13 @@
 # limitations under the License.
 
 from typing import List
-
 from kfp import dsl
 from kfp.dsl._container_op import ContainerOp
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
+
+
+CEL_EVAL_IMAGE = "aipipeline/cel-eval:latest"
+TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE]
 
 
 class AnySequencer(ContainerOp):
@@ -60,8 +63,29 @@ def after_any(any: List[dsl.ContainerOp], name: str = None):
     The function adds a new AnySequencer and connects the given op to it
     '''
     seq = AnySequencer(any, name)
-    
+
     def _after_components(cop):
         cop.after(seq)
         return cop
     return _after_components
+
+
+def CEL_ConditionOp(condition_statement):
+    '''A containerOp template for CEL and converts it into Tekton custom task
+    during Tekton compiliation.
+
+    Args:
+        condition_statement: CEL expression statement using string and/or pipeline params.
+    '''
+    ConditionOp = dsl.ContainerOp(
+            name="condition-cel",
+            image=CEL_EVAL_IMAGE,
+            command=["sh", "-c"],
+            arguments=["--apiVersion", "cel.tekton.dev/v1alpha1",
+                       "--kind", "CEL",
+                       "--name", "cel_condition",
+                       "--status", condition_statement],
+            file_outputs={'status': '/tmp/tekton'}
+        )
+    ConditionOp.add_pod_annotation("valid_container", "false")
+    return ConditionOp
