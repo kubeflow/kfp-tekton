@@ -16,6 +16,7 @@ import os
 from random import choice
 from string import ascii_lowercase
 from typing import Optional, List
+import pytest
 
 from kfp import dsl
 from kfp.components import load_component_from_text
@@ -78,8 +79,13 @@ def main(fdir: Optional[str] = None) -> List[str]:
     fname = os.path.basename(fpath)
     if fdir is not None:
       fpath = os.path.join(fdir, fname)
-    Compiler().compile(main_pipeline, fpath)
-    fpaths.append(fpath)
+    if length > 57:
+      # Op name cannot be more than 57 characters
+      with pytest.raises(ValueError):
+        Compiler().compile(main_pipeline, fpath)
+    else:
+      Compiler().compile(main_pipeline, fpath)
+      fpaths.append(fpath)
 
   return fpaths
 

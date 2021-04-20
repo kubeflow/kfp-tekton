@@ -865,8 +865,19 @@ class TektonCompiler(Compiler):
     sanitized_ops = {}
 
     for op in pipeline.ops.values():
+      if len(op.name) > 57:
+        raise ValueError('Input ops cannot be longer than 57 characters. \
+             \nOp name: %s' % op.name)
       sanitized_name = sanitize_k8s_name(op.name)
       op.name = sanitized_name
+      # check sanitized input params
+      for param in op.inputs:
+        if param.op_name:
+          if len(param.op_name) > 128:
+            raise ValueError('Input parameter cannot be longer than 128 characters. \
+             \nInput name: %s. \nOp name: %s' % (param.op_name, op.name))
+          param.op_name = sanitize_k8s_name(param.op_name, max_length=float('inf'))
+      # sanitized output params
       for param in op.outputs.values():
         param.name = sanitize_k8s_name(param.name, True)
         if param.op_name:
@@ -1139,8 +1150,8 @@ def _validate_workflow(workflow: Dict[Text, Any]):
     return {k.lstrip("."): v for k, v in results_dict.items()}
 
   non_k8s_names = {path: name for path, name in _find_items(workflow, "name").items()
-                   if "metadata" in path and name != sanitize_k8s_name(name)
-                   or "param" in path and name != sanitize_k8s_name(name, allow_capital_underscore=True)}
+                   if "metadata" in path and name != sanitize_k8s_name(name, max_length=253)
+                   or "param" in path and name != sanitize_k8s_name(name, allow_capital_underscore=True, max_length=253)}
 
   non_k8s_labels = {path: k_v_dict for path, k_v_dict in _find_items(workflow, "labels", "", {}).items()
                     if "metadata" in path and

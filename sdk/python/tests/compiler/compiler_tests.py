@@ -169,6 +169,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.tekton_custom_task import custom_task_pipeline
     self._test_pipeline_workflow(custom_task_pipeline, 'tekton_custom_task.yaml')
 
+  def test_long_param_name_workflow(self):
+    """
+    Test long parameter name workflow.
+    """
+    from .testdata.long_param_name import main_fn
+    self._test_pipeline_workflow(main_fn, 'long_param_name.yaml')
+
   def test_long_pipeline_name_workflow(self):
     """
     Test long pipeline name workflow.
