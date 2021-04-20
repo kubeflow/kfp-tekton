@@ -38,7 +38,12 @@ class AnySequencer(ContainerOp):
     def __init__(self,
                  any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
                  name: str = None,):
-
+        arguments = [
+                    "--namespace",
+                    "$(context.pipelineRun.namespace)",
+                    "--prName",
+                    "$(context.pipelineRun.name)"
+                ]
         tasks_list = []
         condition_list = []
         for cop in any:
@@ -47,16 +52,10 @@ class AnySequencer(ContainerOp):
                 tasks_list.append(cop_name)
             elif isinstance(cop, ConditionOperator):
                 condition_list.append(cop)
-
-        task_list_str = ",".join(tasks_list)
-        arguments = [
-                    "--namespace",
-                    "$(context.pipelineRun.namespace)",
-                    "--prName",
-                    "$(context.pipelineRun.name)",
-                    "--taskList",
-                    task_list_str
-                ]
+        if len(tasks_list) > 0:
+            task_list_str = ",".join(tasks_list)
+            arguments.extend(["--taskList", task_list_str])
+            
         conditonArgs = processConditionArgs(condition_list)
         arguments.extend(conditonArgs)
 
@@ -83,9 +82,9 @@ def processOperand(operand) -> (str, str):
 def processCondition(condition: ConditionOperator) -> str:
     op1, taskName1 = processOperand(condition.operand1)
     op2, taskName2 = processOperand(condition.operand2)
-    if taskName1 != None and taskName2 != None:
+    if taskName1 is not None and taskName2 is not None:
         assert taskName1 == taskName2, "The result for condition must come from the same task."
-    assert taskName1 != None or taskName2 != None, "Must at least contain one result in one condition for a task."
+    assert taskName1 is not None or taskName2 is not None, "Must at least contain one result in one condition for a task."
     conditionStr = f"{op1} {condition.operator} {op2}"
     return conditionStr
 

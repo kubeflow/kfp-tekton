@@ -88,14 +88,12 @@ func parse_conditions(condtions []string, tasks *[]string) {
 				operand1Results[0][2],
 				operand2Results[0][2],
 			}
-		}
-		if len(operand1Results) > 0 {
+		} else if len(operand1Results) > 0 {
 			taskName = operand1Results[0][1]
 			resultName = []string{
 				operand1Results[0][2],
 			}
-		}
-		if len(operand2Results) > 0 {
+		} else if len(operand2Results) > 0 {
 			taskName = operand2Results[0][1]
 			resultName = []string{
 				operand2Results[0][2],
@@ -133,7 +131,6 @@ func Execute() {
 	rootCmd.Flags().StringVar(&prName, "prName", "", "The name of the pipelinerun.")
 	rootCmd.MarkFlagRequired("prName")
 	rootCmd.Flags().StringVar(&taskList, "taskList", "", "The comma separated list of the tasks.")
-	rootCmd.MarkFlagRequired("taskList")
 	rootCmd.Flags().StringSliceVarP(&conditions, "condition", "c", []string{}, "The conditions to watch")
 
 	if err := rootCmd.Execute(); err != nil {
@@ -195,9 +192,17 @@ func checkConditions(crs []conditionResult, tr *v1beta1.TaskRun) (string, bool) 
 }
 
 func watch(cmd *cobra.Command, args []string) {
+	if taskList == "" && len(conditions) == 0 {
+		log.Printf("Should provide either taskList or conditions to watch.")
+		os.Exit(1)
+	}
+
 	log.Printf("Starting to watch taskrun for '%s' and condition in %s/%s.", taskList, namespace, prName)
 
-	tasks := strings.Split(taskList, ",")
+	var tasks []string
+	if taskList != "" {
+		tasks = strings.Split(taskList, ",")
+	}
 
 	parse_conditions(conditions, &tasks)
 
