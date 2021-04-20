@@ -58,14 +58,14 @@ def any_sequence_pipeline(
 
     flip_out = flip_coin_op()
 
-    flip_out.after(task2)
+    flip_out.after(task1)
 
-    task4 = dsl.ContainerOp(
+    dsl.ContainerOp(
         name="task4",
         image="registry.access.redhat.com/ubi8/ubi-minimal",
         command=["/bin/bash", "-c"],
         arguments=["sleep 30"]
-    ).apply(after_any([task1, task2, task3, flip_out.outputs['output'] == "heads"], "any_test"))
+    ).apply(after_any([task2, task3, flip_out.outputs['output'] == "heads"], "any_test"))
 
 
 if __name__ == "__main__":
