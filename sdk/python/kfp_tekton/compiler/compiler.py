@@ -269,12 +269,14 @@ class TektonCompiler(Compiler):
             self.loops_pipeline[group_name]['depends'].append({'org': depend, 'runAfter': group_name})
         for op in sub_group.groups + sub_group.ops:
           self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(op.name))
-          if hasattr(op, 'type') and op.type == 'condition' and op.ops:
-            for condition_op in op.ops:
-              self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
-            for condition_op in op.groups:
-              if condition_op.type == 'graph' and condition_op.recursive_ref:
+          if hasattr(op, 'type') and op.type == 'condition':
+            if op.ops:
+              for condition_op in op.ops:
                 self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
+            if op.groups:
+              for condition_op in op.groups:
+                if condition_op.type == 'graph' and condition_op.recursive_ref:
+                  self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
         self.loops_pipeline[group_name]['spec']['name'] = group_name
         self.loops_pipeline[group_name]['spec']['taskRef'] = {
           "apiVersion": "custom.tekton.dev/v1alpha1",
