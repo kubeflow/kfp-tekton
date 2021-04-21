@@ -31,7 +31,7 @@ import (
 // Removed tests: "TestToStringForStore", "TestWorkflow_OverrideParameters", "TestWorkflow_SetLabelsToAllTemplates",
 // "TestGetWorkflowSpec", "TestGetWorkflowSpecTruncatesNameIfLongerThan200Runes", "TestVerifyParameters",
 // "TestVerifyParameters_Failed", "TestFindS3ArtifactKey_Succeed", "TestFindS3ArtifactKey_ArtifactNotFound",
-// "TestFindS3ArtifactKey_NodeNotFound", "TestReplaceUID", ""
+// "TestFindS3ArtifactKey_NodeNotFound", "TestReplaceUID"
 
 func TestWorkflow_ScheduledWorkflowUUIDAsStringOrEmpty(t *testing.T) {
 	// Base case
