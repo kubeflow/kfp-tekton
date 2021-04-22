@@ -142,7 +142,7 @@ To see how the Python SDK provides this feature, refer to the examples below:
 
 ### Any Sequencer
 
-When any one of the task dependencies completes successfully, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym).
+When any one of the task dependencies completes successfully and the conditions meet, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Condition can be applied to enforce the task dependencies completes as expected. The condition expression should be the same format as is in Kubeflow ConditionOperator, and the result of containerOps can be used in expression. Notice the expression should only contain results from only one task because the purpose here is to check the simple condition for the task's output when a task complete. And also the operand in the expression should be int or string, other python types will be transferred to string automatically. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym).
 
 For example:
 
@@ -151,7 +151,7 @@ from kfp_tekton.tekton import after_any
 
 dsl.ContainerOp(
   ...
-).apply(after_any([containerOps], "any_sequencer_name"))
+).apply(after_any([containerOps, conditionOp.output['result'] == 'true'], "any_sequencer_name"))
 ```
 
 Please note that the service account of the `Any Sequencer` needs 'get' permission to watch the status of the specified `taskRun`.
