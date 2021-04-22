@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,13 @@ spec:
     tasks:
     - name: random-failure
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - import random; import sys; exit_code = random.choice([0,1,2,3]); print(exit_code);
@@ -43,6 +50,13 @@ spec:
       timeout: 20s
     - name: random-failure-2
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - import random; import sys; exit_code = random.choice([0,1]); print(exit_code);
@@ -52,4 +66,5 @@ spec:
           - -c
           image: python:alpine3.6
           name: main
+      timeout: 0s
   timeout: 40s

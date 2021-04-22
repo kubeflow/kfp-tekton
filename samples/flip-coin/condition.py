@@ -46,7 +46,7 @@ def print_op(msg):
         image='alpine:3.6',
         command=['echo', msg],
     )
-    
+
 
 @dsl.pipeline(
     name='Conditional execution pipeline',

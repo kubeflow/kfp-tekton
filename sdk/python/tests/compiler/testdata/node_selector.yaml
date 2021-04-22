@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,13 @@ spec:
     tasks:
     - name: echo
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - echo "Found my node"
@@ -39,8 +46,10 @@ spec:
           - -c
           image: busybox
           name: main
+      timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: echo
     taskPodTemplate:
       nodeSelector:
         kubernetes.io/os: linux
+  timeout: 0s

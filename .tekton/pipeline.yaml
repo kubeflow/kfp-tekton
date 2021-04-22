@@ -1,0 +1,381 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: pipeline
+spec:
+  params:
+    - name: repository
+      description: the git repo
+    - name: revision
+      description: the revision
+      default: master
+    - name: apikey
+      description: the ibmcloud api key
+    - name: registry-url
+      description: ibm container registry url
+    - name: registry-namespace
+      description: the ibmcloud registry namespace
+    - name: docker-username
+      description: for ibm container registry
+      default: iamapikey
+    - name: docker-password
+      description: iam api key
+    - name: dockerhub-username
+      description: dockerhub username
+    - name: dockerhub-password
+      description: dockerhub password/token
+    - name: resource-group
+      description: resource group
+      default: default
+    - name: org
+      description: organization
+    - name: region
+      description: region
+    - name: space
+      description: space
+    - name: tekton-version
+      description: tekton version
+    - name: tekton-ns
+      description: tekton namespace
+      default: tekton-pipeline
+    - name: kubeflow-ns
+      description: kubeflow namespace
+      default: kubeflow
+    - name: kubernetes-cluster
+      description: cluster name
+    - name: slack-webhook
+      description: webhook URL
+      default: ""
+    - name: slack-channel
+      description: slack channel
+      default: ""
+    - name: publish-to-dockerhub
+      description: publish images to dockerhub
+      default: "0"
+    - name: image-tag
+      description: image tag
+      default: "nightly"
+    - name: dockerhub-namespace
+      description: dockerhub namespace
+      default: aipipeline
+  workspaces:
+  - name: pipeline-pvc
+  tasks:
+    - name: test
+      taskRef:
+        name: test
+      params:
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.revision)
+        - name: apikey
+          value: $(params.apikey)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: $(params.docker-username)
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: resource-group
+          value: $(params.resource-group)
+        - name: org
+          value: $(params.org)
+        - name: region
+          value: $(params.region)
+        - name: space
+          value: $(params.space)
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-images-artifact
+      taskRef:
+        name: build-images
+      runAfter:
+        - test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: api-server
+        - name: docker-root
+          value: .
+        - name: docker-file
+          value: ""
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: artifact
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-images-api-server
+      retries: 1
+      taskRef:
+        name: build-images
+      runAfter:
+        - test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: api-server
+        - name: docker-root
+          value: .
+        - name: docker-file
+          value: backend/Dockerfile
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-images-persistenceagent
+      retries: 1
+      taskRef:
+        name: build-images
+      runAfter:
+        - test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: persistenceagent
+        - name: docker-root
+          value: .
+        - name: docker-file
+          value: backend/Dockerfile.persistenceagent
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-images-metadata-writer
+      retries: 1
+      taskRef:
+        name: build-images
+      runAfter:
+        - test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: metadata-writer
+        - name: docker-root
+          value: .
+        - name: docker-file
+          value: backend/metadata_writer/Dockerfile
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-images-scheduledworkflow
+      retries: 1
+      taskRef:
+        name: build-images
+      runAfter:
+        - test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: scheduledworkflow
+        - name: docker-root
+          value: .
+        - name: docker-file
+          value: backend/Dockerfile.scheduledworkflow
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-images-cacheserver
+      retries: 1
+      taskRef:
+        name: build-images
+      runAfter:
+        - test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: cache-server
+        - name: docker-root
+          value: .
+        - name: docker-file
+          value: backend/Dockerfile.cacheserver
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-images-frontend
+      taskRef:
+        name: build-images-args
+      runAfter:
+        - test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: frontend
+        - name: docker-root
+          value: .
+        - name: docker-file
+          value: frontend/Dockerfile
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: deploy
+      taskRef:
+        name: deploy
+      runAfter:
+        - build-images-api-server
+        - build-images-persistenceagent
+        - build-images-metadata-writer
+        - build-images-scheduledworkflow
+        - build-images-cacheserver
+        - build-images-frontend
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: tekton-version
+          value: $(params.tekton-version)
+        - name: tekton-ns
+          value: $(params.tekton-ns)
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: e2e-test
+      taskRef:
+        name: e2e-test
+      runAfter:
+        - deploy
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: slack-webhook
+          value: $(params.slack-webhook)
+        - name: slack-channel
+          value: $(params.slack-channel)
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: publish-images
+      taskRef:
+        name: publish-images
+      runAfter:
+        - e2e-test
+      when:
+        - input: $(params.publish-to-dockerhub)
+          operator: in
+          values:
+            - '1'
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: $(params.docker-username)
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: dockerhub-username
+          value: $(params.dockerhub-username)
+        - name: dockerhub-password
+          value: $(params.dockerhub-password)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: dockerhub-namespace
+          value: $(params.dockerhub-namespace)
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+  finally:
+    - name: undeploy
+      taskRef:
+        name: undeploy
+      params:
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc

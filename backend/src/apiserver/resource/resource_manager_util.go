@@ -15,6 +15,7 @@
 package resource
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -171,7 +172,7 @@ func formulateRetryWorkflow(wf *util.Workflow) (*util.Workflow, []string, error)
 	// 		// Do not allow retry of workflows with pods in Running/Pending phase
 	// 		return nil, nil, util.NewInternalServerError(
 	// 			errors.New("workflow cannot be retried"),
-	// 			"Workflow cannot be retried with node %s in %s phase", node, node.Phase)
+	// 			"Workflow cannot be retried with node %s in %s phase", node.ID, node.Phase)
 	// 	}
 	// 	if node.Type == "Pod" {
 	// 		podsToDelete = append(podsToDelete, node.ID)
@@ -182,7 +183,7 @@ func formulateRetryWorkflow(wf *util.Workflow) (*util.Workflow, []string, error)
 
 func deletePods(k8sCoreClient client.KubernetesCoreInterface, podsToDelete []string, namespace string) error {
 	for _, podId := range podsToDelete {
-		err := k8sCoreClient.PodClient(namespace).Delete(podId, &metav1.DeleteOptions{})
+		err := k8sCoreClient.PodClient(namespace).Delete(context.Background(), podId, metav1.DeleteOptions{})
 		if err != nil && !apierr.IsNotFound(err) {
 			return util.NewInternalServerError(err, "Failed to delete pods.")
 		}
@@ -244,8 +245,8 @@ func OverrideParameterWithSystemDefault(workflow util.Workflow, apiRun *api.Run)
 // Convert PipelineId in PipelineSpec to the pipeline's default pipeline version.
 // This is for legacy usage of pipeline id to create run. The standard way to
 // create run is by specifying the pipeline version.
-func ConvertPipelineIdToDefaultPipelineVersion(pipelineSpec *api.PipelineSpec, resourceReferences *[]*api.ResourceReference, r *ResourceManager) error {
-	if pipelineSpec.GetPipelineId() == "" {
+func convertPipelineIdToDefaultPipelineVersion(pipelineSpec *api.PipelineSpec, resourceReferences *[]*api.ResourceReference, r *ResourceManager) error {
+	if pipelineSpec == nil || pipelineSpec.GetPipelineId() == "" {
 		return nil
 	}
 	// If there is already a pipeline version in resource references, don't convert pipeline id.

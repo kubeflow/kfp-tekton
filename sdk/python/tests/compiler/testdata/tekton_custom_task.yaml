@@ -1,0 +1,110 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
+      custom task with KFP", "name": "Tekton custom task on Kubeflow Pipeline"}'
+    sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"flip-coin": [["output", "$(results.output.path)"]],
+      "flip-coin-2": [["output", "$(results.output.path)"]], "print": []}'
+    tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-status", "parent_task":
+      "condition-cel"}]}'
+    tekton.dev/output_artifacts: '{"flip-coin": [{"key": "artifacts/$PIPELINERUN/flip-coin/output.tgz",
+      "name": "flip-coin-output", "path": "/tmp/output"}], "flip-coin-2": [{"key":
+      "artifacts/$PIPELINERUN/flip-coin-2/output.tgz", "name": "flip-coin-2-output",
+      "path": "/tmp/output"}]}'
+  name: tekton-custom-task-on-kubeflow-pipeline
+spec:
+  pipelineSpec:
+    tasks:
+    - name: flip-coin
+      taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        results:
+        - description: /tmp/output
+          name: output
+        steps:
+        - args:
+          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
+            else 'tails'; print(result)" | tee $(results.output.path)
+          command:
+          - sh
+          - -c
+          image: python:alpine3.6
+          name: main
+      timeout: 0s
+    - name: flip-coin-2
+      taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        results:
+        - description: /tmp/output
+          name: output
+        steps:
+        - args:
+          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
+            else 'tails'; print(result)" | tee $(results.output.path)
+          command:
+          - sh
+          - -c
+          image: python:alpine3.6
+          name: main
+      timeout: 0s
+    - name: condition-cel
+      params:
+      - name: status
+        value: '''$(tasks.flip-coin.results.output)'' == ''$(tasks.flip-coin-2.results.output)'''
+      taskRef:
+        apiVersion: cel.tekton.dev/v1alpha1
+        kind: CEL
+        name: cel_condition
+    - name: print
+      params:
+      - name: condition-cel-status
+        value: $(tasks.condition-cel.results.status)
+      taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        params:
+        - name: condition-cel-status
+        steps:
+        - command:
+          - echo
+          - Condition output is $(inputs.params.condition-cel-status)
+          image: alpine:3.6
+          name: main
+      timeout: 0s
+  timeout: 0s

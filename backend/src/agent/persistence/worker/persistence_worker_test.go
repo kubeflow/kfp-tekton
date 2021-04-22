@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"testing"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	client "github.com/kubeflow/pipelines/backend/src/agent/persistence/client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/stretchr/testify/assert"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/cache"
@@ -41,10 +41,11 @@ func (h *FakeEventHandler) AddEventHandler(handler cache.ResourceEventHandler) {
 
 func TestPersistenceWorker_Success(t *testing.T) {
 	// Set up workflow client
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
+			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "MY_UUID"},
 		},
 	})
 	workflowClient := client.NewWorkflowClientFake()
@@ -72,7 +73,7 @@ func TestPersistenceWorker_Success(t *testing.T) {
 
 func TestPersistenceWorker_NotFoundError(t *testing.T) {
 	// Set up workflow client
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
@@ -102,7 +103,7 @@ func TestPersistenceWorker_NotFoundError(t *testing.T) {
 
 func TestPersistenceWorker_GetWorklowError(t *testing.T) {
 	// Set up workflow client
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
@@ -133,10 +134,11 @@ func TestPersistenceWorker_GetWorklowError(t *testing.T) {
 
 func TestPersistenceWorker_ReportWorkflowRetryableError(t *testing.T) {
 	// Set up workflow client
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
+			Labels:    map[string]string{util.LabelKeyWorkflowRunId: "MY_UUID"},
 		},
 	})
 	workflowClient := client.NewWorkflowClientFake()
@@ -166,7 +168,7 @@ func TestPersistenceWorker_ReportWorkflowRetryableError(t *testing.T) {
 
 func TestPersistenceWorker_ReportWorkflowNonRetryableError(t *testing.T) {
 	// Set up workflow client
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",

@@ -1,0 +1,427 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: test
+spec:
+  params:
+    - name: repository
+      description: the git repo
+    - name: revision
+      description: the revision
+      default: master
+    - name: apikey
+      description: the ibmcloud api key
+    - name: registry-namespace
+      description: the ibmcloud registry namespace
+    - name: docker-username
+      description: for ibm container registry
+      default: iamapikey
+    - name: docker-password
+      description: iam api key
+    - name: resource-group
+      description: resource group
+      default: default
+    - name: org
+      description: organization
+    - name: region
+      description: region
+    - name: space
+      description: space
+    - name: archive-dir
+      description: archive directory
+      default: "."
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: run-go-unittests
+      image: docker.io/aipipeline/pipeline-base-image:1.0
+      env:
+        - name: DOCKER_USERNAME
+          value: $(params.docker-username)
+        - name: DOCKER_PASSWORD
+          value: $(params.docker-password)
+        - name: IBM_CLOUD_API_KEY
+          value: $(params.apikey)
+        - name: GIT_URL
+          value: $(params.repository)
+        - name: REGION
+          value: $(params.region)
+        - name: ORG
+          value: $(params.org)
+        - name: SPACE
+          value: $(params.space)
+        - name: RESOURCE_GROUP
+          value: $(params.resource-group)
+        - name: GIT_BRANCH
+          value: $(params.revision)
+        - name: REGISTER_NAMESPACE
+          value: $(params.registry-namespace)
+        - name: BUILD_NUMBER
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['devops.cloud.ibm.com/build-number']
+        - name: ARCHIVE_DIR
+          value: $(params.archive-dir)
+      command: ["/bin/bash", "-c"]
+      args:
+        - set -ex;
+          cd /artifacts && git clone -q -b $GIT_BRANCH $GIT_URL .;
+          GIT_COMMIT=$(git rev-parse HEAD);
+          source ./scripts/deploy/iks/run-test.sh;
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-images
+spec:
+  params:
+    - name: apikey
+      description: the ibmcloud api key
+    - name: image-name
+      description: image name
+    - name: docker-root
+      description: root directory for docker
+      default: .
+    - name: docker-file
+      description: dockerfile
+    - name: registry-url
+      description: container registry url
+    - name: registry-namespace
+      description: the ibmcloud registry namespace
+    - name: docker-username
+      description: for ibm container registry
+      default: iamapikey
+    - name: docker-password
+      description: iam api key
+    - name: run-task
+      description: "execution task: artifact or image"
+    - name: archive-dir
+      description: archive directory
+      default: "."
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: build-image
+      image: docker.io/aipipeline/pipeline-base-image:1.0
+      env:
+        - name: DOCKER_USERNAME
+          value: $(params.docker-username)
+        - name: DOCKER_PASSWORD
+          value: $(params.docker-password)
+        - name: IBM_CLOUD_API_KEY
+          value: $(params.apikey)
+        - name: IMAGE_NAME
+          value: $(params.image-name)
+        - name: DOCKER_ROOT
+          value: $(params.docker-root)
+        - name: DOCKER_FILE
+          value: $(params.docker-file)
+        - name: REGISTRY_URL
+          value: $(params.registry-url)
+        - name: REGISTRY_NAMESPACE
+          value: $(params.registry-namespace)
+        - name: RUN_TASK
+          value: $(params.run-task)
+        - name: ARCHIVE_DIR
+          value: $(params.archive-dir)
+        - name: BUILD_NUMBER
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['devops.cloud.ibm.com/build-number']
+      command: ["/bin/bash", "-c"]
+      args:
+        - set -ex;
+          cd /artifacts && source build.properties;
+          source ./scripts/deploy/iks/build-image.sh;
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-images-args
+spec:
+  params:
+    - name: apikey
+      description: the ibmcloud api key
+    - name: image-name
+      description: image name
+    - name: docker-root
+      description: root directory for docker
+      default: .
+    - name: docker-file
+      description: dockerfile
+    - name: registry-url
+      description: container registry url
+    - name: registry-namespace
+      description: the ibmcloud registry namespace
+    - name: docker-username
+      description: for ibm container registry
+      default: iamapikey
+    - name: docker-password
+      description: iam api key
+    - name: run-task
+      description: "execution task: artifact or image"
+    - name: archive-dir
+      description: archive directory
+      default: "."
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: build-image
+      image: docker.io/aipipeline/pipeline-base-image:1.0
+      env:
+        - name: DOCKER_USERNAME
+          value: $(params.docker-username)
+        - name: DOCKER_PASSWORD
+          value: $(params.docker-password)
+        - name: IBM_CLOUD_API_KEY
+          value: $(params.apikey)
+        - name: IMAGE_NAME
+          value: $(params.image-name)
+        - name: DOCKER_ROOT
+          value: $(params.docker-root)
+        - name: DOCKER_FILE
+          value: $(params.docker-file)
+        - name: REGISTRY_URL
+          value: $(params.registry-url)
+        - name: REGISTRY_NAMESPACE
+          value: $(params.registry-namespace)
+        - name: RUN_TASK
+          value: $(params.run-task)
+        - name: ARCHIVE_DIR
+          value: $(params.archive-dir)
+        - name: BUILD_NUMBER
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['devops.cloud.ibm.com/build-number']
+      command: ["/bin/bash", "-c"]
+      args:
+        - set -ex;
+          cd /artifacts && source build.properties;
+          export BUILD_ARG_LIST="COMMIT_HASH=$(git rev-parse HEAD) DATE=\"$(date -u)\"";
+          source ./scripts/deploy/iks/build-image.sh;
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy
+spec:
+  params:
+    - name: apikey
+      description: the ibmcloud api key
+    - name: kubernetes-cluster
+      description: cluster name
+    - name: kubeflow-ns
+      description: kubeflow namespace
+      default: kubeflow
+    - name: tekton-version
+      description: tekton version
+    - name: tekton-ns
+      description: tekton namespace
+      default: tekton-pipeline
+    - name: docker-username
+      description: for ibm container registry
+      default: iamapikey
+    - name: docker-password
+      description: iam api key
+    - name: archive-dir
+      description: archive directory
+      default: "."
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: deploy-kfp-tekton
+      image: docker.io/aipipeline/pipeline-base-image:1.0
+      env:
+        - name: DOCKER_USERNAME
+          value: $(params.docker-username)
+        - name: DOCKER_PASSWORD
+          value: $(params.docker-password)
+        - name: IBM_CLOUD_API_KEY
+          value: $(params.apikey)
+        - name: PIPELINE_KUBERNETES_CLUSTER_NAME
+          value: $(params.kubernetes-cluster)
+        - name: ARCHIVE_DIR
+          value: $(params.archive-dir)
+        - name: KUBEFLOW_NS
+          value: $(params.kubeflow-ns)
+      command: ["/bin/bash", "-c"]
+      args:
+        - set -ex;
+          cd /artifacts && source build.properties;
+          source ./scripts/deploy/iks/deploy-kfp.sh;
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: e2e-test
+spec:
+  params:
+    - name: apikey
+      description: the ibmcloud api key
+    - name: kubernetes-cluster
+      description: cluster name
+    - name: kubeflow-ns
+      description: kubeflow namespace
+      default: kubeflow
+    - name: archive-dir
+      description: archive directory
+      default: "."
+    - name: slack-webhook
+      description: webhook URL
+      default: ""
+    - name: slack-channel
+      description: slack channel
+      default: ""
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: flip-coin
+      image: docker.io/aipipeline/pipeline-base-image:1.0
+      env:
+        - name: IBM_CLOUD_API_KEY
+          value: $(params.apikey)
+        - name: PIPELINE_KUBERNETES_CLUSTER_NAME
+          value: $(params.kubernetes-cluster)
+        - name: ARCHIVE_DIR
+          value: $(params.archive-dir)
+        - name: KUBEFLOW_NS
+          value: $(params.kubeflow-ns)
+        - name: SLACK_WEBHOOK
+          value: $(params.slack-webhook)
+        - name: SLACK_CHANNEL
+          value: $(params.slack-channel)
+        - name: PIPELINE_URL
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['devops.cloud.ibm.com/pipeline-run-url']
+        - name: BUILD_NUMBER
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['devops.cloud.ibm.com/build-number']
+      command: ["/bin/bash", "-c"]
+      args:
+        - set -ex;
+          cd /artifacts && source build.properties;
+          source ./scripts/deploy/iks/e2e-test.sh;
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: publish-images
+spec:
+  params:
+    - name: apikey
+      description: the ibmcloud api key
+    - name: kubernetes-cluster
+      description: cluster name
+    - name: kubeflow-ns
+      description: kubeflow namespace
+      default: kubeflow
+    - name: registry-url
+      description: container registry url
+    - name: registry-namespace
+      description: the ibmcloud registry namespace
+    - name: docker-username
+      description: ibm container registry username
+    - name: docker-password
+      description: ibm container registry password
+    - name: dockerhub-username
+      description: dockerhub username
+    - name: dockerhub-password
+      description: dockerhub password/token
+    - name: images
+      description: image list to publish
+      default: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend"
+    - name: image-tag
+      description: image tag
+      default: "nightly"
+    - name: dind-ns
+      description: dind namespace
+      default: docker-build
+    - name: dockerhub-namespace
+      description: dockerhub namespace
+      default: aipipeline
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: publish-images-to-dockerhub
+      image: docker.io/aipipeline/pipeline-base-image:1.0
+      env:
+        - name: IBM_CLOUD_API_KEY
+          value: $(params.apikey)
+        - name: PIPELINE_KUBERNETES_CLUSTER_NAME
+          value: $(params.kubernetes-cluster)
+        - name: KUBEFLOW_NS
+          value: $(params.kubeflow-ns)
+        - name: REGISTRY_URL
+          value: $(params.registry-url)
+        - name: REGISTRY_NAMESPACE
+          value: $(params.registry-namespace)
+        - name: DOCKER_USERNAME
+          value: $(params.docker-username)
+        - name: DOCKER_PASSWORD
+          value: $(params.docker-password)
+        - name: DOCKERHUB_USERNAME
+          value: $(params.dockerhub-username)
+        - name: DOCKERHUB_TOKEN
+          value: $(params.dockerhub-password)
+        - name: DOCKERHUB_NAMESPACE
+          value: $(params.dockerhub-namespace)
+        - name: IMAGES
+          value: $(params.images)
+        - name: PUBLISH_TAG
+          value: $(params.image-tag)
+        - name: DIND_NS
+          value: $(params.dind-ns)
+        - name: BUILD_NUMBER
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['devops.cloud.ibm.com/build-number']
+      command: ["/bin/bash", "-c"]
+      args:
+        - set -ex;
+          cd /artifacts && source build.properties;
+          source ./scripts/deploy/iks/publish-image.sh;
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: undeploy
+spec:
+  params:
+    - name: apikey
+      description: the ibmcloud api key
+    - name: kubeflow-ns
+      description: kubeflow namespace
+      default: kubeflow
+    - name: archive-dir
+      description: archive directory
+      default: "."
+    - name: kubernetes-cluster
+      description: cluster name
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: undeploy-kfp-tekton
+      image: docker.io/aipipeline/pipeline-base-image:1.0
+      env:
+        - name: PIPELINE_KUBERNETES_CLUSTER_NAME
+          value: $(params.kubernetes-cluster)
+        - name: IBM_CLOUD_API_KEY
+          value: $(params.apikey)
+        - name: ARCHIVE_DIR
+          value: $(params.archive-dir)
+        - name: KUBEFLOW_NS
+          value: $(params.kubeflow-ns)
+      command: ["/bin/bash", "-c"]
+      args:
+        - set -ex;
+          cd /artifacts && source build.properties;
+          source ./scripts/deploy/iks/undeploy-kfp.sh;

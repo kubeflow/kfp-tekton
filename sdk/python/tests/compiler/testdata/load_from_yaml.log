@@ -1,2 +1,8 @@
 [busybox : main] start  /tekton/results/dummy-output-path end
 
+[busybox : copy-artifacts] Added `storage` successfully.
+[busybox : copy-artifacts] tar: /tekton/results/dummy-output-path: No such file or directory
+[busybox : copy-artifacts] tar: error exit delayed from previous errors
+[busybox : copy-artifacts] `dummy_output_path.tgz` -> `storage/mlpipeline/artifacts/component-yaml-pipeline/busybox/dummy_output_path.tgz`
+[busybox : copy-artifacts] Total: 0 B, Transferred: 29 B, Speed: 1002 B/s
+

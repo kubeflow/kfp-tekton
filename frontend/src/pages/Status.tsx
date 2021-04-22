@@ -20,7 +20,8 @@ import PendingIcon from '@material-ui/icons/Schedule';
 import RunningIcon from '../icons/statusRunning';
 import SkippedIcon from '@material-ui/icons/SkipNext';
 import SuccessIcon from '@material-ui/icons/CheckCircle';
-import CachedIcon from '@material-ui/icons/Cached';
+import BlockIcon from '@material-ui/icons/Block';
+import CachedIcon from '../icons/statusCached';
 import TerminatedIcon from '../icons/statusTerminated';
 import Tooltip from '@material-ui/core/Tooltip';
 import UnknownIcon from '@material-ui/icons/Help';
@@ -79,6 +80,11 @@ export function statusToIcon(
       iconColor = color.success;
       title = 'Executed successfully';
       break;
+    case NodePhase.EVALUATIONSUCCESS:
+      IconComponent = SuccessIcon;
+      iconColor = color.success;
+      title = 'Custom task executed successfully';
+      break;
     case NodePhase.CACHED: // This is not argo native, only applies to node.
       IconComponent = CachedIcon;
       iconColor = color.success;
@@ -123,6 +129,10 @@ export function statusToIcon(
       iconColor = color.terminated;
       title = 'TaskRun could not cancel';
       break;
+    case NodePhase.OMITTED:
+      IconComponent = BlockIcon;
+      title = 'Run was omitted because the previous step failed.';
+      break;
     case NodePhase.UNKNOWN:
       break;
     default:
@@ -140,7 +150,10 @@ export function statusToIcon(
       }
     >
       <span style={{ height: 18 }}>
-        <IconComponent style={{ color: iconColor, height: 18, width: 18 }} />
+        <IconComponent
+          data-testid='node-status-sign'
+          style={{ color: iconColor, height: 18, width: 18 }}
+        />
       </span>
     </Tooltip>
   );

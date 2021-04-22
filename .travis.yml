@@ -14,24 +14,24 @@
 
 matrix:
   include:
-    - name: "Unit tests, Python 3.5"
-      language: python
-      python: "3.5"
-      env: TOXENV=py35
-      install: &0
-        - python3 -m pip install -e sdk/python
-      script: &1
-        - VENV=$VIRTUAL_ENV make unit_test
     - name: "Unit tests, Python 3.6"
       language: python
       python: "3.6"
       env: TOXENV=py36
-      install: *0
-      script: *1
+      install: &0
+        - python3 -m pip install -e sdk/python
+      script: &1
+        - VENV=$VIRTUAL_ENV make unit_test
     - name: "Unit tests, Python 3.7"
       language: python
       python: "3.7"
       env: TOXENV=py37
+      install: *0
+      script: *1
+    - name: "Unit tests, Python 3.8"
+      language: python
+      python: "3.8"
+      env: TOXENV=py38
       install: *0
       script: *1
     - name: "Progress report on compiling KFP DSL test scripts"
@@ -53,6 +53,47 @@ matrix:
       language: bash
       script:
         - make check_mdtoc
+    - name: "Verify Markdown files have valid links"
+      language: python
+      python: "3.7"
+      install:
+        - python3 -m pip install requests
+      script:
+        - make check_doc_links
+    - name: "Verify apiserver, agent, and workflow build"
+      language: go
+      go: 1.15.x
+      script:
+        - make build-backend
+    - name: "run go unit tests"
+      language: go
+      go: 1.15.x
+      script:
+        - make run-go-unittests
+    - name: "Verify api-server, persistenceagent, metadata-writer, and scheduledworkflow docker build"
+      services: docker
+      env:
+        - DOCKER_REGISTRY=fake_registry
+        - DIFF_DETECTED_ERR_CODE=169
+      before_script:
+        # No diff detected:                   terminate job with success i.e. travis_terminate 0
+        # Script throws unexpected error:     fail job with error code
+        # Diff detected:                      continue/run this job
+        - git remote add upstream https://github.com/kubeflow/kfp-tekton.git
+        - git fetch upstream
+        - ./scripts/check_diff.sh ; EXIT_CODE=$?
+        - |
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "No changes detected - skipping job."
+            travis_terminate 0
+          elif [ $EXIT_CODE -ne $DIFF_DETECTED_ERR_CODE ]; then
+            echo "Unexpected error in check_diff.sh - failing job."
+            travis_terminate $EXIT_CODE
+          fi
+        - echo "Changes detected - continue running job"
+      script:
+        - make build-backend-images
+
 
 # =================================
 # TODO: merge with config from KFP

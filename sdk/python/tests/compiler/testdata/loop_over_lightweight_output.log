@@ -1,0 +1,9 @@
+Pipeline still running ...
+PipelineRun is still running: Tasks Completed: 1 (Failed: 0, Cancelled 0), Incomplete: 1, Skipped: 0
+
+[produce-list : copy-artifacts] Added `storage` successfully.
+[produce-list : copy-artifacts] tar: removing leading '/' from member names
+[produce-list : copy-artifacts] tekton/results/data-list
+[produce-list : copy-artifacts] `data_list.tgz` -> `storage/mlpipeline/artifacts/loop-over-lightweight-output-b14a9/produce-list/data_list.tgz`
+[produce-list : copy-artifacts] Total: 0 B, Transferred: 125 B, Speed: 3.33 KiB/s
+

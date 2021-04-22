@@ -1,0 +1,2 @@
+time="2021-04-20T04:39:23Z" level=info msg="Starting to watch taskrun for 'task2,task3' and condition in gang-test/any-sequencer."
+time="2021-04-20T04:39:41Z" level=info msg="The TaskRun of flipcoin succeeded."

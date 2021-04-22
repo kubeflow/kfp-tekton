@@ -133,7 +133,7 @@ class Banner extends React.Component<BannerProps, BannerState> {
           {this.props.message}
         </div>
         <div className={commonCss.flex}>
-          {this.props.showTroubleshootingGuideLink && (
+          {showTroubleshootingGuideLink && (
             <a
               className={css.troubleShootingLink}
               href='https://www.kubeflow.org/docs/pipelines/troubleshooting'
@@ -149,7 +149,7 @@ class Banner extends React.Component<BannerProps, BannerState> {
               Details
             </Button>
           )}
-          {this.props.refresh && (
+          {showRefreshButton && this.props.refresh && (
             <Button
               className={classes(css.button, css.refreshButton)}
               onClick={this._refresh.bind(this)}

@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,6 +33,13 @@ spec:
     - name: random-failure
       retries: 10
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - import random; import sys; exit_code = random.choice([int(i) for i in
@@ -43,9 +50,17 @@ spec:
           - -c
           image: python:alpine3.6
           name: main
+      timeout: 0s
     - name: random-failure-2
       retries: 5
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - import random; import sys; exit_code = random.choice([int(i) for i in
@@ -56,3 +71,5 @@ spec:
           - -c
           image: python:alpine3.6
           name: main
+      timeout: 0s
+  timeout: 0s

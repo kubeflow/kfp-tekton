@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,18 +19,22 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
       "inputs": [{"default": "heads", "name": "forced_result1", "optional": true,
       "type": "String"}, {"default": "tails", "name": "forced_result2", "optional":
+      true, "type": "String"}, {"default": "heads", "name": "forced_result3", "optional":
       true, "type": "String"}], "name": "Flip Coin Example Pipeline"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"flip": [["output", "$(results.output.path)"]], "flip-again":
-      [["output", "$(results.output.path)"]], "print1": [], "print2": []}'
-    tekton.dev/input_artifacts: '{"print1": [{"name": "flip-again-output", "parent_task":
-      "flip-again"}], "print2": [{"name": "flip-output", "parent_task": "flip"}]}'
-    tekton.dev/output_artifacts: '{"flip": [{"key": "artifacts/$PIPELINERUN/flip/output.tgz",
-      "name": "flip-output", "path": "/tmp/output"}], "flip-again": [{"key": "artifacts/$PIPELINERUN/flip-again/output.tgz",
-      "name": "flip-again-output", "path": "/tmp/output"}]}'
+    tekton.dev/artifact_items: '{"flip": [["output_value", "$(results.output-value.path)"]],
+      "flip-again": [["output_value", "$(results.output-value.path)"]], "flip3": [["output_value",
+      "$(results.output-value.path)"]], "print1": [], "print2": []}'
+    tekton.dev/input_artifacts: '{"print1": [{"name": "flip-again-output_value", "parent_task":
+      "flip-again"}], "print2": [{"name": "flip-output_value", "parent_task": "flip"}]}'
+    tekton.dev/output_artifacts: '{"flip": [{"key": "artifacts/$PIPELINERUN/flip/output_value.tgz",
+      "name": "flip-output_value", "path": "/tmp/output"}], "flip-again": [{"key":
+      "artifacts/$PIPELINERUN/flip-again/output_value.tgz", "name": "flip-again-output_value",
+      "path": "/tmp/output"}], "flip3": [{"key": "artifacts/$PIPELINERUN/flip3/output_value.tgz",
+      "name": "flip3-output_value", "path": "/tmp/output"}]}'
   name: flip-coin-example-pipeline
 spec:
   params:
@@ -38,113 +42,261 @@ spec:
     value: heads
   - name: forced_result2
     value: tails
+  - name: forced_result3
+    value: heads
   pipelineSpec:
     params:
     - default: heads
       name: forced_result1
     - default: tails
       name: forced_result2
+    - default: heads
+      name: forced_result3
     tasks:
     - name: flip
       params:
       - name: forced_result1
         value: $(params.forced_result1)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: forced_result1
         results:
         - description: /tmp/output
-          name: output
+          name: output-value
         steps:
         - args:
           - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result1)';
             result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
             if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
-            | tee $(results.output.path)
+            | tee $(results.output-value.path)
           command:
           - sh
           - -c
           image: python:alpine3.6
           name: main
-    - conditions:
-      - conditionRef: super-condition
+      timeout: 0s
+    - name: flip3
+      params:
+      - name: forced_result3
+        value: $(params.forced_result3)
+      taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
-        - name: operand1
-          value: $(tasks.flip.results.output)
-        - name: operand2
-          value: heads
-        - name: operator
-          value: ==
-      name: flip-again
+        - name: forced_result3
+        results:
+        - description: /tmp/output
+          name: output-value
+        steps:
+        - args:
+          - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result3)';
+            result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
+            if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
+            | tee $(results.output-value.path)
+          command:
+          - sh
+          - -c
+          image: python:alpine3.6
+          name: main
+      timeout: 0s
+    - name: flip-again
       params:
       - name: forced_result2
         value: $(params.forced_result2)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: forced_result2
         results:
         - description: /tmp/output
-          name: output
+          name: output-value
         steps:
         - args:
           - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result2)';
             result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
             if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
-            | tee $(results.output.path)
+            | tee $(results.output-value.path)
           command:
           - sh
           - -c
           image: python:alpine3.6
           name: main
-    - conditions:
-      - conditionRef: super-condition
-        params:
-        - name: operand1
-          value: $(tasks.flip-again.results.output)
-        - name: operand2
-          value: tails
-        - name: operator
-          value: ==
-      - conditionRef: super-condition
-        params:
-        - name: operand1
-          value: $(tasks.flip.results.output)
-        - name: operand2
-          value: heads
-        - name: operator
-          value: ==
-      name: print1
+      timeout: 0s
+      when:
+      - input: $(tasks.condition-1.results.status)
+        operator: in
+        values:
+        - 'true'
+    - name: print1
       params:
-      - name: flip-again-output
-        value: $(tasks.flip-again.results.output)
+      - name: flip-again-output_value
+        value: $(tasks.flip-again.results.output-value)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
-        - name: flip-again-output
+        - name: flip-again-output_value
         steps:
         - command:
           - echo
-          - $(inputs.params.flip-again-output)
+          - $(inputs.params.flip-again-output_value)
           image: alpine:3.6
           name: main
-    - conditions:
-      - conditionRef: super-condition
-        params:
-        - name: operand1
-          value: $(tasks.flip.results.output)
-        - name: operand2
-          value: tails
-        - name: operator
-          value: ==
-      name: print2
+      timeout: 0s
+      when:
+      - input: $(tasks.condition-3.results.status)
+        operator: in
+        values:
+        - 'true'
+    - name: print2
       params:
-      - name: flip-output
-        value: $(tasks.flip.results.output)
+      - name: flip-output_value
+        value: $(tasks.flip.results.output-value)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
-        - name: flip-output
+        - name: flip-output_value
         steps:
         - command:
           - echo
-          - $(inputs.params.flip-output)
+          - $(inputs.params.flip-output_value)
           image: alpine:3.6
           name: main
+      timeout: 0s
+      when:
+      - input: $(tasks.condition-4.results.status)
+        operator: in
+        values:
+        - 'true'
+    - name: condition-1
+      params:
+      - name: operand1
+        value: $(tasks.flip.results.output-value)
+      - name: operand2
+        value: heads
+      - name: operator
+        value: ==
+      taskSpec:
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        results:
+        - description: Conditional task status
+          name: status
+        steps:
+        - image: python:alpine3.6
+          script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+            try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
+            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
+            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
+            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+    - name: condition-2
+      params:
+      - name: operand1
+        value: $(tasks.flip-again.results.output-value)
+      - name: operand2
+        value: tails
+      - name: operator
+        value: ==
+      taskSpec:
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        results:
+        - description: Conditional task status
+          name: status
+        steps:
+        - image: python:alpine3.6
+          script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+            try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
+            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
+            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
+            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+      when:
+      - input: $(tasks.condition-1.results.status)
+        operator: in
+        values:
+        - 'true'
+    - name: condition-3
+      params:
+      - name: operand1
+        value: $(tasks.flip3.results.output-value)
+      - name: operand2
+        value: heads
+      - name: operator
+        value: ==
+      taskSpec:
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        results:
+        - description: Conditional task status
+          name: status
+        steps:
+        - image: python:alpine3.6
+          script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+            try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
+            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
+            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
+            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+      when:
+      - input: $(tasks.condition-2.results.status)
+        operator: in
+        values:
+        - 'true'
+    - name: condition-4
+      params:
+      - name: operand1
+        value: $(tasks.flip.results.output-value)
+      - name: operand2
+        value: tails
+      - name: operator
+        value: ==
+      taskSpec:
+        params:
+        - name: operand1
+        - name: operand2
+        - name: operator
+        results:
+        - description: Conditional task status
+          name: status
+        steps:
+        - image: python:alpine3.6
+          script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
+            try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
+            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
+            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
+            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+  timeout: 0s

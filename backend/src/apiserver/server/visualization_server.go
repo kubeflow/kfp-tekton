@@ -14,6 +14,8 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
+	"github.com/pkg/errors"
+	authorizationv1 "k8s.io/api/authorization/v1"
 )
 
 const (
@@ -34,7 +36,16 @@ func (s *VisualizationServer) CreateVisualization(ctx context.Context, request *
 	// In multi-user mode, we allow empty namespace in which case we fall back to use the visualization service in system namespace.
 	// See getVisualizationServiceURL() for details.
 	if common.IsMultiUserMode() && len(request.Namespace) > 0 {
-		err := isAuthorized(s.resourceManager, ctx, request.Namespace)
+		resourceAttributes := &authorizationv1.ResourceAttributes{
+			Namespace:   request.Namespace,
+			Verb:        common.RbacResourceVerbCreate,
+			Group:       common.RbacPipelinesGroup,
+			Version:     common.RbacPipelinesVersion,
+			Resource:    common.RbacResourceTypeVisualizations,
+			Subresource: "",
+			Name:        "",
+		}
+		err := isAuthorized(s.resourceManager, ctx, resourceAttributes)
 		if err != nil {
 			return nil, util.Wrap(err, "Failed to authorize on namespace.")
 		}
@@ -78,11 +89,8 @@ func (s *VisualizationServer) validateCreateVisualizationRequest(request *go_cli
 // It returns the generated HTML as a string and any error that is encountered.
 func (s *VisualizationServer) generateVisualizationFromRequest(request *go_client.CreateVisualizationRequest) ([]byte, error) {
 	serviceURL := s.getVisualizationServiceURL(request)
-	if !isVisualizationServiceAlive(serviceURL) {
-		return nil, util.NewInternalServerError(
-			fmt.Errorf("service not available"),
-			"Service not available",
-		)
+	if err := isVisualizationServiceAlive(serviceURL); err != nil {
+		return nil, util.Wrap(err, "Cannot generate visualization.")
 	}
 	visualizationType := strings.ToLower(go_client.Visualization_Type_name[int32(request.Visualization.Type)])
 	urlValues := url.Values{
@@ -115,13 +123,19 @@ func (s *VisualizationServer) getVisualizationServiceURL(request *go_client.Crea
 	return s.serviceURL
 }
 
-func isVisualizationServiceAlive(serviceURL string) bool {
+func isVisualizationServiceAlive(serviceURL string) error {
 	resp, err := http.Get(serviceURL)
+
 	if err != nil {
-		glog.Error("Unable to verify visualization service is alive!", err)
-		return false
+		wrappedErr := util.Wrap(err, fmt.Sprintf("Unable to verify visualization service aliveness by sending request to %s", serviceURL))
+		glog.Error(wrappedErr)
+		return wrappedErr
+	} else if resp.StatusCode != http.StatusOK {
+		wrappedErr := errors.New(fmt.Sprintf("Unable to verify visualization service aliveness by sending request to %s and get response code: %s !", serviceURL, resp.Status))
+		glog.Error(wrappedErr)
+		return wrappedErr
 	}
-	return resp.StatusCode == http.StatusOK
+	return nil
 }
 
 func NewVisualizationServer(resourceManager *resource.ResourceManager, serviceHost string, servicePort string) *VisualizationServer {

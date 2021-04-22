@@ -249,7 +249,7 @@ describe('WorkflowParser', () => {
         });
     });
 
-    it('deletes virtual nodes', () => {
+    it('deletes virtual nodes (Steps, StepGroup)', () => {
       const workflow = {
         metadata: { name: 'testWorkflow' },
         status: {
@@ -268,6 +268,40 @@ describe('WorkflowParser', () => {
               name: 'node2',
               phase: 'Succeeded',
               type: 'StepGroup',
+            },
+            node3: {
+              id: 'node3',
+              name: 'node3',
+              phase: 'Succeeded',
+              type: 'Pod',
+            },
+          },
+        },
+      };
+      const g = WorkflowParser.createRuntimeGraph(workflow as any);
+      expect(g.nodes()).toEqual(['node1', 'node3']);
+      expect(g.edges()).toEqual([{ v: 'node1', w: 'node3' }]);
+    });
+
+    it('deletes virtual nodes (Retry)', () => {
+      const workflow = {
+        metadata: { name: 'testWorkflow' },
+        status: {
+          nodes: {
+            node1: {
+              children: ['node2'],
+              id: 'node1',
+              name: 'node1',
+              phase: 'Succeeded',
+              type: 'Pod',
+            },
+            node2: {
+              boundaryID: 'node',
+              children: ['node3'],
+              id: 'node2',
+              name: 'node2',
+              phase: 'Succeeded',
+              type: 'Retry',
             },
             node3: {
               id: 'node3',
@@ -501,6 +535,29 @@ describe('WorkflowParser', () => {
       });
     });
 
+    it('handles trimming output parameter name', () => {
+      const workflow = {
+        status: {
+          nodes: {
+            node1: {
+              templateName: 'my-component',
+              outputs: {
+                parameters: [
+                  {
+                    name: 'my-component-output-param1',
+                    value: 'output param1 value',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      };
+      expect(WorkflowParser.getNodeInputOutputParams(workflow as any, 'node1')).toEqual({
+        inputParams: [],
+        outputParams: [['output-param1', 'output param1 value']],
+      });
+    });
     it('handles a node with one input and one output parameter', () => {
       const workflow = {
         status: {
@@ -736,6 +793,30 @@ describe('WorkflowParser', () => {
       expect(WorkflowParser.getNodeInputOutputArtifacts(workflow as any, 'node1')).toEqual({
         inputArtifacts: [],
         outputArtifacts: [['output art1', s3]],
+      });
+    });
+
+    it('handles trimming output artifact name', () => {
+      const workflow = {
+        status: {
+          nodes: {
+            node1: {
+              templateName: 'my-component',
+              outputs: {
+                artifacts: [
+                  {
+                    name: 'my-component-output-art1',
+                    s3,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      };
+      expect(WorkflowParser.getNodeInputOutputArtifacts(workflow as any, 'node1')).toEqual({
+        inputArtifacts: [],
+        outputArtifacts: [['output-art1', s3]],
       });
     });
 
@@ -1106,6 +1187,22 @@ describe('WorkflowParser', () => {
         bucket: 'host:port',
         key: 'path/foo/bar',
         source: StorageService.HTTPS,
+      });
+    });
+
+    it('handles volume file without path', () => {
+      expect(WorkflowParser.parseStoragePath('volume://output')).toEqual({
+        bucket: 'output',
+        key: '',
+        source: StorageService.VOLUME,
+      });
+    });
+
+    it('handles volume file with path', () => {
+      expect(WorkflowParser.parseStoragePath('volume://output/path/foo/bar')).toEqual({
+        bucket: 'output',
+        key: 'path/foo/bar',
+        source: StorageService.VOLUME,
       });
     });
   });
