@@ -105,16 +105,7 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
     (pipeline['spec']['pipelineSpec']['finally'] || []).map((element: any) => {
       return element['name'];
     }) || [];
-  // Collect the anyConditions from 'metadata.annotations.anyConditions'
-  let anyConditions = {};
-  if (
-    pipeline['metadata'] &&
-    pipeline['metadata']['annotations'] &&
-    pipeline['metadata']['annotations']['anyConditions']
-  ) {
-    anyConditions = JSON.parse(pipeline['metadata']['annotations']['anyConditions']);
-  }
-  const anyTasks = Object.keys(anyConditions);
+
   for (const task of tasks) {
     const taskName = task['name'];
 
@@ -124,12 +115,7 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
       task['runAfter'].forEach((depTask: any) => {
         graph.setEdge(depTask, taskName);
       });
-    // Adds dependencies for anySequencers from 'anyCondition' annotation
-    if (anyTasks.includes(task['name'])) {
-      for (const depTask of anyConditions[task['name']]) {
-        graph.setEdge(depTask, taskName);
-      }
-    }
+
     // Adds any dependencies that arise from Conditions and tracks these dependencies to make sure they aren't duplicated in the case that
     // the Condition and the base task use output from the same dependency
     for (const condition of task['when'] || []) {
@@ -156,6 +142,32 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
           graph.setEdge(parentTask, taskName);
         }
       }
+    }
+
+    // Checks if the task is an any-sequencer and if so, adds the dependencies from the task list 
+    if (task['taskSpec']['steps'] && task['taskSpec']['steps'][0] && task['taskSpec']['steps'][0]['args'] 
+        && task['taskSpec']['steps'][0]['command'] && task['taskSpec']['steps'][0]['command'][0] 
+        && task['taskSpec']['steps'][0]['command'][0] === 'any-taskrun') {
+      let isNextTaskList = false
+      let isNextCondition = false
+      task['taskSpec']['steps'][0]['args'].forEach((arg: string) => {
+        if (arg === '--taskList') {
+          isNextTaskList = true
+        }
+        else if (arg === '-c') {
+          isNextCondition = true
+        }
+        else if (isNextTaskList) {
+          arg.split(',').forEach((parentTask:string) => {
+            graph.setEdge(parentTask, taskName)
+          })
+          isNextTaskList = false
+        }
+        else if (isNextCondition) {
+          graph.setEdge(arg.substring(arg.indexOf('results_') + 8, arg.indexOf('_output')), taskName)
+          isNextCondition = false
+        }
+      });
     }
 
     for (const param of task['params'] || []) {
