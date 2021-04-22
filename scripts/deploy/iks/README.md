@@ -105,15 +105,20 @@ will load those values as default values for the specified CLI options. The loca
 `--config-file="/path/config-file"`*
 
 1. Deploy cluster with cluster-name and vpc-name provided.
-
+   
+    a) Without kubeflow.
     ```shell
     ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc"
-    Please note the config file name, "my-vpc-my-cluster-cluster-config.sh", it can be used to perform maintenance tasks.
-    ... (wait for finish.)
+    Please note the config file name, "~/.iks/my-vpc-my-cluster-cluster-config.sh", it can be used to perform maintenance
+    tasks. ... (wait for finish.)
     kubectl get nodes
+    ```
+    b) With kubeflow
+    ```shell
+   ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc" --deploy-kubeflow=true
     kubectl -n kubeflow get pods
     ```
-
+   
 2. Delete a cluster, that was previously started.
   
    ```shell
@@ -168,15 +173,15 @@ will load those values as default values for the specified CLI options. The loca
     is no mechanism provided by cloud API to detach a VNIC from a subnet.
     
     Similarly, a VPC can only be deleted when all it's resources are released. When a cluster is deleted it takes more
-    than 40 mins, to completely release it's resources. And, it is not a great user experience if the scripts hangs for
-    40 mins to await a complete delete of the cluster. The other alternative is to prompt the user to run the same delete
-    command again, once the cluster is deleted. Second attempt of delete will make sure any lingering resources are also
-    released.
+    than 45 mins, to completely release it's resources. 
+   
     
     ```shell 
-    ./deploy-ibm-vpc.sh --delete-cluster="full" --config-file="/path/my-cluster-cluster-config-file"
-     (It takes a while for the cluster to get deleted and all the resources released. You may run
-     the script again with same option (i.e.  --delete-cluster="full") to reattempt delete.
+    ./deploy-ibm-vpc.sh --delete-cluster="full-sync" --cluster-name=xyz --vpc-name=my-vpc
+    # Or using the config file,
+    ./deploy-ibm-vpc.sh --delete-cluster="full-sync" --config-file="/path/my-cluster-cluster-config-file"
+     (It takes a while for the cluster to get deleted and all the resources released.)
+    
     ```
     
     __A "full" delete also deletes the config-file, the stored state (i.e. VPC id/subnets/clusters etc.) of a vpc is
