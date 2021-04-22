@@ -103,20 +103,20 @@ function complete_delete_cluster() {
     fi
     VPC_ID=$(vpc_name_to_vpc_id)
     if [ "x$SUBNET_ID" != "x" ] || [ "x$GATEWAY_ID" != "x" ]; then
-        ibmcloud is subnetd -f -q "$SUBNET_ID" || true 1>&2 2>/dev/null
-        ibmcloud is pubgwd -f -q "$GATEWAY_ID" || true 1>&2 2>/dev/null
+        ibmcloud is subnetd -f -q "$SUBNET_ID" 2>/dev/null || true
+        ibmcloud is pubgwd -f -q "$GATEWAY_ID" 2>/dev/null || true
     else
         echo "SUBNET_ID and GATEWAY_ID is not defined skipping..."
     fi
     set +e
-    ibmcloud is vpcd -f -q "$VPC_ID"
+    ibmcloud is vpcd -f -q "$VPC_ID" 2>/dev/null
     if [[ "$?" == "0" || "x$VPC_ID" == "x" ]] ; then
         echo "VPC $VPC_ID is deleted. Complete delete successful."
         rm "$CONFIG_FILE_IKS_DEPLOY"
     else
         echo "Delete incomplete, full delete can be done when vpc has no cluster/instances/subnets etc... in it."
         echo "A cluster/cloud resource can only be deleted once it's attached resources are released."
-        echo "Please try again, after the cluster(s) delete is complete."
+        echo "Please check if VPC has other resources in it."
     fi
     set -e
 }
