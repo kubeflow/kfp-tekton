@@ -144,28 +144,33 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
       }
     }
 
-    // Checks if the task is an any-sequencer and if so, adds the dependencies from the task list 
-    if (task['taskSpec']['steps'] && task['taskSpec']['steps'][0] && task['taskSpec']['steps'][0]['args'] 
-        && task['taskSpec']['steps'][0]['command'] && task['taskSpec']['steps'][0]['command'][0] 
-        && task['taskSpec']['steps'][0]['command'][0] === 'any-taskrun') {
-      let isNextTaskList = false
-      let isNextCondition = false
+    // Checks if the task is an any-sequencer and if so, adds the dependencies from the task list
+    if (
+      task['taskSpec']['steps'] &&
+      task['taskSpec']['steps'][0] &&
+      task['taskSpec']['steps'][0]['args'] &&
+      task['taskSpec']['steps'][0]['command'] &&
+      task['taskSpec']['steps'][0]['command'][0] &&
+      task['taskSpec']['steps'][0]['command'][0] === 'any-taskrun'
+    ) {
+      let isNextTaskList = false;
+      let isNextCondition = false;
       task['taskSpec']['steps'][0]['args'].forEach((arg: string) => {
         if (arg === '--taskList') {
-          isNextTaskList = true
-        }
-        else if (arg === '-c') {
-          isNextCondition = true
-        }
-        else if (isNextTaskList) {
-          arg.split(',').forEach((parentTask:string) => {
-            graph.setEdge(parentTask, taskName)
-          })
-          isNextTaskList = false
-        }
-        else if (isNextCondition) {
-          graph.setEdge(arg.substring(arg.indexOf('results_') + 8, arg.indexOf('_output')), taskName)
-          isNextCondition = false
+          isNextTaskList = true;
+        } else if (arg === '-c') {
+          isNextCondition = true;
+        } else if (isNextTaskList) {
+          arg.split(',').forEach((parentTask: string) => {
+            graph.setEdge(parentTask, taskName);
+          });
+          isNextTaskList = false;
+        } else if (isNextCondition) {
+          graph.setEdge(
+            arg.substring(arg.indexOf('results_') + 8, arg.indexOf('_output')),
+            taskName,
+          );
+          isNextCondition = false;
         }
       });
     }

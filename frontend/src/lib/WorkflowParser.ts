@@ -132,35 +132,37 @@ export default class WorkflowParser {
           }
         }
 
-        // Checks if the task is an any-sequencer and if so, adds the dependencies from the task list 
-        if (task['taskSpec']['steps'] && task['taskSpec']['steps'][0] && task['taskSpec']['steps'][0]['args'] 
-            && task['taskSpec']['steps'][0]['command'] && task['taskSpec']['steps'][0]['command'][0] 
-            && task['taskSpec']['steps'][0]['command'][0] === 'any-taskrun') {
-          let isNextTaskList = false
-          let isNextCondition = false
+        // Checks if the task is an any-sequencer and if so, adds the dependencies from the task list
+        if (
+          task['taskSpec']['steps'] &&
+          task['taskSpec']['steps'][0] &&
+          task['taskSpec']['steps'][0]['args'] &&
+          task['taskSpec']['steps'][0]['command'] &&
+          task['taskSpec']['steps'][0]['command'][0] &&
+          task['taskSpec']['steps'][0]['command'][0] === 'any-taskrun'
+        ) {
+          let isNextTaskList = false;
+          let isNextCondition = false;
           task['taskSpec']['steps'][0]['args'].forEach((arg: string) => {
             if (arg === '--taskList') {
-              isNextTaskList = true
-            }
-            else if (arg === '-c') {
-              isNextCondition = true
-            }
-            else if (isNextTaskList) {
-              arg.split(',').forEach((parentTask:string) => {
+              isNextTaskList = true;
+            } else if (arg === '-c') {
+              isNextCondition = true;
+            } else if (isNextTaskList) {
+              arg.split(',').forEach((parentTask: string) => {
                 const parentId =
                   statusMap.get(parentTask)!['status']['podName'] ||
                   statusMap.get(parentTask)!['pipelineTaskName'];
-                graph.setEdge(parentId, taskId)
-              })
-              isNextTaskList = false
-            }
-            else if (isNextCondition) {
-              const parentTask = arg.substring(arg.indexOf('results_') + 8, arg.indexOf('_output'))
+                graph.setEdge(parentId, taskId);
+              });
+              isNextTaskList = false;
+            } else if (isNextCondition) {
+              const parentTask = arg.substring(arg.indexOf('results_') + 8, arg.indexOf('_output'));
               const parentId =
-                  statusMap.get(parentTask)!['status']['podName'] ||
-                  statusMap.get(parentTask)!['pipelineTaskName'];
-              graph.setEdge(parentId, taskId)
-              isNextCondition = false
+                statusMap.get(parentTask)!['status']['podName'] ||
+                statusMap.get(parentTask)!['pipelineTaskName'];
+              graph.setEdge(parentId, taskId);
+              isNextCondition = false;
             }
           });
         }
