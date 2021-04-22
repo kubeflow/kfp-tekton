@@ -699,6 +699,16 @@ class TektonCompiler(Compiler):
           recursive_task['when'] = condition_refs.get(op_name_to_parent_groups[recursive_task['name']][-2], [])
       recursive_task['name'] = sanitize_k8s_name(recursive_task['name'])
 
+    # add condition refs to the pipelineloop refs that depends on the condition
+    opgroup_name_to_parent_groups = self._get_groups_for_opsgroups(pipeline.groups[0])
+    for loop_task_key in self.loops_pipeline.keys():
+      task_name_prefix = '-'.join(self._group_names[:-1] + [""])
+      raw_task_key = loop_task_key.replace(task_name_prefix, "")
+      parent_group = opgroup_name_to_parent_groups.get(raw_task_key, [])
+      if parent_group:
+        if condition_refs.get(parent_group[-2], []):
+          self.loops_pipeline[loop_task_key]['spec']['when'] = condition_refs.get(parent_group[-2], [])
+
     # process input parameters from upstream tasks
     pipeline_param_names = [p['name'] for p in params]
     loop_args = [self.loops_pipeline[key]['loop_args'] for key in self.loops_pipeline.keys()]
