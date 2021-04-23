@@ -150,18 +150,22 @@ export default class WorkflowParser {
               isNextCondition = true;
             } else if (isNextTaskList) {
               arg.split(',').forEach((parentTask: string) => {
-                const parentId =
-                  statusMap.get(parentTask)!['status']['podName'] ||
-                  statusMap.get(parentTask)!['pipelineTaskName'];
-                graph.setEdge(parentId, taskId);
+                if (statusMap.get(parentTask)) {
+                  const parentId =
+                    statusMap.get(parentTask)['status']['podName'] ||
+                    statusMap.get(parentTask)['pipelineTaskName'];
+                  graph.setEdge(parentId, taskId);
+                }
               });
               isNextTaskList = false;
             } else if (isNextCondition) {
               const parentTask = arg.substring(arg.indexOf('results_') + 8, arg.indexOf('_output'));
-              const parentId =
-                statusMap.get(parentTask)!['status']['podName'] ||
-                statusMap.get(parentTask)!['pipelineTaskName'];
-              graph.setEdge(parentId, taskId);
+              if (statusMap.get(parentTask)) {
+                const parentId =
+                  statusMap.get(parentTask)['status']['podName'] ||
+                  statusMap.get(parentTask)['pipelineTaskName'];
+                graph.setEdge(parentId, taskId);
+              }
               isNextCondition = false;
             }
           });
