@@ -24,6 +24,7 @@ from glob import glob
 from kfp_tekton import TektonClient
 from packaging import version
 from os import environ as env
+from os.path import dirname, join
 from subprocess import run, SubprocessError
 from time import sleep
 
@@ -46,11 +47,11 @@ if not KUBECONFIG:
 else:
     logging.warning("KUBECONFIG={}".format(KUBECONFIG))
 
-# set or override the minimum required Tekton Pipeline version, default "v0.20.1":
-#    TKN_PIPELINE_MIN_VERSION=v0.20 sdk/python/tests/run_e2e_tests.sh
+# set or override the minimum required Tekton Pipeline version, default "v0.21.0":
+#    TKN_PIPELINE_MIN_VERSION=v0.21 sdk/python/tests/run_e2e_tests.sh
 # or:
-#    make e2e_test TKN_PIPELINE_MIN_VERSION=v0.20
-TKN_PIPELINE_MIN_VERSION = env.get("TKN_PIPELINE_MIN_VERSION", "v0.20.1")
+#    make e2e_test TKN_PIPELINE_MIN_VERSION=v0.21
+TKN_PIPELINE_MIN_VERSION =    env.get("TKN_PIPELINE_MIN_VERSION", "v0.21.0")
 
 # let the user know the expected Tekton Pipeline version
 if env.get("TKN_PIPELINE_MIN_VERSION"):
@@ -61,7 +62,7 @@ if env.get("TKN_PIPELINE_MIN_VERSION"):
 #    TKN_CLIENT_MIN_VERSION=0.15 sdk/python/tests/run_e2e_tests.sh
 # or:
 #    make e2e_test TKN_CLIENT_MIN_VERSION=0.15
-TKN_CLIENT_MIN_VERSION = env.get("TKN_CLIENT_MIN_VERSION", "0.15.0")
+TKN_CLIENT_MIN_VERSION =    env.get("TKN_CLIENT_MIN_VERSION", "0.15.0")
 
 # let the user know the expected Tekton CLI version
 if env.get("TKN_CLIENT_MIN_VERSION"):
@@ -183,80 +184,42 @@ if RERUN_FAILED_TESTS_ONLY:
 
 
 # =============================================================================
-#  non-configurable test settings
+#  general test settings loaded from e2e_test_config.yaml file
 # =============================================================================
 
-# ignore pipelines with unpredictable log output or complex prerequisites
-# TODO: revisit this list, try to rewrite those Python DSLs in a way that they
-#  will produce logs which can be verified. One option would be to keep more
-#  than one "golden" log file to match either of the desired possible outputs
-ignored_yaml_files = [
-    "big_data_passing.yaml",    # does not complete in a reasonable time frame
-    "create_component_from_func_component.yaml",  # not a Tekton PipelineRun
-    "create_component_from_func.yaml",  # need to investigate, keeps Running
-    "katib.yaml",               # service account needs Katib permission, takes too long doing 9 trail runs
-    "parallel_join_with_logging.yaml",  # experimental feature, requires S3 (Minio)
-    "retry.yaml",               # designed to occasionally fail (randomly) if number of retries exceeded
-    "timeout.yaml",             # random failure (by design) ... would need multiple golden log files to compare to
-    "tolerations.yaml",         # designed to fail, test show only how to add the toleration to the pod
-    "volume.yaml",              # need to rework the credentials part
-    "volume_op.yaml",           # need to delete PVC before/after test run
-    "volume_snapshot_op.yaml",  # only works on Minikube, K8s alpha feature, requires a feature gate from K8s master
+config_file = "./../e2e_test_config.yaml"
 
-    # the following tests require tekton-pipelines feature-flag data.enable-custom-tasks=true
-    #   kubectl patch cm feature-flags -n tekton-pipelines \
-    #     -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true", "enable-custom-tasks": "true"}}'
-    # TODO: apply the _cr*.yaml files "apiVersion: custom.tekton.dev/v1alpha1, kind: PipelineLoop"
-    #   for f in sdk/python/tests/compiler/testdata/*_cr*.yaml; do \
-    #     echo "=== ${f} ==="; \
-    #     kubectl apply -f "${f}" -n kubeflow && \
-    #     echo OK || echo FAILED; \
-    #   done
-    "conditions_and_loops.yaml",
-    "loop_over_lightweight_output.yaml",
-    "loop_static.yaml",
-    "parallelfor_item_argument_resolving.yaml",
-    "withitem_nested.yaml",
-    "withparam_global.yaml",
-    "withparam_global_dict.yaml",
-    "withparam_output.yaml",
-    "withparam_output_dict.yaml",
+with open(join(dirname(__file__), config_file), 'r') as f:
+    test_config = yaml.safe_load(f)
 
-    # TODO: remove the following from ignored list
-    # "any_sequencer.yaml",       # takes 5 min
-    # "basic_no_decorator.yaml",  # takes 2 min
-    # "compose.yaml",             # takes 2 min
-]
+namespace = test_config["namespace"]
+experiment_name = test_config["experiment_name"]
+ignored_yaml_files = test_config["ignored_test_files"]
 
 if ignored_yaml_files:
-    logging.warning("Ignoring the following pipelines: {}".format(
+    logging.warning("Ignoring the following pipelines (see ): {}".format(
         ", ".join(ignored_yaml_files)))
-
-# run pipelines in "kubeflow" namespace as some E2E tests depend on Minio
-# for artifact storage in order to access secrets:
-namespace = "kubeflow"
-
-# experiment name to group the pipeline runs started by these E2E tests
-experiment_name = "E2E_TEST"
 
 # KFP doesn't allow any resource to be created by a pipeline. The API has an option
 # for users to provide their own service account that has those permissions.
 # see https://github.com/kubeflow/kfp-tekton/blob/master/sdk/sa-and-rbac.md
 # TODO: add to setUpClass method
-rbac = textwrap.dedent("""\
-    apiVersion: rbac.authorization.k8s.io/v1beta1
-    kind: ClusterRoleBinding
-    metadata:
-      name: default-admin
-    subjects:
-      - kind: ServiceAccount
-        name: default
-        namespace: {}
-    roleRef:
-      kind: ClusterRole
-      name: cluster-admin
-      apiGroup: rbac.authorization.k8s.io
-    """.format(namespace))
+# rbac = textwrap.dedent("""\
+#     apiVersion: rbac.authorization.k8s.io/v1beta1
+#     kind: ClusterRoleBinding
+#     metadata:
+#       name: default-admin
+#     subjects:
+#       - kind: ServiceAccount
+#         name: pipeline-runner
+#         namespace: kubeflow
+#     roleRef:
+#       kind: ClusterRole
+#       name: cluster-admin
+#       apiGroup: rbac.authorization.k8s.io
+#     """.format(namespace))
+#
+# $ kubectl create clusterrolebinding pipeline-runner-extend --clusterrole cluster-admin --serviceaccount=kubeflow:pipeline-runner
 
 # TODO: enable feature flag for custom tasks to enable E2E tests for loops
 #   $ kubectl get configmap feature-flags -n tekton-pipelines -o jsonpath='{.data.enable-custom-tasks}'
@@ -380,9 +343,10 @@ class TestCompilerE2E(unittest.TestCase):
         self.assertEqual(kfp_proc.returncode, 0,
                          "Process returned non-zero exit code: {} -> {}".format(
                              kfp_cmd, kfp_proc.stderr))
-        run_id = kfp_proc.stdout.decode().split()[1]
+        run_id = kfp_proc.stdout.decode().splitlines()[-2].split("|")[1].strip()
         wf_manifest = self.client.get_run(run_id).pipeline_runtime.workflow_manifest
         pr_name = json.loads(wf_manifest)['metadata']['name']
+        self.assertIn(name, pr_name, msg=f"pr_name '{pr_name}' is expected to contain pipeline name {name}")
         self.pr_name_map[name] = pr_name
         # TODO: find a better way than to sleep, but some PipelineRuns take longer
         #   to be created and logs may not be available yet even with --follow or
