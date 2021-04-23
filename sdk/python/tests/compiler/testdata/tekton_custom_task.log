@@ -1,0 +1,4 @@
+[flip-coin : main] 2021/04/23 20:27:50 Error executing command: fork/exec /bin/bash: no such file or directory
+
+[flip-coin-2 : main] 2021/04/23 20:27:51 Error executing command: fork/exec /bin/bash: no such file or directory
+

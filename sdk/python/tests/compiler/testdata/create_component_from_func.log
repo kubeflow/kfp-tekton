@@ -1,3 +1,69 @@
-Pipeline still running ...
-PipelineRun is still running: Tasks Completed: 0 (Failed: 0, Cancelled 0), Incomplete: 4, Skipped: 0
+
+[produce-dir-with-files-python-op : copy-artifacts] Added `storage` successfully.
+[produce-dir-with-files-python-op : copy-artifacts] tar: removing leading '/' from member names
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/0.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/1.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/2.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/3.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/4.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/5.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/6.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/7.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/8.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/9.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/10.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/11.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/12.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/13.txt
+[produce-dir-with-files-python-op : copy-artifacts] workspace/produce-dir-with-files-python-op/produce-dir-with-files-python-op-output_dir/subdir/14.txt
+[produce-dir-with-files-python-op : copy-artifacts] `output_dir.tgz` -> `storage/mlpipeline/artifacts/create-component-from-function/produce-dir-with-files-python-op/output_dir.tgz`
+[produce-dir-with-files-python-op : copy-artifacts] Total: 0 B, Transferred: 507 B, Speed: 147 B/s
+
+[get-subdirectory : main] + dirname /workspace/get-subdirectory/get-subdirectory-Subdir
+[get-subdirectory : main] + mkdir -p /workspace/get-subdirectory
+[get-subdirectory : main] + cp -r /workspace/get-subdirectory/produce-dir-with-files-python-op-output_dir/subdir /workspace/get-subdirectory/get-subdirectory-Subdir
+
+[get-subdirectory : copy-artifacts] Added `storage` successfully.
+[get-subdirectory : copy-artifacts] tar: removing leading '/' from member names
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/0.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/1.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/2.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/3.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/4.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/5.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/6.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/7.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/8.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/9.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/10.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/11.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/12.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/13.txt
+[get-subdirectory : copy-artifacts] workspace/get-subdirectory/get-subdirectory-Subdir/14.txt
+[get-subdirectory : copy-artifacts] `Subdir.tgz` -> `storage/mlpipeline/artifacts/create-component-from-function/get-subdirectory/Subdir.tgz`
+[get-subdirectory : copy-artifacts] Total: 0 B, Transferred: 397 B, Speed: 159 B/s
+
+[list-items : main] + dirname /tekton/results/items
+[list-items : main] + mkdir -p /tekton/results
+[list-items : main] + ls -A -R /workspace/list-items/get-subdirectory-Subdir
+
+[list-items : copy-artifacts] Added `storage` successfully.
+[list-items : copy-artifacts] tekton/results/items
+[list-items : copy-artifacts] tar: removing leading '/' from member names
+[list-items : copy-artifacts] `Items.tgz` -> `storage/mlpipeline/artifacts/create-component-from-function/list-items/Items.tgz`
+[list-items : copy-artifacts] Total: 0 B, Transferred: 184 B, Speed: 43 B/s
+
+[list-items-2 : main] + dirname /tekton/results/items
+[list-items-2 : main] + mkdir -p /tekton/results
+[list-items-2 : main] + ls -A -R /workspace/list-items-2/get-subdirectory-Subdir
+[list-items-2 : main] + ls -A -R /workspace/list-items-2/produce-dir-with-files-python-op-output_dir
+
+[list-items-2 : copy-artifacts] Added `storage` successfully.
+[list-items-2 : copy-artifacts] tar: removing leading '/' from member names
+[list-items-2 : copy-artifacts] tekton/results/items
+[list-items-2 : copy-artifacts] `Items.tgz` -> `storage/mlpipeline/artifacts/create-component-from-function/list-items-2/Items.tgz`
+[list-items-2 : copy-artifacts] Total: 0 B, Transferred: 229 B, Speed: 53 B/s
 
