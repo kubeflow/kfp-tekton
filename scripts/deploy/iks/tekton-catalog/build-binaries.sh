@@ -20,7 +20,7 @@ BUILD_DIR="${BUILD_DIR:="tekton-catalog/feature"}"
 
 pushd $BUILD_DIR > /dev/null
 
-make build-linux
+make update build-linux
 
 popd > /dev/null
 

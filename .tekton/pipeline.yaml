@@ -90,7 +90,7 @@ spec:
         workspace: pipeline-pvc
     - name: build-images-artifact
       taskRef:
-        name: build-images
+        name: build-images-dnd
       runAfter:
         - test
       params:
@@ -118,7 +118,7 @@ spec:
     - name: build-images-api-server
       retries: 1
       taskRef:
-        name: build-images
+        name: build-images-dnd
       runAfter:
         - test
       params:
@@ -146,7 +146,7 @@ spec:
     - name: build-images-persistenceagent
       retries: 1
       taskRef:
-        name: build-images
+        name: build-images-dnd
       runAfter:
         - test
       params:
@@ -174,7 +174,7 @@ spec:
     - name: build-images-metadata-writer
       retries: 1
       taskRef:
-        name: build-images
+        name: build-images-dnd
       runAfter:
         - test
       params:
@@ -202,7 +202,7 @@ spec:
     - name: build-images-scheduledworkflow
       retries: 1
       taskRef:
-        name: build-images
+        name: build-images-dnd
       runAfter:
         - test
       params:
@@ -230,7 +230,7 @@ spec:
     - name: build-images-cacheserver
       retries: 1
       taskRef:
-        name: build-images
+        name: build-images-dnd
       runAfter:
         - test
       params:
@@ -257,7 +257,7 @@ spec:
         workspace: pipeline-pvc
     - name: build-images-frontend
       taskRef:
-        name: build-images-args
+        name: build-images-dnd
       runAfter:
         - test
       params:
@@ -269,6 +269,115 @@ spec:
           value: .
         - name: docker-file
           value: frontend/Dockerfile
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+        - name: build-args
+          value: "COMMIT_HASH=$(git rev-parse HEAD) DATE=\"$(date -u)\""
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-pipeline-loops-binaries
+      taskRef:
+        name: build-binaries
+      runAfter:
+        - test
+      params:
+        - name: build-dir
+          value: tekton-catalog/pipeline-loops
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: build-any-sequencer-binaries
+      taskRef:
+        name: build-binaries
+      runAfter:
+        - test
+      params:
+        - name: build-dir
+          value: tekton-catalog/any-sequencer
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: containerize-pipelineloop-controller
+      runAfter:
+        - build-pipeline-loops-binaries
+      taskRef:
+        name: build-images-dnd
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: pipelineloop-controller
+        - name: docker-root
+          value: tekton-catalog/pipeline-loops
+        - name: docker-file
+          value: tekton-catalog/pipeline-loops/Dockerfile
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: build-args
+          value: "bin_name=pipelineloop-controller"
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: containerize-pipelineloop-webhook
+      runAfter:
+        - build-pipeline-loops-binaries
+      taskRef:
+        name: build-images-dnd
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: pipelineloop-webhook
+        - name: docker-root
+          value: tekton-catalog/pipeline-loops
+        - name: docker-file
+          value: tekton-catalog/pipeline-loops/Dockerfile
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: build-args
+          value: "bin_name=pipelineloop-webhook"
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: containerize-any-sequencer
+      runAfter:
+        - build-any-sequencer-binaries
+      taskRef:
+        name: build-images-dnd
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: any-sequencer
+        - name: docker-root
+          value: tekton-catalog/any-sequencer
+        - name: docker-file
+          value: tekton-catalog/any-sequencer/Dockerfile
         - name: registry-url
           value: $(params.registry-url)
         - name: registry-namespace
@@ -303,10 +412,76 @@ spec:
           value: $(params.kubernetes-cluster)
         - name: kubeflow-ns
           value: $(params.kubeflow-ns)
-        - name: tekton-version
-          value: $(params.tekton-version)
-        - name: tekton-ns
-          value: $(params.tekton-ns)
+        # - name: tekton-version
+        #   value: $(params.tekton-version)
+        # - name: tekton-ns
+        #   value: $(params.tekton-ns)
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: setup-pipeline-loops-deploy
+      taskRef:
+        name: setup-pipeline-loops-deploy
+      runAfter:
+        - containerize-pipelineloop-controller
+        - containerize-pipelineloop-webhook
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: deploy-pipeline-loops-e2e
+      taskRef:
+        name: iks-test
+      runAfter:
+        - setup-pipeline-loops-deploy
+        - deploy
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: resource-group
+          value: $(params.resource-group)
+        - name: org
+          value: $(params.org)
+        - name: region
+          value: $(params.region)
+        - name: space
+          value: $(params.space)
+        - name: test-commands
+          value: |
+            source scripts/deploy/iks/tekton-catalog/deploy-pipeline-loops-e2e.sh;
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: deploy-any-sequencer-e2e
+      taskRef:
+        name: iks-test
+      runAfter:
+        - deploy
+        - build-any-sequencer-binaries
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: resource-group
+          value: $(params.resource-group)
+        - name: org
+          value: $(params.org)
+        - name: region
+          value: $(params.region)
+        - name: space
+          value: $(params.space)
+        - name: test-commands
+          value: |
+            export NEW_IMAGE_URL="${REGISTRY_URL}/${REGISTRY_NAMESPACE}/any-sequencer"
+            export NEW_IMAGE_TAG="${IMAGE_TAG}"
+            kubectl create clusterrolebinding pipeline-runner-extend --clusterrole=cluster-admin --serviceaccount=default:default || true
+            source scripts/deploy/iks/tekton-catalog/deploy-any-sequencer-e2e.sh
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
@@ -315,6 +490,7 @@ spec:
         name: e2e-test
       runAfter:
         - deploy
+        - deploy-pipeline-loops-e2e
       params:
         - name: apikey
           value: $(params.apikey)
@@ -362,10 +538,38 @@ spec:
           value: $(params.image-tag)
         - name: dockerhub-namespace
           value: $(params.dockerhub-namespace)
+        - name: images
+          value: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend pipelineloop-controller pipelineloop-webhook"
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
   finally:
+    - name: cleanup-pipeline-loops
+      taskRef:
+        name: iks-test
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: resource-group
+          value: $(params.resource-group)
+        - name: org
+          value: $(params.org)
+        - name: region
+          value: $(params.region)
+        - name: space
+          value: $(params.space)
+        - name: test-commands
+          value: |
+            kubectl delete -f tekton-catalog/pipeline-loops/config || true
+            kubectl delete -f tekton-catalog/pipeline-loops/examples/loop-example-basic.yaml || true
+            kubectl delete -f sdk/python/tests/compiler/testdata/any_sequencer.yaml || true
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
     - name: undeploy
       taskRef:
         name: undeploy
