@@ -1,2 +1,4 @@
-[download : main] 2021/04/23 20:25:16 Error executing command: fork/exec /bin/bash: no such file or directory
+[download : main] "hello world"
+
+[echo : main] pipelineParams: hello world
 

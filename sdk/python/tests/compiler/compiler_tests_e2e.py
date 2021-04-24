@@ -51,7 +51,7 @@ else:
 #    TKN_PIPELINE_MIN_VERSION=v0.21 sdk/python/tests/run_e2e_tests.sh
 # or:
 #    make e2e_test TKN_PIPELINE_MIN_VERSION=v0.21
-TKN_PIPELINE_MIN_VERSION =    env.get("TKN_PIPELINE_MIN_VERSION", "v0.21.0")
+TKN_PIPELINE_MIN_VERSION = env.get("TKN_PIPELINE_MIN_VERSION", "v0.21.0")
 
 # let the user know the expected Tekton Pipeline version
 if env.get("TKN_PIPELINE_MIN_VERSION"):
@@ -62,7 +62,7 @@ if env.get("TKN_PIPELINE_MIN_VERSION"):
 #    TKN_CLIENT_MIN_VERSION=0.15 sdk/python/tests/run_e2e_tests.sh
 # or:
 #    make e2e_test TKN_CLIENT_MIN_VERSION=0.15
-TKN_CLIENT_MIN_VERSION =    env.get("TKN_CLIENT_MIN_VERSION", "0.15.0")
+TKN_CLIENT_MIN_VERSION = env.get("TKN_CLIENT_MIN_VERSION", "0.15.0")
 
 # let the user know the expected Tekton CLI version
 if env.get("TKN_CLIENT_MIN_VERSION"):
@@ -197,7 +197,7 @@ experiment_name = test_config["experiment_name"]
 ignored_yaml_files = test_config["ignored_test_files"]
 
 if ignored_yaml_files:
-    logging.warning("Ignoring the following pipelines (see ): {}".format(
+    logging.warning("Ignoring the following pipelines: {}".format(
         ", ".join(ignored_yaml_files)))
 
 # KFP doesn't allow any resource to be created by a pipeline. The API has an option

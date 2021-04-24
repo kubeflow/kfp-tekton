@@ -1,2 +1,4 @@
-[flip-coin : main] 2021/04/23 20:15:25 Error executing command: fork/exec /bin/bash: no such file or directory
+Pipeline still running ...
+PipelineRun is still running: Tasks Completed: 1 (Failed: 0, Cancelled 0), Incomplete: 9, Skipped: 0
+[flip-coin : main] heads
 

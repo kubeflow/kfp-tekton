@@ -3,7 +3,7 @@
 [repeat-line : copy-artifacts] tar: removing leading '/' from member names
 [repeat-line : copy-artifacts] workspace/repeat-line/repeat-line-output_text
 [repeat-line : copy-artifacts] `output_text.tgz` -> `storage/mlpipeline/artifacts/big-data-passing/repeat-line/output_text.tgz`
-[repeat-line : copy-artifacts] Total: 0 B, Transferred: 212 B, Speed: 27 B/s
+[repeat-line : copy-artifacts] Total: 0 B, Transferred: 212 B, Speed: 20 B/s
 
 [print-text : main] Hello
 [print-text : main] Hello
@@ -5022,11 +5022,11 @@
 [split-text-lines : copy-artifacts] tar: removing leading '/' from member names
 [split-text-lines : copy-artifacts] workspace/split-text-lines/split-text-lines-even_lines
 [split-text-lines : copy-artifacts] `even_lines.tgz` -> `storage/mlpipeline/artifacts/big-data-passing/split-text-lines/even_lines.tgz`
-[split-text-lines : copy-artifacts] Total: 0 B, Transferred: 162 B, Speed: 24 B/s
+[split-text-lines : copy-artifacts] Total: 0 B, Transferred: 161 B, Speed: 19 B/s
 [split-text-lines : copy-artifacts] tar: removing leading '/' from member names
 [split-text-lines : copy-artifacts] workspace/split-text-lines/split-text-lines-odd_lines
 [split-text-lines : copy-artifacts] `odd_lines.tgz` -> `storage/mlpipeline/artifacts/big-data-passing/split-text-lines/odd_lines.tgz`
-[split-text-lines : copy-artifacts] Total: 0 B, Transferred: 164 B, Speed: 60 B/s
+[split-text-lines : copy-artifacts] Total: 0 B, Transferred: 163 B, Speed: 43 B/s
 
 [print-text-2 : main] one
 [print-text-2 : main] three
@@ -5045,7 +5045,7 @@
 [write-numbers : copy-artifacts] tar: removing leading '/' from member names
 [write-numbers : copy-artifacts] workspace/write-numbers/write-numbers-numbers
 [write-numbers : copy-artifacts] `numbers.tgz` -> `storage/mlpipeline/artifacts/big-data-passing/write-numbers/numbers.tgz`
-[write-numbers : copy-artifacts] Total: 0 B, Transferred: 210.30 KiB, Speed: 26.73 KiB/s
+[write-numbers : copy-artifacts] Total: 0 B, Transferred: 210.30 KiB, Speed: 22.50 KiB/s
 
 [print-text-4 : main] 0
 [print-text-4 : main] 1
@@ -105053,17 +105053,11 @@
 [sum-numbers : copy-artifacts] tar: removing leading '/' from member names
 [sum-numbers : copy-artifacts] workspace/sum-numbers/sum-numbers-Output
 [sum-numbers : copy-artifacts] `Output.tgz` -> `storage/mlpipeline/artifacts/big-data-passing/sum-numbers/Output.tgz`
-[sum-numbers : copy-artifacts] Total: 0 B, Transferred: 145 B, Speed: 64 B/s
+[sum-numbers : copy-artifacts] Total: 0 B, Transferred: 145 B, Speed: 44 B/s
 
 [print-text-5 : main] 4999950000
 
-
-[gen-params : copy-artifacts] Added `storage` successfully.
-[gen-params : copy-artifacts] /tekton/scripts/script-1-7kgg8: line 14: workspaces.sum-numbers.path: not found
-[gen-params : copy-artifacts] tar: /sum-numbers-Output: No such file or directory
-[gen-params : copy-artifacts] tar: error exit delayed from previous errors
-[gen-params : copy-artifacts] `Output.tgz` -> `storage/mlpipeline/artifacts/big-data-passing/gen-params/Output.tgz`
-[gen-params : copy-artifacts] Total: 0 B, Transferred: 29 B, Speed: 10 B/s
+[gen-params : main] 3
 
 [print-params : main] The result number is: 3
 

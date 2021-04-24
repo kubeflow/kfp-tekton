@@ -1,2 +1,7 @@
-[download-file : main] 2021/04/23 20:19:39 Error executing command: fork/exec /bin/bash: no such file or directory
+[download-file : main] hello world
+[download-file : main] hello world
+[download-file : main] hello world
+
+[echo : main] Text 1: hello world
+[echo : main] 
 

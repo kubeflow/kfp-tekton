@@ -1,2 +1,2 @@
-[produce-list : main] 2021/04/23 20:22:14 Error executing command: fork/exec /bin/bash: no such file or directory
+[produce-list : main] [1, 2, 3]
 
