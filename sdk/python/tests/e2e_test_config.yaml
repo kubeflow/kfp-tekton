@@ -23,8 +23,8 @@ experiment_name: "E2E_TEST"
 #   will produce logs which can be verified. One option would be to keep more
 #   than one "golden" log file to match either of the desired possible outputs
 ignored_test_files:
-  - "big_data_passing.yaml"            # does not complete in a reasonable time frame
-  - "katib.yaml"                       # service account needs Katib permission, takes too long doing 9 trail runs
+  - "big_data_passing.yaml"            # does not complete in a reasonable time
+  - "katib.yaml"                       # service account needs Katib permission, takes too long doing 9 trial runs
   - "parallel_join_with_logging.yaml"  # experimental feature, requires S3 (Minio)
   - "retry.yaml"                       # designed to occasionally fail (randomly) if number of retries exceeded
   - "timeout.yaml"                     # random failure (by design) ... would need multiple golden log files to compare to
@@ -32,7 +32,9 @@ ignored_test_files:
   - "volume.yaml"                      # need to rework the credentials part
   - "volume_op.yaml"                   # need to delete PVC before/after test run
   - "volume_snapshot_op.yaml"          # only works on Minikube, K8s alpha feature, requires a feature gate from K8s master
-  - "create_component_from_func.yaml"  # TODO: investigate, keeps Running
+  - "create_component_from_func.yaml"  # remains Running, need to investigate
   - "any_sequencer.yaml"               # takes 5 min
   - "basic_no_decorator.yaml"          # takes 2 min
   - "compose.yaml"                     # takes 2 min
+  - "long_param_name.yaml"             # unit test only, not using real container image
+  - "recur_cond.yaml"                  # unit test only, not using real container image

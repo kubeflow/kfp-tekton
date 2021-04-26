@@ -1,2 +1,4 @@
-[my-out-cop0 : main] 2021/04/23 20:32:58 Error executing command: fork/exec /bin/bash: no such file or directory
+[my-out-cop0 : main] [{"a": 1, "b": 2}, {"a": 10, "b": 20}]
+
+[my-out-cop2 : main] do output op2, outp: [{a: 1, b: 2}, {a: 10, b: 20}]
 

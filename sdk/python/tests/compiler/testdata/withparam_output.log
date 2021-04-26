@@ -1,2 +1,4 @@
-[my-out-cop0 : main] 2021/04/23 20:32:40 Error executing command: fork/exec /bin/bash: no such file or directory
+[my-out-cop0 : main] [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+
+[my-out-cop2 : main] do output op2, outp: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
 

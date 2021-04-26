@@ -16,7 +16,6 @@ import json
 import logging
 import os
 import re
-import textwrap
 import unittest
 import yaml
 
@@ -200,6 +199,11 @@ if ignored_yaml_files:
     logging.warning("Ignoring the following pipelines: {}".format(
         ", ".join(ignored_yaml_files)))
 
+
+# ==============================================================================
+#  Test setup TODOs prior to running the E2E tests to be automated/codified
+# ==============================================================================
+
 # KFP doesn't allow any resource to be created by a pipeline. The API has an option
 # for users to provide their own service account that has those permissions.
 # see https://github.com/kubeflow/kfp-tekton/blob/master/sdk/sa-and-rbac.md
@@ -236,6 +240,30 @@ if ignored_yaml_files:
 # test_withparam_global_dict
 # test_withparam_output
 # test_withparam_output_dict
+
+# TODO: examples using the CEL custom task (apiVersion: cel.tekton.dev/v1alpha1)
+#   require separate installation using golang ko and Docker:
+#
+#   $ git clone https://github.com/tektoncd/experimental/
+#   $ cd experimental/cel
+#   $ ko apply -L -f config/
+
+
+# Regenerate the PipelineLoop Custom Resource files:
+#
+#  $ for f in sdk/python/tests/compiler/testdata/*_pipelineloop_cr*.yaml; do \
+#      echo ${f/_pipelineloop_cr*.yaml/.py}; done | sort -u | while read f; do echo $f; \
+#      dsl-compile-tekton --py $f --output ${f/.py/.yaml}; done
+#
+# ...or generate all "golden" YAML files:
+#
+#  $ for f in sdk/python/tests/compiler/testdata/*.py; do echo $f; \
+#      dsl-compile-tekton --py $f --output ${f/.py/.yaml}; done
+#
+# and apply CRDs to the KFP cluster:
+#
+#  $ for f in sdk/python/tests/compiler/testdata/*_cr*.yaml; do echo "=== ${f##*/} ==="; \
+#      kubectl apply -f "${f}" -n kubeflow; done
 
 
 # =============================================================================
@@ -339,7 +367,7 @@ class TestCompilerE2E(unittest.TestCase):
     def _start_pipelinerun(self, name, yaml_file):
         kfp_cmd = "kfp run submit -f {} -n {} -e {} -r {}".format(
             yaml_file, namespace, experiment_name, name)
-        kfp_proc = run(kfp_cmd.split(), capture_output=True, timeout=10, check=False)
+        kfp_proc = run(kfp_cmd.split(), capture_output=True, timeout=30, check=False)
         self.assertEqual(kfp_proc.returncode, 0,
                          "Process returned non-zero exit code: {} -> {}".format(
                              kfp_cmd, kfp_proc.stderr))
