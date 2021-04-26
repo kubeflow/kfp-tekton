@@ -15,41 +15,55 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: condition-and-recur
   annotations:
-    tekton.dev/output_artifacts: '{"print-iter": [{"key": "artifacts/$PIPELINERUN/print-iter/stdout.tgz",
-      "name": "print-iter-stdout", "path": "/tmp/stdout"}]}'
-    tekton.dev/input_artifacts: '{"print-iter": [{"name": "condition-cel-2-status",
-      "parent_task": "condition-cel-2"}]}'
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "42", "name": "iter_num",
+      "optional": true, "type": "Integer"}], "name": "condition-and-recur"}'
+    sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print-iter": [["stdout", "$(results.stdout.path)"]]}'
-    sidecar.istio.io/inject: "false"
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "42", "name": "iter_num",
-      "optional": true, "type": "Integer"}], "name": "condition-and-recur"}'
+    tekton.dev/input_artifacts: '{"print-iter": [{"name": "condition-cel-2-status",
+      "parent_task": "condition-cel-2"}]}'
+    tekton.dev/output_artifacts: '{"print-iter": [{"key": "artifacts/$PIPELINERUN/print-iter/stdout.tgz",
+      "name": "print-iter-stdout", "path": "/tmp/stdout"}]}'
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "condition-and-recur-graph-recur-2"},
+      "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
+      "condition-cel-status", "type": "string"}, {"name": "iter_num", "type": "string"},
+      {"name": "just_one_iteration", "type": "string"}], "tasks": [{"name": "condition-cel-2",
+      "params": [{"name": "status", "value": "$(params.iter_num) - 1"}], "taskRef":
+      {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name": "cel_condition"}},
+      {"name": "print-iter", "params": [{"name": "condition-cel-2-status", "value":
+      "$(tasks.condition-cel-2.results.status)"}], "taskSpec": {"metadata": {"annotations":
+      {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "params": [{"name": "condition-cel-2-status", "type": "string"}], "results":
+      [{"description": "/tmp/stdout", "name": "stdout"}], "steps": [{"command": ["echo",
+      "Iter: $(inputs.params.condition-cel-2-status)", ">", "$(results.stdout.path)"],
+      "image": "alpine:3.6", "name": "main"}]}, "timeout": "0s"}, {"name": "recur",
+      "params": [{"name": "just_one_iteration", "value": ["1"]}, {"name": "iter_num",
+      "value": "$(tasks.condition-cel-2.results.status)"}], "taskRef": {"apiVersion":
+      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "condition-and-recur-graph-recur-2"}}]}}}]'
+  name: condition-and-recur
 spec:
   params:
   - name: iter_num
     value: '42'
   pipelineSpec:
     params:
-    - name: iter_num
-      default: '42'
+    - default: '42'
+      name: iter_num
     tasks:
     - name: condition-cel
       params:
       - name: status
         value: $(params.iter_num) != 0
       taskRef:
-        name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+        name: cel_condition
     - name: condition-and-recur-graph-recur-2
-      taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        name: condition-and-recur-graph-recur-2
       params:
       - name: condition-cel-status
         value: $(params.condition-cel-status)
@@ -58,9 +72,13 @@ spec:
       - name: just_one_iteration
         value:
         - '1'
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: condition-and-recur-graph-recur-2
       when:
       - input: $(tasks.condition-cel.results.status)
         operator: in
         values:
-        - "true"
+        - 'true'
   timeout: 0s
