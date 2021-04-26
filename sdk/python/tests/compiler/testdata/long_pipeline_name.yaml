@@ -27,17 +27,16 @@ metadata:
     tekton.dev/artifact_items: '{"print": []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-    tekton.dev/resource_templates: "\n---\napiVersion: custom.tekton.dev/v1alpha1\n\
-      kind: PipelineLoop\nmetadata:\n  name: some-very-long-name-with-lots-of-words-in-it-for-loop-1\n\
-      spec:\n  pipelineSpec:\n    params:\n    - name: arr-loop-item\n      type:\
-      \ string\n    tasks:\n    - name: print\n      params:\n      - name: arr-loop-item\n\
-      \        value: $(params.arr-loop-item)\n      taskSpec:\n        steps:\n \
-      \       - name: main\n          command:\n          - echo\n          - $(inputs.params.arr-loop-item)\n\
-      \          image: alpine:3.6\n        params:\n        - name: arr-loop-item\n\
-      \          type: string\n        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
-      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
-      \ \"true\"\n          annotations:\n            tekton.dev/template: ''\n  \
-      \    timeout: 0s\n  iterateParam: arr-loop-item\n"
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "some-very-long-name-with-lots-of-words-in-it-for-loop-1"},
+      "spec": {"iterateParam": "arr-loop-item", "pipelineSpec": {"params": [{"name":
+      "arr-loop-item", "type": "string"}], "tasks": [{"name": "print", "params": [{"name":
+      "arr-loop-item", "value": "$(params.arr-loop-item)"}], "taskSpec": {"metadata":
+      {"annotations": {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "params": [{"name": "arr-loop-item", "type": "string"}], "steps": [{"command":
+      ["echo", "$(inputs.params.arr-loop-item)"], "image": "alpine:3.6", "name": "main"}]},
+      "timeout": "0s"}]}}}]'
   name: some-very-long-name-with-lots-of-words-in-it-it-shoul
 spec:
   params:

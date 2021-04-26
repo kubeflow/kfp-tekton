@@ -32,51 +32,41 @@ metadata:
       "name": "flip-coin-output", "path": "/tmp/output"}], "flip-coin-2": [{"key":
       "artifacts/$PIPELINERUN/flip-coin-2/output.tgz", "name": "flip-coin-2-output",
       "path": "/tmp/output"}]}'
-    tekton.dev/resource_templates: "\n---\napiVersion: custom.tekton.dev/v1alpha1\n\
-      kind: PipelineLoop\nmetadata:\n  name: pipeline-flip-coin-graph-flip-component-1\n\
-      spec:\n  pipelineSpec:\n    params:\n    - name: flip-coin-output\n      type:\
-      \ string\n    - name: just_one_iteration\n      type: string\n    - name: maxVal\n\
-      \      type: string\n    tasks:\n    - name: print\n      params:\n      - name:\
-      \ flip-coin-output\n        value: $(params.flip-coin-output)\n      taskSpec:\n\
-      \        steps:\n        - name: main\n          command:\n          - echo\n\
-      \          - $(inputs.params.flip-coin-output)\n          image: alpine:3.6\n\
-      \        params:\n        - name: flip-coin-output\n          type: string\n\
-      \        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
-      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
-      \ \"true\"\n          annotations:\n            tekton.dev/template: ''\n  \
-      \    when:\n      - input: $(tasks.condition-2.results.status)\n        operator:\
-      \ in\n        values:\n        - \"true\"\n      timeout: 0s\n    - name: flip-coin-2\n\
-      \      taskSpec:\n        steps:\n        - name: main\n          args:\n  \
-      \        - python -c \"import random; result = 'heads' if random.randint(0,1)\
-      \ == 0\n            else 'tails'; print(result)\" | tee $(results.output.path)\n\
-      \          command:\n          - sh\n          - -c\n          image: python:alpine3.6\n\
-      \        results:\n        - name: output\n          description: /tmp/output\n\
-      \        metadata:\n          labels:\n            pipelines.kubeflow.org/pipelinename:\
-      \ ''\n            pipelines.kubeflow.org/generation: ''\n            pipelines.kubeflow.org/cache_enabled:\
-      \ \"true\"\n          annotations:\n            tekton.dev/template: ''\n  \
-      \    when:\n      - input: $(tasks.condition-2.results.status)\n        operator:\
-      \ in\n        values:\n        - \"true\"\n      runAfter:\n      - print\n\
-      \      timeout: 0s\n    - name: condition-2\n      params:\n      - name: operand1\n\
-      \        value: $(params.flip-coin-output)\n      - name: operand2\n       \
-      \ value: heads\n      - name: operator\n        value: ==\n      taskSpec:\n\
-      \        results:\n        - name: status\n          description: Conditional\
-      \ task status\n        params:\n        - name: operand1\n          type: string\n\
-      \        - name: operand2\n          type: string\n        - name: operator\n\
-      \          type: string\n        steps:\n        - script: |-\n            python\
-      \ -c 'import sys\n            input1=str.rstrip(sys.argv[1])\n            input2=str.rstrip(sys.argv[2])\n\
-      \            try:\n              input1=int(input1)\n              input2=int(input2)\n\
-      \            except:\n              input1=str(input1)\n            status=\"\
-      true\" if (input1 $(inputs.params.operator) input2) else \"false\"\n       \
-      \     f = open(\"/tekton/results/status\", \"w\")\n            f.write(status)\n\
-      \            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'\n\
-      \          image: python:alpine3.6\n    - name: flip-component\n      taskRef:\n\
-      \        apiVersion: custom.tekton.dev/v1alpha1\n        kind: PipelineLoop\n\
-      \        name: pipeline-flip-coin-graph-flip-component-1\n      params:\n  \
-      \    - name: just_one_iteration\n        value:\n        - '1'\n      - name:\
-      \ flip-coin-output\n        value: $(tasks.flip-coin-2.results.output)\n   \
-      \   - name: maxVal\n        value: $(params.maxVal)\n      when:\n      - input:\
-      \ $(tasks.condition-2.results.status)\n        operator: in\n        values:\n\
-      \        - \"true\"\n  iterateParam: just_one_iteration\n"
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "pipeline-flip-coin-graph-flip-component-1"},
+      "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
+      "flip-coin-output", "type": "string"}, {"name": "just_one_iteration", "type":
+      "string"}, {"name": "maxVal", "type": "string"}], "tasks": [{"name": "print",
+      "params": [{"name": "flip-coin-output", "value": "$(params.flip-coin-output)"}],
+      "taskSpec": {"metadata": {"annotations": {"tekton.dev/template": ""}, "labels":
+      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "flip-coin-output",
+      "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.flip-coin-output)"],
+      "image": "alpine:3.6", "name": "main"}]}, "timeout": "0s", "when": [{"input":
+      "$(tasks.condition-2.results.status)", "operator": "in", "values": ["true"]}]},
+      {"name": "flip-coin-2", "runAfter": ["print"], "taskSpec": {"metadata": {"annotations":
+      {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "results": [{"description": "/tmp/output", "name": "output"}], "steps":
+      [{"args": ["python -c \"import random; result = ''heads'' if random.randint(0,1)
+      == 0 else ''tails''; print(result)\" | tee $(results.output.path)"], "command":
+      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout": "0s",
+      "when": [{"input": "$(tasks.condition-2.results.status)", "operator": "in",
+      "values": ["true"]}]}, {"name": "condition-2", "params": [{"name": "operand1",
+      "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "heads"},
+      {"name": "operator", "value": "=="}], "taskSpec": {"params": [{"name": "operand1",
+      "type": "string"}, {"name": "operand2", "type": "string"}, {"name": "operator",
+      "type": "string"}], "results": [{"description": "Conditional task status", "name":
+      "status"}], "steps": [{"image": "python:alpine3.6", "script": "python -c ''import
+      sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\nstatus=\"true\"
+      if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/status\",
+      \"w\")\nf.write(status)\nf.close()'' ''$(inputs.params.operand1)'' ''$(inputs.params.operand2)''"}]}},
+      {"name": "flip-component", "params": [{"name": "just_one_iteration", "value":
+      ["1"]}, {"name": "flip-coin-output", "value": "$(tasks.flip-coin-2.results.output)"},
+      {"name": "maxVal", "value": "$(params.maxVal)"}], "taskRef": {"apiVersion":
+      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "pipeline-flip-coin-graph-flip-component-1"},
+      "when": [{"input": "$(tasks.condition-2.results.status)", "operator": "in",
+      "values": ["true"]}]}]}}}]'
   name: pipeline-flip-coin
 spec:
   params:

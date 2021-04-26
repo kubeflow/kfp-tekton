@@ -15,15 +15,12 @@
 package resource
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
@@ -1599,11 +1596,15 @@ func (r *ResourceManager) applyCustomResources(workflow util.Workflow, tektonTem
 		glog.Errorf("Failed to create client: %v", err)
 		return err
 	}
-	var template interface{}
+	var templates []interface{}
 	// Decode metadata into JSON payload.
-	dec := yaml.NewDecoder(bytes.NewReader([]byte(tektonTemplates)))
-	for dec.Decode(&template) == nil {
-		template = r.convertToJson(template)
+	err = json.Unmarshal([]byte(tektonTemplates), &templates)
+	if err != nil {
+		glog.Errorf("Failed to Unmarshal custom task CRD: %v", err)
+		return err
+	}
+	for i := range templates {
+		template := templates[i]
 		apiVersion, ok := template.(map[string]interface{})["apiVersion"].(string)
 		if !ok {
 			glog.Errorf("Failed to get Tekton custom task apiVersion")

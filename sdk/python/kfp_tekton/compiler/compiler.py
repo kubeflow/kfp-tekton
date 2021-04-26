@@ -1114,16 +1114,16 @@ class TektonCompiler(Compiler):
     # Separate loop workflow from the main workflow
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
-      loop_package_annotations = ""
+      loop_package_annotations = []
       for i in range(len(pipeline_loop_crs)):
         if LOOP_RESOURCES_IN_SEPARATE_YAML:
           TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
                                          package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
         else:
           pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
-          loop_package_annotations = '\n'.join([loop_package_annotations, '---\n' + pipeline_loop_cr])
+          loop_package_annotations.append(yaml.load(pipeline_loop_cr, Loader=yaml.FullLoader))
       if loop_package_annotations:
-        workflow['metadata']['annotations']['tekton.dev/resource_templates'] = loop_package_annotations
+        workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations, sort_keys=True)
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
     else:
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
