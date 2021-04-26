@@ -43,6 +43,7 @@ export enum NodePhase {
   CONDITIONCHECKFAILED = 'ConditionCheckFailed',
   PIPELINERUNCANCELLED = 'PipelineRunCancelled',
   PIPELINERUNCOULDNTCANCEL = 'PipelineRunCouldntCancel',
+  PIPELINERUNSTOPPING = 'PipelineRunStopping',
   TASKRUNCANCELLED = 'TaskRunCancelled',
   TASKRUNCOULDNTCANCEL = 'TaskRunCouldntCancel',
   TERMINATED = 'Terminated',
@@ -136,6 +137,7 @@ export function statusToPhase(nodeStatus: string | undefined): NodePhase {
     return 'Succeeded' as NodePhase;
   else if (nodeStatus === 'ConditionCheckFailed') return 'Skipped' as NodePhase;
   else if (nodeStatus === 'CouldntGetCondition') return 'Error' as NodePhase;
+  else if (nodeStatus === 'PipelineRunStopping') return 'Running' as NodePhase;
   else if (
     nodeStatus === 'PipelineRunCancelled' ||
     nodeStatus === 'PipelineRunCouldntCancel' ||

@@ -52,27 +52,13 @@ retry 3 3 ibmcloud target -r "$REGION" -o "$ORG" -s "$SPACE" -g "$RESOURCE_GROUP
 retry 3 3 ibmcloud ks cluster config -c "$PIPELINE_KUBERNETES_CLUSTER_NAME"
 retry 3 3 ibmcloud cr login
 
-# copy certs to local env
-kubectl cp -n "$DIND_NS" docker:/certs/client ~/.docker
-kubectl port-forward -n "$DIND_NS" docker 2376:2376 &
-# wait for the port-forward
-sleep 5
-
 # login dockerhub
 set +x
-DOCKER_HOST=tcp://localhost:2376 DOCKER_TLS_VERIFY=1  docker login \
-  -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_TOKEN"
+docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_TOKEN"
 set -x
 
 for one in $IMAGES; do
-  DOCKER_HOST=tcp://localhost:2376 DOCKER_TLS_VERIFY=1  docker pull \
-    "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}"
-
-  DOCKER_HOST=tcp://localhost:2376 DOCKER_TLS_VERIFY=1  docker tag \
-    "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}" "${DOCKERHUB_NAMESPACE}/${one}:${PUBLISH_TAG}"
-
-  DOCKER_HOST=tcp://localhost:2376 DOCKER_TLS_VERIFY=1  docker push \
-    "${DOCKERHUB_NAMESPACE}/${one}:${PUBLISH_TAG}"
+  docker pull "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}"
+  docker tag "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}" "${DOCKERHUB_NAMESPACE}/${one}:${PUBLISH_TAG}"
+  docker push "${DOCKERHUB_NAMESPACE}/${one}:${PUBLISH_TAG}"
 done
-
-kill %1

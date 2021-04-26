@@ -271,12 +271,14 @@ class TektonCompiler(Compiler):
             self.loops_pipeline[group_name]['depends'].append({'org': depend, 'runAfter': group_name})
         for op in sub_group.groups + sub_group.ops:
           self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(op.name))
-          if hasattr(op, 'type') and op.type == 'condition' and op.ops:
-            for condition_op in op.ops:
-              self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
-            for condition_op in op.groups:
-              if condition_op.type == 'graph' and condition_op.recursive_ref:
+          if hasattr(op, 'type') and op.type == 'condition':
+            if op.ops:
+              for condition_op in op.ops:
                 self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
+            if op.groups:
+              for condition_op in op.groups:
+                if condition_op.type == 'graph' and condition_op.recursive_ref:
+                  self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
         self.loops_pipeline[group_name]['spec']['name'] = group_name
         self.loops_pipeline[group_name]['spec']['taskRef'] = {
           "apiVersion": "custom.tekton.dev/v1alpha1",
@@ -699,6 +701,16 @@ class TektonCompiler(Compiler):
           recursive_task['when'] = condition_refs.get(op_name_to_parent_groups[recursive_task['name']][-2], [])
       recursive_task['name'] = sanitize_k8s_name(recursive_task['name'])
 
+    # add condition refs to the pipelineloop refs that depends on the condition
+    opgroup_name_to_parent_groups = self._get_groups_for_opsgroups(pipeline.groups[0])
+    for loop_task_key in self.loops_pipeline.keys():
+      task_name_prefix = '-'.join(self._group_names[:-1] + [""])
+      raw_task_key = loop_task_key.replace(task_name_prefix, "")
+      parent_group = opgroup_name_to_parent_groups.get(raw_task_key, [])
+      if parent_group:
+        if condition_refs.get(parent_group[-2], []):
+          self.loops_pipeline[loop_task_key]['spec']['when'] = condition_refs.get(parent_group[-2], [])
+
     # process input parameters from upstream tasks
     pipeline_param_names = [p['name'] for p in params]
     loop_args = [self.loops_pipeline[key]['loop_args'] for key in self.loops_pipeline.keys()]
@@ -867,8 +879,19 @@ class TektonCompiler(Compiler):
     sanitized_ops = {}
 
     for op in pipeline.ops.values():
+      if len(op.name) > 57:
+        raise ValueError('Input ops cannot be longer than 57 characters. \
+             \nOp name: %s' % op.name)
       sanitized_name = sanitize_k8s_name(op.name)
       op.name = sanitized_name
+      # check sanitized input params
+      for param in op.inputs:
+        if param.op_name:
+          if len(param.op_name) > 128:
+            raise ValueError('Input parameter cannot be longer than 128 characters. \
+             \nInput name: %s. \nOp name: %s' % (param.op_name, op.name))
+          param.op_name = sanitize_k8s_name(param.op_name, max_length=float('inf'))
+      # sanitized output params
       for param in op.outputs.values():
         param.name = sanitize_k8s_name(param.name, True)
         if param.op_name:
@@ -1148,8 +1171,8 @@ def _validate_workflow(workflow: Dict[Text, Any]):
     return {k.lstrip("."): v for k, v in results_dict.items()}
 
   non_k8s_names = {path: name for path, name in _find_items(workflow, "name").items()
-                   if "metadata" in path and name != sanitize_k8s_name(name)
-                   or "param" in path and name != sanitize_k8s_name(name, allow_capital_underscore=True)}
+                   if "metadata" in path and name != sanitize_k8s_name(name, max_length=253)
+                   or "param" in path and name != sanitize_k8s_name(name, allow_capital_underscore=True, max_length=253)}
 
   non_k8s_labels = {path: k_v_dict for path, k_v_dict in _find_items(workflow, "labels", "", {}).items()
                     if "metadata" in path and

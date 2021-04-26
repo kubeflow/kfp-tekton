@@ -105,6 +105,20 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
 
+  def test_recur_cond_workflow(self):
+    """
+    Test compiling a recurive condition workflow.
+    """
+    from .testdata.recur_cond import recur_and_condition
+    self._test_pipeline_workflow(recur_and_condition, 'recur_cond.yaml')
+
+  def test_cond_recur_workflow(self):
+    """
+    Test compiling a conditional recursive workflow.
+    """
+    from .testdata.cond_recur import condition_and_recur
+    self._test_pipeline_workflow(condition_and_recur, 'cond_recur.yaml')
+
   def test_parallel_join_with_argo_vars_workflow(self):
     """
     Test compiling a parallel join workflow.
@@ -168,6 +182,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.tekton_custom_task import custom_task_pipeline
     self._test_pipeline_workflow(custom_task_pipeline, 'tekton_custom_task.yaml')
+
+  def test_long_param_name_workflow(self):
+    """
+    Test long parameter name workflow.
+    """
+    from .testdata.long_param_name import main_fn
+    self._test_pipeline_workflow(main_fn, 'long_param_name.yaml')
 
   def test_long_pipeline_name_workflow(self):
     """

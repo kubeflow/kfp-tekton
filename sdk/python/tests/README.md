@@ -27,7 +27,7 @@ You should see an output similar to the one below, outlining which test scripts 
 which are failing:
 
 ```YAML
-KFP version: 1.5.0-rc.2  # TODO
+KFP version: 1.5.0
 
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_passing_using_volume.py

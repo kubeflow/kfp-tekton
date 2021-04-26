@@ -102,16 +102,6 @@ export default class WorkflowParser {
         }
       }
     }
-    // Collect the anyConditions from 'metadata.annotations.anyConditions'
-    let anyConditions = {};
-    if (
-      workflow['metadata'] &&
-      workflow['metadata']['annotations'] &&
-      workflow['metadata']['annotations']['anyConditions']
-    ) {
-      anyConditions = JSON.parse(workflow['metadata']['annotations']['anyConditions'] || '{}');
-    }
-    const anyTasks = Object.keys(anyConditions);
 
     for (const task of tasks) {
       // If the task has a status then add it and its edges to the graph
@@ -141,6 +131,46 @@ export default class WorkflowParser {
             }
           }
         }
+
+        // Checks if the task is an any-sequencer and if so, adds the dependencies from the task list
+        if (
+          task['taskSpec']['steps'] &&
+          task['taskSpec']['steps'][0] &&
+          task['taskSpec']['steps'][0]['args'] &&
+          task['taskSpec']['steps'][0]['command'] &&
+          task['taskSpec']['steps'][0]['command'][0] &&
+          task['taskSpec']['steps'][0]['command'][0] === 'any-taskrun'
+        ) {
+          let isNextTaskList = false;
+          let isNextCondition = false;
+          task['taskSpec']['steps'][0]['args'].forEach((arg: string) => {
+            if (arg === '--taskList') {
+              isNextTaskList = true;
+            } else if (arg === '-c') {
+              isNextCondition = true;
+            } else if (isNextTaskList) {
+              arg.split(',').forEach((parentTask: string) => {
+                if (statusMap.get(parentTask)) {
+                  const parentId =
+                    statusMap.get(parentTask)['status']['podName'] ||
+                    statusMap.get(parentTask)['pipelineTaskName'];
+                  graph.setEdge(parentId, taskId);
+                }
+              });
+              isNextTaskList = false;
+            } else if (isNextCondition) {
+              const parentTask = arg.substring(arg.indexOf('results_') + 8, arg.indexOf('_output'));
+              if (statusMap.get(parentTask)) {
+                const parentId =
+                  statusMap.get(parentTask)['status']['podName'] ||
+                  statusMap.get(parentTask)['pipelineTaskName'];
+                graph.setEdge(parentId, taskId);
+              }
+              isNextCondition = false;
+            }
+          });
+        }
+
         if (task['runAfter']) {
           task['runAfter'].forEach((parentTask: any) => {
             if (
@@ -151,18 +181,6 @@ export default class WorkflowParser {
               edges.push({ parent: parentId, child: taskId });
             }
           });
-        }
-        // Adds dependencies for anySequencers from 'anyCondition' annotation
-        if (anyTasks.includes(task['name'])) {
-          for (const depTask of anyConditions[task['name']]) {
-            if (
-              statusMap.get(depTask) &&
-              statusMap.get(depTask)!['status']['conditions'][0]['type'] === 'Succeeded'
-            ) {
-              const parentId = statusMap.get(depTask)!['status']['podName'];
-              edges.push({ parent: parentId, child: taskId });
-            }
-          }
         }
         for (const edge of edges || []) graph.setEdge(edge['parent'], edge['child']);
 
