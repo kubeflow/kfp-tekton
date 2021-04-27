@@ -30,8 +30,8 @@ kubectl get secret all-icr-io -n default -o yaml | sed "s/default/tekton-pipelin
 
 kubectl apply -f config
 
-wait_for_pod "tekton-pipelines" "tekton-pipelineloop-controller" 5 5
-wait_for_pod "tekton-pipelines" "tekton-pipelineloop-webhook" 5 5
+wait_for_pod "tekton-pipelines" "tekton-pipelineloop-controller" 10 30
+wait_for_pod "tekton-pipelines" "tekton-pipelineloop-webhook" 10 30
 
 kubectl apply -f ${E2E_MANIFEST}
 
@@ -40,6 +40,6 @@ wait_for_pipeline_run "pr-loop-example" 20 30
 kubectl delete -f ${E2E_MANIFEST}
 
 # Clean up deployment
-kubectl delete -f config
+# kubectl delete -f config
 
 popd > /dev/null

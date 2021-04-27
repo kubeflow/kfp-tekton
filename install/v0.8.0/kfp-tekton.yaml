@@ -1351,7 +1351,7 @@ data:
   autoUpdatePipelineDefaultVersion: "true"
   bucketName: mlpipeline
   cacheDb: cachedb
-  cacheImage: gcr.io/google-containers/busybox
+  cacheImage: registry.access.redhat.com/ubi8/ubi-minimal
   cronScheduleTimezone: UTC
   dbHost: mysql
   dbPort: "3306"
