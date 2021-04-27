@@ -1,7 +1,4 @@
-[download-file : main] hello world
-[download-file : main] hello world
-[download-file : main] hello world
+[download-file : main] hello worldhello worldhello world
 
 [echo : main] Text 1: hello world
-[echo : main] 
 

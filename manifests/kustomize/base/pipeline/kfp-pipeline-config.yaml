@@ -22,6 +22,8 @@ data:
         push_artifact main-log step-main.log
     }
     strip_eof() {
-        awk 'NF' $2 | head -c -1 > $1_temp_save && cp $1_temp_save $2
+        if [ -f "$2" ]; then
+            awk 'NF' $2 | head -c -1 > $1_temp_save && cp $1_temp_save $2
+        fi
     }
     mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT} $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
