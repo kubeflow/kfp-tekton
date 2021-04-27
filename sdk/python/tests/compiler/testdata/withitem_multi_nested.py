@@ -25,7 +25,7 @@ class Coder:
 TektonCompiler._get_unique_id_code = Coder.empty
 
 
-@dsl.pipeline(name='my-pipeline')
+@dsl.pipeline(name='withitem multiple nesting pipeline')
 def pipeline(my_pipe_param: list = [100, 200], my_pipe_param3: list = [1, 2]):
     loop_args = [{'a': 1, 'b': 2}, {'a': 10, 'b': 20}]
     with dsl.ParallelFor(loop_args) as item:

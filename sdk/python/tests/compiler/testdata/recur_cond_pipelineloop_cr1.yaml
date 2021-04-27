@@ -15,7 +15,7 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: recur-and-condition-c6723-graph-recur-1
+  name: recur-and-condition-7312b-graph-recur-1
 spec:
   pipelineSpec:
     params:
@@ -63,7 +63,7 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: recur-and-condition-c6723-graph-recur-1
+        name: recur-and-condition-7312b-graph-recur-1
       params:
       - name: just_one_iteration
         value:

@@ -15,19 +15,20 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: withitem-multiple-nesting-pipeline
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[100, 200]", "name":
-      "my_pipe_param", "optional": true, "type": "JsonArray"}, {"default": "[1, 2]",
-      "name": "my_pipe_param3", "optional": true, "type": "JsonArray"}], "name": "my-pipeline"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"my-in-coop1": [], "my-in-coop2": [], "my-inner-inner-coop":
       [], "my-inner-inner-coop-2": [], "my-inner-inner-coop-3": []}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  name: my-pipeline
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[100, 200]", "name":
+      "my_pipe_param", "optional": true, "type": "JsonArray"}, {"default": "[1, 2]",
+      "name": "my_pipe_param3", "optional": true, "type": "JsonArray"}], "name": "withitem
+      multiple nesting pipeline"}'
 spec:
   params:
   - name: my_pipe_param
@@ -36,12 +37,16 @@ spec:
     value: '[1, 2]'
   pipelineSpec:
     params:
-    - default: '[100, 200]'
-      name: my_pipe_param
-    - default: '[1, 2]'
-      name: my_pipe_param3
+    - name: my_pipe_param
+      default: '[100, 200]'
+    - name: my_pipe_param3
+      default: '[1, 2]'
     tasks:
-    - name: my-pipeline-for-loop-2
+    - name: withitem-multiple-nesting-pipeline-for-loop-2
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: withitem-multiple-nesting-pipeline-for-loop-2
       params:
       - name: loop-item-param-1
         value: '[{"a": 1, "b": 2}, {"a": 10, "b": 20}]'
@@ -49,8 +54,4 @@ spec:
         value: $(params.my_pipe_param)
       - name: my_pipe_param3-loop-item
         value: $(params.my_pipe_param3)
-      taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        name: my-pipeline-for-loop-2
   timeout: 0s

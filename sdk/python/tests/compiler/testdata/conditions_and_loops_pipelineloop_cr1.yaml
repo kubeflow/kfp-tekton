@@ -14,21 +14,30 @@
 
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
-metadata: {name: conditions-and-loops-for-loop-1}
+metadata:
+  name: conditions-and-loops-for-loop-1
 spec:
   pipelineSpec:
     params:
-    - {name: produce-numbers-Output-loop-item, type: string}
-    - {name: threshold, type: string}
+    - name: produce-numbers-Output-loop-item
+      type: string
+    - name: threshold
+      type: string
     tasks:
     - name: add-numbers
       params:
-      - {name: produce-numbers-Output-loop-item, value: $(params.produce-numbers-Output-loop-item)}
+      - name: produce-numbers-Output-loop-item
+        value: $(params.produce-numbers-Output-loop-item)
       taskSpec:
         steps:
         - name: main
-          args: [--a, $(inputs.params.produce-numbers-Output-loop-item), --b, '10',
-            '----output-paths', $(results.output.path)]
+          args:
+          - --a
+          - $(inputs.params.produce-numbers-Output-loop-item)
+          - --b
+          - '10'
+          - '----output-paths'
+          - $(results.output.path)
           command:
           - sh
           - -ec
@@ -75,19 +84,25 @@ spec:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
         params:
-        - {name: produce-numbers-Output-loop-item, type: string}
+        - name: produce-numbers-Output-loop-item
+          type: string
         results:
-        - {name: output, description: /tmp/outputs/Output/data}
+        - name: output
+          description: /tmp/outputs/Output/data
         metadata:
-          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"args": ["--a", {"inputValue": "a"}, "--b", {"inputValue":
-              "b"}, "----output-paths", {"outputPath": "Output"}], "command": ["sh",
-              "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
-              -u \"$program_path\" \"$@\"\n", "def add_numbers(a, b):\n    print(a
-              + b)\n    return a + b\n\ndef _serialize_int(int_value: int) -> str:\n    if
-              isinstance(int_value, str):\n        return int_value\n    if not isinstance(int_value,
-              int):\n        raise TypeError(''Value \"{}\" has type \"{}\" instead
-              of int.''.format(str(int_value), str(type(int_value))))\n    return
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["--a", {"inputValue": "a"}, "--b", {"inputValue": "b"}, "----output-paths",
+              {"outputPath": "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              "def add_numbers(a, b):\n    print(a + b)\n    return a + b\n\ndef _serialize_int(int_value:
+              int) -> str:\n    if isinstance(int_value, str):\n        return int_value\n    if
+              not isinstance(int_value, int):\n        raise TypeError(''Value \"{}\"
+              has type \"{}\" instead of int.''.format(str(int_value), str(type(int_value))))\n    return
               str(int_value)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Add
               numbers'', description='''')\n_parser.add_argument(\"--a\", dest=\"a\",
               type=int, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--b\",
@@ -99,15 +114,21 @@ spec:
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "inputs": [{"name": "a", "type": "Integer"},
               {"name": "b", "type": "Integer"}], "name": "Add numbers", "outputs":
-              [{"name": "Output", "type": "Integer"}]}'}
+              [{"name": "Output", "type": "Integer"}]}'
+            tekton.dev/template: ''
       timeout: 0s
     - name: print-number
       params:
-      - {name: add-numbers-Output, value: $(tasks.add-numbers.results.output)}
+      - name: add-numbers-Output
+        value: $(tasks.add-numbers.results.output)
       taskSpec:
         steps:
         - name: main
-          args: [--a, $(inputs.params.add-numbers-Output), '----output-paths', $(results.output.path)]
+          args:
+          - --a
+          - $(inputs.params.add-numbers-Output)
+          - '----output-paths'
+          - $(results.output.path)
           command:
           - sh
           - -ec
@@ -153,13 +174,20 @@ spec:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
         params:
-        - {name: add-numbers-Output, type: string}
+        - name: add-numbers-Output
+          type: string
         results:
-        - {name: output, description: /tmp/outputs/Output/data}
+        - name: output
+          description: /tmp/outputs/Output/data
         metadata:
-          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"args": ["--a", {"inputValue": "a"}, "----output-paths",
-              {"outputPath": "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["--a", {"inputValue": "a"}, "----output-paths", {"outputPath":
+              "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
               \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def print_number(a):\n    print(a)\n    return a\n\ndef _serialize_int(int_value:
               int) -> str:\n    if isinstance(int_value, str):\n        return int_value\n    if
@@ -174,7 +202,8 @@ spec:
               os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "inputs": [{"name": "a", "type": "Integer"}],
-              "name": "Print number", "outputs": [{"name": "Output", "type": "Integer"}]}'}
+              "name": "Print number", "outputs": [{"name": "Output", "type": "Integer"}]}'
+            tekton.dev/template: ''
       timeout: 0s
     - name: notify-success
       taskSpec:
@@ -198,13 +227,19 @@ spec:
             _outputs = notify_success(**_parsed_args)
           image: python:3.7
         metadata:
-          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
               \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def notify_success():\n    print(''SUCCESS!'')\n\nimport argparse\n_parser
               = argparse.ArgumentParser(prog=''Notify success'', description='''')\n_parsed_args
               = vars(_parser.parse_args())\n\n_outputs = notify_success(**_parsed_args)\n"],
-              "image": "python:3.7"}}, "name": "Notify success"}'}
+              "image": "python:3.7"}}, "name": "Notify success"}'
+            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-2.results.status)
         operator: in
@@ -233,13 +268,19 @@ spec:
             _outputs = notify_failure(**_parsed_args)
           image: python:3.7
         metadata:
-          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": [], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
               \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def notify_failure():\n    print(''FAILED!'')\n\nimport argparse\n_parser
               = argparse.ArgumentParser(prog=''Notify failure'', description='''')\n_parsed_args
               = vars(_parser.parse_args())\n\n_outputs = notify_failure(**_parsed_args)\n"],
-              "image": "python:3.7"}}, "name": "Notify failure"}'}
+              "image": "python:3.7"}}, "name": "Notify failure"}'
+            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-3.results.status)
         operator: in
@@ -248,16 +289,23 @@ spec:
       timeout: 0s
     - name: condition-2
       params:
-      - {name: operand1, value: $(tasks.print-number.results.output)}
-      - {name: operand2, value: $(params.threshold)}
-      - {name: operator, value: '>'}
+      - name: operand1
+        value: $(tasks.print-number.results.output)
+      - name: operand2
+        value: $(params.threshold)
+      - name: operator
+        value: '>'
       taskSpec:
         results:
-        - {name: status, description: Conditional task status}
+        - name: status
+          description: Conditional task status
         params:
-        - {name: operand1, type: string}
-        - {name: operand2, type: string}
-        - {name: operator, type: string}
+        - name: operand1
+          type: string
+        - name: operand2
+          type: string
+        - name: operator
+          type: string
         steps:
         - script: |-
             python -c 'import sys
@@ -275,16 +323,23 @@ spec:
           image: python:alpine3.6
     - name: condition-3
       params:
-      - {name: operand1, value: $(tasks.print-number.results.output)}
-      - {name: operand2, value: $(params.threshold)}
-      - {name: operator, value: <=}
+      - name: operand1
+        value: $(tasks.print-number.results.output)
+      - name: operand2
+        value: $(params.threshold)
+      - name: operator
+        value: <=
       taskSpec:
         results:
-        - {name: status, description: Conditional task status}
+        - name: status
+          description: Conditional task status
         params:
-        - {name: operand1, type: string}
-        - {name: operand2, type: string}
-        - {name: operator, type: string}
+        - name: operand1
+          type: string
+        - name: operand2
+          type: string
+        - name: operator
+          type: string
         steps:
         - script: |-
             python -c 'import sys
