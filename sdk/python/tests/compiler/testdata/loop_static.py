@@ -29,21 +29,21 @@ def pipeline(my_pipe_param='10'):
     loop_args = [1, 2, 3]
     with dsl.ParallelFor(loop_args) as item:
         op1 = dsl.ContainerOp(
-            name="my-in-coop1",
+            name="static-loop-inner-op1",
             image="library/bash:4.4.23",
             command=["sh", "-c"],
             arguments=["echo op1 %s %s" % (item, my_pipe_param)],
         )
 
         op2 = dsl.ContainerOp(
-            name="my-in-coop2",
+            name="static-loop-inner-op2",
             image="library/bash:4.4.23",
             command=["sh", "-c"],
             arguments=["echo op2 %s" % item],
         )
 
     op_out = dsl.ContainerOp(
-        name="my-out-cop",
+        name="static-loop-out-op",
         image="library/bash:4.4.23",
         command=["sh", "-c"],
         arguments=["echo %s" % my_pipe_param],

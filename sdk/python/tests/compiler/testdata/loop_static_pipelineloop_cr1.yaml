@@ -24,7 +24,7 @@ spec:
     - name: my_pipe_param
       type: string
     tasks:
-    - name: my-in-coop1
+    - name: static-loop-inner-op1
       params:
       - name: loop-item-param-1
         value: $(params.loop-item-param-1)
@@ -52,7 +52,7 @@ spec:
           annotations:
             tekton.dev/template: ''
       timeout: 0s
-    - name: my-in-coop2
+    - name: static-loop-inner-op2
       params:
       - name: loop-item-param-1
         value: $(params.loop-item-param-1)
