@@ -15,34 +15,34 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: some-very-long-name-with-lots-of-words-in-it-it-shoul
   annotations:
-    tekton.dev/output_artifacts: '{}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/artifact_bucket: mlpipeline
-    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
-    tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"print": []}'
-    sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
       \"c\"]", "name": "arr", "optional": true, "type": "typing.List[str]"}], "name":
       "Some very long name with lots of words in it. It should be over 63 chars long
       in order to observe the problem."}'
+    sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print": []}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{}'
+  name: some-very-long-name-with-lots-of-words-in-it-it-shoul
 spec:
   params:
   - name: arr
     value: '["a", "b", "c"]'
   pipelineSpec:
     params:
-    - name: arr
-      default: '["a", "b", "c"]'
+    - default: '["a", "b", "c"]'
+      name: arr
     tasks:
     - name: some-very-long-name-with-lots-of-words-in-it-for-loop-1
+      params:
+      - name: arr-loop-item
+        value: $(params.arr)
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         name: some-very-long-name-with-lots-of-words-in-it-for-loop-1
-      params:
-      - name: arr-loop-item
-        value: $(params.arr)
   timeout: 0s

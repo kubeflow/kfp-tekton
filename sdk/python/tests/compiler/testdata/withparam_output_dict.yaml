@@ -15,75 +15,75 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: withparam-output-dict
   annotations:
-    tekton.dev/output_artifacts: '{"my-out-cop0": [{"key": "artifacts/$PIPELINERUN/my-out-cop0/out.tgz",
-      "name": "my-out-cop0-out", "path": "/tmp/out.json"}]}'
-    tekton.dev/input_artifacts: '{"my-out-cop2": [{"name": "my-out-cop0-out", "parent_task":
-      "my-out-cop0"}]}'
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "withparam-output-dict"}'
+    sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"my-in-cop1": [], "my-out-cop0": [["out", "$(results.out.path)"]],
       "my-out-cop2": []}'
-    sidecar.istio.io/inject: "false"
-    pipelines.kubeflow.org/pipeline_spec: '{"name": "withparam-output-dict"}'
+    tekton.dev/input_artifacts: '{"my-out-cop2": [{"name": "my-out-cop0-out", "parent_task":
+      "my-out-cop0"}]}'
+    tekton.dev/output_artifacts: '{"my-out-cop0": [{"key": "artifacts/$PIPELINERUN/my-out-cop0/out.tgz",
+      "name": "my-out-cop0-out", "path": "/tmp/out.json"}]}'
+  name: withparam-output-dict
 spec:
   pipelineSpec:
     tasks:
     - name: my-out-cop0
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        results:
+        - description: /tmp/out.json
+          name: out
         steps:
-        - name: main
-          args:
+        - args:
           - 'python -c "import json; import sys; json.dump([{''a'': 1, ''b'': 2},
             {''a'': 10, ''b'': 20}], open(''$(results.out.path)'', ''w''))"'
           command:
           - sh
           - -c
           image: python:alpine3.6
-        results:
-        - name: out
-          description: /tmp/out.json
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
-          annotations:
-            tekton.dev/template: ''
+          name: main
       timeout: 0s
     - name: my-out-cop2
       params:
       - name: my-out-cop0-out
         value: $(tasks.my-out-cop0.results.out)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        params:
+        - name: my-out-cop0-out
         steps:
-        - name: main
-          args:
+        - args:
           - 'echo do output op2, outp: $(inputs.params.my-out-cop0-out)'
           command:
           - sh
           - -c
           image: library/bash:4.4.23
-        params:
-        - name: my-out-cop0-out
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
-          annotations:
-            tekton.dev/template: ''
+          name: main
       timeout: 0s
-    - runAfter:
+    - name: withparam-output-dict-for-loop-1
+      params:
+      - name: my-out-cop0-out-loop-item
+        value: $(tasks.my-out-cop0.results.out)
+      runAfter:
       - my-out-cop0
-      name: withparam-output-dict-for-loop-1
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         name: withparam-output-dict-for-loop-1
-      params:
-      - name: my-out-cop0-out-loop-item
-        value: $(tasks.my-out-cop0.results.out)
   timeout: 0s
