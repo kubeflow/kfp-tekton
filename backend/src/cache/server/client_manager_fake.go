@@ -25,6 +25,7 @@ type FakeClientManager struct {
 	db                *storage.DB
 	cacheStore        storage.ExecutionCacheStoreInterface
 	k8sCoreClientFake *client.FakeKuberneteCoreClient
+	tektonClientFake  *client.FakeTektonClient
 	time              util.TimeInterface
 }
 
@@ -42,6 +43,7 @@ func NewFakeClientManager(time util.TimeInterface) (*FakeClientManager, error) {
 		db:                db,
 		cacheStore:        storage.NewExecutionCacheStore(db, time),
 		k8sCoreClientFake: client.NewFakeKuberneteCoresClient(),
+		tektonClientFake:  client.NewFakeTektonClient(),
 		time:              time,
 	}, nil
 }
@@ -72,4 +74,8 @@ func (f *FakeClientManager) Close() error {
 
 func (f *FakeClientManager) KubernetesCoreClient() client.KubernetesCoreInterface {
 	return f.k8sCoreClientFake
+}
+
+func (c *FakeClientManager) TektonClient() client.TektonInterface {
+	return c.tektonClientFake
 }

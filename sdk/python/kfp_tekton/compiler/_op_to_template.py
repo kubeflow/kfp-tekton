@@ -246,6 +246,8 @@ def _process_parameters(processed_op: BaseOp,
                             need_copy_step = False
                         args.append(a)
                     s['args'] = args
+                if path == '/tekton/results/' + sanitize_k8s_name(name):
+                    need_copy_step = False
             # If file output path cannot be found/replaced, use emptyDir to copy it to the tekton/results path
             if need_copy_step:
                 copy_results_step['script'] = copy_results_step['script'] + 'cp ' + path + ' $(results.%s.path);' \
@@ -254,7 +256,7 @@ def _process_parameters(processed_op: BaseOp,
                 if mount_path not in mounted_param_paths:
                     _add_mount_path(name, path, mount_path, volume_mount_step_template, volume_template, mounted_param_paths)
             # Record what artifacts are moved to result parameters.
-            parameter_name = sanitize_k8s_name(processed_op.name + '-' + name, allow_capital_underscore=True)
+            parameter_name = sanitize_k8s_name(processed_op.name + '-' + name, allow_capital_underscore=True, max_length=float('Inf'))
             replaced_param_list.append(parameter_name)
             artifact_to_result_mapping[parameter_name] = name
         return copy_results_step
@@ -283,23 +285,25 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
     Returns:
         Dict[Text, Any]
     """
-    
+
     if outputs_dict.get('artifacts'):
         mounted_artifact_paths = []
         for artifact in outputs_dict['artifacts']:
-            artifact_name = artifact_to_result_mapping.get(artifact['name'], artifact['name'])
-            if artifact['name'] in replaced_param_list:
+            parameter_name = sanitize_k8s_name(artifact['name'], allow_capital_underscore=True, max_length=float('Inf'))
+            artifact_name = artifact_to_result_mapping.get(parameter_name, parameter_name)
+            if parameter_name in replaced_param_list:
                 artifact_items.append([artifact_name, "$(results.%s.path)" % sanitize_k8s_name(artifact_name)])
             else:
                 artifact_items.append([artifact_name, artifact['path']])
-                if artifact['path'].rsplit("/", 1)[0] not in mounted_artifact_paths:
-                    if artifact['path'].rsplit("/", 1)[0] == "":
+                mount_path = artifact['path'].rsplit("/", 1)[0]
+                if mount_path not in mounted_artifact_paths:
+                    if mount_path == "":
                         raise ValueError('Undefined volume path or "/" path artifacts are not allowed.')
                     volume_mount_step_template.append({
-                        'name': sanitize_k8s_name(artifact['name']), 'mountPath': artifact['path'].rsplit("/", 1)[0]
+                        'name': parameter_name, 'mountPath': mount_path
                     })
-                    volume_template.append({'name': sanitize_k8s_name(artifact['name']), 'emptyDir': {}})
-                    mounted_artifact_paths.append(artifact['path'].rsplit("/", 1)[0])
+                    volume_template.append({'name': parameter_name, 'emptyDir': {}})
+                    mounted_artifact_paths.append(mount_path)
 
 
 def _process_base_ops(op: BaseOp):
@@ -336,6 +340,10 @@ def _op_to_template(op: BaseOp,
                     pipelinerun_output_artifacts={},
                     artifact_items={}):
     """Generate template given an operator inherited from BaseOp."""
+
+    # Display name
+    if op.display_name:
+        op.add_pod_annotation('pipelines.kubeflow.org/task_display_name', op.display_name)
 
     # initial local variables for tracking volumes and artifacts
     volume_mount_step_template = []
@@ -483,11 +491,6 @@ def _op_to_template(op: BaseOp,
         template['spec']['volumes'] = template['spec'].get('volumes', []) + [convert_k8s_obj_to_json(volume)
                                                                             for volume in processed_op.volumes]
         template['spec']['volumes'].sort(key=lambda x: x['name'])
-
-    # Display name
-    if processed_op.display_name:
-        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/task_display_name'] = \
-            processed_op.display_name
 
     if isinstance(op, dsl.ContainerOp) and op._metadata:
         template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec'] = \

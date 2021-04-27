@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,6 +38,13 @@ spec:
     tasks:
     - name: download-file
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/results.txt
           name: data
@@ -73,11 +80,19 @@ spec:
         volumes:
         - emptyDir: {}
           name: data
+      timeout: 0s
     - name: echo
       params:
       - name: download-file-data
         value: $(tasks.download-file.results.data)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: download-file-data
         steps:
@@ -89,3 +104,5 @@ spec:
           - -c
           image: library/bash:4.4.23
           name: main
+      timeout: 0s
+  timeout: 0s

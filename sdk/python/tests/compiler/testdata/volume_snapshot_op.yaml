@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,6 +55,13 @@ spec:
       - name: set-ownerreference
         value: 'false'
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - description: Action on the resource
           name: action
@@ -111,6 +118,7 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: step1-ingest
       params:
       - name: create-volume-name
@@ -118,6 +126,13 @@ spec:
       - name: url
         value: $(params.url)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: create-volume-name
         - name: url
@@ -136,6 +151,7 @@ spec:
         - name: create-volume
           persistentVolumeClaim:
             claimName: $(inputs.params.create-volume-name)
+      timeout: 0s
     - name: step1-snap
       params:
       - name: action
@@ -152,6 +168,13 @@ spec:
       runAfter:
       - step1-ingest
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - description: Action on the resource
           name: action
@@ -209,6 +232,7 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: step2-gunzip
       params:
       - name: create-volume-name
@@ -216,6 +240,13 @@ spec:
       runAfter:
       - step1-ingest
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: create-volume-name
         steps:
@@ -233,6 +264,7 @@ spec:
         - name: create-volume
           persistentVolumeClaim:
             claimName: $(inputs.params.create-volume-name)
+      timeout: 0s
     - name: step2-snap
       params:
       - name: action
@@ -249,6 +281,13 @@ spec:
       runAfter:
       - step2-gunzip
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - description: Action on the resource
           name: action
@@ -306,6 +345,7 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: step3-copy
       params:
       - name: create-volume-name
@@ -313,6 +353,13 @@ spec:
       runAfter:
       - step2-gunzip
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: create-volume-name
         steps:
@@ -330,6 +377,7 @@ spec:
         - name: create-volume
           persistentVolumeClaim:
             claimName: $(inputs.params.create-volume-name)
+      timeout: 0s
     - name: step3-snap
       params:
       - name: action
@@ -346,6 +394,13 @@ spec:
       runAfter:
       - step3-copy
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - description: Action on the resource
           name: action
@@ -403,6 +458,7 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: step4-output
       params:
       - name: create-volume-name
@@ -410,6 +466,13 @@ spec:
       runAfter:
       - step3-copy
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: create-volume-name
         steps:
@@ -426,3 +489,5 @@ spec:
         - name: create-volume
           persistentVolumeClaim:
             claimName: $(inputs.params.create-volume-name)
+      timeout: 0s
+  timeout: 0s

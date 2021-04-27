@@ -1,0 +1,69 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Test pipeline to verify
+      functions of par loop.", "name": "Loop over lightweight output"}'
+    sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"consume-data": [], "produce-list": [["data_list",
+      "$(results.data-list.path)"]]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/output_artifacts: '{"produce-list": [{"key": "artifacts/$PIPELINERUN/produce-list/data_list.tgz",
+      "name": "produce-list-data_list", "path": "/tmp/outputs/data_list/data"}]}'
+  name: loop-over-lightweight-output
+spec:
+  pipelineSpec:
+    tasks:
+    - name: produce-list
+      taskSpec:
+        metadata:
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"command": ["sh", "-c", "echo \"[1, 2, 3]\" > \"$0\"", {"outputPath":
+              "data_list"}], "image": "busybox"}}, "name": "Produce list", "outputs":
+              [{"name": "data_list"}]}'
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        results:
+        - description: /tmp/outputs/data_list/data
+          name: data-list
+        steps:
+        - command:
+          - sh
+          - -c
+          - echo "[1, 2, 3]" > "$0"
+          - $(results.data-list.path)
+          image: busybox
+          name: main
+      timeout: 0s
+    - name: loop-over-lightweight-output-for-loop-1
+      params:
+      - name: produce-list-data_list-loop-item
+        value: $(tasks.produce-list.results.data-list)
+      runAfter:
+      - produce-list
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: loop-over-lightweight-output-for-loop-1
+  timeout: 0s

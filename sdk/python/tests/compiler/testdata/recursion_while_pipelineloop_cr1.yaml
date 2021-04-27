@@ -1,0 +1,137 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: custom.tekton.dev/v1alpha1
+kind: PipelineLoop
+metadata:
+  name: pipeline-flip-coin-graph-flip-component-1
+spec:
+  pipelineSpec:
+    params:
+    - name: just_one_iteration
+      type: string
+    - name: flip-coin-output
+      type: string
+    - name: maxVal
+      type: string
+    tasks:
+    - name: print
+      params:
+      - name: flip-coin-output
+        value: $(params.flip-coin-output)
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - echo
+          - $(inputs.params.flip-coin-output)
+          image: alpine:3.6
+        params:
+        - name: flip-coin-output
+          type: string
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
+      when:
+      - input: $(tasks.condition-2.results.status)
+        operator: in
+        values:
+        - "true"
+      timeout: 0s
+    - name: flip-coin-2
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
+            else 'tails'; print(result)" | tee $(results.output.path)
+          command:
+          - sh
+          - -c
+          image: python:alpine3.6
+        results:
+        - name: output
+          description: /tmp/output
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
+      when:
+      - input: $(tasks.condition-2.results.status)
+        operator: in
+        values:
+        - "true"
+      runAfter:
+      - print
+      timeout: 0s
+    - name: condition-2
+      params:
+      - name: operand1
+        value: $(params.flip-coin-output)
+      - name: operand2
+        value: heads
+      - name: operator
+        value: ==
+      taskSpec:
+        results:
+        - name: status
+          description: Conditional task status
+        params:
+        - name: operand1
+          type: string
+        - name: operand2
+          type: string
+        - name: operator
+          type: string
+        steps:
+        - script: |-
+            python -c 'import sys
+            input1=str.rstrip(sys.argv[1])
+            input2=str.rstrip(sys.argv[2])
+            try:
+              input1=int(input1)
+              input2=int(input2)
+            except:
+              input1=str(input1)
+            status="true" if (input1 $(inputs.params.operator) input2) else "false"
+            f = open("/tekton/results/status", "w")
+            f.write(status)
+            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
+          image: python:alpine3.6
+    - name: flip-component
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: pipeline-flip-coin-graph-flip-component-1
+      params:
+      - name: just_one_iteration
+        value:
+        - '1'
+      - name: flip-coin-output
+        value: $(tasks.flip-coin-2.results.output)
+      - name: maxVal
+        value: $(params.maxVal)
+      when:
+      - input: $(tasks.condition-2.results.status)
+        operator: in
+        values:
+        - "true"
+  iterateParam: just_one_iteration

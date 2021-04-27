@@ -3,11 +3,13 @@ package api_server
 import (
 	"fmt"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/go-openapi/strfmt"
 	runparams "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client/run_service"
 	runmodel "github.com/kubeflow/pipelines/backend/api/go_http_client/run_model"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
+
+// Replaced Argo v1alpha1.Workflow to Tekton v1beta1.PipelineRun
 
 const (
 	RunForDefaultTest     = "RUN_DEFAULT"
@@ -33,7 +35,7 @@ func NewRunClientFake() *RunClientFake {
 }
 
 func (c *RunClientFake) Get(params *runparams.GetRunParams) (*runmodel.APIRunDetail,
-	*workflowapi.Workflow, error) {
+	*workflowapi.PipelineRun, error) {
 	switch params.RunID {
 	case RunForClientErrorTest:
 		return nil, nil, fmt.Errorf(ClientErrorString)

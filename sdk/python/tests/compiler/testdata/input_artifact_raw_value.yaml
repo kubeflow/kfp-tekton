@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,6 +34,13 @@ spec:
     tasks:
     - name: component-with-inline-input-artifact
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp/inputs/text
@@ -56,8 +63,16 @@ spec:
         volumes:
         - emptyDir: {}
           name: text
+      timeout: 0s
     - name: component-with-input-artifact
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp/inputs/text
@@ -80,8 +95,16 @@ spec:
         volumes:
         - emptyDir: {}
           name: text
+      timeout: 0s
     - name: component-with-input-artifact-2
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp/inputs/text
@@ -104,8 +127,16 @@ spec:
         volumes:
         - emptyDir: {}
           name: text
+      timeout: 0s
     - name: component-with-input-artifact-3
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         stepTemplate:
           volumeMounts:
           - mountPath: /tmp/inputs/text
@@ -130,3 +161,5 @@ spec:
         volumes:
         - emptyDir: {}
           name: text
+      timeout: 0s
+  timeout: 0s

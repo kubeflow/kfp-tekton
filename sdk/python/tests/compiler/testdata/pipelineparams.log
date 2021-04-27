@@ -3,9 +3,15 @@
 [download : main] downloaded-resultout 100% |********************************|    14  0:00:00 ETA
 [download : main] '/tekton/results/downloaded-resultoutput' saved
 
-[download : sidecar-echo] 2020/08/31 22:10:21 Server is listening on :5678
-[download : sidecar-echo] 2020/08/31 22:10:33 localhost:5678 127.0.0.1:37340 "GET / HTTP/1.1" 200 14 "Wget" 126.308µs
-[download : sidecar-echo] 2020/08/31 22:10:35 [ERR] Unknown signal terminated
+[download : copy-artifacts] Added `storage` successfully.
+[download : copy-artifacts] tekton/results/downloaded-resultoutput
+[download : copy-artifacts] tar: removing leading '/' from member names
+[download : copy-artifacts] `downloaded_resultOutput.tgz` -> `storage/mlpipeline/artifacts/pipelineparams/download/downloaded_resultOutput.tgz`
+[download : copy-artifacts] Total: 0 B, Transferred: 137 B, Speed: 4.60 KiB/s
+
+[download : sidecar-echo] 2021/02/20 08:15:56 Server is listening on :5678
+[download : sidecar-echo] 2021/02/20 08:16:09 localhost:5678 127.0.0.1:39848 "GET / HTTP/1.1" 200 14 "Wget" 40.332µs
+[download : sidecar-echo] 2021/02/20 08:16:11 [ERR] Unknown signal terminated
 
 [echo : main] pipelineParams: hello world
 

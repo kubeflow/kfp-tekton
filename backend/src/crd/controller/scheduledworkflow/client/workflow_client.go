@@ -15,6 +15,7 @@
 package client
 
 import (
+	"context"
 	"time"
 
 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
@@ -131,7 +132,7 @@ func retrieveIndex(workflow *workflowapi.PipelineRun) int64 {
 // Create creates a workflow given a namespace and its specification.
 func (p *WorkflowClient) Create(namespace string, workflow *commonutil.Workflow) (
 	*commonutil.Workflow, error) {
-	result, err := p.clientSet.TektonV1beta1().PipelineRuns(namespace).Create(workflow.Get())
+	result, err := p.clientSet.TektonV1beta1().PipelineRuns(namespace).Create(context.Background(), workflow.Get(), metav1.CreateOptions{})
 	if err != nil {
 		return nil, wraperror.Wrapf(err, "Error creating workflow in namespace (%v): %v: %+v", namespace,
 			err, workflow.Get())

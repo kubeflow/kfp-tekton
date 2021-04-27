@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,6 +49,13 @@ spec:
       - name: size
         value: $(params.size)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - description: Action on the resource
           name: action
@@ -106,11 +113,19 @@ spec:
           image: $(params.image)
           name: main
           resources: {}
+      timeout: 0s
     - name: cop
       params:
       - name: create-pvc-name
         value: $(tasks.create-pvc.results.name)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: create-pvc-name
         steps:
@@ -128,3 +143,5 @@ spec:
         - name: create-pvc
           persistentVolumeClaim:
             claimName: $(inputs.params.create-pvc-name)
+      timeout: 0s
+  timeout: 0s

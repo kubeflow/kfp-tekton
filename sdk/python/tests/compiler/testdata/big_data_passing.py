@@ -32,6 +32,7 @@
 
 # %%
 
+from kfp import dsl
 from kfp.components import func_to_container_op, InputPath, OutputPath
 
 # %% [markdown]
@@ -207,6 +208,7 @@ def params_pipeline():
 
 
 # Combining all pipelines together in a single pipeline
+@dsl.pipeline(name='Big data passing')
 def file_passing_pipelines():
     print_repeating_lines_pipeline()
     text_splitting_pipeline()

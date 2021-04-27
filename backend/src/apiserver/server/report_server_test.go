@@ -4,51 +4,26 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	"github.com/stretchr/testify/assert"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"google.golang.org/grpc/codes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func TestReportWorkflow(t *testing.T) {
-	clientManager, resourceManager, run := initWithOneTimeRun(t)
-	defer clientManager.Close()
-	reportServer := NewReportServer(resourceManager)
-
-	workflow := util.NewWorkflow(&v1alpha1.Workflow{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "run1",
-			Namespace: "default",
-			UID:       types.UID(run.UUID),
-			Labels:    map[string]string{util.LabelKeyWorkflowRunId: run.UUID},
-		},
-		Spec: v1alpha1.WorkflowSpec{
-			Arguments: v1alpha1.Arguments{
-				Parameters: []v1alpha1.Parameter{
-					{Name: "param1"},
-				},
-			},
-		}})
-	_, err := reportServer.ReportWorkflow(nil, &api.ReportWorkflowRequest{
-		Workflow: workflow.ToStringForStore(),
-	})
-	assert.Nil(t, err)
-	run, err = resourceManager.GetRun(run.UUID)
-	assert.Nil(t, err)
-	assert.NotNil(t, run)
-}
+// Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
+// removed tests: "TestReportWorkflow"
 
 func TestReportWorkflow_ValidationFailed(t *testing.T) {
 	clientManager, resourceManager, run := initWithOneTimeRun(t)
 	defer clientManager.Close()
 	reportServer := NewReportServer(resourceManager)
 
-	workflow := util.NewWorkflow(&v1alpha1.Workflow{
+	workflow := util.NewWorkflow(&v1beta1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "default",
 			UID:       types.UID(run.UUID),
@@ -64,7 +39,7 @@ func TestReportWorkflow_ValidationFailed(t *testing.T) {
 
 func TestValidateReportWorkflowRequest(t *testing.T) {
 	// Name
-	workflow := &workflowapi.Workflow{
+	workflow := &workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "MY_NAME",
 			Namespace: "MY_NAMESPACE",
@@ -92,7 +67,7 @@ func TestValidateReportWorkflowRequest_UnmarshalError(t *testing.T) {
 
 func TestValidateReportWorkflowRequest_MissingField(t *testing.T) {
 	// Name
-	workflow := util.NewWorkflow(&workflowapi.Workflow{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			UID:       "1",
@@ -110,7 +85,7 @@ func TestValidateReportWorkflowRequest_MissingField(t *testing.T) {
 	assert.Equal(t, err.(*util.UserError).ExternalStatusCode(), codes.InvalidArgument)
 
 	// Namespace
-	workflow = util.NewWorkflow(&workflowapi.Workflow{
+	workflow = util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "MY_NAME",
 			UID:  "1",
@@ -129,7 +104,7 @@ func TestValidateReportWorkflowRequest_MissingField(t *testing.T) {
 	assert.Equal(t, err.(*util.UserError).ExternalStatusCode(), codes.InvalidArgument)
 
 	// UID
-	workflow = util.NewWorkflow(&workflowapi.Workflow{
+	workflow = util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "MY_NAME",
 			Namespace: "MY_NAMESPACE",

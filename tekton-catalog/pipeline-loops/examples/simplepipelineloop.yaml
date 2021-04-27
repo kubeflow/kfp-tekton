@@ -1,0 +1,82 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: simpletask
+spec:
+  params:
+    - name: word
+      type: string
+    - name: suffix
+      type: string
+  steps:
+    - name: echo
+      image: ubuntu
+      script: |
+        #!/usr/bin/env bash
+        echo "$(params.word)$(params.suffix)"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: demo-pipeline
+spec:
+  params:
+  - name: word
+    default: "word"
+  - name: suffix
+    default: "suffix"
+  tasks:
+  - name: simpletask
+    taskRef:
+      name: simpletask
+    params:
+    - name: word
+      value: $(params.word)
+    - name: suffix
+      value: $(params.suffix)
+
+# ---
+# apiVersion: tekton.dev/v1beta1
+# kind: PipelineRun
+# metadata:
+#   name: demo-pipeline-run-1
+# spec:
+#   params:
+#   - name: word
+#     value: "word"
+#   - name: suffix
+#     value: "suffix"
+#   pipelineRef:
+#     name: demo-pipeline
+
+---
+apiVersion: custom.tekton.dev/v1alpha1
+kind: PipelineLoop
+metadata:
+  name: simpletaskloop
+spec:
+  # Task to run (inline taskSpec also works)
+  pipelineRef:
+    name: demo-pipeline
+  # Parameter that contains the values to iterate
+  iterateParam: word
+  # Timeout (defaults to global default timeout, usually 1h00m; use "0" for no timeout)
+  timeout: 60s
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Run
+metadata:
+  name: simpletasklooprun
+spec:
+  params:
+    - name: word
+      value:
+        - jump
+        - land
+        - roll
+    - name: suffix
+      value: ing
+  ref:
+    apiVersion: custom.tekton.dev/v1alpha1
+    kind: PipelineLoop
+    name: simpletaskloop

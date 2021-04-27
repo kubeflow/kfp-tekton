@@ -1,0 +1,95 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
+      "name": "url1", "optional": true}], "name": "Some very long name with lots of
+      words in it. It should be over 63 chars long in order to observe the problem."}'
+    sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"gcs-downloadgcs-downloadgcs-downloadgcs-download":
+      [["datadatadatadatadatadatadatadatadatadata", "$(results.datadatadatadatadatadatadatadatadatadata.path)"]],
+      "printprintprintprintprintprintprintprintprintprint": []}'
+    tekton.dev/input_artifacts: '{"printprintprintprintprintprintprintprintprintprint":
+      [{"name": "gcs-downloadgcs-downloadgcs-downloadgcs-download-datadatadatadatadatadatadatadatadatadata",
+      "parent_task": "gcs-downloadgcs-downloadgcs-downloadgcs-download"}]}'
+    tekton.dev/output_artifacts: '{"gcs-downloadgcs-downloadgcs-downloadgcs-download":
+      [{"key": "artifacts/$PIPELINERUN/gcs-downloadgcs-downloadgcs-downloadgcs-download/datadatadatadatadatadatadatadatadatadata.tgz",
+      "name": "gcs-downloadgcs-downloadgcs-downloadgcs-download-datadatadatadatadatadatadatadatadatadata",
+      "path": "/tmp/results.txt"}]}'
+  name: some-very-long-name-with-lots-of-words-in-it-it-shoul
+spec:
+  params:
+  - name: url1
+    value: gs://ml-pipeline-playground/shakespeare1.txt
+  pipelineSpec:
+    params:
+    - default: gs://ml-pipeline-playground/shakespeare1.txt
+      name: url1
+    tasks:
+    - name: gcs-downloadgcs-downloadgcs-downloadgcs-download
+      params:
+      - name: url1
+        value: $(params.url1)
+      taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        params:
+        - name: url1
+        results:
+        - description: /tmp/results.txt
+          name: datadatadatadatadatadatadatadatadatadata
+        steps:
+        - args:
+          - gsutil cat $0 | tee $1
+          - $(inputs.params.url1)
+          - $(results.datadatadatadatadatadatadatadatadatadata.path)
+          command:
+          - sh
+          - -c
+          image: google/cloud-sdk:279.0.0
+          name: main
+      timeout: 0s
+    - name: printprintprintprintprintprintprintprintprintprint
+      params:
+      - name: gcs-downloadgcs-downloadgcs-downloadgcs-download-datadatadatadatadatadatadatadatadatadata
+        value: $(tasks.gcs-downloadgcs-downloadgcs-downloadgcs-download.results.datadatadatadatadatadatadatadatadatadata)
+      taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        params:
+        - name: gcs-downloadgcs-downloadgcs-downloadgcs-download-datadatadatadatadatadatadatadatadatadata
+        steps:
+        - command:
+          - echo
+          - $(inputs.params.gcs-downloadgcs-downloadgcs-downloadgcs-download-datadatadatadatadatadatadatadatadatadata)
+          image: alpine:3.6
+          name: main
+      timeout: 0s
+  timeout: 0s
