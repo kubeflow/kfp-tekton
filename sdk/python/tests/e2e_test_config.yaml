@@ -38,3 +38,4 @@ ignored_test_files:
   - "compose.yaml"                     # takes 2 min
   - "long_param_name.yaml"             # unit test only, not using real container image
   - "recur_cond.yaml"                  # unit test only, not using real container image
+  - "cond_recur.yaml"                  # unit test for recursion under condition group, not a valid running example
