@@ -265,6 +265,13 @@ if ignored_yaml_files:
 #  $ for f in sdk/python/tests/compiler/testdata/*_cr*.yaml; do echo "=== ${f##*/} ==="; \
 #      kubectl apply -f "${f}" -n kubeflow; done
 
+# For custom task implementation, we need to enable auto-strip for End-of-File newlines,
+# it appears that the tektoncd/experimental does not like EOF newline for the output variables:
+#  - test_condition_custom_task
+#  - test_tekton_custom_task
+#
+#  $ kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"strip_eof":"true"}}'
+#  $ kubectl rollout restart deploy/ml-pipeline -n kubeflow
 
 # =============================================================================
 #  ensure we have what we need, abort early instead of failing every test

@@ -1,4 +1,6 @@
-[flip-coin : main] heads
+[flip-coin : main] tails
 
 [flip-coin-2 : main] heads
+
+[print : main] Condition output is false
 

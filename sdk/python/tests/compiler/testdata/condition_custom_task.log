@@ -1,2 +1,6 @@
-[flip-coin : main] heads
+[flip-coin : main] tails
+
+[generate-random-number-2 : main] 10
+
+[print-4 : main] tails and 10 <= 15!
 
