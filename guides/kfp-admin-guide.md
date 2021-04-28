@@ -9,11 +9,8 @@ This page introduces different ways to configure the kfp-tekton admin settings s
 - [Enable Auto Strip for End of File newlines](#enable-auto-strip-for-end-of-file-newlines)
 - [Customize Artifact Image to do your own post processing](#customize-artifact-image-to-do-your-own-post-processing)
 - [Customize S3 Endpoint for KFP Tekton artifacts](#customize-s3-endpoint-for-kfp-tekton-artifacts)
-<<<<<<< HEAD
 - [Disable Auto Apply for Tekton Custom Resources](#disable-auto-apply-for-tekton-custom-resources)
-=======
 - [Disable Caching](#disable-caching)
->>>>>>> upstream/master
 
 
 ## Disable Artifact Tracking
