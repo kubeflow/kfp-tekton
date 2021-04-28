@@ -639,6 +639,26 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  name: setup-kubectl-wrapper-deploy
+spec:
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: setup-deploy
+      image: docker.io/aipipeline/pipeline-base-image:1.2
+      command:
+        - /bin/bash
+        - '-c'
+      args:
+        - >
+          cd /artifacts && source build.properties;
+          export KUBECTL_WRAPPER_IMAGE_URL=${REGISTRY_URL}/${REGISTRY_NAMESPACE}/kubeclient;
+          source scripts/deploy/iks/tekton-catalog/setup-kubectl-wrapper-deploy.sh;
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
   name: iks-test
 spec:
   params:

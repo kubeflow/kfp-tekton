@@ -40,4 +40,4 @@ kubectl delete -f sdk/python/tests/compiler/testdata/resourceop_basic.yaml || tr
 kubectl delete secret registry-dockerconfig-secret || true
 
 # Jobs run in default namespace
-kubectl delete job --all -n default
+kubectl delete job --all -n default || true
