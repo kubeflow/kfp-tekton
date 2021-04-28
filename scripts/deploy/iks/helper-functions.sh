@@ -189,6 +189,24 @@ wait_for_pipeline_run () {
     return 0
 }
 
+wait_for_pipeline_run_rev () {
+    local run_name=$1
+    local max_tries=$2
+    local sleep_time=$3
+
+    until [ "$(pipeline_run_is_success_rev "$run_name")" = "0" ]; do
+        max_tries=$((max_tries-1))
+        if [[ "$max_tries" -eq 0 ]]; then
+            echo "1"
+            return
+        fi
+        sleep "$sleep_time"
+    done
+
+    echo "0"
+    return
+}
+
 pipeline_run_is_success () {
     local run_name=$1
 
@@ -205,4 +223,24 @@ pipeline_run_is_success () {
     fi
 
     return 1
+}
+
+pipeline_run_is_success_rev () {
+    local run_name=$1
+
+    local run_status
+
+    # May have unexpected results if run_status has multiple matches
+    run_status=$(kubectl get pipelineruns "$run_name" | tail -1 | awk '{print $2}')
+
+    if [ "$run_status" = "True" ]; then
+        echo "0"
+        return
+    elif [ "$run_status" = "False" ]; then
+        echo "1"
+        return
+    fi
+
+    echo "1"
+    return
 }

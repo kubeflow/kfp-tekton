@@ -59,6 +59,9 @@ spec:
     - name: dockerhub-namespace
       description: dockerhub namespace
       default: aipipeline
+    - name: images
+      description: a image list for publishing
+      default: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend pipelineloop-controller pipelineloop-webhook kubeclient"
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -127,6 +130,8 @@ spec:
           value: $(params.dockerhub-namespace)
         - name: publish-to-dockerhub
           value: $(params.publish-to-dockerhub)
+        - name: images
+          value: $(params.images)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: TriggerBinding

@@ -58,6 +58,9 @@ spec:
     - name: dockerhub-namespace
       description: dockerhub namespace
       default: aipipeline
+    - name: images
+      description: a image list for publishing
+      default: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend pipelineloop-controller pipelineloop-webhook kubeclient"
   workspaces:
   - name: pipeline-pvc
   tasks:
@@ -306,6 +309,17 @@ spec:
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
+    - name: build-kubectl-wrapper-binaries
+      taskRef:
+        name: build-binaries
+      runAfter:
+        - test
+      params:
+        - name: build-dir
+          value: tekton-catalog/kubectl-wrapper
+      workspaces:
+        - name: task-pvc
+          workspace: pipeline-pvc
     - name: containerize-pipelineloop-controller
       runAfter:
         - build-pipeline-loops-binaries
@@ -391,6 +405,33 @@ spec:
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
+    - name: containerize-kubectl-wrapper
+      runAfter:
+        - build-kubectl-wrapper-binaries
+      taskRef:
+        name: build-images-dnd
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: kubeclient
+        - name: docker-root
+          value: tekton-catalog/kubectl-wrapper
+        - name: docker-file
+          value: tekton-catalog/kubectl-wrapper/Dockerfile
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+        - name: task-pvc
+          workspace: pipeline-pvc
     - name: deploy
       taskRef:
         name: deploy
@@ -428,6 +469,14 @@ spec:
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
+    - name: setup-kubectl-wrapper-deploy
+      taskRef:
+        name: setup-kubectl-wrapper-deploy
+      runAfter:
+        - containerize-kubectl-wrapper
+      workspaces:
+        - name: task-pvc
+          workspace: pipeline-pvc
     - name: deploy-pipeline-loops-e2e
       taskRef:
         name: iks-test
@@ -460,7 +509,7 @@ spec:
         name: iks-test
       runAfter:
         - deploy
-        - build-any-sequencer-binaries
+        - containerize-any-sequencer
       params:
         - name: apikey
           value: $(params.apikey)
@@ -485,6 +534,34 @@ spec:
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
+    - name: deploy-kubectl-wrapper-e2e
+      taskRef:
+        name: iks-test
+      runAfter:
+        - deploy
+        - setup-kubectl-wrapper-deploy
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: resource-group
+          value: $(params.resource-group)
+        - name: org
+          value: $(params.org)
+        - name: region
+          value: $(params.region)
+        - name: space
+          value: $(params.space)
+        - name: test-commands
+          value: |
+            export MANIFEST="resourceop_basic.yaml"
+            source scripts/deploy/iks/tekton-catalog/deploy-kubectl-wrapper-e2e.sh
+      workspaces:
+        - name: task-pvc
+          workspace: pipeline-pvc
     - name: e2e-test
       taskRef:
         name: e2e-test
@@ -510,6 +587,8 @@ spec:
         name: publish-images
       runAfter:
         - e2e-test
+        - deploy-any-sequencer-e2e
+        - deploy-kubectl-wrapper-e2e
       when:
         - input: $(params.publish-to-dockerhub)
           operator: in
@@ -539,7 +618,7 @@ spec:
         - name: dockerhub-namespace
           value: $(params.dockerhub-namespace)
         - name: images
-          value: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend pipelineloop-controller pipelineloop-webhook"
+          value: $(params.images)
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
@@ -567,6 +646,8 @@ spec:
             kubectl delete -f tekton-catalog/pipeline-loops/config || true
             kubectl delete -f tekton-catalog/pipeline-loops/examples/loop-example-basic.yaml || true
             kubectl delete -f sdk/python/tests/compiler/testdata/any_sequencer.yaml || true
+            kubectl delete -f sdk/python/tests/compiler/testdata/resourceop_basic.yaml || true
+            kubectl delete job --all -n default || true
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
