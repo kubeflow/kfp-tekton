@@ -1664,23 +1664,3 @@ func (r *ResourceManager) applyCustomResources(workflow util.Workflow, tektonTem
 	}
 	return nil
 }
-
-func (r *ResourceManager) convertToJson(input interface{}) interface{} {
-	switch inputObject := input.(type) {
-	// In input interface is a dictionary, iterate each key
-	// and recursively decode them.
-	case map[interface{}]interface{}:
-		subMap := map[string]interface{}{}
-		for key, value := range inputObject {
-			subMap[key.(string)] = r.convertToJson(value)
-		}
-		return subMap
-	// If input interface is a list, iterate each item
-	// and recusively decode them
-	case []interface{}:
-		for index, value := range inputObject {
-			inputObject[index] = r.convertToJson(value)
-		}
-	}
-	return input
-}
