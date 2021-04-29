@@ -84,7 +84,7 @@ spec:
             is failure.
           name: failure-condition
           type: string
-        - default: index.docker.io/aipipeline/kubeclient:v0.0.2
+        - default: aipipeline/kubectl-wrapper:0.8.0
           description: Kubectl wrapper image
           name: image
           type: string
@@ -197,7 +197,7 @@ spec:
             is failure.
           name: failure-condition
           type: string
-        - default: index.docker.io/aipipeline/kubeclient:v0.0.2
+        - default: aipipeline/kubectl-wrapper:0.8.0
           description: Kubectl wrapper image
           name: image
           type: string
@@ -310,7 +310,7 @@ spec:
             is failure.
           name: failure-condition
           type: string
-        - default: index.docker.io/aipipeline/kubeclient:v0.0.2
+        - default: aipipeline/kubectl-wrapper:0.8.0
           description: Kubectl wrapper image
           name: image
           type: string
@@ -423,7 +423,7 @@ spec:
             is failure.
           name: failure-condition
           type: string
-        - default: index.docker.io/aipipeline/kubeclient:v0.0.2
+        - default: aipipeline/kubectl-wrapper:0.8.0
           description: Kubectl wrapper image
           name: image
           type: string

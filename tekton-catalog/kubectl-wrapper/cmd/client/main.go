@@ -69,12 +69,6 @@ func main() {
 		}
 	}
 
-	// cmd := exec.Command("/bin/sh", "/builder/kubectl.bash")
-	// _, err = cmd.Output()
-	// if err != nil {
-	// 	log.Errorf("Initialize script failed: %+v:", err)
-	// }
-
 	isDelete := action == "delete"
 	resourceNamespace, resourceName, err := execResource(action, mergeStrategy)
 	if err != nil {

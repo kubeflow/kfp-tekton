@@ -14,8 +14,12 @@ data:
   artifact_script: |-
     #!/usr/bin/env sh
     push_artifact() {
-        tar -cvzf $1.tgz $2
-        mc cp $1.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/$1.tgz
+        if [ -f "$2" ]; then
+            tar -cvzf $1.tgz $2
+            mc cp $1.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/$1.tgz
+        else
+            echo "$2 file does not exist. Skip artifact tracking for $1"
+        fi
     }
     push_log() {
         cat /var/log/containers/$PODNAME*$NAMESPACE*step-main*.log > step-main.log
