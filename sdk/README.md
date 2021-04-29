@@ -1,3 +1,8 @@
+[![PyPI](https://img.shields.io/pypi/v/kfp-tekton?label=PyPI)](https://pypi.org/project/kfp-tekton/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/kfp-tekton?label=Downloads)](https://pypi.org/project/kfp-tekton/#files)
+[![PyPI - License](https://img.shields.io/pypi/l/kfp-tekton?label=License)](https://www.apache.org/licenses/LICENSE-2.0)
+
+
 # Kubeflow Pipelines SDK for Tekton
 
 The Kubeflow Pipelines [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/)

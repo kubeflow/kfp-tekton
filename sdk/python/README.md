@@ -1,6 +1,6 @@
-# KFP-Tekton Developer Guide
+# KFP-Tekton SDK Developer Guide
 
-This document describes the development guidelines for contributing to the KFP-Tekton project.
+This document describes the development guidelines for contributing to the KFP-Tekton SDK/compiler.
 Details about the required contributor license agreement (CLA) and the code review process can be found
 in the [CONTRIBUTING.md](/CONTRIBUTING.md) document.
 A quick-start guide with general setup instruction, trouble shooting guide and technical limitations
