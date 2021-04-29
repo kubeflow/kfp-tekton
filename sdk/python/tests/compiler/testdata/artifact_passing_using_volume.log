@@ -1,26 +1,23 @@
 
 [producer : copy-artifacts] Added `storage` successfully.
-[producer : copy-artifacts] tekton/results/output-1
 [producer : copy-artifacts] tar: removing leading '/' from member names
+[producer : copy-artifacts] tekton/results/output-1
 [producer : copy-artifacts] `Output-1.tgz` -> `storage/mlpipeline/artifacts/artifact-passing-pipeline/producer/Output-1.tgz`
-[producer : copy-artifacts] Total: 0 B, Transferred: 121 B, Speed: 29 B/s
+[producer : copy-artifacts] Total: 0 B, Transferred: 121 B, Speed: 31 B/s
 [producer : copy-artifacts] tar: removing leading '/' from member names
 [producer : copy-artifacts] workspace/producer/producer-Output-2
 [producer : copy-artifacts] `Output-2.tgz` -> `storage/mlpipeline/artifacts/artifact-passing-pipeline/producer/Output-2.tgz`
-[producer : copy-artifacts] Total: 0 B, Transferred: 144 B, Speed: 41 B/s
+[producer : copy-artifacts] Total: 0 B, Transferred: 143 B, Speed: 44 B/s
 
 
 [processor : copy-artifacts] Added `storage` successfully.
-[processor : copy-artifacts] tekton/results/output-1
 [processor : copy-artifacts] tar: removing leading '/' from member names
+[processor : copy-artifacts] tekton/results/output-1
 [processor : copy-artifacts] `Output-1.tgz` -> `storage/mlpipeline/artifacts/artifact-passing-pipeline/processor/Output-1.tgz`
-[processor : copy-artifacts] Total: 0 B, Transferred: 121 B, Speed: 39 B/s
-[processor : copy-artifacts] /tekton/scripts/script-1-b4jcg: line 17: workspaces.producer.path: not found
-[processor : copy-artifacts] tar: /producer-Output-2: No such file or directory
-[processor : copy-artifacts] tar: error exit delayed from previous errors
-[processor : copy-artifacts] `Output-2.tgz` -> `storage/mlpipeline/artifacts/artifact-passing-pipeline/processor/Output-2.tgz`
-[processor : copy-artifacts] Total: 0 B, Transferred: 29 B, Speed: 8 B/s
-[processor : copy-artifacts] /tekton/scripts/script-1-b4jcg: line 19: workspaces.producer.path: not found
+[processor : copy-artifacts] Total: 0 B, Transferred: 121 B, Speed: 42 B/s
+[processor : copy-artifacts] /tekton/scripts/script-1-v92rb: line 21: workspaces.producer.path: not found
+[processor : copy-artifacts] /producer-Output-2 file does not exist. Skip artifact tracking for Output-2
+[processor : copy-artifacts] /tekton/scripts/script-1-v92rb: line 23: workspaces.producer.path: not found
 
 [consumer : main] Input parameter = Data 1
 [consumer : main] Input artifact = 
