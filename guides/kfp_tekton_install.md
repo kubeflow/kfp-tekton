@@ -17,13 +17,15 @@ A Kubernetes cluster `v1.18` that has least 8 vCPU and 16 GB memory.
 ### IBM Cloud Kubernetes Service (IKS)
 
    1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://master.kubeflow.org/docs/distributions/ibm/create-cluster/#connecting-to-an-existing-cluster)
-   2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#ibm-cloud-block-storage-setup)
+   2. **Important**: Configure the IKS cluster with [IBM Cloud Group ID Storage Setup](https://www.kubeflow.org/docs/distributions/ibm/deploy/install-kubeflow-on-iks/#storage-setup-for-a-classic-ibm-cloud-kubernetes-cluster)
 
 ### OpenShift
 
-   Follow the instructions at [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](./kfp-tekton-openshift.md). Depending on your situation, you can choose between the two approaches:
-   1. Leverage OpenShift Pipelines (built on Tekton)
+   Depending on your situation, you can choose between the two approaches to set up the pipeline engine on Openshift:
+   1. Leverage [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.7/cicd/pipelines/installing-pipelines.html) (built on Tekton)
    2. Install Tekton as part of deployment
+
+   Once you decided your approach, follow the [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment) to install the Kubeflow Pipeline Stack.
 
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
 
@@ -33,7 +35,7 @@ A Kubernetes cluster `v1.18` that has least 8 vCPU and 16 GB memory.
 
 To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
 
-1. Install [Tekton v0.21.0](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0)
+1. Install [Tekton v0.21.0](https://github.com/tektoncd/pipeline/blob/v0.21.0/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines or OpenShift Pipelines on the cluster.
 
 2. Enable custom task controller and other feature flags for kfp-tekton
    ```shell
@@ -61,6 +63,11 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
     ```shell
     kubectl get svc ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
     ```
+
+6. (OpenShift only) If you are running the standalone KFP-Tekton on OpenShift, apply the necessary security context constraint below
+   ```shell
+   oc apply -f manifests/kustomize/third-party/openshift/standalone
+   ```
 
 ## Kubeflow installation including Kubeflow Pipelines with Tekton Backend
 
