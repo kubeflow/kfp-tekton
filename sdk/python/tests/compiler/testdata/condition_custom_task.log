@@ -1,0 +1,6 @@
+[flip-coin : main] heads
+
+[generate-random-number : main] 7
+
+[print : main] heads and 7 > 5!
+

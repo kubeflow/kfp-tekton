@@ -17,7 +17,7 @@ kind: PipelineRun
 metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
-      "optional": true, "type": "Integer"}], "name": "my-pipeline"}'
+      "optional": true, "type": "Integer"}], "name": "with-item-nested-pipeline"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -26,7 +26,7 @@ metadata:
       [], "my-out-cop": []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: my-pipeline
+  name: with-item-nested-pipeline
 spec:
   params:
   - name: my_pipe_param
@@ -59,7 +59,7 @@ spec:
           image: library/bash:4.4.23
           name: main
       timeout: 0s
-    - name: my-pipeline-for-loop-2
+    - name: with-item-nested-pipeline-for-loop-2
       params:
       - name: loop-item-param-1
         value: '[{"a": 1, "b": 2}, {"a": 10, "b": 20}]'
@@ -68,5 +68,5 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: my-pipeline-for-loop-2
+        name: with-item-nested-pipeline-for-loop-2
   timeout: 0s
