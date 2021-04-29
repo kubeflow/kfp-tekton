@@ -1,6 +1,6 @@
 [mnist-hpo : main] INFO:root:Generating experiment template.
 [mnist-hpo : main] INFO:root:Creating kubeflow.org/experiments mnist in namespace kubeflow.
-[mnist-hpo : main] ERROR:root:Exception when create kubeflow.org/experiments: {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"experiments.kubeflow.org is forbidden: User \"system:serviceaccount:kubeflow:default\" cannot create resource \"experiments\" in API group \"kubeflow.org\" in the namespace \"kubeflow\"","reason":"Forbidden","details":{"group":"kubeflow.org","kind":"experiments"},"code":403}
+[mnist-hpo : main] ERROR:root:Exception when create kubeflow.org/experiments: 404 page not found
 [mnist-hpo : main] 
 [mnist-hpo : main] Traceback (most recent call last):
 [mnist-hpo : main]   File "/ml/launch_experiment.py", line 137, in <module>
@@ -9,12 +9,11 @@
 [mnist-hpo : main]     create_response = experiment.create(inst)
 [mnist-hpo : main]   File "/ml/launch_crd.py", line 98, in create
 [mnist-hpo : main]     self._log_and_raise_exception(e, "create")
-[mnist-hpo : main]   File "/ml/launch_crd.py", line 135, in _log_and_raise_exception
-[mnist-hpo : main]     raise ex
-[mnist-hpo : main] kubernetes.client.rest.ApiException: (403)
-[mnist-hpo : main] Reason: Forbidden
-[mnist-hpo : main] HTTP response headers: HTTPHeaderDict({'Date': 'Tue, 09 Jun 2020 02:46:29 GMT', 'Content-Length': '355', 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-cache, private'})
-[mnist-hpo : main] HTTP response body: {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"experiments.kubeflow.org is forbidden: User \"system:serviceaccount:kubeflow:default\" cannot create resource \"experiments\" in API group \"kubeflow.org\" in the namespace \"kubeflow\"","reason":"Forbidden","details":{"group":"kubeflow.org","kind":"experiments"},"code":403}
-[mnist-hpo : main] 
-[mnist-hpo : main] 
+[mnist-hpo : main]   File "/ml/launch_crd.py", line 128, in _log_and_raise_exception
+[mnist-hpo : main]     body = json.loads(ex.body)
+[mnist-hpo : main]   File "/usr/lib/python2.7/json/__init__.py", line 339, in loads
+[mnist-hpo : main]     return _default_decoder.decode(s)
+[mnist-hpo : main]   File "/usr/lib/python2.7/json/decoder.py", line 367, in decode
+[mnist-hpo : main]     raise ValueError(errmsg("Extra data", s, end, len(s)))
+[mnist-hpo : main] ValueError: Extra data: line 1 column 5 - line 2 column 1 (char 4 - 19)
 

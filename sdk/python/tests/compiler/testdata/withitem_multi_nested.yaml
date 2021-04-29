@@ -18,7 +18,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[100, 200]", "name":
       "my_pipe_param", "optional": true, "type": "JsonArray"}, {"default": "[1, 2]",
-      "name": "my_pipe_param3", "optional": true, "type": "JsonArray"}], "name": "my-pipeline"}'
+      "name": "my_pipe_param3", "optional": true, "type": "JsonArray"}], "name": "withitem
+      multiple nesting pipeline"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -27,7 +28,7 @@ metadata:
       [], "my-inner-inner-coop-2": [], "my-inner-inner-coop-3": []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-  name: my-pipeline
+  name: withitem-multiple-nesting-pipeline
 spec:
   params:
   - name: my_pipe_param
@@ -41,7 +42,7 @@ spec:
     - default: '[1, 2]'
       name: my_pipe_param3
     tasks:
-    - name: my-pipeline-for-loop-2
+    - name: withitem-multiple-nesting-pipeline-for-loop-2
       params:
       - name: loop-item-param-1
         value: '[{"a": 1, "b": 2}, {"a": 10, "b": 20}]'
@@ -52,5 +53,5 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: my-pipeline-for-loop-2
+        name: withitem-multiple-nesting-pipeline-for-loop-2
   timeout: 0s

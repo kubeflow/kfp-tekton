@@ -54,7 +54,7 @@ def flip_component(flip_result, maxVal):
 
 
 @dsl.pipeline(
-    name='pipeline flip coin',
+    name='recursion pipeline',
     description='shows how to use graph_component and recursion.'
 )
 def flipcoin(maxVal=12):

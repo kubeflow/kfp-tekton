@@ -18,7 +18,7 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use graph_component
       and recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
-      true}], "name": "pipeline flip coin"}'
+      true}], "name": "recursion pipeline"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -32,7 +32,7 @@ metadata:
       "name": "flip-coin-output", "path": "/tmp/output"}], "flip-coin-2": [{"key":
       "artifacts/$PIPELINERUN/flip-coin-2/output.tgz", "name": "flip-coin-2-output",
       "path": "/tmp/output"}]}'
-  name: pipeline-flip-coin
+  name: recursion-pipeline
 spec:
   params:
   - name: maxVal
@@ -69,7 +69,7 @@ spec:
       - name: flip-coin-output
         value: $(tasks.flip-coin.results.output)
       runAfter:
-      - pipeline-flip-coin-graph-flip-component-1
+      - recursion-pipeline-graph-flip-component-1
       taskSpec:
         metadata:
           annotations:
@@ -87,7 +87,7 @@ spec:
           image: alpine:3.6
           name: main
       timeout: 0s
-    - name: pipeline-flip-coin-graph-flip-component-1
+    - name: recursion-pipeline-graph-flip-component-1
       params:
       - name: flip-coin-output
         value: $(tasks.flip-coin.results.output)
@@ -101,5 +101,5 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: pipeline-flip-coin-graph-flip-component-1
+        name: recursion-pipeline-graph-flip-component-1
   timeout: 0s

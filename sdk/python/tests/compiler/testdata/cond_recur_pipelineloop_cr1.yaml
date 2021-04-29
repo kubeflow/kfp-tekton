@@ -21,9 +21,9 @@ spec:
     params:
     - name: just_one_iteration
       type: string
-    - name: iter_num
-      type: string
     - name: condition-cel-status
+      type: string
+    - name: iter_num
       type: string
     tasks:
     - name: condition-cel-2

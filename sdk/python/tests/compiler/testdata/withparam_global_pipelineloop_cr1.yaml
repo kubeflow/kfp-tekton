@@ -14,23 +14,37 @@
 
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
-metadata: {name: withparam-global-for-loop-1}
+metadata:
+  name: withparam-global-for-loop-1
 spec:
   pipelineSpec:
     params:
-    - {name: loopidy_doop-loop-item, type: string}
+    - name: loopidy_doop-loop-item
+      type: string
     tasks:
     - name: my-in-cop1
       params:
-      - {name: loopidy_doop-loop-item, value: $(params.loopidy_doop-loop-item)}
+      - name: loopidy_doop-loop-item
+        value: $(params.loopidy_doop-loop-item)
       taskSpec:
         steps:
         - name: main
-          args: ['echo no output global op1, item: $(inputs.params.loopidy_doop-loop-item)']
-          command: [sh, -c]
+          args:
+          - 'echo no output global op1, item: $(inputs.params.loopidy_doop-loop-item)'
+          command:
+          - sh
+          - -c
           image: library/bash:4.4.23
         params:
-        - {name: loopidy_doop-loop-item, type: string}
+        - name: loopidy_doop-loop-item
+          type: string
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       runAfter: []
       timeout: 0s
   iterateParam: loopidy_doop-loop-item

@@ -15,7 +15,7 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: my-pipeline-for-loop-6
+  name: withitem-multiple-nesting-pipeline-for-loop-6
 spec:
   pipelineSpec:
     params:

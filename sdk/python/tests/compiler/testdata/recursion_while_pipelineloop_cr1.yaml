@@ -15,15 +15,15 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: pipeline-flip-coin-graph-flip-component-1
+  name: recursion-pipeline-graph-flip-component-1
 spec:
   pipelineSpec:
     params:
     - name: just_one_iteration
       type: string
-    - name: flip-coin-output
-      type: string
     - name: maxVal
+      type: string
+    - name: flip-coin-output
       type: string
     tasks:
     - name: print
@@ -120,7 +120,7 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: pipeline-flip-coin-graph-flip-component-1
+        name: recursion-pipeline-graph-flip-component-1
       params:
       - name: just_one_iteration
         value:
