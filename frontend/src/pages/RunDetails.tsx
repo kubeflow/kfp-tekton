@@ -131,6 +131,7 @@ interface RunDetailsState {
   mlmdRunContext?: Context;
   mlmdExecutions?: Execution[];
   showReducedGraph?: boolean;
+  cachedPipelineRun?: string;
 }
 
 export const css = stylesheet({
@@ -241,6 +242,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       workflow,
       mlmdExecutions,
       showReducedGraph,
+      cachedPipelineRun,
     } = this.state;
     const { projectId, clusterName } = this.props.gkeMetadata;
     const selectedNodeId = selectedNodeDetails?.id || '';
@@ -258,6 +260,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     const { inputArtifacts, outputArtifacts } = WorkflowParser.getNodeInputOutputArtifacts(
       workflow,
       selectedNodeId,
+      cachedPipelineRun,
     );
     const selectedExecution = mlmdExecutions?.find(
       execution => ExecutionHelpers.getKfpPod(execution) === selectedNodeId,
@@ -693,6 +696,40 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       }
 
       const jsonWorkflow = JSON.parse(runDetail.pipeline_runtime!.workflow_manifest || '{}');
+
+      let cachedTaskRun = '';
+      // Check if any of the pods are cached and if they are then set the cached pipelineRun
+      if (jsonWorkflow.status && jsonWorkflow.status.taskRuns) {
+        jsonWorkflow.spec.pipelineSpec.tasks.forEach((task: any) => {
+          if (
+            task.taskSpec.metadata &&
+            task.taskSpec.metadata.labels &&
+            task.taskSpec.metadata.labels['pipelines.kubeflow.org/cache_enabled'] === 'true' &&
+            !cachedTaskRun
+          ) {
+            Object.keys(jsonWorkflow.status.taskRuns).forEach((taskRun: string) => {
+              if (task.name === jsonWorkflow.status.taskRuns[taskRun].pipelineTaskName) {
+                cachedTaskRun = jsonWorkflow.status.taskRuns[taskRun].status.podName;
+              }
+            });
+          }
+        });
+
+        if (cachedTaskRun) {
+          const podInfo = await Apis.getPodInfo(cachedTaskRun, jsonWorkflow?.metadata?.namespace);
+          if (
+            podInfo &&
+            podInfo.metadata &&
+            podInfo.metadata['annotations'] &&
+            podInfo.metadata['annotations']['pipelines.kubeflow.org/cached_pipeline_run']
+          ) {
+            this.setStateSafe({
+              cachedPipelineRun:
+                podInfo.metadata['annotations']['pipelines.kubeflow.org/cached_pipeline_run'],
+            });
+          }
+        }
+      }
 
       if (
         jsonWorkflow.status &&

@@ -79,6 +79,7 @@ func WatchPods(namespaceToWatch string, clientManager ClientManagerInterface) {
 			executionOutputMap := make(map[string]interface{})
 			executionOutputMap[TektonTaskrunOutputs] = executionOutput
 			executionOutputMap[MetadataExecutionIDKey] = pod.ObjectMeta.Labels[MetadataExecutionIDKey]
+			executionOutputMap[CachedPipeline] = pod.ObjectMeta.Labels[PipelineRun]
 			executionOutputJSON, _ := json.Marshal(executionOutputMap)
 
 			executionMaxCacheStaleness, exists := pod.ObjectMeta.Annotations[MaxCacheStalenessKey]

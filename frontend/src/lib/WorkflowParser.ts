@@ -359,6 +359,7 @@ export default class WorkflowParser {
   public static getNodeInputOutputArtifacts(
     workflow?: any,
     nodeId?: string,
+    cachedPipelineRun?: string,
   ): Record<'inputArtifacts' | 'outputArtifacts', Array<KeyValue<S3Artifact>>> {
     type ParamList = Array<KeyValue<S3Artifact>>;
     let inputArtifacts: ParamList = [];
@@ -376,7 +377,7 @@ export default class WorkflowParser {
     // Get the task name that corresponds to the nodeId
     let taskName = '';
     let taskStatus: NodePhase = NodePhase.SUCCEEDED;
-    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns || {})) {
+    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
       const taskRun = workflow.status.taskRuns[taskRunId];
       if (taskRun.status && taskRun.status.podName === nodeId) {
         taskName = taskRun.pipelineTaskName;
@@ -404,6 +405,17 @@ export default class WorkflowParser {
     };
 
     inputArtifacts = (rawInputArtifacts[taskName] || []).map((artifact: any) => {
+      const parentTask = artifact.parent_task;
+      let pipelineRunID = workflow.metadata.name || '';
+      // Use the cached pipelineRun as the pipelineRunID if this artifact is stored by a taskRun with caching enabled
+      workflow.spec.pipelineSpec.tasks.forEach((task: any) => {
+        if (
+          parentTask === task.name &&
+          task.taskSpec.metadata.labels['pipelines.kubeflow.org/cache_enabled'] === 'true' &&
+          cachedPipelineRun
+        )
+          pipelineRunID = cachedPipelineRun;
+      });
       return [
         artifact.name,
         {
@@ -412,9 +424,9 @@ export default class WorkflowParser {
           insecure: template.insecure,
           accessKeySecret: template.accessKeySecret,
           secretKeySecret: template.secretKeySecret,
-          key: `artifacts/${workflow.metadata.name}/${
-            artifact.parent_task
-          }/${artifact.name.substring(artifact.parent_task.length + 1)}.tgz`,
+          key: `artifacts/${pipelineRunID}/${parentTask}/${artifact.name.substring(
+            artifact.parent_task.length + 1,
+          )}.tgz`,
         },
       ];
     });
@@ -430,6 +442,18 @@ export default class WorkflowParser {
       return { inputArtifacts, outputArtifacts };
 
     outputArtifacts = rawOutputArtifacts[taskName].map((artifact: any) => {
+      const split = artifact.key.split('/');
+      const taskName = split[2];
+      let pipelineRunID = workflow.metadata.name || '';
+      // Use the cached pipelineRun as the pipelineRunID if this artifact is stored by a taskRun with caching enabled
+      workflow.spec.pipelineSpec.tasks.forEach((task: any) => {
+        if (
+          taskName === task.name &&
+          task.taskSpec.metadata.labels['pipelines.kubeflow.org/cache_enabled'] === 'true' &&
+          cachedPipelineRun
+        )
+          pipelineRunID = cachedPipelineRun;
+      });
       return [
         artifact.name,
         {
@@ -438,7 +462,7 @@ export default class WorkflowParser {
           insecure: template.insecure,
           accessKeySecret: template.accessKeySecret,
           secretKeySecret: template.secretKeySecret,
-          key: artifact.key.replace('$PIPELINERUN', workflow.metadata.name || ''),
+          key: artifact.key.replace('$PIPELINERUN', pipelineRunID),
         },
       ];
     });

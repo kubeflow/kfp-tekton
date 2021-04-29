@@ -58,6 +58,8 @@ const (
 	TaskName                   string = "tekton.dev/pipelineTask"
 	PipelineName               string = "pipelines.kubeflow.org/pipelinename"
 	Generation                 string = "pipelines.kubeflow.org/generation"
+	PipelineRun               string = "tekton.dev/pipelineRun"
+	CachedPipeline            string = "pipelines.kubeflow.org/cached_pipeline_run"
 
 	TektonGroup        string = "tekton.dev/v1beta1"
 	TektonTaskKind     string = "TaskRun"
@@ -181,6 +183,8 @@ func MutatePodIfCached(req *v1beta1.AdmissionRequest, clientMgr ClientManagerInt
 
 		result := getValueFromSerializedMap(cachedExecution.ExecutionOutput, TektonTaskrunOutputs)
 		annotations[TektonTaskrunOutputs] = result
+		cachedPipelineRun := getValueFromSerializedMap(cachedExecution.ExecutionOutput, CachedPipeline)
+		annotations[CachedPipeline] = cachedPipelineRun
 		labels[CacheIDLabelKey] = strconv.FormatInt(cachedExecution.ID, 10)
 		labels[KFPCachedLabelKey] = KFPCachedLabelValue // This label indicates the pod is taken from cache.
 
@@ -248,7 +252,15 @@ func prepareInitContainer(pod *corev1.Pod, logger *zap.SugaredLogger) ([]corev1.
 
 func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLogger) ([]corev1.Container, error) {
 	logger.Infof("Start to prepare dummy containers.")
-	dummyContainers := []corev1.Container{}
+	image := "gcr.io/google-containers/busybox"
+	dummyContainer := corev1.Container{
+		Name:    "main",
+		Image:   image,
+		Command: []string{`echo`, `"This step output is taken from cache."`},
+	}
+	dummyContainers := []corev1.Container{
+		dummyContainer,
+	}
 
 	results, err := unmarshalResult(result)
 	if err != nil {
