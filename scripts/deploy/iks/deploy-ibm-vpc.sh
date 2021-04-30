@@ -95,27 +95,41 @@ function existence_check() {
     fi
 }
 
+function vpc_name_to_gateway_id() {
+    existence_check "VPC_NAME" "vpc-name"
+    local value_pubgw_id=$(ibmcloud is pubgws -q | grep "\s${VPC_NAME}\s" | awk '{print $1}')
+    echo $value_pubgw_id
+}
+
+function vpc_name_to_vpc_id() {
+    existence_check "VPC_NAME" "vpc-name"
+    local value_vpc_id=$(ibmcloud is vpcs -q | grep "\s${VPC_NAME}\s" | awk '{print $1}')
+    echo "$value_vpc_id"
+}
+
 function complete_delete_cluster() {
     delete_cluster
     if [[ "x${DELETE_CLUSTER}" == "xfull-sync" ]]; then
         echo "Waiting for the cluster to be deleted, this usually takes about 45 mins."
         wait_for_cluster_deleted
     fi
+    sleep 5
     VPC_ID=$(vpc_name_to_vpc_id)
     if [[ "x$SUBNET_ID" != "x" ]]; then
         ibmcloud is subnetd -f -q "$SUBNET_ID" 2>/dev/null || true
     fi
+    sleep 5
     if [[ "x$GATEWAY_ID" != "x" ]]; then
         ibmcloud is pubgwd -f -q "$GATEWAY_ID" 2>/dev/null || true
     fi
     set +e
     sleep 5 # it may take some time for subnet and pubgw to be detached & deleted.
-    ibmcloud is vpcd -f -q "$VPC_ID" 2>/dev/null
+    ibmcloud is vpcd -f -q "$VPC_ID"
     if [[ "$?" == "0" || "x$VPC_ID" == "x" ]] ; then
         echo "VPC $VPC_ID is deleted. Complete delete successful."
         rm -f "$CONFIG_FILE_IKS_DEPLOY" 2>/dev/null
     else
-        echo "VPC is not deleted it may have cluster/instances/subnets etc... attached to it."
+        echo "VPC $VPC_NAME is not deleted it may have cluster/instances/subnets etc. attached to it, please retry."
     fi
     set -e
 }
@@ -130,27 +144,15 @@ function delete_cluster() {
     existence_check "CLUSTER_NAME" "cluster-name"
     local CLUSTER_ID=$(cluster_name_to_cluster_id)
     set +e
-    ibmcloud ks cluster rm -q -f --force-delete-storage -c "${CLUSTER_NAME}"
+    ibmcloud ks cluster rm -q -f --force-delete-storage -c "${CLUSTER_NAME}" 2>/dev/null
 
     if [[ "$?" != "0" ]] ; then
-        echo "Cluster delete failed."
+        echo "Cluster delete failed. Is it already deleted?"
     else
-        kubectl config delete-cluster "${CLUSTER_NAME}/$CLUSTER_ID" || true
-        kubectl config delete-context "${CLUSTER_NAME}/$CLUSTER_ID" || true
+        kubectl config delete-cluster "${CLUSTER_NAME}/$CLUSTER_ID" 2>/dev/null || true
+        kubectl config delete-context "${CLUSTER_NAME}/$CLUSTER_ID" 2>/dev/null || true
     fi
     set -e
-}
-
-function vpc_name_to_gateway_id() {
-    existence_check "VPC_NAME" "vpc-name"
-    local value_pubgw_id=$(ibmcloud is pubgws -q | grep "\s${VPC_NAME}\s" | awk '{print $1}')
-    echo $value_pubgw_id
-}
-
-function vpc_name_to_vpc_id() {
-    existence_check "VPC_NAME" "vpc-name"
-    local value_vpc_id=$(ibmcloud is vpcs -q | grep "\s${VPC_NAME}\s" | awk '{print $1}')
-    echo "$value_vpc_id"
 }
 
 function get_cluster_status() {
@@ -242,15 +244,14 @@ if [[ "x$CONFIG_FILE_IKS_DEPLOY" == "x" ]]; then
   existence_check "VPC_NAME" "vpc-name"
   existence_check "CLUSTER_NAME" "cluster-name"
   export CONFIG_FILE_IKS_DEPLOY="$IKS_CONFIG_HOME/$VPC_NAME-$CLUSTER_NAME-iks-conf.sh"
-fi
-
-# Restore environment created by previous runs if any.
-if [ -f "$CONFIG_FILE_IKS_DEPLOY" ]; then
+  # Restore environment created by previous runs if any.
+elif [ -f "$CONFIG_FILE_IKS_DEPLOY" ]; then
     # shellcheck disable=SC1090
     source "$CONFIG_FILE_IKS_DEPLOY"
 else
-    echo "No previous run environment found."
+    echo "No previous run environment found at ${CONFIG_FILE_IKS_DEPLOY}"
 fi
+
 echo -e "$(current_env)"
 existence_check "VPC_NAME" "vpc-name"
 existence_check "CLUSTER_NAME" "cluster-name"
@@ -297,7 +298,7 @@ if [[ "x$DELETE_CLUSTER" != "x" ]]; then
     exit 1
 fi
 echo "Please note the config file name, $CONFIG_FILE_IKS_DEPLOY, it can be used to perform maintenance tasks."
-echo "e.g. to completely delete VPC: ./deploy-ibm-vpc.sh --config-file=$CONFIG_FILE_IKS_DEPLOY --delete-cluster=full"
+echo "e.g. to completely delete VPC: ./deploy-ibm-vpc.sh --config-file=$CONFIG_FILE_IKS_DEPLOY --delete-cluster=full-sync"
 echo " or just delete the cluster: ./deploy-ibm-vpc.sh --config-file=$CONFIG_FILE_IKS_DEPLOY --delete-cluster=cluster"
 echo " or start a cluster in same vpc: ./deploy-ibm-vpc.sh --config-file=$CONFIG_FILE_IKS_DEPLOY --cluster-name=cluster2"
 ## Step 2.
