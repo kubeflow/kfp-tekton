@@ -102,21 +102,20 @@ function complete_delete_cluster() {
         wait_for_cluster_deleted
     fi
     VPC_ID=$(vpc_name_to_vpc_id)
-    if [ "x$SUBNET_ID" != "x" ] || [ "x$GATEWAY_ID" != "x" ]; then
+    if [[ "x$SUBNET_ID" != "x" ]]; then
         ibmcloud is subnetd -f -q "$SUBNET_ID" 2>/dev/null || true
+    fi
+    if [[ "x$GATEWAY_ID" != "x" ]]; then
         ibmcloud is pubgwd -f -q "$GATEWAY_ID" 2>/dev/null || true
-    else
-        echo "SUBNET_ID and GATEWAY_ID is not defined skipping..."
     fi
     set +e
+    sleep 5 # it may take some time for subnet and pubgw to be detached & deleted.
     ibmcloud is vpcd -f -q "$VPC_ID" 2>/dev/null
     if [[ "$?" == "0" || "x$VPC_ID" == "x" ]] ; then
         echo "VPC $VPC_ID is deleted. Complete delete successful."
-        rm "$CONFIG_FILE_IKS_DEPLOY"
+        rm -f "$CONFIG_FILE_IKS_DEPLOY" 2>/dev/null
     else
-        echo "Delete incomplete, full delete can be done when vpc has no cluster/instances/subnets etc... in it."
-        echo "A cluster/cloud resource can only be deleted once it's attached resources are released."
-        echo "Please check if VPC has other resources in it."
+        echo "VPC is not deleted it may have cluster/instances/subnets etc... attached to it."
     fi
     set -e
 }
@@ -238,9 +237,23 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
+echo -e "Environment variables for cluster ..."
+if [[ "x$CONFIG_FILE_IKS_DEPLOY" == "x" ]]; then
+  existence_check "VPC_NAME" "vpc-name"
+  existence_check "CLUSTER_NAME" "cluster-name"
+  export CONFIG_FILE_IKS_DEPLOY="$IKS_CONFIG_HOME/$VPC_NAME-$CLUSTER_NAME-iks-conf.sh"
+fi
+
+# Restore environment created by previous runs if any.
+if [ -f "$CONFIG_FILE_IKS_DEPLOY" ]; then
+    # shellcheck disable=SC1090
+    source "$CONFIG_FILE_IKS_DEPLOY"
+else
+    echo "No previous run environment found."
+fi
+echo -e "$(current_env)"
 existence_check "VPC_NAME" "vpc-name"
 existence_check "CLUSTER_NAME" "cluster-name"
-
 # To create a cluster.
 ## Step 1.
 # 1a. Test if ibmcloud utility exists.
@@ -274,18 +287,6 @@ if [[ "x$cmd_plugin_check_is" != "x0" ]]; then
 fi
 
 echo "done."
-
-echo -e "Environment variables for cluster ..."
-export CONFIG_FILE_IKS_DEPLOY=${CONFIG_FILE_IKS_DEPLOY:-"$IKS_CONFIG_HOME/$VPC_NAME-$CLUSTER_NAME-iks-conf.sh"}
-echo -e "$(current_env)"
-
-# Restore environment created by previous runs if any.
-if [ -f "$CONFIG_FILE_IKS_DEPLOY" ]; then
-    # shellcheck disable=SC1090
-    source "$CONFIG_FILE_IKS_DEPLOY"
-else
-    echo "No previous run environment found."
-fi
 
 if [[ "x$DELETE_CLUSTER" != "x" ]]; then
     if [[ "x${DELETE_CLUSTER}" == "xfull"* ]]; then
@@ -378,6 +379,7 @@ ibmcloud ks cluster config --cluster "${CLUSTER_NAME}"
 echo "The cluster: $CLUSTER_NAME in zone: $CLUSTER_ZONE, is ready."
 
 if [ -x "$(which kubectl)" ]; then
+    sleep 10
     kubectl wait --for=condition=Ready --timeout=200s --all nodes
 fi
 
