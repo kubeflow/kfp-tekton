@@ -134,6 +134,7 @@ export default class WorkflowParser {
 
         // Checks if the task is an any-sequencer and if so, adds the dependencies from the task list
         if (
+          task['taskSpec'] &&
           task['taskSpec']['steps'] &&
           task['taskSpec']['steps'][0] &&
           task['taskSpec']['steps'][0]['args'] &&
@@ -369,7 +370,7 @@ export default class WorkflowParser {
       !workflow ||
       !workflow.metadata ||
       !workflow.status ||
-      !workflow.status.taskRuns ||
+      !(workflow.status.taskRuns || workflow.status.runs) ||
       !workflow.metadata.annotations
     )
       return { inputArtifacts, outputArtifacts };
@@ -377,11 +378,20 @@ export default class WorkflowParser {
     // Get the task name that corresponds to the nodeId
     let taskName = '';
     let taskStatus: NodePhase = NodePhase.SUCCEEDED;
-    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {
+    for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns || {})) {
       const taskRun = workflow.status.taskRuns[taskRunId];
       if (taskRun.status && taskRun.status.podName === nodeId) {
         taskName = taskRun.pipelineTaskName;
         taskStatus = this.getStatus(taskRun);
+      }
+    }
+
+    // Loop for custom tasks
+    for (const runId of Object.getOwnPropertyNames(workflow.status.runs || {})) {
+      const run = workflow.status.runs[runId];
+      if (run.status && run.pipelineTaskName === nodeId) {
+        taskName = run.pipelineTaskName
+        taskStatus = this.getStatus(run);
       }
     }
 

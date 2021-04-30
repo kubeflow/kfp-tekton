@@ -252,15 +252,7 @@ func prepareInitContainer(pod *corev1.Pod, logger *zap.SugaredLogger) ([]corev1.
 
 func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLogger) ([]corev1.Container, error) {
 	logger.Infof("Start to prepare dummy containers.")
-	image := "gcr.io/google-containers/busybox"
-	dummyContainer := corev1.Container{
-		Name:    "main",
-		Image:   image,
-		Command: []string{`echo`, `"This step output is taken from cache."`},
-	}
-	dummyContainers := []corev1.Container{
-		dummyContainer,
-	}
+	dummyContainers := []corev1.Container{}
 
 	results, err := unmarshalResult(result)
 	if err != nil {
@@ -269,6 +261,7 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 	}
 
 	args := []string{}
+	args = append(args, "printf 'This step output is taken from cache.'")
 	for _, result := range results {
 		arg := fmt.Sprintf("printf '%s' | tee /tekton/results/%s", result.Value, result.Name)
 		args = append(args, arg)

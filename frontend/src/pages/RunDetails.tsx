@@ -702,6 +702,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       if (jsonWorkflow.status && jsonWorkflow.status.taskRuns) {
         jsonWorkflow.spec.pipelineSpec.tasks.forEach((task: any) => {
           if (
+            task.taskSpec &&
             task.taskSpec.metadata &&
             task.taskSpec.metadata.labels &&
             task.taskSpec.metadata.labels['pipelines.kubeflow.org/cache_enabled'] === 'true' &&
