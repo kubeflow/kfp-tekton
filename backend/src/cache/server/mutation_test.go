@@ -57,7 +57,7 @@ var (
 					Name:    "main",
 					Image:   "test_image",
 					Command: []string{"python"},
-					Args:    []string{"-entrypoint", "/bin/bash", "--", "-c", "printf 'This step output is taken from cache.'", "printf '200'"},
+					Args:    []string{"-entrypoint", "/bin/bash", "--", "-c", "printf 'This step output is taken from cache.\n\n'", "printf '200'"},
 				},
 			},
 		},

@@ -261,7 +261,7 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 	}
 
 	args := []string{}
-	args = append(args, "printf 'This step output is taken from cache.'")
+	args = append(args, "printf 'This step output is taken from cache.\n\n'")
 	for _, result := range results {
 		arg := fmt.Sprintf("printf '%s' | tee /tekton/results/%s", result.Value, result.Name)
 		args = append(args, arg)
