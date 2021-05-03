@@ -58,6 +58,8 @@ const (
 	TaskName                   string = "tekton.dev/pipelineTask"
 	PipelineName               string = "pipelines.kubeflow.org/pipelinename"
 	Generation                 string = "pipelines.kubeflow.org/generation"
+	PipelineRun               string = "tekton.dev/pipelineRun"
+	CachedPipeline            string = "pipelines.kubeflow.org/cached_pipeline_run"
 
 	TektonGroup        string = "tekton.dev/v1beta1"
 	TektonTaskKind     string = "TaskRun"
@@ -181,6 +183,8 @@ func MutatePodIfCached(req *v1beta1.AdmissionRequest, clientMgr ClientManagerInt
 
 		result := getValueFromSerializedMap(cachedExecution.ExecutionOutput, TektonTaskrunOutputs)
 		annotations[TektonTaskrunOutputs] = result
+		cachedPipelineRun := getValueFromSerializedMap(cachedExecution.ExecutionOutput, CachedPipeline)
+		annotations[CachedPipeline] = cachedPipelineRun
 		labels[CacheIDLabelKey] = strconv.FormatInt(cachedExecution.ID, 10)
 		labels[KFPCachedLabelKey] = KFPCachedLabelValue // This label indicates the pod is taken from cache.
 
@@ -257,6 +261,7 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 	}
 
 	args := []string{}
+	args = append(args, "printf 'This step output is taken from cache.\n\n'")
 	for _, result := range results {
 		arg := fmt.Sprintf("printf '%s' | tee /tekton/results/%s", result.Value, result.Name)
 		args = append(args, arg)
