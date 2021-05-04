@@ -1,0 +1,78 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: custom.tekton.dev/v1alpha1
+kind: PipelineLoop
+metadata:
+  name: recur-and-condition-774e9-graph-recur-1
+spec:
+  pipelineSpec:
+    params:
+    - name: just_one_iteration
+      type: string
+    - name: iter_num
+      type: string
+    tasks:
+    - name: condition-cel
+      params:
+      - name: status
+        value: $(params.iter_num) - 1
+      taskRef:
+        name: cel_condition
+        apiVersion: cel.tekton.dev/v1alpha1
+        kind: CEL
+    - name: print-iter
+      params:
+      - name: condition-cel-status
+        value: $(tasks.condition-cel.results.status)
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - echo
+          - 'Iter: $(inputs.params.condition-cel-status)'
+          - '>'
+          - $(results.stdout.path)
+          image: alpine:3.6
+        params:
+        - name: condition-cel-status
+          type: string
+        results:
+        - name: stdout
+          description: /tmp/stdout
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
+      timeout: 0s
+    - name: recur
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: recur-and-condition-774e9-graph-recur-1
+      params:
+      - name: just_one_iteration
+        value:
+        - '1'
+      - name: iter_num
+        value: $(tasks.condition-cel.results.status)
+      when:
+      - input: $(tasks.condition-cel.results.status)
+        operator: notin
+        values:
+        - '0'
+  iterateParam: just_one_iteration

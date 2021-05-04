@@ -20,12 +20,14 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
 	MultiUserMode                       string = "MULTIUSER"
+	MultiUserModeSharedReadAccess       string = "MULTIUSER_SHARED_READ"
 	PodNamespace                        string = "POD_NAMESPACE"
-	CacheEnabled                        string = "CacheEnabled"
+	CacheEnabled                        string = "CACHE_ENABLED"
 	DefaultPipelineRunnerServiceAccount string = "DefaultPipelineRunnerServiceAccount"
 	KubeflowUserIDHeader                string = "KUBEFLOW_USERID_HEADER"
 	KubeflowUserIDPrefix                string = "KUBEFLOW_USERID_PREFIX"
@@ -37,8 +39,15 @@ const (
 	ArtifactEndpointScheme              string = "ARTIFACT_ENDPOINT_SCHEME"
 	ArtifactScript                      string = "ARTIFACT_SCRIPT"
 	ArtifactImage                       string = "ARTIFACT_IMAGE"
+	ArtifactCopyStepTemplate            string = "ARTIFACT_COPY_STEP_TEMPLATE"
 	InjectDefaultScript                 string = "INJECT_DEFAULT_SCRIPT"
+	UpdatePipelineVersionByDefault      string = "AUTO_UPDATE_PIPELINE_DEFAULT_VERSION"
+	TokenReviewAudience                 string = "TOKEN_REVIEW_AUDIENCE"
 )
+
+func IsPipelineVersionUpdatedByDefault() bool {
+	return GetBoolConfigWithDefault(UpdatePipelineVersionByDefault, true)
+}
 
 func GetStringConfig(configName string) string {
 	if !viper.IsSet(configName) {
@@ -73,11 +82,29 @@ func GetBoolConfigWithDefault(configName string, value bool) bool {
 	return value
 }
 
+func GetFloat64ConfigWithDefault(configName string, value float64) float64 {
+	if !viper.IsSet(configName) {
+		return value
+	}
+	return viper.GetFloat64(configName)
+}
+
+func GetIntConfigWithDefault(configName string, value int) int {
+	if !viper.IsSet(configName) {
+		return value
+	}
+	return viper.GetInt(configName)
+}
+
 func GetDurationConfig(configName string) time.Duration {
 	if !viper.IsSet(configName) {
 		glog.Fatalf("Please specify flag %s", configName)
 	}
 	return viper.GetDuration(configName)
+}
+
+func IsMultiUserSharedReadMode() bool {
+	return GetBoolConfigWithDefault(MultiUserModeSharedReadAccess, false)
 }
 
 func IsMultiUserMode() bool {
@@ -108,6 +135,14 @@ func GetArtifactImage() string {
 	return GetStringConfigWithDefault(ArtifactImage, DefaultArtifactImage)
 }
 
+func GetCopyStepTemplate() *corev1.Container {
+	var tpl corev1.Container
+	if err := viper.UnmarshalKey(ArtifactCopyStepTemplate, &tpl); err != nil {
+		glog.Fatalf("Invalid '%s', %v", ArtifactCopyStepTemplate, err)
+	}
+	return &tpl
+}
+
 func GetBoolFromStringWithDefault(value string, defaultValue bool) bool {
 	boolVal, err := strconv.ParseBool(value)
 	if err != nil {
@@ -126,6 +161,10 @@ func GetKubeflowUserIDHeader() string {
 
 func GetKubeflowUserIDPrefix() string {
 	return GetStringConfigWithDefault(KubeflowUserIDPrefix, GoogleIAPUserIdentityPrefix)
+}
+
+func GetTokenReviewAudience() string {
+	return GetStringConfigWithDefault(TokenReviewAudience, DefaultTokenReviewAudience)
 }
 
 func GetArtifactBucket() string {

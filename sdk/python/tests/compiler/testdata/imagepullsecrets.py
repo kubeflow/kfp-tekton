@@ -34,7 +34,7 @@ class GetFrequentWordOp(dsl.ContainerOp):
         """
         super(GetFrequentWordOp, self).__init__(
             name=name,
-            image='python:3.5-jessie',
+            image='python:3.6-jessie',
             command=['sh', '-c'],
             arguments=['python -c "from collections import Counter; '
                        'text = \'%s\'; '

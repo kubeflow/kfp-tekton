@@ -19,6 +19,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
+	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
 	tektonclient "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1beta1"
@@ -37,13 +38,15 @@ func (tektonClient *TektonClient) PipelineRun(namespace string) tektonv1beta1.Pi
 	return tektonClient.tektonClient.PipelineRuns(namespace)
 }
 
-func NewTektonClientOrFatal(initConnectionTimeout time.Duration) *TektonClient {
+func NewTektonClientOrFatal(initConnectionTimeout time.Duration, clientParams util.ClientParameters) *TektonClient {
 	var tektonClient tektonv1beta1.TektonV1beta1Interface
 	var operation = func() error {
 		restConfig, err := rest.InClusterConfig()
 		if err != nil {
 			return errors.Wrap(err, "Failed to initialize the RestConfig")
 		}
+		restConfig.QPS = float32(clientParams.QPS)
+		restConfig.Burst = clientParams.Burst
 		tektonClient = tektonclient.NewForConfigOrDie(restConfig).TektonV1beta1()
 		return nil
 	}

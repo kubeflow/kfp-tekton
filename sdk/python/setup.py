@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2020-2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@
 #
 # To create a distribution for PyPi run:
 #
-#    $ export KFP_TEKTON_VERSION=0.3.0-rc1
+#    $ export KFP_TEKTON_VERSION=0.8.0-rc1
 #    $ python3 setup.py sdist
 #    $ twine check dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #    $ twine upload --repository pypi dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #
 #   ... or:
 #
-#    $ make distribution KFP_TEKTON_VERSION=0.3.0-rc1
+#    $ make distribution KFP_TEKTON_VERSION=0.8.0-rc1
 #
 # =============================================================================
 
@@ -51,12 +51,20 @@ generating Tekton YAML instead of Argo YAML. The project is still in an early
 development stage. Contributions are welcome: {}
 """.format(HOMEPAGE)
 
+# NOTICE, after any updates to the following, ./requirements.in should be updated
+# accordingly.
 REQUIRES = [
-    'kfp==1.0.0',
+    "kfp @ git+https://github.com/kubeflow/pipelines.git@1.5.0#egg=kfp&subdirectory=sdk/python",
 ]
+
+TESTS_REQUIRE = [
+    'pytest',
+]
+
 
 logging.basicConfig()
 logger = logging.getLogger("kfp_tekton/setup.py")
+logger.setLevel(logging.INFO)
 
 
 def find_version(*file_path_parts):
@@ -91,7 +99,7 @@ def get_long_description() -> str:
     if "sdist" not in sys.argv:
         # log messages are only displayed when running `pip --verbose`
         logger.warning("This not a distribution build. Using abbreviated "
-                       "long_description: {}".format(LONG_DESCRIPTION))
+                       "long_description: \"{}\"".format(LONG_DESCRIPTION))
         return LONG_DESCRIPTION
     else:
         logger.warning(
@@ -134,23 +142,30 @@ def get_long_description() -> str:
         text.append(line)
     long_description = "\n".join(text)
 
-    # verify all replaced links
-    import requests  # top-level import fails pip install, only required for make dist
-    for (text, link) in re.findall(r"\[([^]]+)\]\((%s[^)]+)\)" % github_repo_master_path,
-                                   long_description):
-        response = requests.head(link, allow_redirects=True, timeout=3)
-        if response.status_code >= 400:
-            # raise RuntimeError(  # don't fail the installation
-            # report errors when pip install verbose -v
-            logger.error(
-                "Invalid link in long_description: `[{}]({})`. "
-                "Please open an issue at {}/issues".format(
-                    text, link, HOMEPAGE.rstrip("/")))
-
-    # generate the README with absolute links for easy side-by-side verification
+    # generate the README with absolute links for easy side-by-side comparison
     sdk_readme_w_abs_links = join(project_root, "sdk", "README_for_PyPi.md")
     with open(sdk_readme_w_abs_links, 'w') as f:
         f.write(long_description)
+
+    # verify all replaced links
+    import requests  # top-level import fails pip install, only required for make dist
+    invalid_links = []
+    for (text, link) in re.findall(r"\[([^]]+)\]\((%s[^)]+)\)" % "http",
+                                   long_description):
+        logger.info("checking link: {}".format(link))
+        response = requests.head(link, allow_redirects=True, timeout=3)
+        if response.status_code >= 400:
+            invalid_links.append((text, link))
+
+    # report all invalid links
+    if invalid_links:
+        links = ["[{}]({})".format(text, link) for (text, link) in invalid_links]
+        for l in links:
+            logger.error("invalid link: {}".format(l))
+        raise RuntimeError(
+            "Invalid link(s) in long_description: {}"
+            "Please open an issue at {}/issues".format(
+                links, HOMEPAGE.rstrip("/")))
 
     return long_description
 
@@ -165,6 +180,7 @@ setup(
     license=LICENSE,
     url=HOMEPAGE,
     install_requires=REQUIRES,
+    tests_require=TESTS_REQUIRE,
     packages=[
         'kfp_tekton',
         'kfp_tekton.compiler',
@@ -175,16 +191,16 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    python_requires='>=3.5.3',
+    python_requires='>=3.6.1',
     include_package_data=True,
     entry_points={
         'console_scripts': [

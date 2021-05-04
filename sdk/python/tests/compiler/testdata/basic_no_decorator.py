@@ -34,7 +34,7 @@ class GetFrequentWordOp(dsl.ContainerOp):
     """
     super(GetFrequentWordOp, self).__init__(
         name=name,
-        image='python:3.5-jessie',
+        image='python:3.6-jessie',
         command=['sh', '-c'],
         arguments=['python -c "from collections import Counter; '
                    'words = Counter(\'%s\'.split()); print(max(words, key=words.get))" '
@@ -65,7 +65,7 @@ class ExitHandlerOp(dsl.ContainerOp):
   def __init__(self, name):
     super(ExitHandlerOp, self).__init__(
         name=name,
-        image='python:3.5-jessie',
+        image='python:3.6-jessie',
         command=['sh', '-c'],
         arguments=['echo exit!'])
 

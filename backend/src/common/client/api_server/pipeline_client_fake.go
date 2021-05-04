@@ -5,13 +5,16 @@ import (
 
 	"path"
 
-	workflowapi "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/strfmt"
+	params "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
 	pipelineparams "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
 	pipelinemodel "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_model"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// Replaced Argo v1alpha1.Workflow to Tekton v1beta1.PipelineRun
 
 const (
 	PipelineForDefaultTest     = "PIPELINE_ID_10"
@@ -33,8 +36,8 @@ func getDefaultPipeline(id string) *pipelinemodel.APIPipeline {
 	}
 }
 
-func getDefaultWorkflow() *workflowapi.Workflow {
-	return &workflowapi.Workflow{
+func getDefaultWorkflow() *workflowapi.PipelineRun {
+	return &workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",
@@ -86,7 +89,7 @@ func (c *PipelineClientFake) Delete(params *pipelineparams.DeletePipelineParams)
 }
 
 func (c *PipelineClientFake) GetTemplate(params *pipelineparams.GetTemplateParams) (
-	*workflowapi.Workflow, error) {
+	*workflowapi.PipelineRun, error) {
 	switch params.ID {
 	case PipelineForClientErrorTest:
 		return nil, fmt.Errorf(ClientErrorString)
@@ -127,4 +130,13 @@ func (c *PipelineClientFake) List(params *pipelineparams.ListPipelinesParams) (
 func (c *PipelineClientFake) ListAll(params *pipelineparams.ListPipelinesParams,
 	maxResultSize int) ([]*pipelinemodel.APIPipeline, error) {
 	return listAllForPipeline(c, params, maxResultSize)
+}
+
+func (c *PipelineClientFake) UpdateDefaultVersion(params *params.UpdatePipelineDefaultVersionParams) error {
+	switch params.PipelineID {
+	case PipelineForClientErrorTest:
+		return fmt.Errorf(ClientErrorString)
+	default:
+		return nil
+	}
 }

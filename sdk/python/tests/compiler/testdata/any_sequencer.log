@@ -1,0 +1,11 @@
+
+
+
+[flipcoin : main] tails
+
+
+[any-test : main] time="2021-04-23T23:20:01Z" level=info msg="Starting to watch taskrun for 'task2,task3' and condition in kubeflow/any-sequencer."
+[any-test : main] time="2021-04-23T23:20:23Z" level=info msg="The TaskRun of flipcoin succeeded."
+[any-test : main] time="2021-04-23T23:20:23Z" level=info msg="The condition results_flipcoin_output == 'heads' for the task flipcoin does not meet."
+[any-test : main] time="2021-04-23T23:23:21Z" level=info msg="The TaskRun of task2 succeeded."
+

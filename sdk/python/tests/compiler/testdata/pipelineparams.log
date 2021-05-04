@@ -1,11 +1,4 @@
-[download : main] Connecting to localhost:5678 (127.0.0.1:5678)
-[download : main] saving to '/tekton/results/downloaded-resultoutput'
-[download : main] downloaded-resultout 100% |********************************|    14  0:00:00 ETA
-[download : main] '/tekton/results/downloaded-resultoutput' saved
-
-[download : sidecar-echo] 2020/08/31 22:10:21 Server is listening on :5678
-[download : sidecar-echo] 2020/08/31 22:10:33 localhost:5678 127.0.0.1:37340 "GET / HTTP/1.1" 200 14 "Wget" 126.308µs
-[download : sidecar-echo] 2020/08/31 22:10:35 [ERR] Unknown signal terminated
+[download : main] "hello world"
 
 [echo : main] pipelineParams: hello world
 

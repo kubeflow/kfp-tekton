@@ -1,0 +1,8 @@
+[produce-str : main] Hello
+
+[produce-list-of-strings : main] ["a", "z"]
+
+[produce-list-of-ints : main] [1234567890, 987654321]
+
+[produce-list-of-dicts : main] [{"aaa": "aaa1", "bbb": "bbb1"}, {"aaa": "aaa2", "bbb": "bbb2"}]
+

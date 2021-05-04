@@ -1,2 +1,5 @@
 [busybox : main] start  /tekton/results/dummy-output-path end
 
+[busybox : copy-artifacts] Added `storage` successfully.
+[busybox : copy-artifacts] /tekton/results/dummy-output-path file does not exist. Skip artifact tracking for dummy_output_path
+

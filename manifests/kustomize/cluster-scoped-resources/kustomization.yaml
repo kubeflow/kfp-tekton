@@ -6,8 +6,7 @@ namespace: kubeflow
 resources:
 - namespace.yaml
 bases:
-- ../base/application/cluster-scoped
-- ../base/argo/cluster-scoped
+- ../third-party/application/cluster-scoped
 - ../base/pipeline/cluster-scoped
 - ../base/cache-deployer/cluster-scoped
 vars:

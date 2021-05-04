@@ -1,9 +1,6 @@
-import json
 from kfp import components
 import kfp.dsl as dsl
 
-
-katib_experiment_launcher_op = components.load_component_from_url('https://raw.githubusercontent.com/kubeflow/pipelines/master/components/kubeflow/katib-launcher/component.yaml')
 fairness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/Trusted-AI/AIF360/master/mlops/kubeflow/bias_detector_pytorch/component.yaml')
 robustness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/Trusted-AI/adversarial-robustness-toolbox/main/utils/mlops/kubeflow/robustness_evaluation_fgsm_pytorch/component.yaml')
 
@@ -13,13 +10,7 @@ robustness_check_ops = components.load_component_from_url('https://raw.githubuse
     description="An example for trusted-ai integration."
 )
 def trusted_ai(
-        name="trusted-ai",
         namespace="anonymous",
-        goal="0.99",
-        parallelTrialCount="1",
-        maxTrialCount="1",
-        experimentTimeoutMinutes="60",
-        deleteAfterDone="True",
         fgsm_attack_epsilon='0.2',
         model_class_file='PyTorchModel.py',
         model_class_name='ThreeLayerCNN',
@@ -35,56 +26,43 @@ def trusted_ai(
         clip_values='(0, 1)',
         nb_classes='2',
         input_shape='(1,3,64,64)'):
-    objectiveConfig = {
-      "type": "maximize",
-      "goal": goal,
-      "objectiveMetricName": "accuracy",
-      "additionalMetricNames": []
-    }
-    algorithmConfig = {"algorithmName" : "random"}
-    parameters = [
-      {"name": "--dummy", "parameterType": "int", "feasibleSpace": {"min": "1", "max": "2"}},
-    ]
-    rawTemplate = {
-      "apiVersion": "batch/v1",
-      "kind": "Job",
-      "metadata": {
-         "name": "{{.Trial}}",
-         "namespace": "{{.NameSpace}}"
-      },
-      "spec": {
-        "template": {
-          "spec": {
-            "restartPolicy": "Never",
-            "containers": [
-              {"name": "{{.Trial}}",
-               "image": "aipipeline/gender-classification:latest",
-               "command": [
-                   "python", "-u", "gender_classification_training.py", "--data_bucket", "mlpipeline", "--result_bucket", "mlpipeline"
-               ]
-              }
-            ],
-            "env": [{'name': 'S3_ENDPOINT', 'value': 'minio-service.kubeflow:9000'}]
-          }
+    job_manifest = {
+        "apiVersion": "batch/v1",
+        "kind": "Job",
+        "metadata": {
+            "name": "trusted-ai-train-job",
+            "namespace": namespace
+        },
+        "spec": {
+            "ttlSecondsAfterFinished": 100,
+            "template": {
+                "metadata": {
+                    "annotations": {
+                        "sidecar.istio.io/inject": "false"
+                    }
+                },
+                "spec": {
+                    "restartPolicy": "Never",
+                    "containers": [
+                        {"name": "classification-training",
+                         "image": "aipipeline/gender-classification:latest",
+                         "command": [
+                             "python", "-u", "gender_classification_training.py", "--data_bucket", "mlpipeline",
+                             "--result_bucket", "mlpipeline"
+                         ],
+                         "env": [{'name': 'S3_ENDPOINT', 'value': 'minio-service.kubeflow:9000'}]
+                         }
+                    ],
+                }
+            }
         }
-      }
     }
-    trialTemplate = {
-      "goTemplate": {
-        "rawTemplate": json.dumps(rawTemplate)
-      }
-    }
-    katib_run = katib_experiment_launcher_op(
-        experiment_name=name,
-        experiment_namespace=namespace,
-        parallel_trial_count=parallelTrialCount,
-        max_trial_count=maxTrialCount,
-        objective=str(objectiveConfig),
-        algorithm=str(algorithmConfig),
-        trial_template=str(trialTemplate),
-        parameters=str(parameters),
-        experiment_timeout_minutes=experimentTimeoutMinutes,
-        delete_finished_experiment=deleteAfterDone)
+    train_step = dsl.ResourceOp(
+        name="trust-ai-train-step",
+        k8s_resource=job_manifest,
+        action='create',
+        success_condition='status.succeeded > 0',
+        failure_condition='status.failed > 0')
 
     fairness_check = fairness_check_ops(model_id='training-example',
                                         model_class_file=model_class_file,
@@ -97,7 +75,7 @@ def trusted_ai(
                                         privileged_groups=privileged_groups,
                                         unprivileged_groups=unprivileged_groups,
                                         data_bucket_name='mlpipeline',
-                                        result_bucket_name='mlpipeline').after(katib_run).set_image_pull_policy("Always")
+                                        result_bucket_name='mlpipeline').after(train_step).set_image_pull_policy("Always")
     robustness_check = robustness_check_ops(model_id='training-example',
                                             epsilon=fgsm_attack_epsilon,
                                             model_class_file=model_class_file,
@@ -110,7 +88,8 @@ def trusted_ai(
                                             nb_classes=nb_classes,
                                             input_shape=input_shape,
                                             data_bucket_name='mlpipeline',
-                                            result_bucket_name='mlpipeline').after(katib_run).set_image_pull_policy("Always")
+                                            result_bucket_name='mlpipeline').after(train_step).set_image_pull_policy("Always")
+
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler

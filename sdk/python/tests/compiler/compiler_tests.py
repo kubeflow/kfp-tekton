@@ -44,7 +44,7 @@ if GENERATE_GOLDEN_YAML:
 
 # License header for Kubeflow project
 LICENSE_HEADER = textwrap.dedent("""\
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -77,13 +77,19 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.condition import flipcoin
     self._test_pipeline_workflow(flipcoin, 'condition.yaml')
 
-  def test_condition_dependency_error(self):
+  def test_condition_custom_task_workflow(self):
     """
-    Test errors for dependency on Tekton conditional.
+    Test compiling a conditional workflow with custom task
     """
-    from .testdata.condition_error import flipcoin
-    with pytest.raises(TypeError):
-      self._test_pipeline_workflow(flipcoin, 'condition.yaml')
+    from .testdata.condition_custom_task import flipcoin_pipeline
+    self._test_pipeline_workflow(flipcoin_pipeline, 'condition_custom_task.yaml')
+
+  def test_condition_dependency(self):
+    """
+    Test dependency on Tekton conditional task.
+    """
+    from .testdata.condition_dependency import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'condition_dependency.yaml')
 
   def test_sequential_workflow(self):
     """
@@ -99,6 +105,20 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
 
+  def test_recur_cond_workflow(self):
+    """
+    Test compiling a recurive condition workflow.
+    """
+    from .testdata.recur_cond import recur_and_condition
+    self._test_pipeline_workflow(recur_and_condition, 'recur_cond.yaml')
+
+  def test_cond_recur_workflow(self):
+    """
+    Test compiling a conditional recursive workflow.
+    """
+    from .testdata.cond_recur import condition_and_recur
+    self._test_pipeline_workflow(condition_and_recur, 'cond_recur.yaml')
+
   def test_parallel_join_with_argo_vars_workflow(self):
     """
     Test compiling a parallel join workflow.
@@ -112,7 +132,7 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.sidecar import sidecar_pipeline
     self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
-  
+
   def test_loop_static_workflow(self):
     """
     Test compiling a loop static params in workflow.
@@ -122,7 +142,7 @@ class TestTektonCompiler(unittest.TestCase):
       pipeline,
       'loop_static.yaml',
       normalize_compiler_output_function=lambda f: re.sub(
-          "loop-item-param-.*-subvar", "loop-item-param-subvar", f))
+          "(loop-item-param-[a-z 0-9]*|for-loop-for-loop-[a-z 0-9]*)", "with-item-name", f))
 
   def test_withitem_nested_workflow(self):
     """
@@ -130,6 +150,105 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.withitem_nested import pipeline
     self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
+
+  def test_withitem_multi_nested_workflow(self):
+    """
+    Test compiling a withitem multi nested in workflow.
+    """
+    from .testdata.withitem_multi_nested import pipeline
+    self._test_pipeline_workflow(pipeline, 'withitem_multi_nested.yaml')
+
+  def test_conditions_and_loops_workflow(self):
+    """
+    Test compiling a conditions and loops in workflow.
+    """
+    from .testdata.conditions_and_loops import conditions_and_loops
+    self._test_pipeline_workflow(
+      conditions_and_loops,
+      'conditions_and_loops.yaml',
+      normalize_compiler_output_function=lambda f: re.sub(
+          "(loop-item-param-[a-z 0-9]*|for-loop-for-loop-[a-z 0-9]*)", "with-item-name", f))
+
+  def test_recursion_while_workflow(self):
+    """
+    Test recursion while workflow.
+    """
+    from .testdata.recursion_while import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'recursion_while.yaml')
+
+  def test_tekton_custom_task_workflow(self):
+    """
+    Test Tekton custom task workflow.
+    """
+    from .testdata.tekton_custom_task import custom_task_pipeline
+    self._test_pipeline_workflow(custom_task_pipeline, 'tekton_custom_task.yaml')
+
+  def test_long_param_name_workflow(self):
+    """
+    Test long parameter name workflow.
+    """
+    from .testdata.long_param_name import main_fn
+    self._test_pipeline_workflow(main_fn, 'long_param_name.yaml')
+
+  def test_long_pipeline_name_workflow(self):
+    """
+    Test long pipeline name workflow.
+    """
+    # Skip this test for Python 3.6 because 3.6 generates the List[str] type in yaml with different type name.
+    if sys.version_info < (3, 7, 0):
+      logging.warning("Skipping long pipeline name workflow test for Python version < 3.7.0")
+    else:
+      from .testdata.long_pipeline_name import main_fn
+      self._test_pipeline_workflow(main_fn, 'long_pipeline_name.yaml')
+
+  def test_withparam_global_workflow(self):
+    """
+    Test compiling a withparam global in workflow.
+    """
+    from .testdata.withparam_global import pipeline
+    self._test_pipeline_workflow(pipeline, 'withparam_global.yaml')
+
+  def test_withparam_global_dict_workflow(self):
+    """
+    Test compiling a withparam global dict in workflow.
+    """
+    from .testdata.withparam_global_dict import pipeline
+    self._test_pipeline_workflow(pipeline, 'withparam_global_dict.yaml')
+
+  def test_withparam_output_dict_workflow(self):
+    """
+    Test compiling a withparam output dict in workflow.
+    """
+    from .testdata.withparam_output_dict import pipeline
+    self._test_pipeline_workflow(pipeline, 'withparam_output_dict.yaml')
+
+  def test_parallelfor_item_argument_resolving_workflow(self):
+    """
+    Test compiling a parallelfor item argument resolving in workflow.
+    """
+    from .testdata.parallelfor_item_argument_resolving import parallelfor_item_argument_resolving
+    self._test_pipeline_workflow(parallelfor_item_argument_resolving, 'parallelfor_item_argument_resolving.yaml')
+
+  def test_loop_over_lightweight_output_workflow(self):
+    """
+    Test compiling a loop over lightweight output in workflow.
+    """
+    from .testdata.loop_over_lightweight_output import pipeline
+    self._test_pipeline_workflow(pipeline, 'loop_over_lightweight_output.yaml')
+
+  def test_withparam_output_workflow(self):
+    """
+    Test compiling a withparam output in workflow.
+    """
+    from .testdata.withparam_output import pipeline
+    self._test_pipeline_workflow(pipeline, 'withparam_output.yaml')
+
+  def test_conditions_with_global_params_workflow(self):
+    """
+    Test conditions with global params in workflow.
+    """
+    from .testdata.conditions_with_global_params import conditions_with_global_params
+    self._test_pipeline_workflow(conditions_with_global_params, 'conditions_with_global_params.yaml')
 
   def test_pipelineparams_workflow(self):
     """
@@ -166,6 +285,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
+
+  def test_display_name_workflow(self):
+    """
+    Test compiling a step level timeout workflow.
+    """
+    from .testdata.set_display_name import echo_pipeline
+    self._test_pipeline_workflow(echo_pipeline, 'set_display_name.yaml')
 
   def test_resourceOp_workflow(self):
     """
@@ -242,6 +368,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.big_data_passing import file_passing_pipelines
     self._test_pipeline_workflow(file_passing_pipelines, 'big_data_passing.yaml')
 
+  def test_create_component_from_func_workflow(self):
+    """
+    Test compiling a creating component from func workflow.
+    """
+    from .testdata.create_component_from_func import create_component_pipeline
+    self._test_pipeline_workflow(create_component_pipeline, 'create_component_from_func.yaml')
+
   def test_katib_workflow(self):
     """
     Test compiling a katib workflow.
@@ -261,7 +394,7 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.load_from_yaml import component_yaml_pipeline
     self._test_pipeline_workflow(component_yaml_pipeline, 'load_from_yaml.yaml')
-    
+
   def test_imagepullsecrets_workflow(self):
     """
     Test compiling a imagepullsecrets workflow.
@@ -289,24 +422,52 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.exit_handler import download_and_print
     self._test_pipeline_workflow(download_and_print, 'exit_handler.yaml')
 
+  def test_cache_workflow(self):
+    """
+    Test compiling a workflow with two tasks one with caching enabled and the other disabled.
+    """
+    from .testdata.cache import cache_pipeline
+    self._test_pipeline_workflow(cache_pipeline, 'cache.yaml')
+
+  def test_tekton_pipeline_conf(self):
+    """
+    Test applying Tekton pipeline config to a workflow
+    """
+    from .testdata.tekton_pipeline_conf import echo_pipeline
+    pipeline_conf = compiler.pipeline_utils.TektonPipelineConf()
+    pipeline_conf.add_pipeline_label('test', 'label')
+    pipeline_conf.add_pipeline_label('test2', 'label2')
+    pipeline_conf.add_pipeline_annotation('test', 'annotation')
+    self._test_pipeline_workflow(echo_pipeline, 'tekton_pipeline_conf.yaml', tekton_pipeline_conf=pipeline_conf)
+
   def test_compose(self):
     """
     Test compiling a simple workflow, and a bigger one composed from a simple one.
     """
     from .testdata import compose
     self._test_nested_workflow('compose.yaml', [compose.save_most_frequent_word, compose.download_save_most_frequent_word])
-    
+
+  def test_any_sequencer(self):
+    """
+    Test any sequencer dependency.
+    """
+    from .testdata.any_sequencer import any_sequence_pipeline
+
+    self._test_pipeline_workflow(any_sequence_pipeline, 'any_sequencer.yaml')
+
   def _test_pipeline_workflow(self,
                               pipeline_function,
                               pipeline_yaml,
-                              normalize_compiler_output_function=None):
+                              normalize_compiler_output_function=None,
+                              tekton_pipeline_conf=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
     try:
       compiler.TektonCompiler().compile(pipeline_function,
-                                        compiled_yaml_file)
+                                        compiled_yaml_file,
+                                        tekton_pipeline_conf=tekton_pipeline_conf)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f
@@ -362,6 +523,11 @@ class TestTektonCompiler(unittest.TestCase):
     Tests if the compiled workflow matches the golden yaml.
     """
     if GENERATE_GOLDEN_YAML:
+      # TODO: generate the pipelineloop CRD files akin to ...
+      #   for f in testdata/*_pipelineloop_cr*.yaml; do \
+      #     echo ${f/_pipelineloop_cr*.yaml/.py}; done | sort -u | while read f; do \
+      #     echo $f; dsl-compile-tekton --py $f --output ${f/.py/.yaml}; \
+      #   done
       with open(golden_yaml_file, 'w') as f:
         f.write(LICENSE_HEADER)
       with open(golden_yaml_file, 'a+') as f:
@@ -387,3 +553,25 @@ class TestTektonCompiler(unittest.TestCase):
       self.assertEqual(golden, compiled_workflow,
                        msg="\n===[ " + golden_yaml_file.split(os.path.sep)[-1] + " ]===\n"
                            + json.dumps(compiled_workflow, indent=2))
+
+  def test_artifacts_of_ops_with_long_names(self):
+    """
+    Test compiling a pipeline with artifacts of ops with long names.
+
+    No step-templates should be generated for either case.
+    """
+    from .testdata import artifacts_of_ops_with_long_names as py_module
+    temp_dir = tempfile.mkdtemp()
+    try:
+      temp_files = py_module.main(temp_dir)
+      for temp_file in temp_files:
+        with open(temp_file, 'r') as f:
+          obj = yaml.safe_load(f)
+        text = yaml.safe_dump(obj)
+        self.assertNotRegex(text, "stepTemplate")
+        artifact_items = obj['metadata']['annotations']['tekton.dev/artifact_items']
+        items_for_op0 = list(json.loads(artifact_items).values())[0]
+        names_of_items_for_op0 = set([item[0] for item in items_for_op0])
+        self.assertSetEqual(names_of_items_for_op0, {"incr_i", "sq_i"})
+    finally:
+      shutil.rmtree(temp_dir)

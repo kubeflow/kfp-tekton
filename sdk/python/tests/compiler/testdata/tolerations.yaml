@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,6 +32,13 @@ spec:
     tasks:
     - name: download
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         results:
         - description: /tmp/results.txt
           name: downloaded
@@ -43,6 +50,7 @@ spec:
           - -c
           image: busybox
           name: main
+      timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: download
     taskPodTemplate:
@@ -51,3 +59,4 @@ spec:
         key: gpu
         operator: Equal
         value: run
+  timeout: 0s

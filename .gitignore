@@ -69,6 +69,7 @@ frontend/test/ui/visual-regression/screenshots/screen
 
 # go vendor
 vendor
+tekton-catalog/**/go.sum
 
 # Go module cache
 backend/pkg/mod/cache
@@ -98,3 +99,8 @@ docs/_build
 # sed backups
 *.bak
 
+# virtualenv
+.venv/
+
+# python sdk package
+*.tar.gz

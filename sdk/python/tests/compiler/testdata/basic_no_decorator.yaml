@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,14 +41,22 @@ spec:
     finally:
     - name: exiting
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         steps:
         - args:
           - echo exit!
           command:
           - sh
           - -c
-          image: python:3.5-jessie
+          image: python:3.6-jessie
           name: main
+      timeout: 0s
     params:
     - default: When flies fly behind flies
       name: message
@@ -60,6 +68,13 @@ spec:
       - name: message
         value: $(params.message)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: message
         results:
@@ -72,11 +87,12 @@ spec:
           command:
           - sh
           - -c
-          image: python:3.5-jessie
+          image: python:3.6-jessie
           name: main
           resources:
             requests:
               memory: 200M
+      timeout: 0s
     - name: save
       params:
       - name: get-frequent-word
@@ -84,6 +100,13 @@ spec:
       - name: outputpath
         value: $(params.outputpath)
       taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: get-frequent-word
         - name: outputpath
@@ -99,8 +122,10 @@ spec:
           resources:
             limits:
               cpu: '0.5'
+      timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: save
     taskPodTemplate:
       nodeSelector:
         kubernetes.io/os: linux
+  timeout: 0s

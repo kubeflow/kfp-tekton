@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
 	experimentParams "github.com/kubeflow/pipelines/backend/api/go_http_client/experiment_client/experiment_service"
 	"github.com/kubeflow/pipelines/backend/api/go_http_client/experiment_model"
@@ -108,15 +108,16 @@ func (s *UpgradeTests) SetupSuite() {
 
 func (s *UpgradeTests) TearDownSuite() {
 	if *runIntegrationTests {
-		t := s.T()
-
-		// Clean up after the suite to unblock other tests. (Not needed for upgrade
-		// tests because it needs changes in prepare tests to persist and verified
-		// later.)
-		test.DeleteAllExperiments(s.experimentClient, t)
-		test.DeleteAllPipelines(s.pipelineClient, t)
-		test.DeleteAllRuns(s.runClient, t)
-		test.DeleteAllJobs(s.jobClient, t)
+		if !*isDevMode {
+			t := s.T()
+			// Clean up after the suite to unblock other tests. (Not needed for upgrade
+			// tests because it needs changes in prepare tests to persist and verified
+			// later.)
+			test.DeleteAllExperiments(s.experimentClient, t)
+			test.DeleteAllPipelines(s.pipelineClient, t)
+			test.DeleteAllRuns(s.runClient, t)
+			test.DeleteAllJobs(s.jobClient, t)
+		}
 	}
 }
 
@@ -233,7 +234,7 @@ func (s *UpgradeTests) VerifyPipelines() {
 	require.Nil(t, err)
 	expected, err := ioutil.ReadFile("../resources/arguments-parameters.yaml")
 	require.Nil(t, err)
-	var expectedWorkflow v1alpha1.Workflow
+	var expectedWorkflow v1beta1.PipelineRun
 	err = yaml.Unmarshal(expected, &expectedWorkflow)
 	assert.Equal(t, expectedWorkflow, *template)
 }
@@ -359,6 +360,9 @@ func checkHelloWorldRunDetail(t *testing.T, runDetail *run_model.APIRunDetail) {
 	// Check runtime workflow manifest is not empty
 	assert.Contains(t, runDetail.PipelineRuntime.WorkflowManifest, "whalesay")
 
+	expectedExperimentID := test.GetExperimentIDFromAPIResourceReferences(runDetail.Run.ResourceReferences)
+	require.NotEmpty(t, expectedExperimentID)
+
 	expectedRun := &run_model.APIRun{
 		ID:          runDetail.Run.ID,
 		Name:        "hello world",
@@ -370,7 +374,7 @@ func checkHelloWorldRunDetail(t *testing.T, runDetail *run_model.APIRunDetail) {
 			WorkflowManifest: runDetail.Run.PipelineSpec.WorkflowManifest,
 		},
 		ResourceReferences: []*run_model.APIResourceReference{
-			{Key: &run_model.APIResourceKey{Type: run_model.APIResourceTypeEXPERIMENT, ID: runDetail.Run.ResourceReferences[0].Key.ID},
+			{Key: &run_model.APIResourceKey{Type: run_model.APIResourceTypeEXPERIMENT, ID: expectedExperimentID},
 				Name: "hello world experiment", Relationship: run_model.APIRelationshipOWNER,
 			},
 			{Key: &run_model.APIResourceKey{ID: runDetail.Run.PipelineSpec.PipelineID, Type: run_model.APIResourceTypePIPELINEVERSION},

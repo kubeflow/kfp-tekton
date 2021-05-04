@@ -32,14 +32,43 @@ const (
 )
 
 const (
+	RbacKubeflowGroup    = "kubeflow.org"
+	RbacPipelinesGroup   = "pipelines.kubeflow.org"
+	RbacPipelinesVersion = "v1beta1"
+
+	RbacResourceTypePipelines      = "pipelines"
+	RbacResourceTypeExperiments    = "experiments"
+	RbacResourceTypeRuns           = "runs"
+	RbacResourceTypeJobs           = "jobs"
+	RbacResourceTypeViewers        = "viewers"
+	RbacResourceTypeVisualizations = "visualizations"
+
+	RbacResourceVerbArchive   = "archive"
+	RbacResourceVerbUpdate    = "update"
+	RbacResourceVerbCreate    = "create"
+	RbacResourceVerbDelete    = "delete"
+	RbacResourceVerbDisable   = "disable"
+	RbacResourceVerbEnable    = "enable"
+	RbacResourceVerbGet       = "get"
+	RbacResourceVerbList      = "list"
+	RbacResourceVerbRetry     = "retry"
+	RbacResourceVerbTerminate = "terminate"
+	RbacResourceVerbUnarchive = "unarchive"
+)
+
+const (
 	Owner   Relationship = "Owner"
 	Creator Relationship = "Creator"
 )
 
 const (
-	GoogleIAPUserIdentityHeader string = "x-goog-authenticated-user-email"
-	GoogleIAPUserIdentityPrefix string = "accounts.google.com:"
+	GoogleIAPUserIdentityHeader    string = "x-goog-authenticated-user-email"
+	GoogleIAPUserIdentityPrefix    string = "accounts.google.com:"
+	AuthorizationBearerTokenHeader string = "Authorization"
+	AuthorizationBearerTokenPrefix string = "Bearer "
 )
+
+const DefaultTokenReviewAudience string = "pipelines.kubeflow.org"
 
 const (
 	DefaultArtifactBucket         string = "mlpipeline"
