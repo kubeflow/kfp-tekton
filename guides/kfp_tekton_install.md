@@ -8,7 +8,7 @@
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
 - [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
-- [Upgrade Multi-Users KFP-Tekton on Kubeflow](#upgrade-multi-users-kfp-tekton-on-kubeflow)
+- [Upgrade to Multi-User KFP-Tekton on Kubeflow](#upgrade-multi-users-kfp-tekton-on-kubeflow)
 - [Troubleshooting](#troubleshooting)
 
 ## Installation Targets and Prerequisites
@@ -83,11 +83,11 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 3. Visit [KFP Tekton Admin Guide](/guides/kfp-admin-guide.md) for how to configure kfp-tekton with different settings.
 
 
-## Upgrade Multi-Users KFP-Tekton on Kubeflow
+## Upgrade to Multi-User KFP-Tekton on Kubeflow
 
-1. If you haven't installed Kubeflow 1.3+, Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#kubeflow-installation) to install Kubeflow with multi-users.
+1. If you haven't installed Kubeflow 1.3+, Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#kubeflow-installation) to install Kubeflow with multi-user capabilities.
 
-2. To upgrade the Multi-Users version of KFP-Tekton, custom task controllers, and core Tekton controller, please run
+2. To upgrade to the Multi-User version of KFP-Tekton, custom task controllers, and core Tekton controller, please run
 
    ```shell
    kubectl apply -k manifests/kustomize/env/platform-agnostic-multi-user
