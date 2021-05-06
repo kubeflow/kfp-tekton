@@ -8,7 +8,7 @@
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
 - [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
-- [Upgrade to Multi-User KFP-Tekton on Kubeflow](#upgrade-multi-users-kfp-tekton-on-kubeflow)
+- [Upgrade to Multi-User KFP-Tekton on Kubeflow](#upgrade-to-multi-user-kfp-tekton-on-kubeflow)
 - [Troubleshooting](#troubleshooting)
 
 ## Installation Targets and Prerequisites
