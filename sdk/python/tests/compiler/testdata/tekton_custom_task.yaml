@@ -22,14 +22,15 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"flip-coin": [["output", "$(results.output.path)"]],
-      "flip-coin-2": [["output", "$(results.output.path)"]], "print": []}'
+    tekton.dev/artifact_items: '{"flip-coin": [["output_result", "$(results.output-result.path)"]],
+      "flip-coin-2": [["output_result", "$(results.output-result.path)"]], "print":
+      []}'
     tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-status", "parent_task":
       "condition-cel"}]}'
-    tekton.dev/output_artifacts: '{"flip-coin": [{"key": "artifacts/$PIPELINERUN/flip-coin/output.tgz",
-      "name": "flip-coin-output", "path": "/tmp/output"}], "flip-coin-2": [{"key":
-      "artifacts/$PIPELINERUN/flip-coin-2/output.tgz", "name": "flip-coin-2-output",
-      "path": "/tmp/output"}]}'
+    tekton.dev/output_artifacts: '{"flip-coin": [{"key": "artifacts/$PIPELINERUN/flip-coin/output_result.tgz",
+      "name": "flip-coin-output_result", "path": "/tmp/output_result"}], "flip-coin-2":
+      [{"key": "artifacts/$PIPELINERUN/flip-coin-2/output_result.tgz", "name": "flip-coin-2-output_result",
+      "path": "/tmp/output_result"}]}'
   name: tekton-custom-task-on-kubeflow-pipeline
 spec:
   pipelineSpec:
@@ -44,12 +45,12 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/pipelinename: ''
         results:
-        - description: /tmp/output
-          name: output
+        - description: /tmp/output_result
+          name: output-result
         steps:
         - args:
           - python -c "import random; result = 'heads' if random.randint(0,1) == 0
-            else 'tails'; print(result)" | tee $(results.output.path)
+            else 'tails'; print(result)" | tee $(results.output-result.path)
           command:
           - sh
           - -c
@@ -66,12 +67,12 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/pipelinename: ''
         results:
-        - description: /tmp/output
-          name: output
+        - description: /tmp/output_result
+          name: output-result
         steps:
         - args:
           - python -c "import random; result = 'heads' if random.randint(0,1) == 0
-            else 'tails'; print(result)" | tee $(results.output.path)
+            else 'tails'; print(result)" | tee $(results.output-result.path)
           command:
           - sh
           - -c
@@ -81,7 +82,7 @@ spec:
     - name: condition-cel
       params:
       - name: status
-        value: '''$(tasks.flip-coin.results.output)'' == ''$(tasks.flip-coin-2.results.output)'''
+        value: '''$(tasks.flip-coin.results.output-result)'' == ''$(tasks.flip-coin-2.results.output-result)'''
       taskRef:
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
