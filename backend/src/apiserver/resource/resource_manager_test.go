@@ -30,6 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"google.golang.org/grpc/codes"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -541,4 +542,17 @@ func TestCreateDefaultExperiment_MultiUser(t *testing.T) {
 		StorageState:   "STORAGESTATE_AVAILABLE",
 	}
 	assert.Equal(t, expectedExperiment, experiment)
+}
+
+func TestGetPodLogOptions(t *testing.T) {
+	initEnvVars()
+	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
+	manager := NewResourceManager(store)
+	logOptions := manager.getPodLogOptions(true)
+	expectedLogOptions := corev1.PodLogOptions{
+		Container:  "step-main",
+		Timestamps: false,
+		Follow:     true,
+	}
+	assert.Equal(t, expectedLogOptions, logOptions)
 }
