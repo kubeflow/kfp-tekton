@@ -728,12 +728,14 @@ class TektonCompiler(Compiler):
           for pipeline_param in pipeline_params:
             if pipeline_param in orig_params:
               if pipeline_param in pipeline_param_names + loop_args:
+                # Do not sanitize Tekton pipeline input parameters, only the output parameters need to be sanitized
                 substitute_param = '$(params.%s)' % pipeline_param
                 tp['value'] = re.sub('\$\(inputs.params.%s\)' % pipeline_param, substitute_param, tp.get('value', ''))
               else:
                 for pp in op.inputs:
                   if pipeline_param == pp.full_name:
-                    substitute_param = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
+                    # Parameters from Tekton results need to be sanitized
+                    substitute_param = '$(tasks.%s.results.%s)' % (sanitize_k8s_name(pp.op_name), sanitize_k8s_name(pp.name))
                     tp['value'] = re.sub('\$\(inputs.params.%s\)' % pipeline_param, substitute_param, tp.get('value', ''))
                     break
         # Not necessary for Tekton execution
