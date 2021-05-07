@@ -28,6 +28,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	v1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	tektoncdclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -152,7 +153,7 @@ func sanitize_task_result(result string) interface{} {
 	return i
 }
 
-func checkConditions(crs []conditionResult, tr *v1beta1.TaskRun) (string, bool) {
+func checkTaskrunConditions(crs []conditionResult, tr *v1beta1.TaskRun) (string, bool) {
 	for _, cr := range crs {
 		parameters := make(map[string]interface{})
 		for _, result := range cr.results {
@@ -191,21 +192,46 @@ func checkConditions(crs []conditionResult, tr *v1beta1.TaskRun) (string, bool) 
 	return "", true
 }
 
-func watch(cmd *cobra.Command, args []string) {
-	if taskList == "" && len(conditions) == 0 {
-		log.Printf("Should provide either taskList or conditions to watch.")
-		os.Exit(1)
+func checkRunConditions(crs []conditionResult, run *v1alpha1.Run) (string, bool) {
+	for _, cr := range crs {
+		parameters := make(map[string]interface{})
+		for _, result := range cr.results {
+			runLabel := run.Labels["tekton.dev/pipelineTask"]
+			var found bool
+			for _, runResults := range run.Status.Results {
+				if result == runResults.Name {
+					// Do not need sanitize parameter name but only for expression for go valuate
+					parameters[`results_`+runLabel+`_`+result] = sanitize_task_result(runResults.Value)
+					found = true
+					break
+				}
+			}
+			if !found {
+				log.Printf("The result %s does not exist in run %s.", result, runLabel)
+				return cr.condition, false
+			}
+		}
+		expr, err := govaluate.NewEvaluableExpression(sanitize_parameter_name(cr.condition))
+		if err != nil {
+			log.Fatal("syntax error:", err)
+		}
+
+		evaluateresult, err := expr.Evaluate(parameters)
+		if err != nil {
+			log.Fatal("evaluate error:", err)
+		}
+
+		if result, ok := evaluateresult.(bool); ok {
+			if result {
+				continue
+			}
+		}
+		return cr.condition, false
 	}
+	return "", true
+}
 
-	log.Printf("Starting to watch taskrun for '%s' and condition in %s/%s.", taskList, namespace, prName)
-
-	var tasks []string
-	if taskList != "" {
-		tasks = strings.Split(taskList, ",")
-	}
-
-	parse_conditions(conditions, &tasks)
-
+func watchTaskRun(labelSelector string, tasks []string, failedTasksCh chan string) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		log.Errorf("Get config of the cluster failed: %+v", err)
@@ -218,11 +244,8 @@ func watch(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	labelSelector := "tekton.dev/pipelineRun=" + strings.TrimSpace(prName)
-
-	var failedTasks []string
 	for {
-		watcher, err := tektonClient.TektonV1beta1().TaskRuns(namespace).Watch(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
+		trWatcher, err := tektonClient.TektonV1beta1().TaskRuns(namespace).Watch(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
 
 		if err != nil {
 			log.Printf("TaskRun Watcher error:" + err.Error())
@@ -230,7 +253,7 @@ func watch(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 
-		for event := range watcher.ResultChan() {
+		for event := range trWatcher.ResultChan() {
 			taskrun := event.Object.(*v1beta1.TaskRun)
 			taskLabel := taskrun.Labels["tekton.dev/pipelineTask"]
 			if contains(tasks, taskLabel) {
@@ -240,13 +263,13 @@ func watch(cmd *cobra.Command, args []string) {
 					log.Printf("The TaskRun of %s succeeded.", taskLabel)
 					conditions, ok := conditionMap[taskLabel]
 					if !ok { // no conditions to be passed --> any-sequencer success
-						watcher.Stop()
+						trWatcher.Stop()
 						os.Exit(0)
 					}
 
-					condition, ok := checkConditions(conditions, taskrun)
+					condition, ok := checkTaskrunConditions(conditions, taskrun)
 					if ok { // condition passed -->  any-sequencer success
-						watcher.Stop()
+						trWatcher.Stop()
 						os.Exit(0)
 					}
 					taskFailed = true
@@ -257,16 +280,104 @@ func watch(cmd *cobra.Command, args []string) {
 					taskFailed = true
 				}
 
-				if taskFailed && !contains(failedTasks, taskLabel) {
-					failedTasks = append(failedTasks, taskLabel)
+				if taskFailed {
+					failedTasksCh <- taskLabel
+				}
+				//if taskFailed && !contains(failedTasks, taskLabel) {
+				//	failedTasks = append(failedTasks, taskLabel)
+				//}
+			}
+		}
+	}
+}
+
+func watchRun(labelSelector string, tasks []string, failedTasksCh chan string) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		log.Errorf("Get config of the cluster failed: %+v", err)
+		os.Exit(1)
+	}
+
+	tektonClient, err := tektoncdclientset.NewForConfig(config)
+	if err != nil {
+		log.Errorf("Get client of tekton failed: %+v", err)
+		os.Exit(1)
+	}
+
+	for {
+		runWatcher, err := tektonClient.TektonV1alpha1().Runs(namespace).Watch(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
+
+		if err != nil {
+			log.Printf("Run Watcher error:" + err.Error())
+			log.Printf("Please ensure the service account has permission to get Run.")
+			os.Exit(1)
+		}
+
+		for event := range runWatcher.ResultChan() {
+			run := event.Object.(*v1alpha1.Run)
+			taskLabel := run.Labels["tekton.dev/pipelineTask"]
+			if contains(tasks, taskLabel) {
+				runStatus := run.Status.GetCondition(apis.ConditionSucceeded)
+				var taskFailed bool
+				if runStatus.IsTrue() {
+					log.Printf("The Run of %s succeeded.", taskLabel)
+					conditions, ok := conditionMap[taskLabel]
+					if !ok { // no conditions to be passed --> any-sequencer success
+						runWatcher.Stop()
+						os.Exit(0)
+					}
+
+					condition, ok := checkRunConditions(conditions, run)
+					if ok { // condition passed -->  any-sequencer success
+						runWatcher.Stop()
+						os.Exit(0)
+					}
+					taskFailed = true
+					log.Printf("The condition %s for the task %s does not meet.", condition, taskLabel)
 				}
 
-				if len(failedTasks) >= len(tasks) {
-					log.Printf("All specified TaskRun(s) failed.")
-					watcher.Stop()
-					os.Exit(1)
+				if runStatus.IsFalse() {
+					taskFailed = true
+				}
+
+				if taskFailed {
+					failedTasksCh <- taskLabel
 				}
 			}
+		}
+	}
+}
+
+func watch(cmd *cobra.Command, args []string) {
+	if taskList == "" && len(conditions) == 0 {
+		log.Printf("Should provide either taskList or conditions to watch.")
+		os.Exit(1)
+	}
+
+	log.Printf("Starting to watch taskrun or run for '%s' and condition in %s/%s.", taskList, namespace, prName)
+
+	var tasks []string
+	if taskList != "" {
+		tasks = strings.Split(taskList, ",")
+	}
+
+	parse_conditions(conditions, &tasks)
+
+	labelSelector := "tekton.dev/pipelineRun=" + strings.TrimSpace(prName)
+
+	failedTasksCh := make(chan string)
+
+	go watchTaskRun(labelSelector, tasks, failedTasksCh)
+	go watchRun(labelSelector, tasks, failedTasksCh)
+
+	var failedTasks []string
+	for failedTask := range failedTasksCh {
+		if !contains(failedTasks, failedTask) {
+			failedTasks = append(failedTasks, failedTask)
+		}
+		if len(failedTasks) >= len(tasks) {
+			log.Printf("All specified TaskRun(s) or Run(s) failed.")
+			os.Exit(1)
 		}
 	}
 }
