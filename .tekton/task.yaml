@@ -392,11 +392,14 @@ spec:
     - name: slack-channel
       description: slack channel
       default: ""
+    - name: test-script
+      description: a shell script to run the test case
+      default: ""
   workspaces:
   - name: task-pvc
     mountPath: /artifacts
   steps:
-    - name: flip-coin
+    - name: run-test
       image: docker.io/aipipeline/pipeline-base-image:1.2
       env:
         - name: IBM_CLOUD_API_KEY
@@ -419,6 +422,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.annotations['devops.cloud.ibm.com/build-number']
+        - name: TEST_SCRIPT
+          value: $(params.test-script)
       command: ["/bin/bash", "-c"]
       args:
         - set -ex;

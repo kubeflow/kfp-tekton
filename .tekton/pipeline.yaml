@@ -52,6 +52,9 @@ spec:
     - name: publish-to-dockerhub
       description: publish images to dockerhub
       default: "0"
+    - name: extra-test-cases
+      description: execute extra test cases
+      default: "0"
     - name: image-tag
       description: image tag
       default: "nightly"
@@ -478,6 +481,7 @@ spec:
         - name: task-pvc
           workspace: pipeline-pvc
     - name: deploy-pipeline-loops-e2e
+      retries: 1
       taskRef:
         name: iks-test
       runAfter:
@@ -505,6 +509,7 @@ spec:
       - name: task-pvc
         workspace: pipeline-pvc
     - name: deploy-any-sequencer-e2e
+      retries: 1
       taskRef:
         name: iks-test
       runAfter:
@@ -535,6 +540,7 @@ spec:
       - name: task-pvc
         workspace: pipeline-pvc
     - name: deploy-kubectl-wrapper-e2e
+      retries: 1
       taskRef:
         name: iks-test
       runAfter:
@@ -562,7 +568,8 @@ spec:
       workspaces:
         - name: task-pvc
           workspace: pipeline-pvc
-    - name: e2e-test
+    - name: e2e-test-flip-coin
+      retries: 1
       taskRef:
         name: e2e-test
       runAfter:
@@ -579,6 +586,36 @@ spec:
           value: $(params.slack-webhook)
         - name: slack-channel
           value: $(params.slack-channel)
+        - name: test-script
+          value: "scripts/deploy/iks/test-flip-coin.sh"
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: e2e-test-trusted-ai
+      retries: 1
+      taskRef:
+        name: e2e-test
+      runAfter:
+        - deploy
+        - deploy-pipeline-loops-e2e
+      when:
+        - input: $(params.extra-test-cases)
+          operator: in
+          values:
+            - '1'
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: slack-webhook
+          value: $(params.slack-webhook)
+        - name: slack-channel
+          value: $(params.slack-channel)
+        - name: test-script
+          value: "scripts/deploy/iks/test-trusted-ai.sh"
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
@@ -586,7 +623,7 @@ spec:
       taskRef:
         name: publish-images
       runAfter:
-        - e2e-test
+        - e2e-test-flip-coin
         - deploy-any-sequencer-e2e
         - deploy-kubectl-wrapper-e2e
       when:
