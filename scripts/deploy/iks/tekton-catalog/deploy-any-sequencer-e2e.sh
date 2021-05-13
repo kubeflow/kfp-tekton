@@ -45,7 +45,7 @@ echo "=============================="
 # Note - Permission to watch status required: "kubectl create clusterrolebinding pipeline-runner-extend --clusterrole=cluster-admin --serviceaccount=default:default"
 kubectl apply -f $MANIFEST
 
-wait_for_pipeline_run "any-sequencer" 20 30
+wait_for_pipeline_run "any-sequencer" 40 30
 
 kubectl delete -f $MANIFEST
 

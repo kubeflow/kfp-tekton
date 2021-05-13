@@ -20,13 +20,10 @@ set -ex
 # Need the following env
 # - PIPELINE_KUBERNETES_CLUSTER_NAME:       kube cluster name
 # - KUBEFLOW_NS:                            kubeflow namespace
-# - SLACK_WEBHOOK:                          webhook to send out the notification
-# - SLACK_CHANNEL:                          slack channel name
 # - PIPELINE_URL:                           url to point of the details page for this pipeline run
 
-SLACK_WEBHOOK="${SLACK_WEBHOOK:-""}"
-SLACK_CHANNEL="${SLACK_CHANNEL:-""}"
 PIPELINE_URL="${PIPELINE_URL:-""}"
+TEST_SCRIPT="${TEST_SCRIPT:=""}"
 
 # These env vars should come from the build.properties that `build-image.sh` generates
 echo "REGISTRY_URL=${REGISTRY_URL}"
@@ -43,7 +40,7 @@ echo "RESOURCE_GROUP=${RESOURCE_GROUP}"
 echo "PIPELINE_KUBERNETES_CLUSTER_NAME=${PIPELINE_KUBERNETES_CLUSTER_NAME}"
 echo "KUBEFLOW_NS=${KUBEFLOW_NS}"
 echo "PIPELINE_URL=${PIPELINE_URL}"
-echo "SLACK_CHANNEL=${SLACK_CHANNEL}"
+echo "TEST_SCRIPT=${TEST_SCRIPT}"
 
 # copy files to ARCHIVE_DIR for next stage if needed
 echo "Checking archive dir presence"
@@ -91,79 +88,16 @@ kubectl port-forward -n "$KUBEFLOW_NS" "$POD_NAME" 8888:8888 &
 sleep 5
 
 # Prepare python venv and install sdk
-python3 -m venv .venv
-source .venv/bin/activate
+VENV_DIR=".venv-$((RANDOM%10000+1))"
+python3 -m venv "${VENV_DIR}"
+source "${VENV_DIR}/bin/activate"
 pip install wheel
 pip install -e sdk/python
 pip install -U setuptools
 pip install pytest
 
-# flip coin example
-run_flip_coin_example() {
-  local REV=1
-  local DURATION=$1
-  shift
-  local PIPELINE_ID
-  local RUN_ID
-
-  echo " =====   flip coin sample  ====="
-  python3 samples/flip-coin/condition.py
-  retry 3 3 kfp --endpoint http://localhost:8888 pipeline upload -p e2e-flip-coin samples/flip-coin/condition.yaml || :
-  PIPELINE_ID=$(kfp --endpoint http://localhost:8888  pipeline list | grep 'e2e-flip-coin' | awk '{print $2}')
-  if [[ -z "$PIPELINE_ID" ]]; then
-    echo "Failed to upload pipeline"
-    return "$REV"
-  fi
-
-  local RUN_NAME="e2e-flip-coin-run-$((RANDOM%10000+1))"
-  retry 3 3 kfp --endpoint http://localhost:8888 run submit -e exp-e2e-flip-coin -r "$RUN_NAME" -p "$PIPELINE_ID" || :
-  RUN_ID=$(kfp --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
-  if [[ -z "$RUN_ID" ]]; then
-    echo "Failed to submit a run for flip coin pipeline"
-    return "$REV"
-  fi
-
-  local RUN_STATUS
-  ENDTIME=$(date -ud "$DURATION minute" +%s)
-  while [[ "$(date -u +%s)" -le "$ENDTIME" ]]; do
-    RUN_STATUS=$(kfp --endpoint http://localhost:8888 run list | grep "$RUN_NAME" | awk '{print $6}')
-    if [[ "$RUN_STATUS" == "Completed" ]]; then
-      REV=0
-      break;
-    fi
-    echo "  Status of flip coin run: $RUN_STATUS"
-    sleep 10
-  done
-
-  if [[ "$REV" -eq 0 ]]; then
-    echo " =====   flip coin sample PASSED ====="
-  else
-    echo " =====   flip coin sample FAILED ====="
-  fi
-
-  return "$REV"
-}
-
-RESULT=0
-run_flip_coin_example 10 || RESULT=$?
-
-PUBLISH_BUILD_STATUS=pass
-STATUS_MSG=PASSED
-if [[ "$RESULT" -ne 0 ]]; then
-  PUBLISH_BUILD_STATUS=fail
-  STATUS_MSG=FAILED
-fi
-# check if doi is integrated in this toolchain
-if [ -e _toolchain.json ]; then
-  if jq -e '.services[] | select(.service_id=="draservicebroker")' _toolchain.json; then
-    ibmcloud doi publishbuildrecord --branch "${GIT_BRANCH}" --repositoryurl "${GIT_URL}" --commitid "${GIT_COMMIT}" \
-      --buildnumber "${BUILD_NUMBER}" --logicalappname "kfp-tekton" --status "$PUBLISH_BUILD_STATUS"
-  fi
-fi
-
-if [[ "$SLACK_CHANNEL" != "" && "$SLACK_WEBHOOK" != "" ]]; then
-  curl -X POST --data-urlencode "payload={\"channel\": \"#${SLACK_CHANNEL}\", \"username\": \"tekton-pipeline\", \"type\": \"mrkdwn\", \"text\": \"build: *<${PIPELINE_URL} | ${BUILD_NUMBER}>* ${STATUS_MSG}.\", \"icon_emoji\": \":robot_:\"}" \
-    "$SLACK_WEBHOOK"
+if [ -n "$TEST_SCRIPT" ]; then
+  source "$TEST_SCRIPT"
 fi
 
 kill %1
