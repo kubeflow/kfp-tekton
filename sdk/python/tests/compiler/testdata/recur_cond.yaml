@@ -23,7 +23,7 @@ metadata:
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print-iter": [["stdout", "$(results.stdout.path)"]]}'
-    tekton.dev/input_artifacts: '{"print-iter": [{"name": "condition-cel-status",
+    tekton.dev/input_artifacts: '{"print-iter": [{"name": "condition-cel-outcome",
       "parent_task": "condition-cel"}]}'
     tekton.dev/output_artifacts: '{"print-iter": [{"key": "artifacts/$PIPELINERUN/print-iter/stdout.tgz",
       "name": "print-iter-stdout", "path": "/tmp/stdout"}]}'

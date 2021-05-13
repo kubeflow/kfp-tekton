@@ -25,7 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{"flip-coin": [["output_result", "$(results.output-result.path)"]],
       "flip-coin-2": [["output_result", "$(results.output-result.path)"]], "print":
       []}'
-    tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-status", "parent_task":
+    tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-outcome", "parent_task":
       "condition-cel"}]}'
     tekton.dev/output_artifacts: '{"flip-coin": [{"key": "artifacts/$PIPELINERUN/flip-coin/output_result.tgz",
       "name": "flip-coin-output_result", "path": "/tmp/output_result"}], "flip-coin-2":
@@ -81,7 +81,7 @@ spec:
       timeout: 0s
     - name: condition-cel
       params:
-      - name: status
+      - name: outcome
         value: '''$(tasks.flip-coin.results.output-result)'' == ''$(tasks.flip-coin-2.results.output-result)'''
       taskRef:
         apiVersion: cel.tekton.dev/v1alpha1
@@ -89,8 +89,8 @@ spec:
         name: cel_condition
     - name: print
       params:
-      - name: condition-cel-status
-        value: $(tasks.condition-cel.results.status)
+      - name: condition-cel-outcome
+        value: $(tasks.condition-cel.results.outcome)
       taskSpec:
         metadata:
           annotations:
@@ -100,11 +100,11 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/pipelinename: ''
         params:
-        - name: condition-cel-status
+        - name: condition-cel-outcome
         steps:
         - command:
           - echo
-          - Condition output is $(inputs.params.condition-cel-status)
+          - Condition output is $(inputs.params.condition-cel-outcome)
           image: alpine:3.6
           name: main
       timeout: 0s

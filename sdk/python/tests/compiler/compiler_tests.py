@@ -119,6 +119,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.cond_recur import condition_and_recur
     self._test_pipeline_workflow(condition_and_recur, 'cond_recur.yaml')
 
+  def test_custom_task_recur_with_cond_workflow(self):
+    """
+    Test compiling a custom task conditional recursive workflow.
+    """
+    from .testdata.custom_task_recur_with_cond import recursion_test
+    self._test_pipeline_workflow(recursion_test, 'custom_task_recur_with_cond.yaml')
+
   def test_parallel_join_with_argo_vars_workflow(self):
     """
     Test compiling a parallel join workflow.

@@ -33,6 +33,7 @@ from kfp.compiler.compiler import Compiler
 from kfp.components.structures import InputSpec
 from kfp.dsl._for_loop import LoopArguments
 from kfp.dsl._metadata import _extract_pipeline_metadata
+from collections import defaultdict
 
 # KFP-Tekton imports
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
@@ -42,7 +43,7 @@ from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
-from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES
+from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPUT_KEYWORD
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
@@ -63,15 +64,16 @@ def _get_super_condition_template():
       input2=int(input2)
     except:
       input1=str(input1)
-    status="true" if (input1 $(inputs.params.operator) input2) else "false"
-    f = open("/tekton/results/status", "w")
-    f.write(status)
-    f.close()' ''')
+    %(s)s="true" if (input1 $(inputs.params.operator) input2) else "false"
+    f = open("/tekton/results/%(s)s", "w")
+    f.write(%(s)s)
+    f.close()' '''
+    % {'s': DEFAULT_CONDITION_OUTPUT_KEYWORD})
 
   template = {
     'results': [
-      {'name': 'status',
-       'description': 'Conditional task status'
+      {'name': DEFAULT_CONDITION_OUTPUT_KEYWORD,
+       'description': 'Conditional task %s' % DEFAULT_CONDITION_OUTPUT_KEYWORD
        }
     ],
     'params': [
@@ -446,7 +448,6 @@ class TektonCompiler(Compiler):
       opsgroups,
       condition_params,
     )
-
     templates = []
     for opsgroup in opsgroups.keys():
       # Conditions and loops will get templates in Tekton
@@ -462,6 +463,138 @@ class TektonCompiler(Compiler):
       templates.extend(op_to_steps_handler(op))
 
     return templates
+
+  def _get_inputs_outputs(
+          self,
+          pipeline,
+          root_group,
+          op_groups,
+          opsgroup_groups,
+          condition_params,
+          op_name_to_for_loop_op: Dict[Text, dsl.ParallelFor],
+  ):
+    """Get inputs and outputs of each group and op.
+    Returns:
+      A tuple (inputs, outputs).
+      inputs and outputs are dicts with key being the group/op names and values being list of
+      tuples (param_name, producing_op_name). producing_op_name is the name of the op that
+      produces the param. If the param is a pipeline param (no producer op), then
+      producing_op_name is None.
+    """
+    inputs = defaultdict(set)
+    outputs = defaultdict(set)
+
+    for op in pipeline.ops.values():
+      # op's inputs and all params used in conditions for that op are both considered.
+      for param in op.inputs + list(condition_params[op.name]):
+        # if the value is already provided (immediate value), then no need to expose
+        # it as input for its parent groups.
+        if param.value:
+          continue
+        if param.op_name:
+          upstream_op = pipeline.ops[param.op_name]
+          upstream_groups, downstream_groups = \
+            self._get_uncommon_ancestors(op_groups, opsgroup_groups, upstream_op, op)
+          for i, group_name in enumerate(downstream_groups):
+            # Important: Changes for Tekton custom tasks
+            # Custom task condition are not pods running in Tekton. Thus it should also
+            # be considered as the first uncommon downstream group.
+            def is_parent_custom_task(index):
+              for group_name in downstream_groups[:index]:
+                if 'condition-' in group_name:
+                  return True
+              return False
+            if i == 0 or is_parent_custom_task(i):
+              # If it is the first uncommon downstream group, then the input comes from
+              # the first uncommon upstream group.
+              inputs[group_name].add((param.full_name, upstream_groups[0]))
+            else:
+              # If not the first downstream group, then the input is passed down from
+              # its ancestor groups so the upstream group is None.
+              inputs[group_name].add((param.full_name, None))
+          for i, group_name in enumerate(upstream_groups):
+            if i == len(upstream_groups) - 1:
+              # If last upstream group, it is an operator and output comes from container.
+              outputs[group_name].add((param.full_name, None))
+            else:
+              # If not last upstream group, output value comes from one of its child.
+              outputs[group_name].add((param.full_name, upstream_groups[i + 1]))
+        else:
+          if not op.is_exit_handler:
+            for group_name in op_groups[op.name][::-1]:
+              # if group is for loop group and param is that loop's param, then the param
+              # is created by that for loop ops_group and it shouldn't be an input to
+              # any of its parent groups.
+              inputs[group_name].add((param.full_name, None))
+              if group_name in op_name_to_for_loop_op:
+                # for example:
+                #   loop_group.loop_args.name = 'loop-item-param-99ca152e'
+                #   param.name =                'loop-item-param-99ca152e--a'
+                loop_group = op_name_to_for_loop_op[group_name]
+                if loop_group.loop_args.name in param.name:
+                  break
+
+    # Generate the input/output for recursive opsgroups
+    # It propagates the recursive opsgroups IO to their ancester opsgroups
+    def _get_inputs_outputs_recursive_opsgroup(group):
+      # TODO: refactor the following codes with the above
+      if group.recursive_ref:
+        params = [(param, False) for param in group.inputs]
+        params.extend([(param, True) for param in list(condition_params[group.name])])
+        for param, is_condition_param in params:
+          if param.value:
+            continue
+          full_name = param.full_name
+          if param.op_name:
+            upstream_op = pipeline.ops[param.op_name]
+            upstream_groups, downstream_groups = \
+              self._get_uncommon_ancestors(op_groups, opsgroup_groups, upstream_op, group)
+            for i, g in enumerate(downstream_groups):
+              if i == 0:
+                inputs[g].add((full_name, upstream_groups[0]))
+              # There is no need to pass the condition param as argument to the downstream ops.
+              # TODO: this might also apply to ops. add a TODO here and think about it.
+              elif i == len(downstream_groups) - 1 and is_condition_param:
+                continue
+              else:
+                # For Tekton, do note append duplicated input parameters
+                duplicated_downstream_group = False
+                for group_name in inputs[g]:
+                  if len(group_name) > 1 and group_name[0] == full_name:
+                    duplicated_downstream_group = True
+                    break
+                if not duplicated_downstream_group:
+                  inputs[g].add((full_name, None))
+            for i, g in enumerate(upstream_groups):
+              if i == len(upstream_groups) - 1:
+                outputs[g].add((full_name, None))
+              else:
+                outputs[g].add((full_name, upstream_groups[i + 1]))
+          elif not is_condition_param:
+            for g in op_groups[group.name]:
+              inputs[g].add((full_name, None))
+      for subgroup in group.groups:
+        _get_inputs_outputs_recursive_opsgroup(subgroup)
+
+    _get_inputs_outputs_recursive_opsgroup(root_group)
+
+    # Generate the input for SubGraph along with parallelfor
+    for sub_graph in opsgroup_groups:
+      if sub_graph in op_name_to_for_loop_op:
+        # The opsgroup list is sorted with the farthest group as the first and
+        # the opsgroup itself as the last. To get the latest opsgroup which is
+        # not the opsgroup itself -2 is used.
+        parent = opsgroup_groups[sub_graph][-2]
+        if parent and parent.startswith('subgraph'):
+          # propagate only op's pipeline param from subgraph to parallelfor
+          loop_op = op_name_to_for_loop_op[sub_graph]
+          pipeline_param = loop_op.loop_args.items_or_pipeline_param
+          if loop_op.items_is_pipeline_param and pipeline_param.op_name:
+            param_name = '%s-%s' % (
+              sanitize_k8s_name(pipeline_param.op_name), pipeline_param.name)
+            inputs[parent].add((param_name, pipeline_param.op_name))
+
+    return inputs, outputs
 
   def _process_resourceOp(self, task_refs, pipeline):
     """ handle resourceOp cases in pipeline """
@@ -545,7 +678,7 @@ class TektonCompiler(Compiler):
           }]
           condition_refs[template['metadata']['name']] = [
               {
-                'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
+                'input': '$(tasks.%s.results.%s)' % (template['metadata']['name'], DEFAULT_CONDITION_OUTPUT_KEYWORD),
                 'operator': 'in',
                 'values': ['true']
               }
@@ -674,7 +807,7 @@ class TektonCompiler(Compiler):
           var2 = condition_task_ref['params'][1]['value']
           op = condition_task_ref['params'][2]['value']
           condition_task_ref['params'] = [{
-                  'name': "status",
+                  'name': DEFAULT_CONDITION_OUTPUT_KEYWORD,
                   'value': " ".join([var1, op, var2])
                 }]
         most_recent_condition = cur_opsgroup.name
@@ -708,6 +841,10 @@ class TektonCompiler(Compiler):
       if parent_group:
         if condition_refs.get(parent_group[-2], []):
           self.loops_pipeline[loop_task_key]['spec']['when'] = condition_refs.get(parent_group[-2], [])
+          for i, param in enumerate(self.loops_pipeline[loop_task_key]['spec']["params"]):
+            if param["value"] == condition_refs.get(parent_group[-2], [])[0]["input"]:
+              self.loops_pipeline[loop_task_key]['spec']["params"].pop(i)
+              break
 
     # process input parameters from upstream tasks
     pipeline_param_names = [p['name'] for p in params]
