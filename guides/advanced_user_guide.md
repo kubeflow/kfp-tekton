@@ -51,7 +51,7 @@ Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom t
     # Annotation to tell the Argo controller that this containerOp is for specific Tekton runtime only.
     ConditionOp.add_pod_annotation("valid_container", "false")
     ```
-    - **name**: Name for the custom task, it can be anything with a valid Kubernetes name (regular expression `[a-z0-9]([-a-z0-9]*[a-z0-9])`)
+    - **name**: Name for the custom task, it can be anything with a valid Kubernetes name.
     - **image**: Identifier for your custom task. This is the value you defined above in step 1. If you want to use a custom task with CEL condition support (such as using literal results from CEL custom task for Tekton whenExpression), then use `CEL_EVAL_IMAGE` instead.
     - **arguments**: Define the key value pairs for the custom task definition. Below are the mandatory fields
       - **--apiVersion**: Kubernetes API Version for your custom task CRD.
