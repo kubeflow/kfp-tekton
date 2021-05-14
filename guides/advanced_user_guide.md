@@ -12,6 +12,10 @@ This page is an advanced KFP-Tekton guide on how to use Tekton specific features
 
 ## Using Tekton Custom Task on KFP-Tekton
 
+[Tekton Custom Tasks](https://github.com/tektoncd/pipeline/blob/main/docs/pipelines.md#using-custom-tasks)
+can implement behavior that doesn't correspond directly to running a workload in a `Pod` on the cluster.
+For example, a custom task might execute some operation outside of the cluster and wait for its execution to complete.
+
 ### Basic Usage
 [The flip-coin pipeline using custom task](/samples/flip-coin-custom-task) example is a basic tutorial on how to use a pre-defined [CEL custom task](https://github.com/tektoncd/experimental/tree/main/cel) to replace the traditional KFP-Tekton conditions. Behind the scene, the pre-defined CEL custom task is written as the below containerOp in [/sdk/python/kfp_tekton/tekton.py](/sdk/python/kfp_tekton/tekton.py):
 ```python
