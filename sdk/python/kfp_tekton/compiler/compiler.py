@@ -557,7 +557,7 @@ class TektonCompiler(Compiler):
               elif i == len(downstream_groups) - 1 and is_condition_param:
                 continue
               else:
-                # For Tekton, do note append duplicated input parameters
+                # For Tekton, do not append duplicated input parameters
                 duplicated_downstream_group = False
                 for group_name in inputs[g]:
                   if len(group_name) > 1 and group_name[0] == full_name:
