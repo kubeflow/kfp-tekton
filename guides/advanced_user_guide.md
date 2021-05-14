@@ -1,6 +1,6 @@
 # Advanced User Guide
 
-This page is targeting the advanced KFP-Tekton on how to use Tekton specific features such as Tekton custom tasks on KFP. For general KFP usage, please visit the [kfp-user-guide](kfp-user-guide).
+This page is an advanced KFP-Tekton guide on how to use Tekton specific features such as Tekton custom tasks on KFP. For general KFP usage, please visit the [kfp-user-guide](kfp-user-guide).
 
 ## Table of Contents
 
@@ -35,7 +35,7 @@ def CEL_ConditionOp(condition_statement):
     return ConditionOp
 ```
 
-Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom tasks. The `DEFAULT_CONDITION_OUTPUT_KEYWORD` is a required argument for running CEL custom task only. The `CEL_EVAL_IMAGE` image is registered as a custom task in the KFP-Tekton compiler, so the backend knows this ContianerOp needs to be compiled differently.
+Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom tasks. The `DEFAULT_CONDITION_OUTPUT_KEYWORD` field is a required argument only for running CEL custom task. The `CEL_EVAL_IMAGE` image is registered as a custom task in the KFP-Tekton compiler, so the backend knows this ContianerOp needs to be compiled differently.
 
 ### Defining Your Own Tekton Custom Task on KFP-Tekton
 1. To define your own Tekton custom task on KFP-Tekton, first define a unique image name for classifying your containerOp definition as a custom task and update the list of registered custom task images.
@@ -71,9 +71,9 @@ Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom t
 
 
 ### Custom task with Conditions
-When using custom task with conditions, the compiled workload is slightly different from Argo because we are not wrapping condition blocks as sub-pipeline. The [flip-coin-custom-task](/samples/flip-coin-custom-task) example describes how custom tasks are used with KFP conditions.
+When using a custom task with conditions, the compiled workload is slightly different from Argo because we are not wrapping condition blocks as a sub-pipeline. The [flip-coin-custom-task](/samples/flip-coin-custom-task) example describes how custom tasks are used with KFP conditions.
 
-The benefits for not having the sub-pipeline in Tekton allow us to represent the condition dependencies that are more align in the DSL. In KFP Argo, the [issue #5422](https://github.com/kubeflow/pipelines/issues/5422) describes how the Argo workflow misrepresent the DSL.
+The benefits for not having the sub-pipeline in Tekton allow us to represent the condition dependencies that are more aligned with the DSL. In KFP Argo, the [issue #5422](https://github.com/kubeflow/pipelines/issues/5422) describes how the Argo workflow misrepresent the DSL.
 
 Condition DSL
 ```python
@@ -98,8 +98,8 @@ When compiled to Argo vs Tekton:
 
 ![condition-dependency](/images/condition-dependency.png)
 
-In this case, the Argo workflow task C will always execution after the condition A,B blocks are done despite task A1 and B1 are skipped. Whereas the Tekton workflow task C only executes if task A1 and B1 are completed and not executes Task C if task A1 and B1 are failed or skipped. So Tekton gives a closer representation of the DSL workflow behavior without using any sub-dag/sub-pipeline.
+In this case, the Argo workflow task C will always execute after the condition A,B blocks are done even if task A1 and B1 are skipped. Whereas the Tekton workflow task C only executes if task A1 and B1 are completed and will not execute Task C if task A1 and B1 are failed or skipped. So Tekton gives a closer representation of the DSL workflow behavior without using any sub-dag/sub-pipeline.
 
 
 ### Custom Task Limitations
-Currently, custom tasks don't support timeout, retries, and any Kubernetes pod spec because these fields are not supported by the [Tekton community](https://github.com/tektoncd/pipeline/blob/main/docs/pipelines.md#limitations) and custom tasks may not need any pod to run their workloads. Therefore, there will not be any log, pod reference, and event for custom tasks in the KFP-Tekton API.
+Currently, custom tasks don't support timeout, retries, or any Kubernetes pod spec because these fields are not supported by the [Tekton community](https://github.com/tektoncd/pipeline/blob/main/docs/pipelines.md#limitations) and custom tasks may not need any pod to run their workloads. Therefore, there will not be any logs, pod references, or events for custom tasks in the KFP-Tekton API.
