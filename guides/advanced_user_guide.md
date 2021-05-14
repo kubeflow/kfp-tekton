@@ -1,6 +1,6 @@
 # Advanced User Guide
 
-This page is an advanced KFP-Tekton guide on how to use Tekton specific features such as Tekton custom tasks on KFP. For general KFP usage, please visit the [kfp-user-guide](kfp-user-guide).
+This page is an advanced KFP-Tekton guide on how to use Tekton specific features such as [Tekton custom tasks](https://github.com/tektoncd/pipeline/blob/main/docs/pipelines.md#using-custom-tasks) on KFP. For general KFP usage, please visit the [kfp-user-guide](kfp-user-guide).
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@ This page is an advanced KFP-Tekton guide on how to use Tekton specific features
 ## Using Tekton Custom Task on KFP-Tekton
 
 ### Basic Usage
-[The flip-coin pipeline using custom task](/samples/flip-coin-custom-task) example is a basic tutorial on how to use a pre-defined CEL custom task to replace the traditional KFP-Tekton conditions. Behind the scene, the pre-defined CEL custom task is written as the below containerOp in [/sdk/python/kfp_tekton/tekton.py](/sdk/python/kfp_tekton/tekton.py):
+[The flip-coin pipeline using custom task](/samples/flip-coin-custom-task) example is a basic tutorial on how to use a pre-defined [CEL custom task](https://github.com/tektoncd/experimental/tree/main/cel) to replace the traditional KFP-Tekton conditions. Behind the scene, the pre-defined CEL custom task is written as the below containerOp in [/sdk/python/kfp_tekton/tekton.py](/sdk/python/kfp_tekton/tekton.py):
 ```python
 def CEL_ConditionOp(condition_statement):
     '''A containerOp template for CEL and converts it into Tekton custom task
