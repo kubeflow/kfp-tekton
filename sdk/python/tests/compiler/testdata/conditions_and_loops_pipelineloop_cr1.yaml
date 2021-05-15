@@ -241,7 +241,7 @@ spec:
               "image": "python:3.7"}}, "name": "Notify success"}'
             tekton.dev/template: ''
       when:
-      - input: $(tasks.condition-2.results.status)
+      - input: $(tasks.condition-2.results.outcome)
         operator: in
         values:
         - "true"
@@ -282,7 +282,7 @@ spec:
               "image": "python:3.7"}}, "name": "Notify failure"}'
             tekton.dev/template: ''
       when:
-      - input: $(tasks.condition-3.results.status)
+      - input: $(tasks.condition-3.results.outcome)
         operator: in
         values:
         - "true"
@@ -297,8 +297,8 @@ spec:
         value: '>'
       taskSpec:
         results:
-        - name: status
-          description: Conditional task status
+        - name: outcome
+          description: Conditional task outcome
         params:
         - name: operand1
           type: string
@@ -316,9 +316,9 @@ spec:
               input2=int(input2)
             except:
               input1=str(input1)
-            status="true" if (input1 $(inputs.params.operator) input2) else "false"
-            f = open("/tekton/results/status", "w")
-            f.write(status)
+            outcome="true" if (input1 $(inputs.params.operator) input2) else "false"
+            f = open("/tekton/results/outcome", "w")
+            f.write(outcome)
             f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
           image: python:alpine3.6
     - name: condition-3
@@ -331,8 +331,8 @@ spec:
         value: <=
       taskSpec:
         results:
-        - name: status
-          description: Conditional task status
+        - name: outcome
+          description: Conditional task outcome
         params:
         - name: operand1
           type: string
@@ -350,9 +350,9 @@ spec:
               input2=int(input2)
             except:
               input1=str(input1)
-            status="true" if (input1 $(inputs.params.operator) input2) else "false"
-            f = open("/tekton/results/status", "w")
-            f.write(status)
+            outcome="true" if (input1 $(inputs.params.operator) input2) else "false"
+            f = open("/tekton/results/outcome", "w")
+            f.write(outcome)
             f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
           image: python:alpine3.6
   iterateParam: produce-numbers-Output-loop-item

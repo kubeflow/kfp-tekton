@@ -229,7 +229,7 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-1.results.status)
+      - input: $(tasks.condition-1.results.outcome)
         operator: in
         values:
         - 'true'
@@ -267,7 +267,7 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-2.results.status)
+      - input: $(tasks.condition-2.results.outcome)
         operator: in
         values:
         - 'true'
@@ -285,15 +285,15 @@ spec:
         - name: operand2
         - name: operator
         results:
-        - description: Conditional task status
-          name: status
+        - description: Conditional task outcome
+          name: outcome
         steps:
         - image: python:alpine3.6
           script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
             try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
-            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
-            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
-            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+            outcome=\"true\" if (input1 $(inputs.params.operator) input2) else \"\
+            false\"\nf = open(\"/tekton/results/outcome\", \"w\")\nf.write(outcome)\n\
+            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
     - name: condition-2
       params:
       - name: operand1
@@ -308,13 +308,13 @@ spec:
         - name: operand2
         - name: operator
         results:
-        - description: Conditional task status
-          name: status
+        - description: Conditional task outcome
+          name: outcome
         steps:
         - image: python:alpine3.6
           script: "python -c 'import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\n\
             try:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\n\
-            status=\"true\" if (input1 $(inputs.params.operator) input2) else \"false\"\
-            \nf = open(\"/tekton/results/status\", \"w\")\nf.write(status)\nf.close()'\
-            \ '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
+            outcome=\"true\" if (input1 $(inputs.params.operator) input2) else \"\
+            false\"\nf = open(\"/tekton/results/outcome\", \"w\")\nf.write(outcome)\n\
+            f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'"
   timeout: 0s

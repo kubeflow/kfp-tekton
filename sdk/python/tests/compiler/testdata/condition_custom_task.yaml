@@ -65,7 +65,7 @@ spec:
       timeout: 0s
     - name: condition-cel
       params:
-      - name: status
+      - name: outcome
         value: '''$(tasks.flip-coin.results.output)'' == ''heads'''
       taskRef:
         apiVersion: cel.tekton.dev/v1alpha1
@@ -96,20 +96,20 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-cel.results.status)
+      - input: $(tasks.condition-cel.results.outcome)
         operator: in
         values:
         - 'true'
     - name: condition-cel-2
       params:
-      - name: status
+      - name: outcome
         value: $(tasks.generate-random-number.results.output) > 5
       taskRef:
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
         name: cel_condition
       when:
-      - input: $(tasks.condition-cel.results.status)
+      - input: $(tasks.condition-cel.results.outcome)
         operator: in
         values:
         - 'true'
@@ -135,7 +135,7 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-cel-2.results.status)
+      - input: $(tasks.condition-cel-2.results.outcome)
         operator: in
         values:
         - 'true'
@@ -161,7 +161,7 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-cel-2.results.status)
+      - input: $(tasks.condition-cel-2.results.outcome)
         operator: notin
         values:
         - 'true'
@@ -190,20 +190,20 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-cel.results.status)
+      - input: $(tasks.condition-cel.results.outcome)
         operator: notin
         values:
         - 'true'
     - name: condition-cel-3
       params:
-      - name: status
+      - name: outcome
         value: $(tasks.generate-random-number-2.results.output) > 15
       taskRef:
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
         name: cel_condition
       when:
-      - input: $(tasks.condition-cel.results.status)
+      - input: $(tasks.condition-cel.results.outcome)
         operator: notin
         values:
         - 'true'
@@ -229,7 +229,7 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-cel-3.results.status)
+      - input: $(tasks.condition-cel-3.results.outcome)
         operator: in
         values:
         - 'true'
@@ -255,7 +255,7 @@ spec:
           name: main
       timeout: 0s
       when:
-      - input: $(tasks.condition-cel-3.results.status)
+      - input: $(tasks.condition-cel-3.results.outcome)
         operator: notin
         values:
         - 'true'
