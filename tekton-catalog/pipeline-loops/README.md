@@ -31,6 +31,8 @@
 
 - Install pipelineloop controller `kubectl apply -f config/`
 
+# Parallelism
+`Parallelism` is to define the number of pipelineruns can be created at the same time. It must be eqaul to or bigger than 1. If it's not set then the default value will be 1. If it's bigger than the total iterations in the loop then the number will be total iterations.
 
 # Verification
 - check controller and the webhook. `kubectl get po -n tekton-pipelines`

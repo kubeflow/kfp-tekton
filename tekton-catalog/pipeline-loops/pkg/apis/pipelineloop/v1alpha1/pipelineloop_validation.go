@@ -37,6 +37,9 @@ func (tl *PipelineLoop) Validate(ctx context.Context) *apis.FieldError {
 
 // Validate PipelineLoopSpec
 func (tls *PipelineLoopSpec) Validate(ctx context.Context) *apis.FieldError {
+	if tls.Parallelism < 1 {
+		return apis.ErrInvalidValue(tls.Parallelism, "spec.Parallelism")
+	}
 	// Validate Task reference or inline task spec.
 	if err := validateTask(ctx, tls); err != nil {
 		return err
