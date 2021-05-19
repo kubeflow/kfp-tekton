@@ -153,6 +153,10 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
 
             # add loop special filed
             custom_task_cr['kind'] = 'PipelineLoop'
+            if custom_task[custom_task_key]['spec'].get('parallelism') is not None:
+                custom_task_cr['spec']['parallelism'] = custom_task[custom_task_key]['spec']['parallelism']
+                # remove from pipeline run spec
+                del custom_task[custom_task_key]['spec']['parallelism']
             custom_task_cr['spec']['iterateParam'] = custom_task[custom_task_key]['loop_args']
             for custom_task_param in custom_task[custom_task_key]['spec']['params']:
                 if custom_task_param['name'] != custom_task[custom_task_key]['loop_args'] and '$(tasks.' in custom_task_param['value']:
