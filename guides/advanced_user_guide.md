@@ -57,6 +57,7 @@ Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom t
             arguments=["--apiVersion", "custom_task_api_version",
                        "--kind", "custom_task_kind",
                        "--name", "custom_task_name",
+                       "--taskSpec", {"task_spec_key": "task_spec_value"},
                        "--other_custom_task_argument_keys", custom_task_argument_values],
             file_outputs={"other_custom_task_argument_keys": '/anypath'}
         )
@@ -69,6 +70,8 @@ Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom t
       - **--apiVersion**: Kubernetes API Version for your custom task CRD.
       - **--kind**: Kubernetes Kind for your custom task CRD.
       - **--name**: Kubernetes Resource reference name for your custom task CRD.
+      - **--taskSpec** (optional): Kubernetes Resource Spec for your custom task CRD. The value needs to define in Python Dictionary.
+      - **Other arguments** (optional): Parameters for your custom task CRD inputs.
 
       Then, you can add any extra arguments to map as the custom task CRD's `spec.params` fields.
     - **--file_outputs**: List of Tekton results from the custom task. Since the custom task spec doesn't have Tekton results in static compile time, users need to explicitly define the custom task outputs to avoid mismatching between the custom task I/O.
