@@ -393,6 +393,8 @@ class TektonCompiler(Compiler):
               self.loops_pipeline[group_name]['spec']['params'].append({
                 'name': param[0], 'value': '$(params.%s)' % param[0]
               })
+      if sub_group.parallelism is not None:
+        self.loops_pipeline[group_name]['spec']['parallelism'] = sub_group.parallelism
 
     return template
 

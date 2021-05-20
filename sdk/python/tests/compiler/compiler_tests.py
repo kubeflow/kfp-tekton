@@ -140,6 +140,15 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.sidecar import sidecar_pipeline
     self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
 
+  def test_loop_parallelism_workflow(self):
+    """
+    Test compiling a loop with parallelism defined workflow.
+    """
+    from .testdata.loop_static_with_parallelism import pipeline
+    self._test_pipeline_workflow(
+      pipeline,
+      'loop_static_with_parallelism.yaml')
+
   def test_loop_static_workflow(self):
     """
     Test compiling a loop static params in workflow.
