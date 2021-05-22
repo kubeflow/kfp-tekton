@@ -142,7 +142,13 @@ To see how the Python SDK provides this feature, refer to the examples below:
 
 ### Any Sequencer
 
-When any one of the task dependencies completes successfully and the conditions meet, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Condition can be applied to enforce the task dependencies completes as expected. The condition expression should be the same format as is in Kubeflow ConditionOperator, and the result of containerOps can be used in expression. Notice the expression should only contain results from only one task because the purpose here is to check the simple condition for the task's output when a task complete. And also the operand in the expression should be int or string, other python types will be transferred to string automatically. Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym).
+When any one of the task dependencies completes successfully and the conditions meet, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Condition can be applied to enforce the task dependencies completes as expected. The condition expression should be the same format as is in Kubeflow ConditionOperator, and the result of containerOps can be used in expression. Notice the expression should only contain results from only one task because the purpose here is to check the simple condition for the task's output when a task complete. And also the operand in the expression should be int or string, other python types will be transferred to string automatically. 
+
+The exit status of any-sequencer is configurable through parameters, `statusPath` must be specified for any-sequencer to write status to, then use `skippingPolicy` and `errorPolicy`.
+- skippingPolicy --- determines for the AnySequencer reacts to no-dependency-condition-matching case. Values can be one of `skipOnNoMatch` or `errorOnNoMatch`, a status with value "Skipped" will be generated and the exit status will still be succeeded on `skipOnNoMatch`.
+- errorPolicy --- the standard field, either `failOnError` or `continueOnError`. On `continueOnError`, a status with value "Failed" will be generated but the exit status will still be succeeded. For `Fail_on_error` the AnySequencer should truly fail in the Tekton terms, as it does now.
+
+Please follow the details of the implementation in the [design doc](https://docs.google.com/document/d/1oXOdiItI4GbEe_qzyBmMAqfLBjfYX1nM94WHY3EPa94/edit#heading=h.dt8bhna4spym).
 
 For example:
 
