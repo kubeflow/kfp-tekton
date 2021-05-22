@@ -21,6 +21,7 @@ import textwrap
 import yaml
 import os
 import uuid
+import ast
 
 from typing import Callable, List, Text, Dict, Any
 from os import environ as env
@@ -125,6 +126,7 @@ class TektonCompiler(Compiler):
     self.artifact_items = {}
     self.loops_pipeline = {}
     self.recursive_tasks = []
+    self.custom_task_crs = []
     self.uuid = self._get_unique_id_code()
     self._group_names = []
     self.pipeline_labels = {}
@@ -736,7 +738,7 @@ class TektonCompiler(Compiler):
             for index, item in enumerate(container_args):
               if item.startswith('--'):
                 custom_task_args[item[2:]] = container_args[index + 1]
-            non_param_keys = ['name', 'apiVersion', 'kind']
+            non_param_keys = ['name', 'apiVersion', 'kind', 'taskSpec']
             task_params = []
             for key, value in custom_task_args.items():
               if key not in non_param_keys:
@@ -752,6 +754,26 @@ class TektonCompiler(Compiler):
                 'kind': custom_task_args['kind']
               }
             }
+            if custom_task_args.get('taskSpec', ''):
+              try:
+                if custom_task_args['taskSpec']:
+                  custom_task_cr = {
+                    'apiVersion': custom_task_args['apiVersion'],
+                    'kind': custom_task_args['kind'],
+                    'metadata': {
+                      'name': custom_task_args['name']
+                    },
+                    'spec': ast.literal_eval(custom_task_args['taskSpec'])
+                  }
+                  for existing_cr in self.custom_task_crs:
+                    if existing_cr == custom_task_cr:
+                      # Skip duplicated CR resource
+                      custom_task_cr = {}
+                      break
+                  if custom_task_cr:
+                    self.custom_task_crs.append(custom_task_cr)
+              except ValueError:
+                raise("Custom task spec %s is not a valid Python Dictionary" % custom_task_args['taskSpec'])
             # Pop custom task artifacts since we have no control of how
             # custom task controller is handling the container/task execution.
             self.artifact_items.pop(template['metadata']['name'], None)
@@ -1232,7 +1254,10 @@ class TektonCompiler(Compiler):
           'Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues '
           'attaching the pipeline DSL code and the pipeline YAML.')
 
-    yaml_text = dump_yaml(_handle_tekton_pipeline_variables(yaml.load(yaml_text, Loader=yaml.FullLoader)))
+    pipeline_run = yaml.load(yaml_text, Loader=yaml.FullLoader)
+    if pipeline_run.get("spec", {}) and pipeline_run["spec"].get("pipelineSpec", {}) and \
+      pipeline_run["spec"]["pipelineSpec"].get("tasks", []):
+      yaml_text = dump_yaml(_handle_tekton_pipeline_variables(pipeline_run))
 
     if package_path is None:
       return yaml_text
@@ -1282,6 +1307,10 @@ class TektonCompiler(Compiler):
                                        package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
     else:
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
+    # Separate custom task CR from the main workflow
+    for i in range(len(self.custom_task_crs)):
+      TektonCompiler._write_workflow(workflow=self.custom_task_crs[i],
+                                     package_path=os.path.splitext(package_path)[0] + "_customtask_cr" + str(i + 1) + '.yaml')
     _validate_workflow(workflow)
 
 

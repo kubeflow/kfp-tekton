@@ -340,7 +340,8 @@ def fix_big_data_passing(workflow: dict) -> dict:
 
     # Remove pipeline task parameters unless they're used downstream
     for task in pipeline_tasks:
-        if 'condition-' not in task['name']:
+        # Don't process condition and custom task parameters
+        if 'condition-' not in task['name'] and not task.get('taskRef', ''):
             task['params'] = [
                 parameter_argument
                 for parameter_argument in task.get('params', [])
