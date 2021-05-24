@@ -42,6 +42,8 @@ for this project.
 
 [Available KFP DSL Features](/sdk/FEATURES.md)
 
+[Tekton Specific Features](/guides/advanced_user_guide.md)
+
 ### Development Guides
 
 [Backend Developer Guide](/guides/developer_guide.md)
