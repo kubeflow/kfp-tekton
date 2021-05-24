@@ -22,11 +22,14 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"any-test": [], "flipcoin": [["output", "$(results.output.path)"]],
-      "task1": [], "task2": [], "task3": [], "task4": []}'
+    tekton.dev/artifact_items: '{"any-test": [["status", "$(results.status.path)"]],
+      "flipcoin": [["output", "$(results.output.path)"]], "task1": [], "task2": [],
+      "task3": [], "task4": []}'
     tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{"flipcoin": [{"key": "artifacts/$PIPELINERUN/flipcoin/output.tgz",
-      "name": "flipcoin-output", "path": "/tmp/output"}]}'
+    tekton.dev/output_artifacts: '{"any-test": [{"key": "artifacts/$PIPELINERUN/any-test/status.tgz",
+      "name": "any-test-status", "path": "/tekton/results/status"}], "flipcoin": [{"key":
+      "artifacts/$PIPELINERUN/flipcoin/output.tgz", "name": "flipcoin-output", "path":
+      "/tmp/output"}]}'
   name: any-sequencer
 spec:
   pipelineSpec:
@@ -146,6 +149,9 @@ spec:
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace
+        results:
+        - description: /tekton/results/status
+          name: status
         steps:
         - args:
           - --namespace
@@ -154,6 +160,8 @@ spec:
           - $(params.pipelineRun-name)
           - --taskList
           - task2,task3
+          - --statusPath
+          - $(results.status.path)
           - -c
           - results_flipcoin_output == 'heads'
           command:

@@ -38,7 +38,8 @@ class AnySequencer(ContainerOp):
     """
     def __init__(self,
                  any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
-                 name: str = None,):
+                 name: str = None, statusPath: str = None,
+                 skippingPolicy: str = None, errorPolicy: str = None):
         arguments = [
                     "--namespace",
                     "$(context.pipelineRun.namespace)",
@@ -47,6 +48,7 @@ class AnySequencer(ContainerOp):
                 ]
         tasks_list = []
         condition_list = []
+        file_outputs = None
         for cop in any:
             if isinstance(cop, dsl.ContainerOp):
                 cop_name = sanitize_k8s_name(cop.name)
@@ -56,6 +58,15 @@ class AnySequencer(ContainerOp):
         if len(tasks_list) > 0:
             task_list_str = ",".join(tasks_list)
             arguments.extend(["--taskList", task_list_str])
+        if statusPath is not None:
+            file_outputs = {"status": statusPath}
+            arguments.extend(["--statusPath", statusPath])
+            if skippingPolicy is not None:
+                assert skippingPolicy == "skipOnNoMatch" or skippingPolicy == "errorOnNoMatch"
+                arguments.extend(["--skippingPolicy", skippingPolicy])
+            if errorPolicy is not None:
+                assert errorPolicy == "continueOnError" or errorPolicy == "failOnError"
+                arguments.extend(["--errorPolicy", errorPolicy])
 
         conditonArgs = processConditionArgs(condition_list)
         arguments.extend(conditonArgs)
@@ -63,6 +74,7 @@ class AnySequencer(ContainerOp):
         super().__init__(
             name=name,
             image=ANY_SEQUENCER_IMAGE,
+            file_outputs=file_outputs,
             command="any-taskrun",
             arguments=arguments,
         )
@@ -98,11 +110,12 @@ def processConditionArgs(conditions: List[ConditionOperator]) -> List[str]:
     return conditionArgs
 
 
-def after_any(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]], name: str = None):
+def after_any(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]], name: str = None,
+              statusPath: str = None, skippingPolicy: str = None, errorPolicy: str = None):
     '''
     The function adds a new AnySequencer and connects the given op to it
     '''
-    seq = AnySequencer(any, name)
+    seq = AnySequencer(any, name, statusPath, skippingPolicy, errorPolicy)
 
     def _after_components(cop):
         cop.after(seq)
