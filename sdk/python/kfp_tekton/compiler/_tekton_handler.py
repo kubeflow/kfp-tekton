@@ -222,11 +222,18 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     elif task['name'] in nested_custom_task['ancestors'] or task[
                         'name'] == nested_custom_task['father_ct']:
                         task['params'].extend(nested_custom_task_special_params)
-                    task['params'] = sorted(task['params'], key=lambda k: k['name'])
+                    if task.get('params') is not None:
+                        task['params'] = sorted(task['params'], key=lambda k: k['name'])
                 for special_param in nested_custom_task_special_params:
                     for nested_param in nested_custom_task_spec['params']:
                         if nested_param['name'] == special_param['name']:
                             nested_param['value'] = '$(params.%s)' % nested_param['name']
+                # need process parameters to replace results
+                for nested_custom_task_param in nested_custom_task_spec['params']:
+                    if '$(tasks.' in nested_custom_task_param['value']:
+                        nested_custom_task_spec = json.loads(
+                            json.dumps(nested_custom_task_spec).replace(nested_custom_task_param['value'],
+                            '$(params.%s)' % nested_custom_task_param['name']))
                 # add nested custom task spec to main custom task
                 custom_task_cr['spec']['pipelineSpec']['tasks'].append(nested_custom_task_spec)
 
