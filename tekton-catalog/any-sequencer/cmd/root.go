@@ -37,16 +37,84 @@ import (
 )
 
 var (
-	namespace    string
-	prName       string
-	taskList     string
-	conditions   []string
-	conditionMap map[string][]conditionResult
+	namespace      string
+	prName         string
+	taskList       string
+	statusPath     string
+	skippingPolicy string
+	errorPolicy    string
+	conditions     []string
+	conditionMap   map[string][]conditionResult
+)
+
+const (
+	succeededStatus = "Succeeded"
+	failedStatus    = "Failed"
+	skippedStatus   = "Skipped"
+	skipOnNoMatch   = "skipOnNoMatch"
+	errorOnNoMatch  = "errorOnNoMatch"
+	continueOnError = "continueOnError"
+	failOnError     = "failOnError"
 )
 
 type conditionResult struct {
 	condition string
 	results   []string
+}
+
+func exitWithStatus(statusToWrite string, osStatus int) {
+	if statusPath == "" {
+		log.Printf("Program exit status is %d.", osStatus)
+		os.Exit(osStatus)
+	}
+	if statusToWrite == skippedStatus {
+		log.Printf("All the tasks or conditions to watch does not meet, skipping.")
+		if skippingPolicy == skipOnNoMatch {
+			if err := writeStringToFile(skippedStatus, statusPath); err != nil {
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
+		if skippingPolicy == errorOnNoMatch {
+			writeStringToFile(skippedStatus, statusPath)
+			os.Exit(1)
+		}
+	}
+	if errorPolicy == continueOnError {
+		if err := writeStringToFile(statusToWrite, statusPath); err != nil {
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+	if errorPolicy == failOnError {
+		if err := writeStringToFile(statusToWrite, statusPath); err != nil {
+			os.Exit(1)
+		}
+		os.Exit(osStatus)
+	}
+	os.Exit(osStatus)
+}
+
+func writeStringToFile(s string, path string) error {
+	_, err := os.Stat(path)
+	var dstFile *os.File
+	if err != nil {
+		if os.IsNotExist(err) {
+			dstFile, err = os.Create(path)
+			if err != nil {
+				log.Printf("Error creating file: " + err.Error())
+				return err
+			}
+		}
+	}
+	defer dstFile.Close()
+	_, err = dstFile.WriteString(s)
+	if err != nil {
+		log.Printf("Error writing to file: " + err.Error())
+		return err
+	}
+	log.Printf("Wrote %s to file %s.", s, path)
+	return nil
 }
 
 func contains(s []string, str string) bool {
@@ -68,7 +136,7 @@ func parse_conditions(condtions []string, tasks *[]string) {
 		operands := regexp.MustCompile(" +").Split(condition, -1)
 		if len(operands) != 3 {
 			log.Printf("The conditon must be as format 'operand1 operator operand2'.")
-			os.Exit(1)
+			exitWithStatus(failedStatus, 1)
 		}
 		var taskName string
 		var resultName []string
@@ -77,12 +145,12 @@ func parse_conditions(condtions []string, tasks *[]string) {
 		operand2Results := resultMatcher.FindAllStringSubmatch(operands[2], -1)
 		if len(operand1Results) == 0 && len(operand2Results) == 0 {
 			log.Printf("Must at least contain one result and at most two in one condition for a task.")
-			os.Exit(1)
+			exitWithStatus(failedStatus, 1)
 		}
 		if len(operand1Results) > 0 && len(operand2Results) > 0 {
 			if operand1Results[0][1] != operand2Results[0][1] {
 				log.Printf("The conditon can only contain results in one task, here's two.")
-				os.Exit(1)
+				exitWithStatus(failedStatus, 1)
 			}
 			taskName = operand1Results[0][1]
 			resultName = []string{
@@ -133,6 +201,9 @@ func Execute() {
 	rootCmd.MarkFlagRequired("prName")
 	rootCmd.Flags().StringVar(&taskList, "taskList", "", "The comma separated list of the tasks.")
 	rootCmd.Flags().StringSliceVarP(&conditions, "condition", "c", []string{}, "The conditions to watch")
+	rootCmd.Flags().StringVar(&statusPath, "statusPath", "", "The path to write the status when finished.")
+	rootCmd.Flags().StringVar(&skippingPolicy, "skippingPolicy", "", "The name of the pipelinerun.")
+	rootCmd.Flags().StringVar(&errorPolicy, "errorPolicy", "", "The namespace of the pipelinerun.")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -235,13 +306,13 @@ func watchTaskRun(labelSelector string, tasks []string, failedTasksCh chan strin
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		log.Errorf("Get config of the cluster failed: %+v", err)
-		os.Exit(1)
+		exitWithStatus(failedStatus, 1)
 	}
 
 	tektonClient, err := tektoncdclientset.NewForConfig(config)
 	if err != nil {
 		log.Errorf("Get client of tekton failed: %+v", err)
-		os.Exit(1)
+		exitWithStatus(failedStatus, 1)
 	}
 
 	for {
@@ -250,7 +321,7 @@ func watchTaskRun(labelSelector string, tasks []string, failedTasksCh chan strin
 		if err != nil {
 			log.Printf("TaskRun Watcher error:" + err.Error())
 			log.Printf("Please ensure the service account has permission to get taskRun.")
-			os.Exit(1)
+			exitWithStatus(failedStatus, 1)
 		}
 
 		for event := range trWatcher.ResultChan() {
@@ -264,13 +335,13 @@ func watchTaskRun(labelSelector string, tasks []string, failedTasksCh chan strin
 					conditions, ok := conditionMap[taskLabel]
 					if !ok { // no conditions to be passed --> any-sequencer success
 						trWatcher.Stop()
-						os.Exit(0)
+						exitWithStatus(succeededStatus, 0)
 					}
 
 					condition, ok := checkTaskrunConditions(conditions, taskrun)
 					if ok { // condition passed -->  any-sequencer success
 						trWatcher.Stop()
-						os.Exit(0)
+						exitWithStatus(succeededStatus, 0)
 					}
 					taskFailed = true
 					log.Printf("The condition %s for the task %s does not meet.", condition, taskLabel)
@@ -295,13 +366,13 @@ func watchRun(labelSelector string, tasks []string, failedTasksCh chan string) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		log.Errorf("Get config of the cluster failed: %+v", err)
-		os.Exit(1)
+		exitWithStatus(failedStatus, 1)
 	}
 
 	tektonClient, err := tektoncdclientset.NewForConfig(config)
 	if err != nil {
 		log.Errorf("Get client of tekton failed: %+v", err)
-		os.Exit(1)
+		exitWithStatus(failedStatus, 1)
 	}
 
 	for {
@@ -310,7 +381,7 @@ func watchRun(labelSelector string, tasks []string, failedTasksCh chan string) {
 		if err != nil {
 			log.Printf("Run Watcher error:" + err.Error())
 			log.Printf("Please ensure the service account has permission to get Run.")
-			os.Exit(1)
+			exitWithStatus(failedStatus, 1)
 		}
 
 		for event := range runWatcher.ResultChan() {
@@ -324,13 +395,13 @@ func watchRun(labelSelector string, tasks []string, failedTasksCh chan string) {
 					conditions, ok := conditionMap[taskLabel]
 					if !ok { // no conditions to be passed --> any-sequencer success
 						runWatcher.Stop()
-						os.Exit(0)
+						exitWithStatus(succeededStatus, 0)
 					}
 
 					condition, ok := checkRunConditions(conditions, run)
 					if ok { // condition passed -->  any-sequencer success
 						runWatcher.Stop()
-						os.Exit(0)
+						exitWithStatus(succeededStatus, 0)
 					}
 					taskFailed = true
 					log.Printf("The condition %s for the task %s does not meet.", condition, taskLabel)
@@ -351,7 +422,26 @@ func watchRun(labelSelector string, tasks []string, failedTasksCh chan string) {
 func watch(cmd *cobra.Command, args []string) {
 	if taskList == "" && len(conditions) == 0 {
 		log.Printf("Should provide either taskList or conditions to watch.")
-		os.Exit(1)
+		exitWithStatus(failedStatus, 1)
+	}
+
+	if statusPath != "" {
+		if skippingPolicy == "" {
+			skippingPolicy = skipOnNoMatch
+		} else {
+			if skippingPolicy != skipOnNoMatch && skippingPolicy != errorOnNoMatch {
+				log.Printf("skippingPolicy value must be one of %s or %s.", skipOnNoMatch, errorOnNoMatch)
+				exitWithStatus(failedStatus, 1)
+			}
+		}
+		if errorPolicy == "" {
+			errorPolicy = continueOnError
+		} else {
+			if errorPolicy != continueOnError && errorPolicy != failOnError {
+				log.Printf("skippingPolicy value must be one of %s or %s.", continueOnError, failOnError)
+				exitWithStatus(failedStatus, 1)
+			}
+		}
 	}
 
 	log.Printf("Starting to watch taskrun or run for '%s' and condition in %s/%s.", taskList, namespace, prName)
@@ -377,7 +467,7 @@ func watch(cmd *cobra.Command, args []string) {
 		}
 		if len(failedTasks) >= len(tasks) {
 			log.Printf("All specified TaskRun(s) or Run(s) failed.")
-			os.Exit(1)
+			exitWithStatus(skippedStatus, 1)
 		}
 	}
 }
