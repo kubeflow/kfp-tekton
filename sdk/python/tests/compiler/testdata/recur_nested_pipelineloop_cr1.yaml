@@ -15,7 +15,7 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: nested-recursion-pipeline-da43f-graph-flip-component-1
+  name: nested-recursion-pipeline-graph-flip-component-1
 spec:
   pipelineSpec:
     params:
@@ -154,7 +154,7 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: nested-recursion-pipeline-da43f-graph-flip-component-1
+        name: nested-recursion-pipeline-graph-flip-component-1
       params:
       - name: just_one_iteration
         value:
@@ -168,11 +168,11 @@ spec:
         operator: in
         values:
         - "true"
-    - name: nested-recursion-pipeline-da43f-graph-flip-component-b-3
+    - name: nested-recursion-pipeline-graph-flip-component-b-3
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: nested-recursion-pipeline-da43f-graph-flip-component-b-3
+        name: nested-recursion-pipeline-graph-flip-component-b-3
       params:
       - name: flip-coin-output
         value: $(params.flip-coin-output)

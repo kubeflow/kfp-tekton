@@ -15,15 +15,15 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: nested-recursion-pipeline-da43f-graph-flip-component-b-3
+  name: nested-recursion-pipeline-graph-flip-component-b-3
 spec:
   pipelineSpec:
     params:
     - name: just_one_iteration
       type: string
-    - name: maxVal
-      type: string
     - name: flip-coin-output
+      type: string
+    - name: maxVal
       type: string
     tasks:
     - name: print
@@ -125,7 +125,7 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: nested-recursion-pipeline-da43f-graph-flip-component-b-3
+        name: nested-recursion-pipeline-graph-flip-component-b-3
       params:
       - name: just_one_iteration
         value:

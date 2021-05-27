@@ -16,10 +16,9 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
-      \"c\"]", "name": "arr", "optional": true, "type": "typing.List[str]"}], "name":
-      "Some very long name with lots of words in it. It should be over 63 chars long
-      in order to observe the problem."}'
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"name": "arr", "optional":
+      true, "type": "typing.List[str]"}], "name": "Some very long name with lots of
+      words in it. It should be over 63 chars long in order to observe the problem."}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
