@@ -33,7 +33,6 @@ import (
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	ttesting "github.com/tektoncd/pipeline/pkg/reconciler/testing"
-	"github.com/tektoncd/pipeline/pkg/system"
 	"github.com/tektoncd/pipeline/test/diff"
 	"github.com/tektoncd/pipeline/test/names"
 	corev1 "k8s.io/api/core/v1"
@@ -46,6 +45,7 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/system"
 )
 
 var (
@@ -132,7 +132,7 @@ func getPipelineLoopController(t *testing.T, d test.Data, pipelineloops []*pipel
 		}
 	}
 
-	configMapWatcher := informer.NewInformedWatcher(c.Kube, system.GetNamespace())
+	configMapWatcher := informer.NewInformedWatcher(c.Kube, system.Namespace())
 	ctl := NewController(namespace)(ctx, configMapWatcher)
 
 	if la, ok := ctl.Reconciler.(reconciler.LeaderAware); ok {
