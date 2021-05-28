@@ -50,4 +50,90 @@
 - Edit feature-flags configmap, ensure "data.enable-custom-tasks" is "true":
 `kubectl edit cm feature-flags -n tekton-pipelines`
 
-- Run the E2E example: `kubectl apply -f examples/loop-example-basic.yaml`
+- Run the E2E example: 
+  
+  `kubectl apply -f examples/loop-example-basic.yaml`
+  
+
+- Tekton now supports custom task as embedded spec, it requires tekton version >= v0.25
+
+  - Install Tekton version >= v0.25
+  Or directly from source as,
+  ```
+    git clone https://github.com/tektoncd/pipeline.git
+    cd pipeline
+    make apply
+  ```
+
+  - To use the `taskSpec` example as below
+
+    e.g.
+    
+    ```yaml
+    apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: pr-loop-example
+    spec:
+      pipelineSpec:
+        tasks:
+          - name: first-task
+            taskSpec:
+              steps:
+                - name: echo
+                  image: ubuntu
+                  imagePullPolicy: IfNotPresent
+                  script: |
+                    #!/usr/bin/env bash
+                    echo "I am the first task before the loop task"
+          - name: loop-task
+            runAfter:
+              - first-task
+            params:
+              - name: message
+                value:
+                  - I am the first one
+                  - I am the second one
+                  - I am the third one
+            taskSpec:
+              apiVersion: custom.tekton.dev/v1alpha1
+              kind: PipelineLoop
+              spec: # Following is the embedded spec.
+                iterateParam: message
+                pipelineSpec:
+                  params:
+                    - name: message
+                      type: string
+                  tasks:
+                    - name: echo-loop-task
+                      params:
+                        - name: message
+                          value: $(params.message)
+                      taskSpec:
+                        params:
+                          - name: message
+                            type: string
+                        steps:
+                          - name: echo
+                            image: ubuntu
+                            imagePullPolicy: IfNotPresent
+                            script: |
+                              #!/usr/bin/env bash
+                              echo "$(params.message)"
+          - name: last-task
+            runAfter:
+              - loop-task
+            taskSpec:
+              steps:
+                - name: echo
+                  image: ubuntu
+                  imagePullPolicy: IfNotPresent
+                  script: |
+                    #!/usr/bin/env bash
+                    echo "I am the last task after the loop task"
+    ```
+
+  - To run the above example:
+
+    `kubectl apply -f examples/loop-example-basic_taskspec.yaml`
+
