@@ -823,7 +823,14 @@ class TektonCompiler(Compiler):
         for param_iter in range(len(input_params)):
           # Add ancestor conditions to the current condition ref
           if most_recent_condition:
-            condition_task_ref['when'] = condition_when_refs[most_recent_condition]
+            add_ancestor_conditions = True
+            # Do not add ancestor conditions if the ancestor is not in the same graph/pipelineloop
+            for pipeline_loop in self.loops_pipeline.values():
+              if condition_task_ref['name'] in pipeline_loop['task_list']:
+                if most_recent_condition not in pipeline_loop['task_list']:
+                  add_ancestor_conditions = False
+            if add_ancestor_conditions:
+              condition_task_ref['when'] = condition_when_refs[most_recent_condition]
           condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
         if not DISABLE_CEL_CONDITION and not cel_conditions.get(condition_task_ref['name'], None):
           # Type processing are done on the CEL controller since v1 SDK doesn't have value type for conditions.
