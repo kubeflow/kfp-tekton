@@ -21,9 +21,9 @@ spec:
     params:
     - name: just_one_iteration
       type: string
-    - name: flip-coin-output
-      type: string
     - name: maxVal
+      type: string
+    - name: flip-coin-output
       type: string
     tasks:
     - name: print
@@ -116,11 +116,6 @@ spec:
             f.write(outcome)
             f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
           image: python:alpine3.6
-      when:
-      - input: $(tasks.condition-2.results.outcome)
-        operator: in
-        values:
-        - "true"
     - name: flip-component-b
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
