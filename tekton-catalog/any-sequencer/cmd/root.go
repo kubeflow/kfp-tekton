@@ -48,7 +48,7 @@ var (
 )
 
 const (
-	succeededStatus = "Succeeded"
+	succeededStatus = "Completed"
 	failedStatus    = "Failed"
 	skippedStatus   = "Skipped"
 	skipOnNoMatch   = "skipOnNoMatch"
