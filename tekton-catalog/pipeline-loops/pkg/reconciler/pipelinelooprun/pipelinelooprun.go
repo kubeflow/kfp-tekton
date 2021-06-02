@@ -85,16 +85,29 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	var merr error
 	logger := logging.FromContext(ctx)
 	logger.Infof("Reconciling Run %s/%s at %v", run.Namespace, run.Name, time.Now())
-
+	if run.Spec.Ref != nil && run.Spec.Spec != nil {
+		logger.Errorf("Run %s/%s can provide one of Run.Spec.Ref/Run.Spec.Spec", run.Namespace, run.Name)
+	}
+	if run.Spec.Spec == nil && run.Spec.Ref == nil {
+		logger.Errorf("Run %s/%s does not provide a spec or ref.", run.Namespace, run.Name)
+		return nil
+	}
 	// Check that the Run references a PipelineLoop CRD.  The logic is controller.go should ensure that only this type of Run
 	// is reconciled this controller but it never hurts to do some bullet-proofing.
-	if run.Spec.Ref == nil ||
-		run.Spec.Ref.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
-		run.Spec.Ref.Kind != pipelineloop.PipelineLoopControllerName {
-		logger.Errorf("Received control for a Run %s/%s that does not reference a PipelineLoop custom CRD", run.Namespace, run.Name)
+	if run.Spec.Ref != nil &&
+		(run.Spec.Ref.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
+			run.Spec.Ref.Kind != pipelineloop.PipelineLoopControllerName) {
+		logger.Errorf("Received control for a Run %s/%s/%v that does not reference a PipelineLoop custom CRD ref", run.Namespace, run.Name, run.Spec.Ref)
 		return nil
 	}
 
+	if run.Spec.Spec != nil &&
+		(run.Spec.Spec.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
+			run.Spec.Spec.Kind != pipelineloop.PipelineLoopControllerName) {
+		logger.Errorf("Received control for a Run %s/%s that does not reference a PipelineLoop custom CRD spec", run.Namespace, run.Name)
+		return nil
+	}
+	logger.Infof("Received control for a Run %s/%s %-v", run.Namespace, run.Name, run.Spec.Spec)
 	// If the Run has not started, initialize the Condition and set the start time.
 	if !run.HasStarted() {
 		logger.Infof("Starting new Run %s/%s", run.Namespace, run.Name)
@@ -303,6 +316,23 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 		}
 		pipelineLoopMeta = tl.ObjectMeta
 		pipelineLoopSpec = tl.Spec
+	} else if run.Spec.Spec != nil {
+		err := json.Unmarshal(run.Spec.Spec.Spec.Raw, &pipelineLoopSpec)
+		if err != nil {
+			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
+				"Error unmarshal PipelineLoop spec for Run %s/%s: %s",
+				run.Namespace, run.Name, err)
+			return nil, nil, fmt.Errorf("Error unmarshal PipelineLoop spec for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
+		}
+		pipelineloopObject := &pipelineloopv1alpha1.PipelineLoop{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       run.Spec.Spec.Kind,
+				APIVersion: run.Spec.Spec.APIVersion,
+			},
+			Spec: pipelineLoopSpec,
+		}
+		pipelineloopObject.Name = run.Name
+		pipelineLoopMeta = metav1.ObjectMeta{Name: run.Name}
 	} else {
 		// Run does not require name but for PipelineLoop it does.
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
@@ -623,9 +653,9 @@ func Find(slice []string, val string) (int, bool) {
 func getPipelineRunLabels(run *v1alpha1.Run, iterationStr string) map[string]string {
 	// Propagate labels from Run to PipelineRun.
 	labels := make(map[string]string, len(run.ObjectMeta.Labels)+1)
-	ignnoreLabelsKey := []string{"tekton.dev/pipelineRun", "tekton.dev/pipelineTask", "tekton.dev/pipeline", "custom.tekton.dev/pipelineLoopIteration"}
+	ignoreLabelsKey := []string{"tekton.dev/pipelineRun", "tekton.dev/pipelineTask", "tekton.dev/pipeline", "custom.tekton.dev/pipelineLoopIteration"}
 	for key, val := range run.ObjectMeta.Labels {
-		if _, found := Find(ignnoreLabelsKey, key); !found {
+		if _, found := Find(ignoreLabelsKey, key); !found {
 			labels[key] = val
 		}
 	}
