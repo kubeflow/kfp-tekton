@@ -174,6 +174,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.withitem_nested import pipeline
     self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
 
+  def test_nested_recur_runafter_workflow(self):
+    """
+    Test compiling a nested recursion pipeline with graph dependencies.
+    """
+    from .testdata.nested_recur_runafter import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'nested_recur_runafter.yaml')
+
   def test_withitem_multi_nested_workflow(self):
     """
     Test compiling a withitem multi nested in workflow.

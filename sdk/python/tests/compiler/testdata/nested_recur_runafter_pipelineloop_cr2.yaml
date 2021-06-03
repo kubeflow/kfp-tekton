@@ -15,7 +15,7 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: nested-recursion-pipeline-graph-flip-component-b-3
+  name: nested-recursion-pipeline-graph-flip-component-b-2
 spec:
   pipelineSpec:
     params:
@@ -48,7 +48,7 @@ spec:
           annotations:
             tekton.dev/template: ''
       when:
-      - input: $(tasks.condition-4.results.outcome)
+      - input: $(tasks.condition-3.results.outcome)
         operator: in
         values:
         - "true"
@@ -75,14 +75,14 @@ spec:
           annotations:
             tekton.dev/template: ''
       when:
-      - input: $(tasks.condition-4.results.outcome)
+      - input: $(tasks.condition-3.results.outcome)
         operator: in
         values:
         - "true"
       runAfter:
       - print
       timeout: 0s
-    - name: condition-4
+    - name: condition-3
       params:
       - name: operand1
         value: $(params.flip-coin-output)
@@ -120,7 +120,7 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: nested-recursion-pipeline-graph-flip-component-b-3
+        name: nested-recursion-pipeline-graph-flip-component-b-2
       params:
       - name: just_one_iteration
         value:
@@ -130,7 +130,7 @@ spec:
       - name: maxVal
         value: $(params.maxVal)
       when:
-      - input: $(tasks.condition-4.results.outcome)
+      - input: $(tasks.condition-3.results.outcome)
         operator: in
         values:
         - "true"

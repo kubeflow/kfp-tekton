@@ -21,9 +21,9 @@ spec:
     params:
     - name: just_one_iteration
       type: string
-    - name: maxVal
-      type: string
     - name: flip-coin-output
+      type: string
+    - name: maxVal
       type: string
     tasks:
     - name: print
