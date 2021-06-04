@@ -21,9 +21,9 @@ spec:
     params:
     - name: loop-item-param-3
       type: string
-    - name: my_pipe_param
-      type: string
     - name: loop-item-param-1-subvar-a
+      type: string
+    - name: my_pipe_param
       type: string
     tasks:
     - name: my-inner-inner-coop
