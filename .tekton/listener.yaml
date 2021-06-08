@@ -56,6 +56,9 @@ spec:
     - name: extra-test-cases
       description: publish images to dockerhub
       default: "0"
+    - name: skip-pipeline-loop
+      descript: skip the pipeline loop test case
+      default: "0"
     - name: image-tag
       description: image tag
       default: "nightly"
@@ -135,6 +138,8 @@ spec:
           value: $(params.publish-to-dockerhub)
         - name: extra-test-cases
           value: $(params.extra-test-cases)
+        - name: skip-pipeline-loop
+          value: $(params.skip-pipeline-loop)
         - name: images
           value: $(params.images)
 ---

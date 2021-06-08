@@ -33,6 +33,12 @@ kubectl apply -f config
 wait_for_pod "tekton-pipelines" "tekton-pipelineloop-controller" 10 30
 wait_for_pod "tekton-pipelines" "tekton-pipelineloop-webhook" 10 30
 
+if [ "$SKIP_PIPELINE_LOOP" = "1" ]; then
+    echo "skip pipeline loop test case and treat it as a success run."
+    popd > /dev/null
+    exit 0
+fi
+
 kubectl apply -f ${E2E_MANIFEST}
 
 wait_for_pipeline_run "pr-loop-example" 20 30
