@@ -82,7 +82,7 @@ virtual environment first:
     pip install kfp-tekton
 
 Alternatively you can install the latest version of the `kfp-tekton` compiler
-from source by cloning the repository [https://github.com/kubeflow/kfp-tekton](https://github.com/kubeflow/kfp-tekton):
+from the source by cloning the repository [https://github.com/kubeflow/kfp-tekton](https://github.com/kubeflow/kfp-tekton):
 
 1. Clone the `kfp-tekton` repo:
 
