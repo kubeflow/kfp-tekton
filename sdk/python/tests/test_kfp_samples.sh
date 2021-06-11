@@ -52,9 +52,9 @@ function help {
 # process command line parameters
 while (( $# > 0 )); do
   case "$1" in
-    -v|--kfp-version)          KFP_VERSION="$2";            shift 2 ;;  # KFP SDK version, default: 1.0.0
+    -v|--kfp-version)          KFP_VERSION="$2";            shift 2 ;;  # KFP SDK version, default: 1.5.0
     -a|--include-all-samples)  ALL_SAMPLES="TRUE";          shift 1 ;;  # Compile all DSL scripts in KFP repo
-    -s|--dont-list-files)       SKIP_FILES="TRUE";           shift 1 ;;  # Suppress compile status for each DSL file
+    -s|--dont-list-files)      SKIP_FILES="TRUE";           shift 1 ;;  # Suppress compile status for each DSL file
     -e|--print-error-details)  PRINT_ERRORS="TRUE";         shift 1 ;;  # Print summary of compilation errors
     -h|--help)                 help;                        exit 0  ;;  # Show this help message
     -*)                        echo "Unknown option '$1'";  exit 1  ;;
@@ -63,7 +63,8 @@ while (( $# > 0 )); do
 done
 
 # define global variables
-KFP_VERSION=${KFP_VERSION:-1.5.0}
+KFP_GIT_VERSION=${KFP_VERSION:-1.5.0}
+KFP_SDK_VERSION=${KFP_VERSION:-1.6.3}
 KFP_REPO_URL="https://github.com/kubeflow/pipelines.git"
 SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)"
 PROJECT_DIR="${TRAVIS_BUILD_DIR:-$(cd "${SCRIPT_DIR%/sdk/python/tests}"; pwd)}"
@@ -75,6 +76,10 @@ TEKTON_COMPILED_YAML_DIR="${TEMP_DIR}/tekton_compiler_output"
 COMPILER_OUTPUTS_FILE="${TEMP_DIR}/test_kfp_samples_output.txt"
 CONFIG_FILE="${PROJECT_DIR}/sdk/python/tests/config.yaml"
 REPLACE_EXCEPTIONS="FALSE" # "TRUE" | "FALSE"
+
+# print KFP SDK and GIT versions (might be different)
+#echo "KFP_GIT_VERSION=${KFP_GIT_VERSION}"
+#echo "KFP_SDK_VERSION=${KFP_SDK_VERSION}"
 
 # show value of the _DIR variables, use set in POSIX mode in a sub-shell to supress functions definitions (https://stackoverflow.com/a/1305273/5601796)
 #(set -o posix ; set) | grep "_DIR" | sort
@@ -99,14 +104,14 @@ cp "${COMPILE_REPORT_FILE}" "${COMPILE_REPORT_FILE_OLD}"
 
 # clone kubeflow/pipeline repo to get the testdata DSL scripts
 if [ ! -d "${KFP_CLONE_DIR}" ]; then
-  git -c advice.detachedHead=false clone -b "${KFP_VERSION}" "${KFP_REPO_URL}" "${KFP_CLONE_DIR}" -q
+  git -c advice.detachedHead=false clone -b "${KFP_GIT_VERSION}" "${KFP_REPO_URL}" "${KFP_CLONE_DIR}" -q
 else
   cd "${KFP_CLONE_DIR}"
   git fetch --all -q
-  git -c advice.detachedHead=false checkout "${KFP_VERSION}" -f -q
+  git -c advice.detachedHead=false checkout "${KFP_GIT_VERSION}" -f -q
   cd - &> /dev/null
 fi
-echo "KFP version: $(git --git-dir "${KFP_CLONE_DIR}"/.git tag --points-at HEAD)"
+echo "KFP clone version: $(git --git-dir "${KFP_CLONE_DIR}"/.git tag --points-at HEAD)"
 
 # check if we are running in a Python virtual environment, if not create one
 if [ ! -d "${VENV_DIR}" ]; then
@@ -117,10 +122,10 @@ if [ ! -d "${VENV_DIR}" ]; then
 fi
 source "${VENV_DIR}/bin/activate"
 
-# install KFP with the desired KFP_VERSION (unless already installed)
-if ! (pip show "kfp" | grep Version | grep -q "${KFP_VERSION}"); then
-  echo "Installing KFP ${KFP_VERSION} ..."
-  pip install -q -e "${KFP_CLONE_DIR}/sdk/python"
+# install KFP with the desired KFP SDK version (unless already installed)
+if ! (pip show "kfp" | grep Version | grep -q "${KFP_SDK_VERSION}"); then
+  echo "Installing KFP SDK ${KFP_SDK_VERSION} ..."
+  pip install -q kfp==${KFP_SDK_VERSION}
 fi
 
 # install KFP-Tekton compiler, unless already installed
@@ -138,8 +143,12 @@ if [[ "${ALL_SAMPLES}" == "TRUE" ]]; then
 
   # reinstall KFP with the desired version to get all of its dependencies with their respective desired versions
   # pip uninstall -q -y kfp
-  pip install -q -e "${KFP_CLONE_DIR}/sdk/python"
+  pip install -q kfp==${KFP_SDK_VERSION} --force-reinstall
 fi
+
+# confirm installed kfp version(s)
+echo "KFP Python SDK version(s):"
+pip list | grep kfp
 
 echo  # just adding some separation for console output
 
