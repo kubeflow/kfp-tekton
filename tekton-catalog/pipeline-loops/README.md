@@ -139,3 +139,40 @@
 
     `kubectl apply -f examples/loop-example-basic_taskspec.yaml`
 
+# Validation
+
+A validation CLI validates any Pipeline/PipelineRun/Run with embedded
+PipelineLoop Spec or any PipelineLoop custom task definition.
+
+To build it from source, use the make tool as follows:
+
+
+1. For both Mac and linux, invoke make with a default target. 
+
+``` 
+export BIN_DIR="bin"
+make cli
+```
+
+Output:
+```
+mkdir -p bin
+go build -o=bin/pipelineloop-cli ./cmd/cli
+```
+
+For linux specific build:
+```
+export BIN_DIR="bin"
+make build-linux
+```
+
+2. Above command will generate the output in `bin` dir. Use as follows:
+```
+bin/pipelineloop-cli -f examples/loop-example-basic_taskspec.yaml 
+```
+
+Output:
+```
+
+Congratulations, all checks passed !!
+```
