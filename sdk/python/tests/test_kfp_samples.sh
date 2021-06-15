@@ -124,7 +124,7 @@ source "${VENV_DIR}/bin/activate"
 
 # install KFP with the desired KFP SDK version (unless already installed)
 if ! (pip show "kfp" | grep Version | grep -q "${KFP_SDK_VERSION}"); then
-  echo "Installing KFP SDK ${KFP_SDK_VERSION} ..."
+  echo "Installing KFP SDK ${KFP_SDK_VERSION} and pytest..."
   pip install -q kfp==${KFP_SDK_VERSION}
 fi
 
@@ -132,6 +132,12 @@ fi
 if ! (pip show "kfp-tekton" | grep Location | grep -q "${PROJECT_DIR}"); then
   echo "Installing KFP-Tekton ..."
   pip install -q -e "${PROJECT_DIR}/sdk/python"
+fi
+
+# install pytest, unless already installed
+if ! (pip show "pytest" | grep -q Version); then
+  echo "Installing pytest ..."
+  pip install -q pytest
 fi
 
 # install 3rd party dependencies required for certain pipeline samples

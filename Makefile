@@ -35,7 +35,7 @@ $(VENV)/bin/activate: sdk/python/setup.py
 	@echo "VENV=$(VENV)"
 	@test -d $(VENV) || python3 -m venv $(VENV)
 	@$(VENV)/bin/pip show kfp-tekton >/dev/null 2>&1 || $(VENV)/bin/pip install -e sdk/python
-	@touch $(VENV)/bin/activate
+#   @touch $(VENV)/bin/activate
 
 .PHONY: install
 install: venv ## Install the kfp_tekton compiler in a virtual environment

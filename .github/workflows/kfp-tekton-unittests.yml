@@ -1,0 +1,77 @@
+name: KFP Tekton Unit Tests
+
+on:
+  push:
+    branches: [master, pull_request]
+
+jobs:
+  python-unittest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: python -m pip install -e sdk/python
+      - name: Unit Tests
+        run: VENV=$VIRTUAL_ENV make unit_test
+  progress-report:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: python -m pip install -e sdk/python
+    - name: "Progress report on compiling KFP DSL test scripts"
+      run: VENV=$VIRTUAL_ENV make report
+  python-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: "Lint Python code with flake8"
+      run: VENV=$VIRTUAL_ENV make lint
+  check-license:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: "Verify source files contain the license header"
+      run: make check_license
+  check-mdtoc:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: "Verify Markdown files have current table of contents"
+      run: make check_mdtoc
+  check-doc-links:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: "Verify Markdown files have valid links"
+      run: make check_doc_links
+  run-go-unittests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15.x
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: "run go unit tests"
+      run: make run-go-unittests
+    - name: "Verify apiserver, agent, and workflow build"
+      run: make build-backend
