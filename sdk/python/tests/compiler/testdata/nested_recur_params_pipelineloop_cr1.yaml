@@ -1,0 +1,99 @@
+apiVersion: custom.tekton.dev/v1alpha1
+kind: PipelineLoop
+metadata:
+  name: double-recursion-test-5f83b-graph-recur-a-2
+spec:
+  pipelineSpec:
+    params:
+    - name: condition-cel-2-outcome
+      type: string
+    - name: condition-cel-outcome
+      type: string
+    - name: just_one_iteration
+      type: string
+    - name: until_a
+      type: string
+    - name: until_b
+      type: string
+    tasks:
+    - name: condition-cel-3
+      params:
+      - name: outcome
+        value: '0'
+      taskRef:
+        name: cel_condition
+        apiVersion: cel.tekton.dev/v1alpha1
+        kind: CEL
+    - name: condition-cel-4
+      params:
+      - name: outcome
+        value: $(tasks.condition-cel-3.results.outcome) < $(params.until_b)
+      taskRef:
+        name: cel_condition
+        apiVersion: cel.tekton.dev/v1alpha1
+        kind: CEL
+    - name: condition-cel-7
+      params:
+      - name: outcome
+        value: $(params.condition-cel-outcome) + 1
+      taskRef:
+        name: cel_condition
+        apiVersion: cel.tekton.dev/v1alpha1
+        kind: CEL
+      runAfter:
+      - double-recursion-test-5f83b-graph-recur-b-4
+    - name: condition-cel-8
+      params:
+      - name: outcome
+        value: $(tasks.condition-cel-7.results.outcome) < $(params.until_a)
+      taskRef:
+        name: cel_condition
+        apiVersion: cel.tekton.dev/v1alpha1
+        kind: CEL
+    - name: recur-a
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: double-recursion-test-5f83b-graph-recur-a-2
+      params:
+      - name: just_one_iteration
+        value:
+        - '1'
+      - name: condition-cel-outcome
+        value: $(tasks.condition-cel-7.results.outcome)
+      - name: until_a
+        value: $(params.until_a)
+      - name: condition-cel-2-outcome
+        value: $(params.condition-cel-2-outcome)
+      - name: until_b
+        value: $(params.until_b)
+      when:
+      - input: $(tasks.condition-cel-8.results.outcome)
+        operator: in
+        values:
+        - "true"
+    - name: double-recursion-test-5f83b-graph-recur-b-4
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: double-recursion-test-5f83b-graph-recur-b-4
+      params:
+      - name: condition-cel-2-outcome
+        value: $(params.condition-cel-2-outcome)
+      - name: condition-cel-3-outcome
+        value: $(tasks.condition-cel-3.results.outcome)
+      - name: condition-cel-4-outcome
+        value: $(tasks.condition-cel-4.results.outcome)
+      - name: condition-cel-outcome
+        value: $(params.condition-cel-outcome)
+      - name: just_one_iteration
+        value:
+        - '1'
+      - name: until_b
+        value: $(params.until_b)
+      when:
+      - input: $(tasks.condition-cel-4.results.outcome)
+        operator: in
+        values:
+        - "true"
+  iterateParam: just_one_iteration

@@ -873,10 +873,17 @@ class TektonCompiler(Compiler):
       if parent_group:
         if condition_refs.get(parent_group[-2], []):
           self.loops_pipeline[loop_task_key]['spec']['when'] = condition_refs.get(parent_group[-2], [])
-          for i, param in enumerate(self.loops_pipeline[loop_task_key]['spec']["params"]):
-            if param["value"] == condition_refs.get(parent_group[-2], [])[0]["input"]:
-              self.loops_pipeline[loop_task_key]['spec']["params"].pop(i)
-              break
+          # In nested recursive loop, the children of the loop pipeline can be both another loop
+          # and the self recursive loop. Thus, we cannot simply pop unnecessary params in one
+          # loop pipeline without verifying all the dependent parameters. Because nested recursion
+          # can have cycles, the DSL DAG may not represent the full view of all the dependent parameters.
+          # TODO: 1. Break any cycle in the nested recursion so it can represent as an acyclic graph.
+          #       2. Once the graph is acyclic, check all the children parameters in the loop_task
+          #          and pop the unnecessary parameters using the below logic.
+          # for i, param in enumerate(self.loops_pipeline[loop_task_key]['spec']["params"]):
+          #   if param["value"] == condition_refs.get(parent_group[-2], [])[0]["input"]:
+          #     self.loops_pipeline[loop_task_key]['spec']["params"].pop(i)
+          #     break
 
     # process input parameters from upstream tasks
     pipeline_param_names = [p['name'] for p in params]

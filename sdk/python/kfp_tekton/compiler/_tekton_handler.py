@@ -98,6 +98,16 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     if dep_task not in custom_task[dependency['runAfter']]['task_list']:
                         task_dependencies.append(dep_task)
                 task['runAfter'] = task_dependencies
+
+    # process recursive tasks to match parameters
+    for task in recursive_tasks:
+        recursive_graph = custom_task.get(task['taskRef']['name'], {})
+        if recursive_graph:
+            for param in recursive_graph['spec']['params']:
+                recursive_params = [param['name'] for param in task['params']]
+                if param['name'] not in recursive_params:
+                    task['params'].append({'name': param['name'], 'value': "$(params.%s)" % param['name']})
+
     # get custom tasks
     for custom_task_key in custom_task.keys():
         denpendency_list = custom_task[custom_task_key]['spec'].get('runAfter', [])
@@ -247,11 +257,23 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                         if nested_param['name'] == special_param['name']:
                             nested_param['value'] = '$(params.%s)' % nested_param['name']
                 # need process parameters to replace results
+                custom_task_cr_task_names = [cr_task['name'] for cr_task in custom_task_cr['spec']['pipelineSpec']['tasks']]
                 for nested_custom_task_param in nested_custom_task_spec['params']:
                     if '$(tasks.' in nested_custom_task_param['value']:
-                        nested_custom_task_spec = json.loads(
-                            json.dumps(nested_custom_task_spec).replace(nested_custom_task_param['value'],
-                            '$(params.%s)' % nested_custom_task_param['name']))
+                        param_results = re.findall('\$\(tasks.([^ \t\n.:,;\{\}]+).results.([^ \t\n.:,;\{\}]+)\)',
+                                                    nested_custom_task_param['value'])
+                        for param_result in param_results:
+                            if param_result[0] not in custom_task_cr_task_names:
+                                custom_task_cr_param_names = [p['name'] for p in custom_task_cr['spec']['pipelineSpec']['params']]
+                                if nested_custom_task_param['name'] not in custom_task_cr_param_names:
+                                    for index, param in enumerate(nested_custom_task_spec['params']):
+                                        if nested_custom_task_param['name'] == param['name']:
+                                            nested_custom_task_spec['params'].pop(index)
+                                            break
+                                else:
+                                    nested_custom_task_spec = json.loads(
+                                        json.dumps(nested_custom_task_spec).replace(nested_custom_task_param['value'],
+                                        '$(params.%s)' % nested_custom_task_param['name']))
                 # add nested custom task spec to main custom task
                 custom_task_cr['spec']['pipelineSpec']['tasks'].append(nested_custom_task_spec)
 
