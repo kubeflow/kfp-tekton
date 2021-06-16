@@ -22,9 +22,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/test/diff"
-	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis"
@@ -106,7 +106,9 @@ func TestPipelineLoop_Validate_Success(t *testing.T) {
 	}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.tl.Validate(context.Background())
+			ctx := context.Background()
+			tc.tl.SetDefaults(ctx)
+			err := tc.tl.Validate(ctx)
 			if err != nil {
 				t.Errorf("Unexpected error for %s: %s", tc.name, err)
 			}
@@ -194,7 +196,9 @@ func TestPipelineLoop_Validate_Error(t *testing.T) {
 	}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.tl.Validate(context.Background())
+			ctx := context.Background()
+			tc.tl.SetDefaults(ctx)
+			err := tc.tl.Validate(ctx)
 			if err == nil {
 				t.Errorf("Expected an Error but did not get one for %s", tc.name)
 			} else {

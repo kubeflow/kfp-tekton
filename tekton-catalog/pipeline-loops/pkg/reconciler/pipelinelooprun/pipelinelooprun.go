@@ -33,7 +33,6 @@ import (
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-
 	runv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/run/v1alpha1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
@@ -183,6 +182,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	// Propagate labels and annotations from PipelineLoop to Run.
 	propagatePipelineLoopLabelsAndAnnotations(run, pipelineLoopMeta)
 
+	pipelineLoopSpec.SetDefaults(ctx)
 	// Validate PipelineLoop spec
 	if err := pipelineLoopSpec.Validate(ctx); err != nil {
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
@@ -327,15 +327,11 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 				run.Namespace, run.Name, err)
 			return nil, nil, fmt.Errorf("Error unmarshal PipelineLoop spec for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
 		}
-		pipelineloopObject := &pipelineloopv1alpha1.PipelineLoop{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       run.Spec.Spec.Kind,
-				APIVersion: run.Spec.Spec.APIVersion,
-			},
-			Spec: pipelineLoopSpec,
-		}
-		pipelineloopObject.Name = run.Name
-		pipelineLoopMeta = metav1.ObjectMeta{Name: run.Name}
+		pipelineLoopMeta = metav1.ObjectMeta{Name: run.Name,
+			Namespace:       run.Namespace,
+			OwnerReferences: run.OwnerReferences,
+			Labels:          run.Spec.Spec.Metadata.Labels,
+			Annotations:     run.Spec.Spec.Metadata.Annotations}
 	} else {
 		// Run does not require name but for PipelineLoop it does.
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
