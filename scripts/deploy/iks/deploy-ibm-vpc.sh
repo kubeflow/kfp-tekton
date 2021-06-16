@@ -97,7 +97,8 @@ function existence_check() {
 
 function vpc_name_to_gateway_id() {
     existence_check "VPC_NAME" "vpc-name"
-    local value_pubgw_id=$(ibmcloud is pubgws -q | grep "\s${VPC_NAME}\s" | awk '{print $1}')
+    existence_check "CLUSTER_ZONE" "cluster-zone"
+    local value_pubgw_id=$(ibmcloud is pubgws -q | grep "\s${VPC_NAME}\s" | grep "\s${CLUSTER_ZONE}\s" | head -1 | awk '{print $1}')
     echo $value_pubgw_id
 }
 
@@ -348,8 +349,8 @@ else
             GATEWAY_ID=$(ibmcloud is public-gateway-create -q "kf-${USER_STR}-${RAND_STR}-gw" "$VPC_ID" "$CLUSTER_ZONE" | grep "^ID\b\s" | awk '{print $2}')
             echo "Created a public gateway: $GATEWAY_ID"
         fi
+        echo "Attaching Gateway: $GATEWAY_ID to the subnet: $SUBNET_ID"
         ibmcloud is subnet-update "$SUBNET_ID" --public-gateway-id "$GATEWAY_ID" 1>/dev/null
-        echo "Gateway: $GATEWAY_ID is attached to the subnet: $SUBNET_ID"
     fi
 fi
 # A SUBNET is created recording the current env state.
