@@ -124,7 +124,7 @@ source "${VENV_DIR}/bin/activate"
 
 # install KFP with the desired KFP SDK version (unless already installed)
 if ! (pip show "kfp" | grep Version | grep -q "${KFP_SDK_VERSION}"); then
-  echo "Installing KFP SDK ${KFP_SDK_VERSION} and pytest..."
+  echo "Installing KFP SDK ${KFP_SDK_VERSION}..."
   pip install -q kfp==${KFP_SDK_VERSION}
 fi
 
