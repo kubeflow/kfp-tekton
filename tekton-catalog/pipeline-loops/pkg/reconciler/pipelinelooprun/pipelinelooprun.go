@@ -61,6 +61,9 @@ const (
 	// parentPRKey is the label identifier for the original Pipelnerun who created the Run.  This label is added to the Run's PipelineRuns.
 	parentPRKey = "/parentPipelineRun"
 
+	// originalPRKey is the label identifier for the original Pipelnerun (first Pipelinerun)
+	originalPRKey = "/originalPipelineRun"
+
 	// pipelineLoopIterationLabelKey is the label identifier for the iteration number.  This label is added to the Run's PipelineRuns.
 	pipelineLoopIterationLabelKey = "/pipelineLoopIteration"
 )
@@ -665,6 +668,14 @@ func getPipelineRunLabels(run *v1alpha1.Run, iterationStr string) map[string]str
 		labels[pipelineloop.GroupName+pipelineLoopIterationLabelKey] = iterationStr
 	}
 	labels[pipelineloop.GroupName+parentPRKey] = run.ObjectMeta.Labels["tekton.dev/pipelineRun"]
+
+	var prOriginalName string
+	if _, ok := run.ObjectMeta.Labels[pipelineloop.GroupName+originalPRKey]; ok {
+		prOriginalName = run.ObjectMeta.Labels[pipelineloop.GroupName+originalPRKey]
+	} else {
+		prOriginalName = run.ObjectMeta.Labels["tekton.dev/pipelineRun"]
+	}
+	labels[pipelineloop.GroupName+originalPRKey] = prOriginalName
 	return labels
 }
 
