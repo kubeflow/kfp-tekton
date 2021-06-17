@@ -515,11 +515,11 @@ func (r *ResourceManager) ListJobs(filterContext *common.FilterContext,
 	return r.jobStore.ListJobs(filterContext, opts)
 }
 
-// TerminateWorkflow terminates a pipelinerun by setting its status to PipelineRunCancelled
+// TerminateWorkflow terminates a pipelinerun by setting its status to Cancelled
 func TerminateWorkflow(wfClient workflowclient.PipelineRunInterface, name string) error {
 	patchObj := map[string]interface{}{
 		"spec": map[string]interface{}{
-			"status": "PipelineRunCancelled",
+			"status": "Cancelled",
 		},
 	}
 

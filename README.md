@@ -25,7 +25,7 @@ look for more details in [Tekton repo](https://github.com/tektoncd/pipeline).
 ## Kubeflow Pipeline with Tekton Backend
 
 We are currently using [Kubeflow Pipelines 1.5.0](https://github.com/kubeflow/pipelines/releases/tag/1.5.0) and
-[Tekton >= 0.21.0](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0)
+[Tekton >= 0.25.0](https://github.com/tektoncd/pipeline/releases/tag/v0.25.0)
 for this project.
 
 ![kfp-tekton](images/kfp-tekton.png)
