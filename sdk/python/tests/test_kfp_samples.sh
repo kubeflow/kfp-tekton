@@ -134,6 +134,12 @@ if ! (pip show "kfp-tekton" | grep Location | grep -q "${PROJECT_DIR}"); then
   pip install -q -e "${PROJECT_DIR}/sdk/python"
 fi
 
+# install pytest, unless already installed
+if ! (pip show "pytest" | grep -q Version); then
+  echo "Installing pytest ..."
+  pip install -q pytest
+fi
+
 # install 3rd party dependencies required for certain pipeline samples
 if [[ "${ALL_SAMPLES}" == "TRUE" ]]; then
   echo "Installing 3rd-party dependencies ..."
