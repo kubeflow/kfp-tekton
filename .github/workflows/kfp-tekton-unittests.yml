@@ -4,6 +4,9 @@ on:
   push:
     branches: [master, pull_request]
 
+env:
+  GITHUB_ACTION: "true"
+
 jobs:
   python-unittest:
     runs-on: ubuntu-latest
