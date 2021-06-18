@@ -2,7 +2,10 @@ name: KFP Tekton Unit Tests
 
 on:
   push:
-    branches: [master, pull_request]
+    branches: [master]
+    
+  # Run tests for any PRs.
+  pull_request:
 
 env:
   GITHUB_ACTION: "true"
