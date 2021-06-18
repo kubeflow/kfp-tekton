@@ -47,6 +47,8 @@ spec:
         name: cel_condition
     - name: condition-and-recur-graph-recur-2
       params:
+      - name: condition-cel-outcome
+        value: $(tasks.condition-cel.results.outcome)
       - name: iter_num
         value: $(params.iter_num)
       - name: just_one_iteration

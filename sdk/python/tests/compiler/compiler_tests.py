@@ -126,6 +126,20 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recur_nested import flipcoin
     self._test_pipeline_workflow(flipcoin, 'recur_nested.yaml')
 
+  def test_nested_recur_custom_task_workflow(self):
+    """
+    Test compiling a nested recursive workflow.
+    """
+    from .testdata.nested_recur_custom_task import double_recursion_test
+    self._test_pipeline_workflow(double_recursion_test, 'nested_recur_custom_task.yaml')
+
+  def test_nested_recur_params_workflow(self):
+    """
+    Test compiling a nested recursive workflow.
+    """
+    from .testdata.nested_recur_params import double_recursion_test
+    self._test_pipeline_workflow(double_recursion_test, 'nested_recur_params.yaml')
+
   def test_custom_task_recur_with_cond_workflow(self):
     """
     Test compiling a custom task conditional recursive workflow.

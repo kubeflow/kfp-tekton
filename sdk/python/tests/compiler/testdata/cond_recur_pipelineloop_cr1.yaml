@@ -23,6 +23,8 @@ spec:
       type: string
     - name: iter_num
       type: string
+    - name: condition-cel-outcome
+      type: string
     tasks:
     - name: condition-cel-2
       params:
@@ -70,4 +72,6 @@ spec:
         - '1'
       - name: iter_num
         value: $(tasks.condition-cel-2.results.outcome)
+      - name: condition-cel-outcome
+        value: $(params.condition-cel-outcome)
   iterateParam: just_one_iteration
