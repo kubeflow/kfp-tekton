@@ -111,6 +111,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recur_cond import recur_and_condition
     self._test_pipeline_workflow(recur_and_condition, 'recur_cond.yaml')
 
+  def test_recur_cond_workflow_inlined(self):
+    """
+    Test compiling a recurive condition workflow with inlined taskSpec.
+    """
+    from .testdata.recur_cond import recur_and_condition
+    self._test_pipeline_workflow_inlined_spec(recur_and_condition, 'recur_cond.yaml')
+
   def test_cond_recur_workflow(self):
     """
     Test compiling a conditional recursive workflow.
@@ -125,6 +132,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recur_nested import flipcoin
     self._test_pipeline_workflow(flipcoin, 'recur_nested.yaml')
 
+  def test_recur_nested_workflow_inlined(self):
+    """
+    Test compiling a nested recursive workflow with inlined taskSpec.
+    """
+    from .testdata.recur_nested import flipcoin
+    self._test_pipeline_workflow_inlined_spec(flipcoin, 'recur_nested.yaml')
+
   def test_nested_recur_custom_task_workflow(self):
     """
     Test compiling a nested recursive workflow.
@@ -138,6 +152,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.nested_recur_params import double_recursion_test
     self._test_pipeline_workflow(double_recursion_test, 'nested_recur_params.yaml')
+
+  def test_nested_recur_params_workflow_inlined(self):
+    """
+    Test compiling a nested recursive workflow with inlined taskSpec.
+    """
+    from .testdata.nested_recur_params import double_recursion_test
+    self._test_pipeline_workflow_inlined_spec(double_recursion_test, 'nested_recur_params.yaml')
 
   def test_custom_task_recur_with_cond_workflow(self):
     """
@@ -166,6 +187,15 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.loop_static_with_parallelism import pipeline
     self._test_pipeline_workflow(
+      pipeline,
+      'loop_static_with_parallelism.yaml')
+
+  def test_loop_parallelism_workflow_inlined(self):
+    """
+    Test compiling a loop with parallelism defined workflow with inlined taskSpec.
+    """
+    from .testdata.loop_static_with_parallelism import pipeline
+    self._test_pipeline_workflow_inlined_spec(
       pipeline,
       'loop_static_with_parallelism.yaml')
 

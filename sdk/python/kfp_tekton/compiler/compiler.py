@@ -1317,18 +1317,22 @@ class TektonCompiler(Compiler):
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
       inlined_as_taskSpec = []
+      recursive_tasks_names: List[Text] = [x['taskRef'].get('name', "") for x in self.recursive_tasks]
       if self.tekton_inline_spec:
         # Step 1. inline all the pipeline_loop_crs as they may refer to each other.
         for i in range(len(pipeline_loop_crs)):
           if 'pipelineSpec' in pipeline_loop_crs[i]['spec']:
-            t, e = TektonCompiler._inline_tasks(pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'], pipeline_loop_crs)
+            t, e = TektonCompiler._inline_tasks(pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'],
+                                                pipeline_loop_crs, recursive_tasks_names)
             if e:
               pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'] = t
               inlined_as_taskSpec.append(e)
-        # Step 2. inline them in the workflow
-        workflow_tasks, e = TektonCompiler._inline_tasks(workflow['spec']['pipelineSpec']['tasks'], pipeline_loop_crs)
+        # Step 2. inline pipeline_loop_crs in the workflow
+        workflow_tasks, e = TektonCompiler._inline_tasks(workflow['spec']['pipelineSpec']['tasks'],
+                                                         pipeline_loop_crs, recursive_tasks_names)
         inlined_as_taskSpec.append(e)
         workflow['spec']['pipelineSpec']['tasks'] = workflow_tasks
+
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
 
       # create cr yaml for only those pipelineLoop cr which could not be converted to inlined spec.
@@ -1342,11 +1346,12 @@ class TektonCompiler(Compiler):
     # Separate custom task CR from the main workflow
     for i in range(len(self.custom_task_crs)):
       TektonCompiler._write_workflow(workflow=self.custom_task_crs[i],
-                                     package_path=os.path.splitext(package_path)[0] + "_customtask_cr" + str(i + 1) + '.yaml')
+                                     package_path=os.path.splitext(package_path)[0] +
+                                                  "_customtask_cr" + str(i + 1) + '.yaml')
     _validate_workflow(workflow)
 
   @staticmethod
-  def _inline_tasks(tasks: List[Dict[Text, Any]], crs: List[Dict[Text, Any]]):
+  def _inline_tasks(tasks: List[Dict[Text, Any]], crs: List[Dict[Text, Any]], recursive_tasks: List[Text]):
     """
       Scan all the `tasks` and for each taskRef in `tasks` resolve it in `crs`
        and inline them as taskSpec.
@@ -1357,10 +1362,12 @@ class TektonCompiler(Compiler):
     inlined_as_taskSpec = []
     for j in range(len(workflow_tasks)):
       if 'taskRef' in workflow_tasks[j]:
-        if 'name' in workflow_tasks[j]['taskRef']:
-          cr_apiVersion = workflow_tasks[j]['taskRef']['apiVersion']
-          cr_kind = workflow_tasks[j]['taskRef']['kind']
-          cr_ref_name = workflow_tasks[j]['taskRef']['name']
+        wf_taskRef = workflow_tasks[j]['taskRef']
+        if 'name' in wf_taskRef and \
+                wf_taskRef['name'] not in recursive_tasks:  # we do not inline recursive tasks.
+          cr_apiVersion = wf_taskRef['apiVersion']
+          cr_kind = wf_taskRef['kind']
+          cr_ref_name = wf_taskRef['name']
           for i in range(len(crs)):
             if crs[i]['metadata'].get('name', "") == cr_ref_name:
               workflow_tasks[j]['taskSpec'] = \

@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
-import json
-import re
+import json, copy, re
 
 
 def _handle_tekton_pipeline_variables(pipeline_run):
