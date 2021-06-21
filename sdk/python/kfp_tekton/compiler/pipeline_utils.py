@@ -25,6 +25,7 @@ class TektonPipelineConf(dsl.PipelineConf):
     def __init__(self, **kwargs):
         self.pipeline_labels = {}
         self.pipeline_annotations = {}
+        self.tekton_inline_spec = False
         super().__init__(**kwargs)
 
     def add_pipeline_label(self, label_name: str, value: str):
@@ -36,4 +37,8 @@ class TektonPipelineConf(dsl.PipelineConf):
             raise ValueError('Cannot add pipeline annotation %s:%s because it is a reserved Tekton annotation.'
                              % annotation_name, value)
         self.pipeline_annotations[annotation_name] = value
+        return self
+
+    def set_tekton_inline_spec(self, value: bool):
+        self.tekton_inline_spec = value
         return self

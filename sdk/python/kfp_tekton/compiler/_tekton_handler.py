@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json, copy, re
+import copy
+import json
+import re
 
 
 def _handle_tekton_pipeline_variables(pipeline_run):
@@ -36,6 +38,8 @@ def _handle_tekton_pipeline_variables(pipeline_run):
     task_list = pipeline_run['spec']['pipelineSpec']['tasks']
     for task in task_list:
         if task.get('taskRef', {}):
+            continue
+        if 'taskSpec' in task and 'apiVersion' in task['taskSpec']:
             continue
         for key, val in pipeline_variables.items():
             task_str = json.dumps(task['taskSpec']['steps'])

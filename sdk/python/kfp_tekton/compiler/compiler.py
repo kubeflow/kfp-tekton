@@ -12,21 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
 import inspect
 import json
-import tarfile
-import zipfile
-import re
-import textwrap
-import yaml
 import os
+import re
+import tarfile
+import textwrap
 import uuid
-import ast
-
-from typing import Callable, List, Text, Dict, Any
-from os import environ as env
+import zipfile
+from collections import defaultdict
 from distutils.util import strtobool
+from os import environ as env
+from typing import Callable, List, Text, Dict, Any
 
+import yaml
 # Kubeflow Pipeline imports
 from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env
@@ -34,16 +34,14 @@ from kfp.compiler.compiler import Compiler
 from kfp.components.structures import InputSpec
 from kfp.dsl._for_loop import LoopArguments
 from kfp.dsl._metadata import _extract_pipeline_metadata
-from collections import defaultdict
-
 # KFP-Tekton imports
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
-from kfp_tekton.compiler.yaml_utils import dump_yaml
-from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
+from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
+from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPUT_KEYWORD
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
@@ -131,11 +129,13 @@ class TektonCompiler(Compiler):
     self._group_names = []
     self.pipeline_labels = {}
     self.pipeline_annotations = {}
+    self.tekton_inline_spec = False
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
     self.pipeline_labels = tekton_pipeline_conf.pipeline_labels
     self.pipeline_annotations = tekton_pipeline_conf.pipeline_annotations
+    self.tekton_inline_spec = tekton_pipeline_conf.tekton_inline_spec
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -1316,10 +1316,27 @@ class TektonCompiler(Compiler):
     # Separate loop workflow from the main workflow
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
+      inlined_as_taskSpec = []
+      if self.tekton_inline_spec:
+        # Step 1. inline all the pipeline_loop_crs as they may refer to each other.
+        for i in range(len(pipeline_loop_crs)):
+          if 'pipelineSpec' in pipeline_loop_crs[i]['spec']:
+            t, e = TektonCompiler._inline_tasks(pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'], pipeline_loop_crs)
+            if e:
+              pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'] = t
+              inlined_as_taskSpec.append(e)
+        # Step 2. inline them in the workflow
+        workflow_tasks, e = TektonCompiler._inline_tasks(workflow['spec']['pipelineSpec']['tasks'], pipeline_loop_crs)
+        inlined_as_taskSpec.append(e)
+        workflow['spec']['pipelineSpec']['tasks'] = workflow_tasks
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
+
+      # create cr yaml for only those pipelineLoop cr which could not be converted to inlined spec.
       for i in range(len(pipeline_loop_crs)):
-        TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
-                                       package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
+        if pipeline_loop_crs[i]['metadata'].get('name', "") not in inlined_as_taskSpec:
+          TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
+                                         package_path=os.path.splitext(package_path)[0] +
+                                                      "_pipelineloop_cr" + str(i + 1) + '.yaml')
     else:
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
     # Separate custom task CR from the main workflow
@@ -1327,6 +1344,31 @@ class TektonCompiler(Compiler):
       TektonCompiler._write_workflow(workflow=self.custom_task_crs[i],
                                      package_path=os.path.splitext(package_path)[0] + "_customtask_cr" + str(i + 1) + '.yaml')
     _validate_workflow(workflow)
+
+  @staticmethod
+  def _inline_tasks(tasks: List[Dict[Text, Any]], crs: List[Dict[Text, Any]]):
+    """
+      Scan all the `tasks` and for each taskRef in `tasks` resolve it in `crs`
+       and inline them as taskSpec.
+       return tasks with all the taskRef -> taskSpec resolved.
+       list of names of the taskRef that were successfully converted.
+    """
+    workflow_tasks = tasks.copy()
+    inlined_as_taskSpec = []
+    for j in range(len(workflow_tasks)):
+      if 'taskRef' in workflow_tasks[j]:
+        if 'name' in workflow_tasks[j]['taskRef']:
+          cr_apiVersion = workflow_tasks[j]['taskRef']['apiVersion']
+          cr_kind = workflow_tasks[j]['taskRef']['kind']
+          cr_ref_name = workflow_tasks[j]['taskRef']['name']
+          for i in range(len(crs)):
+            if crs[i]['metadata'].get('name', "") == cr_ref_name:
+              workflow_tasks[j]['taskSpec'] = \
+                {'apiVersion': cr_apiVersion, 'kind': cr_kind,
+                 'spec': crs[i]['spec']}
+              inlined_as_taskSpec.append(cr_ref_name)
+              workflow_tasks[j].pop('taskRef')
+    return workflow_tasks, inlined_as_taskSpec
 
 
 def _validate_workflow(workflow: Dict[Text, Any]):
