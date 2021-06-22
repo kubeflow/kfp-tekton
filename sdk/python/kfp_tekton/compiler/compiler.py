@@ -129,7 +129,7 @@ class TektonCompiler(Compiler):
     self._group_names = []
     self.pipeline_labels = {}
     self.pipeline_annotations = {}
-    self.tekton_inline_spec = False
+    self.tekton_inline_spec = True
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -1316,12 +1316,16 @@ class TektonCompiler(Compiler):
     # Separate loop workflow from the main workflow
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
-      inlined_as_taskSpec = []
+      inlined_as_taskSpec: List[Text] = []
       recursive_tasks_names: List[Text] = [x['taskRef'].get('name', "") for x in self.recursive_tasks]
       if self.tekton_inline_spec:
         # Step 1. inline all the pipeline_loop_crs as they may refer to each other.
         for i in range(len(pipeline_loop_crs)):
           if 'pipelineSpec' in pipeline_loop_crs[i]['spec']:
+            if 'params' in pipeline_loop_crs[i]['spec']['pipelineSpec']:
+              # Preserve order of params, required by tests.
+              pipeline_loop_crs[i]['spec']['pipelineSpec']['params'] =\
+                sorted(pipeline_loop_crs[i]['spec']['pipelineSpec']['params'], key=lambda kv: (kv['name']))
             t, e = TektonCompiler._inline_tasks(pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'],
                                                 pipeline_loop_crs, recursive_tasks_names)
             if e:
@@ -1361,6 +1365,9 @@ class TektonCompiler(Compiler):
     workflow_tasks = tasks.copy()
     inlined_as_taskSpec = []
     for j in range(len(workflow_tasks)):
+      if 'params' in workflow_tasks[j]:
+        # Preserve order of params, required by tests.
+        workflow_tasks[j]['params'] = sorted(workflow_tasks[j]['params'], key=lambda kv: (kv['name']))
       if 'taskRef' in workflow_tasks[j]:
         wf_taskRef = workflow_tasks[j]['taskRef']
         if 'name' in wf_taskRef and \

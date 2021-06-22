@@ -41,36 +41,8 @@ spec:
       params:
       - name: arr-loop-item
         value: $(params.arr)
-      taskSpec:
+      taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        spec:
-          iterateParam: arr-loop-item
-          pipelineSpec:
-            params:
-            - name: arr-loop-item
-              type: string
-            tasks:
-            - name: print
-              params:
-              - name: arr-loop-item
-                value: $(params.arr-loop-item)
-              taskSpec:
-                metadata:
-                  annotations:
-                    tekton.dev/template: ''
-                  labels:
-                    pipelines.kubeflow.org/cache_enabled: 'true'
-                    pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/pipelinename: ''
-                params:
-                - name: arr-loop-item
-                  type: string
-                steps:
-                - command:
-                  - echo
-                  - $(inputs.params.arr-loop-item)
-                  image: alpine:3.6
-                  name: main
-              timeout: 0s
+        name: some-very-long-name-with-lots-of-words-in-it-for-loop-1
   timeout: 0s
