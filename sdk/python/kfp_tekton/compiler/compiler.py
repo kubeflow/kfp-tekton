@@ -1205,7 +1205,7 @@ class TektonCompiler(Compiler):
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.
       package_path: the output workflow tar.gz file path. for example, "~/a.tar.gz"
-      type_check: whether to enable the type check or not, default: False.
+      type_check: whether to enable the type check or not, default: True.
       pipeline_conf: PipelineConf instance. Can specify op transforms,
                      image pull secrets and other pipeline-level configuration options.
                      Overrides any configuration that may be set by the pipeline.
@@ -1330,11 +1330,11 @@ class TektonCompiler(Compiler):
                                                 pipeline_loop_crs, recursive_tasks_names)
             if e:
               pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'] = t
-              inlined_as_taskSpec.append(e)
+              inlined_as_taskSpec.extend(e)
         # Step 2. inline pipeline_loop_crs in the workflow
         workflow_tasks, e = TektonCompiler._inline_tasks(workflow['spec']['pipelineSpec']['tasks'],
                                                          pipeline_loop_crs, recursive_tasks_names)
-        inlined_as_taskSpec.append(e)
+        inlined_as_taskSpec.extend(e)
         workflow['spec']['pipelineSpec']['tasks'] = workflow_tasks
 
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
