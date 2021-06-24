@@ -231,7 +231,14 @@ class TestTektonCompiler(unittest.TestCase):
     Test Tekton custom task with custom spec workflow.
     """
     from .testdata.custom_task_spec import custom_task_pipeline
-    self._test_pipeline_workflow(custom_task_pipeline, 'custom_task_spec.yaml')
+    self._test_pipeline_workflow(custom_task_pipeline, 'custom_task_spec.yaml', skip_noninlined=True)
+
+  def test_custom_task_ref_workflow(self):
+    """
+    Test Tekton custom task with custom ref workflow.
+    """
+    from .testdata.custom_task_ref import custom_task_pipeline
+    self._test_pipeline_workflow(custom_task_pipeline, 'custom_task_ref.yaml', skip_noninlined=True)
 
   def test_long_param_name_workflow(self):
     """
@@ -484,7 +491,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test applying Tekton pipeline config to a workflow
     """
     from .testdata.tekton_pipeline_conf import echo_pipeline
-    pipeline_conf = compiler.pipeline_utils.TektonPipelineConf()
+    pipeline_conf = TektonPipelineConf()
     pipeline_conf.add_pipeline_label('test', 'label')
     pipeline_conf.add_pipeline_label('test2', 'label2')
     pipeline_conf.add_pipeline_annotation('test', 'annotation')
@@ -531,27 +538,30 @@ class TestTektonCompiler(unittest.TestCase):
                               pipeline_function,
                               pipeline_yaml,
                               normalize_compiler_output_function=None,
-                              tekton_pipeline_conf=TektonPipelineConf()):
-    test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
-    golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml.replace(".yaml", "") + "_noninlined.yaml")
-    temp_dir = tempfile.mkdtemp()
-    compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
-    tekton_pipeline_conf.set_tekton_inline_spec(False)
-    try:
-      compiler.TektonCompiler().compile(pipeline_function,
-                                        compiled_yaml_file,
-                                        tekton_pipeline_conf=tekton_pipeline_conf)
-      with open(compiled_yaml_file, 'r') as f:
-        f = normalize_compiler_output_function(
-          f.read()) if normalize_compiler_output_function else f
-        compiled = yaml.safe_load(f)
-      self._verify_compiled_workflow(golden_yaml_file, compiled)
-    finally:
-      shutil.rmtree(temp_dir)
-    self._test_pipeline_workflow_inlined_spec(pipeline_function=pipeline_function,
-                                              pipeline_yaml=pipeline_yaml,
-                                              normalize_compiler_output_function=normalize_compiler_output_function,
-                                              tekton_pipeline_conf=tekton_pipeline_conf)
+                              tekton_pipeline_conf=TektonPipelineConf(),
+                              skip_noninlined=False):
+    self._test_pipeline_workflow_inlined_spec(
+      pipeline_function=pipeline_function,
+      pipeline_yaml=pipeline_yaml,
+      normalize_compiler_output_function=normalize_compiler_output_function,
+      tekton_pipeline_conf=tekton_pipeline_conf)
+    if not skip_noninlined:
+      test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
+      golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml.replace(".yaml", "") + "_noninlined.yaml")
+      temp_dir = tempfile.mkdtemp()
+      compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
+      tekton_pipeline_conf.set_tekton_inline_spec(False)
+      try:
+        compiler.TektonCompiler().compile(pipeline_function,
+                                          compiled_yaml_file,
+                                          tekton_pipeline_conf=tekton_pipeline_conf)
+        with open(compiled_yaml_file, 'r') as f:
+          f = normalize_compiler_output_function(
+            f.read()) if normalize_compiler_output_function else f
+          compiled = yaml.safe_load(f)
+        self._verify_compiled_workflow(golden_yaml_file, compiled)
+      finally:
+        shutil.rmtree(temp_dir)
 
   def _test_workflow_without_decorator(self, pipeline_yaml, params_dict):
     """

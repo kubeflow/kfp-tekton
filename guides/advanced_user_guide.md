@@ -58,6 +58,7 @@ Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom t
                        "--kind", "custom_task_kind",
                        "--name", "custom_task_name",
                        "--taskSpec", {"task_spec_key": "task_spec_value"},
+                       "--taskRef", {"task_ref_key": "task_ref_value"},
                        "--other_custom_task_argument_keys", custom_task_argument_values],
             file_outputs={"other_custom_task_argument_keys": '/anypath'}
         )
@@ -70,7 +71,11 @@ Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom t
       - **--apiVersion**: Kubernetes API Version for your custom task CRD.
       - **--kind**: Kubernetes Kind for your custom task CRD.
       - **--name**: Kubernetes Resource reference name for your custom task CRD.
-      - **--taskSpec** (optional): Kubernetes Resource Spec for your custom task CRD. The value needs to define in Python Dictionary.
+      - **--taskRef** (optional): Kubernetes Resource Spec for your custom task CRD. One of `--taskSpec` or `--taskRef` can be specified at a time.
+        The value should be a Python Dictionary.
+      - **--taskSpec** (optional): Kubernetes Resource Spec for your custom task CRD. This gets inlined in the pipeline.  One of `--taskSpec` or `--taskRef` can be specified at a time.
+        Custom task controller should support [embedded spec](https://github.com/tektoncd/pipeline/blob/main/docs/runs.md#2-specifying-the-target-custom-task-by-embedding-its-spec).
+        The value should be a Python Dictionary.
       - **Other arguments** (optional): Parameters for your custom task CRD inputs.
 
       Then, you can add any extra arguments to map as the custom task CRD's `spec.params` fields.
