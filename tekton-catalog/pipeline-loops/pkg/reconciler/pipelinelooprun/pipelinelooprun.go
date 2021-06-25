@@ -30,6 +30,7 @@ import (
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	pipelineloopclientset "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/clientset/versioned"
 	listerspipelineloop "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/listers/pipelineloop/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/config"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -167,7 +168,24 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	return merr
 }
 
+func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
+	defaults, _ := config.NewDefaultsFromMap(map[string]string{})
+	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{
+		"enable-custom-tasks": "true",
+	})
+	artifactBucket, _ := config.NewArtifactBucketFromMap(map[string]string{})
+	artifactPVC, _ := config.NewArtifactPVCFromMap(map[string]string{})
+	c := &config.Config{
+		Defaults:       defaults,
+		FeatureFlags:   featureFlags,
+		ArtifactBucket: artifactBucket,
+		ArtifactPVC:    artifactPVC,
+	}
+	return config.ToContext(ctx, c)
+}
+
 func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
+	ctx = EnableCustomTaskFeatureFlag(ctx)
 	logger := logging.FromContext(ctx)
 
 	// Get the PipelineLoop referenced by the Run

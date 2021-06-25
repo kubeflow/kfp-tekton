@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
-	"github.com/tektoncd/pipeline/pkg/apis/config"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/reconciler/pipelinelooprun"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -186,29 +186,13 @@ func validatePipelineLoopEmbedded(bytes []byte) error {
 	return validatePipelineLoop(marshalBytes)
 }
 
-func enableCustomTaskFeatureFlag(ctx context.Context) context.Context {
-	defaults, _ := config.NewDefaultsFromMap(map[string]string{})
-	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{
-		"enable-custom-tasks": "true",
-	})
-	artifactBucket, _ := config.NewArtifactBucketFromMap(map[string]string{})
-	artifactPVC, _ := config.NewArtifactPVCFromMap(map[string]string{})
-	c := &config.Config{
-		Defaults:       defaults,
-		FeatureFlags:   featureFlags,
-		ArtifactBucket: artifactBucket,
-		ArtifactPVC:    artifactPVC,
-	}
-	return config.ToContext(ctx, c)
-}
-
 func validatePipelineLoop(bytes []byte) error {
 	pipelineLoop := pipelineloopv1alpha1.PipelineLoop{}
 	if err := json.Unmarshal(bytes, &pipelineLoop); err != nil {
 		return err
 	}
 	ctx := context.Background()
-	ctx = enableCustomTaskFeatureFlag(ctx)
+	ctx = pipelinelooprun.EnableCustomTaskFeatureFlag(ctx)
 	pipelineLoop.SetDefaults(ctx)
 	if err := pipelineLoop.Validate(ctx); err != nil {
 		return fmt.Errorf("PipelineLoop name:%s\n %s", pipelineLoop.Name, err.Error())
