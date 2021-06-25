@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/config"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,13 +73,13 @@ func main() {
 	if inputFileType == "yaml" {
 		objs, err := readFile(inputFileName)
 		if err != nil {
-			fmt.Printf("Error while reading input spec: %v\n", err)
+			fmt.Printf("\nError while reading input spec: %v\n", err)
 			os.Exit(2)
 		}
 		for _, o := range objs {
 			marshalledBytes, err := o.MarshalJSON()
 			if err != nil {
-				fmt.Printf("Error while marshalling json: %v\n", err)
+				fmt.Printf("\nError while marshalling json: %v\n", err)
 				os.Exit(3)
 			}
 			err = nil
@@ -94,14 +95,14 @@ func main() {
 			case "PipelineRun":
 				err = validatePipelineRun(marshalledBytes)
 			default:
-				fmt.Printf("Warn: Unsupported kind: %s.\n", kind)
+				fmt.Printf("\nWarn: Unsupported kind: %s.\n", kind)
 			}
 			if err != nil {
 				errs = append(errs, err.Error())
 			}
 		}
 		if len(errs) > 0 {
-			fmt.Printf("Validation errors: %s\n", strings.Join(errs, "\n"))
+			fmt.Printf("\nValidation errors: %s\n", strings.Join(errs, "\n"))
 			os.Exit(100)
 		} else {
 			fmt.Printf("\nCongratulations, all checks passed !!\n")
@@ -185,17 +186,49 @@ func validatePipelineLoopEmbedded(bytes []byte) error {
 	return validatePipelineLoop(marshalBytes)
 }
 
+func enableCustomTaskFeatureFlag(ctx context.Context) context.Context {
+	defaults, _ := config.NewDefaultsFromMap(map[string]string{})
+	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{
+		"enable-custom-tasks": "true",
+	})
+	artifactBucket, _ := config.NewArtifactBucketFromMap(map[string]string{})
+	artifactPVC, _ := config.NewArtifactPVCFromMap(map[string]string{})
+	c := &config.Config{
+		Defaults:       defaults,
+		FeatureFlags:   featureFlags,
+		ArtifactBucket: artifactBucket,
+		ArtifactPVC:    artifactPVC,
+	}
+	return config.ToContext(ctx, c)
+}
+
 func validatePipelineLoop(bytes []byte) error {
 	pipelineLoop := pipelineloopv1alpha1.PipelineLoop{}
 	if err := json.Unmarshal(bytes, &pipelineLoop); err != nil {
 		return err
 	}
-	ctx := context.TODO()
+	ctx := context.Background()
+	ctx = enableCustomTaskFeatureFlag(ctx)
 	pipelineLoop.SetDefaults(ctx)
 	if err := pipelineLoop.Validate(ctx); err != nil {
 		return fmt.Errorf("PipelineLoop name:%s\n %s", pipelineLoop.Name, err.Error())
 	}
+	if err, name := validateNestedPipelineLoop(pipelineLoop); err != nil {
+		return fmt.Errorf("Nested PipelineLoop name:%s\n %s", name, err.Error())
+	}
 	return nil
+}
+
+func validateNestedPipelineLoop(pl pipelineloopv1alpha1.PipelineLoop) (error, string) {
+	for _, task := range pl.Spec.PipelineSpec.Tasks {
+		if task.TaskSpec != nil && task.TaskSpec.Kind == "PipelineLoop" {
+			err := validatePipelineLoopEmbedded(task.TaskSpec.Spec.Raw)
+			if err != nil {
+				return err, task.Name
+			}
+		}
+	}
+	return nil, ""
 }
 
 // readFile parses a single file.
