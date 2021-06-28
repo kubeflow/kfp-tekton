@@ -25,6 +25,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/reconciler/pipelinelooprun"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
@@ -90,7 +91,7 @@ func main() {
 				err = validateRun(marshalledBytes)
 			case "Pipeline":
 				err = validatePipeline(marshalledBytes)
-			case "PipelineLoop":
+			case pipelineloop.PipelineLoopControllerName:
 				err = validatePipelineLoop(marshalledBytes)
 			case "PipelineRun":
 				err = validatePipelineRun(marshalledBytes)
@@ -126,7 +127,7 @@ func validatePipelineSpec(p *v1beta1.PipelineSpec, name string) error {
 	// Here we only need to validate those embedded spec, whose kind is pipelineLoop.
 	if p.Tasks != nil {
 		for _, task := range p.Tasks {
-			if task.TaskSpec != nil && task.TaskSpec.Kind == "PipelineLoop" {
+			if task.TaskSpec != nil && task.TaskSpec.Kind == pipelineloop.PipelineLoopControllerName {
 				err := validatePipelineLoopEmbedded(task.TaskSpec.Spec.Raw)
 				if err != nil {
 					errs = append(errs, err.Error())
@@ -150,7 +151,7 @@ func validateRun(bytes []byte) error {
 	// We do not need to validate Run because it is validated by tekton admission webhook
 	// And r.Spec.Ref is also validated by tekton.
 	// Here we only need to validate the embedded spec. i.e. r.Spec.Spec
-	if r.Spec.Spec != nil && r.Spec.Spec.Kind == "PipelineLoop" {
+	if r.Spec.Spec != nil && r.Spec.Spec.Kind == pipelineloop.PipelineLoopControllerName {
 		if err := validatePipelineLoopEmbedded(r.Spec.Spec.Spec.Raw); err != nil {
 			return fmt.Errorf("Found validation errors in Run: %s \n %s", r.Name, err.Error())
 		}
@@ -173,8 +174,8 @@ func validatePipelineLoopEmbedded(bytes []byte) error {
 		return err
 	}
 	r1 := map[string]interface{}{
-		"kind":       "PipelineLoop",
-		"apiVersion": "custom.tekton.dev/v1alpha1",
+		"kind":       pipelineloop.PipelineLoopControllerName,
+		"apiVersion": pipelineloopv1alpha1.SchemeGroupVersion.String(),
 		"metadata":   metav1.ObjectMeta{Name: "embedded"},
 		"spec":       embeddedSpec,
 	}
@@ -205,7 +206,7 @@ func validatePipelineLoop(bytes []byte) error {
 
 func validateNestedPipelineLoop(pl pipelineloopv1alpha1.PipelineLoop) (error, string) {
 	for _, task := range pl.Spec.PipelineSpec.Tasks {
-		if task.TaskSpec != nil && task.TaskSpec.Kind == "PipelineLoop" {
+		if task.TaskSpec != nil && task.TaskSpec.Kind == pipelineloop.PipelineLoopControllerName {
 			err := validatePipelineLoopEmbedded(task.TaskSpec.Spec.Raw)
 			if err != nil {
 				return err, task.Name
