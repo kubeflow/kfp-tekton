@@ -39,7 +39,8 @@ class AnySequencer(ContainerOp):
     def __init__(self,
                  any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
                  name: str = None, statusPath: str = None,
-                 skippingPolicy: str = None, errorPolicy: str = None):
+                 skippingPolicy: str = None, errorPolicy: str = None,
+                 image: str = ANY_SEQUENCER_IMAGE):
         arguments = [
                     "--namespace",
                     "$(context.pipelineRun.namespace)",
@@ -73,7 +74,7 @@ class AnySequencer(ContainerOp):
 
         super().__init__(
             name=name,
-            image=ANY_SEQUENCER_IMAGE,
+            image=image,
             file_outputs=file_outputs,
             command="any-taskrun",
             arguments=arguments,
