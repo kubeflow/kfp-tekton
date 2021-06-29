@@ -1,6 +1,6 @@
 # Training and Serving Models with Watson Machine Learning
 
-This pipeline runs training, storing and deploying a Tensorflow model with MNIST handwriting recognition using [IBM Watson Machine Learning](https://www.ibm.com/cloud/machine-learning) service. This example is originated from Kubeflow pipeline's [ibm-samples/watson](https://github.com/kubeflow/pipelines/tree/master/samples/contrib/ibm-samples/watson) example.
+This pipeline runs training, storing and deploying a Tensorflow model with MNIST handwriting recognition using [IBM Watson Studio](https://www.ibm.com/cloud/watson-studio/) service. This example is originated from Kubeflow pipeline's [ibm-samples/watson](https://github.com/kubeflow/pipelines/tree/master/samples/contrib/ibm-samples/watson) example.
 
 ## Prerequisites 
 - Install [KFP Tekton prerequisites](/samples/README.md)
