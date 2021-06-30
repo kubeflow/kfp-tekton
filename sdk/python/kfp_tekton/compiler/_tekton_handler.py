@@ -37,6 +37,8 @@ def _handle_tekton_pipeline_variables(pipeline_run):
     for task in task_list:
         if task.get('taskRef', {}):
             continue
+        if 'taskSpec' in task and 'apiVersion' in task['taskSpec']:
+            continue
         for key, val in pipeline_variables.items():
             task_str = json.dumps(task['taskSpec']['steps'])
             if val in task_str:

@@ -21,13 +21,12 @@ import sys
 import tempfile
 import textwrap
 import unittest
-import yaml
-import pytest
-
 from os import environ as env
 
+import pytest
+import yaml
 from kfp_tekton import compiler
-
+from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 
 # temporarily set this flag to True in order to (re)generate new "golden" YAML
 # files after making code changes that modify the expected YAML output.
@@ -506,15 +505,16 @@ class TestTektonCompiler(unittest.TestCase):
 
     self._test_pipeline_workflow(any_sequence_pipeline, 'any_sequencer.yaml')
 
-  def _test_pipeline_workflow(self,
+  def _test_pipeline_workflow_inlined_spec(self,
                               pipeline_function,
                               pipeline_yaml,
                               normalize_compiler_output_function=None,
-                              tekton_pipeline_conf=None):
+                              tekton_pipeline_conf=TektonPipelineConf()):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
+    tekton_pipeline_conf.set_tekton_inline_spec(True)
     try:
       compiler.TektonCompiler().compile(pipeline_function,
                                         compiled_yaml_file,
@@ -526,6 +526,32 @@ class TestTektonCompiler(unittest.TestCase):
       self._verify_compiled_workflow(golden_yaml_file, compiled)
     finally:
       shutil.rmtree(temp_dir)
+
+  def _test_pipeline_workflow(self,
+                              pipeline_function,
+                              pipeline_yaml,
+                              normalize_compiler_output_function=None,
+                              tekton_pipeline_conf=TektonPipelineConf()):
+    test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
+    golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml.replace(".yaml", "") + "_noninlined.yaml")
+    temp_dir = tempfile.mkdtemp()
+    compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
+    tekton_pipeline_conf.set_tekton_inline_spec(False)
+    try:
+      compiler.TektonCompiler().compile(pipeline_function,
+                                        compiled_yaml_file,
+                                        tekton_pipeline_conf=tekton_pipeline_conf)
+      with open(compiled_yaml_file, 'r') as f:
+        f = normalize_compiler_output_function(
+          f.read()) if normalize_compiler_output_function else f
+        compiled = yaml.safe_load(f)
+      self._verify_compiled_workflow(golden_yaml_file, compiled)
+    finally:
+      shutil.rmtree(temp_dir)
+    self._test_pipeline_workflow_inlined_spec(pipeline_function=pipeline_function,
+                                              pipeline_yaml=pipeline_yaml,
+                                              normalize_compiler_output_function=normalize_compiler_output_function,
+                                              tekton_pipeline_conf=tekton_pipeline_conf)
 
   def _test_workflow_without_decorator(self, pipeline_yaml, params_dict):
     """

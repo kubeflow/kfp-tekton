@@ -82,8 +82,38 @@ spec:
         value: $(tasks.my-out-cop0.results.out)
       runAfter:
       - my-out-cop0
-      taskRef:
+      taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: withparam-output-for-loop-1
+        spec:
+          iterateParam: my-out-cop0-out-loop-item
+          pipelineSpec:
+            params:
+            - name: my-out-cop0-out-loop-item
+              type: string
+            tasks:
+            - name: my-in-cop1
+              params:
+              - name: my-out-cop0-out-loop-item
+                value: $(params.my-out-cop0-out-loop-item)
+              taskSpec:
+                metadata:
+                  annotations:
+                    tekton.dev/template: ''
+                  labels:
+                    pipelines.kubeflow.org/cache_enabled: 'true'
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/pipelinename: ''
+                params:
+                - name: my-out-cop0-out-loop-item
+                  type: string
+                steps:
+                - args:
+                  - 'echo do output op1 item: $(inputs.params.my-out-cop0-out-loop-item)'
+                  command:
+                  - sh
+                  - -c
+                  image: library/bash:4.4.23
+                  name: main
+              timeout: 0s
   timeout: 0s
