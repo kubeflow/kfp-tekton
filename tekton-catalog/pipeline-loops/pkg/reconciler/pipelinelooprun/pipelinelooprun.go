@@ -66,6 +66,9 @@ const (
 
 	// pipelineLoopIterationLabelKey is the label identifier for the iteration number.  This label is added to the Run's PipelineRuns.
 	pipelineLoopIterationLabelKey = "/pipelineLoopIteration"
+
+	// LabelKeyWorkflowRunId is the label identifier a pipelinerun is managed by the Kubeflow Pipeline persistent agent.
+	LabelKeyWorkflowRunId = "pipeline/runid"
 )
 
 // Reconciler implements controller.Reconciler for Configuration resources.
@@ -690,6 +693,11 @@ func getPipelineRunLabels(run *v1alpha1.Run, iterationStr string) map[string]str
 		prOriginalName = run.ObjectMeta.Labels["tekton.dev/pipelineRun"]
 	}
 	labels[pipelineloop.GroupName+originalPRKey] = prOriginalName
+	// Empty the RunId reference from the KFP persistent agent because LabelKeyWorkflowRunId should be unique across all pipelineruns
+	_, ok := labels[LabelKeyWorkflowRunId]
+	if ok {
+		delete(labels, LabelKeyWorkflowRunId)
+	}
 	return labels
 }
 
