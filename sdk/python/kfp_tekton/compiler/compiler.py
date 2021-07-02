@@ -279,9 +279,7 @@ class TektonCompiler(Compiler):
                 self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
             if op.groups:
               for condition_op in op.groups:
-                # graph task should be a nested cr and need be appended to task list.
-                if condition_op.type == 'graph':
-                  self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
+                self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
         self.loops_pipeline[group_name]['spec']['name'] = group_name
         self.loops_pipeline[group_name]['spec']['taskRef'] = {
           "apiVersion": "custom.tekton.dev/v1alpha1",

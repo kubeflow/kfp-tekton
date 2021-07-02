@@ -118,6 +118,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.cond_recur import condition_and_recur
     self._test_pipeline_workflow(condition_and_recur, 'cond_recur.yaml')
 
+  def test_loop_in_recur_workflow(self):
+    """
+    Test compiling a conditional recursive workflow.
+    """
+    from .testdata.loop_in_recursion import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'loop_in_recursion.yaml')
+
   def test_recur_nested_workflow(self):
     """
     Test compiling a nested recursive workflow.
