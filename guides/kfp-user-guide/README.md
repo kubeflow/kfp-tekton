@@ -350,7 +350,7 @@ When developing a Kubeflow pipeline for the Tekton backend, please be aware that
 
 Therefore, we have prohibited the kfp-tekton compiler from putting artifacts and parameter output files in the container's root directory. We recommend placing the output files inside a new directory under root to avoid this problem, such as `/tmp/`. The [condition](/samples/flip-coin/condition.py) example shows how the output files can be stored. Alternatively, you can learn [how to create reusable components](https://www.kubeflow.org/docs/pipelines/sdk/component-development/) in a component.yaml where you can avoid hard coding your output file path.
 
-This also applies to the Argo backend with k8sapi and kubelet executors, and it's the recommended way to avoid the [race condition for Argo's PNS executor](https://github.com/argoproj/argo/issues/1256#issuecomment-494319015).
+This also applies to the Argo backend with k8sapi and kubelet executors, and it's the recommended way to avoid the [race condition for Argo's PNS executor](https://github.com/argoproj/argo-workflows/issues/1256#issuecomment-494319015).
 
 ## Migration from Argo backend
 
