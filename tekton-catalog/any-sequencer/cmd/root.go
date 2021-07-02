@@ -1,5 +1,5 @@
 /*
-Copyright 2020 kubeflow.org.
+Copyright 2021 kubeflow.org.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import (
 	"github.com/Knetic/govaluate"
 
 	"github.com/spf13/cobra"
-	v1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	tektoncdclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -125,6 +124,21 @@ func contains(s []string, str string) bool {
 	return false
 }
 
+func intersection(a, b []string) (c []string) {
+	m := make(map[string]bool)
+
+	for _, item := range a {
+		m[item] = true
+	}
+
+	for _, item := range b {
+		if _, ok := m[item]; ok {
+			c = append(c, item)
+		}
+	}
+	return
+}
+
 func parse_conditions(condtions []string, tasks *[]string) {
 	conditionMap = make(map[string][]conditionResult)
 	if len(condtions) == 0 {
@@ -186,7 +200,7 @@ func parse_conditions(condtions []string, tasks *[]string) {
 func Execute() {
 	// rootCmd represents the base command when called without any subcommands
 	var rootCmd = &cobra.Command{
-		Use:   "any-taskrun",
+		Use:   "any-task",
 		Short: "Watch taskrun or run, and exit when any taskrun or run complete",
 		Long: `Watch taskrun or run, and exit when any of below is true:
 			1: taskrun or run complete
@@ -223,22 +237,22 @@ func sanitize_task_result(result string) interface{} {
 	return i
 }
 
-func checkTaskrunConditions(crs []conditionResult, tr *v1beta1.TaskRun) (string, bool) {
+func checkTaskrunConditions(crs []conditionResult, taskRunStatus *v1beta1.PipelineRunTaskRunStatus) (string, bool) {
 	for _, cr := range crs {
 		parameters := make(map[string]interface{})
 		for _, result := range cr.results {
-			trLabel := tr.Labels["tekton.dev/pipelineTask"]
+			trName := taskRunStatus.PipelineTaskName
 			var found bool
-			for _, taskRunResults := range tr.Status.TaskRunResults {
+			for _, taskRunResults := range taskRunStatus.Status.TaskRunResults {
 				if result == taskRunResults.Name {
 					// Do not need sanitize parameter name but only for expression for go valuate
-					parameters[`results_`+trLabel+`_`+result] = sanitize_task_result(taskRunResults.Value)
+					parameters[`results_`+trName+`_`+result] = sanitize_task_result(taskRunResults.Value)
 					found = true
 					break
 				}
 			}
 			if !found {
-				fmt.Printf("The result %s does not exist in taskrun %s.\n", result, trLabel)
+				fmt.Printf("The result %s does not exist in taskrun %s.\n", result, trName)
 				return cr.condition, false
 			}
 		}
@@ -262,22 +276,22 @@ func checkTaskrunConditions(crs []conditionResult, tr *v1beta1.TaskRun) (string,
 	return "", true
 }
 
-func checkRunConditions(crs []conditionResult, run *v1alpha1.Run) (string, bool) {
+func checkRunConditions(crs []conditionResult, runStatus *v1beta1.PipelineRunRunStatus) (string, bool) {
 	for _, cr := range crs {
 		parameters := make(map[string]interface{})
 		for _, result := range cr.results {
-			runLabel := run.Labels["tekton.dev/pipelineTask"]
+			runName := runStatus.PipelineTaskName
 			var found bool
-			for _, runResults := range run.Status.Results {
+			for _, runResults := range runStatus.Status.Results {
 				if result == runResults.Name {
 					// Do not need sanitize parameter name but only for expression for go valuate
-					parameters[`results_`+runLabel+`_`+result] = sanitize_task_result(runResults.Value)
+					parameters[`results_`+runName+`_`+result] = sanitize_task_result(runResults.Value)
 					found = true
 					break
 				}
 			}
 			if !found {
-				fmt.Printf("The result %s does not exist in run %s.\n", result, runLabel)
+				fmt.Printf("The result %s does not exist in run %s.\n", result, runName)
 				return cr.condition, false
 			}
 		}
@@ -301,119 +315,114 @@ func checkRunConditions(crs []conditionResult, run *v1alpha1.Run) (string, bool)
 	return "", true
 }
 
-func watchTaskRun(labelSelector string, tasks []string, failedTasksCh chan string) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		fmt.Printf("Get config of the cluster failed: %+v \n", err)
-		exitWithStatus(failedStatus, 1)
-	}
-
-	tektonClient, err := tektoncdclientset.NewForConfig(config)
-	if err != nil {
-		fmt.Printf("Get client of tekton failed: %+v \n", err)
-		exitWithStatus(failedStatus, 1)
-	}
-
-	for {
-		trWatcher, err := tektonClient.TektonV1beta1().TaskRuns(namespace).Watch(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
-
-		if err != nil {
-			fmt.Println("TaskRun Watcher error:" + err.Error())
-			fmt.Println("Please ensure the service account has permission to get taskRun.")
-			exitWithStatus(failedStatus, 1)
+func checkTaskRunStatus(taskRunStatus *v1beta1.PipelineRunTaskRunStatus, failedOrSkippedTasksCh chan string) {
+	var taskFailed bool
+	taskName := taskRunStatus.PipelineTaskName
+	taskrunStatusCondition := taskRunStatus.Status.GetCondition(apis.ConditionSucceeded)
+	if taskrunStatusCondition.IsTrue() {
+		fmt.Printf("The TaskRun of %s succeeded.\n", taskName)
+		conditions, ok := conditionMap[taskName]
+		if !ok { // no conditions to be passed --> any-sequencer success
+			exitWithStatus(succeededStatus, 0)
 		}
 
-		for event := range trWatcher.ResultChan() {
-			taskrun := event.Object.(*v1beta1.TaskRun)
-			taskLabel := taskrun.Labels["tekton.dev/pipelineTask"]
-			if contains(tasks, taskLabel) {
-				taskrunStatus := taskrun.Status.GetCondition(apis.ConditionSucceeded)
-				var taskFailed bool
-				if taskrunStatus.IsTrue() {
-					fmt.Printf("The TaskRun of %s succeeded.\n", taskLabel)
-					conditions, ok := conditionMap[taskLabel]
-					if !ok { // no conditions to be passed --> any-sequencer success
-						trWatcher.Stop()
-						exitWithStatus(succeededStatus, 0)
-					}
+		condition, ok := checkTaskrunConditions(conditions, taskRunStatus)
+		if ok { // condition passed -->  any-sequencer success
+			exitWithStatus(succeededStatus, 0)
+		}
+		taskFailed = true
+		fmt.Printf("The condition %s for the task %s does not meet.\n", condition, taskName)
+	}
 
-					condition, ok := checkTaskrunConditions(conditions, taskrun)
-					if ok { // condition passed -->  any-sequencer success
-						trWatcher.Stop()
-						exitWithStatus(succeededStatus, 0)
-					}
-					taskFailed = true
-					fmt.Printf("The condition %s for the task %s does not meet.\n", condition, taskLabel)
-				}
+	if taskrunStatusCondition.IsFalse() {
+		taskFailed = true
+	}
 
-				if taskrunStatus.IsFalse() {
-					taskFailed = true
-				}
+	if taskFailed {
+		failedOrSkippedTasksCh <- taskName
+	}
+}
 
-				if taskFailed {
-					failedTasksCh <- taskLabel
-				}
-				//if taskFailed && !contains(failedTasks, taskLabel) {
-				//	failedTasks = append(failedTasks, taskLabel)
-				//}
+func checkRunStatus(runStatus *v1beta1.PipelineRunRunStatus, failedOrSkippedTasksCh chan string) {
+	taskName := runStatus.PipelineTaskName
+	var taskFailed bool
+	runStatusCondition := runStatus.Status.GetCondition(apis.ConditionSucceeded)
+	if runStatusCondition.IsTrue() {
+		fmt.Printf("The Run of %s succeeded.\n", taskName)
+		conditions, ok := conditionMap[taskName]
+		if !ok { // no conditions to be passed --> any-sequencer success
+			exitWithStatus(succeededStatus, 0)
+		}
+		condition, ok := checkRunConditions(conditions, runStatus)
+		if ok { // condition passed -->  any-sequencer success
+			exitWithStatus(succeededStatus, 0)
+		}
+		taskFailed = true
+		fmt.Printf("The condition %s for the task %s does not meet.\n", condition, taskName)
+	}
+
+	if runStatusCondition.IsFalse() {
+		taskFailed = true
+	}
+
+	if taskFailed {
+		failedOrSkippedTasksCh <- taskName
+	}
+}
+
+func checkSkippedTasks(pr *v1beta1.PipelineRun, tasks []string, failedOrSkippedTasksCh chan string) {
+	var skippedTasks []string
+
+	if pr.Status.SkippedTasks != nil {
+		for _, skippedTask := range pr.Status.SkippedTasks {
+			if !contains(skippedTasks, skippedTask.Name) {
+				skippedTasks = append(skippedTasks, skippedTask.Name)
 			}
+		}
+		interestedSkippedTasks := intersection(skippedTasks, tasks)
+		for _, interestedSkippedTask := range interestedSkippedTasks {
+			failedOrSkippedTasksCh <- interestedSkippedTask
 		}
 	}
 }
 
-func watchRun(labelSelector string, tasks []string, failedTasksCh chan string) {
+func watchPipelineRun(tasks []string, failedOrSkippedTasksCh chan string) []string {
+
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		fmt.Printf("Get config of the cluster failed: %+v \n", err)
 		exitWithStatus(failedStatus, 1)
 	}
-
 	tektonClient, err := tektoncdclientset.NewForConfig(config)
 	if err != nil {
 		fmt.Printf("Get client of tekton failed: %+v \n", err)
 		exitWithStatus(failedStatus, 1)
 	}
 
+	fieldSelector := "metadata.name=" + strings.TrimSpace(prName)
+
 	for {
-		runWatcher, err := tektonClient.TektonV1alpha1().Runs(namespace).Watch(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
+		prWatcher, err := tektonClient.TektonV1beta1().PipelineRuns(namespace).Watch(context.TODO(), metav1.ListOptions{FieldSelector: fieldSelector})
 
 		if err != nil {
 			fmt.Println("Run Watcher error:" + err.Error())
-			fmt.Println("Please ensure the service account has permission to get Run.")
+			fmt.Println("Please ensure the service account has permission to get PipelineRun.")
 			exitWithStatus(failedStatus, 1)
 		}
 
-		for event := range runWatcher.ResultChan() {
-			run := event.Object.(*v1alpha1.Run)
-			taskLabel := run.Labels["tekton.dev/pipelineTask"]
-			if contains(tasks, taskLabel) {
-				runStatus := run.Status.GetCondition(apis.ConditionSucceeded)
-				var taskFailed bool
-				if runStatus.IsTrue() {
-					fmt.Printf("The Run of %s succeeded.\n", taskLabel)
-					conditions, ok := conditionMap[taskLabel]
-					if !ok { // no conditions to be passed --> any-sequencer success
-						runWatcher.Stop()
-						exitWithStatus(succeededStatus, 0)
-					}
-
-					condition, ok := checkRunConditions(conditions, run)
-					if ok { // condition passed -->  any-sequencer success
-						runWatcher.Stop()
-						exitWithStatus(succeededStatus, 0)
-					}
-					taskFailed = true
-					fmt.Printf("The condition %s for the task %s does not meet.\n", condition, taskLabel)
-				}
-
-				if runStatus.IsFalse() {
-					taskFailed = true
-				}
-
-				if taskFailed {
-					failedTasksCh <- taskLabel
+		for event := range prWatcher.ResultChan() {
+			pr := event.Object.(*v1beta1.PipelineRun)
+			for _, taskRunStatus := range pr.Status.TaskRuns {
+				if contains(tasks, taskRunStatus.PipelineTaskName) {
+					checkTaskRunStatus(taskRunStatus, failedOrSkippedTasksCh)
 				}
 			}
+			for _, runStatus := range pr.Status.Runs {
+				if contains(tasks, runStatus.PipelineTaskName) {
+					checkRunStatus(runStatus, failedOrSkippedTasksCh)
+				}
+			}
+			checkSkippedTasks(pr, tasks, failedOrSkippedTasksCh)
 		}
 	}
 }
@@ -443,8 +452,6 @@ func watch(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	fmt.Printf("Starting to watch taskrun or run for '%s' and condition in %s/%s.\n", taskList, namespace, prName)
-
 	var tasks []string
 	if taskList != "" {
 		tasks = strings.Split(taskList, ",")
@@ -452,20 +459,20 @@ func watch(cmd *cobra.Command, args []string) {
 
 	parse_conditions(conditions, &tasks)
 
-	labelSelector := "tekton.dev/pipelineRun=" + strings.TrimSpace(prName)
+	fmt.Printf("Starting to watch taskrun or run of '%s' and conditions in %s/%s.\n", taskList, namespace, prName)
 
-	failedTasksCh := make(chan string)
+	failedOrSkippedTasksCh := make(chan string)
 
-	go watchTaskRun(labelSelector, tasks, failedTasksCh)
-	go watchRun(labelSelector, tasks, failedTasksCh)
+	go watchPipelineRun(tasks, failedOrSkippedTasksCh)
 
-	var failedTasks []string
-	for failedTask := range failedTasksCh {
-		if !contains(failedTasks, failedTask) {
-			failedTasks = append(failedTasks, failedTask)
+	var failedOrSkippedTasks []string
+	for failedorSkippedTask := range failedOrSkippedTasksCh {
+		if !contains(failedOrSkippedTasks, failedorSkippedTask) {
+			fmt.Printf("The taskrun or run failed/skipped, or condition unmatched of task: %s.\n", failedorSkippedTask)
+			failedOrSkippedTasks = append(failedOrSkippedTasks, failedorSkippedTask)
 		}
-		if len(failedTasks) >= len(tasks) {
-			fmt.Println("All specified TaskRun(s) or Run(s) failed.")
+		if len(failedOrSkippedTasks) >= len(tasks) {
+			fmt.Println("All specified TaskRun(s) or Run(s) failed or skipped.")
 			exitWithStatus(skippedStatus, 1)
 		}
 	}

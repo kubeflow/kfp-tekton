@@ -165,7 +165,7 @@ spec:
           - -c
           - results_flipcoin_output == 'heads'
           command:
-          - any-taskrun
+          - any-task
           image: dspipelines/any-sequencer:latest
           name: main
       timeout: 0s
