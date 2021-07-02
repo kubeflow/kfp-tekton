@@ -737,7 +737,7 @@ class TektonCompiler(Compiler):
             for index, item in enumerate(container_args):
               if item.startswith('--'):
                 custom_task_args[item[2:]] = container_args[index + 1]
-            non_param_keys = ['name', 'apiVersion', 'kind', 'taskSpec']
+            non_param_keys = ['name', 'apiVersion', 'kind', 'taskSpec', 'taskRef']
             task_params = []
             for key, value in custom_task_args.items():
               if key not in non_param_keys:
@@ -753,24 +753,42 @@ class TektonCompiler(Compiler):
                 'kind': custom_task_args['kind']
               }
             }
+            # Only one of --taskRef and --taskSpec allowed.
+            if custom_task_args.get('taskRef', '') and custom_task_args.get('taskSpec', ''):
+              raise("Custom task invalid configuration %s, Only one of --taskRef and --taskSpec allowed." % custom_task_args)
+            if custom_task_args.get('taskRef', ''):
+              try:
+                custom_task_cr = {
+                  'apiVersion': custom_task_args['apiVersion'],
+                  'kind': custom_task_args['kind'],
+                  'metadata': {
+                    'name': custom_task_args['name']
+                  },
+                  'spec': ast.literal_eval(custom_task_args['taskRef'])
+                }
+                for existing_cr in self.custom_task_crs:
+                  if existing_cr == custom_task_cr:
+                    # Skip duplicated CR resource
+                    custom_task_cr = {}
+                    break
+                if custom_task_cr:
+                  self.custom_task_crs.append(custom_task_cr)
+              except ValueError:
+                raise("Custom task ref %s is not a valid Python Dictionary" % custom_task_args['taskRef'])
+            # Setting --taskRef flag indicates, that spec be inlined.
             if custom_task_args.get('taskSpec', ''):
               try:
-                if custom_task_args['taskSpec']:
-                  custom_task_cr = {
+                task_ref = {
+                  'name': template['metadata']['name'],
+                  'params': task_params,
+                  # For processing Tekton parameter mapping later on.
+                  'orig_params': task_ref['params'],
+                  'taskSpec': {
                     'apiVersion': custom_task_args['apiVersion'],
                     'kind': custom_task_args['kind'],
-                    'metadata': {
-                      'name': custom_task_args['name']
-                    },
                     'spec': ast.literal_eval(custom_task_args['taskSpec'])
                   }
-                  for existing_cr in self.custom_task_crs:
-                    if existing_cr == custom_task_cr:
-                      # Skip duplicated CR resource
-                      custom_task_cr = {}
-                      break
-                  if custom_task_cr:
-                    self.custom_task_crs.append(custom_task_cr)
+                }
               except ValueError:
                 raise("Custom task spec %s is not a valid Python Dictionary" % custom_task_args['taskSpec'])
             # Pop custom task artifacts since we have no control of how
@@ -944,7 +962,7 @@ class TektonCompiler(Compiler):
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       # Custom task doesn't support timeout feature
-      if task.get('taskSpec', ''):
+      if task.get('taskSpec', '') and 'apiVersion' not in task['taskSpec']:
         if op != None and (not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout):
           task['timeout'] = '%ds' % op.timeout
 
