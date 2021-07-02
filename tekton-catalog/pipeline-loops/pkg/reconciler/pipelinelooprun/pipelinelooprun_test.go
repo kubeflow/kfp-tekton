@@ -1107,6 +1107,7 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
 		expectedPipelineruns: []*v1beta1.PipelineRun{expectedNestedPipelineRun},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+		// TODO: Add unit tests for conditional pipeline run.
 	}}
 
 	for _, tc := range testcases {
