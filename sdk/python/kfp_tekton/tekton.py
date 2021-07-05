@@ -76,7 +76,7 @@ class AnySequencer(ContainerOp):
             name=name,
             image=image,
             file_outputs=file_outputs,
-            command="any-taskrun",
+            command="any-task",
             arguments=arguments,
         )
 
