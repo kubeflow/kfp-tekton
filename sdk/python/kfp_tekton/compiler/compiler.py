@@ -371,7 +371,7 @@ class TektonCompiler(Compiler):
             sanitized_tasks.append(c_dict)
           loop_args_str_value = json.dumps(sanitized_tasks, sort_keys=True)
         else:
-          loop_args_str_value = str(loop_arg_value)
+          loop_args_str_value = json.dumps(loop_arg_value)
 
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": sub_group.loop_args.full_name,
