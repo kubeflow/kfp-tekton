@@ -49,7 +49,7 @@ DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
 TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
-LOOP_RESOURCES_IN_SEPARATE_YAML = strtobool(env.get('LOOP_RESOURCES_IN_SEPARATE_YAML', 'false'))
+LOOP_RESOURCES_IN_SEPARATE_YAML = strtobool(env.get('LOOP_RESOURCES_IN_SEPARATE_YAML', 'true'))
 # DISABLE_CEL_CONDITION should be True until CEL is officially merged into Tekton main API.
 DISABLE_CEL_CONDITION = True
 
@@ -1334,17 +1334,6 @@ class TektonCompiler(Compiler):
     # Separate loop workflow from the main workflow
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
-      # loop_package_annotations = []
-      # for i in range(len(pipeline_loop_crs)):
-      #   if LOOP_RESOURCES_IN_SEPARATE_YAML:
-      #     TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
-      #                                    package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
-      #   else:
-      #     pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
-      #     loop_package_annotations.append(yaml.load(pipeline_loop_cr, Loader=yaml.FullLoader))
-      # if loop_package_annotations:
-      #   workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations, sort_keys=True)
-      # TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
       inlined_as_taskSpec: List[Text] = []
       recursive_tasks_names: List[Text] = [x['taskRef'].get('name', "") for x in self.recursive_tasks]
       if self.tekton_inline_spec:
@@ -1366,8 +1355,6 @@ class TektonCompiler(Compiler):
         inlined_as_taskSpec.extend(e)
         workflow['spec']['pipelineSpec']['tasks'] = workflow_tasks
 
-      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
-
       # create cr yaml for only those pipelineLoop cr which could not be converted to inlined spec.
       loop_package_annotations = []
       for i in range(len(pipeline_loop_crs)):
@@ -1379,8 +1366,10 @@ class TektonCompiler(Compiler):
         else:
           pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
           loop_package_annotations.append(yaml.load(pipeline_loop_cr, Loader=yaml.FullLoader))
-        if loop_package_annotations:
-          workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations, sort_keys=True)
+      if loop_package_annotations:
+        workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations, sort_keys=True)
+      # Need to compiles after all the CRs being processed.
+      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
     else:
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
     # Separate custom task CR from the main workflow

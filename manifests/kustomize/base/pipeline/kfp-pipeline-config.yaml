@@ -11,7 +11,7 @@ data:
   track_artifacts: "true"
   strip_eof: "false"
   inject_default_script: "true"
-  apply_tekton_custom_resource: "true"
+  apply_tekton_custom_resource: "false"
   artifact_script: |-
     #!/usr/bin/env sh
     push_artifact() {
