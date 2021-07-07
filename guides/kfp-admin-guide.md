@@ -10,6 +10,7 @@ This page introduces different ways to configure the kfp-tekton admin settings s
 - [Customize Artifact Image to do your own post processing](#customize-artifact-image-to-do-your-own-post-processing)
 - [Customize S3 Endpoint for KFP Tekton artifacts](#customize-s3-endpoint-for-kfp-tekton-artifacts)
 - [Disable Caching](#disable-caching)
+- [Change the Tekton Terminate API Method](#change-the-tekton-terminate-api-method)
 
 
 ## Disable Artifact Tracking
@@ -84,8 +85,6 @@ kubectl rollout restart deploy/ml-pipeline -n kubeflow
 kubectl rollout restart deploy/minio -n kubeflow
 ```
 
-[kfp-tekton-configmap]: /manifests/kustomize/base/pipeline/kfp-pipeline-config.yaml
-
 ## Disable Caching
 
 KFP Caching will cache all the workloads that use the same task with the same inputs. It's enabled by default. To disable caching on the server side, run the commands below.
@@ -93,3 +92,22 @@ KFP Caching will cache all the workloads that use the same task with the same in
 ```shell
 kubectl set env -n kubeflow deploy/ml-pipeline CACHE_ENABLED=false
 ```
+
+## Change the Tekton Terminate API Method
+
+Starting from Tekton 0.25.0, there are three different ways to terminate a pipeline in Tekton.
+- "StoppedRunFinally" - To stop (i.e. let the tasks complete, then execute finally tasks) a PipelineRun
+- "CancelledRunFinally" - To cancel (i.e. interrupt any executing non finally tasks, then execute finally tasks)
+- "Cancelled" - Interrupt any executing tasks without running finally tasks
+
+By default, kfp-tekton uses `Cancelled` as the terminate API for Tekton. However, if the admin wants to change the terminate API to other methods, the admin can update the default [kfp-tekton configmap][kfp-tekton-configmap] and apply the configamap with the below commands
+
+- `terminate_status`: Tekton terminate status for the KFP terminate API. Default is `Cancelled`.
+
+```shell
+kubectl apply -f /manifests/kustomize/base/pipeline/kfp-pipeline-config.yaml -n kubeflow
+kubectl rollout restart deploy/ml-pipeline -n kubeflow
+```
+
+
+[kfp-tekton-configmap]: /manifests/kustomize/base/pipeline/kfp-pipeline-config.yaml

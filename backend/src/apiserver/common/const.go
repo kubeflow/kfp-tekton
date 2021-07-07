@@ -99,6 +99,9 @@ const DefaultArtifactScript string = "#!/usr/bin/env sh\n" +
 	"}\n" +
 	"mc config host add storage ${ARTIFACT_ENDPOINT_SCHEME}${ARTIFACT_ENDPOINT} $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY\n"
 
+// Default Tekton 0.25.0+ Terminate Status.
+const DefaultTerminateStatus string = "Cancelled"
+
 func ToModelResourceType(apiType api.ResourceType) (ResourceType, error) {
 	switch apiType {
 	case api.ResourceType_EXPERIMENT:

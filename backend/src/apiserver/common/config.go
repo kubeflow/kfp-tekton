@@ -43,6 +43,7 @@ const (
 	InjectDefaultScript                 string = "INJECT_DEFAULT_SCRIPT"
 	UpdatePipelineVersionByDefault      string = "AUTO_UPDATE_PIPELINE_DEFAULT_VERSION"
 	TokenReviewAudience                 string = "TOKEN_REVIEW_AUDIENCE"
+	TerminateStatus                     string = "TERMINATE_STATUS"
 )
 
 func IsPipelineVersionUpdatedByDefault() bool {
@@ -181,4 +182,8 @@ func GetArtifactEndpointScheme() string {
 
 func GetArtifactScript() string {
 	return GetStringConfigWithDefault(ArtifactScript, DefaultArtifactScript)
+}
+
+func GetTerminateStatus() string {
+	return GetStringConfigWithDefault(TerminateStatus, DefaultTerminateStatus)
 }
