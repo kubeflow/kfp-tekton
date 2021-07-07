@@ -16,7 +16,7 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "5", "name": "n",
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "5", "name": "n1",
       "optional": true}, {"default": "10", "name": "threshold", "optional": true},
       {"default": "15", "name": "lower_bound", "optional": true}], "name": "Conditions
       with global params"}'
@@ -35,7 +35,7 @@ metadata:
   name: conditions-with-global-params
 spec:
   params:
-  - name: n
+  - name: n1
     value: '5'
   - name: threshold
     value: '10'
@@ -44,7 +44,7 @@ spec:
   pipelineSpec:
     params:
     - default: '5'
-      name: n
+      name: n1
     - default: '10'
       name: threshold
     - default: '15'
@@ -54,8 +54,8 @@ spec:
       params:
       - name: lower_bound
         value: $(params.lower_bound)
-      - name: n
-        value: $(params.n)
+      - name: n1
+        value: $(params.n1)
       taskSpec:
         metadata:
           annotations:
@@ -86,14 +86,14 @@ spec:
             pipelines.kubeflow.org/pipelinename: ''
         params:
         - name: lower_bound
-        - name: n
+        - name: n1
         results:
         - description: /tmp/outputs/Output/data
           name: output
         steps:
         - args:
           - --a
-          - $(inputs.params.n)
+          - $(inputs.params.n1)
           - --b
           - $(inputs.params.lower_bound)
           - '----output-paths'

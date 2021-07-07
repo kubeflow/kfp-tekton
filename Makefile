@@ -42,8 +42,12 @@ $(VENV)/bin/activate: sdk/python/setup.py
 install: venv ## Install the kfp_tekton compiler in a virtual environment
 	@echo "Run 'source $(VENV)/bin/activate' to activate the virtual environment."
 
+.PHONY: validate_testdata
+validate-testdata:
+	@cd tekton-catalog/pipeline-loops/ && make validate-testdata-python-sdk
+
 .PHONY: unit_test
-unit_test: venv ## Run compiler unit tests
+unit_test: venv validate-testdata ## Run compiler unit tests
 	@echo "=================================================================="
 	@echo "Optional environment variables to configure $@, examples:"
 	@sed -n -e 's/# *\(make $@ .*\)/  \1/p' sdk/python/tests/compiler/compiler_tests.py

@@ -50,7 +50,7 @@ func validateFlags(action, inputFileName, inputFileType string) {
 		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
-		fmt.Println("Errors while processing input:")
+		fmt.Println("Errors while processing input for filename: ", inputFileName)
 		for i, e := range errs {
 			fmt.Printf("Error: %d -> %v\n", i, e)
 		}
@@ -60,10 +60,11 @@ func validateFlags(action, inputFileName, inputFileType string) {
 
 func main() {
 	var action, inputFileName, inputFileType string
-
+	var quiet bool
 	flag.StringVar(&action, "a", "validate", "The `action` on the resource.")
 	flag.StringVar(&inputFileName, "f", "", "path to input `filename` either a yaml or json.")
 	flag.StringVar(&inputFileType, "file-type", "yaml", "`yaml` or a json")
+	flag.BoolVar(&quiet, "q", false, "quiet mode, report only errors.")
 	flag.Parse()
 	validateFlags(action, inputFileName, inputFileType)
 	if inputFileType == "json" {
@@ -74,14 +75,16 @@ func main() {
 	if inputFileType == "yaml" {
 		objs, err := readFile(inputFileName)
 		if err != nil {
-			fmt.Printf("\nError while reading input spec: %v\n", err)
-			os.Exit(2)
+			fmt.Printf("\nWarn: skipping file:%s, %v\n", inputFileName, err)
+			// os.Exit(2) These are warning because, certain yaml are not k8s resource and we can skip.
+			os.Exit(0)
 		}
 		for _, o := range objs {
 			marshalledBytes, err := o.MarshalJSON()
 			if err != nil {
-				fmt.Printf("\nError while marshalling json: %v\n", err)
-				os.Exit(3)
+				fmt.Printf("\nWarn: skipping file due to json Marshal errors:%s, %v\n", inputFileName, err)
+				// os.Exit(3) These are warning because, certain yaml are not k8s resource and we can skip.
+				os.Exit(0)
 			}
 			err = nil
 			switch kind := o.GetKind(); kind {
@@ -96,25 +99,29 @@ func main() {
 			case "PipelineRun":
 				err = validatePipelineRun(marshalledBytes)
 			default:
-				fmt.Printf("\nWarn: Unsupported kind: %s.\n", kind)
+				if !quiet {
+					fmt.Printf("\nWarn: Unsupported kind: %s.\n", kind)
+				}
 			}
 			if err != nil {
 				errs = append(errs, err.Error())
 			}
 		}
 		if len(errs) > 0 {
-			fmt.Printf("\nValidation errors: %s\n", strings.Join(errs, "\n"))
+			fmt.Printf("\nFound validation errors in %s: \n%s\n", inputFileName,
+				strings.Join(errs, "\n"))
 			os.Exit(100)
 		} else {
-			fmt.Printf("\nCongratulations, all checks passed !!\n")
+			if !quiet {
+				fmt.Printf("\nCongratulations, all checks passed in %s\n", inputFileName)
+			}
 		}
 	}
 }
 
 func validatePipeline(bytes []byte) error {
 	p := v1beta1.Pipeline{}
-	err := json.Unmarshal(bytes, &p)
-	if err != nil {
+	if err := json.Unmarshal(bytes, &p); err != nil {
 		return err
 	}
 	return validatePipelineSpec(&p.Spec, p.Name)
@@ -146,7 +153,7 @@ func validateRun(bytes []byte) error {
 	r := v1alpha1.Run{}
 	err := json.Unmarshal(bytes, &r)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error while unmarshal Run:%s\n", err.Error())
 	}
 	// We do not need to validate Run because it is validated by tekton admission webhook
 	// And r.Spec.Ref is also validated by tekton.
@@ -161,9 +168,8 @@ func validateRun(bytes []byte) error {
 
 func validatePipelineRun(bytes []byte) error {
 	pr := v1beta1.PipelineRun{}
-	err := json.Unmarshal(bytes, &pr)
-	if err != nil {
-		return err
+	if err := json.Unmarshal(bytes, &pr); err != nil {
+		return fmt.Errorf("Error while unmarshal PipelineRun spec:%s\n", err.Error())
 	}
 	return validatePipelineSpec(pr.Spec.PipelineSpec, pr.Name)
 }
@@ -171,7 +177,7 @@ func validatePipelineRun(bytes []byte) error {
 func validatePipelineLoopEmbedded(bytes []byte) error {
 	var embeddedSpec map[string]interface{}
 	if err := json.Unmarshal(bytes, &embeddedSpec); err != nil {
-		return err
+		return fmt.Errorf("Error while unmarshal PipelineLoop embedded spec:%s\n", err.Error())
 	}
 	r1 := map[string]interface{}{
 		"kind":       pipelineloop.PipelineLoopControllerName,
@@ -182,7 +188,7 @@ func validatePipelineLoopEmbedded(bytes []byte) error {
 
 	marshalBytes, err := json.Marshal(r1)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error while marshalling embedded to PipelineLoop:%s\n", err.Error())
 	}
 	return validatePipelineLoop(marshalBytes)
 }
@@ -190,7 +196,7 @@ func validatePipelineLoopEmbedded(bytes []byte) error {
 func validatePipelineLoop(bytes []byte) error {
 	pipelineLoop := pipelineloopv1alpha1.PipelineLoop{}
 	if err := json.Unmarshal(bytes, &pipelineLoop); err != nil {
-		return err
+		return fmt.Errorf("Error while unmarshal PipelineLoop:%s\n", err.Error())
 	}
 	ctx := context.Background()
 	ctx = pipelinelooprun.EnableCustomTaskFeatureFlag(ctx)
