@@ -131,9 +131,10 @@ The `finally` syntax is supported since Tekton version `0.14.0`.
 
 PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks Controller](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops.
 
-By default, the SDK will not compile all the recursion loop resources in the pipelineRun annotations. If you want to apply the recursion loop resources together with pipelinerun as an admin, export the following environment variables before compiling the pipeline.
-```shell
-export LOOP_RESOURCES_IN_SEPARATE_YAML=false
+By default, the SDK will not compile all the recursion loop resources in the pipelineRun annotations. If you want to apply the recursion loop resources together with pipelinerun as an admin, add the following code snippet before compiling the pipeline.
+```python
+import kfp_tekton
+kfp_tekton.compiler.LOOP_RESOURCES_IN_SEPARATE_YAML=False
 ```
 
 To use this feature, please ensure Tekton version >= v0.19, and "data.enable-custom-tasks" is "true" in feature-flags configmap:
