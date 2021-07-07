@@ -1,0 +1,17 @@
+[flip-coin : main] heads
+
+[flip-coin : copy-artifacts] Added `storage` successfully.
+[flip-coin : copy-artifacts] tar: removing leading '/' from member names
+[flip-coin : copy-artifacts] tekton/results/output-result
+[flip-coin : copy-artifacts] `output_result.tgz` -> `storage/mlpipeline/artifacts/tekton-custom-task-on-kubeflow-pipeline-76b7c/flip-coin/output_result.tgz`
+[flip-coin : copy-artifacts] Total: 0 B, Transferred: 121 B, Speed: 10 B/s
+
+[flip-coin-2 : main] heads
+
+[flip-coin-2 : copy-artifacts] Added `storage` successfully.
+[flip-coin-2 : copy-artifacts] tar: removing leading '/' from member names
+[flip-coin-2 : copy-artifacts] tekton/results/output-result
+[flip-coin-2 : copy-artifacts] `output_result.tgz` -> `storage/mlpipeline/artifacts/tekton-custom-task-on-kubeflow-pipeline-76b7c/flip-coin-2/output_result.tgz`
+[flip-coin-2 : copy-artifacts] Total: 0 B, Transferred: 120 B, Speed: 9 B/s
+
+[print : main] Condition output is true

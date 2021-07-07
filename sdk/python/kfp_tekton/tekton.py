@@ -21,6 +21,7 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
 CEL_EVAL_IMAGE = "aipipeline/cel-eval:latest"
 ANY_SEQUENCER_IMAGE = "dspipelines/any-sequencer:latest"
+DEFAULT_CONDITION_OUTPUT_KEYWORD = "outcome"
 TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE]
 
 
@@ -37,7 +38,9 @@ class AnySequencer(ContainerOp):
     """
     def __init__(self,
                  any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
-                 name: str = None,):
+                 name: str = None, statusPath: str = None,
+                 skippingPolicy: str = None, errorPolicy: str = None,
+                 image: str = ANY_SEQUENCER_IMAGE):
         arguments = [
                     "--namespace",
                     "$(context.pipelineRun.namespace)",
@@ -46,6 +49,7 @@ class AnySequencer(ContainerOp):
                 ]
         tasks_list = []
         condition_list = []
+        file_outputs = None
         for cop in any:
             if isinstance(cop, dsl.ContainerOp):
                 cop_name = sanitize_k8s_name(cop.name)
@@ -55,14 +59,24 @@ class AnySequencer(ContainerOp):
         if len(tasks_list) > 0:
             task_list_str = ",".join(tasks_list)
             arguments.extend(["--taskList", task_list_str])
-            
+        if statusPath is not None:
+            file_outputs = {"status": statusPath}
+            arguments.extend(["--statusPath", statusPath])
+            if skippingPolicy is not None:
+                assert skippingPolicy == "skipOnNoMatch" or skippingPolicy == "errorOnNoMatch"
+                arguments.extend(["--skippingPolicy", skippingPolicy])
+            if errorPolicy is not None:
+                assert errorPolicy == "continueOnError" or errorPolicy == "failOnError"
+                arguments.extend(["--errorPolicy", errorPolicy])
+
         conditonArgs = processConditionArgs(condition_list)
         arguments.extend(conditonArgs)
 
         super().__init__(
             name=name,
-            image=ANY_SEQUENCER_IMAGE,
-            command="any-taskrun",
+            image=image,
+            file_outputs=file_outputs,
+            command="any-task",
             arguments=arguments,
         )
 
@@ -88,20 +102,21 @@ def processCondition(condition: ConditionOperator) -> str:
     conditionStr = f"{op1} {condition.operator} {op2}"
     return conditionStr
 
-    
+
 def processConditionArgs(conditions: List[ConditionOperator]) -> List[str]:
     conditionArgs = []
     for condition in conditions:
         conditionStr = processCondition(condition)
         conditionArgs.extend(["-c", conditionStr])
     return conditionArgs
-    
 
-def after_any(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]], name: str = None):
+
+def after_any(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]], name: str = None,
+              statusPath: str = None, skippingPolicy: str = None, errorPolicy: str = None):
     '''
     The function adds a new AnySequencer and connects the given op to it
     '''
-    seq = AnySequencer(any, name)
+    seq = AnySequencer(any, name, statusPath, skippingPolicy, errorPolicy)
 
     def _after_components(cop):
         cop.after(seq)
@@ -123,8 +138,8 @@ def CEL_ConditionOp(condition_statement):
             arguments=["--apiVersion", "cel.tekton.dev/v1alpha1",
                        "--kind", "CEL",
                        "--name", "cel_condition",
-                       "--status", condition_statement],
-            file_outputs={'status': '/tmp/tekton'}
+                       "--%s" % DEFAULT_CONDITION_OUTPUT_KEYWORD, condition_statement],
+            file_outputs={DEFAULT_CONDITION_OUTPUT_KEYWORD: '/tmp/tekton'}
         )
     ConditionOp.add_pod_annotation("valid_container", "false")
     return ConditionOp

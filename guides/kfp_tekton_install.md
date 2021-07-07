@@ -8,6 +8,7 @@
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
 - [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
+- [Upgrade to Multi-User KFP-Tekton on Kubeflow](#upgrade-to-multi-user-kfp-tekton-on-kubeflow)
 - [Troubleshooting](#troubleshooting)
 
 ## Installation Targets and Prerequisites
@@ -17,13 +18,15 @@ A Kubernetes cluster `v1.18` that has least 8 vCPU and 16 GB memory.
 ### IBM Cloud Kubernetes Service (IKS)
 
    1. [Create an IBM Cloud cluster](https://www.kubeflow.org/docs/ibm/create-cluster/) or if you have an existing cluster, please follow the [initial setup for an existing cluster](https://master.kubeflow.org/docs/distributions/ibm/create-cluster/#connecting-to-an-existing-cluster)
-   2. **Important**: Configure the IKS cluster with [IBM Cloud Block Storage Setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#ibm-cloud-block-storage-setup)
+   2. **Important**: Configure the IKS cluster with [IBM Cloud Group ID Storage Setup](https://www.kubeflow.org/docs/distributions/ibm/deploy/install-kubeflow-on-iks/#storage-setup-for-a-classic-ibm-cloud-kubernetes-cluster)
 
 ### OpenShift
 
-   Follow the instructions at [Deploy Kubeflow Pipelines with Tekton backend on OpenShift Container Platform](./kfp-tekton-openshift.md). Depending on your situation, you can choose between the two approaches:
-   1. Leverage OpenShift Pipelines (built on Tekton)
+   Depending on your situation, you can choose between the two approaches to set up the pipeline engine on Openshift:
+   1. Leverage [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.7/cicd/pipelines/installing-pipelines.html) (built on Tekton)
    2. Install Tekton as part of deployment
+
+   Once you decided your approach, follow the [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment) to install the Kubeflow Pipeline Stack.
 
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
 
@@ -33,23 +36,23 @@ A Kubernetes cluster `v1.18` that has least 8 vCPU and 16 GB memory.
 
 To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
 
-1. Install [Tekton v0.21.0](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0)
+1. Install [Tekton v0.25.0](https://github.com/tektoncd/pipeline/blob/v0.25.0/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines or OpenShift Pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton/Openshift pipelines version is not v0.25.0+.
 
 2. Enable custom task controller and other feature flags for kfp-tekton
    ```shell
-    kubectl patch cm feature-flags -n tekton-pipelines \
-        -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true", "enable-custom-tasks": "true"}}'
+   kubectl patch cm feature-flags -n tekton-pipelines \
+         -p '{"data":{"enable-custom-tasks": "true", "enable-api-fields": "alpha"}}'
    ```
 
-3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.8.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
+3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.9.0-rc0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
    > Note: You can ignore the error `no matches for kind "Application" in version "app.k8s.io/v1beta1"` since it's a warning saying `application` CRD is not yet ready.
     ```shell
-    kubectl apply --selector kubeflow/crd-install=true -f install/v0.8.0/kfp-tekton.yaml
+    kubectl apply --selector kubeflow/crd-install=true -f install/v0.9.0-rc0/kfp-tekton.yaml
     ```
 
-4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.8.0` deployment
+4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v0.9.0-rc0` deployment
     ```shell
-    kubectl apply -f install/v0.8.0/kfp-tekton.yaml
+    kubectl apply -f install/v0.9.0-rc0/kfp-tekton.yaml
     ```
 
 5. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
@@ -62,6 +65,11 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
     kubectl get svc ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
     ```
 
+6. (OpenShift only) If you are running the standalone KFP-Tekton on OpenShift, apply the necessary security context constraint below
+   ```shell
+   oc apply -f manifests/kustomize/third-party/openshift/standalone
+   ```
+
 ## Kubeflow installation including Kubeflow Pipelines with Tekton Backend
 
 **Important: Please complete the [prerequisites](#installation-targets-and-prerequisites) before proceeding with the following instructions.**
@@ -73,6 +81,23 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 2. Visit [KFP Tekton User Guide](/guides/kfp-user-guide) and start learning how to use Kubeflow pipeline.
 
 3. Visit [KFP Tekton Admin Guide](/guides/kfp-admin-guide.md) for how to configure kfp-tekton with different settings.
+
+
+## Upgrade to Multi-User KFP-Tekton on Kubeflow
+
+1. If you haven't installed Kubeflow 1.3+, Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#kubeflow-installation) to install Kubeflow with multi-user capabilities.
+
+2. To upgrade to the Multi-User version of KFP-Tekton, custom task controllers, and core Tekton controller, please run
+
+   ```shell
+   kubectl apply -k manifests/kustomize/env/platform-agnostic-multi-user
+   ```
+
+   If you only want to upgrade the core KFP-Tekton (no custom task and Tekton upgrade), run
+
+   ```shell
+   kubectl apply -k manifests/kustomize/env/plain-multi-user
+   ```
 
 
 ## Troubleshooting

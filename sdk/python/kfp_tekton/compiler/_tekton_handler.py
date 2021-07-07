@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json, copy
+import json, copy, re
 
 
 def _handle_tekton_pipeline_variables(pipeline_run):
@@ -36,6 +36,8 @@ def _handle_tekton_pipeline_variables(pipeline_run):
     task_list = pipeline_run['spec']['pipelineSpec']['tasks']
     for task in task_list:
         if task.get('taskRef', {}):
+            continue
+        if 'taskSpec' in task and 'apiVersion' in task['taskSpec']:
             continue
         for key, val in pipeline_variables.items():
             task_str = json.dumps(task['taskSpec']['steps'])
@@ -98,6 +100,16 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     if dep_task not in custom_task[dependency['runAfter']]['task_list']:
                         task_dependencies.append(dep_task)
                 task['runAfter'] = task_dependencies
+
+    # process recursive tasks to match parameters
+    for task in recursive_tasks:
+        recursive_graph = custom_task.get(task['taskRef']['name'], {})
+        if recursive_graph:
+            for param in recursive_graph['spec']['params']:
+                recursive_params = [param['name'] for param in task['params']]
+                if param['name'] not in recursive_params:
+                    task['params'].append({'name': param['name'], 'value': "$(params.%s)" % param['name']})
+
     # get custom tasks
     for custom_task_key in custom_task.keys():
         denpendency_list = custom_task[custom_task_key]['spec'].get('runAfter', [])
@@ -110,6 +122,10 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     param['type'] = 'string'
                 run_after_task_list = []
                 for run_after_task in task.get('runAfter', []):
+                    for recursive_task in recursive_tasks:
+                        if recursive_task['name'] in run_after_task and '-'.join(group_names[:-1]) not in run_after_task:
+                            run_after_task = '-'.join(group_names[:-1] + [run_after_task])
+                            break
                     if run_after_task not in denpendency_list:
                         run_after_task_list.append(run_after_task)
                 if task.get('runAfter', []):
@@ -136,6 +152,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 }
             }
         }
+
         # handle loop special case
         if custom_task[custom_task_key]['kind'] == 'loops':
             # if subvar exist, this is dict loop parameters
@@ -153,11 +170,28 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
 
             # add loop special filed
             custom_task_cr['kind'] = 'PipelineLoop'
+            if custom_task[custom_task_key]['spec'].get('parallelism') is not None:
+                custom_task_cr['spec']['parallelism'] = custom_task[custom_task_key]['spec']['parallelism']
+                # remove from pipeline run spec
+                del custom_task[custom_task_key]['spec']['parallelism']
             custom_task_cr['spec']['iterateParam'] = custom_task[custom_task_key]['loop_args']
             for custom_task_param in custom_task[custom_task_key]['spec']['params']:
                 if custom_task_param['name'] != custom_task[custom_task_key]['loop_args'] and '$(tasks.' in custom_task_param['value']:
                     custom_task_cr = json.loads(
                         json.dumps(custom_task_cr).replace(custom_task_param['value'], '$(params.%s)' % custom_task_param['name']))
+
+        # need to process task parameters to replace out of scope results
+        # because nested graph cannot refer to task results outside of the sub-pipeline.
+        custom_task_cr_task_names = [custom_task_cr_task['name'] for custom_task_cr_task in custom_task_cr_tasks]
+        for task in custom_task_cr_tasks:
+            for task_param in task.get('params', []):
+                if '$(tasks.' in task_param['value']:
+                    param_results = re.findall('\$\(tasks.([^ \t\n.:,;\{\}]+).results.([^ \t\n.:,;\{\}]+)\)', task_param['value'])
+                    for param_result in param_results:
+                        if param_result[0] not in custom_task_cr_task_names:
+                            task['params'] = json.loads(
+                                json.dumps(task['params']).replace(task_param['value'],
+                                '$(params.%s-%s)' % param_result))
         custom_task_crs.append(custom_task_cr)
         custom_task[custom_task_key]['spec']['params'] = sorted(custom_task[custom_task_key]['spec']['params'],
                                                                           key=lambda k: k['name'])
@@ -218,11 +252,30 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     elif task['name'] in nested_custom_task['ancestors'] or task[
                         'name'] == nested_custom_task['father_ct']:
                         task['params'].extend(nested_custom_task_special_params)
-                    task['params'] = sorted(task['params'], key=lambda k: k['name'])
+                    if task.get('params') is not None:
+                        task['params'] = sorted(task['params'], key=lambda k: k['name'])
                 for special_param in nested_custom_task_special_params:
                     for nested_param in nested_custom_task_spec['params']:
                         if nested_param['name'] == special_param['name']:
                             nested_param['value'] = '$(params.%s)' % nested_param['name']
+                # need process parameters to replace results
+                custom_task_cr_task_names = [cr_task['name'] for cr_task in custom_task_cr['spec']['pipelineSpec']['tasks']]
+                for nested_custom_task_param in nested_custom_task_spec['params']:
+                    if '$(tasks.' in nested_custom_task_param['value']:
+                        param_results = re.findall('\$\(tasks.([^ \t\n.:,;\{\}]+).results.([^ \t\n.:,;\{\}]+)\)',
+                                                    nested_custom_task_param['value'])
+                        for param_result in param_results:
+                            if param_result[0] not in custom_task_cr_task_names:
+                                custom_task_cr_param_names = [p['name'] for p in custom_task_cr['spec']['pipelineSpec']['params']]
+                                if nested_custom_task_param['name'] not in custom_task_cr_param_names:
+                                    for index, param in enumerate(nested_custom_task_spec['params']):
+                                        if nested_custom_task_param['name'] == param['name']:
+                                            nested_custom_task_spec['params'].pop(index)
+                                            break
+                                else:
+                                    nested_custom_task_spec = json.loads(
+                                        json.dumps(nested_custom_task_spec).replace(nested_custom_task_param['value'],
+                                        '$(params.%s)' % nested_custom_task_param['name']))
                 # add nested custom task spec to main custom task
                 custom_task_cr['spec']['pipelineSpec']['tasks'].append(nested_custom_task_spec)
 

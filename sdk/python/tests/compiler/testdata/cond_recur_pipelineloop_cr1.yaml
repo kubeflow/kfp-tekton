@@ -23,12 +23,12 @@ spec:
       type: string
     - name: iter_num
       type: string
-    - name: condition-cel-status
+    - name: condition-cel-outcome
       type: string
     tasks:
     - name: condition-cel-2
       params:
-      - name: status
+      - name: outcome
         value: $(params.iter_num) - 1
       taskRef:
         name: cel_condition
@@ -36,19 +36,19 @@ spec:
         kind: CEL
     - name: print-iter
       params:
-      - name: condition-cel-2-status
-        value: $(tasks.condition-cel-2.results.status)
+      - name: condition-cel-2-outcome
+        value: $(tasks.condition-cel-2.results.outcome)
       taskSpec:
         steps:
         - name: main
           command:
           - echo
-          - 'Iter: $(inputs.params.condition-cel-2-status)'
+          - 'Iter: $(inputs.params.condition-cel-2-outcome)'
           - '>'
           - $(results.stdout.path)
           image: alpine:3.6
         params:
-        - name: condition-cel-2-status
+        - name: condition-cel-2-outcome
           type: string
         results:
         - name: stdout
@@ -71,5 +71,7 @@ spec:
         value:
         - '1'
       - name: iter_num
-        value: $(tasks.condition-cel-2.results.status)
+        value: $(tasks.condition-cel-2.results.outcome)
+      - name: condition-cel-outcome
+        value: $(params.condition-cel-outcome)
   iterateParam: just_one_iteration

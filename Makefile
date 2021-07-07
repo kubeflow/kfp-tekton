@@ -16,10 +16,11 @@
 #  - The help target was derived from https://stackoverflow.com/a/35730328/5601796
 
 VENV ?= .venv
-KFP_TEKTON_RELEASE ?= v0.8.0
+KFP_TEKTON_RELEASE ?= v0.9.0-rc0
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 DOCKER_REGISTRY ?= aipipeline
+GITHUB_ACTION ?= false
 
 .PHONY: help
 help: ## Display the Make targets
@@ -35,7 +36,7 @@ $(VENV)/bin/activate: sdk/python/setup.py
 	@echo "VENV=$(VENV)"
 	@test -d $(VENV) || python3 -m venv $(VENV)
 	@$(VENV)/bin/pip show kfp-tekton >/dev/null 2>&1 || $(VENV)/bin/pip install -e sdk/python
-	@touch $(VENV)/bin/activate
+	@if [ "$(GITHUB_ACTION)" = "false" ]; then touch $(VENV)/bin/activate; fi
 
 .PHONY: install
 install: venv ## Install the kfp_tekton compiler in a virtual environment

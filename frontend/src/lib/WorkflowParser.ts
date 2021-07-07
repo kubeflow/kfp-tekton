@@ -134,12 +134,13 @@ export default class WorkflowParser {
 
         // Checks if the task is an any-sequencer and if so, adds the dependencies from the task list
         if (
+          task['taskSpec'] &&
           task['taskSpec']['steps'] &&
           task['taskSpec']['steps'][0] &&
           task['taskSpec']['steps'][0]['args'] &&
           task['taskSpec']['steps'][0]['command'] &&
           task['taskSpec']['steps'][0]['command'][0] &&
-          task['taskSpec']['steps'][0]['command'][0] === 'any-taskrun'
+          task['taskSpec']['steps'][0]['command'][0] === 'any-task'
         ) {
           let isNextTaskList = false;
           let isNextCondition = false;
@@ -359,6 +360,7 @@ export default class WorkflowParser {
   public static getNodeInputOutputArtifacts(
     workflow?: any,
     nodeId?: string,
+    cachedPipelineRun?: string,
   ): Record<'inputArtifacts' | 'outputArtifacts', Array<KeyValue<S3Artifact>>> {
     type ParamList = Array<KeyValue<S3Artifact>>;
     let inputArtifacts: ParamList = [];
@@ -368,7 +370,7 @@ export default class WorkflowParser {
       !workflow ||
       !workflow.metadata ||
       !workflow.status ||
-      !workflow.status.taskRuns ||
+      !(workflow.status.taskRuns || workflow.status.runs) ||
       !workflow.metadata.annotations
     )
       return { inputArtifacts, outputArtifacts };
@@ -381,6 +383,15 @@ export default class WorkflowParser {
       if (taskRun.status && taskRun.status.podName === nodeId) {
         taskName = taskRun.pipelineTaskName;
         taskStatus = this.getStatus(taskRun);
+      }
+    }
+
+    // Loop for custom tasks
+    for (const runId of Object.getOwnPropertyNames(workflow.status.runs || {})) {
+      const run = workflow.status.runs[runId];
+      if (run.status && run.pipelineTaskName === nodeId) {
+        taskName = run.pipelineTaskName
+        taskStatus = this.getStatus(run);
       }
     }
 
@@ -404,6 +415,17 @@ export default class WorkflowParser {
     };
 
     inputArtifacts = (rawInputArtifacts[taskName] || []).map((artifact: any) => {
+      const parentTask = artifact.parent_task;
+      let pipelineRunID = workflow.metadata.name || '';
+      // Use the cached pipelineRun as the pipelineRunID if this artifact is stored by a taskRun with caching enabled
+      workflow.spec.pipelineSpec.tasks.forEach((task: any) => {
+        if (
+          parentTask === task.name &&
+          task.taskSpec.metadata.labels['pipelines.kubeflow.org/cache_enabled'] === 'true' &&
+          cachedPipelineRun
+        )
+          pipelineRunID = cachedPipelineRun;
+      });
       return [
         artifact.name,
         {
@@ -412,9 +434,9 @@ export default class WorkflowParser {
           insecure: template.insecure,
           accessKeySecret: template.accessKeySecret,
           secretKeySecret: template.secretKeySecret,
-          key: `artifacts/${workflow.metadata.name}/${
-            artifact.parent_task
-          }/${artifact.name.substring(artifact.parent_task.length + 1)}.tgz`,
+          key: `artifacts/${pipelineRunID}/${parentTask}/${artifact.name.substring(
+            artifact.parent_task.length + 1,
+          )}.tgz`,
         },
       ];
     });
@@ -430,6 +452,18 @@ export default class WorkflowParser {
       return { inputArtifacts, outputArtifacts };
 
     outputArtifacts = rawOutputArtifacts[taskName].map((artifact: any) => {
+      const split = artifact.key.split('/');
+      const taskName = split[2];
+      let pipelineRunID = workflow.metadata.name || '';
+      // Use the cached pipelineRun as the pipelineRunID if this artifact is stored by a taskRun with caching enabled
+      workflow.spec.pipelineSpec.tasks.forEach((task: any) => {
+        if (
+          taskName === task.name &&
+          task.taskSpec.metadata.labels['pipelines.kubeflow.org/cache_enabled'] === 'true' &&
+          cachedPipelineRun
+        )
+          pipelineRunID = cachedPipelineRun;
+      });
       return [
         artifact.name,
         {
@@ -438,7 +472,7 @@ export default class WorkflowParser {
           insecure: template.insecure,
           accessKeySecret: template.accessKeySecret,
           secretKeySecret: template.secretKeySecret,
-          key: artifact.key.replace('$PIPELINERUN', workflow.metadata.name || ''),
+          key: artifact.key.replace('$PIPELINERUN', pipelineRunID),
         },
       ];
     });

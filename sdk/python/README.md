@@ -1,6 +1,6 @@
-# KFP-Tekton Developer Guide
+# KFP-Tekton SDK Developer Guide
 
-This document describes the development guidelines for contributing to the KFP-Tekton project.
+This document describes the development guidelines for contributing to the KFP-Tekton SDK/compiler.
 Details about the required contributor license agreement (CLA) and the code review process can be found
 in the [CONTRIBUTING.md](/CONTRIBUTING.md) document.
 A quick-start guide with general setup instruction, trouble shooting guide and technical limitations
@@ -108,7 +108,8 @@ the Tekton YAML instead of Argo YAML. Since the KFP SDK was not designed and imp
 _monkey-patching_ was used to replace non-class methods and functions at runtime.
 
 In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a
-specific version of the `kfp` SDK compiler. As of now that version is [`1.5.0`](https://github.com/kubeflow/pipelines/releases/tag/1.5.0).
+specific version of the `kfp` SDK compiler. As of now the `kfp-tekton` SDK version is `0.8.1` which is aligned with KFP 
+SDK version [`1.6.3`](https://pypi.org/project/kfp/1.6.3/).
 
 
 ## Adding New Code
@@ -223,7 +224,7 @@ access secrets:
 
 You can also run the dynamically generated end-to-end test suite which takes all of the "golden" YAML files from the
 compiler `testdata` directory and runs them on a Kubernetes cluster, prerequisite that the environment variable
-`KUBECONFIG` is set and the K8s cluster has both Kubeflow Pipelines as well as Tekton Pipelines installed:
+`KUBECONFIG` is set and the K8s cluster has both Kubeflow Pipelines and Tekton Pipelines installed:
 
     make e2e_test
 
@@ -246,7 +247,7 @@ To update the ["Compiler Status Report"](/sdk/python/tests/README.md) use the ou
 ## License Headers
 
 All source files should have the following license header. Adjust the year accordingly to reflect the year the file was
-added and the last year it was modified:
+added, and the last year it was modified:
 
     # Copyright 2019-2021 kubeflow.org
     #
@@ -329,6 +330,3 @@ if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(pipeline_func, __file__.replace('.py', '.yaml'))
 ```
-
-
-

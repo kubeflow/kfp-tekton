@@ -1,0 +1,107 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with multiple
+      pipeline params.", "inputs": [{"default": "latest", "name": "tag", "optional":
+      true, "type": "String"}, {"default": "10", "name": "sleep_ms", "optional": true,
+      "type": "Integer"}], "name": "PipelineParams"}'
+    sidecar.istio.io/inject: 'false'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"download": [["downloaded_resultOutput", "$(results.downloaded-resultoutput.path)"]],
+      "echo": []}'
+    tekton.dev/input_artifacts: '{"echo": [{"name": "download-downloaded_resultOutput",
+      "parent_task": "download"}]}'
+    tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/downloaded_resultOutput.tgz",
+      "name": "download-downloaded_resultOutput", "path": "/tmp/results.txt"}]}'
+  name: pipelineparams
+spec:
+  params:
+  - name: sleep_ms
+    value: '10'
+  - name: tag
+    value: latest
+  pipelineSpec:
+    params:
+    - default: '10'
+      name: sleep_ms
+    - default: latest
+      name: tag
+    tasks:
+    - name: download
+      params:
+      - name: sleep_ms
+        value: $(params.sleep_ms)
+      - name: tag
+        value: $(params.tag)
+      taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        params:
+        - name: sleep_ms
+        - name: tag
+        results:
+        - description: /tmp/results.txt
+          name: downloaded-resultoutput
+        sidecars:
+        - args:
+          - -text="hello world"
+          image: hashicorp/http-echo:$(inputs.params.tag)
+          name: echo
+        steps:
+        - args:
+          - sleep $(inputs.params.sleep_ms); wget localhost:5678 -O $(results.downloaded-resultoutput.path)
+          command:
+          - sh
+          - -c
+          image: busybox:$(inputs.params.tag)
+          name: main
+      timeout: 0s
+    - name: echo
+      params:
+      - name: download-downloaded_resultOutput
+        value: $(tasks.download.results.downloaded-resultoutput)
+      taskSpec:
+        metadata:
+          annotations:
+            tekton.dev/template: ''
+          labels:
+            pipelines.kubeflow.org/cache_enabled: 'true'
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/pipelinename: ''
+        params:
+        - name: download-downloaded_resultOutput
+        steps:
+        - args:
+          - echo $MSG $(inputs.params.download-downloaded_resultOutput)
+          command:
+          - sh
+          - -c
+          env:
+          - name: MSG
+            value: 'pipelineParams: '
+          image: library/bash
+          name: main
+      timeout: 0s
+  timeout: 0s

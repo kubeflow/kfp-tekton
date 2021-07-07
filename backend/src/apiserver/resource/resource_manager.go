@@ -528,11 +528,11 @@ func (r *ResourceManager) ListJobs(filterContext *common.FilterContext,
 	return r.jobStore.ListJobs(filterContext, opts)
 }
 
-// TerminateWorkflow terminates a pipelinerun by setting its status to PipelineRunCancelled
+// TerminateWorkflow terminates a pipelinerun by setting its status to Cancelled
 func TerminateWorkflow(wfClient workflowclient.PipelineRunInterface, name string) error {
 	patchObj := map[string]interface{}{
 		"spec": map[string]interface{}{
-			"status": "PipelineRunCancelled",
+			"status": "Cancelled",
 		},
 	}
 
@@ -663,12 +663,16 @@ func (r *ResourceManager) ReadLog(runId string, nodeId string, follow bool, dst 
 	return err
 }
 
-func (r *ResourceManager) readRunLogFromPod(run *model.RunDetail, nodeId string, follow bool, dst io.Writer) error {
-	logOptions := corev1.PodLogOptions{
-		Container:  "main",
+func (r *ResourceManager) getPodLogOptions(follow bool) corev1.PodLogOptions {
+	return corev1.PodLogOptions{
+		Container:  "step-main",
 		Timestamps: false,
 		Follow:     follow,
 	}
+}
+
+func (r *ResourceManager) readRunLogFromPod(run *model.RunDetail, nodeId string, follow bool, dst io.Writer) error {
+	logOptions := r.getPodLogOptions(follow)
 
 	req := r.k8sCoreClient.PodClient(run.Namespace).GetLogs(nodeId, &logOptions)
 	podLogs, err := req.Stream(context.Background())

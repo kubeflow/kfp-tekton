@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script checks whether any of the files related to the backend docker 
-# build (files listed in files_to_check) have been modified from the 
-# origin/master branch. This is done by running a diff on each file between the 
+# This script checks whether any of the files related to the backend docker
+# build (files listed in files_to_check) have been modified from the
+# origin/master branch. This is done by running a diff on each file between the
 # most recent commit on origin/master and HEAD.
 #
 # Execute from top-level directory i.e. kfp-tekton/

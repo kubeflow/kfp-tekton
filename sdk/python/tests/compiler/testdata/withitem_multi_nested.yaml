@@ -18,7 +18,8 @@ metadata:
   annotations:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[100, 200]", "name":
       "my_pipe_param", "optional": true, "type": "JsonArray"}, {"default": "[1, 2]",
-      "name": "my_pipe_param3", "optional": true, "type": "JsonArray"}], "name": "my-pipeline"}'
+      "name": "my_pipe_param3", "optional": true, "type": "JsonArray"}], "name": "withitem
+      multiple nesting pipeline"}'
     sidecar.istio.io/inject: 'false'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -27,79 +28,7 @@ metadata:
       [], "my-inner-inner-coop-2": [], "my-inner-inner-coop-3": []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "my-pipeline-for-loop-2"}, "spec":
-      {"iterateParam": "loop-item-param-1", "pipelineSpec": {"params": [{"name": "loop-item-param-1-subvar-a",
-      "type": "string"}, {"name": "loop-item-param-1-subvar-b", "type": "string"},
-      {"name": "my_pipe_param-loop-item", "type": "string"}, {"name": "my_pipe_param3-loop-item",
-      "type": "string"}], "tasks": [{"name": "my-in-coop1", "params": [{"name": "loop-item-param-1-subvar-a",
-      "value": "$(params.loop-item-param-1-subvar-a)"}], "taskSpec": {"metadata":
-      {"annotations": {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "loop-item-param-1-subvar-a", "type": "string"}],
-      "steps": [{"args": ["echo op1 $(inputs.params.loop-item-param-1-subvar-a)"],
-      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "0s"}, {"name": "my-in-coop2", "params": [{"name": "loop-item-param-1-subvar-b",
-      "value": "$(params.loop-item-param-1-subvar-b)"}], "taskSpec": {"metadata":
-      {"annotations": {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "loop-item-param-1-subvar-b", "type": "string"}],
-      "steps": [{"args": ["echo op2 $(inputs.params.loop-item-param-1-subvar-b)"],
-      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "0s"}, {"name": "my-pipeline-for-loop-3", "params": [{"name": "loop-item-param-1-subvar-a",
-      "value": "$(params.loop-item-param-1-subvar-a)"}, {"name": "loop-item-param-1-subvar-b",
-      "value": "$(params.loop-item-param-1-subvar-b)"}, {"name": "my_pipe_param-loop-item",
-      "value": "$(params.my_pipe_param-loop-item)"}, {"name": "my_pipe_param3-loop-item",
-      "value": "$(params.my_pipe_param3-loop-item)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "name": "my-pipeline-for-loop-3"}}]}}}, {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "my-pipeline-for-loop-3"},
-      "spec": {"iterateParam": "my_pipe_param-loop-item", "pipelineSpec": {"params":
-      [{"name": "loop-item-param-1-subvar-a", "type": "string"}, {"name": "loop-item-param-1-subvar-b",
-      "type": "string"}, {"name": "my_pipe_param-loop-item", "type": "string"}, {"name":
-      "my_pipe_param3-loop-item", "type": "string"}], "tasks": [{"name": "my-inner-inner-coop",
-      "params": [{"name": "loop-item-param-1-subvar-a", "value": "$(params.loop-item-param-1-subvar-a)"},
-      {"name": "my_pipe_param-loop-item", "value": "$(params.my_pipe_param-loop-item)"}],
-      "taskSpec": {"metadata": {"annotations": {"tekton.dev/template": ""}, "labels":
-      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
-      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "loop-item-param-1-subvar-a",
-      "type": "string"}, {"name": "my_pipe_param-loop-item", "type": "string"}], "steps":
-      [{"args": ["echo op1 $(inputs.params.loop-item-param-1-subvar-a) $(inputs.params.my_pipe_param-loop-item)"],
-      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "0s"}, {"name": "my-pipeline-for-loop-5", "params": [{"name": "loop-item-param-1-subvar-b",
-      "value": "$(params.loop-item-param-1-subvar-b)"}, {"name": "loop-item-param-4",
-      "value": "[4, 5]"}, {"name": "my_pipe_param3-loop-item", "value": "$(params.my_pipe_param3-loop-item)"}],
-      "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
-      "name": "my-pipeline-for-loop-5"}}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "my-pipeline-for-loop-5"}, "spec":
-      {"iterateParam": "loop-item-param-4", "pipelineSpec": {"params": [{"name": "loop-item-param-1-subvar-b",
-      "type": "string"}, {"name": "loop-item-param-4", "type": "string"}, {"name":
-      "my_pipe_param3-loop-item", "type": "string"}], "tasks": [{"name": "my-inner-inner-coop-2",
-      "params": [{"name": "loop-item-param-1-subvar-b", "value": "$(params.loop-item-param-1-subvar-b)"},
-      {"name": "loop-item-param-4", "value": "$(params.loop-item-param-4)"}], "taskSpec":
-      {"metadata": {"annotations": {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "loop-item-param-1-subvar-b", "type": "string"}, {"name":
-      "loop-item-param-4", "type": "string"}], "steps": [{"args": ["echo op1 $(inputs.params.loop-item-param-1-subvar-b)
-      $(inputs.params.loop-item-param-4)"], "command": ["sh", "-c"], "image": "library/bash:4.4.23",
-      "name": "main"}]}, "timeout": "0s"}, {"name": "my-pipeline-for-loop-6", "params":
-      [{"name": "loop-item-param-1-subvar-b", "value": "$(params.loop-item-param-1-subvar-b)"},
-      {"name": "my_pipe_param3-loop-item", "value": "$(params.my_pipe_param3-loop-item)"}],
-      "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
-      "name": "my-pipeline-for-loop-6"}}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "my-pipeline-for-loop-6"}, "spec":
-      {"iterateParam": "my_pipe_param3-loop-item", "pipelineSpec": {"params": [{"name":
-      "loop-item-param-1-subvar-b", "type": "string"}, {"name": "my_pipe_param3-loop-item",
-      "type": "string"}], "tasks": [{"name": "my-inner-inner-coop-3", "params": [{"name":
-      "loop-item-param-1-subvar-b", "value": "$(params.loop-item-param-1-subvar-b)"},
-      {"name": "my_pipe_param3-loop-item", "value": "$(params.my_pipe_param3-loop-item)"}],
-      "taskSpec": {"metadata": {"annotations": {"tekton.dev/template": ""}, "labels":
-      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
-      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "loop-item-param-1-subvar-b",
-      "type": "string"}, {"name": "my_pipe_param3-loop-item", "type": "string"}],
-      "steps": [{"args": ["echo op1 $(inputs.params.loop-item-param-1-subvar-b) $(inputs.params.my_pipe_param3-loop-item)"],
-      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "0s"}]}}}]'
-  name: my-pipeline
+  name: withitem-multiple-nesting-pipeline
 spec:
   params:
   - name: my_pipe_param
@@ -113,7 +42,7 @@ spec:
     - default: '[1, 2]'
       name: my_pipe_param3
     tasks:
-    - name: my-pipeline-for-loop-2
+    - name: withitem-multiple-nesting-pipeline-for-loop-2
       params:
       - name: loop-item-param-1
         value: '[{"a": 1, "b": 2}, {"a": 10, "b": 20}]'
@@ -121,8 +50,220 @@ spec:
         value: $(params.my_pipe_param)
       - name: my_pipe_param3-loop-item
         value: $(params.my_pipe_param3)
-      taskRef:
+      taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: my-pipeline-for-loop-2
+        spec:
+          iterateParam: loop-item-param-1
+          pipelineSpec:
+            params:
+            - name: loop-item-param-1-subvar-a
+              type: string
+            - name: loop-item-param-1-subvar-b
+              type: string
+            - name: my_pipe_param-loop-item
+              type: string
+            - name: my_pipe_param3-loop-item
+              type: string
+            tasks:
+            - name: my-in-coop1
+              params:
+              - name: loop-item-param-1-subvar-a
+                value: $(params.loop-item-param-1-subvar-a)
+              taskSpec:
+                metadata:
+                  annotations:
+                    tekton.dev/template: ''
+                  labels:
+                    pipelines.kubeflow.org/cache_enabled: 'true'
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/pipelinename: ''
+                params:
+                - name: loop-item-param-1-subvar-a
+                  type: string
+                steps:
+                - args:
+                  - echo op1 $(inputs.params.loop-item-param-1-subvar-a)
+                  command:
+                  - sh
+                  - -c
+                  image: library/bash:4.4.23
+                  name: main
+              timeout: 0s
+            - name: my-in-coop2
+              params:
+              - name: loop-item-param-1-subvar-b
+                value: $(params.loop-item-param-1-subvar-b)
+              taskSpec:
+                metadata:
+                  annotations:
+                    tekton.dev/template: ''
+                  labels:
+                    pipelines.kubeflow.org/cache_enabled: 'true'
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/pipelinename: ''
+                params:
+                - name: loop-item-param-1-subvar-b
+                  type: string
+                steps:
+                - args:
+                  - echo op2 $(inputs.params.loop-item-param-1-subvar-b)
+                  command:
+                  - sh
+                  - -c
+                  image: library/bash:4.4.23
+                  name: main
+              timeout: 0s
+            - name: withitem-multiple-nesting-pipeline-for-loop-3
+              params:
+              - name: loop-item-param-1-subvar-a
+                value: $(params.loop-item-param-1-subvar-a)
+              - name: loop-item-param-1-subvar-b
+                value: $(params.loop-item-param-1-subvar-b)
+              - name: my_pipe_param-loop-item
+                value: $(params.my_pipe_param-loop-item)
+              - name: my_pipe_param3-loop-item
+                value: $(params.my_pipe_param3-loop-item)
+              taskSpec:
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: PipelineLoop
+                spec:
+                  iterateParam: my_pipe_param-loop-item
+                  pipelineSpec:
+                    params:
+                    - name: loop-item-param-1-subvar-a
+                      type: string
+                    - name: loop-item-param-1-subvar-b
+                      type: string
+                    - name: my_pipe_param-loop-item
+                      type: string
+                    - name: my_pipe_param3-loop-item
+                      type: string
+                    tasks:
+                    - name: my-inner-inner-coop
+                      params:
+                      - name: loop-item-param-1-subvar-a
+                        value: $(params.loop-item-param-1-subvar-a)
+                      - name: my_pipe_param-loop-item
+                        value: $(params.my_pipe_param-loop-item)
+                      taskSpec:
+                        metadata:
+                          annotations:
+                            tekton.dev/template: ''
+                          labels:
+                            pipelines.kubeflow.org/cache_enabled: 'true'
+                            pipelines.kubeflow.org/generation: ''
+                            pipelines.kubeflow.org/pipelinename: ''
+                        params:
+                        - name: loop-item-param-1-subvar-a
+                          type: string
+                        - name: my_pipe_param-loop-item
+                          type: string
+                        steps:
+                        - args:
+                          - echo op1 $(inputs.params.loop-item-param-1-subvar-a) $(inputs.params.my_pipe_param-loop-item)
+                          command:
+                          - sh
+                          - -c
+                          image: library/bash:4.4.23
+                          name: main
+                      timeout: 0s
+                    - name: withitem-multiple-nesting-pipeline-for-loop-5
+                      params:
+                      - name: loop-item-param-1-subvar-b
+                        value: $(params.loop-item-param-1-subvar-b)
+                      - name: loop-item-param-4
+                        value: '[4, 5]'
+                      - name: my_pipe_param3-loop-item
+                        value: $(params.my_pipe_param3-loop-item)
+                      taskSpec:
+                        apiVersion: custom.tekton.dev/v1alpha1
+                        kind: PipelineLoop
+                        spec:
+                          iterateParam: loop-item-param-4
+                          pipelineSpec:
+                            params:
+                            - name: loop-item-param-1-subvar-b
+                              type: string
+                            - name: loop-item-param-4
+                              type: string
+                            - name: my_pipe_param3-loop-item
+                              type: string
+                            tasks:
+                            - name: my-inner-inner-coop-2
+                              params:
+                              - name: loop-item-param-1-subvar-b
+                                value: $(params.loop-item-param-1-subvar-b)
+                              - name: loop-item-param-4
+                                value: $(params.loop-item-param-4)
+                              taskSpec:
+                                metadata:
+                                  annotations:
+                                    tekton.dev/template: ''
+                                  labels:
+                                    pipelines.kubeflow.org/cache_enabled: 'true'
+                                    pipelines.kubeflow.org/generation: ''
+                                    pipelines.kubeflow.org/pipelinename: ''
+                                params:
+                                - name: loop-item-param-1-subvar-b
+                                  type: string
+                                - name: loop-item-param-4
+                                  type: string
+                                steps:
+                                - args:
+                                  - echo op1 $(inputs.params.loop-item-param-1-subvar-b)
+                                    $(inputs.params.loop-item-param-4)
+                                  command:
+                                  - sh
+                                  - -c
+                                  image: library/bash:4.4.23
+                                  name: main
+                              timeout: 0s
+                            - name: withitem-multiple-nesting-pipeline-for-loop-6
+                              params:
+                              - name: loop-item-param-1-subvar-b
+                                value: $(params.loop-item-param-1-subvar-b)
+                              - name: my_pipe_param3-loop-item
+                                value: $(params.my_pipe_param3-loop-item)
+                              taskSpec:
+                                apiVersion: custom.tekton.dev/v1alpha1
+                                kind: PipelineLoop
+                                spec:
+                                  iterateParam: my_pipe_param3-loop-item
+                                  pipelineSpec:
+                                    params:
+                                    - name: loop-item-param-1-subvar-b
+                                      type: string
+                                    - name: my_pipe_param3-loop-item
+                                      type: string
+                                    tasks:
+                                    - name: my-inner-inner-coop-3
+                                      params:
+                                      - name: loop-item-param-1-subvar-b
+                                        value: $(params.loop-item-param-1-subvar-b)
+                                      - name: my_pipe_param3-loop-item
+                                        value: $(params.my_pipe_param3-loop-item)
+                                      taskSpec:
+                                        metadata:
+                                          annotations:
+                                            tekton.dev/template: ''
+                                          labels:
+                                            pipelines.kubeflow.org/cache_enabled: 'true'
+                                            pipelines.kubeflow.org/generation: ''
+                                            pipelines.kubeflow.org/pipelinename: ''
+                                        params:
+                                        - name: loop-item-param-1-subvar-b
+                                          type: string
+                                        - name: my_pipe_param3-loop-item
+                                          type: string
+                                        steps:
+                                        - args:
+                                          - echo op1 $(inputs.params.loop-item-param-1-subvar-b)
+                                            $(inputs.params.my_pipe_param3-loop-item)
+                                          command:
+                                          - sh
+                                          - -c
+                                          image: library/bash:4.4.23
+                                          name: main
+                                      timeout: 0s
   timeout: 0s

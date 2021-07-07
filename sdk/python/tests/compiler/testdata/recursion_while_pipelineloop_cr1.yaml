@@ -1,4 +1,4 @@
-# Copyright 2020 kubeflow.org
+# Copyright 2021 kubeflow.org
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +15,15 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: pipeline-flip-coin-graph-flip-component-1
+  name: recursion-pipeline-graph-flip-component-1
 spec:
   pipelineSpec:
     params:
     - name: just_one_iteration
       type: string
-    - name: flip-coin-output
-      type: string
     - name: maxVal
+      type: string
+    - name: flip-coin-output
       type: string
     tasks:
     - name: print
@@ -48,7 +48,7 @@ spec:
           annotations:
             tekton.dev/template: ''
       when:
-      - input: $(tasks.condition-2.results.status)
+      - input: $(tasks.condition-2.results.outcome)
         operator: in
         values:
         - "true"
@@ -75,7 +75,7 @@ spec:
           annotations:
             tekton.dev/template: ''
       when:
-      - input: $(tasks.condition-2.results.status)
+      - input: $(tasks.condition-2.results.outcome)
         operator: in
         values:
         - "true"
@@ -92,8 +92,8 @@ spec:
         value: ==
       taskSpec:
         results:
-        - name: status
-          description: Conditional task status
+        - name: outcome
+          description: Conditional task outcome
         params:
         - name: operand1
           type: string
@@ -111,16 +111,16 @@ spec:
               input2=int(input2)
             except:
               input1=str(input1)
-            status="true" if (input1 $(inputs.params.operator) input2) else "false"
-            f = open("/tekton/results/status", "w")
-            f.write(status)
+            outcome="true" if (input1 $(inputs.params.operator) input2) else "false"
+            f = open("/tekton/results/outcome", "w")
+            f.write(outcome)
             f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
           image: python:alpine3.6
     - name: flip-component
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: pipeline-flip-coin-graph-flip-component-1
+        name: recursion-pipeline-graph-flip-component-1
       params:
       - name: just_one_iteration
         value:
@@ -130,7 +130,7 @@ spec:
       - name: maxVal
         value: $(params.maxVal)
       when:
-      - input: $(tasks.condition-2.results.status)
+      - input: $(tasks.condition-2.results.outcome)
         operator: in
         values:
         - "true"

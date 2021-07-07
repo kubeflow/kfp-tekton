@@ -57,6 +57,10 @@ type PipelineLoopSpec struct {
 	// +optional
 	Timeout *metav1.Duration `json:"timeout,omitempty"`
 
+	// Parallelism represents how many pipelines can be triggered simutaniously by the loop.
+	// +optional
+	Parallelism int `json:"parallelism,omitempty"`
+
 	// Retries represents how many times a task should be retried in case of task failure.
 	// +optional
 	Retries int `json:"retries,omitempty"`
@@ -113,12 +117,16 @@ func (t PipelineLoopRunReason) String() string {
 type PipelineLoopRunStatus struct {
 	// PipelineLoopSpec contains the exact spec used to instantiate the Run
 	PipelineLoopSpec *PipelineLoopSpec `json:"pipelineLoopSpec,omitempty"`
+	// current running pipelinerun number
+	// +optional
+	CurrentRunning int `json:"currentRunning,omitempty"`
 	// map of PipelineLoopPipelineRunStatus with the PipelineRun name as the key
 	// +optional
 	PipelineRuns map[string]*PipelineLoopPipelineRunStatus `json:"pipelineRuns,omitempty"`
 }
 
-// PipelineLoopPipelineRunStatus contains the iteration number for a PipelineRun and the PipelineRun's Status
+// PipelineLoopPipelineRunStatus contains the iteration number for a PipelineRun,
+// current running pipeline number, and the PipelineRun's Status
 type PipelineLoopPipelineRunStatus struct {
 	// iteration number
 	Iteration int `json:"iteration,omitempty"`

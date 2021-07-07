@@ -30,10 +30,10 @@ import (
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	pipelineloopclientset "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/clientset/versioned"
 	listerspipelineloop "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/listers/pipelineloop/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/config"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-
 	runv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/run/v1alpha1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
@@ -61,8 +61,14 @@ const (
 	// parentPRKey is the label identifier for the original Pipelnerun who created the Run.  This label is added to the Run's PipelineRuns.
 	parentPRKey = "/parentPipelineRun"
 
+	// originalPRKey is the label identifier for the original Pipelnerun (first Pipelinerun)
+	originalPRKey = "/originalPipelineRun"
+
 	// pipelineLoopIterationLabelKey is the label identifier for the iteration number.  This label is added to the Run's PipelineRuns.
 	pipelineLoopIterationLabelKey = "/pipelineLoopIteration"
+
+	// LabelKeyWorkflowRunId is the label identifier a pipelinerun is managed by the Kubeflow Pipeline persistent agent.
+	LabelKeyWorkflowRunId = "pipeline/runid"
 )
 
 // Reconciler implements controller.Reconciler for Configuration resources.
@@ -85,16 +91,29 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	var merr error
 	logger := logging.FromContext(ctx)
 	logger.Infof("Reconciling Run %s/%s at %v", run.Namespace, run.Name, time.Now())
-
+	if run.Spec.Ref != nil && run.Spec.Spec != nil {
+		logger.Errorf("Run %s/%s can provide one of Run.Spec.Ref/Run.Spec.Spec", run.Namespace, run.Name)
+	}
+	if run.Spec.Spec == nil && run.Spec.Ref == nil {
+		logger.Errorf("Run %s/%s does not provide a spec or ref.", run.Namespace, run.Name)
+		return nil
+	}
 	// Check that the Run references a PipelineLoop CRD.  The logic is controller.go should ensure that only this type of Run
 	// is reconciled this controller but it never hurts to do some bullet-proofing.
-	if run.Spec.Ref == nil ||
-		run.Spec.Ref.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
-		run.Spec.Ref.Kind != pipelineloop.PipelineLoopControllerName {
-		logger.Errorf("Received control for a Run %s/%s that does not reference a PipelineLoop custom CRD", run.Namespace, run.Name)
+	if run.Spec.Ref != nil &&
+		(run.Spec.Ref.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
+			run.Spec.Ref.Kind != pipelineloop.PipelineLoopControllerName) {
+		logger.Errorf("Received control for a Run %s/%s/%v that does not reference a PipelineLoop custom CRD ref", run.Namespace, run.Name, run.Spec.Ref)
 		return nil
 	}
 
+	if run.Spec.Spec != nil &&
+		(run.Spec.Spec.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
+			run.Spec.Spec.Kind != pipelineloop.PipelineLoopControllerName) {
+		logger.Errorf("Received control for a Run %s/%s that does not reference a PipelineLoop custom CRD spec", run.Namespace, run.Name)
+		return nil
+	}
+	logger.Infof("Received control for a Run %s/%s %-v", run.Namespace, run.Name, run.Spec.Spec)
 	// If the Run has not started, initialize the Condition and set the start time.
 	if !run.HasStarted() {
 		logger.Infof("Starting new Run %s/%s", run.Namespace, run.Name)
@@ -152,7 +171,24 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	return merr
 }
 
+func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
+	defaults, _ := config.NewDefaultsFromMap(map[string]string{})
+	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{
+		"enable-custom-tasks": "true",
+	})
+	artifactBucket, _ := config.NewArtifactBucketFromMap(map[string]string{})
+	artifactPVC, _ := config.NewArtifactPVCFromMap(map[string]string{})
+	c := &config.Config{
+		Defaults:       defaults,
+		FeatureFlags:   featureFlags,
+		ArtifactBucket: artifactBucket,
+		ArtifactPVC:    artifactPVC,
+	}
+	return config.ToContext(ctx, c)
+}
+
 func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
+	ctx = EnableCustomTaskFeatureFlag(ctx)
 	logger := logging.FromContext(ctx)
 
 	// Get the PipelineLoop referenced by the Run
@@ -167,6 +203,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	// Propagate labels and annotations from PipelineLoop to Run.
 	propagatePipelineLoopLabelsAndAnnotations(run, pipelineLoopMeta)
 
+	pipelineLoopSpec.SetDefaults(ctx)
 	// Validate PipelineLoop spec
 	if err := pipelineLoopSpec.Validate(ctx); err != nil {
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
@@ -184,83 +221,64 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 
 	// Update status of PipelineRuns.  Return the PipelineRun representing the highest loop iteration.
-	highestIteration, highestIterationPr, err := c.updatePipelineRunStatus(logger, run, status)
+	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(logger, run, status)
 	if err != nil {
 		return fmt.Errorf("error updating PipelineRun status for Run %s/%s: %w", run.Namespace, run.Name, err)
 	}
 
-	// Check the status of the PipelineRun for the highest iteration.
-	if highestIterationPr != nil {
-		// If it's not done, wait for it to finish or cancel it if the run is cancelled.
-		if !highestIterationPr.IsDone() {
-			if run.IsCancelled() {
-				logger.Infof("Run %s/%s is cancelled.  Cancelling PipelineRun %s.", run.Namespace, run.Name, highestIterationPr.Name)
-				b, err := getCancelPatch()
-				if err != nil {
-					return fmt.Errorf("Failed to make patch to cancel PipelineRun %s: %v", highestIterationPr.Name, err)
-				}
-				if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, highestIterationPr.Name, types.JSONPatchType, b, metav1.PatchOptions{}); err != nil {
-					run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
-						"Failed to patch PipelineRun `%s` with cancellation: %v", highestIterationPr.Name, err)
-					return nil
-				}
-				// Update status. It is still running until the PipelineRun is actually cancelled.
-				run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
-					"Cancelling PipelineRun %s", highestIterationPr.Name)
+	// Run is cancelled, just cancel all the running instance and return
+	if run.IsCancelled() {
+		if len(failedPrs) > 0 {
+			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String(),
+				"Run %s/%s was cancelled",
+				run.Namespace, run.Name)
+		}
+		for _, currentRunningPr := range currentRunningPrs {
+			logger.Infof("Run %s/%s is cancelled.  Cancelling PipelineRun %s.", run.Namespace, run.Name, currentRunningPr.Name)
+			b, err := getCancelPatch()
+			if err != nil {
+				return fmt.Errorf("Failed to make patch to cancel PipelineRun %s: %v", currentRunningPr.Name, err)
+			}
+			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, b, metav1.PatchOptions{}); err != nil {
+				run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
+					"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
 				return nil
 			}
-			run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
-				"Iterations completed: %d", highestIteration-1)
-			return nil
 		}
-
-		if !highestIterationPr.Status.GetCondition(apis.ConditionSucceeded).IsTrue() {
-			if run.IsCancelled() {
-				run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String(),
-					"Run %s/%s was cancelled",
-					run.Namespace, run.Name)
-			} else {
-				run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
-					"PipelineRun %s has failed", highestIterationPr.Name)
-			}
-			return nil
-		}
-
-		// Mark run successful if the condition are met.
-		// if the last loop task is skipped, but the highestIterationPr successed. Mark run success.
-		// lastLoopTask := highestIterationPr.ObjectMeta.Annotations["last-loop-task"]
-		lastLoopTask := ""
-		for key, val := range run.ObjectMeta.Labels {
-			if key == "last-loop-task" {
-				lastLoopTask = val
-			}
-		}
-		if lastLoopTask != "" {
-			skippedTaskList := highestIterationPr.Status.SkippedTasks
-			for _, task := range skippedTaskList {
-				if task.Name == lastLoopTask {
-					// Mark run successful and stop the loop pipelinerun
-					run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
-						"PipelineRuns completed successfully with the conditions are met")
-					run.Status.Results = []runv1alpha1.RunResult{{
-						Name:  "condition",
-						Value: "pass",
-					}}
-					return nil
-				}
-			}
-		}
+		return nil
 	}
+
+	// Run may be marked succeeded already by updatePipelineRunStatus
+	if run.IsSuccessful() {
+		return nil
+	}
+
+	// Check the status of the PipelineRun for the highest iteration.
+	for _, failedPr := range failedPrs {
+		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
+			"PipelineRun %s has failed", failedPr.Name)
+		return nil
+	}
+
+	// Mark run status Running
+	run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
+		"Iterations completed: %d", highestIteration-len(currentRunningPrs))
 
 	// Move on to the next iteration (or the first iteration if there was no PipelineRun).
 	// Check if the Run is done.
 	nextIteration := highestIteration + 1
 	if nextIteration > totalIterations {
+		// Still running which we already marked, just waiting
+		if len(currentRunningPrs) > 0 {
+			logger.Infof("Already started all pipelineruns for the loop, totally %d pipelineruns, waiting for complete.", totalIterations)
+			return nil
+		}
+		// All task finished
 		run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 			"All PipelineRuns completed successfully")
 		run.Status.Results = []runv1alpha1.RunResult{{
 			Name:  "condition",
-			Value: "fail",
+			Value: "succeeded",
 		}}
 		return nil
 	}
@@ -271,20 +289,35 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			run.Namespace, run.Name)
 		return nil
 	}
-
-	// Create a PipelineRun to run this iteration.
-	pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, nextIteration)
-	if err != nil {
-		return fmt.Errorf("error creating PipelineRun from Run %s: %w", run.Name, err)
+	actualParallelism := 1
+	// if Parallelism is bigger then totalIterations means there's no limit
+	if status.PipelineLoopSpec.Parallelism > totalIterations {
+		actualParallelism = totalIterations
+	} else if status.PipelineLoopSpec.Parallelism > 0 {
+		actualParallelism = status.PipelineLoopSpec.Parallelism
+	}
+	if len(currentRunningPrs) >= actualParallelism {
+		logger.Infof("Currently %d pipelinerun started, meet parallelism %d, waiting...", len(currentRunningPrs), actualParallelism)
+		return nil
 	}
 
-	status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
-		Iteration: nextIteration,
-		Status:    &pr.Status,
-	}
+	// Create PipelineRun to run this iteration based on parallelism
+	for i := 0; i < actualParallelism-len(currentRunningPrs); i++ {
+		pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, nextIteration)
+		if err != nil {
+			return fmt.Errorf("error creating PipelineRun from Run %s: %w", run.Name, err)
+		}
 
-	run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
-		"Iterations completed: %d", highestIteration)
+		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
+			Iteration: nextIteration,
+			Status:    &pr.Status,
+		}
+		nextIteration++
+		if nextIteration > totalIterations {
+			logger.Infof("Started all pipelineruns for the loop, totally %d pipelineruns.", totalIterations)
+			return nil
+		}
+	}
 
 	return nil
 }
@@ -307,6 +340,19 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 		}
 		pipelineLoopMeta = tl.ObjectMeta
 		pipelineLoopSpec = tl.Spec
+	} else if run.Spec.Spec != nil {
+		err := json.Unmarshal(run.Spec.Spec.Spec.Raw, &pipelineLoopSpec)
+		if err != nil {
+			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
+				"Error unmarshal PipelineLoop spec for Run %s/%s: %s",
+				run.Namespace, run.Name, err)
+			return nil, nil, fmt.Errorf("Error unmarshal PipelineLoop spec for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
+		}
+		pipelineLoopMeta = metav1.ObjectMeta{Name: run.Name,
+			Namespace:       run.Namespace,
+			OwnerReferences: run.OwnerReferences,
+			Labels:          run.Spec.Spec.Metadata.Labels,
+			Annotations:     run.Spec.Spec.Metadata.Annotations}
 	} else {
 		// Run does not require name but for PipelineLoop it does.
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
@@ -387,20 +433,22 @@ func (c *Reconciler) updateLabelsAndAnnotations(ctx context.Context, run *v1alph
 	return nil
 }
 
-func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, *v1beta1.PipelineRun, error) {
+func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
 	highestIteration := 0
-	var highestIterationPr *v1beta1.PipelineRun = nil
+	var currentRunningPrs []*v1beta1.PipelineRun
+	var failedPrs []*v1beta1.PipelineRun
 	if status.PipelineRuns == nil {
 		status.PipelineRuns = make(map[string]*pipelineloopv1alpha1.PipelineLoopPipelineRunStatus)
 	}
 	pipelineRunLabels := getPipelineRunLabels(run, "")
 	pipelineRuns, err := c.pipelineRunLister.PipelineRuns(run.Namespace).List(labels.SelectorFromSet(pipelineRunLabels))
 	if err != nil {
-		return 0, nil, fmt.Errorf("could not list PipelineRuns %#v", err)
+		return 0, nil, nil, fmt.Errorf("could not list PipelineRuns %#v", err)
 	}
 	if pipelineRuns == nil || len(pipelineRuns) == 0 {
-		return 0, nil, nil
+		return 0, nil, nil, nil
 	}
+	status.CurrentRunning = 0
 	for _, pr := range pipelineRuns {
 		lbls := pr.GetLabels()
 		iterationStr := lbls[pipelineloop.GroupName+pipelineLoopIterationLabelKey]
@@ -409,18 +457,50 @@ func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1a
 			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
 				"Error converting iteration number in PipelineRun %s:  %#v", pr.Name, err)
 			logger.Errorf("Error converting iteration number in PipelineRun %s:  %#v", pr.Name, err)
-			return 0, nil, nil
+			return 0, nil, nil, nil
 		}
+		// when we just create pr in a forloop, the started time may be empty
+		if !pr.IsDone() {
+			status.CurrentRunning++
+			currentRunningPrs = append(currentRunningPrs, pr)
+		}
+		if pr.IsDone() && !pr.Status.GetCondition(apis.ConditionSucceeded).IsTrue() {
+			failedPrs = append(failedPrs, pr)
+		}
+
+		// Mark run successful if the condition are met.
+		// if the last loop task is skipped, but the highestIterationPr successed. Mark run success.
+		// lastLoopTask := highestIterationPr.ObjectMeta.Annotations["last-loop-task"]
+		lastLoopTask := ""
+		for key, val := range run.ObjectMeta.Labels {
+			if key == "last-loop-task" {
+				lastLoopTask = val
+			}
+		}
+		if lastLoopTask != "" {
+			skippedTaskList := pr.Status.SkippedTasks
+			for _, task := range skippedTaskList {
+				if task.Name == lastLoopTask {
+					// Mark run successful and stop the loop pipelinerun
+					run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
+						"PipelineRuns completed successfully with the conditions are met")
+					run.Status.Results = []runv1alpha1.RunResult{{
+						Name:  "condition",
+						Value: "pass",
+					}}
+				}
+			}
+		}
+
 		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 			Iteration: iteration,
 			Status:    &pr.Status,
 		}
 		if iteration > highestIteration {
 			highestIteration = iteration
-			highestIterationPr = pr
 		}
 	}
-	return highestIteration, highestIterationPr, nil
+	return highestIteration, currentRunningPrs, failedPrs, nil
 }
 
 func getCancelPatch() ([]byte, error) {
@@ -593,9 +673,9 @@ func Find(slice []string, val string) (int, bool) {
 func getPipelineRunLabels(run *v1alpha1.Run, iterationStr string) map[string]string {
 	// Propagate labels from Run to PipelineRun.
 	labels := make(map[string]string, len(run.ObjectMeta.Labels)+1)
-	ignnoreLabelsKey := []string{"tekton.dev/pipelineRun", "tekton.dev/pipelineTask", "tekton.dev/pipeline", "custom.tekton.dev/pipelineLoopIteration"}
+	ignoreLabelsKey := []string{"tekton.dev/pipelineRun", "tekton.dev/pipelineTask", "tekton.dev/pipeline", "custom.tekton.dev/pipelineLoopIteration"}
 	for key, val := range run.ObjectMeta.Labels {
-		if _, found := Find(ignnoreLabelsKey, key); !found {
+		if _, found := Find(ignoreLabelsKey, key); !found {
 			labels[key] = val
 		}
 	}
@@ -605,6 +685,19 @@ func getPipelineRunLabels(run *v1alpha1.Run, iterationStr string) map[string]str
 		labels[pipelineloop.GroupName+pipelineLoopIterationLabelKey] = iterationStr
 	}
 	labels[pipelineloop.GroupName+parentPRKey] = run.ObjectMeta.Labels["tekton.dev/pipelineRun"]
+
+	var prOriginalName string
+	if _, ok := run.ObjectMeta.Labels[pipelineloop.GroupName+originalPRKey]; ok {
+		prOriginalName = run.ObjectMeta.Labels[pipelineloop.GroupName+originalPRKey]
+	} else {
+		prOriginalName = run.ObjectMeta.Labels["tekton.dev/pipelineRun"]
+	}
+	labels[pipelineloop.GroupName+originalPRKey] = prOriginalName
+	// Empty the RunId reference from the KFP persistent agent because LabelKeyWorkflowRunId should be unique across all pipelineruns
+	_, ok := labels[LabelKeyWorkflowRunId]
+	if ok {
+		delete(labels, LabelKeyWorkflowRunId)
+	}
 	return labels
 }
 

@@ -146,12 +146,13 @@ function buildTektonDag(graph: dagre.graphlib.Graph, template: any): void {
 
     // Checks if the task is an any-sequencer and if so, adds the dependencies from the task list
     if (
+      task['taskSpec'] &&
       task['taskSpec']['steps'] &&
       task['taskSpec']['steps'][0] &&
       task['taskSpec']['steps'][0]['args'] &&
       task['taskSpec']['steps'][0]['command'] &&
       task['taskSpec']['steps'][0]['command'][0] &&
-      task['taskSpec']['steps'][0]['command'][0] === 'any-taskrun'
+      task['taskSpec']['steps'][0]['command'][0] === 'any-task'
     ) {
       let isNextTaskList = false;
       let isNextCondition = false;

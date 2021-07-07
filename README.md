@@ -13,6 +13,8 @@ Additionally, look at these [slides](https://www.slideshare.net/AnimeshSingh/kub
 as well as this [deep dive presentation](https://www.youtube.com/watch?v=AYIeNtXLT_k)
 for demos.
 
+**Note**: If you are interested in a sister project built on top of Kubeflow Pipelines with Tekton, please try [Machine Learning eXchange (MLX)](https://github.com/machine-learning-exchange), Data and AI Assets Catalog and Execution Engine. It introduces a 'Component Registry' for Kubeflow Pipelines, amongst other things.
+
 ## Tekton
 
 The Tekton Pipelines project provides Kubernetes-style resources for declaring
@@ -25,7 +27,7 @@ look for more details in [Tekton repo](https://github.com/tektoncd/pipeline).
 ## Kubeflow Pipeline with Tekton Backend
 
 We are currently using [Kubeflow Pipelines 1.5.0](https://github.com/kubeflow/pipelines/releases/tag/1.5.0) and
-[Tekton >= 0.21.0](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0)
+[Tekton >= 0.25.0](https://github.com/tektoncd/pipeline/releases/tag/v0.25.0)
 for this project.
 
 ![kfp-tekton](images/kfp-tekton.png)
@@ -41,6 +43,8 @@ for this project.
 [Run Samples](/samples/README.md)
 
 [Available KFP DSL Features](/sdk/FEATURES.md)
+
+[Tekton Specific Features](/guides/advanced_user_guide.md)
 
 ### Development Guides
 

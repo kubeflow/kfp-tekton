@@ -1,0 +1,42 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# run pipelines in "kubeflow" namespace, to access secrets, some E2E tests depend on Minio for artifact storage
+namespace: "kubeflow"
+
+# experiment name to group the pipeline runs started by these E2E tests
+experiment_name: "E2E_TEST"
+
+# ignore pipelines with unpredictable log output or complex prerequisites
+# TODO: revisit list of ignored end-to-end tests, i.e. rewrite DSL so it
+#   will produce logs which can be verified. One option would be to keep more
+#   than one "golden" log file to match either of the desired possible outputs
+ignored_test_files:
+  - "big_data_passing.yaml"            # does not complete in a reasonable time
+  - "katib.yaml"                       # service account needs Katib permission, takes too long doing 9 trial runs
+  - "parallel_join_with_logging.yaml"  # experimental feature, requires S3 (Minio)
+  - "retry.yaml"                       # designed to occasionally fail (randomly) if number of retries exceeded
+  - "timeout.yaml"                     # random failure (by design) ... would need multiple golden log files to compare to
+  - "tolerations.yaml"                 # designed to fail, test show only how to add the toleration to the pod
+  - "volume.yaml"                      # need to rework the credentials part
+  - "volume_op.yaml"                   # need to delete PVC before/after test run
+  - "volume_snapshot_op.yaml"          # only works on Minikube, K8s alpha feature, requires a feature gate from K8s master
+  - "create_component_from_func.yaml"  # remains Running, need to investigate
+  - "any_sequencer.yaml"               # takes 5 min
+  - "basic_no_decorator.yaml"          # takes 2 min
+  - "compose.yaml"                     # takes 2 min
+  - "long_param_name.yaml"             # unit test only, not using real container image
+  - "recur_cond.yaml"                  # unit test only, not using real container image
+  - "cond_recur.yaml"                  # unit test for recursion under condition group, not a valid running example
+  - "custom_task_spec.yaml"            # unit test for generating custom task with custom spec, not a valid running example

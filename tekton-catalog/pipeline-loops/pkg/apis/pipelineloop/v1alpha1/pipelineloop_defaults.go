@@ -18,6 +18,8 @@ package v1alpha1
 
 import (
 	"context"
+	"os"
+	"strconv"
 
 	"knative.dev/pkg/apis"
 )
@@ -31,4 +33,19 @@ func (tl *PipelineLoop) SetDefaults(ctx context.Context) {
 
 // SetDefaults set any defaults for the PipelineLoop spec
 func (tls *PipelineLoopSpec) SetDefaults(ctx context.Context) {
+	if tls.Parallelism == 0 {
+		parallelism := os.Getenv("LOOP_PARALLELISM")
+		if parallelism == "" {
+			tls.Parallelism = 1
+			return
+		}
+		i, err := strconv.Atoi(parallelism)
+		if err != nil {
+			// fall back to default 1
+			tls.Parallelism = 1
+			return
+		} else {
+			tls.Parallelism = i
+		}
+	}
 }

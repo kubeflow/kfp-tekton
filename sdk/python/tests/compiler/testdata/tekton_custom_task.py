@@ -23,8 +23,8 @@ def flip_coin_op():
         image='python:alpine3.6',
         command=['sh', '-c'],
         arguments=['python -c "import random; result = \'heads\' if random.randint(0,1) == 0 '
-                  'else \'tails\'; print(result)" | tee /tmp/output'],
-        file_outputs={'output': '/tmp/output'}
+                  'else \'tails\'; print(result)" | tee /tmp/output_result'],
+        file_outputs={'output_result': '/tmp/output_result'}
     )
 
 

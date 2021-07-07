@@ -27,16 +27,6 @@ metadata:
     tekton.dev/artifact_items: '{"print": []}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/output_artifacts: '{}'
-    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "some-very-long-name-with-lots-of-words-in-it-for-loop-1"},
-      "spec": {"iterateParam": "arr-loop-item", "pipelineSpec": {"params": [{"name":
-      "arr-loop-item", "type": "string"}], "tasks": [{"name": "print", "params": [{"name":
-      "arr-loop-item", "value": "$(params.arr-loop-item)"}], "taskSpec": {"metadata":
-      {"annotations": {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "arr-loop-item", "type": "string"}], "steps": [{"command":
-      ["echo", "$(inputs.params.arr-loop-item)"], "image": "alpine:3.6", "name": "main"}]},
-      "timeout": "0s"}]}}}]'
   name: some-very-long-name-with-lots-of-words-in-it-it-shoul
 spec:
   params:
@@ -51,8 +41,36 @@ spec:
       params:
       - name: arr-loop-item
         value: $(params.arr)
-      taskRef:
+      taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: some-very-long-name-with-lots-of-words-in-it-for-loop-1
+        spec:
+          iterateParam: arr-loop-item
+          pipelineSpec:
+            params:
+            - name: arr-loop-item
+              type: string
+            tasks:
+            - name: print
+              params:
+              - name: arr-loop-item
+                value: $(params.arr-loop-item)
+              taskSpec:
+                metadata:
+                  annotations:
+                    tekton.dev/template: ''
+                  labels:
+                    pipelines.kubeflow.org/cache_enabled: 'true'
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/pipelinename: ''
+                params:
+                - name: arr-loop-item
+                  type: string
+                steps:
+                - command:
+                  - echo
+                  - $(inputs.params.arr-loop-item)
+                  image: alpine:3.6
+                  name: main
+              timeout: 0s
   timeout: 0s

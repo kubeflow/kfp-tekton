@@ -114,6 +114,21 @@ export function statusToIcon(
       iconColor = color.terminated;
       title = 'PipelineRun cancelled';
       break;
+    case NodePhase.CANCELLED:
+      IconComponent = TerminatedIcon;
+      iconColor = color.terminated;
+      title = 'PipelineRun cancelled';
+      break;
+    case NodePhase.STOPPEDRUNFINALLY:
+      IconComponent = TerminatedIcon;
+      iconColor = color.terminated;
+      title = 'PipelineRun stopped';
+      break;
+    case NodePhase.CANCELLEDRUNFINALLY:
+      IconComponent = TerminatedIcon;
+      iconColor = color.terminated;
+      title = 'PipelineRun cancelled';
+      break;
     case NodePhase.PIPELINERUNCOULDNTCANCEL:
       IconComponent = TerminatedIcon;
       iconColor = color.terminated;

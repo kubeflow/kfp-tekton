@@ -63,6 +63,9 @@ The following scripts are used within the pipeline:
   - Deletes the kubeflow deployment and cleans up any related resources.
 - `undeploy-tekton.sh`
   - Deletes the tekton deployment and cleans up any related resources.
+- `deploy-ibm-vpc.sh` and `./deploy-kfp-ibm-vpc.sh` 
+  - Please see the section [A script to deploy kubernetes cluster to IBM Cloud IKS.](#a-script-to-deploy-kubernetes-cluster-to-ibm-cloud-iks), 
+    for usage guide.
 
 These scripts store variables into ${ARCHIVE_DIR}/build.properties which could be used
 by the subsequent jobs in the next stage. You need to specify `build.properties` as a
@@ -78,3 +81,108 @@ The toolchain executes every XXX.
 
 The toolchain outputs job updates to [this](https://ibm-cloudplatform.slack.com/archives/G01LD87L81Z) slack channel.
 
+## A script to deploy kubernetes cluster to IBM Cloud IKS.
+
+### Goals:
+
+1. Provide CLI options to start a IBM Cloud vpc-gen2 IKS cluster with kubeflow deployed, in just one step.
+2. Reasonable defaults for most options, allowing the user to spend least amount of time understanding how it works.
+3. Takes care of complete cleanup of resources or just delete the cluster.
+4. A cluster may be deployed in an existing VPC.
+5. Store the cluster state, so that next run remembers the resources and perform delete/ or start new cluster operation
+   in the previously created VPC.
+6. If a run crashes, allow for resuming where it left off, by re-running with same config file as created by previous run.
+
+### Non Goals:
+1. Managing user login. i.e. before running the script, user should be logged in or script will exit with suitable error.
+
+### User guide
+Know more about the CLI options (and the defaults) by executing: 
+`./deploy-ibm-vpc.sh --help`
+
+*Please note, the script stores all the CLI options passed as configuration for future run. The next run
+will load those values as default values for the specified CLI options. The location of the config can be provided by,
+`--config-file="/path/config-file"`*
+
+1. Deploy cluster with cluster-name and vpc-name provided.
+   
+    a) Without kubeflow.
+    ```shell
+    ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc"
+    Please note the config file name, "~/.iks/my-vpc-my-cluster-cluster-config.sh", it can be used to perform maintenance
+    tasks. ... (wait for finish.)
+    kubectl get nodes
+    ```
+    b) With kubeflow
+    ```shell
+   ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc" --deploy-kubeflow=true
+    kubectl -n kubeflow get pods
+    ```
+   
+2. Delete a cluster, that was previously started.
+  
+   ```shell
+   ./deploy-ibm-vpc.sh --delete-cluster="cluster" --config-file="/path/my-cluster-cluster-config-file"
+   ```
+  
+   __The above step, deletes a cluster by looking up previously stored state in config file
+   (i.e. the option --config-file=`/path/value`)__
+
+3. Start again cluster, that was stopped in the previous step.
+   
+   ```shell
+   ./deploy-ibm-vpc.sh --config-file="/path/my-cluster-cluster-config-file"
+    ... (wait for finish.) A cluster with same specification will be started as specified in config file of previous run.
+   ```
+4. Delete a cluster by specifying it's name and name of the VPC where it is running.
+    
+    ```shell
+    ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc" --delete-cluster="cluster"
+    # OR
+    ./deploy-ibm-vpc.sh --config-file="/path/to/cluster-config"
+    ```
+5. Resume a crashed run, by re-running with same cli options or config-file option.
+    ```shell
+      ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc"
+      # OR
+      ./deploy-ibm-vpc.sh --config-file="/path/to/cluster-config"
+    ```
+
+6. Refresh an `OAuth` token for an already running cluster.
+    
+    When following error appears, 
+   
+    ```shell
+        $> kubectl get pods
+   
+        Unable to connect to the server: failed to refresh token: oauth2: cannot fetch token: 400 Bad Request
+        Response: {
+        "errorCode": "BXNIM0408E",
+        "errorMessage": "Provided refresh token is expired"
+        }
+    ```
+   the OAuth token can be refreshed as:
+   
+    ```shell
+      ./deploy-ibm-vpc.sh --cluster-name="my-cluster" --vpc-name="my-vpc" --deploy-kubeflow=false
+    ```
+
+7. Completely delete cluster and associated resources.
+
+    Please note that, a subnet cannot be deleted unless it is released when that instance is deleted. At the moment there
+    is no mechanism provided by cloud API to detach a VNIC from a subnet.
+    
+    Similarly, a VPC can only be deleted when all it's resources are released. When a cluster is deleted it takes more
+    than 45 mins, to completely release it's resources. 
+   
+    
+    ```shell 
+    ./deploy-ibm-vpc.sh --delete-cluster="full-sync" --cluster-name=xyz --vpc-name=my-vpc
+    # Or using the config file,
+    ./deploy-ibm-vpc.sh --delete-cluster="full-sync" --config-file="/path/my-cluster-cluster-config-file"
+     (It takes a while for the cluster to get deleted and all the resources released.)
+    
+    ```
+    
+    __A "full" delete also deletes the config-file, the stored state (i.e. VPC id/subnets/clusters etc.) of a vpc is
+    irrelevant once the VPC is deleted.__

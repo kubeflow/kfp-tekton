@@ -4,6 +4,7 @@ approvers:
  - Tomcli
  - fenglixa
  - drewbutlerbb4
+ - pugangxa
 reviewers:
  - animeshsingh
  - ckadner
@@ -11,4 +12,5 @@ reviewers:
  - fenglixa
  - drewbutlerbb4
  - pugangxa
-
+ - jinchihe
+ - scrapcodes

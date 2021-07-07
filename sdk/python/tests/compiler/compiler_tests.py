@@ -21,13 +21,12 @@ import sys
 import tempfile
 import textwrap
 import unittest
-import yaml
-import pytest
-
 from os import environ as env
 
+import pytest
+import yaml
 from kfp_tekton import compiler
-
+from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 
 # temporarily set this flag to True in order to (re)generate new "golden" YAML
 # files after making code changes that modify the expected YAML output.
@@ -119,6 +118,41 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.cond_recur import condition_and_recur
     self._test_pipeline_workflow(condition_and_recur, 'cond_recur.yaml')
 
+  def test_loop_in_recur_workflow(self):
+    """
+    Test compiling a conditional recursive workflow.
+    """
+    from .testdata.loop_in_recursion import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'loop_in_recursion.yaml')
+
+  def test_recur_nested_workflow(self):
+    """
+    Test compiling a nested recursive workflow.
+    """
+    from .testdata.recur_nested import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'recur_nested.yaml')
+
+  def test_nested_recur_custom_task_workflow(self):
+    """
+    Test compiling a nested recursive workflow.
+    """
+    from .testdata.nested_recur_custom_task import double_recursion_test
+    self._test_pipeline_workflow(double_recursion_test, 'nested_recur_custom_task.yaml')
+
+  def test_nested_recur_params_workflow(self):
+    """
+    Test compiling a nested recursive workflow.
+    """
+    from .testdata.nested_recur_params import double_recursion_test
+    self._test_pipeline_workflow(double_recursion_test, 'nested_recur_params.yaml')
+
+  def test_custom_task_recur_with_cond_workflow(self):
+    """
+    Test compiling a custom task conditional recursive workflow.
+    """
+    from .testdata.custom_task_recur_with_cond import recursion_test
+    self._test_pipeline_workflow(recursion_test, 'custom_task_recur_with_cond.yaml')
+
   def test_parallel_join_with_argo_vars_workflow(self):
     """
     Test compiling a parallel join workflow.
@@ -132,6 +166,15 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.sidecar import sidecar_pipeline
     self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
+
+  def test_loop_parallelism_workflow(self):
+    """
+    Test compiling a loop with parallelism defined workflow.
+    """
+    from .testdata.loop_static_with_parallelism import pipeline
+    self._test_pipeline_workflow(
+      pipeline,
+      'loop_static_with_parallelism.yaml')
 
   def test_loop_static_workflow(self):
     """
@@ -150,6 +193,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.withitem_nested import pipeline
     self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
+
+  def test_nested_recur_runafter_workflow(self):
+    """
+    Test compiling a nested recursion pipeline with graph dependencies.
+    """
+    from .testdata.nested_recur_runafter import flipcoin
+    self._test_pipeline_workflow(flipcoin, 'nested_recur_runafter.yaml')
 
   def test_withitem_multi_nested_workflow(self):
     """
@@ -182,6 +232,20 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.tekton_custom_task import custom_task_pipeline
     self._test_pipeline_workflow(custom_task_pipeline, 'tekton_custom_task.yaml')
+
+  def test_custom_task_spec_workflow(self):
+    """
+    Test Tekton custom task with custom spec workflow.
+    """
+    from .testdata.custom_task_spec import custom_task_pipeline
+    self._test_pipeline_workflow(custom_task_pipeline, 'custom_task_spec.yaml', skip_noninlined=True)
+
+  def test_custom_task_ref_workflow(self):
+    """
+    Test Tekton custom task with custom ref workflow.
+    """
+    from .testdata.custom_task_ref import custom_task_pipeline
+    self._test_pipeline_workflow(custom_task_pipeline, 'custom_task_ref.yaml', skip_noninlined=True)
 
   def test_long_param_name_workflow(self):
     """
@@ -434,7 +498,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test applying Tekton pipeline config to a workflow
     """
     from .testdata.tekton_pipeline_conf import echo_pipeline
-    pipeline_conf = compiler.pipeline_utils.TektonPipelineConf()
+    pipeline_conf = TektonPipelineConf()
     pipeline_conf.add_pipeline_label('test', 'label')
     pipeline_conf.add_pipeline_label('test2', 'label2')
     pipeline_conf.add_pipeline_annotation('test', 'annotation')
@@ -455,15 +519,16 @@ class TestTektonCompiler(unittest.TestCase):
 
     self._test_pipeline_workflow(any_sequence_pipeline, 'any_sequencer.yaml')
 
-  def _test_pipeline_workflow(self,
+  def _test_pipeline_workflow_inlined_spec(self,
                               pipeline_function,
                               pipeline_yaml,
                               normalize_compiler_output_function=None,
-                              tekton_pipeline_conf=None):
+                              tekton_pipeline_conf=TektonPipelineConf()):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
     compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
+    tekton_pipeline_conf.set_tekton_inline_spec(True)
     try:
       compiler.TektonCompiler().compile(pipeline_function,
                                         compiled_yaml_file,
@@ -475,6 +540,35 @@ class TestTektonCompiler(unittest.TestCase):
       self._verify_compiled_workflow(golden_yaml_file, compiled)
     finally:
       shutil.rmtree(temp_dir)
+
+  def _test_pipeline_workflow(self,
+                              pipeline_function,
+                              pipeline_yaml,
+                              normalize_compiler_output_function=None,
+                              tekton_pipeline_conf=TektonPipelineConf(),
+                              skip_noninlined=False):
+    self._test_pipeline_workflow_inlined_spec(
+      pipeline_function=pipeline_function,
+      pipeline_yaml=pipeline_yaml,
+      normalize_compiler_output_function=normalize_compiler_output_function,
+      tekton_pipeline_conf=tekton_pipeline_conf)
+    if not skip_noninlined:
+      test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
+      golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml.replace(".yaml", "") + "_noninlined.yaml")
+      temp_dir = tempfile.mkdtemp()
+      compiled_yaml_file = os.path.join(temp_dir, 'workflow.yaml')
+      tekton_pipeline_conf.set_tekton_inline_spec(False)
+      try:
+        compiler.TektonCompiler().compile(pipeline_function,
+                                          compiled_yaml_file,
+                                          tekton_pipeline_conf=tekton_pipeline_conf)
+        with open(compiled_yaml_file, 'r') as f:
+          f = normalize_compiler_output_function(
+            f.read()) if normalize_compiler_output_function else f
+          compiled = yaml.safe_load(f)
+        self._verify_compiled_workflow(golden_yaml_file, compiled)
+      finally:
+        shutil.rmtree(temp_dir)
 
   def _test_workflow_without_decorator(self, pipeline_yaml, params_dict):
     """

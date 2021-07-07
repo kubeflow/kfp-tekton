@@ -392,11 +392,14 @@ spec:
     - name: slack-channel
       description: slack channel
       default: ""
+    - name: test-script
+      description: a shell script to run the test case
+      default: ""
   workspaces:
   - name: task-pvc
     mountPath: /artifacts
   steps:
-    - name: flip-coin
+    - name: run-test
       image: docker.io/aipipeline/pipeline-base-image:1.2
       env:
         - name: IBM_CLOUD_API_KEY
@@ -419,6 +422,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.annotations['devops.cloud.ibm.com/build-number']
+        - name: TEST_SCRIPT
+          value: $(params.test-script)
       command: ["/bin/bash", "-c"]
       args:
         - set -ex;
@@ -635,6 +640,26 @@ spec:
           export CONTROLLER_IMAGE_URL=${REGISTRY_URL}/${REGISTRY_NAMESPACE}/pipelineloop-controller;
           export WEBHOOK_IMAGE_URL=${REGISTRY_URL}/${REGISTRY_NAMESPACE}/pipelineloop-webhook;
           source scripts/deploy/iks/tekton-catalog/setup-pipeline-loops-deploy.sh;
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: setup-kubectl-wrapper-deploy
+spec:
+  workspaces:
+  - name: task-pvc
+    mountPath: /artifacts
+  steps:
+    - name: setup-deploy
+      image: docker.io/aipipeline/pipeline-base-image:1.2
+      command:
+        - /bin/bash
+        - '-c'
+      args:
+        - >
+          cd /artifacts && source build.properties;
+          export KUBECTL_WRAPPER_IMAGE_URL=${REGISTRY_URL}/${REGISTRY_NAMESPACE}/kubeclient;
+          source scripts/deploy/iks/tekton-catalog/setup-kubectl-wrapper-deploy.sh;
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task

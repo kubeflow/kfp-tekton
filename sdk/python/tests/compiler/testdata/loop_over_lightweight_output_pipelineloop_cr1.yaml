@@ -14,25 +14,37 @@
 
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
-metadata: {name: loop-over-lightweight-output-for-loop-1}
+metadata:
+  name: loop-over-lightweight-output-for-loop-1
 spec:
   pipelineSpec:
     params:
-    - {name: produce-list-data_list-loop-item, type: string}
+    - name: produce-list-data_list-loop-item
+      type: string
     tasks:
     - name: consume-data
       params:
-      - {name: produce-list-data_list-loop-item, value: $(params.produce-list-data_list-loop-item)}
+      - name: produce-list-data_list-loop-item
+        value: $(params.produce-list-data_list-loop-item)
       taskSpec:
         steps:
         - name: main
-          command: [echo, $(inputs.params.produce-list-data_list-loop-item)]
+          command:
+          - echo
+          - $(inputs.params.produce-list-data_list-loop-item)
           image: busybox
         params:
-        - {name: produce-list-data_list-loop-item, type: string}
+        - name: produce-list-data_list-loop-item
+          type: string
         metadata:
-          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"command": ["echo", {"inputValue": "data"}], "image":
-              "busybox"}}, "inputs": [{"name": "data"}], "name": "Consume data"}'}
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"command": ["echo", {"inputValue": "data"}], "image": "busybox"}},
+              "inputs": [{"name": "data"}], "name": "Consume data"}'
+            tekton.dev/template: ''
       timeout: 0s
   iterateParam: produce-list-data_list-loop-item

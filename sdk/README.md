@@ -1,3 +1,8 @@
+[![PyPI](https://img.shields.io/pypi/v/kfp-tekton?label=PyPI)](https://pypi.org/project/kfp-tekton/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/kfp-tekton?label=Downloads)](https://pypi.org/project/kfp-tekton/#files)
+[![PyPI - License](https://img.shields.io/pypi/l/kfp-tekton?label=License)](https://www.apache.org/licenses/LICENSE-2.0)
+
+
 # Kubeflow Pipelines SDK for Tekton
 
 The Kubeflow Pipelines [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/)
@@ -57,7 +62,7 @@ adding the `TektonCompiler` and the `TektonClient`:
 ## Project Prerequisites
 
  - Python: `3.6` or later
- - Tekton: [`v0.21.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0) or [later](https://github.com/tektoncd/pipeline/releases/latest)
+ - Tekton: [`v0.25.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.25.0) or [later](https://github.com/tektoncd/pipeline/releases/latest)
  - Tekton CLI: [`0.17.2`](https://github.com/tektoncd/cli/releases/tag/v0.17.2)
  - Kubeflow Pipelines: [KFP with Tekton backend](/guides/kfp_tekton_install.md)
 
@@ -77,7 +82,7 @@ virtual environment first:
     pip install kfp-tekton
 
 Alternatively you can install the latest version of the `kfp-tekton` compiler
-from source by cloning the repository [https://github.com/kubeflow/kfp-tekton](https://github.com/kubeflow/kfp-tekton):
+from the source by cloning the repository [https://github.com/kubeflow/kfp-tekton](https://github.com/kubeflow/kfp-tekton):
 
 1. Clone the `kfp-tekton` repo:
 

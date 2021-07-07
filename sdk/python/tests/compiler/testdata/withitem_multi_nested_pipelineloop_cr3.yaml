@@ -15,7 +15,7 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: my-pipeline-for-loop-5
+  name: withitem-multiple-nesting-pipeline-for-loop-5
 spec:
   pipelineSpec:
     params:
@@ -54,11 +54,11 @@ spec:
           annotations:
             tekton.dev/template: ''
       timeout: 0s
-    - name: my-pipeline-for-loop-6
+    - name: withitem-multiple-nesting-pipeline-for-loop-6
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: my-pipeline-for-loop-6
+        name: withitem-multiple-nesting-pipeline-for-loop-6
       params:
       - name: loop-item-param-1-subvar-b
         value: $(params.loop-item-param-1-subvar-b)

@@ -12,21 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
 import inspect
 import json
-import tarfile
-import zipfile
-import re
-import textwrap
-import yaml
 import os
+import re
+import tarfile
+import textwrap
 import uuid
-
-from typing import Callable, List, Text, Dict, Any
-from os import environ as env
+import zipfile
+from collections import defaultdict
 from distutils.util import strtobool
 import collections
+from os import environ as env
+from typing import Callable, List, Text, Dict, Any
 
+import yaml
 # Kubeflow Pipeline imports
 from kfp import dsl
 from kfp.compiler._default_transformers import add_pod_env
@@ -34,16 +35,15 @@ from kfp.compiler.compiler import Compiler
 from kfp.components.structures import InputSpec
 from kfp.dsl._for_loop import LoopArguments
 from kfp.dsl._metadata import _extract_pipeline_metadata
-
 # KFP-Tekton imports
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
-from kfp_tekton.compiler.yaml_utils import dump_yaml
-from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
-from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES
+from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
+from kfp_tekton.compiler.yaml_utils import dump_yaml
+from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPUT_KEYWORD
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
@@ -65,15 +65,16 @@ def _get_super_condition_template():
       input2=int(input2)
     except:
       input1=str(input1)
-    status="true" if (input1 $(inputs.params.operator) input2) else "false"
-    f = open("/tekton/results/status", "w")
-    f.write(status)
-    f.close()' ''')
+    %(s)s="true" if (input1 $(inputs.params.operator) input2) else "false"
+    f = open("/tekton/results/%(s)s", "w")
+    f.write(%(s)s)
+    f.close()' '''
+    % {'s': DEFAULT_CONDITION_OUTPUT_KEYWORD})
 
   template = {
     'results': [
-      {'name': 'status',
-       'description': 'Conditional task status'
+      {'name': DEFAULT_CONDITION_OUTPUT_KEYWORD,
+       'description': 'Conditional task %s' % DEFAULT_CONDITION_OUTPUT_KEYWORD
        }
     ],
     'params': [
@@ -125,15 +126,18 @@ class TektonCompiler(Compiler):
     self.artifact_items = {}
     self.loops_pipeline = {}
     self.recursive_tasks = []
+    self.custom_task_crs = []
     self.uuid = self._get_unique_id_code()
     self._group_names = []
     self.pipeline_labels = {}
     self.pipeline_annotations = {}
+    self.tekton_inline_spec = True
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
     self.pipeline_labels = tekton_pipeline_conf.pipeline_labels
     self.pipeline_annotations = tekton_pipeline_conf.pipeline_annotations
+    self.tekton_inline_spec = tekton_pipeline_conf.tekton_inline_spec
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -277,8 +281,7 @@ class TektonCompiler(Compiler):
                 self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
             if op.groups:
               for condition_op in op.groups:
-                if condition_op.type == 'graph' and condition_op.recursive_ref:
-                  self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
+                self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
         self.loops_pipeline[group_name]['spec']['name'] = group_name
         self.loops_pipeline[group_name]['spec']['taskRef'] = {
           "apiVersion": "custom.tekton.dev/v1alpha1",
@@ -370,7 +373,7 @@ class TektonCompiler(Compiler):
             sanitized_tasks.append(c_dict)
           loop_args_str_value = json.dumps(sanitized_tasks, sort_keys=True)
         else:
-          loop_args_str_value = str(loop_arg_value)
+          loop_args_str_value = json.dumps(loop_arg_value)
 
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": sub_group.loop_args.full_name,
@@ -393,6 +396,8 @@ class TektonCompiler(Compiler):
               self.loops_pipeline[group_name]['spec']['params'].append({
                 'name': param[0], 'value': '$(params.%s)' % param[0]
               })
+      if sub_group.parallelism is not None:
+        self.loops_pipeline[group_name]['spec']['parallelism'] = sub_group.parallelism
 
     return template
 
@@ -448,7 +453,6 @@ class TektonCompiler(Compiler):
       opsgroups,
       condition_params,
     )
-
     templates = []
     for opsgroup in opsgroups.keys():
       # Conditions and loops will get templates in Tekton
@@ -464,6 +468,138 @@ class TektonCompiler(Compiler):
       templates.extend(op_to_steps_handler(op))
 
     return templates
+
+  def _get_inputs_outputs(
+          self,
+          pipeline,
+          root_group,
+          op_groups,
+          opsgroup_groups,
+          condition_params,
+          op_name_to_for_loop_op: Dict[Text, dsl.ParallelFor],
+  ):
+    """Get inputs and outputs of each group and op.
+    Returns:
+      A tuple (inputs, outputs).
+      inputs and outputs are dicts with key being the group/op names and values being list of
+      tuples (param_name, producing_op_name). producing_op_name is the name of the op that
+      produces the param. If the param is a pipeline param (no producer op), then
+      producing_op_name is None.
+    """
+    inputs = defaultdict(set)
+    outputs = defaultdict(set)
+
+    for op in pipeline.ops.values():
+      # op's inputs and all params used in conditions for that op are both considered.
+      for param in op.inputs + list(condition_params[op.name]):
+        # if the value is already provided (immediate value), then no need to expose
+        # it as input for its parent groups.
+        if param.value:
+          continue
+        if param.op_name:
+          upstream_op = pipeline.ops[param.op_name]
+          upstream_groups, downstream_groups = \
+            self._get_uncommon_ancestors(op_groups, opsgroup_groups, upstream_op, op)
+          for i, group_name in enumerate(downstream_groups):
+            # Important: Changes for Tekton custom tasks
+            # Custom task condition are not pods running in Tekton. Thus it should also
+            # be considered as the first uncommon downstream group.
+            def is_parent_custom_task(index):
+              for group_name in downstream_groups[:index]:
+                if 'condition-' in group_name:
+                  return True
+              return False
+            if i == 0 or is_parent_custom_task(i):
+              # If it is the first uncommon downstream group, then the input comes from
+              # the first uncommon upstream group.
+              inputs[group_name].add((param.full_name, upstream_groups[0]))
+            else:
+              # If not the first downstream group, then the input is passed down from
+              # its ancestor groups so the upstream group is None.
+              inputs[group_name].add((param.full_name, None))
+          for i, group_name in enumerate(upstream_groups):
+            if i == len(upstream_groups) - 1:
+              # If last upstream group, it is an operator and output comes from container.
+              outputs[group_name].add((param.full_name, None))
+            else:
+              # If not last upstream group, output value comes from one of its child.
+              outputs[group_name].add((param.full_name, upstream_groups[i + 1]))
+        else:
+          if not op.is_exit_handler:
+            for group_name in op_groups[op.name][::-1]:
+              # if group is for loop group and param is that loop's param, then the param
+              # is created by that for loop ops_group and it shouldn't be an input to
+              # any of its parent groups.
+              inputs[group_name].add((param.full_name, None))
+              if group_name in op_name_to_for_loop_op:
+                # for example:
+                #   loop_group.loop_args.name = 'loop-item-param-99ca152e'
+                #   param.name =                'loop-item-param-99ca152e--a'
+                loop_group = op_name_to_for_loop_op[group_name]
+                if loop_group.loop_args.name in param.name:
+                  break
+
+    # Generate the input/output for recursive opsgroups
+    # It propagates the recursive opsgroups IO to their ancester opsgroups
+    def _get_inputs_outputs_recursive_opsgroup(group):
+      # TODO: refactor the following codes with the above
+      if group.recursive_ref:
+        params = [(param, False) for param in group.inputs]
+        params.extend([(param, True) for param in list(condition_params[group.name])])
+        for param, is_condition_param in params:
+          if param.value:
+            continue
+          full_name = param.full_name
+          if param.op_name:
+            upstream_op = pipeline.ops[param.op_name]
+            upstream_groups, downstream_groups = \
+              self._get_uncommon_ancestors(op_groups, opsgroup_groups, upstream_op, group)
+            for i, g in enumerate(downstream_groups):
+              if i == 0:
+                inputs[g].add((full_name, upstream_groups[0]))
+              # There is no need to pass the condition param as argument to the downstream ops.
+              # TODO: this might also apply to ops. add a TODO here and think about it.
+              elif i == len(downstream_groups) - 1 and is_condition_param:
+                continue
+              else:
+                # For Tekton, do not append duplicated input parameters
+                duplicated_downstream_group = False
+                for group_name in inputs[g]:
+                  if len(group_name) > 1 and group_name[0] == full_name:
+                    duplicated_downstream_group = True
+                    break
+                if not duplicated_downstream_group:
+                  inputs[g].add((full_name, None))
+            for i, g in enumerate(upstream_groups):
+              if i == len(upstream_groups) - 1:
+                outputs[g].add((full_name, None))
+              else:
+                outputs[g].add((full_name, upstream_groups[i + 1]))
+          elif not is_condition_param:
+            for g in op_groups[group.name]:
+              inputs[g].add((full_name, None))
+      for subgroup in group.groups:
+        _get_inputs_outputs_recursive_opsgroup(subgroup)
+
+    _get_inputs_outputs_recursive_opsgroup(root_group)
+
+    # Generate the input for SubGraph along with parallelfor
+    for sub_graph in opsgroup_groups:
+      if sub_graph in op_name_to_for_loop_op:
+        # The opsgroup list is sorted with the farthest group as the first and
+        # the opsgroup itself as the last. To get the latest opsgroup which is
+        # not the opsgroup itself -2 is used.
+        parent = opsgroup_groups[sub_graph][-2]
+        if parent and parent.startswith('subgraph'):
+          # propagate only op's pipeline param from subgraph to parallelfor
+          loop_op = op_name_to_for_loop_op[sub_graph]
+          pipeline_param = loop_op.loop_args.items_or_pipeline_param
+          if loop_op.items_is_pipeline_param and pipeline_param.op_name:
+            param_name = '%s-%s' % (
+              sanitize_k8s_name(pipeline_param.op_name), pipeline_param.name)
+            inputs[parent].add((param_name, pipeline_param.op_name))
+
+    return inputs, outputs
 
   def _process_resourceOp(self, task_refs, pipeline):
     """ handle resourceOp cases in pipeline """
@@ -547,7 +683,7 @@ class TektonCompiler(Compiler):
           }]
           condition_refs[template['metadata']['name']] = [
               {
-                'input': '$(tasks.%s.results.status)' % template['metadata']['name'],
+                'input': '$(tasks.%s.results.%s)' % (template['metadata']['name'], DEFAULT_CONDITION_OUTPUT_KEYWORD),
                 'operator': 'in',
                 'values': ['true']
               }
@@ -603,7 +739,7 @@ class TektonCompiler(Compiler):
             for index, item in enumerate(container_args):
               if item.startswith('--'):
                 custom_task_args[item[2:]] = container_args[index + 1]
-            non_param_keys = ['name', 'apiVersion', 'kind']
+            non_param_keys = ['name', 'apiVersion', 'kind', 'taskSpec', 'taskRef']
             task_params = []
             for key, value in custom_task_args.items():
               if key not in non_param_keys:
@@ -619,6 +755,44 @@ class TektonCompiler(Compiler):
                 'kind': custom_task_args['kind']
               }
             }
+            # Only one of --taskRef and --taskSpec allowed.
+            if custom_task_args.get('taskRef', '') and custom_task_args.get('taskSpec', ''):
+              raise("Custom task invalid configuration %s, Only one of --taskRef and --taskSpec allowed." % custom_task_args)
+            if custom_task_args.get('taskRef', ''):
+              try:
+                custom_task_cr = {
+                  'apiVersion': custom_task_args['apiVersion'],
+                  'kind': custom_task_args['kind'],
+                  'metadata': {
+                    'name': custom_task_args['name']
+                  },
+                  'spec': ast.literal_eval(custom_task_args['taskRef'])
+                }
+                for existing_cr in self.custom_task_crs:
+                  if existing_cr == custom_task_cr:
+                    # Skip duplicated CR resource
+                    custom_task_cr = {}
+                    break
+                if custom_task_cr:
+                  self.custom_task_crs.append(custom_task_cr)
+              except ValueError:
+                raise("Custom task ref %s is not a valid Python Dictionary" % custom_task_args['taskRef'])
+            # Setting --taskRef flag indicates, that spec be inlined.
+            if custom_task_args.get('taskSpec', ''):
+              try:
+                task_ref = {
+                  'name': template['metadata']['name'],
+                  'params': task_params,
+                  # For processing Tekton parameter mapping later on.
+                  'orig_params': task_ref['params'],
+                  'taskSpec': {
+                    'apiVersion': custom_task_args['apiVersion'],
+                    'kind': custom_task_args['kind'],
+                    'spec': ast.literal_eval(custom_task_args['taskSpec'])
+                  }
+                }
+              except ValueError:
+                raise("Custom task spec %s is not a valid Python Dictionary" % custom_task_args['taskSpec'])
             # Pop custom task artifacts since we have no control of how
             # custom task controller is handling the container/task execution.
             self.artifact_items.pop(template['metadata']['name'], None)
@@ -667,7 +841,14 @@ class TektonCompiler(Compiler):
         for param_iter in range(len(input_params)):
           # Add ancestor conditions to the current condition ref
           if most_recent_condition:
-            condition_task_ref['when'] = condition_when_refs[most_recent_condition]
+            add_ancestor_conditions = True
+            # Do not add ancestor conditions if the ancestor is not in the same graph/pipelineloop
+            for pipeline_loop in self.loops_pipeline.values():
+              if condition_task_ref['name'] in pipeline_loop['task_list']:
+                if most_recent_condition not in pipeline_loop['task_list']:
+                  add_ancestor_conditions = False
+            if add_ancestor_conditions:
+              condition_task_ref['when'] = condition_when_refs[most_recent_condition]
           condition_task_ref['params'][param_iter]['value'] = input_params[param_iter]
         if not DISABLE_CEL_CONDITION and not cel_conditions.get(condition_task_ref['name'], None):
           # Type processing are done on the CEL controller since v1 SDK doesn't have value type for conditions.
@@ -676,7 +857,7 @@ class TektonCompiler(Compiler):
           var2 = condition_task_ref['params'][1]['value']
           op = condition_task_ref['params'][2]['value']
           condition_task_ref['params'] = [{
-                  'name': "status",
+                  'name': DEFAULT_CONDITION_OUTPUT_KEYWORD,
                   'value': " ".join([var1, op, var2])
                 }]
         most_recent_condition = cur_opsgroup.name
@@ -710,6 +891,17 @@ class TektonCompiler(Compiler):
       if parent_group:
         if condition_refs.get(parent_group[-2], []):
           self.loops_pipeline[loop_task_key]['spec']['when'] = condition_refs.get(parent_group[-2], [])
+          # In nested recursive loop, the children of the loop pipeline can be both another loop
+          # and the self recursive loop. Thus, we cannot simply pop unnecessary params in one
+          # loop pipeline without verifying all the dependent parameters. Because nested recursion
+          # can have cycles, the DSL DAG may not represent the full view of all the dependent parameters.
+          # TODO: 1. Break any cycle in the nested recursion so it can represent as an acyclic graph.
+          #       2. Once the graph is acyclic, check all the children parameters in the loop_task
+          #          and pop the unnecessary parameters using the below logic.
+          # for i, param in enumerate(self.loops_pipeline[loop_task_key]['spec']["params"]):
+          #   if param["value"] == condition_refs.get(parent_group[-2], [])[0]["input"]:
+          #     self.loops_pipeline[loop_task_key]['spec']["params"].pop(i)
+          #     break
 
     # process input parameters from upstream tasks
     pipeline_param_names = [p['name'] for p in params]
@@ -730,12 +922,14 @@ class TektonCompiler(Compiler):
           for pipeline_param in pipeline_params:
             if pipeline_param in orig_params:
               if pipeline_param in pipeline_param_names + loop_args:
+                # Do not sanitize Tekton pipeline input parameters, only the output parameters need to be sanitized
                 substitute_param = '$(params.%s)' % pipeline_param
                 tp['value'] = re.sub('\$\(inputs.params.%s\)' % pipeline_param, substitute_param, tp.get('value', ''))
               else:
                 for pp in op.inputs:
                   if pipeline_param == pp.full_name:
-                    substitute_param = '$(tasks.%s.results.%s)' % (pp.op_name, pp.name)
+                    # Parameters from Tekton results need to be sanitized
+                    substitute_param = '$(tasks.%s.results.%s)' % (sanitize_k8s_name(pp.op_name), sanitize_k8s_name(pp.name))
                     tp['value'] = re.sub('\$\(inputs.params.%s\)' % pipeline_param, substitute_param, tp.get('value', ''))
                     break
         # Not necessary for Tekton execution
@@ -770,7 +964,7 @@ class TektonCompiler(Compiler):
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       # Custom task doesn't support timeout feature
-      if task.get('taskSpec', ''):
+      if task.get('taskSpec', '') and 'apiVersion' not in task['taskSpec']:
         if op != None and (not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout):
           task['timeout'] = '%ds' % op.timeout
 
@@ -1029,7 +1223,7 @@ class TektonCompiler(Compiler):
     Args:
       pipeline_func: pipeline functions with @dsl.pipeline decorator.
       package_path: the output workflow tar.gz file path. for example, "~/a.tar.gz"
-      type_check: whether to enable the type check or not, default: False.
+      type_check: whether to enable the type check or not, default: True.
       pipeline_conf: PipelineConf instance. Can specify op transforms,
                      image pull secrets and other pipeline-level configuration options.
                      Overrides any configuration that may be set by the pipeline.
@@ -1093,7 +1287,10 @@ class TektonCompiler(Compiler):
           'Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues '
           'attaching the pipeline DSL code and the pipeline YAML.')
 
-    yaml_text = dump_yaml(_handle_tekton_pipeline_variables(yaml.load(yaml_text, Loader=yaml.FullLoader)))
+    pipeline_run = yaml.load(yaml_text, Loader=yaml.FullLoader)
+    if pipeline_run.get("spec", {}) and pipeline_run["spec"].get("pipelineSpec", {}) and \
+      pipeline_run["spec"]["pipelineSpec"].get("tasks", []):
+      yaml_text = dump_yaml(_handle_tekton_pipeline_variables(pipeline_run))
 
     if package_path is None:
       return yaml_text
@@ -1137,20 +1334,91 @@ class TektonCompiler(Compiler):
     # Separate loop workflow from the main workflow
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
+      # loop_package_annotations = []
+      # for i in range(len(pipeline_loop_crs)):
+      #   if LOOP_RESOURCES_IN_SEPARATE_YAML:
+      #     TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
+      #                                    package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
+      #   else:
+      #     pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
+      #     loop_package_annotations.append(yaml.load(pipeline_loop_cr, Loader=yaml.FullLoader))
+      # if loop_package_annotations:
+      #   workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations, sort_keys=True)
+      # TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
+      inlined_as_taskSpec: List[Text] = []
+      recursive_tasks_names: List[Text] = [x['taskRef'].get('name', "") for x in self.recursive_tasks]
+      if self.tekton_inline_spec:
+        # Step 1. inline all the pipeline_loop_crs as they may refer to each other.
+        for i in range(len(pipeline_loop_crs)):
+          if 'pipelineSpec' in pipeline_loop_crs[i]['spec']:
+            if 'params' in pipeline_loop_crs[i]['spec']['pipelineSpec']:
+              # Preserve order of params, required by tests.
+              pipeline_loop_crs[i]['spec']['pipelineSpec']['params'] =\
+                sorted(pipeline_loop_crs[i]['spec']['pipelineSpec']['params'], key=lambda kv: (kv['name']))
+            t, e = TektonCompiler._inline_tasks(pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'],
+                                                pipeline_loop_crs, recursive_tasks_names)
+            if e:
+              pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'] = t
+              inlined_as_taskSpec.extend(e)
+        # Step 2. inline pipeline_loop_crs in the workflow
+        workflow_tasks, e = TektonCompiler._inline_tasks(workflow['spec']['pipelineSpec']['tasks'],
+                                                         pipeline_loop_crs, recursive_tasks_names)
+        inlined_as_taskSpec.extend(e)
+        workflow['spec']['pipelineSpec']['tasks'] = workflow_tasks
+
+      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
+
+      # create cr yaml for only those pipelineLoop cr which could not be converted to inlined spec.
       loop_package_annotations = []
       for i in range(len(pipeline_loop_crs)):
         if LOOP_RESOURCES_IN_SEPARATE_YAML:
-          TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
-                                         package_path=os.path.splitext(package_path)[0] + "_pipelineloop_cr" + str(i + 1) + '.yaml')
+          if pipeline_loop_crs[i]['metadata'].get('name', "") not in inlined_as_taskSpec:
+            TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
+                                          package_path=os.path.splitext(package_path)[0] +
+                                                        "_pipelineloop_cr" + str(i + 1) + '.yaml')
         else:
           pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
           loop_package_annotations.append(yaml.load(pipeline_loop_cr, Loader=yaml.FullLoader))
-      if loop_package_annotations:
-        workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations, sort_keys=True)
-      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
+        if loop_package_annotations:
+          workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations, sort_keys=True)
     else:
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
+    # Separate custom task CR from the main workflow
+    for i in range(len(self.custom_task_crs)):
+      TektonCompiler._write_workflow(workflow=self.custom_task_crs[i],
+                                    package_path=os.path.splitext(package_path)[0] +
+                                                  "_customtask_cr" + str(i + 1) + '.yaml')
     _validate_workflow(workflow)
+
+  @staticmethod
+  def _inline_tasks(tasks: List[Dict[Text, Any]], crs: List[Dict[Text, Any]], recursive_tasks: List[Text]):
+    """
+      Scan all the `tasks` and for each taskRef in `tasks` resolve it in `crs`
+       and inline them as taskSpec.
+       return tasks with all the taskRef -> taskSpec resolved.
+       list of names of the taskRef that were successfully converted.
+    """
+    workflow_tasks = tasks.copy()
+    inlined_as_taskSpec = []
+    for j in range(len(workflow_tasks)):
+      if 'params' in workflow_tasks[j]:
+        # Preserve order of params, required by tests.
+        workflow_tasks[j]['params'] = sorted(workflow_tasks[j]['params'], key=lambda kv: (kv['name']))
+      if 'taskRef' in workflow_tasks[j]:
+        wf_taskRef = workflow_tasks[j]['taskRef']
+        if 'name' in wf_taskRef and \
+                wf_taskRef['name'] not in recursive_tasks:  # we do not inline recursive tasks.
+          cr_apiVersion = wf_taskRef['apiVersion']
+          cr_kind = wf_taskRef['kind']
+          cr_ref_name = wf_taskRef['name']
+          for i in range(len(crs)):
+            if crs[i]['metadata'].get('name', "") == cr_ref_name:
+              workflow_tasks[j]['taskSpec'] = \
+                {'apiVersion': cr_apiVersion, 'kind': cr_kind,
+                 'spec': crs[i]['spec']}
+              inlined_as_taskSpec.append(cr_ref_name)
+              workflow_tasks[j].pop('taskRef')
+    return workflow_tasks, inlined_as_taskSpec
 
 
 def _validate_workflow(workflow: Dict[Text, Any]):
