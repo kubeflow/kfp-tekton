@@ -64,8 +64,8 @@ def produce_number() -> int:
 
 
 @dsl.pipeline(name='Conditions and loops')
-def conditions_and_loops(n='3', threshold='20'):
-    produce_numbers_task = produce_numbers(n)
+def conditions_and_loops(n1='3', threshold='20'):
+    produce_numbers_task = produce_numbers(n1)
     with dsl.ParallelFor(produce_numbers_task.output) as loop_item:
         add_numbers_task = add_numbers(loop_item, '10')
         print_number_task = print_number(add_numbers_task.output)

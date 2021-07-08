@@ -16,7 +16,7 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "3", "name": "n",
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "3", "name": "n1",
       "optional": true}, {"default": "20", "name": "threshold", "optional": true}],
       "name": "Conditions and loops"}'
     sidecar.istio.io/inject: 'false'
@@ -36,21 +36,21 @@ metadata:
   name: conditions-and-loops
 spec:
   params:
-  - name: n
+  - name: n1
     value: '3'
   - name: threshold
     value: '20'
   pipelineSpec:
     params:
     - default: '3'
-      name: n
+      name: n1
     - default: '20'
       name: threshold
     tasks:
     - name: produce-numbers
       params:
-      - name: n
-        value: $(params.n)
+      - name: n1
+        value: $(params.n1)
       taskSpec:
         metadata:
           annotations:
@@ -81,14 +81,14 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/pipelinename: ''
         params:
-        - name: n
+        - name: n1
         results:
         - description: /tmp/outputs/Output/data
           name: output
         steps:
         - args:
           - --n
-          - $(inputs.params.n)
+          - $(inputs.params.n1)
           - '----output-paths'
           - $(results.output.path)
           command:
