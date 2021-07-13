@@ -25,6 +25,7 @@ from os import environ as env
 
 import pytest
 import yaml
+from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton import compiler
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 
@@ -625,7 +626,8 @@ class TestTektonCompiler(unittest.TestCase):
       with open(golden_yaml_file, 'w') as f:
         f.write(LICENSE_HEADER)
       with open(golden_yaml_file, 'a+') as f:
-        yaml.dump(compiled_workflow, f, default_flow_style=False)
+        yaml_text = dump_yaml(compiled_workflow)
+        f.write(yaml_text)
     else:
       with open(golden_yaml_file, 'r') as f:
         golden = yaml.safe_load(f)
