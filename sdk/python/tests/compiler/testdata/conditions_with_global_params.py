@@ -48,8 +48,8 @@ def produce_number() -> int:
 
 
 @dsl.pipeline(name='Conditions with global params')
-def conditions_with_global_params(n1='5', threshold='10', lower_bound='15'):
-    add_numbers_task = add_numbers(n1, lower_bound)
+def conditions_with_global_params(n='5', threshold='10', lower_bound='15'):
+    add_numbers_task = add_numbers(n, lower_bound)
     print_number_task = print_number(add_numbers_task.output)
     with dsl.Condition(print_number_task.output > threshold):
         notify_success()
