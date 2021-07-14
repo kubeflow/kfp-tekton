@@ -15,37 +15,28 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: volume
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with volume.",
-      "name": "Volume"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/downloaded.tgz",
+      "name": "download-downloaded", "path": "/tmp/results.txt"}]}'
+    tekton.dev/input_artifacts: '{"echo": [{"name": "download-downloaded", "parent_task":
+      "download"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"download": [["downloaded", "$(results.downloaded.path)"]],
       "echo": []}'
-    tekton.dev/input_artifacts: '{"echo": [{"name": "download-downloaded", "parent_task":
-      "download"}]}'
-    tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/downloaded.tgz",
-      "name": "download-downloaded", "path": "/tmp/results.txt"}]}'
-  name: volume
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with volume.",
+      "name": "Volume"}'
 spec:
   pipelineSpec:
     tasks:
     - name: download
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
-        results:
-        - description: /tmp/results.txt
-          name: downloaded
         steps:
-        - args:
+        - name: main
+          args:
           - ls | tee $(results.downloaded.path)
           command:
           - sh
@@ -56,36 +47,45 @@ spec:
           - name: Foo
             value: bar
           image: google/cloud-sdk
-          name: main
           volumeMounts:
           - mountPath: /secret/gcp-credentials
             name: gcp-credentials
+        results:
+        - name: downloaded
+          description: /tmp/results.txt
         volumes:
         - name: gcp-credentials
           secret:
             secretName: user-gcp-sa
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
     - name: echo
       params:
       - name: download-downloaded
         value: $(tasks.download.results.downloaded)
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
-        params:
-        - name: download-downloaded
         steps:
-        - args:
+        - name: main
+          args:
           - echo $(inputs.params.download-downloaded)
           command:
           - sh
           - -c
           image: library/bash
-          name: main
+        params:
+        - name: download-downloaded
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

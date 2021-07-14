@@ -18,17 +18,27 @@ all:
 KO = ko
 ko: PACKAGE=github.com/google/ko/cmd/ko
 
-apply: $(info apply PipelineLoop controller to the k8s cluster )
+apply: $(info apply: Apply PipelineLoop controller to the k8s cluster )
 	$(KO) apply -f config
 
 test-all:  $(info test-all: run unit tests )
 	go test -v -cover -timeout=${TIMEOUT_TESTS} ./...
 
+.PHONY: init
 init:
 	mkdir -p ${BIN_DIR}
 
+.PHONY: cli
 cli: init $(info cli: build validation cli )
 	go build -o=${BIN_DIR}/pipelineloop-cli ./cmd/cli
+
+.PHONY: validate-testdata-python-sdk
+validate-testdata-python-sdk: cli $(info validate-testdata-python-sdk: validate testdata for python SDK )
+## works w/o findutils installed, but globbing has a limit
+## for x in ../../sdk/python/tests/compiler/testdata/*yaml; do ${BIN_DIR}/pipelineloop-cli -f $$x || true ; done
+	@find ../../sdk/python/tests/compiler/testdata \
+		\( -type f -name "*yaml" -not -path "*\test_data\*" -not -name "*component.yaml" \) \
+		-print0 | xargs -0 -n1 ${BIN_DIR}/pipelineloop-cli -f
 
 local: init
 	go build -o=${BIN_DIR}/pipelineloop-controller ./cmd/controller

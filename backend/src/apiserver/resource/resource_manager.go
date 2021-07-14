@@ -532,7 +532,7 @@ func (r *ResourceManager) ListJobs(filterContext *common.FilterContext,
 func TerminateWorkflow(wfClient workflowclient.PipelineRunInterface, name string) error {
 	patchObj := map[string]interface{}{
 		"spec": map[string]interface{}{
-			"status": "Cancelled",
+			"status": common.GetTerminateStatus(),
 		},
 	}
 

@@ -1355,6 +1355,10 @@ class TektonCompiler(Compiler):
                                                          pipeline_loop_crs, recursive_tasks_names)
         inlined_as_taskSpec.extend(e)
         workflow['spec']['pipelineSpec']['tasks'] = workflow_tasks
+        # Preserve order of params, required by tests.
+        if 'params' in workflow['spec']:
+          workflow['spec']['params'] = sorted(workflow['spec']['params'], key=lambda kv: (kv['name']))
+      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
 
       # create cr yaml for only those pipelineLoop cr which could not be converted to inlined spec.
       loop_package_annotations = []

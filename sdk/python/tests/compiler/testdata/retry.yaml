@@ -15,33 +15,26 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: retry-random-failures
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline includes
-      two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).",
-      "name": "Retry random failures"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"random-failure": [], "random-failure-2": []}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  name: retry-random-failures
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline includes
+      two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).",
+      "name": "Retry random failures"}'
 spec:
   pipelineSpec:
     tasks:
     - name: random-failure
-      retries: 10
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
         steps:
-        - args:
+        - name: main
+          args:
           - import random; import sys; exit_code = random.choice([int(i) for i in
             sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
           - 0,1,2,3
@@ -49,20 +42,20 @@ spec:
           - python
           - -c
           image: python:alpine3.6
-          name: main
-      timeout: 0s
-    - name: random-failure-2
-      retries: 5
-      taskSpec:
         metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
+      retries: 10
+      timeout: 0s
+    - name: random-failure-2
+      taskSpec:
         steps:
-        - args:
+        - name: main
+          args:
           - import random; import sys; exit_code = random.choice([int(i) for i in
             sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
           - 0,1
@@ -70,6 +63,13 @@ spec:
           - python
           - -c
           image: python:alpine3.6
-          name: main
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
+      retries: 5
       timeout: 0s
   timeout: 0s

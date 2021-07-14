@@ -12,6 +12,7 @@ data:
   strip_eof: "false"
   inject_default_script: "true"
   apply_tekton_custom_resource: "false"
+  terminate_status: "Cancelled"
   artifact_script: |-
     #!/usr/bin/env sh
     push_artifact() {

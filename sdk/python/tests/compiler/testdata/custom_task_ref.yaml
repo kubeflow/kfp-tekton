@@ -15,18 +15,18 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: tekton-custom-task-on-kubeflow-pipeline
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
-      custom task with custom spec on KFP", "name": "Tekton custom task on Kubeflow
-      Pipeline"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  name: tekton-custom-task-on-kubeflow-pipeline
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
+      custom task with custom spec on KFP", "name": "Tekton custom task on Kubeflow
+      Pipeline"}'
 spec:
   pipelineSpec:
     tasks:
@@ -35,17 +35,17 @@ spec:
       - name: other_custom_task_argument_keys
         value: args
       taskRef:
+        name: custom_task_name
         apiVersion: custom_task_api_version
         kind: custom_task_kind
-        name: custom_task_name
     - name: any-name-2
       params:
       - name: other_custom_task_argument_keys
         value: args
-      runAfter:
-      - any-name
       taskRef:
+        name: custom_task_name
         apiVersion: custom_task_api_version
         kind: custom_task_kind
-        name: custom_task_name
+      runAfter:
+      - any-name
   timeout: 0s

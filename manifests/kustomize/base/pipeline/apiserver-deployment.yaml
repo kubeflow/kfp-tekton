@@ -106,3 +106,8 @@ spec:
             configMapKeyRef:
               name: kfp-tekton-config
               key: apply_tekton_custom_resource
+        - name: TERMINATE_STATUS
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: terminate_status

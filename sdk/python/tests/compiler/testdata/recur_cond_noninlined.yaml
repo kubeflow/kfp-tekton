@@ -15,37 +15,37 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: recur-and-condition
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "42", "name": "iter_num",
-      "optional": true, "type": "Integer"}], "name": "recur-and-condition"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{"print-iter": [{"key": "artifacts/$PIPELINERUN/print-iter/stdout.tgz",
+      "name": "print-iter-stdout", "path": "/tmp/stdout"}]}'
+    tekton.dev/input_artifacts: '{"print-iter": [{"name": "condition-cel-outcome",
+      "parent_task": "condition-cel"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print-iter": [["stdout", "$(results.stdout.path)"]]}'
-    tekton.dev/input_artifacts: '{"print-iter": [{"name": "condition-cel-outcome",
-      "parent_task": "condition-cel"}]}'
-    tekton.dev/output_artifacts: '{"print-iter": [{"key": "artifacts/$PIPELINERUN/print-iter/stdout.tgz",
-      "name": "print-iter-stdout", "path": "/tmp/stdout"}]}'
-  name: recur-and-condition
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "42", "name": "iter_num",
+      "optional": true, "type": "Integer"}], "name": "recur-and-condition"}'
 spec:
   params:
   - name: iter_num
     value: '42'
   pipelineSpec:
     params:
-    - default: '42'
-      name: iter_num
+    - name: iter_num
+      default: '42'
     tasks:
     - name: recur-and-condition-graph-recur-1
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: recur-and-condition-graph-recur-1
       params:
       - name: iter_num
         value: $(params.iter_num)
       - name: just_one_iteration
         value:
         - '1'
-      taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        name: recur-and-condition-graph-recur-1
   timeout: 0s
