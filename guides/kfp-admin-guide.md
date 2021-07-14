@@ -106,8 +106,6 @@ KFP Caching will cache all the workloads that use the same task with the same in
 kubectl set env -n kubeflow deploy/ml-pipeline CACHE_ENABLED=false
 ```
 
-<<<<<<< HEAD
-=======
 ## Change the Tekton Terminate API Method
 
 Starting from Tekton 0.25.0, there are three different ways to terminate a pipeline in Tekton.
@@ -125,5 +123,4 @@ kubectl rollout restart deploy/ml-pipeline -n kubeflow
 ```
 
 
->>>>>>> upstream/master
 [kfp-tekton-configmap]: /manifests/kustomize/base/pipeline/kfp-pipeline-config.yaml
