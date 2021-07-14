@@ -15,56 +15,56 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: pipeline-includes-two-steps-which-fail-randomly
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use ContainerOp
-      set_timeout().", "name": "pipeline includes two steps which fail randomly."}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"random-failure": [], "random-failure-2": []}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  name: pipeline-includes-two-steps-which-fail-randomly
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use ContainerOp
+      set_timeout().", "name": "pipeline includes two steps which fail randomly."}'
 spec:
   pipelineSpec:
     tasks:
     - name: random-failure
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
         steps:
-        - args:
+        - name: main
+          args:
           - import random; import sys; exit_code = random.choice([0,1,2,3]); print(exit_code);
             import time; time.sleep(30); sys.exit(exit_code)
           command:
           - python
           - -c
           image: python:alpine3.6
-          name: main
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 20s
     - name: random-failure-2
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
         steps:
-        - args:
+        - name: main
+          args:
           - import random; import sys; exit_code = random.choice([0,1]); print(exit_code);
             import time; time.sleep(30); sys.exit(exit_code)
           command:
           - python
           - -c
           image: python:alpine3.6
-          name: main
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
   timeout: 40s

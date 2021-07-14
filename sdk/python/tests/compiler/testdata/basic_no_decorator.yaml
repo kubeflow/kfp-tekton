@@ -15,22 +15,22 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: save-most-frequent-word
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "Get Most Frequent Word
-      and Save to GCS", "inputs": [{"default": "When flies fly behind flies", "name":
-      "message"}, {"default": "default_output", "name": "outputpath"}], "name": "Save
-      Most Frequent Word"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{"get-frequent": [{"key": "artifacts/$PIPELINERUN/get-frequent/word.tgz",
+      "name": "get-frequent-word", "path": "/tmp/message.txt"}]}'
+    tekton.dev/input_artifacts: '{"save": [{"name": "get-frequent-word", "parent_task":
+      "get-frequent"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"exiting": [], "get-frequent": [["word", "$(results.word.path)"]],
       "save": []}'
-    tekton.dev/input_artifacts: '{"save": [{"name": "get-frequent-word", "parent_task":
-      "get-frequent"}]}'
-    tekton.dev/output_artifacts: '{"get-frequent": [{"key": "artifacts/$PIPELINERUN/get-frequent/word.tgz",
-      "name": "get-frequent-word", "path": "/tmp/message.txt"}]}'
-  name: save-most-frequent-word
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Get Most Frequent Word
+      and Save to GCS", "inputs": [{"default": "When flies fly behind flies", "name":
+      "message"}, {"default": "default_output", "name": "outputpath"}], "name": "Save
+      Most Frequent Word"}'
 spec:
   params:
   - name: message
@@ -38,60 +38,41 @@ spec:
   - name: outputpath
     value: default_output
   pipelineSpec:
-    finally:
-    - name: exiting
-      taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
-        steps:
-        - args:
-          - echo exit!
-          command:
-          - sh
-          - -c
-          image: python:3.6-jessie
-          name: main
-      timeout: 0s
     params:
-    - default: When flies fly behind flies
-      name: message
-    - default: default_output
-      name: outputpath
+    - name: message
+      default: When flies fly behind flies
+    - name: outputpath
+      default: default_output
     tasks:
     - name: get-frequent
       params:
       - name: message
         value: $(params.message)
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
-        params:
-        - name: message
-        results:
-        - description: /tmp/message.txt
-          name: word
         steps:
-        - args:
+        - name: main
+          args:
           - python -c "from collections import Counter; words = Counter('$(inputs.params.message)'.split());
             print(max(words, key=words.get))" | tee $(results.word.path)
           command:
           - sh
           - -c
           image: python:3.6-jessie
-          name: main
           resources:
             requests:
               memory: 200M
+        params:
+        - name: message
+        results:
+        - name: word
+          description: /tmp/message.txt
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
     - name: save
       params:
@@ -100,28 +81,47 @@ spec:
       - name: outputpath
         value: $(params.outputpath)
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
-        params:
-        - name: get-frequent-word
-        - name: outputpath
         steps:
-        - args:
+        - name: main
+          args:
           - echo "$(inputs.params.get-frequent-word)" | tee /tmp/results.txt | gsutil
             cp /tmp/results.txt $(inputs.params.outputpath)
           command:
           - sh
           - -c
           image: google/cloud-sdk
-          name: main
           resources:
             limits:
               cpu: '0.5'
+        params:
+        - name: get-frequent-word
+        - name: outputpath
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
+      timeout: 0s
+    finally:
+    - name: exiting
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - echo exit!
+          command:
+          - sh
+          - -c
+          image: python:3.6-jessie
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: save
