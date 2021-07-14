@@ -132,6 +132,15 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recur_nested import flipcoin
     self._test_pipeline_workflow(flipcoin, 'recur_nested.yaml')
 
+  def test_recur_nested_inline_anno_workflow(self):
+    """
+    Test compiling a nested recursive workflow with embedded loop resource in annotations.
+    """
+    from .testdata.recur_nested import flipcoin
+    pipeline_conf = TektonPipelineConf()
+    pipeline_conf.set_resource_in_separate_yaml(False)
+    self._test_pipeline_workflow(flipcoin, 'recur_nested_inline_anno.yaml', tekton_pipeline_conf=pipeline_conf)
+
   def test_nested_recur_custom_task_workflow(self):
     """
     Test compiling a nested recursive workflow.

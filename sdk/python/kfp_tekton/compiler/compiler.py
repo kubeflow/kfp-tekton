@@ -49,7 +49,6 @@ DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
 TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
-LOOP_RESOURCES_IN_SEPARATE_YAML = True
 # DISABLE_CEL_CONDITION should be True until CEL is officially merged into Tekton main API.
 DISABLE_CEL_CONDITION = True
 
@@ -132,12 +131,14 @@ class TektonCompiler(Compiler):
     self.pipeline_labels = {}
     self.pipeline_annotations = {}
     self.tekton_inline_spec = True
+    self.resource_in_separate_yaml = True
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
     self.pipeline_labels = tekton_pipeline_conf.pipeline_labels
     self.pipeline_annotations = tekton_pipeline_conf.pipeline_annotations
     self.tekton_inline_spec = tekton_pipeline_conf.tekton_inline_spec
+    self.resource_in_separate_yaml = tekton_pipeline_conf.resource_in_separate_yaml
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -1358,7 +1359,7 @@ class TektonCompiler(Compiler):
       # create cr yaml for only those pipelineLoop cr which could not be converted to inlined spec.
       loop_package_annotations = []
       for i in range(len(pipeline_loop_crs)):
-        if LOOP_RESOURCES_IN_SEPARATE_YAML:
+        if self.resource_in_separate_yaml:
           if pipeline_loop_crs[i]['metadata'].get('name', "") not in inlined_as_taskSpec:
             TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
                                           package_path=os.path.splitext(package_path)[0] +
