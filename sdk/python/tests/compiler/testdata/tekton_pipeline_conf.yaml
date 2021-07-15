@@ -15,40 +15,40 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: echo
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "echo pipeline", "name":
-      "echo"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"echo": []}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
+    sidecar.istio.io/inject: "false"
     test: annotation
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "echo pipeline", "name":
+      "echo"}'
   labels:
     test: label
     test2: label2
-  name: echo
 spec:
   pipelineSpec:
     tasks:
     - name: echo
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
         steps:
-        - args:
+        - name: main
+          args:
           - echo "Got scheduled"
           command:
           - sh
           - -c
           image: busybox
-          name: main
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

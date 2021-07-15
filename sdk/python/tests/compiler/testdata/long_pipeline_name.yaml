@@ -15,27 +15,27 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: some-very-long-name-with-lots-of-words-in-it-it-shoul
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
-      \"c\"]", "name": "arr", "optional": true, "type": "typing.List[str]"}], "name":
-      "Some very long name with lots of words in it. It should be over 63 chars long
-      in order to observe the problem."}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": []}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  name: some-very-long-name-with-lots-of-words-in-it-it-shoul
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
+      \"c\"]", "name": "arr", "optional": true, "type": "typing.List[str]"}], "name":
+      "Some very long name with lots of words in it. It should be over 63 chars long
+      in order to observe the problem."}'
 spec:
   params:
   - name: arr
     value: '["a", "b", "c"]'
   pipelineSpec:
     params:
-    - default: '["a", "b", "c"]'
-      name: arr
+    - name: arr
+      default: '["a", "b", "c"]'
     tasks:
     - name: some-very-long-name-with-lots-of-words-in-it-for-loop-1
       params:
@@ -45,7 +45,6 @@ spec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         spec:
-          iterateParam: arr-loop-item
           pipelineSpec:
             params:
             - name: arr-loop-item
@@ -56,21 +55,22 @@ spec:
               - name: arr-loop-item
                 value: $(params.arr-loop-item)
               taskSpec:
-                metadata:
-                  annotations:
-                    tekton.dev/template: ''
-                  labels:
-                    pipelines.kubeflow.org/cache_enabled: 'true'
-                    pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/pipelinename: ''
-                params:
-                - name: arr-loop-item
-                  type: string
                 steps:
-                - command:
+                - name: main
+                  command:
                   - echo
                   - $(inputs.params.arr-loop-item)
                   image: alpine:3.6
-                  name: main
+                params:
+                - name: arr-loop-item
+                  type: string
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    tekton.dev/template: ''
               timeout: 0s
+          iterateParam: arr-loop-item
   timeout: 0s

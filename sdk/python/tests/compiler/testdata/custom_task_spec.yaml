@@ -15,18 +15,18 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: tekton-custom-task-on-kubeflow-pipeline
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
-      custom task with custom spec on KFP", "name": "Tekton custom task on Kubeflow
-      Pipeline"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  name: tekton-custom-task-on-kubeflow-pipeline
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
+      custom task with custom spec on KFP", "name": "Tekton custom task on Kubeflow
+      Pipeline"}'
 spec:
   pipelineSpec:
     tasks:
@@ -34,30 +34,30 @@ spec:
       taskSpec:
         apiVersion: custom_task_api_version
         kind: custom_task_kind
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-            valid_container: 'false'
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
         spec:
           raw: raw
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            valid_container: "false"
+            tekton.dev/template: ''
     - name: any-name-2
-      runAfter:
-      - any-name
       taskSpec:
         apiVersion: custom_task_api_version
         kind: custom_task_kind
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-            valid_container: 'false'
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
         spec:
           raw: raw
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            valid_container: "false"
+            tekton.dev/template: ''
+      runAfter:
+      - any-name
   timeout: 0s

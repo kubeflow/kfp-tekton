@@ -15,37 +15,37 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: node-selector
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with Node Selector",
-      "name": "node_selector"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"echo": []}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  name: node-selector
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with Node Selector",
+      "name": "node_selector"}'
 spec:
   pipelineSpec:
     tasks:
     - name: echo
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
         steps:
-        - args:
+        - name: main
+          args:
           - echo "Found my node"
           command:
           - sh
           - -c
           image: busybox
-          name: main
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: echo

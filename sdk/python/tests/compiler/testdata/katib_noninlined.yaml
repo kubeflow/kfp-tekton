@@ -15,7 +15,18 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: launch-katib-experiment
   annotations:
+    tekton.dev/output_artifacts: '{"mnist-hpo": [{"key": "artifacts/$PIPELINERUN/mnist-hpo/bestHyperParameter.tgz",
+      "name": "mnist-hpo-bestHyperParameter", "path": "/output.txt"}]}'
+    tekton.dev/input_artifacts: '{"my-out-cop": [{"name": "mnist-hpo-bestHyperParameter",
+      "parent_task": "mnist-hpo"}]}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"mnist-hpo": [["bestHyperParameter", "$(results.besthyperparameter.path)"]],
+      "my-out-cop": []}'
+    sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "An example to launch katib
       experiment.", "inputs": [{"default": "mnist", "name": "name", "optional": true},
       {"default": "kubeflow", "name": "namespace", "optional": true}, {"default":
@@ -25,17 +36,6 @@ metadata:
       "60", "name": "experimentTimeoutMinutes", "optional": true, "type": "Integer"},
       {"default": "True", "name": "deleteAfterDone", "optional": true, "type": "Boolean"}],
       "name": "Launch katib experiment"}'
-    sidecar.istio.io/inject: 'false'
-    tekton.dev/artifact_bucket: mlpipeline
-    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
-    tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"mnist-hpo": [["bestHyperParameter", "$(results.besthyperparameter.path)"]],
-      "my-out-cop": []}'
-    tekton.dev/input_artifacts: '{"my-out-cop": [{"name": "mnist-hpo-bestHyperParameter",
-      "parent_task": "mnist-hpo"}]}'
-    tekton.dev/output_artifacts: '{"mnist-hpo": [{"key": "artifacts/$PIPELINERUN/mnist-hpo/bestHyperParameter.tgz",
-      "name": "mnist-hpo-bestHyperParameter", "path": "/output.txt"}]}'
-  name: launch-katib-experiment
 spec:
   params:
   - name: name
@@ -51,23 +51,23 @@ spec:
   - name: experimentTimeoutMinutes
     value: '60'
   - name: deleteAfterDone
-    value: 'True'
+    value: "True"
   pipelineSpec:
     params:
-    - default: mnist
-      name: name
-    - default: kubeflow
-      name: namespace
-    - default: '0.99'
-      name: goal
-    - default: '3'
-      name: parallelTrialCount
-    - default: '12'
-      name: maxTrialCount
-    - default: '60'
-      name: experimentTimeoutMinutes
-    - default: 'True'
-      name: deleteAfterDone
+    - name: name
+      default: mnist
+    - name: namespace
+      default: kubeflow
+    - name: goal
+      default: '0.99'
+    - name: parallelTrialCount
+      default: '3'
+    - name: maxTrialCount
+      default: '12'
+    - name: experimentTimeoutMinutes
+      default: '60'
+    - name: deleteAfterDone
+      default: "True"
     tasks:
     - name: mnist-hpo
       params:
@@ -86,26 +86,9 @@ spec:
       - name: parallelTrialCount
         value: $(params.parallelTrialCount)
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
-        params:
-        - name: deleteAfterDone
-        - name: experimentTimeoutMinutes
-        - name: goal
-        - name: maxTrialCount
-        - name: name
-        - name: namespace
-        - name: parallelTrialCount
-        results:
-        - description: /output.txt
-          name: besthyperparameter
         steps:
-        - args:
+        - name: main
+          args:
           - --name
           - $(inputs.params.name)
           - --namespace
@@ -144,29 +127,46 @@ spec:
           - --experimentTimeoutMinutes
           - $(inputs.params.experimentTimeoutMinutes)
           image: liuhougangxa/katib-experiment-launcher:latest
-          name: main
+        params:
+        - name: deleteAfterDone
+        - name: experimentTimeoutMinutes
+        - name: goal
+        - name: maxTrialCount
+        - name: name
+        - name: namespace
+        - name: parallelTrialCount
+        results:
+        - name: besthyperparameter
+          description: /output.txt
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
     - name: my-out-cop
       params:
       - name: mnist-hpo-bestHyperParameter
         value: $(tasks.mnist-hpo.results.besthyperparameter)
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
-        params:
-        - name: mnist-hpo-bestHyperParameter
         steps:
-        - args:
+        - name: main
+          args:
           - 'echo hyperparameter: $(inputs.params.mnist-hpo-bestHyperParameter)'
           command:
           - sh
           - -c
           image: library/bash:4.4.23
-          name: main
+        params:
+        - name: mnist-hpo-bestHyperParameter
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

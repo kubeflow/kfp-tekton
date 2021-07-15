@@ -15,41 +15,41 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: tolerations
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with tolerations",
-      "name": "tolerations"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/downloaded.tgz",
+      "name": "download-downloaded", "path": "/tmp/results.txt"}]}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"download": [["downloaded", "$(results.downloaded.path)"]]}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/downloaded.tgz",
-      "name": "download-downloaded", "path": "/tmp/results.txt"}]}'
-  name: tolerations
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with tolerations",
+      "name": "tolerations"}'
 spec:
   pipelineSpec:
     tasks:
     - name: download
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
-        results:
-        - description: /tmp/results.txt
-          name: downloaded
         steps:
-        - args:
+        - name: main
+          args:
           - sleep 10; wget localhost:5678 -O $(results.downloaded.path)
           command:
           - sh
           - -c
           image: busybox
-          name: main
+        results:
+        - name: downloaded
+          description: /tmp/results.txt
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
   taskRunSpecs:
   - pipelineTaskName: download

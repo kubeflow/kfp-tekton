@@ -15,45 +15,49 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: double-recursion-test
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[3, 1, 4, 9, 2]",
-      "name": "array", "optional": true, "type": "typing.List[int]"}], "name": "double-recursion
-      test"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-3-outcome", "parent_task":
+      "condition-cel-3"}, {"name": "condition-cel-outcome", "parent_task": "condition-cel"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": []}'
-    tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-3-outcome", "parent_task":
-      "condition-cel-3"}, {"name": "condition-cel-outcome", "parent_task": "condition-cel"}]}'
-    tekton.dev/output_artifacts: '{}'
-  name: double-recursion-test
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[3, 1, 4, 9, 2]",
+      "name": "array", "optional": true, "type": "typing.List[int]"}], "name": "double-recursion
+      test"}'
 spec:
   params:
   - name: array
     value: '[3, 1, 4, 9, 2]'
   pipelineSpec:
     params:
-    - default: '[3, 1, 4, 9, 2]'
-      name: array
+    - name: array
+      default: '[3, 1, 4, 9, 2]'
     tasks:
     - name: condition-cel
       params:
       - name: outcome
         value: '0'
       taskRef:
+        name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-        name: cel_condition
     - name: condition-cel-2
       params:
       - name: outcome
         value: $(tasks.condition-cel.results.outcome) < size( $(params.array) )
       taskRef:
+        name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-        name: cel_condition
     - name: double-recursion-test-graph-recur-a-2
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: double-recursion-test-graph-recur-a-2
       params:
       - name: array
         value: $(params.array)
@@ -64,13 +68,9 @@ spec:
       - name: just_one_iteration
         value:
         - '1'
-      taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        name: double-recursion-test-graph-recur-a-2
       when:
       - input: $(tasks.condition-cel-2.results.outcome)
         operator: in
         values:
-        - 'true'
+        - "true"
   timeout: 0s
