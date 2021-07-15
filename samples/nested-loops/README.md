@@ -2,7 +2,8 @@
 This pipeline shows how to define loops and nested loops inside a loop. The nested loops feature demonstrates how Tekton can use the custom task feature to create multiple layers of sub-pipelines and loops on individual pipeline layers.
 
 ## Prerequisites
-- Install [KFP Tekton prerequisites](/samples/README.md) (Kubeflow 1.3+)
+- Install [KFP Tekton 0.9.0+](/guides/kfp_tekton_install.md#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
+- Install the [latest KFP SDK](https://github.com/kubeflow/kfp-tekton/tree/master/sdk#installation) (0.9.0+)
 
 ## Instructions
 

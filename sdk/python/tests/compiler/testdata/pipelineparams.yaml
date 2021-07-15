@@ -39,10 +39,10 @@ spec:
     value: latest
   pipelineSpec:
     params:
-    - name: sleep_ms
-      default: '10'
     - name: tag
       default: latest
+    - name: sleep_ms
+      default: '10'
     tasks:
     - name: download
       params:

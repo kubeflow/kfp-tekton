@@ -43,10 +43,10 @@ spec:
     value: gs://ml-pipeline-playground/shakespeare1.txt
   pipelineSpec:
     params:
-    - name: outputpath
-      default: /tmp/output.txt
     - name: url
       default: gs://ml-pipeline-playground/shakespeare1.txt
+    - name: outputpath
+      default: /tmp/output.txt
     tasks:
     - name: download
       params:
