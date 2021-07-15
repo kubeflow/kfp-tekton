@@ -15,55 +15,55 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: pipeline-transformer
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline shows how
-      to apply functions to all ops in the pipeline by pipeline transformers", "name":
-      "Pipeline transformer"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": [], "print-2": []}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  name: pipeline-transformer
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline shows how
+      to apply functions to all ops in the pipeline by pipeline transformers", "name":
+      "Pipeline transformer"}'
 spec:
   pipelineSpec:
     tasks:
     - name: print
       taskSpec:
-        metadata:
-          annotations:
-            hobby: football
-            tekton.dev/template: ''
-          labels:
-            hobby: football
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
         steps:
-        - command:
+        - name: main
+          command:
           - echo
           - hey, what are you up to?
           image: alpine:3.6
-          name: main
-      timeout: 0s
-    - name: print-2
-      taskSpec:
         metadata:
+          labels:
+            hobby: football
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             hobby: football
             tekton.dev/template: ''
-          labels:
-            hobby: football
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
+      timeout: 0s
+    - name: print-2
+      taskSpec:
         steps:
-        - command:
+        - name: main
+          command:
           - echo
           - train my model.
           image: alpine:3.6
-          name: main
+        metadata:
+          labels:
+            hobby: football
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            hobby: football
+            tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

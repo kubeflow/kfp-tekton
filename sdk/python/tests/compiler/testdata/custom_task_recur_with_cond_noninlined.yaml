@@ -15,45 +15,49 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: recursion-test
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "5", "name": "until",
-      "optional": true, "type": "Integer"}], "name": "recursion test"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/stdout.tgz",
+      "name": "print-stdout", "path": "/tmp/stdout"}]}'
+    tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-outcome", "parent_task":
+      "condition-cel"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": [["stdout", "$(results.stdout.path)"]]}'
-    tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-outcome", "parent_task":
-      "condition-cel"}]}'
-    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/stdout.tgz",
-      "name": "print-stdout", "path": "/tmp/stdout"}]}'
-  name: recursion-test
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "5", "name": "until",
+      "optional": true, "type": "Integer"}], "name": "recursion test"}'
 spec:
   params:
   - name: until
     value: '5'
   pipelineSpec:
     params:
-    - default: '5'
-      name: until
+    - name: until
+      default: '5'
     tasks:
     - name: condition-cel
       params:
       - name: outcome
         value: '0'
       taskRef:
+        name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-        name: cel_condition
     - name: condition-cel-2
       params:
       - name: outcome
         value: $(tasks.condition-cel.results.outcome) < $(params.until)
       taskRef:
+        name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-        name: cel_condition
     - name: recursion-test-graph-recur-2
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: recursion-test-graph-recur-2
       params:
       - name: condition-cel-2-outcome
         value: $(tasks.condition-cel-2.results.outcome)
@@ -64,13 +68,9 @@ spec:
         - '1'
       - name: until
         value: $(params.until)
-      taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        name: recursion-test-graph-recur-2
       when:
       - input: $(tasks.condition-cel-2.results.outcome)
         operator: in
         values:
-        - 'true'
+        - "true"
   timeout: 0s

@@ -15,19 +15,19 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: double-recursion-test
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "4", "name": "until_a",
-      "optional": true, "type": "Integer"}, {"default": "3", "name": "until_b", "optional":
-      true, "type": "Integer"}], "name": "double-recursion test"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-3-outcome", "parent_task":
+      "condition-cel-3"}, {"name": "condition-cel-outcome", "parent_task": "condition-cel"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": []}'
-    tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-3-outcome", "parent_task":
-      "condition-cel-3"}, {"name": "condition-cel-outcome", "parent_task": "condition-cel"}]}'
-    tekton.dev/output_artifacts: '{}'
-  name: double-recursion-test
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "4", "name": "until_a",
+      "optional": true, "type": "Integer"}, {"default": "3", "name": "until_b", "optional":
+      true, "type": "Integer"}], "name": "double-recursion test"}'
 spec:
   params:
   - name: until_a
@@ -36,28 +36,32 @@ spec:
     value: '3'
   pipelineSpec:
     params:
-    - default: '4'
-      name: until_a
-    - default: '3'
-      name: until_b
+    - name: until_a
+      default: '4'
+    - name: until_b
+      default: '3'
     tasks:
     - name: condition-cel
       params:
       - name: outcome
         value: '0'
       taskRef:
+        name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-        name: cel_condition
     - name: condition-cel-2
       params:
       - name: outcome
         value: $(tasks.condition-cel.results.outcome) < $(params.until_a)
       taskRef:
+        name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-        name: cel_condition
     - name: double-recursion-test-graph-recur-a-2
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: double-recursion-test-graph-recur-a-2
       params:
       - name: condition-cel-2-outcome
         value: $(tasks.condition-cel-2.results.outcome)
@@ -70,13 +74,9 @@ spec:
         value: $(params.until_a)
       - name: until_b
         value: $(params.until_b)
-      taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        name: double-recursion-test-graph-recur-a-2
       when:
       - input: $(tasks.condition-cel-2.results.outcome)
         operator: in
         values:
-        - 'true'
+        - "true"
   timeout: 0s

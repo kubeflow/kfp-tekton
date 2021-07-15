@@ -15,49 +15,49 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  name: para-loop-pipeline
   annotations:
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
-      "optional": true}], "name": "para-loop-pipeline"}'
-    sidecar.istio.io/inject: 'false'
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"para-loop-inner-op1": [], "para-loop-inner-op2":
       [], "para-loop-out-op": []}'
-    tekton.dev/input_artifacts: '{}'
-    tekton.dev/output_artifacts: '{}'
-  name: para-loop-pipeline
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
+      "optional": true}], "name": "para-loop-pipeline"}'
 spec:
   params:
   - name: my_pipe_param
     value: '10'
   pipelineSpec:
     params:
-    - default: '10'
-      name: my_pipe_param
+    - name: my_pipe_param
+      default: '10'
     tasks:
     - name: para-loop-out-op
       params:
       - name: my_pipe_param
         value: $(params.my_pipe_param)
       taskSpec:
-        metadata:
-          annotations:
-            tekton.dev/template: ''
-          labels:
-            pipelines.kubeflow.org/cache_enabled: 'true'
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/pipelinename: ''
-        params:
-        - name: my_pipe_param
         steps:
-        - args:
+        - name: main
+          args:
           - echo $(inputs.params.my_pipe_param)
           command:
           - sh
           - -c
           image: library/bash:4.4.23
-          name: main
+        params:
+        - name: my_pipe_param
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton.dev/template: ''
       timeout: 0s
     - name: para-loop-pipeline-for-loop-2
       params:
@@ -69,8 +69,6 @@ spec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         spec:
-          iterateParam: loop-item-param-1
-          parallelism: 5
           pipelineSpec:
             params:
             - name: loop-item-param-1
@@ -85,49 +83,51 @@ spec:
               - name: my_pipe_param
                 value: $(params.my_pipe_param)
               taskSpec:
-                metadata:
-                  annotations:
-                    tekton.dev/template: ''
-                  labels:
-                    pipelines.kubeflow.org/cache_enabled: 'true'
-                    pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/pipelinename: ''
-                params:
-                - name: loop-item-param-1
-                  type: string
-                - name: my_pipe_param
-                  type: string
                 steps:
-                - args:
+                - name: main
+                  args:
                   - echo op1 $(inputs.params.loop-item-param-1) $(inputs.params.my_pipe_param)
                   command:
                   - sh
                   - -c
                   image: library/bash:4.4.23
-                  name: main
+                params:
+                - name: loop-item-param-1
+                  type: string
+                - name: my_pipe_param
+                  type: string
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    tekton.dev/template: ''
               timeout: 0s
             - name: para-loop-inner-op2
               params:
               - name: loop-item-param-1
                 value: $(params.loop-item-param-1)
               taskSpec:
-                metadata:
-                  annotations:
-                    tekton.dev/template: ''
-                  labels:
-                    pipelines.kubeflow.org/cache_enabled: 'true'
-                    pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/pipelinename: ''
-                params:
-                - name: loop-item-param-1
-                  type: string
                 steps:
-                - args:
+                - name: main
+                  args:
                   - echo op2 $(inputs.params.loop-item-param-1)
                   command:
                   - sh
                   - -c
                   image: library/bash:4.4.23
-                  name: main
+                params:
+                - name: loop-item-param-1
+                  type: string
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    tekton.dev/template: ''
               timeout: 0s
+          parallelism: 5
+          iterateParam: loop-item-param-1
   timeout: 0s
