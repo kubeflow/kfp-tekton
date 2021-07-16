@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -345,10 +346,10 @@ var nestedPipeline = &v1beta1.Pipeline{
 	ObjectMeta: metav1.ObjectMeta{Name: "nestedPipeline", Namespace: "foo"},
 	Spec: v1beta1.PipelineSpec{
 		Params: []v1beta1.ParamSpec{{
-			Name: "iteration",
+			Name: "additional-parameter",
 			Type: v1beta1.ParamTypeString,
 		}, {
-			Name: "additional-parameter",
+			Name: "iteration",
 			Type: v1beta1.ParamTypeString,
 		}},
 		Tasks: []v1beta1.PipelineTask{{
@@ -730,14 +731,14 @@ var expectedPipelineRunIterationDict = &v1beta1.PipelineRun{
 	Spec: v1beta1.PipelineRunSpec{
 		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
 		Params: []v1beta1.Param{{
+			Name:  "additional-parameter",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
 			Name:  "current-item-subvar-a",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "1"},
 		}, {
 			Name:  "current-item-subvar-b",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "2"},
-		}, {
-			Name:  "additional-parameter",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
 	},
 }
@@ -768,11 +769,11 @@ var expectedParaPipelineRun = &v1beta1.PipelineRun{
 	Spec: v1beta1.PipelineRunSpec{
 		PipelineRef: &v1beta1.PipelineRef{Name: "para-pipeline"},
 		Params: []v1beta1.Param{{
-			Name:  "current-item",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
-		}, {
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
 		}},
 	},
 }
@@ -803,11 +804,11 @@ var expectedParaPipelineRun1 = &v1beta1.PipelineRun{
 	Spec: v1beta1.PipelineRunSpec{
 		PipelineRef: &v1beta1.PipelineRef{Name: "para-pipeline"},
 		Params: []v1beta1.Param{{
-			Name:  "current-item",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item2"},
-		}, {
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item2"},
 		}},
 	},
 }
@@ -838,11 +839,11 @@ var expectedPipelineRunIteration1 = &v1beta1.PipelineRun{
 	Spec: v1beta1.PipelineRunSpec{
 		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
 		Params: []v1beta1.Param{{
-			Name:  "current-item",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
-		}, {
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
 		}},
 	},
 }
@@ -948,10 +949,10 @@ var expectedPipelineRunWithInlineTaskIteration1 = &v1beta1.PipelineRun{
 				TaskSpec: &v1beta1.EmbeddedTask{
 					TaskSpec: v1beta1.TaskSpec{
 						Params: []v1beta1.ParamSpec{{
-							Name: "current-item",
+							Name: "additional-parameter",
 							Type: v1beta1.ParamTypeString,
 						}, {
-							Name: "additional-parameter",
+							Name: "current-item",
 							Type: v1beta1.ParamTypeString,
 						}},
 						Steps: []v1beta1.Step{{
@@ -962,11 +963,11 @@ var expectedPipelineRunWithInlineTaskIteration1 = &v1beta1.PipelineRun{
 			}},
 		},
 		Params: []v1beta1.Param{{
-			Name:  "current-item",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
-		}, {
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
 		}},
 		Timeout: &metav1.Duration{Duration: 5 * time.Minute},
 	},
@@ -997,11 +998,11 @@ var expectedNestedPipelineRun = &v1beta1.PipelineRun{
 	Spec: v1beta1.PipelineRunSpec{
 		PipelineSpec: &nestedPipeline.Spec,
 		Params: []v1beta1.Param{{
-			Name:  "current-item",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
-		}, {
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
 		}},
 	},
 }
@@ -1020,11 +1021,11 @@ var conditionRunPipelineLoop = &v1alpha1.Run{
 	},
 	Spec: v1alpha1.RunSpec{
 		Params: []v1beta1.Param{{
-			Name:  "current-item",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeArray, ArrayVal: []string{"item1", "item2"}},
-		}, {
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeArray, ArrayVal: []string{"item1", "item2"}},
 		}},
 		Ref: &v1alpha1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
@@ -1061,11 +1062,11 @@ var expectedConditionPipelineRunIteration1 = &v1beta1.PipelineRun{
 	Spec: v1beta1.PipelineRunSpec{
 		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
 		Params: []v1beta1.Param{{
-			Name:  "current-item",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
-		}, {
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
 		}},
 	},
 }
@@ -1221,6 +1222,34 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 			// then the test expects a new PipelineRun to be created.  The new PipelineRun must be the
 			// last one in the list of expected PipelineRuns.
 			createdPipelineruns := getCreatedPipelinerun(t, clients)
+			// All the arrays and sub arrays are sorted to ensure there are no sporadic failures
+			// resulting from mismatch due to different ordering of items.
+			sort.Slice(createdPipelineruns, func(i, j int) bool {
+				return createdPipelineruns[i].Name < createdPipelineruns[j].Name
+			})
+			for _, createdPipelinerun := range createdPipelineruns {
+				sort.Slice(createdPipelinerun.Spec.Params, func(i, j int) bool {
+					return createdPipelinerun.Spec.Params[i].Name < createdPipelinerun.Spec.Params[j].Name
+				})
+				if createdPipelinerun.Spec.PipelineSpec != nil {
+					sort.Slice(createdPipelinerun.Spec.PipelineSpec.Params, func(i, j int) bool {
+						return createdPipelinerun.Spec.PipelineSpec.Params[i].Name < createdPipelinerun.Spec.PipelineSpec.Params[j].Name
+					})
+					sort.Slice(createdPipelinerun.Spec.PipelineSpec.Tasks, func(i, j int) bool {
+						return createdPipelinerun.Spec.PipelineSpec.Tasks[i].Name < createdPipelinerun.Spec.PipelineSpec.Tasks[j].Name
+					})
+					for _, t := range createdPipelinerun.Spec.PipelineSpec.Tasks {
+						sort.Slice(t.Params, func(i, j int) bool {
+							return t.Params[i].Name < t.Params[j].Name
+						})
+						if t.TaskSpec != nil {
+							sort.Slice(t.TaskSpec.Params, func(i, j int) bool {
+								return t.TaskSpec.Params[i].Name < t.TaskSpec.Params[j].Name
+							})
+						}
+					}
+				}
+			}
 			if len(tc.expectedPipelineruns) > len(tc.pipelineruns) {
 				if len(createdPipelineruns) == 0 {
 					t.Errorf("A PipelineRun should have been created but was not")
