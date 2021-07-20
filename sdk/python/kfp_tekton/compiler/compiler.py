@@ -131,7 +131,7 @@ class TektonCompiler(Compiler):
     self.pipeline_labels = {}
     self.pipeline_annotations = {}
     self.tekton_inline_spec = True
-    self.resource_in_separate_yaml = True
+    self.resource_in_separate_yaml = False
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):

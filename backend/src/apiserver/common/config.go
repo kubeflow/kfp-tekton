@@ -130,7 +130,7 @@ func IsInjectDefaultScript() bool {
 }
 
 func IsApplyTektonCustomResource() string {
-	return GetStringConfigWithDefault(ApplyTektonCustomResource, "false")
+	return GetStringConfigWithDefault(ApplyTektonCustomResource, "true")
 }
 
 func GetPodNamespace() string {

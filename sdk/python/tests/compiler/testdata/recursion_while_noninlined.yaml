@@ -33,6 +33,41 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use graph_component
       and recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
       true}], "name": "recursion pipeline"}'
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "recursion-pipeline-graph-flip-component-1"},
+      "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
+      "flip-coin-output", "type": "string"}, {"name": "just_one_iteration", "type":
+      "string"}, {"name": "maxVal", "type": "string"}], "tasks": [{"name": "print",
+      "params": [{"name": "flip-coin-output", "value": "$(params.flip-coin-output)"}],
+      "taskSpec": {"metadata": {"annotations": {"tekton.dev/template": ""}, "labels":
+      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "flip-coin-output",
+      "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.flip-coin-output)"],
+      "image": "alpine:3.6", "name": "main"}]}, "timeout": "0s", "when": [{"input":
+      "$(tasks.condition-2.results.outcome)", "operator": "in", "values": ["true"]}]},
+      {"name": "flip-coin-2", "runAfter": ["print"], "taskSpec": {"metadata": {"annotations":
+      {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "results": [{"description": "/tmp/output", "name": "output"}], "steps":
+      [{"args": ["python -c \"import random; result = ''heads'' if random.randint(0,1)
+      == 0 else ''tails''; print(result)\" | tee $(results.output.path)"], "command":
+      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout": "0s",
+      "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator": "in",
+      "values": ["true"]}]}, {"name": "condition-2", "params": [{"name": "operand1",
+      "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "heads"},
+      {"name": "operator", "value": "=="}], "taskSpec": {"params": [{"name": "operand1",
+      "type": "string"}, {"name": "operand2", "type": "string"}, {"name": "operator",
+      "type": "string"}], "results": [{"description": "Conditional task outcome",
+      "name": "outcome"}], "steps": [{"image": "python:alpine3.6", "script": "python
+      -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
+      if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
+      \"w\")\nf.write(outcome)\nf.close()'' ''$(inputs.params.operand1)'' ''$(inputs.params.operand2)''"}]}},
+      {"name": "flip-component", "params": [{"name": "just_one_iteration", "value":
+      ["1"]}, {"name": "flip-coin-output", "value": "$(tasks.flip-coin-2.results.output)"},
+      {"name": "maxVal", "value": "$(params.maxVal)"}], "taskRef": {"apiVersion":
+      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "recursion-pipeline-graph-flip-component-1"},
+      "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator": "in",
+      "values": ["true"]}]}]}}}]'
 spec:
   params:
   - name: maxVal
