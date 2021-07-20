@@ -105,6 +105,8 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
     for task in recursive_tasks:
         recursive_graph = custom_task.get(task['taskRef']['name'], {})
         if recursive_graph:
+            if recursive_graph['spec']['params']:
+                recursive_graph['spec']['params'] = sorted(recursive_graph['spec']['params'], key=lambda k: k['name'])
             for param in recursive_graph['spec']['params']:
                 recursive_params = [param['name'] for param in task['params']]
                 if param['name'] not in recursive_params:
