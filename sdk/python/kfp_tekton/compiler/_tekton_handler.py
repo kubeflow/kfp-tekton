@@ -233,8 +233,6 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 custom_task_cr['spec']['pipelineSpec']['params'].extend([
                     {'name': param['name'], 'type': 'string'}for param in nested_custom_task_special_params
                 ])
-                custom_task_cr['spec']['pipelineSpec']['params'] = sorted(
-                    custom_task_cr['spec']['pipelineSpec']['params'], key=lambda k: k['name'])
 
                 if nested_custom_task['ancestors']:
                     for custom_task_cr_again in custom_task_crs:
@@ -278,6 +276,8 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                                         '$(params.%s)' % nested_custom_task_param['name']))
                 # add nested custom task spec to main custom task
                 custom_task_cr['spec']['pipelineSpec']['tasks'].append(nested_custom_task_spec)
+                custom_task_cr['spec']['pipelineSpec']['params'] = sorted(
+                    custom_task_cr['spec']['pipelineSpec']['params'], key=lambda k: k['name'])
 
     # remove the tasks belong to custom task from main workflow
     task_name_prefix = '-'.join(group_names[:-1] + [""])
