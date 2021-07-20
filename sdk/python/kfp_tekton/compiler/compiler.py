@@ -1369,6 +1369,8 @@ class TektonCompiler(Compiler):
                                           package_path=os.path.splitext(package_path)[0] +
                                                         "_pipelineloop_cr" + str(i + 1) + '.yaml')
         else:
+          pipeline_loop_crs[i]['spec']['pipelineSpec']['params'] = sorted(
+            pipeline_loop_crs[i]['spec']['pipelineSpec']['params'], key=lambda k: k['name'])
           pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
           loop_package_annotations.append(yaml.load(pipeline_loop_cr, Loader=yaml.FullLoader))
       if loop_package_annotations:
