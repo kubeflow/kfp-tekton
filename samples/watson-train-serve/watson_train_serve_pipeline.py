@@ -22,6 +22,10 @@ configuration_op = components.load_component_from_url('https://raw.githubusercon
 train_op = components.load_component_from_url('https://raw.githubusercontent.com/kubeflow/pipelines/master/components/ibm-components/watson/train/component.yaml')
 store_op = components.load_component_from_url('https://raw.githubusercontent.com/kubeflow/pipelines/master/components/ibm-components/watson/store/component.yaml')
 deploy_op = components.load_component_from_url('https://raw.githubusercontent.com/kubeflow/pipelines/master/components/ibm-components/watson/deploy/component.yaml')
+#configuration_op = components.load_component_from_url('https://raw.githubusercontent.com/yhwang/kfp-tekton/a70586c419e109ca135b7b4bae6a5ae1d329ec3c/components/ibm-components/commons/config/component.yaml')
+#train_op = components.load_component_from_url('https://raw.githubusercontent.com/yhwang/kfp-tekton/a70586c419e109ca135b7b4bae6a5ae1d329ec3c/components/ibm-components/watson/train/component.yaml')
+#store_op = components.load_component_from_url('https://raw.githubusercontent.com/yhwang/kfp-tekton/a70586c419e109ca135b7b4bae6a5ae1d329ec3c/components/ibm-components/watson/store/component.yaml')
+#deploy_op = components.load_component_from_url('https://raw.githubusercontent.com/yhwang/kfp-tekton/a70586c419e109ca135b7b4bae6a5ae1d329ec3c/components/ibm-components/watson/deploy/component.yaml')
 
 # Helper function for secret mount and image pull policy
 def use_ai_pipeline_params(secret_name, secret_volume_mount_path='/app/secrets', image_pull_policy='IfNotPresent'):
@@ -39,24 +43,24 @@ def use_ai_pipeline_params(secret_name, secret_volume_mount_path='/app/secrets',
 # create pipelines
 
 @dsl.pipeline(
-    name='KFP on WML training',
+    name='kfp-on-wml-training',
     description='Kubeflow pipelines running on WML performing tensorflow image recognition.'
 )
 def kfp_wml_pipeline(
-    GITHUB_TOKEN='',
-    CONFIG_FILE_URL='https://raw.githubusercontent.com/user/repository/branch/creds.ini',
-    train_code='tf-model.zip',
-    execution_command='\'python3 convolutional_network.py --trainImagesFile ${DATA_DIR}/train-images-idx3-ubyte.gz --trainLabelsFile ${DATA_DIR}/train-labels-idx1-ubyte.gz --testImagesFile ${DATA_DIR}/t10k-images-idx3-ubyte.gz --testLabelsFile ${DATA_DIR}/t10k-labels-idx1-ubyte.gz --learningRate 0.001 --trainingIters 20000\'',
-    framework='tensorflow',
-    framework_version='1.15',
-    runtime = 'python',
-    runtime_version='3.6',
-    run_definition = 'wml-tensorflow-definition',
-    run_name = 'wml-tensorflow-run',
-    model_name='wml-tensorflow-mnist',
-    scoring_payload='tf-mnist-test-payload.json',
-    compute_name='k80',
-    compute_nodes='1'
+        GITHUB_TOKEN:str='',
+        CONFIG_FILE_URL:str='https://raw.githubusercontent.com/user/repository/branch/creds.ini',
+        train_code:str='tf-model.zip',
+        execution_command:str='\'python3 convolutional_network.py --trainImagesFile ${DATA_DIR}/train-images-idx3-ubyte.gz --trainLabelsFile ${DATA_DIR}/train-labels-idx1-ubyte.gz --testImagesFile ${DATA_DIR}/t10k-images-idx3-ubyte.gz --testLabelsFile ${DATA_DIR}/t10k-labels-idx1-ubyte.gz --learningRate 0.001 --trainingIters 20000\'',
+        framework:str='tensorflow',
+        framework_version:str='1.15',
+        runtime:str = 'python',
+        runtime_version:str='3.6',
+        run_definition:str = 'wml-tensorflow-definition',
+        run_name:str = 'wml-tensorflow-run',
+        model_name:str='wml-tensorflow-mnist',
+        scoring_payload:str='tf-mnist-test-payload.json',
+        compute_name:str='k80',
+        compute_nodes:str='1'
 ):
     # op1 - this operation will create the credentials as secrets to be used by other operations
     get_configuration = configuration_op(
@@ -100,4 +104,6 @@ if __name__ == '__main__':
     # compile the pipeline
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(kfp_wml_pipeline, __file__.replace('.py', '.yaml'))
+    #kfp.v2.compiler.Compiler().compile(kfp_wml_pipeline, __file__.replace('.py','.json'))
+    #kfp.compiler.Compiler(mode=kfp.dsl.PipelineExecutionMode.V2_COMPATIBLE).compile(kfp_wml_pipeline, __file__.replace('.py','.yaml'))
 

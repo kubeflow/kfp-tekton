@@ -14,11 +14,11 @@ name: 'Create Secret - Kubernetes Cluster'
 description: |
   Create secret to store pipeline credentials on Kubernetes Cluster
 inputs:
-  - {name: token,           description: 'Required. GitHub token for accessing private repository'}
-  - {name: url,             description: 'Required. GitHub raw path for accessing the credential file'}
-  - {name: name,            description: 'Required. Secret Name to be stored in Kubernetes'}
+  - {name: token, type: String,  description: 'Required. GitHub token for accessing private repository'}
+  - {name: url, type: String,      description: 'Required. GitHub raw path for accessing the credential file'}
+  - {name: name, type: String,     description: 'Required. Secret Name to be stored in Kubernetes'}
 outputs:
-  - {name: secret_name,     description: 'Kubernetes secret name'}
+  - {name: secret_name, type: String,     description: 'Kubernetes secret name'}
 implementation:
   container:
     image: docker.io/aipipeline/wml-config:latest

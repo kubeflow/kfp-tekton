@@ -16,13 +16,13 @@ description: |
 metadata:
   annotations: {platform: 'IBM Watson Machine Learning'}
 inputs:
-  - {name: model_uid,        description: 'Required. UID for the stored model on Watson Machine Learning'}
-  - {name: model_name,       description: 'Required. Model Name on Watson Machine Learning'}
-  - {name: scoring_payload,  description: 'Sample Payload file name in the object storage', default: ''}
-  - {name: deployment_name,  description: 'Deployment Name on Watson Machine Learning', default: ''}
+  - {name: model_uid, type: String,        description: 'Required. UID for the stored model on Watson Machine Learning'}
+  - {name: model_name, type: String,       description: 'Required. Model Name on Watson Machine Learning'}
+  - {name: scoring_payload, type: String,  description: 'Sample Payload file name in the object storage', default: ''}
+  - {name: deployment_name, type: String,  description: 'Deployment Name on Watson Machine Learning', default: ''}
 outputs:
-  - {name: scoring_endpoint, description: 'Link to the deployed model web service'}
-  - {name: model_uid,        description: 'UID for the stored model on Watson Machine Learning'}
+  - {name: scoring_endpoint, type: String, description: 'Link to the deployed model web service'}
+  - {name: model_uid, type: String,        description: 'UID for the stored model on Watson Machine Learning'}
 implementation:
   container:
     image: docker.io/aipipeline/wml-deploy:latest
