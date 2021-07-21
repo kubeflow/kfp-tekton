@@ -41,6 +41,7 @@ const (
 	ArtifactImage                       string = "ARTIFACT_IMAGE"
 	ArtifactCopyStepTemplate            string = "ARTIFACT_COPY_STEP_TEMPLATE"
 	InjectDefaultScript                 string = "INJECT_DEFAULT_SCRIPT"
+	ApplyTektonCustomResource           string = "APPLY_TEKTON_CUSTOM_RESOURCE"
 	UpdatePipelineVersionByDefault      string = "AUTO_UPDATE_PIPELINE_DEFAULT_VERSION"
 	TokenReviewAudience                 string = "TOKEN_REVIEW_AUDIENCE"
 	TerminateStatus                     string = "TERMINATE_STATUS"
@@ -126,6 +127,10 @@ func IsTrackArtifacts() bool {
 
 func IsInjectDefaultScript() bool {
 	return GetBoolConfigWithDefault(InjectDefaultScript, true)
+}
+
+func IsApplyTektonCustomResource() string {
+	return GetStringConfigWithDefault(ApplyTektonCustomResource, "true")
 }
 
 func GetPodNamespace() string {
