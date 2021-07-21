@@ -382,6 +382,7 @@ rules:
   - pipelineruns
   - taskruns
   - conditions
+  - runs
   verbs:
   - create
   - get
@@ -413,6 +414,18 @@ rules:
   - tokenreviews
   verbs:
   - create
+- apiGroups:
+  - custom.tekton.dev
+  resources:
+  - pipelineloops
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - patch
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -499,6 +512,19 @@ rules:
   - pipelineruns
   - taskruns
   - conditions
+  - runs
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - custom.tekton.dev
+  resources:
+  - pipelineloops
   verbs:
   - create
   - get
@@ -1289,6 +1315,7 @@ subjects:
 ---
 apiVersion: v1
 data:
+  apply_tekton_custom_resource: "true"
   archive_logs: "false"
   artifact_bucket: mlpipeline
   artifact_endpoint: minio-service.kubeflow:9000
@@ -2010,6 +2037,11 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: inject_default_script
+              name: kfp-tekton-config
+        - name: APPLY_TEKTON_CUSTOM_RESOURCE
+          valueFrom:
+            configMapKeyRef:
+              key: apply_tekton_custom_resource
               name: kfp-tekton-config
         - name: TERMINATE_STATUS
           valueFrom:
