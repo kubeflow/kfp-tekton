@@ -1,8 +1,8 @@
 # Compiler Status Report
 
 This report shows the compilation status for all Python DSL pipeline scripts in the KFP compiler
-[`testdata`](https://github.com/kubeflow/pipelines/tree/master/sdk/python/tests/compiler/testdata) 
-folder. 
+[`testdata`](https://github.com/kubeflow/pipelines/tree/master/sdk/python/tests/compiler/testdata)
+folder.
 
 As you are working on a PR to address functionality gaps in the compiler, please run this report to
 update the compile `FAILURE`s which have been addressed by your code changes.
@@ -141,4 +141,4 @@ Occurences of other Errors:
 ## Disclaimer
 
 **Note:** The reports above were created for the pipeline scripts found in KFP SDK version `1.6.3` since
-the `kfp_tekton` `0.8.1` compiler code is based on the `kfp` SDK compiler version `1.6.3`.
+the `kfp_tekton` `0.9.0` compiler code is based on the `kfp` SDK compiler version `1.6.3`.
