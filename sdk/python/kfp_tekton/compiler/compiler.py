@@ -23,6 +23,7 @@ import uuid
 import zipfile
 from collections import defaultdict
 from distutils.util import strtobool
+import collections
 from os import environ as env
 from typing import Callable, List, Text, Dict, Any
 
@@ -130,12 +131,14 @@ class TektonCompiler(Compiler):
     self.pipeline_labels = {}
     self.pipeline_annotations = {}
     self.tekton_inline_spec = True
+    self.resource_in_separate_yaml = False
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
     self.pipeline_labels = tekton_pipeline_conf.pipeline_labels
     self.pipeline_annotations = tekton_pipeline_conf.pipeline_annotations
     self.tekton_inline_spec = tekton_pipeline_conf.tekton_inline_spec
+    self.resource_in_separate_yaml = tekton_pipeline_conf.resource_in_separate_yaml
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -1005,9 +1008,9 @@ class TektonCompiler(Compiler):
         'params': [{
             'name': p['name'],
             'value': p.get('default', '')
-          } for p in params],
+          } for p in sorted(params, key=lambda x: x['name'])],
         'pipelineSpec': {
-          'params': params,
+          'params': sorted(params, key=lambda x: x['name']),
           'tasks': task_refs + condition_task_refs,
           'finally': finally_tasks
         }
@@ -1358,17 +1361,26 @@ class TektonCompiler(Compiler):
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
 
       # create cr yaml for only those pipelineLoop cr which could not be converted to inlined spec.
+      loop_package_annotations = []
       for i in range(len(pipeline_loop_crs)):
-        if pipeline_loop_crs[i]['metadata'].get('name', "") not in inlined_as_taskSpec:
-          TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
-                                         package_path=os.path.splitext(package_path)[0] +
-                                                      "_pipelineloop_cr" + str(i + 1) + '.yaml')
+        if self.resource_in_separate_yaml:
+          if pipeline_loop_crs[i]['metadata'].get('name', "") not in inlined_as_taskSpec:
+            TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
+                                          package_path=os.path.splitext(package_path)[0] +
+                                                        "_pipelineloop_cr" + str(i + 1) + '.yaml')
+        else:
+          pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
+          loop_package_annotations.append(yaml.load(pipeline_loop_cr, Loader=yaml.FullLoader))
+      if loop_package_annotations:
+        workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations, sort_keys=True)
+      # Need to compiles after all the CRs being processed.
+      TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)
     else:
       TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
     # Separate custom task CR from the main workflow
     for i in range(len(self.custom_task_crs)):
       TektonCompiler._write_workflow(workflow=self.custom_task_crs[i],
-                                     package_path=os.path.splitext(package_path)[0] +
+                                    package_path=os.path.splitext(package_path)[0] +
                                                   "_customtask_cr" + str(i + 1) + '.yaml')
     _validate_workflow(workflow)
 

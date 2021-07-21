@@ -33,16 +33,16 @@ metadata:
       "type": "Integer"}], "name": "PipelineParams"}'
 spec:
   params:
-  - name: tag
-    value: latest
   - name: sleep_ms
     value: '10'
+  - name: tag
+    value: latest
   pipelineSpec:
     params:
-    - name: tag
-      default: latest
     - name: sleep_ms
       default: '10'
+    - name: tag
+      default: latest
     tasks:
     - name: download
       params:

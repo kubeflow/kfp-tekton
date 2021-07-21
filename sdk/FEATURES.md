@@ -131,6 +131,12 @@ The `finally` syntax is supported since Tekton version `0.14.0`.
 
 PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks Controller](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops.
 
+By default, the SDK will not compile all the recursion loop resources in the pipelineRun annotations. If you want to apply the recursion loop resources together with pipelinerun as an admin, add the following code snippet before compiling the pipeline.
+```python
+import kfp_tekton
+kfp_tekton.compiler.LOOP_RESOURCES_IN_SEPARATE_YAML=False
+```
+
 To use this feature, please ensure Tekton version >= v0.19, and "data.enable-custom-tasks" is "true" in feature-flags configmap:
 `kubectl edit cm feature-flags -n tekton-pipelines`
 
@@ -142,7 +148,7 @@ To see how the Python SDK provides this feature, refer to the examples below:
 
 ### Any Sequencer
 
-When any one of the task dependencies completes successfully and the conditions meet, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Condition can be applied to enforce the task dependencies completes as expected. The condition expression should be the same format as is in Kubeflow ConditionOperator, and the result of containerOps can be used in expression. Notice the expression should only contain results from only one task because the purpose here is to check the simple condition for the task's output when a task complete. And also the operand in the expression should be int or string, other python types will be transferred to string automatically. 
+When any one of the task dependencies completes successfully and the conditions meet, the dependent task will be started. Order of execution of the dependencies doesn’t matter, and the pipeline doesn't wait for all the task dependencies to complete before moving to the next step. Condition can be applied to enforce the task dependencies completes as expected. The condition expression should be the same format as is in Kubeflow ConditionOperator, and the result of containerOps can be used in expression. Notice the expression should only contain results from only one task because the purpose here is to check the simple condition for the task's output when a task complete. And also the operand in the expression should be int or string, other python types will be transferred to string automatically.
 
 The Any Sequencer exits if all dependencies failed or skipped, or all conditions unmatched.
 

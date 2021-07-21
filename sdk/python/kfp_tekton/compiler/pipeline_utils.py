@@ -26,13 +26,15 @@ class TektonPipelineConf(dsl.PipelineConf):
         self.pipeline_labels = {}
         self.pipeline_annotations = {}
         self.tekton_inline_spec = True
+        self.resource_in_separate_yaml = False
         super().__init__(**kwargs)
 
     def copy(self):
         return TektonPipelineConf()\
             .add_pipeline_label(self.pipeline_labels)\
             .add_pipeline_annotation(self.pipeline_annotations)\
-            .set_tekton_inline_spec(self.tekton_inline_spec)
+            .set_tekton_inline_spec(self.tekton_inline_spec)\
+            .set_resource_in_separate_yaml(self.resource_in_separate_yaml)
 
     def add_pipeline_label(self, label_name: str, value: str):
         self.pipeline_labels[label_name] = value
@@ -47,4 +49,8 @@ class TektonPipelineConf(dsl.PipelineConf):
 
     def set_tekton_inline_spec(self, value: bool):
         self.tekton_inline_spec = value
+        return self
+
+    def set_resource_in_separate_yaml(self, value: bool):
+        self.resource_in_separate_yaml = value
         return self
