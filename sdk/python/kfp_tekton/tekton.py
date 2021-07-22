@@ -14,6 +14,7 @@
 
 from typing import List, Iterable, Union
 from kfp import dsl
+from kfp import components
 from kfp.dsl._container_op import ContainerOp
 from kfp.dsl._pipeline_param import ConditionOperator
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
@@ -131,15 +132,29 @@ def CEL_ConditionOp(condition_statement):
     Args:
         condition_statement: CEL expression statement using string and/or pipeline params.
     '''
-    ConditionOp = dsl.ContainerOp(
-            name="condition-cel",
-            image=CEL_EVAL_IMAGE,
-            command=["sh", "-c"],
-            arguments=["--apiVersion", "cel.tekton.dev/v1alpha1",
-                       "--kind", "CEL",
-                       "--name", "cel_condition",
-                       "--%s" % DEFAULT_CONDITION_OUTPUT_KEYWORD, condition_statement],
-            file_outputs={DEFAULT_CONDITION_OUTPUT_KEYWORD: '/tmp/tekton'}
-        )
+    ConditionOp_yaml = '''\
+    name: 'condition-cel'
+    description: 'Condition Operation using Common Expression Language'
+    inputs:
+    - {name: condition_statement, description: 'Condition statement', default: ''}
+    outputs:
+    - {name: %s, description: 'Default condition output'}
+    implementation:
+        container:
+            image: %s
+            command: ['sh', '-c']
+            args: [
+            '--apiVersion', 'cel.tekton.dev/v1alpha1',
+            '--kind', 'CEL',
+            '--name', 'cel_condition',
+            '--%s', {inputValue: condition_statement},
+            {outputPath: %s},
+            ]
+    ''' % (DEFAULT_CONDITION_OUTPUT_KEYWORD,
+           CEL_EVAL_IMAGE,
+           DEFAULT_CONDITION_OUTPUT_KEYWORD,
+           DEFAULT_CONDITION_OUTPUT_KEYWORD)
+    ConditionOp_template = components.load_component_from_text(ConditionOp_yaml)
+    ConditionOp = ConditionOp_template(condition_statement)
     ConditionOp.add_pod_annotation("valid_container", "false")
     return ConditionOp
