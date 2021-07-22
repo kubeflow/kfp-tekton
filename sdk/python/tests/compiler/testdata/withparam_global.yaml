@@ -29,17 +29,6 @@ metadata:
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[3, 5, 7, 9]",
       "name": "loopidy_doop", "optional": true, "type": "JsonArray"}], "name": "withparam-global"}'
-    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "withparam-global-for-loop-1"},
-      "spec": {"iterateParam": "loopidy_doop-loop-item", "pipelineSpec": {"params":
-      [{"name": "loopidy_doop-loop-item", "type": "string"}], "tasks": [{"name": "my-in-cop1",
-      "params": [{"name": "loopidy_doop-loop-item", "value": "$(params.loopidy_doop-loop-item)"}],
-      "runAfter": [], "taskSpec": {"metadata": {"annotations": {"tekton.dev/template":
-      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
-      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "loopidy_doop-loop-item",
-      "type": "string"}], "steps": [{"args": ["echo no output global op1, item: $(inputs.params.loopidy_doop-loop-item)"],
-      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "0s"}]}}}]'
 spec:
   params:
   - name: loopidy_doop
