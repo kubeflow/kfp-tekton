@@ -1363,14 +1363,14 @@ class TektonCompiler(Compiler):
       # create cr yaml for only those pipelineLoop cr which could not be converted to inlined spec.
       loop_package_annotations = []
       for i in range(len(pipeline_loop_crs)):
-        if self.resource_in_separate_yaml:
-          if pipeline_loop_crs[i]['metadata'].get('name', "") not in inlined_as_taskSpec:
+        if pipeline_loop_crs[i]['metadata'].get('name', "") not in inlined_as_taskSpec:
+          if self.resource_in_separate_yaml:
             TektonCompiler._write_workflow(workflow=pipeline_loop_crs[i],
-                                          package_path=os.path.splitext(package_path)[0] +
+                                           package_path=os.path.splitext(package_path)[0] +
                                                         "_pipelineloop_cr" + str(i + 1) + '.yaml')
-        else:
-          pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
-          loop_package_annotations.append(yaml.load(pipeline_loop_cr, Loader=yaml.FullLoader))
+          else:
+            pipeline_loop_cr = TektonCompiler._write_workflow(workflow=collections.OrderedDict(pipeline_loop_crs[i]))
+            loop_package_annotations.append(yaml.load(pipeline_loop_cr, Loader=yaml.FullLoader))
       if loop_package_annotations:
         workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations, sort_keys=True)
       # Need to compiles after all the CRs being processed.
