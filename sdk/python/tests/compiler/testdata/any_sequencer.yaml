@@ -18,9 +18,9 @@ metadata:
   name: any-sequencer
   annotations:
     tekton.dev/output_artifacts: '{"any-test": [{"key": "artifacts/$PIPELINERUN/any-test/status.tgz",
-      "name": "any-test-status", "path": "/tekton/results/status"}], "flipcoin": [{"key":
-      "artifacts/$PIPELINERUN/flipcoin/output.tgz", "name": "flipcoin-output", "path":
-      "/tmp/output"}]}'
+      "name": "any-test-status", "path": "/tmp/outputs/status/data"}], "flipcoin":
+      [{"key": "artifacts/$PIPELINERUN/flipcoin/output.tgz", "name": "flipcoin-output",
+      "path": "/tmp/output"}]}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -152,13 +152,24 @@ spec:
           image: dspipelines/any-sequencer:latest
         results:
         - name: status
-          description: /tekton/results/status
+          description: /tmp/outputs/status/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            valid_container: "false"
+            pipelines.kubeflow.org/component_spec: '{"description": "Proceed when
+              any of the dependents completed successfully", "implementation": {"container":
+              {"args": ["--namespace", "$(context.pipelineRun.namespace)", "--prName",
+              "$(context.pipelineRun.name)", "--taskList", "task2,task3", "--statusPath",
+              {"outputPath": "status"}, "-c", "results_flipcoin_output == ''heads''"],
+              "command": ["any-task"], "image": "dspipelines/any-sequencer:latest"}},
+              "inputs": [{"description": "Namespace of the pipelinerun", "name": "pipelineRun-namespace"},
+              {"description": "Name of the pipelinerun", "name": "pipelineRun-name"}],
+              "name": "any_test", "outputs": [{"description": "Default condition output",
+              "name": "status"}]}'
             tekton.dev/template: ''
         params:
         - name: pipelineRun-name

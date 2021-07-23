@@ -65,7 +65,7 @@ def any_sequence_pipeline(
         image="registry.access.redhat.com/ubi8/ubi-minimal",
         command=["/bin/bash", "-c"],
         arguments=["sleep 30"]
-    ).apply(after_any([task2, task3, flip_out.outputs['output'] == "heads"], "any_test", '/tekton/results/status'))
+    ).apply(after_any([task2, task3, flip_out.outputs['output'] == "heads"], "any_test", 'status'))
 
 
 if __name__ == "__main__":
