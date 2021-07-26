@@ -717,17 +717,21 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
         });
 
         if (cachedTaskRun) {
-          const podInfo = await Apis.getPodInfo(cachedTaskRun, jsonWorkflow?.metadata?.namespace);
-          if (
-            podInfo &&
-            podInfo.metadata &&
-            podInfo.metadata['annotations'] &&
-            podInfo.metadata['annotations']['pipelines.kubeflow.org/cached_pipeline_run']
-          ) {
-            this.setStateSafe({
-              cachedPipelineRun:
-                podInfo.metadata['annotations']['pipelines.kubeflow.org/cached_pipeline_run'],
-            });
+          try {
+            const podInfo = await Apis.getPodInfo(cachedTaskRun, jsonWorkflow?.metadata?.namespace);
+            if (
+              podInfo &&
+              podInfo.metadata &&
+              podInfo.metadata['annotations'] &&
+              podInfo.metadata['annotations']['pipelines.kubeflow.org/cached_pipeline_run']
+            ) {
+              this.setStateSafe({
+                cachedPipelineRun:
+                  podInfo.metadata['annotations']['pipelines.kubeflow.org/cached_pipeline_run'],
+              });
+            }
+          } catch(err) {
+            console.error(`Failed to get cached pod: ${err}`)
           }
         }
       }
