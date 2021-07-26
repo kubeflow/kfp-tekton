@@ -62,9 +62,9 @@ import kfp.dsl as dsl
 )
 # Currently kfp-tekton doesn't support pass parameter to the pipelinerun yet, so we hard code the number here
 def calc_pipeline(
-   a:float = '7',
-   b:float = '8',
-   c:float = '17',
+   a:float = 7.0,
+   b:float = 8.0,
+   c:float = 17.0,
 ):
     #Passing pipeline parameter and a constant value as operation arguments
     add_task = add_op(a, 4) #Returns a dsl.ContainerOp class instance.
