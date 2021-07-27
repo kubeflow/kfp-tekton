@@ -24,7 +24,6 @@ ANY_SEQUENCER_IMAGE = "dspipelines/any-sequencer:latest"
 DEFAULT_CONDITION_OUTPUT_KEYWORD = "outcome"
 TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE]
 
-
 def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
                 name: str = None, statusPath: str = None,
                 skippingPolicy: str = None, errorPolicy: str = None,
@@ -82,13 +81,12 @@ def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
             arguments.extend(["--errorPolicy", errorPolicy])
     conditonArgs = processConditionArgs(condition_list)
     arguments.extend(conditonArgs)
+    components._components._outputs_dir = "/tekton/results"
+    components._components._single_io_file_name = "status"
 
     AnyOp_yaml = '''\
     name: %s
     description: 'Proceed when any of the dependents completed successfully'
-    inputs:
-    - {name: pipelineRun-namespace, description: 'Namespace of the pipelinerun'}
-    - {name: pipelineRun-name, description: 'Name of the pipelinerun'}
     outputs:
     - {name: %s, description: 'The output file to create the status'}
     implementation:
@@ -98,7 +96,7 @@ def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
             args: [%s]
     ''' % (name, statusPath, image, ",".join(arguments))
     AnyOp_template = components.load_component_from_text(AnyOp_yaml)
-    AnyOp = AnyOp_template("placeholder1", "placeholder2")
+    AnyOp = AnyOp_template()
     return AnyOp
 
 
