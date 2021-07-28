@@ -24,6 +24,7 @@ ANY_SEQUENCER_IMAGE = "dspipelines/any-sequencer:latest"
 DEFAULT_CONDITION_OUTPUT_KEYWORD = "outcome"
 TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE]
 
+
 def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
                 name: str = None, statusPath: str = None,
                 skippingPolicy: str = None, errorPolicy: str = None,
@@ -81,8 +82,6 @@ def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
             arguments.extend(["--errorPolicy", errorPolicy])
     conditonArgs = processConditionArgs(condition_list)
     arguments.extend(conditonArgs)
-    components._components._outputs_dir = "/tekton/results"
-    components._components._single_io_file_name = "status"
 
     AnyOp_yaml = '''\
     name: %s
