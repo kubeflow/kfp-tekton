@@ -136,9 +136,9 @@ def CEL_ConditionOp(condition_statement):
     name: 'condition-cel'
     description: 'Condition Operation using Common Expression Language'
     inputs:
-    - {name: condition_statement, description: 'Condition statement', default: ''}
+    - {name: condition_statement, type: String, description: 'Condition statement', default: ''}
     outputs:
-    - {name: %s, description: 'Default condition output'}
+    - {name: %s, type: String, description: 'Default condition output'}
     implementation:
         container:
             image: %s

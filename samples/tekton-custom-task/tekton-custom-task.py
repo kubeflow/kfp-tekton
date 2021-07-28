@@ -14,31 +14,29 @@
 
 from kfp import dsl
 from kfp_tekton.tekton import CEL_ConditionOp
+from kfp import components
 
 
-def flip_coin_op():
+def flip_coin() -> str:
     """Flip a coin and output heads or tails randomly."""
-    return dsl.ContainerOp(
-        name='Flip coin',
-        image='python:alpine3.6',
-        command=['sh', '-c'],
-        arguments=['python -c "import random; result = \'heads\' if random.randint(0,1) == 0 '
-                  'else \'tails\'; print(result)" | tee /tmp/output'],
-        file_outputs={'output': '/tmp/output'}
-    )
+    import random
+    result = 'heads' if random.randint(0, 1) == 0 else 'tails'
+    print(result)
+    return result
 
-
-def print_op(msg):
+def print_msg(msg: str):
     """Print a message."""
-    return dsl.ContainerOp(
-        name='Print',
-        image='alpine:3.6',
-        command=['echo', msg],
-    )
+    print(msg)
+
+flip_coin_op = components.create_component_from_func(
+    flip_coin, base_image='python:alpine3.6')
+
+print_op = components.create_component_from_func(
+    print_msg, base_image='python:alpine3.6')
 
 
 @dsl.pipeline(
-    name='Tekton custom task on Kubeflow Pipeline',
+    name='tekton-custom-task-on-kubeflow-pipeline',
     description='Shows how to use Tekton custom task with KFP'
 )
 def custom_task_pipeline():
@@ -51,4 +49,3 @@ def custom_task_pipeline():
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(custom_task_pipeline, __file__.replace('.py', '.yaml'))
-
