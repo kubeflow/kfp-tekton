@@ -15,7 +15,6 @@
 from typing import List, Iterable, Union
 from kfp import dsl
 from kfp import components
-from kfp.dsl._container_op import ContainerOp
 from kfp.dsl._pipeline_param import ConditionOperator
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
@@ -26,7 +25,10 @@ DEFAULT_CONDITION_OUTPUT_KEYWORD = "outcome"
 TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE]
 
 
-class AnySequencer(ContainerOp):
+def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
+                name: str = None, statusPath: str = None,
+                skippingPolicy: str = None, errorPolicy: str = None,
+                image: str = ANY_SEQUENCER_IMAGE):
     """A containerOp that will proceed when any of the dependent containerOps completed
        successfully
 
@@ -36,50 +38,65 @@ class AnySequencer(ContainerOp):
 
         any: List of `Conditional` containerOps that deploy together with the `main`
                 containerOp, or the condtion that must meet to continue.
+
+        statusPath: The location to write the output stauts
+
+        skippingPolicy: Determines for the Any Sequencer reacts to
+                no-dependency-condition-matching case. Values can be one of `skipOnNoMatch`
+                or `errorOnNoMatch`, a status with value "Skipped" will be generated and the
+                exit status will still be succeeded on `skipOnNoMatch`.
+
+        errorPolicy: The standard field, either `failOnError` or `continueOnError`. On
+                `continueOnError`, a status with value "Failed" will be generated
+                but the exit status will still be succeeded. For `Fail_on_error` the
+                Any Sequencer should truly fail in the Tekton terms, as it does now.
+
+        image: The image to implement the any sequencer logic. Default to dspipelines/any-sequencer:latest.
     """
-    def __init__(self,
-                 any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
-                 name: str = None, statusPath: str = None,
-                 skippingPolicy: str = None, errorPolicy: str = None,
-                 image: str = ANY_SEQUENCER_IMAGE):
-        arguments = [
-                    "--namespace",
-                    "$(context.pipelineRun.namespace)",
-                    "--prName",
-                    "$(context.pipelineRun.name)"
-                ]
-        tasks_list = []
-        condition_list = []
-        file_outputs = None
-        for cop in any:
-            if isinstance(cop, dsl.ContainerOp):
-                cop_name = sanitize_k8s_name(cop.name)
-                tasks_list.append(cop_name)
-            elif isinstance(cop, ConditionOperator):
-                condition_list.append(cop)
-        if len(tasks_list) > 0:
-            task_list_str = ",".join(tasks_list)
-            arguments.extend(["--taskList", task_list_str])
-        if statusPath is not None:
-            file_outputs = {"status": statusPath}
-            arguments.extend(["--statusPath", statusPath])
-            if skippingPolicy is not None:
-                assert skippingPolicy == "skipOnNoMatch" or skippingPolicy == "errorOnNoMatch"
-                arguments.extend(["--skippingPolicy", skippingPolicy])
-            if errorPolicy is not None:
-                assert errorPolicy == "continueOnError" or errorPolicy == "failOnError"
-                arguments.extend(["--errorPolicy", errorPolicy])
+    arguments = [
+                "--namespace",
+                "$(context.pipelineRun.namespace)",
+                "--prName",
+                "$(context.pipelineRun.name)"
+            ]
+    tasks_list = []
+    condition_list = []
+    file_outputs = None
+    for cop in any:
+        if isinstance(cop, dsl.ContainerOp):
+            cop_name = sanitize_k8s_name(cop.name)
+            tasks_list.append(cop_name)
+        elif isinstance(cop, ConditionOperator):
+            condition_list.append(cop)
+    if len(tasks_list) > 0:
+        task_list_str = "\'" + ",".join(tasks_list) + "\'"
+        arguments.extend(["--taskList", task_list_str])
+    if statusPath is not None:
+        file_outputs = '{outputPath: %s}' % statusPath
+        arguments.extend(["--statusPath", file_outputs])
+        if skippingPolicy is not None:
+            assert skippingPolicy == "skipOnNoMatch" or skippingPolicy == "errorOnNoMatch"
+            arguments.extend(["--skippingPolicy", skippingPolicy])
+        if errorPolicy is not None:
+            assert errorPolicy == "continueOnError" or errorPolicy == "failOnError"
+            arguments.extend(["--errorPolicy", errorPolicy])
+    conditonArgs = processConditionArgs(condition_list)
+    arguments.extend(conditonArgs)
 
-        conditonArgs = processConditionArgs(condition_list)
-        arguments.extend(conditonArgs)
-
-        super().__init__(
-            name=name,
-            image=image,
-            file_outputs=file_outputs,
-            command="any-task",
-            arguments=arguments,
-        )
+    AnyOp_yaml = '''\
+    name: %s
+    description: 'Proceed when any of the dependents completed successfully'
+    outputs:
+    - {name: %s, description: 'The output file to create the status'}
+    implementation:
+        container:
+            image: %s
+            command: [any-task]
+            args: [%s]
+    ''' % (name, statusPath, image, ",".join(arguments))
+    AnyOp_template = components.load_component_from_text(AnyOp_yaml)
+    AnyOp = AnyOp_template()
+    return AnyOp
 
 
 def processOperand(operand) -> (str, str):

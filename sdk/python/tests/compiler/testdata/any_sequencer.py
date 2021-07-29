@@ -13,20 +13,38 @@
 # limitations under the License.
 
 from kfp import dsl
+from kfp import components
 from kfp_tekton.compiler import TektonCompiler
 from kfp_tekton.tekton import after_any
 
 
-def flip_coin_op():
+def flip_coin() -> str:
     """Flip a coin and output heads or tails randomly."""
-    return dsl.ContainerOp(
-        name='flipCoin',
-        image='python:alpine3.6',
-        command=['sh', '-c'],
-        arguments=['python -c "import random; result = \'heads\' if random.randint(0,1) == 0 '
-                'else \'tails\'; print(result)" | tee /tmp/output'],
-        file_outputs={'output': '/tmp/output'}
-    )
+    import random
+    result = 'heads' if random.randint(0, 1) == 0 else 'tails'
+    print(result)
+    return result
+
+
+flip_coin_op = components.create_component_from_func(
+    flip_coin, base_image='python:alpine3.6')
+
+
+component_text = '''\
+name: 'sleepComponent'
+description: |
+  Component for sleep
+inputs:
+  - {name: seconds, description: 'Sleep for some seconds', default: 10, type: int}
+implementation:
+  container:
+    image: alpine:latest
+    command: ['sleep']
+    args: [
+      {inputValue: seconds},
+    ]
+'''
+sleepOp_template = components.load_component_from_text(component_text)
 
 
 @dsl.pipeline(
@@ -35,37 +53,19 @@ def flip_coin_op():
 )
 def any_sequence_pipeline(
 ):
-    task1 = dsl.ContainerOp(
-        name="task1",
-        image="registry.access.redhat.com/ubi8/ubi-minimal",
-        command=["/bin/bash", "-c"],
-        arguments=["sleep 15"]
-    )
+    task1 = sleepOp_template(15)
 
-    task2 = dsl.ContainerOp(
-        name="task2",
-        image="registry.access.redhat.com/ubi8/ubi-minimal",
-        command=["/bin/bash", "-c"],
-        arguments=["sleep 200"]
-    )
+    task2 = sleepOp_template(200)
 
-    task3 = dsl.ContainerOp(
-        name="task3",
-        image="registry.access.redhat.com/ubi8/ubi-minimal",
-        command=["/bin/bash", "-c"],
-        arguments=["sleep 300"]
-    )
+    task3 = sleepOp_template(300)
 
     flip_out = flip_coin_op()
 
     flip_out.after(task1)
 
-    dsl.ContainerOp(
-        name="task4",
-        image="registry.access.redhat.com/ubi8/ubi-minimal",
-        command=["/bin/bash", "-c"],
-        arguments=["sleep 30"]
-    ).apply(after_any([task2, task3, flip_out.outputs['output'] == "heads"], "any_test", '/tekton/results/status'))
+    task4 = sleepOp_template(30)
+
+    task4.apply(after_any([task2, task3, flip_out.outputs['output'] == "heads"], "any_test", 'status'))
 
 
 if __name__ == "__main__":
