@@ -6,7 +6,7 @@ This pipeline contains 5 steps, it finds the best hyperparameter using Katib, cr
 
 To run this pipeline, make sure your cluster has at least 16 cpu and 32GB in total. Otherwise some jobs might not able to run because TFJob needs to run 4 TensorFlow pods in parallel for distributed training.
 
-## Prerequisites 
+## Prerequisites
 - Install [KFP Tekton prerequisites](/samples/README.md)
 - Install the necessary Python packages for running Jupyter notebook.
     ```shell
