@@ -7,7 +7,7 @@
 
 The Kubeflow Pipelines [SDK](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/)
 allows data scientists to define end-to-end machine learning and data pipelines.
-The output of the Kubeflow Pipelines SDK compiler is YAML for [Argo](https://github.com/argoproj/argo).
+The output of the Kubeflow Pipelines SDK compiler is YAML for [Argo](https://github.com/argoproj/argo-workflows).
 
 The `kfp-tekton` SDK is extending the `Compiler` and the `Client` of the Kubeflow
 Pipelines SDK to generate [Tekton](https://github.com/tektoncd/pipeline) YAML
