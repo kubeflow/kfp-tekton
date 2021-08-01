@@ -18,21 +18,22 @@ metadata:
   name: flip-coin-with-dependency
   annotations:
     tekton.dev/output_artifacts: '{"flip": [{"key": "artifacts/$PIPELINERUN/flip/output.tgz",
-      "name": "flip-output", "path": "/tmp/output"}], "flip-again": [{"key": "artifacts/$PIPELINERUN/flip-again/output.tgz",
-      "name": "flip-again-output", "path": "/tmp/output"}]}'
-    tekton.dev/input_artifacts: '{"print1": [{"name": "flip-again-output", "parent_task":
-      "flip-again"}], "print2": [{"name": "flip-output", "parent_task": "flip"}]}'
+      "name": "flip-output", "path": "/tmp/outputs/output/data"}], "flip-2": [{"key":
+      "artifacts/$PIPELINERUN/flip-2/output.tgz", "name": "flip-2-output", "path":
+      "/tmp/outputs/output/data"}]}'
+    tekton.dev/input_artifacts: '{"print": [{"name": "flip-2-output", "parent_task":
+      "flip-2"}], "print-2": [{"name": "flip-output", "parent_task": "flip"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"flip": [["output", "$(results.output.path)"]], "flip-again":
-      [["output", "$(results.output.path)"]], "print1": [], "print2": [], "print3":
+    tekton.dev/artifact_items: '{"flip": [["output", "$(results.output.path)"]], "flip-2":
+      [["output", "$(results.output.path)"]], "print": [], "print-2": [], "print-3":
       []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
       "inputs": [{"default": "heads", "name": "forced_result1", "optional": true,
       "type": "String"}, {"default": "tails", "name": "forced_result2", "optional":
-      true, "type": "String"}], "name": "Flip Coin with Dependency"}'
+      true, "type": "String"}], "name": "flip-coin-with-dependency"}'
 spec:
   params:
   - name: forced_result1
@@ -53,55 +54,71 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args:
-          - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result1)';
-            result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
-            if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
-            | tee $(results.output.path)
           command:
           - sh
           - -c
+          - |
+            python -c "import random; import sys; forced_result = '$0';       result = 'heads' if random.randint(0,1) == 0 else 'tails';       print(forced_result) if (forced_result == 'heads' or forced_result == 'tails') else print(result)"       | tee $1
+          - $(inputs.params.forced_result1)
+          - $(results.output.path)
           image: python:alpine3.6
         params:
         - name: forced_result1
         results:
         - name: output
-          description: /tmp/output
+          description: /tmp/outputs/output/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Flip a coin and
+              output heads or tails randomly", "implementation": {"container": {"command":
+              ["sh", "-c", "python -c \"import random; import sys; forced_result =
+              ''$0'';       result = ''heads'' if random.randint(0,1) == 0 else ''tails'';       print(forced_result)
+              if (forced_result == ''heads'' or forced_result == ''tails'') else print(result)\"       |
+              tee $1\n", {"inputValue": "forced_result"}, {"outputPath": "output"}],
+              "image": "python:alpine3.6"}}, "inputs": [{"name": "forced_result",
+              "type": "String"}], "name": "flip", "outputs": [{"name": "output", "type":
+              "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
-    - name: flip-again
+    - name: flip-2
       params:
       - name: forced_result2
         value: $(params.forced_result2)
       taskSpec:
         steps:
         - name: main
-          args:
-          - python -c "import random; import sys; forced_result = '$(inputs.params.forced_result2)';
-            result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(forced_result)
-            if (forced_result == 'heads' or forced_result == 'tails') else print(result)"
-            | tee $(results.output.path)
           command:
           - sh
           - -c
+          - |
+            python -c "import random; import sys; forced_result = '$0';       result = 'heads' if random.randint(0,1) == 0 else 'tails';       print(forced_result) if (forced_result == 'heads' or forced_result == 'tails') else print(result)"       | tee $1
+          - $(inputs.params.forced_result2)
+          - $(results.output.path)
           image: python:alpine3.6
         params:
         - name: forced_result2
         results:
         - name: output
-          description: /tmp/output
+          description: /tmp/outputs/output/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Flip a coin and
+              output heads or tails randomly", "implementation": {"container": {"command":
+              ["sh", "-c", "python -c \"import random; import sys; forced_result =
+              ''$0'';       result = ''heads'' if random.randint(0,1) == 0 else ''tails'';       print(forced_result)
+              if (forced_result == ''heads'' or forced_result == ''tails'') else print(result)\"       |
+              tee $1\n", {"inputValue": "forced_result"}, {"outputPath": "output"}],
+              "image": "python:alpine3.6"}}, "inputs": [{"name": "forced_result",
+              "type": "String"}], "name": "flip", "outputs": [{"name": "output", "type":
+              "String"}]}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-1.results.outcome)
@@ -109,25 +126,29 @@ spec:
         values:
         - "true"
       timeout: 0s
-    - name: print1
+    - name: print
       params:
-      - name: flip-again-output
-        value: $(tasks.flip-again.results.output)
+      - name: flip-2-output
+        value: $(tasks.flip-2.results.output)
       taskSpec:
         steps:
         - name: main
           command:
           - echo
-          - $(inputs.params.flip-again-output)
+          - $(inputs.params.flip-2-output)
           image: alpine:3.6
         params:
-        - name: flip-again-output
+        - name: flip-2-output
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "print a message",
+              "implementation": {"container": {"command": ["echo", {"inputValue":
+              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "print"}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-2.results.outcome)
@@ -135,7 +156,7 @@ spec:
         values:
         - "true"
       timeout: 0s
-    - name: print2
+    - name: print-2
       params:
       - name: flip-output
         value: $(tasks.flip.results.output)
@@ -154,6 +175,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "print a message",
+              "implementation": {"container": {"command": ["echo", {"inputValue":
+              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "print"}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-3.results.outcome)
@@ -161,7 +186,7 @@ spec:
         values:
         - "true"
       timeout: 0s
-    - name: print3
+    - name: print-3
       taskSpec:
         steps:
         - name: main
@@ -175,6 +200,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "print a message",
+              "implementation": {"container": {"command": ["echo", {"inputValue":
+              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "print"}'
             tekton.dev/template: ''
       runAfter:
       - condition-1
@@ -214,7 +243,7 @@ spec:
     - name: condition-2
       params:
       - name: operand1
-        value: $(tasks.flip-again.results.output)
+        value: $(tasks.flip-2.results.output)
       - name: operand2
         value: tails
       - name: operator

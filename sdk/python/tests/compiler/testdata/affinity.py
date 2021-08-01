@@ -13,16 +13,22 @@
 # limitations under the License.
 
 from kubernetes.client import V1Affinity, V1NodeSelector, V1NodeSelectorRequirement, V1NodeSelectorTerm, V1NodeAffinity
-from kfp import dsl
+from kfp import dsl, components
 
+ECHO_OP_STR = """
+name: echo
+description: echo component
+implementation:
+  container:
+    image: busybox
+    command:
+    - sh
+    - -c
+    args:
+    - echo "Got scheduled"
+"""
 
-def echo_op():
-    return dsl.ContainerOp(
-        name='echo',
-        image='busybox',
-        command=['sh', '-c'],
-        arguments=['echo "Got scheduled"']
-    )
+echo_op = components.load_component_from_text(ECHO_OP_STR)
 
 
 @dsl.pipeline(

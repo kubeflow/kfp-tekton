@@ -16,47 +16,44 @@
 container registry.
 """
 
-import kfp.dsl as dsl
+from kfp import dsl, components
 from kubernetes import client as k8s_client
 
+GET_FREQUENT_WORD_STR = """
+name: get-frequent
+description: A get frequent word class representing a component in ML Pipelines
+inputs:
+  - {name: message, type: String}
+outputs:
+  - {name: word, type: String}
+implementation:
+  container:
+    image: python:3.6-jessie
+    command:
+    - sh
+    - -c
+    args:
+    - |
+      python -c "from collections import Counter; \
+      text = '$0'; print('Input: ' + text); words = Counter(text.split()); \
+      print(max(words, key=words.get))" \
+      | tee $1
+    - {inputValue: message}
+    - {outputPath: word}
+"""
 
-class GetFrequentWordOp(dsl.ContainerOp):
-    """A get frequent word class representing a component in ML Pipelines.
-    The class provides a nice interface to users by hiding details such as container,
-    command, arguments.
-    """
-
-    def __init__(self, name, message):
-        """
-        Args:
-          name: An identifier of the step which needs to be unique within a pipeline.
-          message: a dsl.PipelineParam object representing an input message.
-        """
-        super(GetFrequentWordOp, self).__init__(
-            name=name,
-            image='python:3.6-jessie',
-            command=['sh', '-c'],
-            arguments=['python -c "from collections import Counter; '
-                       'text = \'%s\'; '
-                       'print(\'Input: \' + text); '
-                       'words = Counter(text.split()); '
-                       'print(\'Most frequent word: \' + str(max(words, key=words.get)))" '
-                       '| tee /tmp/message.txt' % message],
-            file_outputs={'word': '/tmp/message.txt'})
+get_frequent_word_op = components.load_component_from_text(GET_FREQUENT_WORD_STR)
 
 
 @dsl.pipeline(
-    name='Save Most Frequent',
+    name='save-most-frequent',
     description='Get Most Frequent Word and Save to GCS'
 )
-# def save_most_frequent_word(message: str):
 def imagepullsecrets_pipeline(
-        message="When flies fly behind flies, then flies are following flies."):
+        message: str = "When flies fly behind flies, then flies are following flies."):
     """A pipeline function describing the orchestration of the workflow."""
 
-    counter = GetFrequentWordOp(
-        name='get-Frequent',
-        message=message)
+    counter = get_frequent_word_op(message=message)
     # Call set_image_pull_secrets after get_pipeline_conf().
     dsl.get_pipeline_conf() \
         .set_image_pull_secrets([k8s_client.V1ObjectReference(name="secretA")])

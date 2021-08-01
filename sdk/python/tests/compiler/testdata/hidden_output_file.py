@@ -12,34 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
+WRITE_TEXT_STR = """
+name: download-file
+description: download file
+outputs:
+  - {name: data, type: String, description: /tmp/results.txt}
+  - {name: underscore_test, type: String, description: /tmp/results.txt}
+  - {name: multiple_underscore_test, type: String, description: /tmp/results.txt}
+implementation:
+  container:
+    image: aipipeline/echo-text:latest
+    args:
+    - -c
+    - |
+      /echo.sh && cp /tmp/results.txt $0 && cp /tmp/results.txt $1 && cp /tmp/results.txt $2
+    - {outputPath: data}
+    - {outputPath: underscore_test}
+    - {outputPath: multiple_underscore_test}
+"""
 
-def write_text_op():
-    return dsl.ContainerOp(
-        name='Download file',
-        image='aipipeline/echo-text:latest',
-        command=['/bin/bash'],
-        arguments=['-c', '/echo.sh'],
-        file_outputs={
-            'data': '/tmp/results.txt',
-            'underscore_test': '/tmp/results.txt',
-            'multiple_underscore_test': '/tmp/results.txt'
-        }
-    )
+write_text_op = components.load_component_from_text(WRITE_TEXT_STR)
 
+ECHO2_STR = """
+name: echo
+description: print the text
+inputs:
+  - {name: text1, type: String}
+implementation:
+  container:
+    image: library/bash:4.4.23
+    command:
+    - sh
+    - -c
+    args:
+    - |
+      echo "Text 1: $0"
+    - {inputValue: text1}
+"""
 
-def echo2_op(text1):
-    return dsl.ContainerOp(
-        name='echo',
-        image='library/bash:4.4.23',
-        command=['sh', '-c'],
-        arguments=['echo "Text 1: $0";', text1]
-    )
+echo2_op = components.load_component_from_text(ECHO2_STR)
 
 
 @dsl.pipeline(
-  name='Hidden output file pipeline',
+  name='hidden-output-file-pipeline',
   description='Run a script that passes file to a non configurable path'
 )
 def hidden_output_file_pipeline(

@@ -12,40 +12,50 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
+from tests.compiler.testdata.custom_task_ref import CUSTOM_STR
 
 MY_CUSTOM_TASK_IMAGE_NAME = "veryunique/image:latest"
 from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES
 TEKTON_CUSTOM_TASK_IMAGES = TEKTON_CUSTOM_TASK_IMAGES.append(MY_CUSTOM_TASK_IMAGE_NAME)
 
+CUSTOM_STR = """
+name: any-name
+description: custom task
+implementation:
+  container:
+    image: %s
+    command:
+    - any
+    - command
+    args:
+    - --apiVersion
+    - custom_task_api_version
+    - --kind
+    - custom_task_kind
+    - --name
+    - custom_task_name
+    - --taskSpec
+    - |
+      {"raw": "raw"}
+    - --other_custom_task_argument_keys
+    - args
+""" % MY_CUSTOM_TASK_IMAGE_NAME
 
-def getCustomOp():
-    CustomOp = dsl.ContainerOp(
-        name="any-name",
-        image=MY_CUSTOM_TASK_IMAGE_NAME,
-        command=["any", "command"],
-        arguments=["--apiVersion", "custom_task_api_version",
-                    "--kind", "custom_task_kind",
-                    "--name", "custom_task_name",
-                    "--taskSpec", {"raw": "raw"},
-                    "--other_custom_task_argument_keys", "args"],
-        file_outputs={"other_custom_task_argument_keys": '/anypath'}
-    )
-    # Annotation to tell the Argo controller that this CustomOp is for specific Tekton runtime only.
-    CustomOp.add_pod_annotation("valid_container", "false")
-    return CustomOp
+custom_op = components.load_component_from_text(CUSTOM_STR)
 
 
 @dsl.pipeline(
-    name='Tekton custom task on Kubeflow Pipeline',
+    name='tekton-custom-task-on-kubeflow-pipeline',
     description='Shows how to use Tekton custom task with custom spec on KFP'
 )
 def custom_task_pipeline():
-    test = getCustomOp()
-    test2 = getCustomOp().after(test)
+    test = custom_op()
+    test.add_pod_annotation("valid_container", "false")
+    test2 = custom_op().after(test)
+    test2.add_pod_annotation("valid_container", "false")
 
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(custom_task_pipeline, __file__.replace('.py', '.yaml'))
-

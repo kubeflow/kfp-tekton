@@ -12,30 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 from kfp_tekton.compiler import TektonCompiler
+
+TASK_STR_1 = """
+name: cache-enabled
+description: cached component
+outputs:
+  - {name: out, type: String}
+implementation:
+  container:
+    image: registry.access.redhat.com/ubi8/ubi-minimal
+    command:
+    - /bin/bash
+    - -c
+    - sleep 30 | echo 'hello world' | tee $0
+    - {outputPath: out}
+"""
+
+TASK_STR_2 = """
+name: cache-disabled
+description: cached component
+outputs:
+  - {name: out, type: String}
+implementation:
+  container:
+    image: registry.access.redhat.com/ubi8/ubi-minimal
+    command:
+    - /bin/bash
+    - -c
+    - sleep 30 | echo 'hello world' | tee $0
+    - {outputPath: out}
+"""
+
+task1_op = components.load_component_from_text(TASK_STR_1)
+task2_op = components.load_component_from_text(TASK_STR_2)
 
 
 @dsl.pipeline(
-    name="Cache",
+    name="cache",
     description="Example of caching",
 )
 def cache_pipeline(
 ):
-    task1 = dsl.ContainerOp(
-        name="cache-enabled",
-        image="registry.access.redhat.com/ubi8/ubi-minimal",
-        command=["/bin/bash", "-c"],
-        arguments=["sleep 30 | echo 'hello world' | tee /tmp/output"],
-        file_outputs={'output_value': '/tmp/output'}
-    )
-    task2 = dsl.ContainerOp(
-        name="cache-disabled ",
-        image="registry.access.redhat.com/ubi8/ubi-minimal",
-        command=["/bin/bash", "-c"],
-        arguments=["sleep 30 | echo 'hello world' | tee /tmp/output"],
-        file_outputs={'output_value': '/tmp/output'}
-    )
+    task1 = task1_op()
+    task2 = task2_op()
     task2.add_pod_label('pipelines.kubeflow.org/cache_enabled', 'false')
 
 

@@ -18,6 +18,17 @@ from kfp_tekton.compiler import TektonCompiler
 from kfp_tekton.tekton import after_any
 
 
+# Note:
+# any_sequencer needs k8s permission to watch the pipelinerun/taskrun
+# status. Therefore, make sure the service account that is used to
+# run the pipeline has sufficient permission. For example, in
+# multi-user deployment, you need to run the follow command to add
+# `cluster-admin` cluster-role to the `default-editor` service account
+# under your namespace:
+#   # assuming the namespace is: mynamespace
+#   kubectl create clusterrolebinding pipeline-runner-extend \
+#     --clusterrole cluster-admin --serviceaccount=mynamespace:default-editor
+
 def flip_coin() -> str:
     """Flip a coin and output heads or tails randomly."""
     import random
@@ -48,7 +59,7 @@ sleepOp_template = components.load_component_from_text(component_text)
 
 
 @dsl.pipeline(
-    name="Any Sequencer",
+    name="any-sequencer",
     description="Any Sequencer Component Demo",
 )
 def any_sequence_pipeline(

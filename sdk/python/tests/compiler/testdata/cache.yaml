@@ -17,19 +17,19 @@ kind: PipelineRun
 metadata:
   name: cache
   annotations:
-    tekton.dev/output_artifacts: '{"cache-disabled": [{"key": "artifacts/$PIPELINERUN/cache-disabled/output_value.tgz",
-      "name": "cache-disabled-output_value", "path": "/tmp/output"}], "cache-enabled":
-      [{"key": "artifacts/$PIPELINERUN/cache-enabled/output_value.tgz", "name": "cache-enabled-output_value",
-      "path": "/tmp/output"}]}'
+    tekton.dev/output_artifacts: '{"cache-disabled": [{"key": "artifacts/$PIPELINERUN/cache-disabled/out.tgz",
+      "name": "cache-disabled-out", "path": "/tmp/outputs/out/data"}], "cache-enabled":
+      [{"key": "artifacts/$PIPELINERUN/cache-enabled/out.tgz", "name": "cache-enabled-out",
+      "path": "/tmp/outputs/out/data"}]}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"cache-disabled": [["output_value", "$(results.output-value.path)"]],
-      "cache-enabled": [["output_value", "$(results.output-value.path)"]]}'
+    tekton.dev/artifact_items: '{"cache-disabled": [["out", "$(results.out.path)"]],
+      "cache-enabled": [["out", "$(results.out.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Example of caching", "name":
-      "Cache"}'
+      "cache"}'
 spec:
   pipelineSpec:
     tasks:
@@ -37,42 +37,52 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args:
-          - sleep 30 | echo 'hello world' | tee $(results.output-value.path)
           command:
           - /bin/bash
           - -c
+          - sleep 30 | echo 'hello world' | tee $0
+          - $(results.out.path)
           image: registry.access.redhat.com/ubi8/ubi-minimal
         results:
-        - name: output-value
-          description: /tmp/output
+        - name: out
+          description: /tmp/outputs/out/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "cached component",
+              "implementation": {"container": {"command": ["/bin/bash", "-c", "sleep
+              30 | echo ''hello world'' | tee $0", {"outputPath": "out"}], "image":
+              "registry.access.redhat.com/ubi8/ubi-minimal"}}, "name": "cache-enabled",
+              "outputs": [{"name": "out", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: cache-disabled
       taskSpec:
         steps:
         - name: main
-          args:
-          - sleep 30 | echo 'hello world' | tee $(results.output-value.path)
           command:
           - /bin/bash
           - -c
+          - sleep 30 | echo 'hello world' | tee $0
+          - $(results.out.path)
           image: registry.access.redhat.com/ubi8/ubi-minimal
         results:
-        - name: output-value
-          description: /tmp/output
+        - name: out
+          description: /tmp/outputs/out/data
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "false"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "cached component",
+              "implementation": {"container": {"command": ["/bin/bash", "-c", "sleep
+              30 | echo ''hello world'' | tee $0", {"outputPath": "out"}], "image":
+              "registry.access.redhat.com/ubi8/ubi-minimal"}}, "name": "cache-disabled",
+              "outputs": [{"name": "out", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

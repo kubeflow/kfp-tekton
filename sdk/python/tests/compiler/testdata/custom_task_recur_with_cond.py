@@ -30,8 +30,10 @@ PrintOp = load_component_from_text("""
   name: print
   inputs:
   - name: msg
+    type: String
   outputs:
   - name: stdout
+    type: String
   implementation:
     container:
       image: alpine:3.6
@@ -65,7 +67,7 @@ def recur(i: int, until: int):
     recur(incr_i, until)
 
 
-@dsl.pipeline("recursion test")
+@dsl.pipeline("recursion-test")
 def recursion_test(until: int = 5):
   start_idx = CEL_ExprOp("0").output  # graph components require all inputs to be PipelineParams
   with CEL_Condition(f"{start_idx} < {until}"):

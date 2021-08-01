@@ -13,100 +13,103 @@
 # limitations under the License.
 
 
-import kfp.dsl as dsl
+from kfp import dsl, components
 
+FREQUENT_WORD_STR = """
+name: get-frequent
+description: Calculate the frequent word from a text
+inputs:
+  - {name: message, type: String, description: 'Required. message'}
+outputs:
+  - {name: word, type: String}
+implementation:
+  container:
+    image: python:3.6-jessie
+    command:
+    - sh
+    - -c
+    - |
+      python -c "import sys; from collections import Counter; \
+      input_text = sys.argv[1]; \
+      words = Counter(input_text.split()); print(max(words, key=words.get));" \
+      "$0" | tee $1
+    - {inputValue: message}
+    - {outputPath: word}
+"""
 
-class GetFrequentWordOp(dsl.ContainerOp):
-    """A get frequent word class representing a component in ML Pipelines.
-    The class provides a nice interface to users by hiding details such as container,
-    command, arguments.
-    """
+frequent_word_op = components.load_component_from_text(FREQUENT_WORD_STR)
 
-    def __init__(self, name, message):
-        """
-        Args:
-          name: An identifier of the step which needs to be unique within a pipeline.
-          message: a dsl.PipelineParam object representing an input message.
-        """
-        super(GetFrequentWordOp, self).__init__(
-            name=name,
-            image='python:3.6-jessie',
-            command=['sh', '-c'],
-            arguments=['python -c "import sys; from collections import Counter; '
-                       'input_text = sys.argv[1]; '
-                       'words = Counter(input_text.split()); '
-                       'print(max(words, key=words.get));" "%s" '
-                       '| tee /tmp/message.txt' % message],
-            file_outputs={'word': '/tmp/message.txt'})
+SAVE_MESSAGE_STR = """
+name: save
+description: |
+  save message to a given output_path
+inputs:
+  - {name: message, type: String, description: 'Required. message'}
+  - {name: output_path, type: String, description: 'Required. output path'}
+implementation:
+  container:
+    image: google/cloud-sdk
+    command:
+    - sh
+    - -c
+    - |
+      set -e
+      echo "$0"| gsutil cp - "$1"
+    - {inputValue: message}
+    - {inputValue: output_path}
+"""
 
-
-class SaveMessageOp(dsl.ContainerOp):
-    """A class representing a component in ML Pipelines.
-    It saves a message to a given output_path.
-    """
-
-    def __init__(self, name, message, output_path):
-        """
-        Args:
-          name: An identifier of the step which needs to be unique within a pipeline.
-          message: a dsl.PipelineParam object representing the message to be saved.
-          output_path: a dsl.PipelineParam object representing the GCS path for output file.
-        """
-        super(SaveMessageOp, self).__init__(
-            name=name,
-            image='google/cloud-sdk',
-            command=['sh', '-c'],
-            arguments=['echo "%s" | tee /tmp/results.txt | gsutil cp /tmp/results.txt %s'
-                       % (message, output_path)])
+save_message_op = components.load_component_from_text(SAVE_MESSAGE_STR)
 
 
 @dsl.pipeline(
-    name='Save Most Frequent',
+    name='save-most-frequent',
     description='Get Most Frequent Word and Save to GCS'
 )
-def save_most_frequent_word(message: dsl.PipelineParam,
-                            outputpath: dsl.PipelineParam):
+def save_most_frequent_word(message: str,
+                            outputpath: str):
     """A pipeline function describing the orchestration of the workflow."""
 
-    counter = GetFrequentWordOp(
-        name='get-Frequent',
-        message=message)
+    counter = frequent_word_op(message=message)
 
-    saver = SaveMessageOp(
-        name='save',
-        message=counter.output,
+    saver = save_message_op(
+        message=counter.outputs['word'],
         output_path=outputpath)
 
 
-class DownloadMessageOp(dsl.ContainerOp):
-    """A class representing a component in ML Pipelines.
-    It downloads a message and outputs it.
-    """
+DOWNLOAD_MESSAGE_STR = """
+name: download
+description: |
+  downloads a message and outputs it
+inputs:
+  - {name: url, type: String, description: 'Required. the gcs url to download the message from'}
+outputs:
+  - {name: downloaded, type: String, description: 'file content.'}
+implementation:
+  container:
+    image: google/cloud-sdk
+    command:
+    - sh
+    - -c
+    - |
+      set -e
+      gsutil cat $0 | tee $1
+    - {inputValue: url}
+    - {outputPath: downloaded}
+"""
 
-    def __init__(self, name, url):
-        """
-        Args:
-          name: An identifier of the step which needs to be unique within a pipeline.
-          url: the gcs url to download the message from.
-        """
-        super(DownloadMessageOp, self).__init__(
-            name=name,
-            image='google/cloud-sdk',
-            command=['sh', '-c'],
-            arguments=['gsutil cat %s | tee /tmp/results.txt' % url],
-            file_outputs={'downloaded': '/tmp/results.txt'}
-        )
+download_message_op = components.load_component_from_text(DOWNLOAD_MESSAGE_STR)
 
 
 @dsl.pipeline(
-    name='Download and Save Most Frequent',
+    name='download-and-save-most-frequent',
     description='Download and Get Most Frequent Word and Save to GCS'
 )
 def download_save_most_frequent_word(
         url: str = 'gs://ml-pipeline-playground/shakespeare1.txt',
         outputpath: str = '/tmp/output.txt'):
-    downloader = DownloadMessageOp('download', url)
-    save_most_frequent_word(downloader.output, outputpath)
+    downloader = download_message_op(url)
+    save_most_frequent_word(downloader.outputs['downloaded'], outputpath)
 
 
 if __name__ == '__main__':

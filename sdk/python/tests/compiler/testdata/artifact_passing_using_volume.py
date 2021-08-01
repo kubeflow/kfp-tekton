@@ -53,4 +53,5 @@ volume_based_data_passing_method = data_passing_methods.KubernetesVolume(
 if __name__ == '__main__':
     pipeline_conf = kfp.dsl.PipelineConf()
     pipeline_conf.data_passing_method = volume_based_data_passing_method
-    kfp.compiler.Compiler().compile(artifact_passing_pipeline, __file__ + '.yaml', pipeline_conf=pipeline_conf)
+    from kfp_tekton.compiler import TektonCompiler
+    TektonCompiler().compile(artifact_passing_pipeline, __file__.replace('.py', '.yaml'), pipeline_conf=pipeline_conf)
