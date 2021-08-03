@@ -37,7 +37,7 @@ spec:
     - name: arr
       default: '["a", "b", "c"]'
     tasks:
-    - name: some-very-long-name-with-lots-of-words-in-it-for-loop-1
+    - name: some-very-long-name-with-lots-of-words-i-for-loop-1
       params:
       - name: arr-loop-item
         value: $(params.arr)

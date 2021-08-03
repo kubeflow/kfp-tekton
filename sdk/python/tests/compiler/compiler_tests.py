@@ -133,6 +133,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recur_nested import flipcoin
     self._test_pipeline_workflow(flipcoin, 'recur_nested.yaml')
 
+  def test_long_recursive_group_name_workflow(self):
+    """
+    Test compiling a workflow with long recursive group name.
+    """
+    from .testdata.long_recursive_group_name import pipeline_the_name_of_which_is_exactly_51_chars_long
+    self._test_pipeline_workflow(pipeline_the_name_of_which_is_exactly_51_chars_long, 'long_recursive_group_name.yaml')
+
   def test_recur_nested_separate_workflow(self):
     """
     Test compiling a nested recursive workflow with embedded loop resource in annotations.

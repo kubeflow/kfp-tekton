@@ -23,6 +23,8 @@ CEL_EVAL_IMAGE = "aipipeline/cel-eval:latest"
 ANY_SEQUENCER_IMAGE = "dspipelines/any-sequencer:latest"
 DEFAULT_CONDITION_OUTPUT_KEYWORD = "outcome"
 TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE]
+LOOP_PIPELINE_NAME_LENGTH = 40
+LOOP_GROUP_NAME_LENGTH = 16
 
 
 def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],

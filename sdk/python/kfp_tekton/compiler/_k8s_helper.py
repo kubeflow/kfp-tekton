@@ -22,7 +22,8 @@ def sanitize_k8s_name(name,
                       allow_dot=False,
                       allow_slash=False,
                       max_length=57,
-                      suffix_space=0):
+                      suffix_space=0,
+                      rev_truncate=False):
     """From _make_kubernetes_name
       sanitize_k8s_name cleans and converts the names in the workflow.
 
@@ -58,7 +59,11 @@ def sanitize_k8s_name(name,
 
     # truncate if length exceeds max_length
     max_length = max_length - suffix_space
-    k8s_name = k8s_name[:max_length].rstrip('-') if len(k8s_name) > max_length else k8s_name
+    if len(k8s_name) > max_length:
+      if rev_truncate:
+        k8s_name = k8s_name[len(k8s_name) - max_length:].strip('-')
+      else:
+        k8s_name = k8s_name[:max_length].rstrip('-')
 
     return k8s_name
 
