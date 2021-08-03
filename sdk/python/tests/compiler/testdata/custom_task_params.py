@@ -21,6 +21,8 @@ custom_task_api_version = "custom.tekton.dev/v1alpha1"
 custom_task_image = "some-image"
 custom_task_command = "cmd"
 custom_task_kind = "custom-task"
+
+
 def custom_task_args(foo: str, bar: Any, pi: float) -> list:
     return [
         "--foo",
@@ -30,6 +32,8 @@ def custom_task_args(foo: str, bar: Any, pi: float) -> list:
         "--pi",
         pi,
     ]
+
+
 custom_task_results = ["target"]
 custom_task_resource_name = "some-custom-resource"
 custom_task_resource = {
@@ -76,6 +80,7 @@ def custom_task(resource_label: str, foo: str, bar: Any, pi: float) -> dsl.Conta
 
 def main_task_ref(foo: str = "Foo", bar="buzz", pi: int = 3.14):
     custom_task("--taskRef", foo, bar, pi)
+
 
 def main_task_spec(foo: str = "Foo", bar="buzz", pi: int = 3.14):
     custom_task("--taskSpec", foo, bar, pi)
