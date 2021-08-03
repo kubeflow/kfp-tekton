@@ -74,7 +74,7 @@ def custom_task(resource_label: str, foo: str, bar: Any, pi: float) -> dsl.Conta
     return task
 
 
-def main_task_ref(foo: str = "Foo", bar = "buzz", pi: int = 3.14):
+def main_task_ref(foo: str = "Foo", bar="buzz", pi: int = 3.14):
     custom_task("--taskRef", foo, bar, pi)
 
 def main_task_spec(foo: str = "Foo", bar="buzz", pi: int = 3.14):
