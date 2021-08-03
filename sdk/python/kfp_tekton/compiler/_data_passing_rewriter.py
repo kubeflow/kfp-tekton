@@ -342,7 +342,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
     for task in pipeline_tasks:
         # Don't process condition and custom task parameters
         is_condition = 'condition-' in task['name']
-        is_custom_task = task.get('taskRef', '') or task.get('taskSpec', '')
+        is_custom_task = task.get('taskRef') or task.get('taskSpec', {}).get('apiVersion')
         if not is_condition and not is_custom_task:
             task['params'] = [
                 parameter_argument

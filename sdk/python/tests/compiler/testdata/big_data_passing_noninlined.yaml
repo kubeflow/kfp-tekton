@@ -124,9 +124,6 @@ spec:
       - name: repeat-line
         workspace: big-data-passing
     - name: print-text
-      params:
-      - name: repeat-line-output_text
-        value: $(tasks.repeat-line.results.output-text)
       taskSpec:
         steps:
         - name: main
@@ -290,9 +287,6 @@ spec:
       - name: split-text-lines
         workspace: big-data-passing
     - name: print-text-2
-      params:
-      - name: split-text-lines-odd_lines
-        value: $(tasks.split-text-lines.results.odd-lines)
       taskSpec:
         steps:
         - name: main
@@ -350,9 +344,6 @@ spec:
       runAfter:
       - split-text-lines
     - name: print-text-3
-      params:
-      - name: split-text-lines-even_lines
-        value: $(tasks.split-text-lines.results.even-lines)
       taskSpec:
         steps:
         - name: main
@@ -481,9 +472,6 @@ spec:
       - name: write-numbers
         workspace: big-data-passing
     - name: print-text-4
-      params:
-      - name: write-numbers-numbers
-        value: $(tasks.write-numbers.results.numbers)
       taskSpec:
         steps:
         - name: main
@@ -541,9 +529,6 @@ spec:
       runAfter:
       - write-numbers
     - name: sum-numbers
-      params:
-      - name: write-numbers-numbers
-        value: $(tasks.write-numbers.results.numbers)
       taskSpec:
         steps:
         - name: main
@@ -635,9 +620,6 @@ spec:
       runAfter:
       - write-numbers
     - name: print-text-5
-      params:
-      - name: sum-numbers-Output
-        value: $(tasks.sum-numbers.results.output)
       taskSpec:
         steps:
         - name: main

@@ -113,9 +113,6 @@ spec:
       - name: produce-dir-with-files-python-op
         workspace: create-component-from-function
     - name: get-subdirectory
-      params:
-      - name: produce-dir-with-files-python-op-output_dir
-        value: $(tasks.produce-dir-with-files-python-op.results.output-dir)
       taskSpec:
         steps:
         - name: main
@@ -153,9 +150,6 @@ spec:
       runAfter:
       - produce-dir-with-files-python-op
     - name: list-items
-      params:
-      - name: get-subdirectory-Subdir
-        value: $(tasks.get-subdirectory.results.subdir)
       taskSpec:
         steps:
         - name: main
@@ -195,11 +189,6 @@ spec:
       runAfter:
       - get-subdirectory
     - name: list-items-2
-      params:
-      - name: get-subdirectory-Subdir
-        value: $(tasks.get-subdirectory.results.subdir)
-      - name: produce-dir-with-files-python-op-output_dir
-        value: $(tasks.produce-dir-with-files-python-op.results.output-dir)
       taskSpec:
         steps:
         - name: main
