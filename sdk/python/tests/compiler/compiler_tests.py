@@ -687,3 +687,11 @@ class TestTektonCompiler(unittest.TestCase):
         self.assertSetEqual(names_of_items_for_op0, {"incr_i", "sq_i"})
     finally:
       shutil.rmtree(temp_dir)
+
+  def test_custom_task_params_ref_vs_spec(self):
+    """
+    Test compiling a custom task with params, ref and spec.
+    """
+    from .testdata.custom_task_params import main_task_ref, main_task_spec
+    self._test_pipeline_workflow(main_task_ref, 'custom_task_params_ref.yaml', skip_noninlined=True)
+    self._test_pipeline_workflow(main_task_spec, 'custom_task_params_spec.yaml', skip_noninlined=True)

@@ -15,7 +15,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: tekton-custom-task-on-kubeflow-pipeline
+  name: main-task-spec
   annotations:
     tekton.dev/output_artifacts: '{}'
     tekton.dev/input_artifacts: '{}'
@@ -24,21 +24,46 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{}'
     sidecar.istio.io/inject: "false"
-    pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
-      custom task with custom spec on KFP", "name": "Tekton custom task on Kubeflow
-      Pipeline"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "Foo", "name":
+      "foo", "optional": true, "type": "String"}, {"default": "buzz", "name": "bar",
+      "optional": true}, {"name": "pi", "optional": true, "type": "Integer"}], "name":
+      "Main task spec"}'
 spec:
+  params:
+  - name: bar
+    value: buzz
+  - name: foo
+    value: Foo
+  - name: pi
+    value: '3.14'
   pipelineSpec:
+    params:
+    - name: bar
+      default: buzz
+    - name: foo
+      default: Foo
+    - name: pi
+      default: '3.14'
     tasks:
-    - name: any-name
+    - name: some-custom-task
       params:
-      - name: other_custom_task_argument_keys
-        value: args
+      - name: foo
+        value: $(params.foo)
+      - name: bar
+        value: $(params.bar)
+      - name: pi
+        value: $(params.pi)
       taskSpec:
-        apiVersion: custom_task_api_version
-        kind: custom_task_kind
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: custom-task
         spec:
-          raw: raw
+          params:
+          - name: foo
+            type: string
+          - name: bar
+          - name: pi
+            type: int
+            default: 3
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -47,23 +72,4 @@ spec:
           annotations:
             valid_container: "false"
             tekton.dev/template: ''
-    - name: any-name-2
-      params:
-      - name: other_custom_task_argument_keys
-        value: args
-      taskSpec:
-        apiVersion: custom_task_api_version
-        kind: custom_task_kind
-        spec:
-          raw: raw
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
-          annotations:
-            valid_container: "false"
-            tekton.dev/template: ''
-      runAfter:
-      - any-name
   timeout: 0s
