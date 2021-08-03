@@ -31,6 +31,9 @@ spec:
   pipelineSpec:
     tasks:
     - name: any-name
+      params:
+      - name: other_custom_task_argument_keys
+        value: args
       taskSpec:
         apiVersion: custom_task_api_version
         kind: custom_task_kind
@@ -45,6 +48,9 @@ spec:
             valid_container: "false"
             tekton.dev/template: ''
     - name: any-name-2
+      params:
+      - name: other_custom_task_argument_keys
+        value: args
       taskSpec:
         apiVersion: custom_task_api_version
         kind: custom_task_kind
