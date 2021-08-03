@@ -1,0 +1,73 @@
+apiVersion: custom.tekton.dev/v1alpha1
+kind: PipelineLoop
+metadata:
+  name: pipeline-the-name-of-which-is-exactly-51-e5fc0-51-chars-long-1
+spec:
+  pipelineSpec:
+    params:
+    - name: iter_num
+      type: string
+    - name: just_one_iteration
+      type: string
+    tasks:
+    - name: condition-cel
+      params:
+      - name: outcome
+        value: $(params.iter_num) - 1
+      taskRef:
+        name: cel_condition
+        apiVersion: cel.tekton.dev/v1alpha1
+        kind: CEL
+    - name: print-iter
+      params:
+      - name: condition-cel-outcome
+        value: $(tasks.condition-cel.results.outcome)
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0 > $1
+          - 'Iter: $(inputs.params.condition-cel-outcome)'
+          - $(results.output-value.path)
+          image: alpine:3.6
+        params:
+        - name: condition-cel-outcome
+          type: string
+        results:
+        - name: output-value
+          description: /tmp/outputs/output_value/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"command": ["sh", "-c", "set -e\necho $0 > $1\n", {"inputValue": "input_text"},
+              {"outputPath": "output_value"}], "image": "alpine:3.6"}}, "inputs":
+              [{"description": "Represents an input parameter.", "name": "input_text",
+              "type": "String"}], "name": "print-iter", "outputs": [{"description":
+              "Represents an output paramter.", "name": "output_value", "type": "String"}]}'
+            tekton.dev/template: ''
+      timeout: 0s
+    - name: function-the-name-of-which-is-exactly-51-chars-long
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: pipeline-the-name-of-which-is-exactly-51-e5fc0-51-chars-long-1
+      params:
+      - name: just_one_iteration
+        value:
+        - '1'
+      - name: iter_num
+        value: $(tasks.condition-cel.results.outcome)
+      when:
+      - input: $(tasks.condition-cel.results.outcome)
+        operator: notin
+        values:
+        - '0'
+  iterateParam: just_one_iteration

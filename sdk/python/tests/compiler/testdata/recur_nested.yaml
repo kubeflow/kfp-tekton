@@ -36,7 +36,7 @@ metadata:
       and nested recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
       true}], "name": "nested recursion pipeline"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "nested-recursion-pipeline-graph-flip-component-1"},
+      "kind": "PipelineLoop", "metadata": {"name": "nested-recursion-pipeline-flip-component-1"},
       "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
       "flip-coin-output", "type": "string"}, {"name": "just_one_iteration", "type":
       "string"}, {"name": "maxVal", "type": "string"}], "tasks": [{"name": "print-2",
@@ -75,16 +75,16 @@ metadata:
       {"name": "flip-component", "params": [{"name": "flip-coin-output", "value":
       "$(tasks.flip-coin-3.results.output)"}, {"name": "just_one_iteration", "value":
       ["1"]}, {"name": "maxVal", "value": "$(params.maxVal)"}], "taskRef": {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "nested-recursion-pipeline-graph-flip-component-1"},
+      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "nested-recursion-pipeline-flip-component-1"},
       "when": [{"input": "$(tasks.condition-5.results.outcome)", "operator": "in",
-      "values": ["true"]}]}, {"name": "nested-recursion-pipeline-graph-flip-component-b-3",
+      "values": ["true"]}]}, {"name": "nested-recursion-pipeline-ip-component-b-3",
       "params": [{"name": "flip-coin-output", "value": "$(params.flip-coin-output)"},
       {"name": "just_one_iteration", "value": ["1"]}, {"name": "maxVal", "value":
       "$(params.maxVal)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "name": "nested-recursion-pipeline-graph-flip-component-b-3"},
+      "kind": "PipelineLoop", "name": "nested-recursion-pipeline-ip-component-b-3"},
       "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator": "in",
       "values": ["true"]}]}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1", "kind":
-      "PipelineLoop", "metadata": {"name": "nested-recursion-pipeline-graph-flip-component-b-3"},
+      "PipelineLoop", "metadata": {"name": "nested-recursion-pipeline-ip-component-b-3"},
       "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
       "flip-coin-output", "type": "string"}, {"name": "just_one_iteration", "type":
       "string"}, {"name": "maxVal", "type": "string"}], "tasks": [{"name": "print",
@@ -115,7 +115,7 @@ metadata:
       {"name": "flip-component-b", "params": [{"name": "flip-coin-output", "value":
       "$(tasks.flip-coin-2.results.output)"}, {"name": "just_one_iteration", "value":
       ["1"]}, {"name": "maxVal", "value": "$(params.maxVal)"}], "taskRef": {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "nested-recursion-pipeline-graph-flip-component-b-3"},
+      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "nested-recursion-pipeline-ip-component-b-3"},
       "when": [{"input": "$(tasks.condition-4.results.outcome)", "operator": "in",
       "values": ["true"]}]}]}}}]'
 spec:
@@ -170,15 +170,15 @@ spec:
           annotations:
             tekton.dev/template: ''
       runAfter:
-      - nested-recursion-pipeline-graph-flip-component-1
+      - nested-recursion-pipeline-flip-component-1
       timeout: 0s
     - runAfter:
       - flip-coin
-      name: nested-recursion-pipeline-graph-flip-component-1
+      name: nested-recursion-pipeline-flip-component-1
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: nested-recursion-pipeline-graph-flip-component-1
+        name: nested-recursion-pipeline-flip-component-1
       params:
       - name: flip-coin-output
         value: $(tasks.flip-coin.results.output)

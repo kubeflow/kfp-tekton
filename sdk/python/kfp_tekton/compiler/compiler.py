@@ -43,7 +43,7 @@ from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler.yaml_utils import dump_yaml
-from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPUT_KEYWORD
+from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPUT_KEYWORD, LOOP_PIPELINE_NAME_LENGTH, LOOP_GROUP_NAME_LENGTH
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
@@ -183,10 +183,14 @@ class TektonCompiler(Compiler):
     """
     # Generate GroupOp template
     sub_group = group
-    # For loop and recursion usually append 16-19 characters, so limit the loop/recusion pipeline_name to 44 char
-    self._group_names = [sanitize_k8s_name(pipeline_name, max_length=44), sanitize_k8s_name(sub_group.name)]
+    # For loop and recursion id appends 5 characters, so limit the loop/recusion pipeline_name to 44 char and group_name to 12
+    # Group_name is truncated reversely because it has an unique identifier at the end of the name.
+    pipeline_name_copy = sanitize_k8s_name(pipeline_name, max_length=LOOP_PIPELINE_NAME_LENGTH)
+    sub_group_name_copy = sanitize_k8s_name(sub_group.name, max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True)
+    self._group_names = [pipeline_name_copy, sub_group_name_copy]
     if self.uuid:
       self._group_names.insert(1, self.uuid)
+    # pipeline name (max 40) + loop id (max 5) + group name (max 16) + two connecting dashes (2) = 63 (Max size for CRD names)
     group_name = '-'.join(self._group_names) if group_type == "loop" or group_type == "graph" else sub_group.name
     template = {
       'metadata': {
@@ -221,7 +225,9 @@ class TektonCompiler(Compiler):
       # Special handling for recursive subgroup
       if sub_group.recursive_ref:
         # generate ref graph name
-        tmp_group_names = [pipeline_name, sanitize_k8s_name(sub_group.recursive_ref.name)]
+        sub_group_recursive_name_copy = sanitize_k8s_name(sub_group.recursive_ref.name,
+                                        max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True)
+        tmp_group_names = [pipeline_name_copy, sub_group_recursive_name_copy]
         if self.uuid:
           tmp_group_names.insert(1, self.uuid)
         ref_group_name = '-'.join(tmp_group_names)
@@ -888,6 +894,10 @@ class TektonCompiler(Compiler):
     for loop_task_key in self.loops_pipeline.keys():
       task_name_prefix = '-'.join(self._group_names[:-1] + [""])
       raw_task_key = loop_task_key.replace(task_name_prefix, "")
+      for key in opgroup_name_to_parent_groups.keys():
+        if raw_task_key in key:
+          raw_task_key = key
+          break
       parent_group = opgroup_name_to_parent_groups.get(raw_task_key, [])
       if parent_group:
         if condition_refs.get(parent_group[-2], []):

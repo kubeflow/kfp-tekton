@@ -1,0 +1,78 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: pipeline-the-name-of-which-is-exactly-51-chars-long
+  annotations:
+    tekton.dev/output_artifacts: '{"print-iter": [{"key": "artifacts/$PIPELINERUN/print-iter/output_value.tgz",
+      "name": "print-iter-output_value", "path": "/tmp/outputs/output_value/data"}]}'
+    tekton.dev/input_artifacts: '{"print-iter": [{"name": "condition-cel-outcome",
+      "parent_task": "condition-cel"}]}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print-iter": [["output_value", "$(results.output-value.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "42", "name": "iter_num",
+      "optional": true, "type": "Integer"}], "name": "pipeline the name of which is
+      exactly 51 chars long"}'
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "pipeline-the-name-of-which-is-exactly-51-51-chars-long-1"},
+      "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
+      "iter_num", "type": "string"}, {"name": "just_one_iteration", "type": "string"}],
+      "tasks": [{"name": "condition-cel", "params": [{"name": "outcome", "value":
+      "$(params.iter_num) - 1"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
+      "kind": "CEL", "name": "cel_condition"}}, {"name": "print-iter", "params": [{"name":
+      "condition-cel-outcome", "value": "$(tasks.condition-cel.results.outcome)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
+      "{\"implementation\": {\"container\": {\"command\": [\"sh\", \"-c\", \"set -e\\necho
+      $0 > $1\\n\", {\"inputValue\": \"input_text\"}, {\"outputPath\": \"output_value\"}],
+      \"image\": \"alpine:3.6\"}}, \"inputs\": [{\"description\": \"Represents an
+      input parameter.\", \"name\": \"input_text\", \"type\": \"String\"}], \"name\":
+      \"print-iter\", \"outputs\": [{\"description\": \"Represents an output paramter.\",
+      \"name\": \"output_value\", \"type\": \"String\"}]}", "tekton.dev/template":
+      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "condition-cel-outcome",
+      "type": "string"}], "results": [{"description": "/tmp/outputs/output_value/data",
+      "name": "output-value"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0
+      > $1\n", "Iter: $(inputs.params.condition-cel-outcome)", "$(results.output-value.path)"],
+      "image": "alpine:3.6", "name": "main"}]}, "timeout": "0s"}, {"name": "function-the-name-of-which-is-exactly-51-chars-long",
+      "params": [{"name": "just_one_iteration", "value": ["1"]}, {"name": "iter_num",
+      "value": "$(tasks.condition-cel.results.outcome)"}], "taskRef": {"apiVersion":
+      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "pipeline-the-name-of-which-is-exactly-51-51-chars-long-1"},
+      "when": [{"input": "$(tasks.condition-cel.results.outcome)", "operator": "notin",
+      "values": ["0"]}]}]}}}]'
+spec:
+  params:
+  - name: iter_num
+    value: '42'
+  pipelineSpec:
+    params:
+    - name: iter_num
+      default: '42'
+    tasks:
+    - name: pipeline-the-name-of-which-is-exactly-51-51-chars-long-1
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: pipeline-the-name-of-which-is-exactly-51-51-chars-long-1
+      params:
+      - name: iter_num
+        value: $(params.iter_num)
+      - name: just_one_iteration
+        value:
+        - '1'
+  timeout: 0s

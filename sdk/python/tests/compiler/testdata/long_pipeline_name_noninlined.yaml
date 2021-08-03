@@ -29,7 +29,7 @@ metadata:
       "Some very long name with lots of words in it. It should be over 63 chars long
       in order to observe the problem."}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "some-very-long-name-with-lots-of-words-in-it-for-loop-1"},
+      "kind": "PipelineLoop", "metadata": {"name": "some-very-long-name-with-lots-of-words-i-for-loop-1"},
       "spec": {"iterateParam": "arr-loop-item", "pipelineSpec": {"params": [{"name":
       "arr-loop-item", "type": "string"}], "tasks": [{"name": "print", "params": [{"name":
       "arr-loop-item", "value": "$(params.arr-loop-item)"}], "taskSpec": {"metadata":
@@ -47,11 +47,11 @@ spec:
     - name: arr
       default: '["a", "b", "c"]'
     tasks:
-    - name: some-very-long-name-with-lots-of-words-in-it-for-loop-1
+    - name: some-very-long-name-with-lots-of-words-i-for-loop-1
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: some-very-long-name-with-lots-of-words-in-it-for-loop-1
+        name: some-very-long-name-with-lots-of-words-i-for-loop-1
       params:
       - name: arr-loop-item
         value: $(params.arr)

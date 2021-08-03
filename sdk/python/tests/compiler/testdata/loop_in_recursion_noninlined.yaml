@@ -35,7 +35,7 @@ metadata:
       true}, {"default": "10", "name": "my_pipe_param", "optional": true, "type":
       "Integer"}], "name": "loop in recursion pipeline"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "loop-in-recursion-pipeline-graph-flip-component-1"},
+      "kind": "PipelineLoop", "metadata": {"name": "loop-in-recursion-pipeline-flip-component-1"},
       "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
       "flip-coin-output", "type": "string"}, {"name": "just_one_iteration", "type":
       "string"}, {"name": "maxVal", "type": "string"}, {"name": "my_pipe_param", "type":
@@ -67,7 +67,7 @@ metadata:
       ["1"]}, {"name": "flip-coin-output", "value": "$(tasks.flip-coin-2.results.output)"},
       {"name": "maxVal", "value": "$(params.maxVal)"}, {"name": "my_pipe_param", "value":
       "$(params.my_pipe_param)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "name": "loop-in-recursion-pipeline-graph-flip-component-1"},
+      "kind": "PipelineLoop", "name": "loop-in-recursion-pipeline-flip-component-1"},
       "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator": "in",
       "values": ["true"]}]}, {"name": "loop-in-recursion-pipeline-for-loop-4", "params":
       [{"name": "flip-coin-output", "value": "$(params.flip-coin-output)"}, {"name":
@@ -173,15 +173,15 @@ spec:
           annotations:
             tekton.dev/template: ''
       runAfter:
-      - loop-in-recursion-pipeline-graph-flip-component-1
+      - loop-in-recursion-pipeline-flip-component-1
       timeout: 0s
     - runAfter:
       - flip-coin
-      name: loop-in-recursion-pipeline-graph-flip-component-1
+      name: loop-in-recursion-pipeline-flip-component-1
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: loop-in-recursion-pipeline-graph-flip-component-1
+        name: loop-in-recursion-pipeline-flip-component-1
       params:
       - name: flip-coin-output
         value: $(tasks.flip-coin.results.output)

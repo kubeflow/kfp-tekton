@@ -87,15 +87,15 @@ spec:
           annotations:
             tekton.dev/template: ''
       runAfter:
-      - nested-recursion-pipeline-graph-flip-component-1
+      - nested-recursion-pipeline-flip-component-1
       timeout: 0s
     - runAfter:
       - flip-coin
-      name: nested-recursion-pipeline-graph-flip-component-1
+      name: nested-recursion-pipeline-flip-component-1
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: nested-recursion-pipeline-graph-flip-component-1
+        name: nested-recursion-pipeline-flip-component-1
       params:
       - name: flip-coin-output
         value: $(tasks.flip-coin.results.output)

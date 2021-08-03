@@ -13,6 +13,9 @@
 # limitations under the License.
 
 import json, copy, re
+from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
+
+from kfp_tekton.tekton import LOOP_GROUP_NAME_LENGTH
 
 
 def _handle_tekton_pipeline_variables(pipeline_run):
@@ -94,7 +97,10 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 task_dependencies = [dependency['runAfter']]
                 for dep_task in task.get('runAfter', []):
                     # should exclude the custom task itself for cases like graph
-                    dep_task_with_prefix = '-'.join(group_names[:-1] + [dep_task])
+                    dep_task_trim = copy.copy(dep_task)
+                    if len(group_names[-1]) <= LOOP_GROUP_NAME_LENGTH:
+                        dep_task_trim = sanitize_k8s_name(dep_task, max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True)
+                    dep_task_with_prefix = '-'.join(group_names[:-1] + [dep_task_trim])
                     if dep_task_with_prefix == dependency['runAfter']:
                         continue
                     if dep_task not in custom_task[dependency['runAfter']]['task_list']:
@@ -125,7 +131,12 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 run_after_task_list = []
                 for run_after_task in task.get('runAfter', []):
                     for recursive_task in recursive_tasks:
-                        if recursive_task['name'] in run_after_task and '-'.join(group_names[:-1]) not in run_after_task:
+                        # The subset of the loop group name should be LOOP_GROUP_NAME_LENGTH minus 4 because the
+                        # numbers of loop cannot exceed 1000 due to ETCD limitation.
+                        if sanitize_k8s_name(recursive_task['name'], max_length=(LOOP_GROUP_NAME_LENGTH - 4), rev_truncate=True) \
+                            in run_after_task and '-'.join(group_names[:-1]) not in run_after_task:
+                            if len(group_names[-1]) <= LOOP_GROUP_NAME_LENGTH:
+                                run_after_task = sanitize_k8s_name(run_after_task, max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True)
                             run_after_task = '-'.join(group_names[:-1] + [run_after_task])
                             break
                     if run_after_task not in denpendency_list:
@@ -202,10 +213,17 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
     # handle the nested custom task case
     # Need to be verified: nested custom task with tasks result as parameters
     nested_custom_tasks = []
-    custom_task_crs_namelist = [custom_task_key for custom_task_key in custom_task.keys()]
+    custom_task_crs_namelist = []
+    for custom_task_key in custom_task.keys():
+        if len(group_names[-1]) <= LOOP_GROUP_NAME_LENGTH:
+            sanitize_k8s_name(custom_task_key, max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True)
+        custom_task_crs_namelist.append(custom_task_key)
     for custom_task_key in custom_task.keys():
         for inner_task_name in custom_task[custom_task_key]['task_list']:
-            inner_task_cr_name = '-'.join(group_names[:-1] + [inner_task_name])
+            inner_task_name_trimmed = copy.copy(inner_task_name)
+            if len(group_names[-1]) <= LOOP_GROUP_NAME_LENGTH:
+                inner_task_name_trimmed = sanitize_k8s_name(inner_task_name, max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True)
+            inner_task_cr_name = '-'.join(group_names[:-1] + [inner_task_name_trimmed])
             if inner_task_cr_name in custom_task_crs_namelist:
                 nested_custom_tasks.append({
                     "father_ct": custom_task_key,
@@ -285,7 +303,9 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
     task_name_prefix = '-'.join(group_names[:-1] + [""])
     for task in tasks:
         if task['name'].replace(task_name_prefix, "") not in task_list:
-            new_tasks.append(task)
+            task_list_trimmed = [sanitize_k8s_name(task, max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True) for task in task_list]
+            if task['name'].replace(task_name_prefix, "") not in task_list_trimmed:
+                new_tasks.append(task)
     workflow['spec']['pipelineSpec']['tasks'] = new_tasks
     return custom_task_crs, workflow
 
