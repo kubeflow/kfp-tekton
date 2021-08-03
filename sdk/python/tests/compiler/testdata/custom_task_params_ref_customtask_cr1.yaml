@@ -1,0 +1,12 @@
+apiVersion: custom.tekton.dev/v1alpha1
+kind: custom-task
+metadata:
+  name: some-custom-resource
+spec:
+  params:
+  - name: foo
+    type: string
+  - name: bar
+  - name: pi
+    type: int
+    default: 3
