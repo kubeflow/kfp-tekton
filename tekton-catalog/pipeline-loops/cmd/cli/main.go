@@ -129,9 +129,7 @@ func validatePipeline(bytes []byte) error {
 
 func validatePipelineSpec(p *v1beta1.PipelineSpec, name string) error {
 	errs := []string{}
-	// We do not need to validate PipelineRun because it is validated by tekton admission webhook
-	// And pipelineTask.TaskRef is also validated by tekton.
-	// Here we only need to validate those embedded spec, whose kind is pipelineLoop.
+	// Here we validate those embedded spec, whose kind is pipelineLoop.
 	if p.Tasks != nil {
 		for _, task := range p.Tasks {
 			if task.TaskSpec != nil && task.TaskSpec.Kind == pipelineloop.PipelineLoopControllerName {
@@ -145,6 +143,15 @@ func validatePipelineSpec(p *v1beta1.PipelineSpec, name string) error {
 	if len(errs) > 0 {
 		e := strings.Join(errs, "\n")
 		return fmt.Errorf("Validation errors found in pipeline %s\n %s", name, e)
+	}
+
+	// Validate the Tekton pipelineSpec
+	ctx := context.Background()
+	ctx = pipelinelooprun.EnableCustomTaskFeatureFlag(ctx)
+	p.SetDefaults(ctx)
+	errors := p.Validate(ctx)
+	if errors != nil {
+		return errors
 	}
 	return nil
 }

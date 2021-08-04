@@ -45,9 +45,10 @@ install: venv ## Install the kfp_tekton compiler in a virtual environment
 .PHONY: validate_testdata
 validate-testdata:
 	@cd tekton-catalog/pipeline-loops/ && make validate-testdata-python-sdk
+	@echo "$@: OK"
 
 .PHONY: unit_test
-unit_test: venv validate-testdata ## Run compiler unit tests
+unit_test: venv ## Run compiler unit tests
 	@echo "=================================================================="
 	@echo "Optional environment variables to configure $@, examples:"
 	@sed -n -e 's/# *\(make $@ .*\)/  \1/p' sdk/python/tests/compiler/compiler_tests.py
@@ -55,6 +56,9 @@ unit_test: venv validate-testdata ## Run compiler unit tests
 	@pip show pytest > /dev/null 2>&1 || pip install pytest
 	@sdk/python/tests/run_tests.sh
 	@echo "$@: OK"
+
+.PHONY: ci_unit_test
+ci_unit_test: unit_test validate-testdata
 
 .PHONY: e2e_test
 e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
