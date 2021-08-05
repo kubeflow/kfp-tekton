@@ -25,8 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
-      custom task with custom spec on KFP", "name": "Tekton custom task on Kubeflow
-      Pipeline"}'
+      custom task with custom spec on KFP", "name": "tekton-custom-task-on-kubeflow-pipeline"}'
 spec:
   pipelineSpec:
     tasks:
@@ -46,6 +45,12 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             valid_container: "false"
+            pipelines.kubeflow.org/component_spec: '{"description": "custom task",
+              "implementation": {"container": {"args": ["--apiVersion", "custom_task_api_version",
+              "--kind", "custom_task_kind", "--name", "custom_task_name", "--taskSpec",
+              "{\"raw\": \"raw\"}\n", "--other_custom_task_argument_keys", "args"],
+              "command": ["any", "command"], "image": "veryunique/image:latest"}},
+              "name": "any-name"}'
             tekton.dev/template: ''
     - name: any-name-2
       params:
@@ -63,6 +68,12 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             valid_container: "false"
+            pipelines.kubeflow.org/component_spec: '{"description": "custom task",
+              "implementation": {"container": {"args": ["--apiVersion", "custom_task_api_version",
+              "--kind", "custom_task_kind", "--name", "custom_task_name", "--taskSpec",
+              "{\"raw\": \"raw\"}\n", "--other_custom_task_argument_keys", "args"],
+              "command": ["any", "command"], "image": "veryunique/image:latest"}},
+              "name": "any-name"}'
             tekton.dev/template: ''
       runAfter:
       - any-name

@@ -18,9 +18,9 @@ metadata:
   name: download-and-save-most-frequent
   annotations:
     tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/downloaded.tgz",
-      "name": "download-downloaded", "path": "/tmp/results.txt"}], "get-frequent":
+      "name": "download-downloaded", "path": "/tmp/outputs/downloaded/data"}], "get-frequent":
       [{"key": "artifacts/$PIPELINERUN/get-frequent/word.tgz", "name": "get-frequent-word",
-      "path": "/tmp/message.txt"}]}'
+      "path": "/tmp/outputs/word/data"}]}'
     tekton.dev/input_artifacts: '{"get-frequent": [{"name": "download-downloaded",
       "parent_task": "download"}], "save": [{"name": "get-frequent-word", "parent_task":
       "get-frequent"}]}'
@@ -33,8 +33,7 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Download and Get Most
       Frequent Word and Save to GCS", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
       "name": "url", "optional": true, "type": "String"}, {"default": "/tmp/output.txt",
-      "name": "outputpath", "optional": true, "type": "String"}], "name": "Download
-      and Save Most Frequent"}'
+      "name": "outputpath", "optional": true, "type": "String"}], "name": "download-and-save-most-frequent"}'
 spec:
   params:
   - name: outputpath
@@ -55,23 +54,33 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args:
-          - gsutil cat $(inputs.params.url) | tee $(results.downloaded.path)
           command:
           - sh
           - -c
+          - |
+            set -e
+            gsutil cat $0 | tee $1
+          - $(inputs.params.url)
+          - $(results.downloaded.path)
           image: google/cloud-sdk
         params:
         - name: url
         results:
         - name: downloaded
-          description: /tmp/results.txt
+          description: /tmp/outputs/downloaded/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "downloads a message
+              and outputs it\n", "implementation": {"container": {"command": ["sh",
+              "-c", "set -e\ngsutil cat $0 | tee $1\n", {"inputValue": "url"}, {"outputPath":
+              "downloaded"}], "image": "google/cloud-sdk"}}, "inputs": [{"description":
+              "Required. the gcs url to download the message from", "name": "url",
+              "type": "String"}], "name": "download", "outputs": [{"description":
+              "file content.", "name": "downloaded", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: get-frequent
@@ -81,25 +90,33 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args:
-          - python -c "import sys; from collections import Counter; input_text = sys.argv[1];
-            words = Counter(input_text.split()); print(max(words, key=words.get));"
-            "$(inputs.params.download-downloaded)" | tee $(results.word.path)
           command:
           - sh
           - -c
+          - |
+            python -c "import sys; from collections import Counter;       input_text = sys.argv[1];       words = Counter(input_text.split()); print(max(words, key=words.get));"       "$0" | tee $1
+          - $(inputs.params.download-downloaded)
+          - $(results.word.path)
           image: python:3.6-jessie
         params:
         - name: download-downloaded
         results:
         - name: word
-          description: /tmp/message.txt
+          description: /tmp/outputs/word/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Calculate the
+              frequent word from a text", "implementation": {"container": {"command":
+              ["sh", "-c", "python -c \"import sys; from collections import Counter;       input_text
+              = sys.argv[1];       words = Counter(input_text.split()); print(max(words,
+              key=words.get));\"       \"$0\" | tee $1\n", {"inputValue": "message"},
+              {"outputPath": "word"}], "image": "python:3.6-jessie"}}, "inputs": [{"description":
+              "Required. message", "name": "message", "type": "String"}], "name":
+              "get-frequent", "outputs": [{"name": "word", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: save
@@ -111,12 +128,14 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args:
-          - echo "$(inputs.params.get-frequent-word)" | tee /tmp/results.txt | gsutil
-            cp /tmp/results.txt $(inputs.params.outputpath)
           command:
           - sh
           - -c
+          - |
+            set -e
+            echo "$0"| gsutil cp - "$1"
+          - $(inputs.params.get-frequent-word)
+          - $(inputs.params.outputpath)
           image: google/cloud-sdk
         params:
         - name: get-frequent-word
@@ -127,6 +146,13 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "save message
+              to a given output_path\n", "implementation": {"container": {"command":
+              ["sh", "-c", "set -e\necho \"$0\"| gsutil cp - \"$1\"\n", {"inputValue":
+              "message"}, {"inputValue": "output_path"}], "image": "google/cloud-sdk"}},
+              "inputs": [{"description": "Required. message", "name": "message", "type":
+              "String"}, {"description": "Required. output path", "name": "output_path",
+              "type": "String"}], "name": "save"}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

@@ -37,7 +37,7 @@ metadata:
       "$(results.items.path)"]], "produce-dir-with-files-python-op": [["output_dir",
       "$(workspaces.produce-dir-with-files-python-op.path)/produce-dir-with-files-python-op-output_dir"]]}'
     sidecar.istio.io/inject: "false"
-    pipelines.kubeflow.org/pipeline_spec: '{"name": "Create component from function"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "create-component-from-function"}'
 spec:
   pipelineSpec:
     tasks:

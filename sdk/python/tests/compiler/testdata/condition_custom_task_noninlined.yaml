@@ -18,11 +18,11 @@ metadata:
   name: conditional-execution-pipeline
   annotations:
     tekton.dev/output_artifacts: '{"flip-coin": [{"key": "artifacts/$PIPELINERUN/flip-coin/output.tgz",
-      "name": "flip-coin-output", "path": "/tmp/output"}], "generate-random-number":
+      "name": "flip-coin-output", "path": "/tmp/outputs/output/data"}], "generate-random-number":
       [{"key": "artifacts/$PIPELINERUN/generate-random-number/output.tgz", "name":
-      "generate-random-number-output", "path": "/tmp/output"}], "generate-random-number-2":
+      "generate-random-number-output", "path": "/tmp/outputs/output/data"}], "generate-random-number-2":
       [{"key": "artifacts/$PIPELINERUN/generate-random-number-2/output.tgz", "name":
-      "generate-random-number-2-output", "path": "/tmp/output"}]}'
+      "generate-random-number-2-output", "path": "/tmp/outputs/output/data"}]}'
     tekton.dev/input_artifacts: '{"print": [{"name": "generate-random-number-output",
       "parent_task": "generate-random-number"}], "print-2": [{"name": "generate-random-number-output",
       "parent_task": "generate-random-number"}], "print-3": [{"name": "generate-random-number-2-output",
@@ -37,7 +37,7 @@ metadata:
       [], "print-4": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition().",
-      "name": "Conditional execution pipeline"}'
+      "name": "conditional-execution-pipeline"}'
 spec:
   pipelineSpec:
     tasks:
@@ -45,22 +45,28 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args:
-          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
-            else 'tails'; print(result)" | tee $(results.output.path)
           command:
           - sh
           - -c
+          - |
+            python -c "import random; result = 'heads' if random.randint(0,1) == 0 else 'tails'; print(result)"       | tee $0
+          - $(results.output.path)
           image: python:alpine3.6
         results:
         - name: output
-          description: /tmp/output
+          description: /tmp/outputs/output/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Flip a coin and
+              output heads or tails randomly", "implementation": {"container": {"command":
+              ["sh", "-c", "python -c \"import random; result = ''heads'' if random.randint(0,1)
+              == 0 else ''tails''; print(result)\"       | tee $0\n", {"outputPath":
+              "output"}], "image": "python:alpine3.6"}}, "name": "flip-coin", "outputs":
+              [{"name": "output", "type": "Integer"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: condition-cel
@@ -75,24 +81,31 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args:
-          - python -c "import random; print(random.randint($0, $1))" | tee $2
-          - '0'
-          - '9'
-          - $(results.output.path)
           command:
           - sh
           - -c
+          - |
+            python -c "import random; print(random.randint($0, $1))" | tee $2'
+          - '0'
+          - '9'
+          - $(results.output.path)
           image: python:alpine3.6
         results:
         - name: output
-          description: /tmp/output
+          description: /tmp/outputs/output/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Generate a random
+              number between low and high.", "implementation": {"container": {"command":
+              ["sh", "-c", "python -c \"import random; print(random.randint($0, $1))\"
+              | tee $2''\n", {"inputValue": "low"}, {"inputValue": "high"}, {"outputPath":
+              "output"}], "image": "python:alpine3.6"}}, "inputs": [{"name": "low",
+              "type": "Integer"}, {"name": "high", "type": "Integer"}], "name": "generate-random-number",
+              "outputs": [{"name": "output", "type": "Integer"}]}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel.results.outcome)
@@ -132,6 +145,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "print a message",
+              "implementation": {"container": {"command": ["echo", {"inputValue":
+              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "print"}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel-2.results.outcome)
@@ -158,6 +175,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "print a message",
+              "implementation": {"container": {"command": ["echo", {"inputValue":
+              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "print"}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel-2.results.outcome)
@@ -169,24 +190,31 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args:
-          - python -c "import random; print(random.randint($0, $1))" | tee $2
-          - '10'
-          - '19'
-          - $(results.output.path)
           command:
           - sh
           - -c
+          - |
+            python -c "import random; print(random.randint($0, $1))" | tee $2'
+          - '10'
+          - '19'
+          - $(results.output.path)
           image: python:alpine3.6
         results:
         - name: output
-          description: /tmp/output
+          description: /tmp/outputs/output/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Generate a random
+              number between low and high.", "implementation": {"container": {"command":
+              ["sh", "-c", "python -c \"import random; print(random.randint($0, $1))\"
+              | tee $2''\n", {"inputValue": "low"}, {"inputValue": "high"}, {"outputPath":
+              "output"}], "image": "python:alpine3.6"}}, "inputs": [{"name": "low",
+              "type": "Integer"}, {"name": "high", "type": "Integer"}], "name": "generate-random-number",
+              "outputs": [{"name": "output", "type": "Integer"}]}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel.results.outcome)
@@ -226,6 +254,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "print a message",
+              "implementation": {"container": {"command": ["echo", {"inputValue":
+              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "print"}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel-3.results.outcome)
@@ -252,6 +284,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "print a message",
+              "implementation": {"container": {"command": ["echo", {"inputValue":
+              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "print"}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel-3.results.outcome)

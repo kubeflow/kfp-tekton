@@ -30,7 +30,7 @@ metadata:
       [], "sleepcomponent-3": [], "sleepcomponent-4": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Any Sequencer Component
-      Demo", "name": "Any Sequencer"}'
+      Demo", "name": "any-sequencer"}'
 spec:
   pipelineSpec:
     tasks:

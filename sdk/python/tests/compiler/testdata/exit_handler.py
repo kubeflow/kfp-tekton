@@ -12,42 +12,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
+GCS_DOWNLOAD_STR = """
+name: gcs-download
+description: download file from GCS
+inputs:
+  - {name: url, type: String}
+outputs:
+  - {name: data, type: String}
+implementation:
+  container:
+    image: google/cloud-sdk:279.0.0
+    command:
+    - sh
+    - -c
+    - gsutil cat $0 | tee $1
+    - {inputValue: url}
+    - {outputPath: data}
+"""
 
-def gcs_download_op(url):
-    return dsl.ContainerOp(
-        name='GCS - Download',
-        image='google/cloud-sdk:279.0.0',
-        command=['sh', '-c'],
-        arguments=['gsutil cat $0 | tee $1', url, '/tmp/results.txt'],
-        file_outputs={
-            'data': '/tmp/results.txt',
-        }
-    )
+gcs_download_op = components.load_component_from_text(GCS_DOWNLOAD_STR)
 
+ECHO_STR = """
+name: echo
+description: print out message
+inputs:
+  - {name: text, type: String}
+implementation:
+  container:
+    image: library/bash:4.4.23
+    command:
+    - sh
+    - -c
+    - echo "$0"
+    - {inputValue: text}
+"""
 
-def echo_op(text):
-    return dsl.ContainerOp(
-        name='echo',
-        image='library/bash:4.4.23',
-        command=['sh', '-c'],
-        arguments=['echo "$0"', text],
-    )
+echo_op = components.load_component_from_text(ECHO_STR)
 
 
 @dsl.pipeline(
-    name='Exit Handler',
+    name='exit-handler',
     description='Downloads a message and prints it. The exit handler will run after the pipeline finishes (successfully or not).'
 )
-def download_and_print(url='gs://ml-pipeline-playground/shakespeare1.txt'):
+def download_and_print(url: str = 'gs://ml-pipeline-playground/shakespeare1.txt'):
     """A sample pipeline showing exit handler."""
 
     exit_task = echo_op('exit!')
 
     with dsl.ExitHandler(exit_task):
         download_task = gcs_download_op(url)
-        echo_task = echo_op(download_task.output)
+        echo_task = echo_op(download_task.outputs['data'])
 
 
 if __name__ == '__main__':

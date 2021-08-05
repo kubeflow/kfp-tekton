@@ -32,8 +32,8 @@ metadata:
       "produce-numbers": [["Output", "$(results.output.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "3", "name": "n",
-      "optional": true}, {"default": "20", "name": "threshold", "optional": true}],
-      "name": "Conditions and loops"}'
+      "optional": true, "type": "Integer"}, {"default": "20", "name": "threshold",
+      "optional": true, "type": "Integer"}], "name": "conditions-and-loops"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "conditions-and-loops-for-loop-1"},
       "spec": {"iterateParam": "produce-numbers-Output-loop-item", "pipelineSpec":

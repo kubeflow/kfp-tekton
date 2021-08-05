@@ -30,9 +30,9 @@ metadata:
       "notify-failure": [], "notify-success": [], "print-number": [["Output", "$(results.output.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "5", "name": "n",
-      "optional": true}, {"default": "10", "name": "threshold", "optional": true},
-      {"default": "15", "name": "lower_bound", "optional": true}], "name": "Conditions
-      with global params"}'
+      "optional": true, "type": "Integer"}, {"default": "10", "name": "threshold",
+      "optional": true, "type": "Integer"}, {"default": "15", "name": "lower_bound",
+      "optional": true, "type": "Integer"}], "name": "conditions-with-global-params"}'
 spec:
   params:
   - name: lower_bound

@@ -45,6 +45,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "echo component",
+              "implementation": {"container": {"args": ["echo \"Got scheduled\""],
+              "command": ["sh", "-c"], "image": "busybox"}}, "name": "echo"}'
             tekton.dev/template: ''
       timeout: 0s
   taskRunSpecs:

@@ -12,49 +12,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
+FLIP_COIN_STR = """
+name: flip
+description: Flip a coin and output heads or tails randomly
+inputs:
+  - {name: forced_result, type: String}
+outputs:
+  - {name: output, type: String}
+implementation:
+  container:
+    image: python:alpine3.6
+    command:
+    - sh
+    - -c
+    - |
+      python -c "import random; import sys; forced_result = '$0'; \
+      result = 'heads' if random.randint(0,1) == 0 else 'tails'; \
+      print(forced_result) if (forced_result == 'heads' or forced_result == 'tails') else print(result)" \
+      | tee $1
+    - {inputValue: forced_result}
+    - {outputPath: output}
+"""
 
-class FlipCoinOp(dsl.ContainerOp):
+flip_coin_op = components.load_component_from_text(FLIP_COIN_STR)
 
-    def __init__(self, name, forced_result=""):
-        super(FlipCoinOp, self).__init__(
-            name=name,
-            image='python:alpine3.6',
-            command=['sh', '-c'],
-            arguments=['python -c "import random; import sys; forced_result = \''+forced_result+'\'; '
-                       'result = \'heads\' if random.randint(0,1) == 0 else \'tails\'; '
-                       'print(forced_result) if (forced_result == \'heads\' or forced_result == \'tails\') else print(result)"'
-                       ' | tee /tmp/output'],
-            file_outputs={'output_value': '/tmp/output'})
+PRINT_STR = """
+name: print
+description: print a message
+inputs:
+  - {name: msg, type: String}
+implementation:
+  container:
+    image: alpine:3.6
+    command:
+    - echo
+    - {inputValue: msg}
+"""
 
-
-class PrintOp(dsl.ContainerOp):
-
-    def __init__(self, name, msg):
-        super(PrintOp, self).__init__(
-            name=name,
-            image='alpine:3.6',
-            command=['echo', msg])
+print_op = components.load_component_from_text(PRINT_STR)
 
 
 @dsl.pipeline(
-    name='Flip Coin Example Pipeline',
+    name='flip-coin-example-pipeline',
     description='Shows how to use dsl.Condition.'
 )
 def flipcoin(forced_result1: str = 'heads', forced_result2: str = 'tails', forced_result3: str = 'heads'):
-    flip = FlipCoinOp('flip', str(forced_result1))
-    flip3 = FlipCoinOp('flip3', str(forced_result3))
+    flip = flip_coin_op(str(forced_result1))
+    flip3 = flip_coin_op(str(forced_result3))
 
-    with dsl.Condition(flip.output == 'heads'):
-        flip2 = FlipCoinOp('flip-again', str(forced_result2))
+    with dsl.Condition(flip.outputs['output'] == 'heads'):
+        flip2 = flip_coin_op(str(forced_result2))
 
-        with dsl.Condition(flip2.output == 'tails'):
-            with dsl.Condition(flip3.output == 'heads'):
-                PrintOp('print1', flip2.output)
+        with dsl.Condition(flip2.outputs['output'] == 'tails'):
+            with dsl.Condition(flip3.outputs['output'] == 'heads'):
+                print_op(flip2.outputs['output'])
 
     with dsl.Condition(flip.output == 'tails'):
-        PrintOp('print2', flip.output)
+        print_op(flip.outputs['output'])
 
 
 if __name__ == '__main__':

@@ -32,8 +32,8 @@ metadata:
       "produce-numbers": [["Output", "$(results.output.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "3", "name": "n",
-      "optional": true}, {"default": "20", "name": "threshold", "optional": true}],
-      "name": "Conditions and loops"}'
+      "optional": true, "type": "Integer"}, {"default": "20", "name": "threshold",
+      "optional": true, "type": "Integer"}], "name": "conditions-and-loops"}'
 spec:
   params:
   - name: "n"

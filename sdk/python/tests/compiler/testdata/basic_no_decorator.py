@@ -12,75 +12,81 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp.dsl as dsl
+from kfp import dsl, components
 # import kfp.gcp as gcp
 
 
 message_param = dsl.PipelineParam(name='message', value='When flies fly behind flies')
 output_path_param = dsl.PipelineParam(name='outputpath', value='default_output')
 
+FREQUENT_WORD_STR = """
+name: frequent-word
+description: Calculate the frequent word from a text
+inputs:
+  - {name: message, type: String, description: 'Required. message'}
+outputs:
+  - {name: word, type: String}
+implementation:
+  container:
+    image: python:3.6-jessie
+    command:
+    - sh
+    - -c
+    - |
+      python -c "from collections import Counter; \
+      words = Counter('$0'.split()); print(max(words, key=words.get))" \
+      | tee $1
+    - {inputValue: message}
+    - {outputPath: word}
+"""
 
-class GetFrequentWordOp(dsl.ContainerOp):
-  """A get frequent word class representing a component in ML Pipelines.
-  The class provides a nice interface to users by hiding details such as container,
-  command, arguments.
-  """
-  def __init__(self, name, message="When flies fly behind flies,"
-                                   " then flies are following flies."):
-    """__init__
-    Args:
-      name: An identifier of the step which needs to be unique within a pipeline.
-      message: a dsl.PipelineParam object representing an input message.
-    """
-    super(GetFrequentWordOp, self).__init__(
-        name=name,
-        image='python:3.6-jessie',
-        command=['sh', '-c'],
-        arguments=['python -c "from collections import Counter; '
-                   'words = Counter(\'%s\'.split()); print(max(words, key=words.get))" '
-                   '| tee /tmp/message.txt' % message],
-        file_outputs={'word': '/tmp/message.txt'})
+frequent_word_op = components.load_component_from_text(FREQUENT_WORD_STR)
 
+SAVE_MESSAGE_STR = """
+name: save-message
+description: |
+  save message to a given output_path
+inputs:
+  - {name: message, type: String, description: 'Required. message'}
+  - {name: output_path, type: String, description: 'Required. output path'}
+implementation:
+  container:
+    image: google/cloud-sdk
+    command:
+    - sh
+    - -c
+    - |
+      set -e
+      echo "$0"| gsutil cp - "$1"
+    - {inputValue: message}
+    - {inputValue: output_path}
+"""
 
-class SaveMessageOp(dsl.ContainerOp):
-  """A class representing a component in ML Pipelines.
-  It saves a message to a given output_path.
-  """
-  def __init__(self, name, message, output_path):
-    """Args:
-         name: An identifier of the step which needs to be unique within a pipeline.
-         message: a dsl.PipelineParam object representing the message to be saved.
-         output_path: a dsl.PipelineParam object representing the GCS path for output file.
-    """
-    super(SaveMessageOp, self).__init__(
-        name=name,
-        image='google/cloud-sdk',
-        command=['sh', '-c'],
-        arguments=['echo "%s" | tee /tmp/results.txt | gsutil cp /tmp/results.txt %s'
-                   % (message, output_path)])
+save_message_op = components.load_component_from_text(SAVE_MESSAGE_STR)
 
+EXIT_STR = """
+name: exit-handler
+description: exit function
+implementation:
+  container:
+    image: python:3.6-jessie
+    command:
+    - sh
+    - -c
+    - echo "exit!"
+"""
 
-class ExitHandlerOp(dsl.ContainerOp):
-  """A class representing a component in ML Pipelines."""
-  def __init__(self, name):
-    super(ExitHandlerOp, self).__init__(
-        name=name,
-        image='python:3.6-jessie',
-        command=['sh', '-c'],
-        arguments=['echo exit!'])
+exit_op = components.load_component_from_text(EXIT_STR)
 
 
 def save_most_frequent_word():
-  exit_op = ExitHandlerOp('exiting')
-  with dsl.ExitHandler(exit_op):
-    counter = GetFrequentWordOp(
-        name='get-Frequent',
-        message=message_param)
+  exit_task = exit_op()
+  with dsl.ExitHandler(exit_task):
+    counter = frequent_word_op(message=message_param)
     counter.container.set_memory_request('200M')
 
-    saver = SaveMessageOp(
-        name='save',
-        message=counter.output,
+    saver = save_message_op(
+        message=counter.outputs['word'],
         output_path=output_path_param)
     saver.container.set_cpu_limit('0.5')
     # saver.container.set_gpu_limit('2')
