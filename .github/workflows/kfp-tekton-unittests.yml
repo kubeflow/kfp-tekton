@@ -3,7 +3,7 @@ name: KFP Tekton Unit Tests
 on:
   push:
     branches: [master]
-    
+
   # Run tests for any PRs.
   pull_request:
 
@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -e sdk/python
       - name: Unit Tests
-        run: VENV=$VIRTUAL_ENV make unit_test
+        run: VENV=$VIRTUAL_ENV make ci_unit_test
   progress-report:
     runs-on: ubuntu-latest
     steps:
