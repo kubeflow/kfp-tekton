@@ -19,9 +19,9 @@ from kubernetes import client as k8s_client
 
 
 @comp.create_component_from_func
-def print_workflow_info(env_name: str):
+def print_workflow_info():
     import os
-    print("Running workflow with ", os.getenv(env_name))
+    print("Running workflow with name ", os.getenv('KFP_RUN_NAME') + " id " + os.getenv('KFP_RUN_ID'))
 
 
 @dsl.pipeline(
@@ -29,15 +29,14 @@ def print_workflow_info(env_name: str):
     description="A basic example using Kubernete downstream API to get KFP run_name and run_id."
 )
 def downstream_api():
-    print_workflow_info('KFP_RUN_NAME').add_env_variable(k8s_client.V1EnvVar(
+    print_workflow_info().add_env_variable(k8s_client.V1EnvVar(
         name='KFP_RUN_NAME',
         value_from=k8s_client.V1EnvVarSource(
             field_ref=k8s_client.V1ObjectFieldSelector(
                 field_path="metadata.annotations['pipelines.kubeflow.org/run_name']"
             )
         )
-    ))
-    print_workflow_info('KFP_RUN_ID').add_env_variable(k8s_client.V1EnvVar(
+    )).add_env_variable(k8s_client.V1EnvVar(
         name='KFP_RUN_ID',
         value_from=k8s_client.V1EnvVarSource(
             field_ref=k8s_client.V1ObjectFieldSelector(
