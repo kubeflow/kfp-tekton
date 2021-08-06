@@ -1,6 +1,6 @@
-# Retrieve KFP metadata using Kubernetes downstream API
+# Retrieve KFP run metadata using Kubernetes downstream API
 
-KFP-Tekton by default comes with a lot of the pipeline metadata that are avalible as part of the pipeline execution pod. However, in order to get those metadata inside the pipeline, users need to leveage the [Kubernetes downstream API](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/) feature. This pipeline is a basic example using Kubernete downstream API to get KFP run_name and run_id as environment variables inside the pipeline.
+KFP-Tekton by default comes with a lot of the pipeline run metadata that are avalible as part of the pipeline execution pod. However, in order to get those metadata inside the pipeline, users need to leveage the [Kubernetes downstream API](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/) feature. This pipeline is a basic example using Kubernete downstream API to get KFP run_name and run_id as environment variables inside the pipeline.
 
 ## Prerequisites
 - Install [KFP Tekton prerequisites](/samples/README.md)

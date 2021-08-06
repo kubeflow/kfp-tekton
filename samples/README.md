@@ -29,4 +29,4 @@ If you are interested more in the larger list of pipelines samples we are testin
 + [Pipeline with Nested loops](/samples/nested-loops)
 + [Using Tekton Custom Task on KFP](/samples/tekton-custom-task)
 + [The flip-coin pipeline using custom task](/samples/flip-coin-custom-task)
-+ [Retrieve KFP metadata using Kubernetes downstream API](/samples/k8s-downstream-api)
++ [Retrieve KFP run metadata using Kubernetes downstream API](/samples/k8s-downstream-api)
