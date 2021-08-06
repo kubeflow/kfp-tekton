@@ -6,7 +6,7 @@ If you are interested more in the larger list of pipelines samples we are testin
 [KFP Tekton User Guide](/guides/kfp-user-guide) is a guideline for the possible ways to develop and consume Kubeflow Pipeline with Tekton. It's recommended to go over at least one of the methods in the user guide before heading into the KFP Tekton Samples.
 
 ## Prerequisites
-- Install [Kubeflow 1.3+ with KFP Tekton backend](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#installation) or install [standalone kfp-tekton 0.7.0+](/guides/kfp_tekton_install.md#standalone-kubeflow-pipelines-with-tekton-backend-deployment). Then connect the cluster to the current shell with `kubectl`
+- Install [Kubeflow 1.3+ with KFP Tekton backend](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#installation) or install [standalone kfp-tekton 0.8.0+](/guides/kfp_tekton_install.md#standalone-kubeflow-pipelines-with-tekton-backend-deployment). Then connect the cluster to the current shell with `kubectl`
 - Install [kfp-tekton](/sdk/README.md) SDK
     ```
     # Set up the python virtual environment
@@ -29,3 +29,4 @@ If you are interested more in the larger list of pipelines samples we are testin
 + [Pipeline with Nested loops](/samples/nested-loops)
 + [Using Tekton Custom Task on KFP](/samples/tekton-custom-task)
 + [The flip-coin pipeline using custom task](/samples/flip-coin-custom-task)
++ [Retrieve KFP metadata using Kubernetes downstream API](/samples/k8s-downstream-api)
