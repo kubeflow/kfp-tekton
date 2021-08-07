@@ -17,17 +17,17 @@ kind: PipelineRun
 metadata:
   name: double-recursion-test
   annotations:
-    tekton.dev/output_artifacts: '{}'
+    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/output.tgz",
+      "name": "print-output", "path": "/tmp/outputs/output/data"}]}'
     tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-3-outcome", "parent_task":
       "condition-cel-3"}, {"name": "condition-cel-outcome", "parent_task": "condition-cel"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"print": []}'
+    tekton.dev/artifact_items: '{"print": [["output", "$(results.output.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[3, 1, 4, 9, 2]",
-      "name": "array", "optional": true, "type": "typing.List[int]"}], "name": "double-recursion
-      test"}'
+      "name": "array", "optional": true, "type": "typing.List[int]"}], "name": "double-recursion-test"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "double-recursion-test-graph-recur-a-2"},
       "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
@@ -72,16 +72,19 @@ metadata:
       [{"name": "condition-cel-3-outcome", "value": "$(params.condition-cel-3-outcome)"},
       {"name": "condition-cel-outcome", "value": "$(params.condition-cel-outcome)"}],
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
-      "{\"implementation\": {\"container\": {\"command\": [\"echo\", {\"inputValue\":
-      \"msg\"}], \"image\": \"alpine:3.6\"}}, \"inputs\": [{\"name\": \"msg\"}], \"name\":
-      \"print\", \"outputs\": [{\"name\": \"stdout\"}]}", "tekton.dev/template": ""},
-      "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
-      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "condition-cel-3-outcome",
-      "type": "string"}, {"name": "condition-cel-outcome", "type": "string"}], "steps":
-      [{"command": ["echo", "Iter A: $(inputs.params.condition-cel-outcome), B: $(inputs.params.condition-cel-3-outcome)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "0s"}, {"name": "condition-cel-6",
-      "params": [{"name": "outcome", "value": "$(params.condition-cel-3-outcome) +
-      1"}], "runAfter": ["print"], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
+      "{\"implementation\": {\"container\": {\"command\": [\"sh\", \"-c\", \"echo
+      $0 | tee $1\\n\", {\"inputValue\": \"msg\"}, {\"outputPath\": \"output\"}],
+      \"image\": \"alpine:3.6\"}}, \"inputs\": [{\"name\": \"msg\", \"type\": \"String\"}],
+      \"name\": \"print\", \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}]}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "params": [{"name": "condition-cel-3-outcome", "type": "string"}, {"name":
+      "condition-cel-outcome", "type": "string"}], "results": [{"description": "/tmp/outputs/output/data",
+      "name": "output"}], "steps": [{"command": ["sh", "-c", "echo $0 | tee $1\n",
+      "Iter A: $(inputs.params.condition-cel-outcome), B: $(inputs.params.condition-cel-3-outcome)",
+      "$(results.output.path)"], "image": "alpine:3.6", "name": "main"}]}, "timeout":
+      "0s"}, {"name": "condition-cel-6", "params": [{"name": "outcome", "value": "$(params.condition-cel-3-outcome)
+      + 1"}], "runAfter": ["print"], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
       "kind": "CEL", "name": "cel_condition"}}, {"name": "condition-cel-7", "params":
       [{"name": "outcome", "value": "$(tasks.condition-cel-6.results.outcome) < $(params.condition-cel-4-outcome)"}],
       "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name":

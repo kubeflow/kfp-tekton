@@ -26,14 +26,16 @@ metadata:
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
       \"c\"]", "name": "arr", "optional": true, "type": "typing.List[str]"}], "name":
-      "Some very long name with lots of words in it. It should be over 63 chars long
-      in order to observe the problem."}'
+      "some-very-long-name-with-lots-of-words-in-it-it-should-be-over-63-chars-long-in-order-to-observe-the-problem"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "some-very-long-name-with-lots-of-words-i-for-loop-1"},
       "spec": {"iterateParam": "arr-loop-item", "pipelineSpec": {"params": [{"name":
       "arr-loop-item", "type": "string"}], "tasks": [{"name": "print", "params": [{"name":
       "arr-loop-item", "value": "$(params.arr-loop-item)"}], "taskSpec": {"metadata":
-      {"annotations": {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"description\":
+      \"print\", \"implementation\": {\"container\": {\"command\": [\"echo\", {\"inputValue\":
+      \"msg\"}], \"image\": \"alpine:3.6\"}}, \"inputs\": [{\"name\": \"msg\", \"type\":
+      \"String\"}], \"name\": \"print\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "arr-loop-item", "type": "string"}], "steps": [{"command":
       ["echo", "$(inputs.params.arr-loop-item)"], "image": "alpine:3.6", "name": "main"}]},

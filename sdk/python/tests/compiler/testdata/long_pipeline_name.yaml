@@ -26,8 +26,7 @@ metadata:
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
       \"c\"]", "name": "arr", "optional": true, "type": "typing.List[str]"}], "name":
-      "Some very long name with lots of words in it. It should be over 63 chars long
-      in order to observe the problem."}'
+      "some-very-long-name-with-lots-of-words-in-it-it-should-be-over-63-chars-long-in-order-to-observe-the-problem"}'
 spec:
   params:
   - name: arr
@@ -70,6 +69,10 @@ spec:
                     pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
+                    pipelines.kubeflow.org/component_spec: '{"description": "print",
+                      "implementation": {"container": {"command": ["echo", {"inputValue":
+                      "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg",
+                      "type": "String"}], "name": "print"}'
                     tekton.dev/template: ''
               timeout: 0s
           iterateParam: arr-loop-item

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp.dsl as dsl
+from kfp import dsl, components
 from kfp_tekton.compiler import TektonCompiler
 
 
@@ -25,29 +25,61 @@ TektonCompiler._get_unique_id_code = Coder.empty
 
 
 @dsl.pipeline(name='para-loop-pipeline')
-def pipeline(my_pipe_param='10'):
+def pipeline(my_pipe_param: str = '10'):
     loop_args = [1, 2, 3]
     with dsl.ParallelFor(loop_args=loop_args, parallelism=5) as item:
-        op1 = dsl.ContainerOp(
-            name="para-loop-inner-op1",
-            image="library/bash:4.4.23",
-            command=["sh", "-c"],
-            arguments=["echo op1 %s %s" % (item, my_pipe_param)],
-        )
+        op1 = components.load_component_from_text("""
+        name: para-loop-inner-op1
+        description: para-loop-inner-op1
+        inputs:
+          - {name: input1, type: Integer}
+          - {name: input2, type: String}
+        implementation:
+          container:
+            image: library/bash:4.4.23
+            command:
+            - sh
+            - -c
+            args:
+            - |
+              echo op1 $0 $1
+            - {inputValue: input1}
+            - {inputValue: input2}
+        """)(input1=item, input2=my_pipe_param)
 
-        op2 = dsl.ContainerOp(
-            name="para-loop-inner-op2",
-            image="library/bash:4.4.23",
-            command=["sh", "-c"],
-            arguments=["echo op2 %s" % item],
-        )
+        op2 = components.load_component_from_text("""
+        name: para-loop-inner-op2
+        description: para-loop-inner-op2
+        inputs:
+          - {name: input1, type: Integer}
+        implementation:
+          container:
+            image: library/bash:4.4.23
+            command:
+            - sh
+            - -c
+            args:
+            - |
+              echo op2 $0
+            - {inputValue: input1}
+        """)(input1=item)
 
-    op_out = dsl.ContainerOp(
-        name="para-loop-out-op",
-        image="library/bash:4.4.23",
-        command=["sh", "-c"],
-        arguments=["echo %s" % my_pipe_param],
-    )
+    op_out = components.load_component_from_text("""
+    name: para-loop-out-op
+    description: para-loop-out-op
+    inputs:
+      - {name: input1, type: String}
+    implementation:
+      container:
+        image: library/bash:4.4.23
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          echo $0
+        - {inputValue: input1}
+    """)(input1=my_pipe_param)
 
 
 if __name__ == '__main__':

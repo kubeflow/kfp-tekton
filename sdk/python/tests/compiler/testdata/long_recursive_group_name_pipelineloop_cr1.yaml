@@ -15,7 +15,7 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: pipeline-the-name-of-which-is-exactly-51-e5fc0-51-chars-long-1
+  name: pipeline-the-name-of-which-is-exactly-51-51-chars-long-1
 spec:
   pipelineSpec:
     params:
@@ -72,7 +72,7 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: pipeline-the-name-of-which-is-exactly-51-e5fc0-51-chars-long-1
+        name: pipeline-the-name-of-which-is-exactly-51-51-chars-long-1
       params:
       - name: just_one_iteration
         value:

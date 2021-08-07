@@ -27,37 +27,38 @@ TektonCompiler._get_unique_id_code = Coder.empty
 produce_op = kfp.components.load_component_from_text('''\
 name: Produce list
 outputs:
-- name: data_list
+- {name: data_list, type: List}
 implementation:
   container:
     image: busybox
     command:
     - sh
     - -c
-    - echo "[1, 2, 3]" > "$0"
-    - outputPath: data_list
+    - |
+      echo "[1, 2, 3]" > "$0"
+    - {outputPath: data_list}
 ''')
 
 consume_op = kfp.components.load_component_from_text('''\
 name: Consume data
 inputs:
-- name: data
+- {name: data, type: Integer}
 implementation:
   container:
     image: busybox
     command:
     - echo
-    - inputValue: data
+    - {inputValue: data}
 ''')
 
 
 @dsl.pipeline(
-    name='Loop over lightweight output',
+    name='loop-over-lightweight-output',
     description='Test pipeline to verify functions of par loop.'
 )
 def pipeline():
     source_task = produce_op()
-    with dsl.ParallelFor(source_task.output) as item:
+    with dsl.ParallelFor(source_task.outputs['data_list']) as item:
         consume_op(item)
 
 
