@@ -46,11 +46,11 @@ def produce_list_of_ints() -> list:
 
 
 @func_to_container_op
-def consume(param1):
+def consume(param1: str):
     print(param1)
 
 
-@kfp.dsl.pipeline()
+@kfp.dsl.pipeline(name='parallelfor-item-argument-resolving')
 def parallelfor_item_argument_resolving():
     produce_str_task = produce_str()
     produce_list_of_strings_task = produce_list_of_strings()
@@ -58,18 +58,18 @@ def parallelfor_item_argument_resolving():
     produce_list_of_dicts_task = produce_list_of_dicts()
 
     with kfp.dsl.ParallelFor(produce_list_of_strings_task.output) as loop_item:
-        consume(produce_list_of_strings_task.output)
-        consume(loop_item)
-        consume(produce_str_task.output)
+        consume(str(produce_list_of_strings_task.output))
+        consume(str(loop_item))
+        consume(str(produce_str_task.output))
 
     with kfp.dsl.ParallelFor(produce_list_of_ints_task.output) as loop_item:
-        consume(produce_list_of_ints_task.output)
-        consume(loop_item)
+        consume(str(produce_list_of_ints_task.output))
+        consume(str(loop_item))
 
     with kfp.dsl.ParallelFor(produce_list_of_dicts_task.output) as loop_item:
-        consume(produce_list_of_dicts_task.output)
+        consume(str(produce_list_of_dicts_task.output))
         # consume(loop_item) # Cannot use the full loop item when it's a dict
-        consume(loop_item.aaa)
+        consume(str(loop_item.aaa))
 
 
 if __name__ == '__main__':

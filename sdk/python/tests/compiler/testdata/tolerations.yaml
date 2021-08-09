@@ -18,7 +18,7 @@ metadata:
   name: tolerations
   annotations:
     tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/downloaded.tgz",
-      "name": "download-downloaded", "path": "/tmp/results.txt"}]}'
+      "name": "download-downloaded", "path": "/tmp/outputs/downloaded/data"}]}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
@@ -35,20 +35,26 @@ spec:
         steps:
         - name: main
           args:
-          - sleep 10; wget localhost:5678 -O $(results.downloaded.path)
+          - |
+            sleep 10; wget localhost:5678 -O $0
+          - $(results.downloaded.path)
           command:
           - sh
           - -c
           image: busybox
         results:
         - name: downloaded
-          description: /tmp/results.txt
+          description: /tmp/outputs/downloaded/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "download", "implementation":
+              {"container": {"args": ["sleep 10; wget localhost:5678 -O $0\n", {"outputPath":
+              "downloaded"}], "command": ["sh", "-c"], "image": "busybox"}}, "name":
+              "download", "outputs": [{"name": "downloaded", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
   taskRunSpecs:

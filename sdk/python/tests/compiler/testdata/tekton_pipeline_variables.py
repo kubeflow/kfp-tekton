@@ -12,27 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 from kfp_tekton.compiler import TektonCompiler
 
 
 @dsl.pipeline(
-    name="Tekton Pipeline Variables",
+    name="tekton-pipeline-variables",
     description="Tests for Tekton Pipeline Variables",
 )
 def tekton_pipeline_variables(
 ):
-    task1 = dsl.ContainerOp(
-        name="task1",
-        image="registry.access.redhat.com/ubi8/ubi-minimal",
-        command=["/bin/bash", "-c"],
-        arguments=["echo \
-            Pipeline name: $(context.pipeline.name), \
-            PipelineRun name: $(context.pipelineRun.name), \
-            PipelineRun namespace: $(context.pipelineRun.namespace), \
-            pipelineRun id: $(context.pipelineRun.uid)"
-        ]
-    )
+    task1 = components.load_component_from_text("""
+    name: task1
+    description: task1
+    implementation:
+      container:
+        image: registry.access.redhat.com/ubi8/ubi-minimal
+        command:
+        - /bin/bash
+        - -c
+        args:
+        - |
+          echo Pipeline name: $(context.pipeline.name), \
+          PipelineRun name: $(context.pipelineRun.name), \
+          PipelineRun namespace: $(context.pipelineRun.namespace), \
+          pipelineRun id: $(context.pipelineRun.uid)
+    """)()
 
 
 if __name__ == "__main__":

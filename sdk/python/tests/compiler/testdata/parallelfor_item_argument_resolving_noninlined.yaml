@@ -39,7 +39,7 @@ metadata:
       "$(results.output.path)"]], "produce-list-of-strings": [["Output", "$(results.output.path)"]],
       "produce-str": [["Output", "$(results.output.path)"]]}'
     sidecar.istio.io/inject: "false"
-    pipelines.kubeflow.org/pipeline_spec: '{"name": "Parallelfor item argument resolving"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "parallelfor-item-argument-resolving"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "parallelfor-item-argument-resolving-for-loop-1"},
       "spec": {"iterateParam": "produce-list-of-strings-Output-loop-item", "pipelineSpec":
@@ -55,8 +55,8 @@ metadata:
       description='''')\\n_parser.add_argument(\\\"--param1\\\", dest=\\\"param1\\\",
       type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args = vars(_parser.parse_args())\\n\\n_outputs
       = consume(**_parsed_args)\\n\"], \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\":
-      \"param1\"}], \"name\": \"Consume\"}", "tekton.dev/template": ""}, "labels":
-      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      \"param1\", \"type\": \"String\"}], \"name\": \"Consume\"}", "tekton.dev/template":
+      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
       "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "produce-list-of-strings-Output",
       "type": "string"}], "steps": [{"args": ["--param1", "$(inputs.params.produce-list-of-strings-Output)"],
       "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
@@ -74,8 +74,8 @@ metadata:
       = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\"--param1\\\",
       dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args
       = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\n\"],
-      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\"}], \"name\":
-      \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\", \"type\": \"String\"}],
+      \"name\": \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "produce-list-of-strings-Output-loop-item", "type":
       "string"}], "steps": [{"args": ["--param1", "$(inputs.params.produce-list-of-strings-Output-loop-item)"],
@@ -94,8 +94,8 @@ metadata:
       description='''')\\n_parser.add_argument(\\\"--param1\\\", dest=\\\"param1\\\",
       type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args = vars(_parser.parse_args())\\n\\n_outputs
       = consume(**_parsed_args)\\n\"], \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\":
-      \"param1\"}], \"name\": \"Consume\"}", "tekton.dev/template": ""}, "labels":
-      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      \"param1\", \"type\": \"String\"}], \"name\": \"Consume\"}", "tekton.dev/template":
+      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
       "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "produce-str-Output",
       "type": "string"}], "steps": [{"args": ["--param1", "$(inputs.params.produce-str-Output)"],
       "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
@@ -117,8 +117,8 @@ metadata:
       = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\"--param1\\\",
       dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args
       = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\n\"],
-      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\"}], \"name\":
-      \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\", \"type\": \"String\"}],
+      \"name\": \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "produce-list-of-ints-Output", "type": "string"}],
       "steps": [{"args": ["--param1", "$(inputs.params.produce-list-of-ints-Output)"],
@@ -137,8 +137,8 @@ metadata:
       = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\"--param1\\\",
       dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args
       = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\n\"],
-      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\"}], \"name\":
-      \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\", \"type\": \"String\"}],
+      \"name\": \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "produce-list-of-ints-Output-loop-item", "type": "string"}],
       "steps": [{"args": ["--param1", "$(inputs.params.produce-list-of-ints-Output-loop-item)"],
@@ -161,8 +161,8 @@ metadata:
       argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\"--param1\\\",
       dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args
       = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\n\"],
-      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\"}], \"name\":
-      \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\", \"type\": \"String\"}],
+      \"name\": \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "produce-list-of-dicts-Output", "type": "string"}],
       "steps": [{"args": ["--param1", "$(inputs.params.produce-list-of-dicts-Output)"],
@@ -181,8 +181,8 @@ metadata:
       = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\"--param1\\\",
       dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args
       = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\n\"],
-      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\"}], \"name\":
-      \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\", \"type\": \"String\"}],
+      \"name\": \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "produce-list-of-dicts-Output-loop-item-subvar-aaa",
       "type": "string"}], "steps": [{"args": ["--param1", "$(inputs.params.produce-list-of-dicts-Output-loop-item-subvar-aaa)"],

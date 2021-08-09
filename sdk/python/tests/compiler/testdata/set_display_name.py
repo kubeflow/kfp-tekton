@@ -12,16 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
 
 def echo_op():
-    return dsl.ContainerOp(
-        name='echo',
-        image='busybox',
-        command=['sh', '-c'],
-        arguments=['echo "Got scheduled"']
-    )
+    return components.load_component_from_text("""
+    name: echo
+    description: echo
+    implementation:
+      container:
+        image: busybox
+        command:
+        - sh
+        - -c
+        args:
+        - echo
+        - Got scheduled
+    """)()
 
 
 @dsl.pipeline(

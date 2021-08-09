@@ -12,33 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 from kfp_tekton.tekton import CEL_ConditionOp
 
 
 def flip_coin_op():
     """Flip a coin and output heads or tails randomly."""
-    return dsl.ContainerOp(
-        name='Flip coin',
-        image='python:alpine3.6',
-        command=['sh', '-c'],
-        arguments=['python -c "import random; result = \'heads\' if random.randint(0,1) == 0 '
-                  'else \'tails\'; print(result)" | tee /tmp/output_result'],
-        file_outputs={'output_result': '/tmp/output_result'}
-    )
+    return components.load_component_from_text("""
+    name: flip-coin
+    description: Flip coin
+    outputs:
+      - {name: output_result, type: String}
+    implementation:
+      container:
+        image: python:alpine3.6
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          python -c "import random; result = 'heads' if random.randint(0,1) == 0 \
+          else 'tails'; print(result)" | tee $0
+        - {outputPath: output_result}
+    """)()
 
 
-def print_op(msg):
+def print_op(msg: str):
     """Print a message."""
-    return dsl.ContainerOp(
-        name='Print',
-        image='alpine:3.6',
-        command=['echo', msg],
-    )
+    return components.load_component_from_text("""
+    name: print
+    description: Print
+    inputs:
+      - {name: msg, type: String}
+    implementation:
+      container:
+        image: alpine:3.6
+        command:
+        - echo
+        - {inputValue: msg}
+    """)(msg=msg)
 
 
 @dsl.pipeline(
-    name='Tekton custom task on Kubeflow Pipeline',
+    name='tekton-custom-task-on-kubeflow-pipeline',
     description='Shows how to use Tekton custom task with KFP'
 )
 def custom_task_pipeline():
@@ -51,4 +67,3 @@ def custom_task_pipeline():
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(custom_task_pipeline, __file__.replace('.py', '.yaml'))
-

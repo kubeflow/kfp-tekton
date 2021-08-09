@@ -17,18 +17,18 @@ kind: PipelineRun
 metadata:
   name: sidecar
   annotations:
-    tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/downloaded.tgz",
-      "name": "download-downloaded", "path": "/tmp/results.txt"}]}'
-    tekton.dev/input_artifacts: '{"echo": [{"name": "download-downloaded", "parent_task":
+    tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/download.tgz",
+      "name": "download-download", "path": "/tmp/outputs/download/data"}]}'
+    tekton.dev/input_artifacts: '{"echo": [{"name": "download-download", "parent_task":
       "download"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"download": [["downloaded", "$(results.downloaded.path)"]],
+    tekton.dev/artifact_items: '{"download": [["download", "$(results.download.path)"]],
       "echo": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with sidecars.",
-      "name": "Sidecar"}'
+      "name": "sidecar"}'
 spec:
   pipelineSpec:
     tasks:
@@ -37,48 +37,54 @@ spec:
         steps:
         - name: main
           args:
-          - sleep 10; wget localhost:5678 -O $(results.downloaded.path)
+          - |
+            sleep 10; wget localhost:5678 -O $0
+          - $(results.download.path)
           command:
           - sh
           - -c
           image: busybox
         results:
-        - name: downloaded
-          description: /tmp/results.txt
-        sidecars:
-        - args:
-          - -text="hello world"
-          image: hashicorp/http-echo
-          name: echo
+        - name: download
+          description: /tmp/outputs/download/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "download", "implementation":
+              {"container": {"args": ["sleep 10; wget localhost:5678 -O $0\n", {"outputPath":
+              "download"}], "command": ["sh", "-c"], "image": "busybox"}}, "name":
+              "download", "outputs": [{"name": "download", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: echo
       params:
-      - name: download-downloaded
-        value: $(tasks.download.results.downloaded)
+      - name: download-download
+        value: $(tasks.download.results.download)
       taskSpec:
         steps:
         - name: main
           args:
-          - echo $(inputs.params.download-downloaded)
+          - echo
+          - $(inputs.params.download-download)
           command:
           - sh
           - -c
           image: library/bash
         params:
-        - name: download-downloaded
+        - name: download-download
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "echo", "implementation":
+              {"container": {"args": ["echo", {"inputValue": "msg"}], "command": ["sh",
+              "-c"], "image": "library/bash"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "echo"}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

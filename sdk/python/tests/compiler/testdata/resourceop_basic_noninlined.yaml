@@ -15,7 +15,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: resourceop-basic
+  name: resource-op-basic
   annotations:
     tekton.dev/output_artifacts: '{}'
     tekton.dev/input_artifacts: '{}'
@@ -25,7 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{"test-step": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on ResourceOp
-      Usage.", "name": "ResourceOp Basic"}'
+      Usage.", "name": "resource-op-basic"}'
 spec:
   pipelineSpec:
     tasks:

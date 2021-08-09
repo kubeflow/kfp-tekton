@@ -18,9 +18,9 @@ metadata:
   name: tekton-custom-task-on-kubeflow-pipeline
   annotations:
     tekton.dev/output_artifacts: '{"flip-coin": [{"key": "artifacts/$PIPELINERUN/flip-coin/output_result.tgz",
-      "name": "flip-coin-output_result", "path": "/tmp/output_result"}], "flip-coin-2":
-      [{"key": "artifacts/$PIPELINERUN/flip-coin-2/output_result.tgz", "name": "flip-coin-2-output_result",
-      "path": "/tmp/output_result"}]}'
+      "name": "flip-coin-output_result", "path": "/tmp/outputs/output_result/data"}],
+      "flip-coin-2": [{"key": "artifacts/$PIPELINERUN/flip-coin-2/output_result.tgz",
+      "name": "flip-coin-2-output_result", "path": "/tmp/outputs/output_result/data"}]}'
     tekton.dev/input_artifacts: '{"print": [{"name": "condition-cel-outcome", "parent_task":
       "condition-cel"}]}'
     tekton.dev/artifact_bucket: mlpipeline
@@ -31,7 +31,7 @@ metadata:
       []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
-      custom task with KFP", "name": "Tekton custom task on Kubeflow Pipeline"}'
+      custom task with KFP", "name": "tekton-custom-task-on-kubeflow-pipeline"}'
 spec:
   pipelineSpec:
     tasks:
@@ -40,21 +40,28 @@ spec:
         steps:
         - name: main
           args:
-          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
-            else 'tails'; print(result)" | tee $(results.output-result.path)
+          - |
+            python -c "import random; result = 'heads' if random.randint(0,1) == 0           else 'tails'; print(result)" | tee $0
+          - $(results.output-result.path)
           command:
           - sh
           - -c
           image: python:alpine3.6
         results:
         - name: output-result
-          description: /tmp/output_result
+          description: /tmp/outputs/output_result/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Flip coin", "implementation":
+              {"container": {"args": ["python -c \"import random; result = ''heads''
+              if random.randint(0,1) == 0           else ''tails''; print(result)\"
+              | tee $0\n", {"outputPath": "output_result"}], "command": ["sh", "-c"],
+              "image": "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name":
+              "output_result", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: flip-coin-2
@@ -62,21 +69,28 @@ spec:
         steps:
         - name: main
           args:
-          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
-            else 'tails'; print(result)" | tee $(results.output-result.path)
+          - |
+            python -c "import random; result = 'heads' if random.randint(0,1) == 0           else 'tails'; print(result)" | tee $0
+          - $(results.output-result.path)
           command:
           - sh
           - -c
           image: python:alpine3.6
         results:
         - name: output-result
-          description: /tmp/output_result
+          description: /tmp/outputs/output_result/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Flip coin", "implementation":
+              {"container": {"args": ["python -c \"import random; result = ''heads''
+              if random.randint(0,1) == 0           else ''tails''; print(result)\"
+              | tee $0\n", {"outputPath": "output_result"}], "command": ["sh", "-c"],
+              "image": "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name":
+              "output_result", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: condition-cel
@@ -106,6 +120,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Print", "implementation":
+              {"container": {"command": ["echo", {"inputValue": "msg"}], "image":
+              "alpine:3.6"}}, "inputs": [{"name": "msg", "type": "String"}], "name":
+              "print"}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 from kfp_tekton.compiler import TektonCompiler
 
 
@@ -26,30 +26,46 @@ TektonCompiler._get_unique_id_code = Coder.empty
 
 def flip_coin_op():
     """Flip a coin and output heads or tails randomly."""
-    return dsl.ContainerOp(
-        name='Flip coin',
-        image='python:alpine3.6',
-        command=['sh', '-c'],
-        arguments=['python -c "import random; result = \'heads\' if random.randint(0,1) == 0 '
-                   'else \'tails\'; print(result)" | tee /tmp/output'],
-        file_outputs={'output': '/tmp/output'}
-    )
+    return components.load_component_from_text("""
+    name: flip-coin
+    description: flip coin
+    outputs:
+      - {name: output, type: String}
+    implementation:
+      container:
+        image: python:alpine3.6
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          python -c "import random; result = \'heads\' if random.randint(0,1) == 0 \
+          else 'tails'; print(result)" | tee $0
+        - {outputPath: output}
+    """)()
 
 
-def print_op(msg):
+def print_op(msg: str):
     """Print a message."""
-    return dsl.ContainerOp(
-        name='Print',
-        image='alpine:3.6',
-        command=['echo', msg],
-    )
+    return components.load_component_from_text("""
+    name: print
+    description: print msg
+    inputs:
+      - {name: msg, type: String}
+    implementation:
+      container:
+        image: alpine:3.6
+        command:
+        - echo
+        - {inputValue: msg}
+    """)(msg=msg)
 
 
 @dsl.pipeline(
-    name='nested recursion pipeline',
+    name='nested-recursion-pipeline',
     description='shows how to use graph_component and nested recursion.'
 )
-def flipcoin(maxVal=12):
+def flipcoin(maxVal: int = 12):
   @dsl._component.graph_component
   def flip_component(flip_result, maxVal):
     @dsl._component.graph_component

@@ -25,7 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{"task1": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Tests for Tekton Pipeline
-      Variables", "name": "Tekton Pipeline Variables"}'
+      Variables", "name": "tekton-pipeline-variables"}'
 spec:
   pipelineSpec:
     tasks:
@@ -33,20 +33,39 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args: ['echo             Pipeline name: $(params.pipeline-name),             PipelineRun
-              name: $(params.pipelineRun-name),             PipelineRun namespace:
-              $(params.pipelineRun-namespace),             pipelineRun id: $(params.pipelineRun-uid)']
-          command: [/bin/bash, -c]
+          args:
+          - |
+            echo Pipeline name: $(params.pipeline-name),           PipelineRun name: $(params.pipelineRun-name),           PipelineRun namespace: $(params.pipelineRun-namespace),           pipelineRun id: $(params.pipelineRun-uid)
+          command:
+          - /bin/bash
+          - -c
           image: registry.access.redhat.com/ubi8/ubi-minimal
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "task1", "implementation":
+              {"container": {"args": ["echo Pipeline name: $(context.pipeline.name),           PipelineRun
+              name: $(context.pipelineRun.name),           PipelineRun namespace:
+              $(context.pipelineRun.namespace),           pipelineRun id: $(context.pipelineRun.uid)\n"],
+              "command": ["/bin/bash", "-c"], "image": "registry.access.redhat.com/ubi8/ubi-minimal"}},
+              "name": "task1"}'
+            tekton.dev/template: ''
         params:
-        - {name: pipeline-name}
-        - {name: pipelineRun-name}
-        - {name: pipelineRun-namespace}
-        - {name: pipelineRun-uid}
+        - name: pipeline-name
+        - name: pipelineRun-name
+        - name: pipelineRun-namespace
+        - name: pipelineRun-uid
       timeout: 0s
       params:
-      - {name: pipeline-name, value: $(context.pipeline.name)}
-      - {name: pipelineRun-name, value: $(context.pipelineRun.name)}
-      - {name: pipelineRun-namespace, value: $(context.pipelineRun.namespace)}
-      - {name: pipelineRun-uid, value: $(context.pipelineRun.uid)}
+      - name: pipeline-name
+        value: $(context.pipeline.name)
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
+      - name: pipelineRun-namespace
+        value: $(context.pipelineRun.namespace)
+      - name: pipelineRun-uid
+        value: $(context.pipelineRun.uid)
   timeout: 0s

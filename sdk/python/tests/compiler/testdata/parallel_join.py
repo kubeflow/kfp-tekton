@@ -12,37 +12,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
 
-def gcs_download_op(url):
-    return dsl.ContainerOp(
-        name='GCS - Download',
-        image='google/cloud-sdk:279.0.0',
-        command=['sh', '-c'],
-        arguments=['gsutil cat $0 | tee $1', url, '/tmp/results.txt'],
-        file_outputs={
-            'data': '/tmp/results.txt',
-        }
-    )
+def gcs_download_op(url: str):
+    return components.load_component_from_text("""
+    name: gcs-download
+    description: GCS - Download
+    inputs:
+      - {name: url, type: String}
+    outputs:
+      - {name: data, type: String}
+    implementation:
+      container:
+        image: google/cloud-sdk:279.0.0
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          gsutil cat $0 | tee $1
+        - {inputValue: url}
+        - {outputPath: data}
+    """)(url=url)
 
 
-def echo2_op(text1, text2):
-    return dsl.ContainerOp(
-        name='echo',
-        image='library/bash:4.4.23',
-        command=['sh', '-c'],
-        arguments=['echo "Text 1: $0"; echo "Text 2: $1"', text1, text2]
-    )
+def echo2_op(text1: str, text2: str):
+    return components.load_component_from_text("""
+    name: echo
+    description: echo
+    inputs:
+      - {name: input1, type: String}
+      - {name: input2, type: String}
+    implementation:
+      container:
+        image: library/bash:4.4.23
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          echo "Text 1: $0"; echo "Text 2: $1"
+        - {inputValue: input1}
+        - {inputValue: input2}
+    """)(input1=text1, input2=text2)
 
 
 @dsl.pipeline(
-  name='Parallel pipeline',
+  name='parallel-pipeline',
   description='Download two messages in parallel and prints the concatenated result.'
 )
 def download_and_join(
-    url1='gs://ml-pipeline-playground/shakespeare1.txt',
-    url2='gs://ml-pipeline-playground/shakespeare2.txt'
+    url1: str = 'gs://ml-pipeline-playground/shakespeare1.txt',
+    url2: str = 'gs://ml-pipeline-playground/shakespeare2.txt'
 ):
     """A three-step pipeline with the first two steps running in parallel."""
 
