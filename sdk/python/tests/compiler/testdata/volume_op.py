@@ -13,13 +13,28 @@
 # limitations under the License.
 
 import kfp.dsl as dsl
+from kfp import components
+
+COP_STR = """
+name: cop
+implementation:
+  container:
+    image: library/bash:4.4.23
+    command:
+    - sh
+    - -c
+    args:
+    - echo foo > /mnt/file1
+"""
+
+cop_op = components.load_component_from_text(COP_STR)
 
 
 @dsl.pipeline(
-    name="VolumeOp Basic",
+    name="volumeop-basic",
     description="A Basic Example on VolumeOp Usage."
 )
-def volumeop_basic(size="10M"):
+def volumeop_basic(size: str = "10M"):
     vop = dsl.VolumeOp(
         name="create-pvc",
         resource_name="my-pvc",
@@ -29,13 +44,7 @@ def volumeop_basic(size="10M"):
         # failure_condition="status.phase = Failed"
     )
 
-    cop = dsl.ContainerOp(
-        name="cop",
-        image="library/bash:4.4.23",
-        command=["sh", "-c"],
-        arguments=["echo foo > /mnt/file1"],
-        pvolumes={"/mnt": vop.volume}
-    )
+    cop = cop_op().add_pvolumes({"/mnt": vop.volume})
 
 
 if __name__ == '__main__':

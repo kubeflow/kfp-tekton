@@ -18,7 +18,7 @@ metadata:
   name: volume
   annotations:
     tekton.dev/output_artifacts: '{"download": [{"key": "artifacts/$PIPELINERUN/download/downloaded.tgz",
-      "name": "download-downloaded", "path": "/tmp/results.txt"}]}'
+      "name": "download-downloaded", "path": "/tmp/outputs/downloaded/data"}]}'
     tekton.dev/input_artifacts: '{"echo": [{"name": "download-downloaded", "parent_task":
       "download"}]}'
     tekton.dev/artifact_bucket: mlpipeline
@@ -28,7 +28,7 @@ metadata:
       "echo": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with volume.",
-      "name": "Volume"}'
+      "name": "volume"}'
 spec:
   pipelineSpec:
     tasks:
@@ -37,7 +37,10 @@ spec:
         steps:
         - name: main
           args:
-          - ls | tee $(results.downloaded.path)
+          - |
+            set -e
+            ls | tee $0
+          - $(results.downloaded.path)
           command:
           - sh
           - -c
@@ -52,7 +55,7 @@ spec:
             name: gcp-credentials
         results:
         - name: downloaded
-          description: /tmp/results.txt
+          description: /tmp/outputs/downloaded/data
         volumes:
         - name: gcp-credentials
           secret:
@@ -63,6 +66,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["set -e\nls | tee $0\n", {"outputPath": "downloaded"}], "command":
+              ["sh", "-c"], "image": "google/cloud-sdk"}}, "name": "download", "outputs":
+              [{"name": "downloaded", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: echo
@@ -73,7 +80,10 @@ spec:
         steps:
         - name: main
           args:
-          - echo $(inputs.params.download-downloaded)
+          - |
+            set -e
+            echo
+          - $(inputs.params.download-downloaded)
           command:
           - sh
           - -c
@@ -86,6 +96,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["set -e\necho\n", {"inputValue": "msg"}], "command": ["sh",
+              "-c"], "image": "library/bash"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "echo"}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

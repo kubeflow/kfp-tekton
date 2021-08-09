@@ -388,13 +388,6 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.volume_op import volumeop_basic
     self._test_pipeline_workflow(volumeop_basic, 'volume_op.yaml')
 
-  def test_volumeSnapshotOp_workflow(self):
-    """
-    Test compiling a volumeSnapshotOp basic workflow.
-    """
-    from .testdata.volume_snapshot_op import volume_snapshotop_sequential
-    self._test_pipeline_workflow(volume_snapshotop_sequential, 'volume_snapshot_op.yaml')
-
   def test_hidden_output_file_workflow(self):
     """
     Test compiling a workflow with non configurable output file.
