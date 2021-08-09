@@ -26,7 +26,7 @@ and test pipelines found in the KFP repository.
   - [Features with the Same Behavior as Argo](#features-with-the-same-behavior-as-argo)
     - [InitContainers](#initcontainers)
     - [Conditions](#conditions)
-    - [ResourceOp, VolumeOp, and VolumeSnapshotOp](#resourceop-volumeop-and-volumesnapshotop)
+    - [ResourceOp and VolumeOp](#resourceop-and-volumeop)
     - [Output Parameters](#output-parameters)
     - [Input Artifacts](#input-artifacts)
     - [Output Artifacts](#output-artifacts)
@@ -214,17 +214,10 @@ is an example of how to use this feature.
 Conditions are used for determining whether to execute certain components based on the output of the condition checks. In KFP Argo, each condition is represented as an Argo DAG template so it can be used as a dependency for other Argo templates. To replicate this in KFP Tekton, we put our condition into a dedicated Tekton task so that conditions can be treated as a dependency for other Tekton tasks. Another advantage of creating conditions using Tekton tasks is that we can have more flexible conditions such as comparing an integer and a float number, which currently is not available in Tekton. We are using the Tekton [when expression](https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#guard-task-execution-using-whenexpressions) to check whether the condition task has succeeded or not. We created a custom python image to replicate the same condition checks that are in Argo and made it as the default in our compiler. The
 [flip-coin](/samples/flip-coin) example demonstrates how to use multiple conditions within the same pipeline.
 
-### ResourceOp, VolumeOp, and VolumeSnapshotOp
+### ResourceOp and VolumeOp
 
-[ResourceOp, VolumeOp, and VolumeSnapshotOp](https://www.kubeflow.org/docs/pipelines/sdk/manipulate-resources/) are special operations for
-creating Kubernetes resources on the pipeline cluster. ResourceOp is a basic operation for manipulating any Kubernetes resource. VolumeOp
-and VolumeSnapshotOp are operations for creating a unique Volume/VolumeSnapshot per pipeline and can be used as volume/snapshot with any pipeline ContainerOp. Because Tekton has no support for these features natively, we have to implement our own custom task called kubectl-wrapper for creating these Kubernetes resources. The [resourceop_basic](/sdk/python/tests/compiler/testdata/resourceop_basic.py),
-[volume_op](/sdk/python/tests/compiler/testdata/volume_op.py), and
-[volume_snapshot_op](/sdk/python/tests/compiler/testdata/volume_snapshot_op.py) python tests are examples of how to use these features.
-
-One thing to pay attention to is that VolumeSnapshot won't be available by default on all the supported Kubernetes versions. Therefore,
-[VolumeSnapshotDataSource feature gate](https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/) must be enabled
-in order to use VolumeSnapshotOp.
+[ResourceOp and VolumeOp](https://www.kubeflow.org/docs/pipelines/sdk/manipulate-resources/) are special operations for
+creating Kubernetes resources on the pipeline cluster. ResourceOp is a basic operation for manipulating any Kubernetes resource. VolumeOps are operations for creating a unique Volume per pipeline and can be used as volume with any pipeline ContainerOp. Because Tekton has no support for these features natively, we have to implement our own custom task called kubectl-wrapper for creating these Kubernetes resources. The [resourceop_basic](/sdk/python/tests/compiler/testdata/resourceop_basic.py) and [volume_op](/sdk/python/tests/compiler/testdata/volume_op.py) python tests are examples of how to use these features.
 
 ### Output Parameters
 
