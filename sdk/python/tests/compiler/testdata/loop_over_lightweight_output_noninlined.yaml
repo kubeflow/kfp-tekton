@@ -27,7 +27,7 @@ metadata:
       "$(results.data-list.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Test pipeline to verify
-      functions of par loop.", "name": "Loop over lightweight output"}'
+      functions of par loop.", "name": "loop-over-lightweight-output"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "loop-over-lightweight-output-for-loop-1"},
       "spec": {"iterateParam": "produce-list-data_list-loop-item", "pipelineSpec":
@@ -36,8 +36,8 @@ metadata:
       "value": "$(params.produce-list-data_list-loop-item)"}], "taskSpec": {"metadata":
       {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"implementation\":
       {\"container\": {\"command\": [\"echo\", {\"inputValue\": \"data\"}], \"image\":
-      \"busybox\"}}, \"inputs\": [{\"name\": \"data\"}], \"name\": \"Consume data\"}",
-      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      \"busybox\"}}, \"inputs\": [{\"name\": \"data\", \"type\": \"Integer\"}], \"name\":
+      \"Consume data\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "produce-list-data_list-loop-item", "type": "string"}],
       "steps": [{"command": ["echo", "$(inputs.params.produce-list-data_list-loop-item)"],
@@ -52,7 +52,8 @@ spec:
           command:
           - sh
           - -c
-          - echo "[1, 2, 3]" > "$0"
+          - |
+            echo "[1, 2, 3]" > "$0"
           - $(results.data-list.path)
           image: busybox
         results:
@@ -65,9 +66,9 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"command": ["sh", "-c", "echo \"[1, 2, 3]\" > \"$0\"", {"outputPath":
+              {"command": ["sh", "-c", "echo \"[1, 2, 3]\" > \"$0\"\n", {"outputPath":
               "data_list"}], "image": "busybox"}}, "name": "Produce list", "outputs":
-              [{"name": "data_list"}]}'
+              [{"name": "data_list", "type": "List"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - runAfter:

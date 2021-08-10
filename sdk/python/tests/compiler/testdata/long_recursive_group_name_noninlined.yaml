@@ -27,8 +27,7 @@ metadata:
     tekton.dev/artifact_items: '{"print-iter": [["output_value", "$(results.output-value.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "42", "name": "iter_num",
-      "optional": true, "type": "Integer"}], "name": "pipeline the name of which is
-      exactly 51 chars long"}'
+      "optional": true, "type": "Integer"}], "name": "pipeline-the-name-of-which-is-exactly-51-chars-long"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "pipeline-the-name-of-which-is-exactly-51-51-chars-long-1"},
       "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":

@@ -12,20 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
 
 def echo_op():
-    return dsl.ContainerOp(
-        name='echo',
-        image='busybox',
-        command=['sh', '-c'],
-        arguments=['echo "Found my node"']
-    )
+    return components.load_component_from_text("""
+    name: echo
+    description: echo
+    implementation:
+      container:
+        image: busybox
+        command:
+        - sh
+        - -c
+        args:
+        - echo
+        - Found my node
+    """)()
 
 
 @dsl.pipeline(
-    name='node_selector',
+    name='node-selector',
     description='A pipeline with Node Selector'
 )
 def node_selector_pipeline(
@@ -38,5 +45,4 @@ def node_selector_pipeline(
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(node_selector_pipeline, __file__.replace('.py', '.yaml'),
-                             generate_pipelinerun=True)
+    TektonCompiler().compile(node_selector_pipeline, __file__.replace('.py', '.yaml'))

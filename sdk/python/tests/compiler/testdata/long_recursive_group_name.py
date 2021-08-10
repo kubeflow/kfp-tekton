@@ -63,7 +63,7 @@ def function_the_name_of_which_is_exactly_51_chars_long(i: int):
     function_the_name_of_which_is_exactly_51_chars_long(decr_i)
 
 
-@dsl.pipeline("pipeline the name of which is exactly 51 chars long")
+@dsl.pipeline("pipeline-the-name-of-which-is-exactly-51-chars-long")
 def pipeline_the_name_of_which_is_exactly_51_chars_long(iter_num: int = 42):
   function_the_name_of_which_is_exactly_51_chars_long(iter_num)
 
@@ -75,4 +75,4 @@ if __name__ == '__main__':
   tekton_pipeline_conf.set_tekton_inline_spec(False)
   tekton_pipeline_conf.set_resource_in_separate_yaml(True)
   Compiler().compile(pipeline_the_name_of_which_is_exactly_51_chars_long,
-  __file__.replace('.py', '.yaml'), tekton_pipeline_conf=tekton_pipeline_conf)
+    __file__.replace('.py', '.yaml'), tekton_pipeline_conf=tekton_pipeline_conf)

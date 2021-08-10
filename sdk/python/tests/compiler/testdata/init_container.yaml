@@ -25,7 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{"hello": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with init container.",
-      "name": "InitContainer"}'
+      "name": "initcontainer"}'
 spec:
   pipelineSpec:
     tasks:
@@ -48,6 +48,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "A simple component",
+              "implementation": {"container": {"command": ["echo", "hello"], "image":
+              "alpine:latest"}}, "name": "hello"}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

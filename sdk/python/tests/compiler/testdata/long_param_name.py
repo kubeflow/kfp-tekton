@@ -12,35 +12,53 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 from kfp_tekton.compiler import TektonCompiler as Compiler
 
 
 def gcs_download_op(url):
-    return dsl.ContainerOp(
-        name='GCS - Download' * 4,
-        image='google/cloud-sdk:279.0.0',
-        command=['sh', '-c'],
-        arguments=['gsutil cat $0 | tee $1', url, '/tmp/results.txt'],
-        file_outputs={
-            'data' * 10: '/tmp/results.txt',
-        }
-    )
+    return components.load_component_from_text("""
+      name: %s
+      description: download
+      inputs:
+        - {name: url, type: String}
+      outputs:
+        - {name: %s, type: String}
+      implementation:
+        container:
+          image: google/cloud-sdk:279.0.0
+          command:
+          - sh
+          - -c
+          args:
+          - |
+            gsutil cat $0 | tee $1
+          - {inputValue: url}
+          - {outputPath: %s}
+    """ % ('GCS - Download' * 4, 'data' * 10, 'data' * 10))(url=url)
 
 
-class PrintOp(dsl.ContainerOp):
-    def __init__(self, name, msg):
-        super(PrintOp, self).__init__(
-            name=name,
-            image='alpine:3.6',
-            command=['echo', msg])
+print_op = components.load_component_from_text("""
+name:
+""")
 
 
-@dsl.pipeline(name="Some very long name with lots of words in it. " +
-                   "It should be over 63 chars long in order to observe the problem.")
-def main_fn(url1='gs://ml-pipeline-playground/shakespeare1.txt'):
+@dsl.pipeline(name="some-very-long-name-with-lots-of-words-in-it-" +
+                   "it-should-be-over-63-chars-long-in-order-to-observe-the-problem")
+def main_fn(url1: str = 'gs://ml-pipeline-playground/shakespeare1.txt'):
     download1_task = gcs_download_op(url1)
-    PrintOp('print' * 10, download1_task.output)
+    components.load_component_from_text("""
+      name: %s
+      description: print
+      inputs:
+        - {name: text, type: String}
+      implementation:
+        container:
+          image: alpine:3.6
+          command:
+          - echo
+          - {inputValue: text}
+    """ % ('print' * 10))(download1_task.outputs['data' * 10])
 
 
 if __name__ == '__main__':

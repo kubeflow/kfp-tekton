@@ -18,10 +18,10 @@ metadata:
   name: nested-recursion-pipeline
   annotations:
     tekton.dev/output_artifacts: '{"flip-coin": [{"key": "artifacts/$PIPELINERUN/flip-coin/output.tgz",
-      "name": "flip-coin-output", "path": "/tmp/output"}], "flip-coin-2": [{"key":
-      "artifacts/$PIPELINERUN/flip-coin-2/output.tgz", "name": "flip-coin-2-output",
-      "path": "/tmp/output"}], "flip-coin-3": [{"key": "artifacts/$PIPELINERUN/flip-coin-3/output.tgz",
-      "name": "flip-coin-3-output", "path": "/tmp/output"}]}'
+      "name": "flip-coin-output", "path": "/tmp/outputs/output/data"}], "flip-coin-2":
+      [{"key": "artifacts/$PIPELINERUN/flip-coin-2/output.tgz", "name": "flip-coin-2-output",
+      "path": "/tmp/outputs/output/data"}], "flip-coin-3": [{"key": "artifacts/$PIPELINERUN/flip-coin-3/output.tgz",
+      "name": "flip-coin-3-output", "path": "/tmp/outputs/output/data"}]}'
     tekton.dev/input_artifacts: '{"print": [{"name": "flip-coin-output", "parent_task":
       "flip-coin"}], "print-2": [{"name": "flip-coin-output", "parent_task": "flip-coin"}],
       "print-3": [{"name": "flip-coin-output", "parent_task": "flip-coin"}]}'
@@ -34,24 +34,33 @@ metadata:
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use graph_component
       and nested recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
-      true}], "name": "nested recursion pipeline"}'
+      true, "type": "Integer"}], "name": "nested-recursion-pipeline"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "nested-recursion-pipeline-flip-component-1"},
       "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
       "flip-coin-output", "type": "string"}, {"name": "just_one_iteration", "type":
       "string"}, {"name": "maxVal", "type": "string"}], "tasks": [{"name": "print-2",
       "params": [{"name": "flip-coin-output", "value": "$(params.flip-coin-output)"}],
-      "taskSpec": {"metadata": {"annotations": {"tekton.dev/template": ""}, "labels":
-      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
+      "{\"description\": \"print\", \"implementation\": {\"container\": {\"command\":
+      [\"echo\", {\"inputValue\": \"msg\"}], \"image\": \"alpine:3.6\"}}, \"inputs\":
+      [{\"name\": \"msg\", \"type\": \"String\"}], \"name\": \"print\"}", "tekton.dev/template":
+      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
       "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "flip-coin-output",
       "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.flip-coin-output)"],
       "image": "alpine:3.6", "name": "main"}]}, "timeout": "0s"}, {"name": "flip-coin-3",
       "runAfter": ["print-2", "nested-recursion-pipeline-ip-component-b-2"], "taskSpec":
-      {"metadata": {"annotations": {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "results": [{"description": "/tmp/output", "name": "output"}], "steps":
-      [{"args": ["python -c \"import random; result = ''heads'' if random.randint(0,1)
-      == 0 else ''tails''; print(result)\" | tee $(results.output.path)"], "command":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"description\":
+      \"flip coin\", \"implementation\": {\"container\": {\"args\": [\"python -c \\\"import
+      random; result = ''heads'' if random.randint(0,1) == 0           else ''tails'';
+      print(result)\\\" | tee $0\\n\", {\"outputPath\": \"output\"}], \"command\":
+      [\"sh\", \"-c\"], \"image\": \"python:alpine3.6\"}}, \"name\": \"flip-coin\",
+      \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}]}", "tekton.dev/template":
+      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      "", "pipelines.kubeflow.org/pipelinename": ""}}, "results": [{"description":
+      "/tmp/outputs/output/data", "name": "output"}], "steps": [{"args": ["python
+      -c \"import random; result = ''heads'' if random.randint(0,1) == 0           else
+      ''tails''; print(result)\" | tee $0\n", "$(results.output.path)"], "command":
       ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout": "0s",
       "when": [{"input": "$(tasks.condition-4.results.outcome)", "operator": "in",
       "values": ["true"]}]}, {"name": "condition-4", "params": [{"name": "operand1",
@@ -79,26 +88,35 @@ metadata:
       "type": "string"}, {"name": "just_one_iteration", "type": "string"}, {"name":
       "maxVal", "type": "string"}], "tasks": [{"name": "print", "params": [{"name":
       "flip-coin-output", "value": "$(params.flip-coin-output)"}], "taskSpec": {"metadata":
-      {"annotations": {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"description\":
+      \"print\", \"implementation\": {\"container\": {\"command\": [\"echo\", {\"inputValue\":
+      \"msg\"}], \"image\": \"alpine:3.6\"}}, \"inputs\": [{\"name\": \"msg\", \"type\":
+      \"String\"}], \"name\": \"print\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "flip-coin-output", "type": "string"}], "steps": [{"command":
       ["echo", "$(inputs.params.flip-coin-output)"], "image": "alpine:3.6", "name":
       "main"}]}, "timeout": "0s", "when": [{"input": "$(tasks.condition-3.results.outcome)",
       "operator": "in", "values": ["true"]}]}, {"name": "flip-coin-2", "runAfter":
-      ["print"], "taskSpec": {"metadata": {"annotations": {"tekton.dev/template":
-      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
-      "", "pipelines.kubeflow.org/pipelinename": ""}}, "results": [{"description":
-      "/tmp/output", "name": "output"}], "steps": [{"args": ["python -c \"import random;
-      result = ''heads'' if random.randint(0,1) == 0 else ''tails''; print(result)\"
-      | tee $(results.output.path)"], "command": ["sh", "-c"], "image": "python:alpine3.6",
-      "name": "main"}]}, "timeout": "0s", "when": [{"input": "$(tasks.condition-3.results.outcome)",
-      "operator": "in", "values": ["true"]}]}, {"name": "condition-3", "params": [{"name":
-      "operand1", "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value":
-      "heads"}, {"name": "operator", "value": "=="}], "taskSpec": {"params": [{"name":
-      "operand1", "type": "string"}, {"name": "operand2", "type": "string"}, {"name":
-      "operator", "type": "string"}], "results": [{"description": "Conditional task
-      outcome", "name": "outcome"}], "steps": [{"image": "python:alpine3.6", "script":
-      "python -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
+      ["print"], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
+      "{\"description\": \"flip coin\", \"implementation\": {\"container\": {\"args\":
+      [\"python -c \\\"import random; result = ''heads'' if random.randint(0,1) ==
+      0           else ''tails''; print(result)\\\" | tee $0\\n\", {\"outputPath\":
+      \"output\"}], \"command\": [\"sh\", \"-c\"], \"image\": \"python:alpine3.6\"}},
+      \"name\": \"flip-coin\", \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}]}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "results": [{"description": "/tmp/outputs/output/data", "name": "output"}],
+      "steps": [{"args": ["python -c \"import random; result = ''heads'' if random.randint(0,1)
+      == 0           else ''tails''; print(result)\" | tee $0\n", "$(results.output.path)"],
+      "command": ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout":
+      "0s", "when": [{"input": "$(tasks.condition-3.results.outcome)", "operator":
+      "in", "values": ["true"]}]}, {"name": "condition-3", "params": [{"name": "operand1",
+      "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "heads"},
+      {"name": "operator", "value": "=="}], "taskSpec": {"params": [{"name": "operand1",
+      "type": "string"}, {"name": "operand2", "type": "string"}, {"name": "operator",
+      "type": "string"}], "results": [{"description": "Conditional task outcome",
+      "name": "outcome"}], "steps": [{"image": "python:alpine3.6", "script": "python
+      -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
       \"w\")\nf.write(outcome)\nf.close()'' ''$(inputs.params.operand1)'' ''$(inputs.params.operand2)''"}]}},
       {"name": "flip-component-b", "params": [{"name": "flip-coin-output", "value":
@@ -121,21 +139,28 @@ spec:
         steps:
         - name: main
           args:
-          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
-            else 'tails'; print(result)" | tee $(results.output.path)
+          - |
+            python -c "import random; result = 'heads' if random.randint(0,1) == 0           else 'tails'; print(result)" | tee $0
+          - $(results.output.path)
           command:
           - sh
           - -c
           image: python:alpine3.6
         results:
         - name: output
-          description: /tmp/output
+          description: /tmp/outputs/output/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "flip coin", "implementation":
+              {"container": {"args": ["python -c \"import random; result = ''heads''
+              if random.randint(0,1) == 0           else ''tails''; print(result)\"
+              | tee $0\n", {"outputPath": "output"}], "command": ["sh", "-c"], "image":
+              "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name": "output",
+              "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: print-3
@@ -157,6 +182,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "print", "implementation":
+              {"container": {"command": ["echo", {"inputValue": "msg"}], "image":
+              "alpine:3.6"}}, "inputs": [{"name": "msg", "type": "String"}], "name":
+              "print"}'
             tekton.dev/template: ''
       runAfter:
       - nested-recursion-pipeline-flip-component-1

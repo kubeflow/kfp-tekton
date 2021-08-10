@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from typing import List
-from kfp import dsl
+from kfp import dsl, components
 from kfp_tekton.compiler import TektonCompiler as Compiler
 
 
@@ -25,19 +25,22 @@ class Coder:
 Compiler._get_unique_id_code = Coder.empty
 
 
-class PrintOp(dsl.ContainerOp):
-    def __init__(self, name, msg):
-        super(PrintOp, self).__init__(
-            name=name,
-            image='alpine:3.6',
-            command=['echo', msg])
-
-
-@dsl.pipeline(name="Some very long name with lots of words in it. " +
-                   "It should be over 63 chars long in order to observe the problem.")
+@dsl.pipeline(name="some-very-long-name-with-lots-of-words-in-it-" +
+                   "it-should-be-over-63-chars-long-in-order-to-observe-the-problem")
 def main_fn(arr: List[str] = ["a", "b", "c"]):
     with dsl.ParallelFor(arr) as it:
-        PrintOp('print', it)
+        components.load_component_from_text("""
+          name: print
+          description: print
+          inputs:
+            - {name: msg, type: String}
+          implementation:
+            container:
+              image: alpine:3.6
+              command:
+              - echo
+              - {inputValue: msg}
+        """)(msg=it)
 
 
 if __name__ == '__main__':

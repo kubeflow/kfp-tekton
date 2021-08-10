@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
 
 echo = dsl.UserContainer(
@@ -20,14 +20,23 @@ echo = dsl.UserContainer(
     image='alpine:latest',
     command=['echo', 'bye'])
 
+HELLO_STR = """
+name: hello
+description: A simple component
+implementation:
+  container:
+    image: alpine:latest
+    command:
+    - echo
+    - hello
+"""
+hello_op = components.load_component_from_text(HELLO_STR)
 
-@dsl.pipeline(name='InitContainer', description='A pipeline with init container.')
+
+@dsl.pipeline(name='initcontainer', description='A pipeline with init container.')
 def init_container_pipeline():
-    dsl.ContainerOp(
-        name='hello',
-        image='alpine:latest',
-        command=['echo', 'hello'],
-        init_containers=[echo])
+    hello_task = hello_op()
+    hello_task.add_init_container(echo)
 
 
 if __name__ == '__main__':

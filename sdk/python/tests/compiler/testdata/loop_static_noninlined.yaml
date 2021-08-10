@@ -26,26 +26,35 @@ metadata:
       [], "static-loop-out-op": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
-      "optional": true}], "name": "static-loop-pipeline"}'
+      "optional": true, "type": "String"}], "name": "static-loop-pipeline"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "static-loop-pipeline-for-loop-2"},
       "spec": {"iterateParam": "with-item-name", "pipelineSpec": {"params": [{"name":
       "with-item-name", "type": "string"}, {"name": "my_pipe_param", "type": "string"}],
       "tasks": [{"name": "static-loop-inner-op1", "params": [{"name": "with-item-name",
       "value": "$(params.with-item-name)"}, {"name": "my_pipe_param", "value": "$(params.my_pipe_param)"}],
-      "taskSpec": {"metadata": {"annotations": {"tekton.dev/template": ""}, "labels":
-      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
+      "{\"description\": \"static-loop-inner-op1\", \"implementation\": {\"container\":
+      {\"args\": [\"echo op1 $0 $1\\n\", {\"inputValue\": \"input1\"}, {\"inputValue\":
+      \"input2\"}], \"command\": [\"sh\", \"-c\"], \"image\": \"library/bash:4.4.23\"}},
+      \"inputs\": [{\"name\": \"input1\", \"type\": \"Integer\"}, {\"name\": \"input2\",
+      \"type\": \"String\"}], \"name\": \"static-loop-inner-op1\"}", "tekton.dev/template":
+      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
       "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "with-item-name",
       "type": "string"}, {"name": "my_pipe_param", "type": "string"}], "steps": [{"args":
-      ["echo op1 $(inputs.params.with-item-name) $(inputs.params.my_pipe_param)"],
+      ["echo op1 $0 $1\n", "$(inputs.params.with-item-name)", "$(inputs.params.my_pipe_param)"],
       "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
       "timeout": "0s"}, {"name": "static-loop-inner-op2", "params": [{"name": "with-item-name",
       "value": "$(params.with-item-name)"}], "taskSpec": {"metadata": {"annotations":
-      {"tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      {"pipelines.kubeflow.org/component_spec": "{\"description\": \"static-loop-inner-op2\",
+      \"implementation\": {\"container\": {\"args\": [\"echo op2 $0\\n\", {\"inputValue\":
+      \"input1\"}], \"command\": [\"sh\", \"-c\"], \"image\": \"library/bash:4.4.23\"}},
+      \"inputs\": [{\"name\": \"input1\", \"type\": \"Integer\"}], \"name\": \"static-loop-inner-op2\"}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "with-item-name", "type": "string"}], "steps": [{"args":
-      ["echo op2 $(inputs.params.with-item-name)"], "command": ["sh", "-c"], "image":
-      "library/bash:4.4.23", "name": "main"}]}, "timeout": "0s"}]}}}]'
+      ["echo op2 $0\n", "$(inputs.params.with-item-name)"], "command": ["sh", "-c"],
+      "image": "library/bash:4.4.23", "name": "main"}]}, "timeout": "0s"}]}}}]'
 spec:
   params:
   - name: my_pipe_param
@@ -63,7 +72,9 @@ spec:
         steps:
         - name: main
           args:
-          - echo $(inputs.params.my_pipe_param)
+          - |
+            echo $0
+          - $(inputs.params.my_pipe_param)
           command:
           - sh
           - -c
@@ -76,6 +87,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "static-loop-out-op",
+              "implementation": {"container": {"args": ["echo $0\n", {"inputValue":
+              "input1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
+              "inputs": [{"name": "input1", "type": "String"}], "name": "static-loop-out-op"}'
             tekton.dev/template: ''
       timeout: 0s
     - name: static-loop-pipeline-for-loop-2

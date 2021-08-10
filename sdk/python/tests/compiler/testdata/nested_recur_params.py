@@ -28,15 +28,19 @@ TektonCompiler._get_unique_id_code = Coder.empty
 PrintOp = load_component_from_text("""
   name: print
   inputs:
-  - name: msg
+    - {name: msg, type: String}
   outputs:
-  - name: stdout
+    - {name: output, type: String}
   implementation:
     container:
       image: alpine:3.6
       command:
-        - "echo"
+        - sh
+        - -c
+        - |
+          echo $0 | tee $1
         - { inputValue: msg }
+        - { outputPath: output }
 """)
 
 
@@ -49,7 +53,7 @@ def CEL_ExprOp(expr: str):
   return CEL_ConditionOp(expr)
 
 
-@dsl.pipeline("double-recursion test")
+@dsl.pipeline("double-recursion-test")
 def double_recursion_test(until_a: int = 4, until_b: int = 3):
   @dsl.graph_component
   def recur_a(i: int, until_a: int):

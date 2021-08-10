@@ -13,16 +13,16 @@
 # limitations under the License.
 
 import json
-import kfp.dsl as dsl
+from kfp import dsl, components
 
 
 @dsl.pipeline(
-    name="Launch katib experiment",
+    name="launch-katib-experiment",
     description="An example to launch katib experiment."
 )
 def mnist_hpo(
-        name="mnist",
-        namespace="kubeflow",
+        name: str = "mnist",
+        namespace: str = "kubeflow",
         goal: float = 0.99,
         parallelTrialCount: int = 3,
         maxTrialCount: int = 12,
@@ -81,48 +81,99 @@ def mnist_hpo(
             deleteAfterDone=deleteAfterDone
     )
 
-    op_out = dsl.ContainerOp(
-        name="my-out-cop",
-        image="library/bash:4.4.23",
-        command=["sh", "-c"],
-        arguments=["echo hyperparameter: %s" % op1.output],
-    )
+    op_out = components.load_component_from_text("""
+      name: my-out-cop
+      description: output component
+      inputs:
+        - {name: text, type: String}
+      implementation:
+        container:
+          image: library/bash:4.4.23
+          command:
+          - sh
+          - -c
+          - |
+            echo hyperparameter: $0
+          - {inputValue: text}
+      """)(op1.outputs['bestHyperParameter'])
 
 
 def katib_experiment_launcher_op(
-      name,
-      namespace,
-      maxTrialCount=100,
-      parallelTrialCount=3,
-      maxFailedTrialCount=3,
-      objectiveConfig='{}',
-      algorithmConfig='{}',
-      metricsCollector='{}',
-      trialTemplate='{}',
-      parameters='[]',
-      experimentTimeoutMinutes=60,
-      deleteAfterDone=True,
-      outputFile='/output.txt'):
-    return dsl.ContainerOp(
-        name="mnist-hpo",
-        image='liuhougangxa/katib-experiment-launcher:latest',
-        arguments=[
-            '--name', name,
-            '--namespace', namespace,
-            '--maxTrialCount', maxTrialCount,
-            '--maxFailedTrialCount', maxFailedTrialCount,
-            '--parallelTrialCount', parallelTrialCount,
-            '--objectiveConfig', objectiveConfig,
-            '--algorithmConfig', algorithmConfig,
-            '--metricsCollector', metricsCollector,
-            '--trialTemplate', trialTemplate,
-            '--parameters', parameters,
-            '--outputFile', outputFile,
-            '--deleteAfterDone', deleteAfterDone,
-            '--experimentTimeoutMinutes', experimentTimeoutMinutes,
-        ],
-        file_outputs={'bestHyperParameter': outputFile}
-    )
+      name: str,
+      namespace: str,
+      maxTrialCount: int = 100,
+      parallelTrialCount: int = 3,
+      maxFailedTrialCount: int = 3,
+      objectiveConfig: str = '{}',
+      algorithmConfig: str = '{}',
+      metricsCollector: str = '{}',
+      trialTemplate: str = '{}',
+      parameters: str = '[]',
+      experimentTimeoutMinutes: int = 60,
+      deleteAfterDone: bool = True):
+
+    component_str = """
+    name: mnist-hpo
+    description: mnist hpo
+    inputs:
+      - {name: name, type: String}
+      - {name: namespace, type: String}
+      - {name: maxtrialcount, type: Integer}
+      - {name: maxfailedtrialcount, type: Integer}
+      - {name: paralleltrialcount, type: Integer}
+      - {name: objectiveconfig, type: String}
+      - {name: algorithmconfig, type: String}
+      - {name: metricscollector, type: String}
+      - {name: trialtemplate, type: String}
+      - {name: parameters, type: String}
+      - {name: deleteafterdone, type: Boolean}
+      - {name: experimenttimeoutminutes, type: Integer}
+    outputs:
+      - {name: bestHyperParameter, type: String}
+    implementation:
+      container:
+        image: liuhougangxa/katib-experiment-launcher:latest
+        args:
+        - --name
+        - {inputValue: name}
+        - --namespace
+        - {inputValue: namespace}
+        - --maxTrialCount
+        - {inputValue: maxtrialcount}
+        - --maxFailedTrialCount
+        - {inputValue: maxfailedtrialcount}
+        - --parallelTrialCount
+        - {inputValue: paralleltrialcount}
+        - --objectiveConfig
+        - {inputValue: objectiveconfig}
+        - --algorithmConfig
+        - {inputValue: algorithmconfig}
+        - --metricsCollector
+        - {inputValue: metricscollector}
+        - --trialTemplate
+        - {inputValue: trialtemplate}
+        - --parameters
+        - {inputValue: parameters}
+        - --outputFile
+        - {outputPath: bestHyperParameter}
+        - --deleteAfterDone
+        - {inputValue: deleteafterdone}
+        - --experimentTimeoutMinutes
+        - {inputValue: experimenttimeoutminutes}
+    """
+    return components.load_component_from_text(component_str)(
+      name=name,
+      namespace=namespace,
+      maxtrialcount=maxTrialCount,
+      maxfailedtrialcount=maxFailedTrialCount,
+      paralleltrialcount=parallelTrialCount,
+      objectiveconfig=objectiveConfig,
+      algorithmconfig=algorithmConfig,
+      metricscollector=metricsCollector,
+      trialtemplate=trialTemplate,
+      parameters=parameters,
+      deleteafterdone=deleteAfterDone,
+      experimenttimeoutminutes=experimentTimeoutMinutes)
 
 
 if __name__ == '__main__':

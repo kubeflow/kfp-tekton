@@ -27,7 +27,7 @@ metadata:
       "$(results.data-list.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Test pipeline to verify
-      functions of par loop.", "name": "Loop over lightweight output"}'
+      functions of par loop.", "name": "loop-over-lightweight-output"}'
 spec:
   pipelineSpec:
     tasks:
@@ -38,7 +38,8 @@ spec:
           command:
           - sh
           - -c
-          - echo "[1, 2, 3]" > "$0"
+          - |
+            echo "[1, 2, 3]" > "$0"
           - $(results.data-list.path)
           image: busybox
         results:
@@ -51,9 +52,9 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"command": ["sh", "-c", "echo \"[1, 2, 3]\" > \"$0\"", {"outputPath":
+              {"command": ["sh", "-c", "echo \"[1, 2, 3]\" > \"$0\"\n", {"outputPath":
               "data_list"}], "image": "busybox"}}, "name": "Produce list", "outputs":
-              [{"name": "data_list"}]}'
+              [{"name": "data_list", "type": "List"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - runAfter:
@@ -93,7 +94,8 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
                       {"command": ["echo", {"inputValue": "data"}], "image": "busybox"}},
-                      "inputs": [{"name": "data"}], "name": "Consume data"}'
+                      "inputs": [{"name": "data", "type": "Integer"}], "name": "Consume
+                      data"}'
                     tekton.dev/template: ''
               timeout: 0s
           iterateParam: produce-list-data_list-loop-item

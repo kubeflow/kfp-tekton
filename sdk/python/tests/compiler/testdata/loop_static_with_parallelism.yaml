@@ -26,7 +26,7 @@ metadata:
       [], "para-loop-out-op": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
-      "optional": true}], "name": "para-loop-pipeline"}'
+      "optional": true, "type": "String"}], "name": "para-loop-pipeline"}'
 spec:
   params:
   - name: my_pipe_param
@@ -44,7 +44,9 @@ spec:
         steps:
         - name: main
           args:
-          - echo $(inputs.params.my_pipe_param)
+          - |
+            echo $0
+          - $(inputs.params.my_pipe_param)
           command:
           - sh
           - -c
@@ -57,6 +59,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "para-loop-out-op",
+              "implementation": {"container": {"args": ["echo $0\n", {"inputValue":
+              "input1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
+              "inputs": [{"name": "input1", "type": "String"}], "name": "para-loop-out-op"}'
             tekton.dev/template: ''
       timeout: 0s
     - name: para-loop-pipeline-for-loop-2
@@ -86,7 +92,10 @@ spec:
                 steps:
                 - name: main
                   args:
-                  - echo op1 $(inputs.params.loop-item-param-1) $(inputs.params.my_pipe_param)
+                  - |
+                    echo op1 $0 $1
+                  - $(inputs.params.loop-item-param-1)
+                  - $(inputs.params.my_pipe_param)
                   command:
                   - sh
                   - -c
@@ -102,6 +111,12 @@ spec:
                     pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
+                    pipelines.kubeflow.org/component_spec: '{"description": "para-loop-inner-op1",
+                      "implementation": {"container": {"args": ["echo op1 $0 $1\n",
+                      {"inputValue": "input1"}, {"inputValue": "input2"}], "command":
+                      ["sh", "-c"], "image": "library/bash:4.4.23"}}, "inputs": [{"name":
+                      "input1", "type": "Integer"}, {"name": "input2", "type": "String"}],
+                      "name": "para-loop-inner-op1"}'
                     tekton.dev/template: ''
               timeout: 0s
             - name: para-loop-inner-op2
@@ -112,7 +127,9 @@ spec:
                 steps:
                 - name: main
                   args:
-                  - echo op2 $(inputs.params.loop-item-param-1)
+                  - |
+                    echo op2 $0
+                  - $(inputs.params.loop-item-param-1)
                   command:
                   - sh
                   - -c
@@ -126,6 +143,10 @@ spec:
                     pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
+                    pipelines.kubeflow.org/component_spec: '{"description": "para-loop-inner-op2",
+                      "implementation": {"container": {"args": ["echo op2 $0\n", {"inputValue":
+                      "input1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
+                      "inputs": [{"name": "input1", "type": "Integer"}], "name": "para-loop-inner-op2"}'
                     tekton.dev/template: ''
               timeout: 0s
           parallelism: 5
