@@ -35,7 +35,7 @@ implementation:
         args:
         - |
           set -e
-          python -c "import json; import sys; json.dump([{\'a\': 1, \'b\': 2}, {\'a\': 10, \'b\': 20}], open(\'\"$0\"\', 'w'))"
+          python -c "import json; import sys; json.dump([{\'a\': 1, \'b\': 2}, {\'a\': 10, \'b\': 20}], open('$0', 'w'))"
         - {outputPath: out}
 '''
 

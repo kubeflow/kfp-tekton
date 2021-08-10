@@ -35,7 +35,7 @@ implementation:
         args:
         - |
           set -e
-          python -c "import json; import sys; json.dump([i for i in range(20, 31)], open(\'\"$0\"\', 'w'))"
+          python -c "import json; import sys; json.dump([i for i in range(20, 31)], open('$0', 'w'))"
         - {outputPath: out}
 '''
 

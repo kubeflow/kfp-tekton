@@ -45,7 +45,7 @@ spec:
           args:
           - |
             set -e
-            python -c "import json; import sys; json.dump([i for i in range(20, 31)], open('"$0"', 'w'))"
+            python -c "import json; import sys; json.dump([i for i in range(20, 31)], open('$0', 'w'))"
           - $(results.out.path)
           command:
           - sh
@@ -62,9 +62,9 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
               {"args": ["set -e\npython -c \"import json; import sys; json.dump([i
-              for i in range(20, 31)], open(''\"$0\"'', ''w''))\"\n", {"outputPath":
-              "out"}], "command": ["sh", "-c"], "image": "python:alpine3.6"}}, "name":
-              "my-out-cop0", "outputs": [{"name": "out", "type": "String"}]}'
+              for i in range(20, 31)], open(''$0'', ''w''))\"\n", {"outputPath": "out"}],
+              "command": ["sh", "-c"], "image": "python:alpine3.6"}}, "name": "my-out-cop0",
+              "outputs": [{"name": "out", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: my-out-cop2
