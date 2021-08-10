@@ -12,23 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
 
-def random_failure_op(exit_codes):
+def random_failure_op(exit_codes: str):
     """A component that fails randomly."""
-    return dsl.ContainerOp(
-        name='random_failure',
-        image='python:alpine3.6',
-        command=['python', '-c'],
-        arguments=['import random; import sys; '
-                   'exit_code = random.choice([int(i) for i in sys.argv[1].split(",")]); '
-                   'print(exit_code); sys.exit(exit_code)', exit_codes]
-    )
+    return components.load_component_from_text("""
+    name: random-failure
+    description: random failure
+    inputs:
+      - {name: exitcode, type: String}
+    implementation:
+      container:
+        image: python:alpine3.6
+        command:
+        - python
+        - -c
+        args:
+        - |
+          import random; import sys; exit_code = random.choice([int(i) for i in sys.argv[1].split(",")]); \
+          print(exit_code); sys.exit(exit_code)
+        - {inputValue: exitcode}
+    """)(exitcode=exit_codes)
 
 
 @dsl.pipeline(
-    name='Retry random failures',
+    name='retry-random-failures',
     description='The pipeline includes two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).'
 )
 def retry_sample_pipeline():

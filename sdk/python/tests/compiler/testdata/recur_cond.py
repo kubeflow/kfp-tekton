@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 from kfp_tekton.tekton import CEL_ConditionOp
 from kfp_tekton.compiler import TektonCompiler
 
@@ -25,20 +25,31 @@ class Coder:
 TektonCompiler._get_unique_id_code = Coder.empty
 
 
-class PrintOp(dsl.ContainerOp):
-    def __init__(self, name: str, msg: str):
-        super(PrintOp, self).__init__(
-            name=name,
-            image='alpine:3.6',
-            command=['echo', msg, ">", "/tmp/stdout"],
-            file_outputs={"stdout": "/tmp/stdout"}
-        )
+print_op = components.load_component_from_text("""
+name: print-iter
+description: print msg
+inputs:
+  - {name: msg, type: String}
+outputs:
+  - {name: stdout, type: String}
+implementation:
+  container:
+    image: alpine:3.6
+    command:
+    - sh
+    - -c
+    args:
+    - |
+      echo $0 > $1
+    - {inputValue: msg}
+    - {outputPath: stdout}
+""")
 
 
 @dsl.graph_component
 def recur(i: int):
   decr_i = CEL_ConditionOp(f"{i} - 1").output
-  PrintOp("print-iter", f"Iter: {decr_i}")
+  print_op(f"Iter: {decr_i}")
   with dsl.Condition(decr_i != 0):
     recur(decr_i)
 

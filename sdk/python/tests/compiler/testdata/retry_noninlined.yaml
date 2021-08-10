@@ -26,7 +26,7 @@ metadata:
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline includes
       two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).",
-      "name": "Retry random failures"}'
+      "name": "retry-random-failures"}'
 spec:
   pipelineSpec:
     tasks:
@@ -35,8 +35,8 @@ spec:
         steps:
         - name: main
           args:
-          - import random; import sys; exit_code = random.choice([int(i) for i in
-            sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
+          - |
+            import random; import sys; exit_code = random.choice([int(i) for i in sys.argv[1].split(",")]);           print(exit_code); sys.exit(exit_code)
           - 0,1,2,3
           command:
           - python
@@ -48,6 +48,12 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "random failure",
+              "implementation": {"container": {"args": ["import random; import sys;
+              exit_code = random.choice([int(i) for i in sys.argv[1].split(\",\")]);           print(exit_code);
+              sys.exit(exit_code)\n", {"inputValue": "exitcode"}], "command": ["python",
+              "-c"], "image": "python:alpine3.6"}}, "inputs": [{"name": "exitcode",
+              "type": "String"}], "name": "random-failure"}'
             tekton.dev/template: ''
       retries: 10
       timeout: 0s
@@ -56,8 +62,8 @@ spec:
         steps:
         - name: main
           args:
-          - import random; import sys; exit_code = random.choice([int(i) for i in
-            sys.argv[1].split(",")]); print(exit_code); sys.exit(exit_code)
+          - |
+            import random; import sys; exit_code = random.choice([int(i) for i in sys.argv[1].split(",")]);           print(exit_code); sys.exit(exit_code)
           - 0,1
           command:
           - python
@@ -69,6 +75,12 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "random failure",
+              "implementation": {"container": {"args": ["import random; import sys;
+              exit_code = random.choice([int(i) for i in sys.argv[1].split(\",\")]);           print(exit_code);
+              sys.exit(exit_code)\n", {"inputValue": "exitcode"}], "command": ["python",
+              "-c"], "image": "python:alpine3.6"}}, "inputs": [{"name": "exitcode",
+              "type": "String"}], "name": "random-failure"}'
             tekton.dev/template: ''
       retries: 5
       timeout: 0s

@@ -34,7 +34,8 @@ spec:
         steps:
         - name: main
           args:
-          - echo "Got scheduled"
+          - echo
+          - Got scheduled
           command:
           - sh
           - -c
@@ -46,6 +47,9 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/task_display_name: Hello World
+            pipelines.kubeflow.org/component_spec: '{"description": "echo", "implementation":
+              {"container": {"args": ["echo", "Got scheduled"], "command": ["sh",
+              "-c"], "image": "busybox"}}, "name": "echo"}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

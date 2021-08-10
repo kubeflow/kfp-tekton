@@ -39,7 +39,7 @@ metadata:
       "$(results.output.path)"]], "produce-list-of-strings": [["Output", "$(results.output.path)"]],
       "produce-str": [["Output", "$(results.output.path)"]]}'
     sidecar.istio.io/inject: "false"
-    pipelines.kubeflow.org/pipeline_spec: '{"name": "Parallelfor item argument resolving"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "parallelfor-item-argument-resolving"}'
 spec:
   pipelineSpec:
     tasks:
@@ -436,8 +436,8 @@ spec:
                       = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
                       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
                       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"],
-                      "image": "python:3.7"}}, "inputs": [{"name": "param1"}], "name":
-                      "Consume"}'
+                      "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
+                      "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
               timeout: 0s
             - name: consume-2
@@ -485,8 +485,8 @@ spec:
                       = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
                       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
                       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"],
-                      "image": "python:3.7"}}, "inputs": [{"name": "param1"}], "name":
-                      "Consume"}'
+                      "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
+                      "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
               timeout: 0s
             - name: consume-3
@@ -534,8 +534,8 @@ spec:
                       = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
                       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
                       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"],
-                      "image": "python:3.7"}}, "inputs": [{"name": "param1"}], "name":
-                      "Consume"}'
+                      "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
+                      "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
               timeout: 0s
           iterateParam: produce-list-of-strings-Output-loop-item
@@ -603,8 +603,8 @@ spec:
                       = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
                       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
                       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"],
-                      "image": "python:3.7"}}, "inputs": [{"name": "param1"}], "name":
-                      "Consume"}'
+                      "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
+                      "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
               timeout: 0s
             - name: consume-5
@@ -652,8 +652,8 @@ spec:
                       = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
                       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
                       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"],
-                      "image": "python:3.7"}}, "inputs": [{"name": "param1"}], "name":
-                      "Consume"}'
+                      "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
+                      "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
               timeout: 0s
           iterateParam: produce-list-of-ints-Output-loop-item
@@ -721,8 +721,8 @@ spec:
                       = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
                       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
                       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"],
-                      "image": "python:3.7"}}, "inputs": [{"name": "param1"}], "name":
-                      "Consume"}'
+                      "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
+                      "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
               timeout: 0s
             - name: consume-7
@@ -770,8 +770,8 @@ spec:
                       = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
                       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
                       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"],
-                      "image": "python:3.7"}}, "inputs": [{"name": "param1"}], "name":
-                      "Consume"}'
+                      "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
+                      "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
               timeout: 0s
           iterateParam: produce-list-of-dicts-Output-loop-item

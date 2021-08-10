@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp.dsl as dsl
+from kfp import dsl
 from kubernetes.client.models import V1EnvVar
 
 
-@dsl.pipeline(name='PipelineParams', description='A pipeline with multiple pipeline params.')
+@dsl.pipeline(name='pipeline-params', description='A pipeline with multiple pipeline params.')
 def pipelineparams_pipeline(tag: str = 'latest', sleep_ms: int = 10):
 
     echo = dsl.Sidecar(

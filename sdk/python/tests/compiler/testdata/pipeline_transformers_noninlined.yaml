@@ -26,7 +26,7 @@ metadata:
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline shows how
       to apply functions to all ops in the pipeline by pipeline transformers", "name":
-      "Pipeline transformer"}'
+      "pipeline-transformer"}'
 spec:
   pipelineSpec:
     tasks:
@@ -46,6 +46,10 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             hobby: football
+            pipelines.kubeflow.org/component_spec: '{"description": "print out msg",
+              "implementation": {"container": {"command": ["echo", {"inputValue":
+              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "print"}'
             tekton.dev/template: ''
       timeout: 0s
     - name: print-2
@@ -64,6 +68,10 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             hobby: football
+            pipelines.kubeflow.org/component_spec: '{"description": "print out msg",
+              "implementation": {"container": {"command": ["echo", {"inputValue":
+              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
+              "String"}], "name": "print"}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

@@ -14,29 +14,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp.dsl as dsl
+from kfp import dsl, components
 
 
 @dsl.graph_component
-def echo1_graph_component(text1):
-  dsl.ContainerOp(
-      name='echo1-task1',
-      image='library/bash:4.4.23',
-      command=['sh', '-c'],
-      arguments=['echo "$0"', text1])
+def echo1_graph_component(text1: str):
+  components.load_component_from_text("""
+  name: echo1-task1
+  description: echo task
+  inputs:
+    - {name: text, type: String}
+  implementation:
+    container:
+      image: library/bash:4.4.23
+      command:
+      - sh
+      - -c
+      args:
+      - echo
+      - {inputValue: text}
+  """)(text=text1)
 
 
 @dsl.graph_component
-def echo2_graph_component(text2):
-  dsl.ContainerOp(
-      name='echo2-task1',
-      image='library/bash:4.4.23',
-      command=['sh', '-c'],
-      arguments=['echo "$0"', text2])
+def echo2_graph_component(text2: str):
+  components.load_component_from_text("""
+  name: echo2-task1
+  description: echo task
+  inputs:
+    - {name: text, type: String}
+  implementation:
+    container:
+      image: library/bash:4.4.23
+      command:
+      - sh
+      - -c
+      args:
+      - echo
+      - {inputValue: text}
+  """)(text=text2)
 
 
-@dsl.pipeline()
-def opsgroups_pipeline(text1='message 1', text2='message 2'):
+@dsl.pipeline(name='opsgroups-pipeline')
+def opsgroups_pipeline(text1: str = 'message 1', text2: str = 'message 2'):
   step1_graph_component = echo1_graph_component(text1)
   step2_graph_component = echo2_graph_component(text2)
   step2_graph_component.after(step1_graph_component)
+
+
+if __name__ == '__main__':
+  from kfp_tekton.compiler import TektonCompiler
+  TektonCompiler().compile(opsgroups_pipeline, __file__.replace('.py', '.yaml'))

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from kubernetes.client import V1Toleration
-from kfp import dsl
+from kfp import dsl, components
 
 
 @dsl.pipeline(
@@ -23,13 +23,23 @@ from kfp import dsl
 def tolerations(
 ):
     """A pipeline with tolerations"""
-    op1 = dsl.ContainerOp(
-        name='download',
-        image='busybox',
-        command=['sh', '-c'],
-        arguments=['sleep 10; wget localhost:5678 -O /tmp/results.txt'],
-        file_outputs={'downloaded': '/tmp/results.txt'})\
-        .add_toleration(V1Toleration(effect='NoSchedule',
+    op1 = components.load_component_from_text("""
+    name: download
+    description: download
+    outputs:
+      - {name: downloaded, type: String}
+    implementation:
+      container:
+        image: busybox
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          sleep 10; wget localhost:5678 -O $0
+        - {outputPath: downloaded}
+    """)()
+    op1.add_toleration(V1Toleration(effect='NoSchedule',
                                      key='gpu',
                                      operator='Equal',
                                      value='run'))

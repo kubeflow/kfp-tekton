@@ -12,34 +12,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
 
-def gcs_download_op(url):
-    return dsl.ContainerOp(
-        name='GCS - Download',
-        image='google/cloud-sdk:216.0.0',
-        command=['sh', '-c'],
-        arguments=['gsutil cat $0 | tee $1', url, '/tmp/results.txt'],
-    )
+def gcs_download_op(url: str):
+    return components.load_component_from_text("""
+    name: gcs-download
+    description: GCS - Download
+    inputs:
+      - {name: url, type: String}
+    outputs:
+      - {name: data, type: String}
+    implementation:
+      container:
+        image: google/cloud-sdk:216.0.0
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          gsutil cat $0 | tee $1
+        - {inputValue: url}
+        - {outputPath: data}
+    """)(url=url)
 
 
-def echo_op(text):
-    return dsl.ContainerOp(
-        name='echo',
-        image='library/bash:4.4.23',
-        command=['sh', '-c'],
-        arguments=['echo "$0"', text]
-    )
+def echo_op(text: str):
+    return components.load_component_from_text("""
+    name: echo
+    description: print msg
+    inputs:
+      - {name: msg, type: String}
+    implementation:
+      container:
+        image: library/bash:4.4.23
+        command:
+        - sh
+        - -c
+        args:
+        - echo
+        - {inputValue: msg}
+    """)(msg=text)
 
 
 @dsl.pipeline(
-    name='Sequential pipeline',
+    name='sequential-pipeline',
     description='A pipeline with two sequential steps.'
 )
 def sequential_pipeline(
-        url='gs://ml-pipeline-playground/shakespeare1.txt',
-        path='/tmp/results.txt'
+        url: str = 'gs://ml-pipeline-playground/shakespeare1.txt',
+        path: str = '/tmp/results.txt'
 ):
     """A pipeline with two sequential steps."""
 

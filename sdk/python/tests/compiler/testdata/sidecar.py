@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfp.dsl as dsl
+from kfp import dsl, components
 
 
-@dsl.pipeline(name='Sidecar', description='A pipeline with sidecars.')
+@dsl.pipeline(name='sidecar', description='A pipeline with sidecars.')
 def sidecar_pipeline():
 
     echo = dsl.Sidecar(
@@ -23,19 +23,38 @@ def sidecar_pipeline():
         image='hashicorp/http-echo',
         args=['-text="hello world"'])
 
-    op1 = dsl.ContainerOp(
-        name='download',
-        image='busybox',
-        command=['sh', '-c'],
-        arguments=['sleep 10; wget localhost:5678 -O /tmp/results.txt'],
-        sidecars=[echo],
-        file_outputs={'downloaded': '/tmp/results.txt'})
+    op1 = components.load_component_from_text("""
+    name: download
+    description: download
+    outputs:
+      - {name: download, type: String}
+    implementation:
+      container:
+        image: busybox
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          sleep 10; wget localhost:5678 -O $0
+        - {outputPath: download}
+    """)()
 
-    op2 = dsl.ContainerOp(
-        name='echo',
-        image='library/bash',
-        command=['sh', '-c'],
-        arguments=['echo %s' % op1.output])
+    op2 = components.load_component_from_text("""
+    name: echo
+    description: echo
+    inputs:
+      - {name: msg, type: String}
+    implementation:
+      container:
+        image: library/bash
+        command:
+        - sh
+        - -c
+        args:
+        - echo
+        - {inputValue: msg}
+    """)(msg=op1.output)
 
 
 if __name__ == '__main__':

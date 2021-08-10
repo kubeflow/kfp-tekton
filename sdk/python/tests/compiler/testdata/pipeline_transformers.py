@@ -12,16 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 
 
-def print_op(msg):
+def print_op(msg: str):
     """Print a message."""
-    return dsl.ContainerOp(
-        name='Print',
-        image='alpine:3.6',
-        command=['echo', msg],
-    )
+    return components.load_component_from_text("""
+    name: print
+    description: print out msg
+    inputs:
+      - {name: msg, type: String}
+    implementation:
+      container:
+        image: alpine:3.6
+        command:
+        - echo
+        - {inputValue: msg}
+    """)(msg=msg)
 
 
 def add_annotation_and_label(op):
@@ -31,7 +38,7 @@ def add_annotation_and_label(op):
 
 
 @dsl.pipeline(
-    name='Pipeline transformer',
+    name='pipeline-transformer',
     description='The pipeline shows how to apply functions to all ops in the pipeline by pipeline transformers'
 )
 def transform_pipeline():
