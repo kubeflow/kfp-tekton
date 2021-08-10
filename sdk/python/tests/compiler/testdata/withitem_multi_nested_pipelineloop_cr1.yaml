@@ -36,7 +36,10 @@ spec:
         steps:
         - name: main
           args:
-          - echo op1 $(inputs.params.loop-item-param-1-subvar-a)
+          - |
+            set -e
+            echo op1 "$0"
+          - $(inputs.params.loop-item-param-1-subvar-a)
           command:
           - sh
           - -c
@@ -50,6 +53,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["set -e\necho op1 \"$0\"\n", {"inputValue": "item"}], "command":
+              ["sh", "-c"], "image": "library/bash:4.4.23"}}, "inputs": [{"name":
+              "item", "type": "Integer"}], "name": "my-in-coop1"}'
             tekton.dev/template: ''
       timeout: 0s
     - name: my-in-coop2
@@ -60,7 +67,10 @@ spec:
         steps:
         - name: main
           args:
-          - echo op2 $(inputs.params.loop-item-param-1-subvar-b)
+          - |
+            set -e
+            echo op2 "$0"
+          - $(inputs.params.loop-item-param-1-subvar-b)
           command:
           - sh
           - -c
@@ -74,6 +84,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["set -e\necho op2 \"$0\"\n", {"inputValue": "item"}], "command":
+              ["sh", "-c"], "image": "library/bash:4.4.23"}}, "inputs": [{"name":
+              "item", "type": "Integer"}], "name": "my-in-coop2"}'
             tekton.dev/template: ''
       timeout: 0s
     - name: withitem-multiple-nesting-pipeline-for-loop-3

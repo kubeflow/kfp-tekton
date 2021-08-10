@@ -14,6 +14,7 @@
 
 import kfp.dsl as dsl
 from kfp_tekton.compiler import TektonCompiler
+from kfp import components
 
 
 class Coder:
@@ -23,32 +24,63 @@ class Coder:
 
 TektonCompiler._get_unique_id_code = Coder.empty
 
+op0_yaml = '''\
+name: 'my-out-cop0'
+outputs:
+  - {name: out, type: String}
+implementation:
+    container:
+        image: python:alpine3.6
+        command: ['sh', '-c']
+        args:
+        - |
+          set -e
+          python -c "import json; import sys; json.dump([i for i in range(20, 31)], open('$0', 'w'))"
+        - {outputPath: out}
+'''
+
+op1_yaml = '''\
+name: 'my-in-cop1'
+inputs:
+- {name: item, type: Integer}
+implementation:
+    container:
+        image: library/bash:4.4.23
+        command: ['sh', '-c']
+        args:
+        - |
+          set -e
+          echo no output global op1, item: "$0"
+        - {inputValue: item}
+'''
+
+op_out_yaml = '''\
+name: 'my-out-cop2'
+inputs:
+- {name: output, type: String}
+implementation:
+    container:
+        image: library/bash:4.4.23
+        command: ['sh', '-c']
+        args:
+        - |
+          set -e
+          echo no output global op2, outp: "$0"
+        - {inputValue: output}
+'''
+
 
 @dsl.pipeline(name='withparam-output')
 def pipeline():
-    op0 = dsl.ContainerOp(
-        name="my-out-cop0",
-        image='python:alpine3.6',
-        command=["sh", "-c"],
-        arguments=[
-            'python -c "import json; import sys; json.dump([i for i in range(20, 31)], open(\'/tmp/out.json\', \'w\'))"'],
-        file_outputs={'out': '/tmp/out.json'},
-    )
+    op0_template = components.load_component_from_text(op0_yaml)
+    op0 = op0_template()
 
     with dsl.ParallelFor(op0.output) as item:
-        op1 = dsl.ContainerOp(
-            name="my-in-cop1",
-            image="library/bash:4.4.23",
-            command=["sh", "-c"],
-            arguments=["echo do output op1 item: %s" % item],
-        )
+        op1_template = components.load_component_from_text(op1_yaml)
+        op1 = op1_template(item)
 
-    op_out = dsl.ContainerOp(
-        name="my-out-cop2",
-        image="library/bash:4.4.23",
-        command=["sh", "-c"],
-        arguments=["echo do output op2, outp: %s" % op0.output],
-    )
+    op_out_template = components.load_component_from_text(op_out_yaml)
+    op_out = op_out_template(op0.output)
 
 
 if __name__ == '__main__':

@@ -26,8 +26,8 @@ metadata:
     tekton.dev/artifact_items: '{"cop": [], "create-pvc": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on VolumeOp
-      Usage.", "inputs": [{"default": "10M", "name": "size", "optional": true}], "name":
-      "VolumeOp Basic"}'
+      Usage.", "inputs": [{"default": "10M", "name": "size", "optional": true, "type":
+      "String"}], "name": "volumeop-basic"}'
 spec:
   params:
   - name: size
@@ -155,6 +155,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["echo foo > /mnt/file1"], "command": ["sh", "-c"], "image":
+              "library/bash:4.4.23"}}, "name": "cop"}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

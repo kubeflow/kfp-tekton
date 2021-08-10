@@ -15,18 +15,53 @@
 
 import kfp.dsl as dsl
 from kubernetes.client import V1Volume, V1SecretVolumeSource, V1VolumeMount, V1EnvVar
+from kfp import components
+
+OP1_STR = """
+name: download
+outputs:
+  - {name: downloaded, type: String}
+implementation:
+  container:
+    image: google/cloud-sdk
+    command:
+    - sh
+    - -c
+    args:
+    - |
+      set -e
+      ls | tee $0
+    - {outputPath: downloaded}
+"""
+
+OP2_STR = """
+name: echo
+inputs:
+  - {name: msg, type: String}
+implementation:
+  container:
+    image: library/bash
+    command:
+    - sh
+    - -c
+    args:
+    - |
+      set -e
+      echo
+    - {inputValue: msg}
+"""
+
+op1_op = components.load_component_from_text(OP1_STR)
+op2_op = components.load_component_from_text(OP2_STR)
 
 
 @dsl.pipeline(
-    name='Volume',
+    name='volume',
     description='A pipeline with volume.'
 )
 def volume_pipeline():
-    op1 = dsl.ContainerOp(name='download',
-                          image='google/cloud-sdk',
-                          command=['sh', '-c'],
-                          arguments=['ls | tee /tmp/results.txt'],
-                          file_outputs={'downloaded': '/tmp/results.txt'})
+    op1 = op1_op()
+
     op1.add_volume(V1Volume(name='gcp-credentials',
                             secret=V1SecretVolumeSource(secret_name='user-gcp-sa')))
     op1.container.add_volume_mount(V1VolumeMount(mount_path='/secret/gcp-credentials',
@@ -35,10 +70,7 @@ def volume_pipeline():
                                             value='/secret/gcp-credentials/user-gcp-sa.json'))
     op1.container.add_env_variable(V1EnvVar(name='Foo', value='bar'))
 
-    op2 = dsl.ContainerOp(name='echo',
-                          image='library/bash',
-                          command=['sh', '-c'],
-                          arguments=['echo %s' % op1.output])
+    op2 = op2_op(op1.output)
 
 
 if __name__ == '__main__':

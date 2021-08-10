@@ -18,7 +18,7 @@ metadata:
   name: withparam-output
   annotations:
     tekton.dev/output_artifacts: '{"my-out-cop0": [{"key": "artifacts/$PIPELINERUN/my-out-cop0/out.tgz",
-      "name": "my-out-cop0-out", "path": "/tmp/out.json"}]}'
+      "name": "my-out-cop0-out", "path": "/tmp/outputs/out/data"}]}'
     tekton.dev/input_artifacts: '{"my-out-cop2": [{"name": "my-out-cop0-out", "parent_task":
       "my-out-cop0"}]}'
     tekton.dev/artifact_bucket: mlpipeline
@@ -33,12 +33,16 @@ metadata:
       "spec": {"iterateParam": "my-out-cop0-out-loop-item", "pipelineSpec": {"params":
       [{"name": "my-out-cop0-out-loop-item", "type": "string"}], "tasks": [{"name":
       "my-in-cop1", "params": [{"name": "my-out-cop0-out-loop-item", "value": "$(params.my-out-cop0-out-loop-item)"}],
-      "taskSpec": {"metadata": {"annotations": {"tekton.dev/template": ""}, "labels":
-      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
+      "{\"implementation\": {\"container\": {\"args\": [\"set -e\\necho no output
+      global op1, item: \\\"$0\\\"\\n\", {\"inputValue\": \"item\"}], \"command\":
+      [\"sh\", \"-c\"], \"image\": \"library/bash:4.4.23\"}}, \"inputs\": [{\"name\":
+      \"item\", \"type\": \"Integer\"}], \"name\": \"my-in-cop1\"}", "tekton.dev/template":
+      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
       "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "my-out-cop0-out-loop-item",
-      "type": "string"}], "steps": [{"args": ["echo do output op1 item: $(inputs.params.my-out-cop0-out-loop-item)"],
-      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "0s"}]}}}]'
+      "type": "string"}], "steps": [{"args": ["set -e\necho no output global op1,
+      item: \"$0\"\n", "$(inputs.params.my-out-cop0-out-loop-item)"], "command": ["sh",
+      "-c"], "image": "library/bash:4.4.23", "name": "main"}]}, "timeout": "0s"}]}}}]'
 spec:
   pipelineSpec:
     tasks:
@@ -47,21 +51,28 @@ spec:
         steps:
         - name: main
           args:
-          - python -c "import json; import sys; json.dump([i for i in range(20, 31)],
-            open('$(results.out.path)', 'w'))"
+          - |
+            set -e
+            python -c "import json; import sys; json.dump([i for i in range(20, 31)], open('$0', 'w'))"
+          - $(results.out.path)
           command:
           - sh
           - -c
           image: python:alpine3.6
         results:
         - name: out
-          description: /tmp/out.json
+          description: /tmp/outputs/out/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["set -e\npython -c \"import json; import sys; json.dump([i
+              for i in range(20, 31)], open(''$0'', ''w''))\"\n", {"outputPath": "out"}],
+              "command": ["sh", "-c"], "image": "python:alpine3.6"}}, "name": "my-out-cop0",
+              "outputs": [{"name": "out", "type": "String"}]}'
             tekton.dev/template: ''
       timeout: 0s
     - name: my-out-cop2
@@ -72,7 +83,10 @@ spec:
         steps:
         - name: main
           args:
-          - 'echo do output op2, outp: $(inputs.params.my-out-cop0-out)'
+          - |
+            set -e
+            echo no output global op2, outp: "$0"
+          - $(inputs.params.my-out-cop0-out)
           command:
           - sh
           - -c
@@ -85,6 +99,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["set -e\necho no output global op2, outp: \"$0\"\n", {"inputValue":
+              "output"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
+              "inputs": [{"name": "output", "type": "String"}], "name": "my-out-cop2"}'
             tekton.dev/template: ''
       timeout: 0s
     - runAfter:
