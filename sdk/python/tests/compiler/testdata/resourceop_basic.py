@@ -30,7 +30,7 @@ _CONTAINER_MANIFEST = """
     "spec": {
         "template": {
             "metadata": {
-                "name": "resource-basic"
+                "name": "resourceop-basic"
             },
             "spec": {
                 "containers": [{
@@ -48,7 +48,7 @@ _CONTAINER_MANIFEST = """
 
 
 @dsl.pipeline(
-    name="resource-basic",
+    name="resourceop-basic",
     description="A Basic Example on ResourceOp Usage."
 )
 def resourceop_basic():
