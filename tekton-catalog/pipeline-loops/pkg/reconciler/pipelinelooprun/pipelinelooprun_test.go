@@ -49,6 +49,7 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/system"
+	_ "knative.dev/pkg/system/testing"
 )
 
 var (
