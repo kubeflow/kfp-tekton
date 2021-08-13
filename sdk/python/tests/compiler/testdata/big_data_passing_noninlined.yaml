@@ -405,6 +405,8 @@ spec:
         steps:
         - name: main
           args:
+          - --start
+          - '0'
           - --count
           - '100000'
           - --numbers
