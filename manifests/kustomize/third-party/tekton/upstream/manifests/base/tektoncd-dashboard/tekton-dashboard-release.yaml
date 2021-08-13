@@ -139,19 +139,6 @@ rules:
     verbs:
       - list
 ---
-aggregationRule:
-  clusterRoleSelectors:
-    - matchLabels:
-        rbac.dashboard.tekton.dev/aggregate-to-dashboard: "true"
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app.kubernetes.io/component: dashboard
-    app.kubernetes.io/instance: default
-    app.kubernetes.io/part-of: tekton-dashboard
-  name: tekton-dashboard-extensions
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -309,9 +296,9 @@ metadata:
     app.kubernetes.io/instance: default
     app.kubernetes.io/name: dashboard
     app.kubernetes.io/part-of: tekton-dashboard
-    app.kubernetes.io/version: v0.17.0
-    dashboard.tekton.dev/release: v0.17.0
-    version: v0.17.0
+    app.kubernetes.io/version: v0.19.0
+    dashboard.tekton.dev/release: v0.19.0
+    version: v0.19.0
   name: tekton-dashboard
   namespace: tekton-pipelines
 spec:
@@ -335,9 +322,9 @@ metadata:
     app.kubernetes.io/instance: default
     app.kubernetes.io/name: dashboard
     app.kubernetes.io/part-of: tekton-dashboard
-    app.kubernetes.io/version: v0.17.0
-    dashboard.tekton.dev/release: v0.17.0
-    version: v0.17.0
+    app.kubernetes.io/version: v0.19.0
+    dashboard.tekton.dev/release: v0.19.0
+    version: v0.19.0
   name: tekton-dashboard
   namespace: tekton-pipelines
 spec:
@@ -356,7 +343,7 @@ spec:
         app.kubernetes.io/instance: default
         app.kubernetes.io/name: dashboard
         app.kubernetes.io/part-of: tekton-dashboard
-        app.kubernetes.io/version: v0.17.0
+        app.kubernetes.io/version: v0.19.0
       name: tekton-dashboard
     spec:
       containers:
@@ -376,7 +363,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: gcr.io/tekton-releases/github.com/tektoncd/dashboard/cmd/dashboard@sha256:b1519c53577d02d7452bfff39f5c25fa6fd64bee3f1716f00ddfb8c2c65a6fd1
+          image: gcr.io/tekton-releases/github.com/tektoncd/dashboard/cmd/dashboard@sha256:81c6e5343eba03333b3bc7bbee2977090daf559d550ae22e570b9d1e1e52c471
           livenessProbe:
             httpGet:
               path: /health
@@ -462,23 +449,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: tekton-dashboard-tenant
-subjects:
-  - kind: ServiceAccount
-    name: tekton-dashboard
-    namespace: tekton-pipelines
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app.kubernetes.io/component: dashboard
-    app.kubernetes.io/instance: default
-    app.kubernetes.io/part-of: tekton-dashboard
-  name: tekton-dashboard-extensions
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: tekton-dashboard-extensions
 subjects:
   - kind: ServiceAccount
     name: tekton-dashboard

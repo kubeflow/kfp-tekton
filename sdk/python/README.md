@@ -34,10 +34,10 @@ can be found in the [SDK README](/sdk/README.md)
 ## Development Prerequisites
 
 1. [`Python`](https://www.python.org/downloads/): version `3.6` or later (new code must maintain compatibility with `3.6`)
-2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.18` ([required by Kubeflow](https://www.kubeflow.org/docs/started/kubeflow-overview/) and Tekton `0.21`)
+2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.19` ([required by Kubeflow](https://www.kubeflow.org/docs/started/kubeflow-overview/) and Tekton `0.27`)
 3. [`kubectl` CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/): required to deploy Tekton pipelines to Kubernetes cluster
-4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.21.0/): version `0.21.0` or greater, required for end-to-end testing
-5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): version `0.11.0` or greater, required for end-to-end testing of Tekton pipelines
+4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.27.0/): version `0.27.0` or greater, required for end-to-end testing
+5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): version `0.17.2` or greater, required for end-to-end testing of Tekton pipelines
 6. [`Kubeflow Pipelines` Deployment](https://www.kubeflow.org/docs/pipelines/installation/overview/): required for some end-to-end tests
 
 
@@ -48,10 +48,10 @@ by the `kfp_tekton` compiler. The Tekton CLI is useful to start a pipeline and a
 
 #### Tekton Cluster
 
-Follow the instructions listed [here](https://github.com/tektoncd/pipeline/blob/v0.20.1/docs/install.md#installing-tekton-pipelines-on-kubernetes)
+Follow the instructions listed [here](https://github.com/tektoncd/pipeline/blob/v0.27.0/docs/install.md#installing-tekton-pipelines-on-kubernetes)
 or simply run:
 
-    kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.20.1/release.yaml
+    kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.27.0/release.yaml
 
 **Note**, if your container runtime does not support `image-reference:tag@digest` (like cri-o used in OpenShift 4.x),
 use `release.notags.yaml` instead.
