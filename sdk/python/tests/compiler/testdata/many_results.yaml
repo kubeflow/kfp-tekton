@@ -1,0 +1,155 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: many-results-pipeline
+  annotations:
+    tekton.dev/output_artifacts: '{"print4results": [{"key": "artifacts/$PIPELINERUN/print4results/param1.tgz",
+      "name": "print4results-param1", "path": "/tmp/outputs/param1/data"}, {"key":
+      "artifacts/$PIPELINERUN/print4results/param2.tgz", "name": "print4results-param2",
+      "path": "/tmp/outputs/param2/data"}, {"key": "artifacts/$PIPELINERUN/print4results/param3.tgz",
+      "name": "print4results-param3", "path": "/tmp/outputs/param3/data"}, {"key":
+      "artifacts/$PIPELINERUN/print4results/param4.tgz", "name": "print4results-param4",
+      "path": "/tmp/outputs/param4/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print4results": [["param1", "$(results.param1.path)"],
+      ["param2", "/tekton/home/tep-results/param2"], ["param3", "/tekton/home/tep-results/param3"],
+      ["param4", "/tekton/home/tep-results/param4"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline that produce
+      many results.", "name": "many-results-pipeline"}'
+spec:
+  pipelineSpec:
+    tasks:
+    - name: print4results
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - '----output-paths'
+          - /tekton/home/tep-results/param1
+          - $(results.param2.path)
+          - $(results.param3.path)
+          - /tekton/home/tep-results/param4
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def print4results():
+               """Print 4 long results"""
+               a = 'a' * 1500
+               b = 'b' * 700
+               c = 'c' * 500
+               d = 'd' * 900
+               from collections import namedtuple
+               task_output = namedtuple('taskOutput', ['param1', 'param2', 'param3', 'param4'])
+               return task_output(a, b, c, d)
+
+            def _serialize_str(str_value: str) -> str:
+                if not isinstance(str_value, str):
+                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(str(str_value), str(type(str_value))))
+                return str_value
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Print4results', description='Print 4 long results')
+            _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=4)
+            _parsed_args = vars(_parser.parse_args())
+            _output_files = _parsed_args.pop("_output_paths", [])
+
+            _outputs = print4results(**_parsed_args)
+
+            _output_serializers = [
+                _serialize_str,
+                _serialize_str,
+                _serialize_str,
+                _serialize_str,
+
+            ]
+
+            import os
+            for idx, output_file in enumerate(_output_files):
+                try:
+                    os.makedirs(os.path.dirname(output_file))
+                except OSError:
+                    pass
+                with open(output_file, 'w') as f:
+                    f.write(_output_serializers[idx](_outputs[idx]))
+          image: python:3.7
+        - name: copy-results-1
+          args:
+          - 'mv /tekton/home/tep-results/param4 $(results.param4.path); mv $(results.param3.path)
+            /tekton/home/tep-results/param3; mv $(results.param2.path) /tekton/home/tep-results/param2; '
+          command:
+          - sh
+          - -c
+          image: library/bash
+        - name: copy-results-2
+          args:
+          - 'mv /tekton/home/tep-results/param1 $(results.param1.path); mv $(results.param4.path)
+            /tekton/home/tep-results/param4; '
+          command:
+          - sh
+          - -c
+          image: library/bash
+        results:
+        - name: param1
+          description: /tmp/outputs/param1/data
+        - name: param2
+          description: /tmp/outputs/param2/data
+        - name: param3
+          description: /tmp/outputs/param3/data
+        - name: param4
+          description: /tmp/outputs/param4/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            tekton-result-sizes: '{"param1": 1500, "param2": 700, "param3": 500, "param4":
+              900}'
+            pipelines.kubeflow.org/component_spec: '{"description": "Print 4 long
+              results", "implementation": {"container": {"args": ["----output-paths",
+              {"outputPath": "param1"}, {"outputPath": "param2"}, {"outputPath": "param3"},
+              {"outputPath": "param4"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+              "def print4results():\n   \"\"\"Print 4 long results\"\"\"\n   a = ''a''
+              * 1500\n   b = ''b'' * 700\n   c = ''c'' * 500\n   d = ''d'' * 900\n   from
+              collections import namedtuple\n   task_output = namedtuple(''taskOutput'',
+              [''param1'', ''param2'', ''param3'', ''param4''])\n   return task_output(a,
+              b, c, d)\n\ndef _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value,
+              str):\n        raise TypeError(''Value \"{}\" has type \"{}\" instead
+              of str.''.format(str(str_value), str(type(str_value))))\n    return
+              str_value\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Print4results'',
+              description=''Print 4 long results'')\n_parser.add_argument(\"----output-paths\",
+              dest=\"_output_paths\", type=str, nargs=4)\n_parsed_args = vars(_parser.parse_args())\n_output_files
+              = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = print4results(**_parsed_args)\n\n_output_serializers
+              = [\n    _serialize_str,\n    _serialize_str,\n    _serialize_str,\n    _serialize_str,\n\n]\n\nimport
+              os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
+              OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
+              "image": "python:3.7"}}, "name": "Print4results", "outputs": [{"name":
+              "param1", "type": "String"}, {"name": "param2", "type": "String"}, {"name":
+              "param3", "type": "String"}, {"name": "param4", "type": "String"}]}'
+            tekton.dev/template: ''
+      timeout: 0s
+  timeout: 0s
