@@ -64,6 +64,7 @@ spec:
               memory: 200M
         params:
         - name: message
+          value: When flies fly behind flies
         results:
         - name: word
           description: /tmp/outputs/word/data
@@ -107,6 +108,7 @@ spec:
         params:
         - name: frequent-word-word
         - name: outputpath
+          value: default_output
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
