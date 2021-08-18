@@ -15,6 +15,7 @@
 import json
 import re
 import yaml
+import logging
 
 from collections import OrderedDict
 from typing import List, Text, Dict, Any
@@ -561,6 +562,9 @@ def _op_to_template(op: BaseOp,
                     step_bins[step_counter] = step_bins[step_counter] + value
                 else:
                     step_counter += 1
+                    if value > max_byte_size:
+                        logging.warning("The estimated size for parameter %s is %sB which is more than 2KB, "
+                            "consider passing this value as artifact instead of output parameter." % (key, str(value)))
                     step_bins[step_counter] = value
                     verified_result_size_map[step_counter] = {}
                 verified_result_size_map[step_counter][key] = value
