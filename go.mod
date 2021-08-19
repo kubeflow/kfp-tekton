@@ -11,13 +11,13 @@ require (
 	github.com/go-openapi/errors v0.19.9
 	github.com/go-openapi/runtime v0.19.24
 	github.com/go-openapi/strfmt v0.19.11
-	github.com/go-openapi/swag v0.19.13
+	github.com/go-openapi/swag v0.19.15
 	github.com/go-openapi/validate v0.20.1
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.5.2
 	github.com/google/addlicense v0.0.0-20200906110928-a0294312aa76
-	github.com/google/go-cmp v0.5.5
+	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.2.0
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/gorilla/mux v1.8.0
@@ -27,24 +27,24 @@ require (
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/peterhellberg/duration v0.0.0-20191119133758-ec6baeebcd10
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.9.0
+	github.com/prometheus/client_golang v1.11.0
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/viper v1.7.0
-	github.com/stretchr/testify v1.6.1
-	github.com/tektoncd/pipeline v0.25.0
-	go.uber.org/zap v1.16.0
-	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
+	github.com/stretchr/testify v1.7.0
+	github.com/tektoncd/pipeline v0.27.0
+	go.uber.org/zap v1.18.1
+	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	google.golang.org/api v0.36.0
-	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d
-	google.golang.org/grpc v1.36.0
+	google.golang.org/genproto v0.0.0-20210416161957-9910b6c460de
+	google.golang.org/grpc v1.38.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.19.7
-	k8s.io/apimachinery v0.19.7
+	k8s.io/api v0.20.7
+	k8s.io/apimachinery v0.20.7
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	k8s.io/code-generator v0.19.7
+	k8s.io/code-generator v0.20.7
 	sigs.k8s.io/controller-runtime v0.6.4
 )
 
