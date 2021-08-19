@@ -120,8 +120,7 @@ func main() {
 		SecretName:  secretName,
 	})
 
-	sharedmain.WebhookMainWithConfig(ctx, WebhookLogKey,
-		sharedmain.ParseAndGetConfigOrDie(),
+	sharedmain.MainWithContext(ctx, WebhookLogKey,
 		certificates.NewController,
 		newDefaultingAdmissionController,
 		newValidationAdmissionController,

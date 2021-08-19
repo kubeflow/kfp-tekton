@@ -229,10 +229,19 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	// Run is cancelled, just cancel all the running instance and return
 	if run.IsCancelled() {
 		if len(failedPrs) > 0 {
-			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String(),
+			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
+				"Run %s/%s was failed",
+				run.Namespace, run.Name)
+		} else {
+			reason := pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String()
+			if run.HasTimedOut() { // This check is only possible if we are on tekton 0.27.0 +
+				reason = v1alpha1.RunReasonTimedOut
+			}
+			run.Status.MarkRunFailed(reason,
 				"Run %s/%s was cancelled",
 				run.Namespace, run.Name)
 		}
+
 		for _, currentRunningPr := range currentRunningPrs {
 			logger.Infof("Run %s/%s is cancelled.  Cancelling PipelineRun %s.", run.Namespace, run.Name, currentRunningPr.Name)
 			b, err := getCancelPatch()
@@ -372,7 +381,7 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            prName,
 			Namespace:       run.Namespace,
-			OwnerReferences: []metav1.OwnerReference{run.GetOwnerReference()},
+			OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(run, run.GroupVersionKind())},
 			Labels:          getPipelineRunLabels(run, strconv.Itoa(iteration)),
 			Annotations:     getPipelineRunAnnotations(run),
 		},
