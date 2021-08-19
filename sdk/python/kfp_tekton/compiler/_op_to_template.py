@@ -546,30 +546,38 @@ def _op_to_template(op: BaseOp,
         # Normalize estimated result size keys.
         result_size_map = {sanitize_k8s_name(key): value for key, value in result_size_map.items()}
         # Sort key orders based on values
-        result_size_map = dict(sorted(result_size_map.items(), key=lambda item: item[1]))
+        result_size_map = dict(sorted(result_size_map.items(), key=lambda item: item[1], reverse=True))
         max_byte_size = 2048
         verified_result_size_map = {0: {}}
         op_result_names = [name['name'] for name in template['spec']['results']]
         step_bins = {0: 0}
         step_counter = 0
-        # Group result files to not exceed max_byte_size
-        # TODO: group result files with better bin packing algorithm
+        # Group result files to not exceed max_byte_size as a bin packing problem
+        # Results are sorted from large to small, each value will loop over each bin to determine can it fit in the existing bins.
         for key, value in result_size_map.items():
             try:
                 value = int(value)
             except ValueError:
                 raise("Estimated value for result %s is %s, but it needs to be an integer." % (key, value))
             if key in op_result_names:
-                if step_bins[step_counter] + value <= max_byte_size:
-                    step_bins[step_counter] = step_bins[step_counter] + value
-                else:
+                packed_index = -1
+                # Look for bin that can fit the result value
+                for i in range(len(step_bins)):
+                    if step_bins[i] + value > max_byte_size:
+                        continue
+                    step_bins[i] = step_bins[i] + value
+                    packed_index = i
+                    break
+                # If no bin can fit the value, create a new bin to store the value
+                if packed_index < 0:
                     step_counter += 1
                     if value > max_byte_size:
                         logging.warning("The estimated size for parameter %s is %sB which is more than 2KB, "
                             "consider passing this value as artifact instead of output parameter." % (key, str(value)))
                     step_bins[step_counter] = value
                     verified_result_size_map[step_counter] = {}
-                verified_result_size_map[step_counter][key] = value
+                    packed_index = step_counter
+                verified_result_size_map[packed_index][key] = value
             else:
                 logging.warning("The esitmated size for parameter %s does not exist in the task %s."
                             "Please correct the task annotations with the correct parameter key" % (key, op.name))

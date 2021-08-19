@@ -28,9 +28,9 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"print4results": [["param1", "$(results.param1.path)"],
-      ["param2", "/tekton/home/tep-results/param2"], ["param3", "/tekton/home/tep-results/param3"],
-      ["param4", "/tekton/home/tep-results/param4"]]}'
+    tekton.dev/artifact_items: '{"print4results": [["param1", "/tekton/home/tep-results/param1"],
+      ["param2", "$(results.param2.path)"], ["param3", "/tekton/home/tep-results/param3"],
+      ["param4", "$(results.param4.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline that produce
       many results.", "name": "many-results-pipeline"}'
@@ -43,8 +43,8 @@ spec:
         - name: main
           args:
           - '----output-paths'
-          - /tekton/home/tep-results/param1
-          - $(results.param2.path)
+          - $(results.param1.path)
+          - /tekton/home/tep-results/param2
           - $(results.param3.path)
           - /tekton/home/tep-results/param4
           command:
@@ -99,17 +99,9 @@ spec:
           args:
           - |
             mv /tekton/home/tep-results/param4 $(results.param4.path);
+            mv /tekton/home/tep-results/param2 $(results.param2.path);
+            mv $(results.param1.path) /tekton/home/tep-results/param1;
             mv $(results.param3.path) /tekton/home/tep-results/param3;
-            mv $(results.param2.path) /tekton/home/tep-results/param2;
-          command:
-          - sh
-          - -c
-          image: library/bash
-        - name: copy-results-2
-          args:
-          - |
-            mv /tekton/home/tep-results/param1 $(results.param1.path);
-            mv $(results.param4.path) /tekton/home/tep-results/param4;
           command:
           - sh
           - -c
