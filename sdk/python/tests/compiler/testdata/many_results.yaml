@@ -97,16 +97,19 @@ spec:
           image: python:3.7
         - name: copy-results-1
           args:
-          - 'mv /tekton/home/tep-results/param4 $(results.param4.path); mv $(results.param3.path)
-            /tekton/home/tep-results/param3; mv $(results.param2.path) /tekton/home/tep-results/param2; '
+          - |
+            mv /tekton/home/tep-results/param4 $(results.param4.path);
+            mv $(results.param3.path) /tekton/home/tep-results/param3;
+            mv $(results.param2.path) /tekton/home/tep-results/param2;
           command:
           - sh
           - -c
           image: library/bash
         - name: copy-results-2
           args:
-          - 'mv /tekton/home/tep-results/param1 $(results.param1.path); mv $(results.param4.path)
-            /tekton/home/tep-results/param4; '
+          - |
+            mv /tekton/home/tep-results/param1 $(results.param1.path);
+            mv $(results.param4.path) /tekton/home/tep-results/param4;
           command:
           - sh
           - -c

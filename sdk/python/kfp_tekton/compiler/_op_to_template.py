@@ -65,10 +65,10 @@ def _get_copy_result_step_template(step_number: int, result_maps: list):
     """
     args = [""]
     for key in result_maps[step_number].keys():
-        args[0] += "mv %s%s $(results.%s.path); " % (TEKTON_HOME_RESULT_PATH, key, key)
+        args[0] += "mv %s%s $(results.%s.path);\n" % (TEKTON_HOME_RESULT_PATH, key, key)
     if step_number > 0:
         for key in result_maps[step_number - 1].keys():
-            args[0] += "mv $(results.%s.path) %s%s; " % (key, TEKTON_HOME_RESULT_PATH, key)
+            args[0] += "mv $(results.%s.path) %s%s;\n" % (key, TEKTON_HOME_RESULT_PATH, key)
     return {
         "name": "copy-results-%s" % str(step_number),
         "args": args,
@@ -543,6 +543,8 @@ def _op_to_template(op: BaseOp,
             result_size_map = json.loads(result_size_map)
         except ValueError:
             raise("tekton-result-sizes annotation is not a valid JSON")
+        # Normalize estimated result size keys.
+        result_size_map = {sanitize_k8s_name(key): value for key, value in result_size_map.items()}
         # Sort key orders based on values
         result_size_map = dict(sorted(result_size_map.items(), key=lambda item: item[1]))
         max_byte_size = 2048
@@ -568,6 +570,9 @@ def _op_to_template(op: BaseOp,
                     step_bins[step_counter] = value
                     verified_result_size_map[step_counter] = {}
                 verified_result_size_map[step_counter][key] = value
+            else:
+                logging.warning("The esitmated size for parameter %s does not exist in the task %s."
+                            "Please correct the task annotations with the correct parameter key" % (key, op.name))
         # Move results between the Tekton home and result directories if there are more than one step
         if step_counter > 0:
             for step in template['spec']['steps']:
