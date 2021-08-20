@@ -15,6 +15,7 @@
 import json
 import re
 import yaml
+import logging
 
 from collections import OrderedDict
 from typing import List, Text, Dict, Any
@@ -29,6 +30,7 @@ from .. import __version__
 
 
 RESOURCE_OP_IMAGE = ":".join(["aipipeline/kubectl-wrapper", __version__])
+TEKTON_HOME_RESULT_PATH = "/tekton/home/tep-results/"
 
 
 def _get_base_step(name: str):
@@ -46,6 +48,32 @@ def _get_base_step(name: str):
         'image': 'busybox',
         'name': name,
         'script': '#!/bin/sh\nset -exo pipefail\n'
+    }
+
+
+def _get_copy_result_step_template(step_number: int, result_maps: list):
+    """Base copy result step for moving Tekton result files around.
+
+    Return a copy result step for moving Tekton result files around.
+
+    Args:
+        step_number {int}: step number
+        result_maps {list}: list of maps bucketed with the result groups
+
+    Returns:
+        Dict[Text, Any]
+    """
+    args = [""]
+    for key in result_maps[step_number].keys():
+        args[0] += "mv %s%s $(results.%s.path);\n" % (TEKTON_HOME_RESULT_PATH, key, key)
+    if step_number > 0:
+        for key in result_maps[step_number - 1].keys():
+            args[0] += "mv $(results.%s.path) %s%s;\n" % (key, TEKTON_HOME_RESULT_PATH, key)
+    return {
+        "name": "copy-results-%s" % str(step_number),
+        "args": args,
+        "command": ["sh", "-c"],
+        "image": "library/bash"
     }
 
 
@@ -505,4 +533,82 @@ def _op_to_template(op: BaseOp,
             template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/max_cache_staleness'] = \
                 str(op.execution_options.caching_strategy.max_cache_staleness)
 
+    # Sort and arrange results based on provided estimate size and process results in multi-steps if the result sizes are too big.
+    result_size_map = "{}"
+    if processed_op.pod_annotations:
+        result_size_map = processed_op.pod_annotations.get("tekton-result-sizes", "{}")
+    # Only sort and arrange results when the estimated sizes are given.
+    if result_size_map and result_size_map != "{}":
+        try:
+            result_size_map = json.loads(result_size_map)
+        except ValueError:
+            raise("tekton-result-sizes annotation is not a valid JSON")
+        # Normalize estimated result size keys.
+        result_size_map = {sanitize_k8s_name(key): value for key, value in result_size_map.items()}
+        # Sort key orders based on values
+        result_size_map = dict(sorted(result_size_map.items(), key=lambda item: item[1], reverse=True))
+        max_byte_size = 2048
+        verified_result_size_map = {0: {}}
+        op_result_names = [name['name'] for name in template['spec']['results']]
+        step_bins = {0: 0}
+        step_counter = 0
+        # Group result files to not exceed max_byte_size as a bin packing problem
+        # Results are sorted from large to small, each value will loop over each bin to determine can it fit in the existing bins.
+        for key, value in result_size_map.items():
+            try:
+                value = int(value)
+            except ValueError:
+                raise("Estimated value for result %s is %s, but it needs to be an integer." % (key, value))
+            if key in op_result_names:
+                packed_index = -1
+                # Look for bin that can fit the result value
+                for i in range(len(step_bins)):
+                    if step_bins[i] + value > max_byte_size:
+                        continue
+                    step_bins[i] = step_bins[i] + value
+                    packed_index = i
+                    break
+                # If no bin can fit the value, create a new bin to store the value
+                if packed_index < 0:
+                    step_counter += 1
+                    if value > max_byte_size:
+                        logging.warning("The estimated size for parameter %s is %sB which is more than 2KB, "
+                            "consider passing this value as artifact instead of output parameter." % (key, str(value)))
+                    step_bins[step_counter] = value
+                    verified_result_size_map[step_counter] = {}
+                    packed_index = step_counter
+                verified_result_size_map[packed_index][key] = value
+            else:
+                logging.warning("The esitmated size for parameter %s does not exist in the task %s."
+                            "Please correct the task annotations with the correct parameter key" % (key, op.name))
+        missing_param_estimation = []
+        for result_name in op_result_names:
+            if result_name not in result_size_map.keys():
+                missing_param_estimation.append(result_name)
+        if missing_param_estimation:
+            logging.warning("The following output parameter estimations are missing in task %s: Missing params: %s."
+                         % (op.name, missing_param_estimation))
+        # Move results between the Tekton home and result directories if there are more than one step
+        if step_counter > 0:
+            for step in template['spec']['steps']:
+                if step['name'] == 'main':
+                    for key in result_size_map.keys():
+                        # Replace main step results that are not in the first bin to the Tekton home path
+                        if key not in verified_result_size_map[0].keys():
+                            for i, a in enumerate(step['args']):
+                                a = a.replace('$(results.%s.path)' % key, '%s%s' % (TEKTON_HOME_RESULT_PATH, key))
+                                step['args'][i] = a
+                            for i, c in enumerate(step['command']):
+                                c = c.replace('$(results.%s.path)' % key, '%s%s' % (TEKTON_HOME_RESULT_PATH, key))
+                                step['command'][i] = c
+            # Append new steps to move result files between each step, so Tekton controller can record all results without
+            # exceeding the Kubernetes termination log limit.
+            for i in range(1, step_counter + 1):
+                copy_result_step = _get_copy_result_step_template(i, verified_result_size_map)
+                template['spec']['steps'].append(copy_result_step)
+        # Update actifact item location to the latest stage in order to properly track and store all the artifacts.
+        for i, artifact in enumerate(artifact_items[op.name]):
+            if artifact[0] not in verified_result_size_map[step_counter].keys():
+                artifact[1] = '%s%s' % (TEKTON_HOME_RESULT_PATH, artifact[0])
+                artifact_items[op.name][i] = artifact
     return template

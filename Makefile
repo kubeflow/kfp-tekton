@@ -87,7 +87,7 @@ lint: venv ## Check Python code style compliance
 	@which flake8 > /dev/null || pip install flake8
 	@flake8 sdk/python --show-source --statistics \
 		--select=E9,E2,E3,E5,F63,F7,F82,F4,F841,W291,W292 \
-		--per-file-ignores sdk/python/tests/compiler/testdata/*:F841 \
+		--per-file-ignores sdk/python/tests/compiler/testdata/*:F841,F821 \
  		--max-line-length=140
 	@echo "$@: OK"
 
