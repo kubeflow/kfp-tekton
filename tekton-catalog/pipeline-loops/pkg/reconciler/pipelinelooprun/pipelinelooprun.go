@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 	"strconv"
 	"time"
@@ -376,14 +377,14 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 
 	// Create name for PipelineRun from Run name plus iteration number.
 	prName := names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("%s-%s", run.Name, fmt.Sprintf("%05d", iteration)))
-
 	pr := &v1beta1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            prName,
-			Namespace:       run.Namespace,
-			OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(run, run.GroupVersionKind())},
-			Labels:          getPipelineRunLabels(run, strconv.Itoa(iteration)),
-			Annotations:     getPipelineRunAnnotations(run),
+			Name:      prName,
+			Namespace: run.Namespace,
+			OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(run,
+				schema.GroupVersionKind{Group: "tekton.dev", Version: "v1alpha1", Kind: "Run"})},
+			Labels:      getPipelineRunLabels(run, strconv.Itoa(iteration)),
+			Annotations: getPipelineRunAnnotations(run),
 		},
 		Spec: v1beta1.PipelineRunSpec{
 			Params:             getParameters(run, tls, iteration),
