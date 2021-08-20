@@ -20,7 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"log"
 	"reflect"
 	"strconv"
 	"time"
@@ -47,6 +47,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+  "k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
@@ -83,8 +84,22 @@ type Reconciler struct {
 
 var (
 	// Check that our Reconciler implements runreconciler.Interface
-	_ runreconciler.Interface = (*Reconciler)(nil)
+	_                runreconciler.Interface = (*Reconciler)(nil)
+	cancelPatchBytes []byte
 )
+
+func init() {
+	var err error
+	patches := []jsonpatch.JsonPatchOperation{{
+		Operation: "add",
+		Path:      "/spec/status",
+		Value:     v1beta1.PipelineRunSpecStatusCancelled,
+	}}
+	cancelPatchBytes, err = json.Marshal(patches)
+	if err != nil {
+		log.Fatalf("failed to marshal patch bytes in order to cancel: %v", err)
+	}
+}
 
 // ReconcileKind compares the actual state with the desired, and attempts to converge the two.
 // It then updates the Status block of the Run resource with the current status of the resource.
@@ -245,11 +260,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 
 		for _, currentRunningPr := range currentRunningPrs {
 			logger.Infof("Run %s/%s is cancelled.  Cancelling PipelineRun %s.", run.Namespace, run.Name, currentRunningPr.Name)
-			b, err := getCancelPatch()
-			if err != nil {
-				return fmt.Errorf("Failed to make patch to cancel PipelineRun %s: %v", currentRunningPr.Name, err)
-			}
-			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, b, metav1.PatchOptions{}); err != nil {
+			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
 				run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
 					"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
 				return nil
@@ -511,19 +522,6 @@ func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1a
 		}
 	}
 	return highestIteration, currentRunningPrs, failedPrs, nil
-}
-
-func getCancelPatch() ([]byte, error) {
-	patches := []jsonpatch.JsonPatchOperation{{
-		Operation: "add",
-		Path:      "/spec/status",
-		Value:     v1beta1.PipelineRunSpecStatusCancelled,
-	}}
-	patchBytes, err := json.Marshal(patches)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal patch bytes in order to cancel: %v", err)
-	}
-	return patchBytes, nil
 }
 
 func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec) (int, error) {
