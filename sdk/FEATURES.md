@@ -223,6 +223,14 @@ creating Kubernetes resources on the pipeline cluster. ResourceOp is a basic ope
 
 Output parameters are a dictionary of string files that users can define as a component's outputs. In Tekton, we implemented this with Tekton [task results](https://github.com/tektoncd/pipeline/blob/master/docs/tasks.md#storing-execution-results) under Tekton Task. Since Tekton task results are only able to output parameters to its `/tekton/results` directory, we add an extra ending step to copy any non-Tekton user output to the `/tekton/results` directory. The [parallel_join](/sdk/python/tests/compiler/testdata/parallel_join.py) python test is an example of how to use this feature.
 
+Due to the nature of Tekton using the Kubernetes Termination message to gather the task results, users only can have up to 4KB output parameters per task by default. However, if each of the output parameters is less than 2KB and users have a lot of output parameters, they can provide an estimated tekton result sizes for the output parameters to extend the Tekton limit. Below is the usage:
+
+Add the annotation `tekton-result-sizes` to the defined KFP task as the following, the compiler will use these numbers to rearrange the tekton results into multiple steps in order to bypass the Tekton limit. [many_results](/sdk/python/tests/compiler/testdata/many_results.py) test is an example of how to use this feature.
+```
+    output_estimation_json = {'param1': 1500, 'param2': 700, 'param3': 500, 'param4': 900}
+    print_task = print_op().add_pod_annotation('tekton-result-sizes', json.dumps(output_estimation_json))
+```
+
 ### Input Artifacts
 
 Input Artifacts in Kubeflow pipelines are used for passing raw text or local files as files placed in

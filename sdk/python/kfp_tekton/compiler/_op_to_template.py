@@ -581,6 +581,13 @@ def _op_to_template(op: BaseOp,
             else:
                 logging.warning("The esitmated size for parameter %s does not exist in the task %s."
                             "Please correct the task annotations with the correct parameter key" % (key, op.name))
+        missing_param_estimation = []
+        for result_name in op_result_names:
+            if result_name not in result_size_map.keys():
+                missing_param_estimation.append(result_name)
+        if missing_param_estimation:
+            logging.warning("The following output parameter estimations are missing in task %s: Missing params: %s."
+                         % (op.name, missing_param_estimation))
         # Move results between the Tekton home and result directories if there are more than one step
         if step_counter > 0:
             for step in template['spec']['steps']:
