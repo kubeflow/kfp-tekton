@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+from kfp import dsl, components
 from kubernetes.client.models import V1EnvVar
 
 
@@ -24,21 +24,43 @@ def pipelineparams_pipeline(tag: str = 'latest', sleep_ms: int = 10):
         image='hashicorp/http-echo:%s' % tag,
         args=['-text="hello world"'],
     )
+    op1 = components.load_component_from_text("""
+    name: download
+    description: download
+    inputs:
+      - {name: sleep_ms, type: Integer}
+    outputs:
+      - {name: data, type: String}
+    implementation:
+      container:
+        image: busy:placeholder
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          sleep $0; wget localhost:5678 -O $1
+        - {inputValue: sleep_ms}
+        - {outputPath: data}
+    """)(sleep_ms)
+    op1.container.image = "busy:%s" % tag
 
-    op1 = dsl.ContainerOp(
-        name='download',
-        image='busybox:%s' % tag,
-        command=['sh', '-c'],
-        arguments=['sleep %s; wget localhost:5678 -O /tmp/results.txt' % sleep_ms],
-        sidecars=[echo],
-        file_outputs={'downloaded_resultOutput': '/tmp/results.txt'})
-
-    op2 = dsl.ContainerOp(
-        name='echo',
-        image='library/bash',
-        command=['sh', '-c'],
-        arguments=['echo $MSG %s' % op1.output])
-    
+    op2 = components.load_component_from_text("""
+    name: echo
+    description: echo
+    inputs:
+      - {name: message, type: String}
+    implementation:
+      container:
+        image: library/bash
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          echo $MSG $1
+        - {inputValue: message}
+    """)(op1.output)
     op2.container.add_env_variable(V1EnvVar(name='MSG', value='pipelineParams: '))
 
 
