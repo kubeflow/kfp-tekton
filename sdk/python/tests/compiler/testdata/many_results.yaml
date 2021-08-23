@@ -19,18 +19,19 @@ metadata:
   annotations:
     tekton.dev/output_artifacts: '{"print4results": [{"key": "artifacts/$PIPELINERUN/print4results/param1.tgz",
       "name": "print4results-param1", "path": "/tmp/outputs/param1/data"}, {"key":
-      "artifacts/$PIPELINERUN/print4results/param2.tgz", "name": "print4results-param2",
-      "path": "/tmp/outputs/param2/data"}, {"key": "artifacts/$PIPELINERUN/print4results/param3.tgz",
-      "name": "print4results-param3", "path": "/tmp/outputs/param3/data"}, {"key":
-      "artifacts/$PIPELINERUN/print4results/param4.tgz", "name": "print4results-param4",
-      "path": "/tmp/outputs/param4/data"}]}'
-    tekton.dev/input_artifacts: '{}'
+      "artifacts/$PIPELINERUN/print4results/param2A.tgz", "name": "print4results-param2A",
+      "path": "/tmp/outputs/param2A/data"}, {"key": "artifacts/$PIPELINERUN/print4results/param3_b.tgz",
+      "name": "print4results-param3_b", "path": "/tmp/outputs/param3_b/data"}, {"key":
+      "artifacts/$PIPELINERUN/print4results/param4c.tgz", "name": "print4results-param4c",
+      "path": "/tmp/outputs/param4c/data"}]}'
+    tekton.dev/input_artifacts: '{"print": [{"name": "print4results-param3_b", "parent_task":
+      "print4results"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"print4results": [["param1", "/tekton/home/tep-results/param1"],
-      ["param2", "$(results.param2.path)"], ["param3", "/tekton/home/tep-results/param3"],
-      ["param4", "$(results.param4.path)"]]}'
+    tekton.dev/artifact_items: '{"print": [], "print4results": [["param1", "/tekton/home/tep-results/param1"],
+      ["param2A", "$(results.param2a.path)"], ["param3_b", "/tekton/home/tep-results/param3_b"],
+      ["param4c", "$(results.param4c.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline that produce
       many results.", "name": "many-results-pipeline"}'
@@ -44,9 +45,9 @@ spec:
           args:
           - '----output-paths'
           - $(results.param1.path)
-          - /tekton/home/tep-results/param2
-          - $(results.param3.path)
-          - /tekton/home/tep-results/param4
+          - /tekton/home/tep-results/param2a
+          - $(results.param3-b.path)
+          - /tekton/home/tep-results/param4c
           command:
           - sh
           - -ec
@@ -62,7 +63,7 @@ spec:
                c = 'c' * 500
                d = 'd' * 900
                from collections import namedtuple
-               task_output = namedtuple('taskOutput', ['param1', 'param2', 'param3', 'param4'])
+               task_output = namedtuple('taskOutput', ['param1', 'param2A', 'param3_b', 'param4c'])
                return task_output(a, b, c, d)
 
             def _serialize_str(str_value: str) -> str:
@@ -98,10 +99,10 @@ spec:
         - name: copy-results-1
           args:
           - |
-            mv /tekton/home/tep-results/param4 $(results.param4.path);
-            mv /tekton/home/tep-results/param2 $(results.param2.path);
+            mv /tekton/home/tep-results/param4c $(results.param4c.path);
+            mv /tekton/home/tep-results/param2a $(results.param2a.path);
             mv $(results.param1.path) /tekton/home/tep-results/param1;
-            mv $(results.param3.path) /tekton/home/tep-results/param3;
+            mv $(results.param3-b.path) /tekton/home/tep-results/param3-b;
           command:
           - sh
           - -c
@@ -109,29 +110,29 @@ spec:
         results:
         - name: param1
           description: /tmp/outputs/param1/data
-        - name: param2
-          description: /tmp/outputs/param2/data
-        - name: param3
-          description: /tmp/outputs/param3/data
-        - name: param4
-          description: /tmp/outputs/param4/data
+        - name: param2a
+          description: /tmp/outputs/param2A/data
+        - name: param3-b
+          description: /tmp/outputs/param3_b/data
+        - name: param4c
+          description: /tmp/outputs/param4c/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            tekton-result-sizes: '{"param1": 1500, "param2": 700, "param3": 500, "param4":
-              900}'
+            tekton-result-sizes: '{"param1": 1500, "param2A": 700, "param3_b": 500,
+              "param4c": 900}'
             pipelines.kubeflow.org/component_spec: '{"description": "Print 4 long
               results", "implementation": {"container": {"args": ["----output-paths",
-              {"outputPath": "param1"}, {"outputPath": "param2"}, {"outputPath": "param3"},
-              {"outputPath": "param4"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+              {"outputPath": "param1"}, {"outputPath": "param2A"}, {"outputPath":
+              "param3_b"}, {"outputPath": "param4c"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
               \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def print4results():\n   \"\"\"Print 4 long results\"\"\"\n   a = ''a''
               * 1500\n   b = ''b'' * 700\n   c = ''c'' * 500\n   d = ''d'' * 900\n   from
               collections import namedtuple\n   task_output = namedtuple(''taskOutput'',
-              [''param1'', ''param2'', ''param3'', ''param4''])\n   return task_output(a,
+              [''param1'', ''param2A'', ''param3_b'', ''param4c''])\n   return task_output(a,
               b, c, d)\n\ndef _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value,
               str):\n        raise TypeError(''Value \"{}\" has type \"{}\" instead
               of str.''.format(str(str_value), str(type(str_value))))\n    return
@@ -143,8 +144,37 @@ spec:
               os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
               OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
               "image": "python:3.7"}}, "name": "Print4results", "outputs": [{"name":
-              "param1", "type": "String"}, {"name": "param2", "type": "String"}, {"name":
-              "param3", "type": "String"}, {"name": "param4", "type": "String"}]}'
+              "param1", "type": "String"}, {"name": "param2A", "type": "String"},
+              {"name": "param3_b", "type": "String"}, {"name": "param4c", "type":
+              "String"}]}'
+            tekton.dev/template: ''
+      timeout: 0s
+    - name: print
+      params:
+      - name: print4results-param3_b
+        value: $(tasks.print4results.results.param3-b)
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            echo $0
+          - $(inputs.params.print4results-param3_b)
+          image: alpine:3.6
+        params:
+        - name: print4results-param3_b
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"command": ["sh", "-c", "echo $0\n", {"inputValue": "msg"}], "image":
+              "alpine:3.6"}}, "inputs": [{"name": "msg", "type": "String"}], "name":
+              "print"}'
             tekton.dev/template: ''
       timeout: 0s
   timeout: 0s

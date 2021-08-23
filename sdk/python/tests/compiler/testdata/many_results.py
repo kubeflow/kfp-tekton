@@ -14,22 +14,38 @@
 
 import kfp.dsl as dsl
 import kfp.components as comp
+from kfp.components import load_component_from_text
 from typing import NamedTuple
 import json
 
 
-def print4results() -> NamedTuple('taskOutput', [('param1', str), ('param2', str), ('param3', str), ('param4', str)]):
+def print4results() -> NamedTuple('taskOutput', [('param1', str), ('param2A', str), ('param3_b', str), ('param4c', str)]):
    """Print 4 long results"""
    a = 'a' * 1500
    b = 'b' * 700
    c = 'c' * 500
    d = 'd' * 900
    from collections import namedtuple
-   task_output = namedtuple('taskOutput', ['param1', 'param2', 'param3', 'param4'])
+   task_output = namedtuple('taskOutput', ['param1', 'param2A', 'param3_b', 'param4c'])
    return task_output(a, b, c, d)
 
 
 print_op = comp.func_to_container_op(print4results)
+
+echo_op = load_component_from_text("""
+  name: print
+  inputs:
+    - {name: msg, type: String}
+  implementation:
+    container:
+      image: alpine:3.6
+      command:
+        - sh
+        - -c
+        - |
+          echo $0
+        - { inputValue: msg }
+""")
 
 
 @dsl.pipeline(
@@ -38,8 +54,9 @@ print_op = comp.func_to_container_op(print4results)
 )
 def many_results_pipeline(
 ):
-    output_estimation_json = {'param1': 1500, 'param2': 700, 'param3': 500, 'param4': 900}
+    output_estimation_json = {'param1': 1500, 'param2A': 700, 'param3_b': 500, 'param4c': 900}
     print_task = print_op().add_pod_annotation('tekton-result-sizes', json.dumps(output_estimation_json))
+    echo_task = echo_op(print_task.outputs['param3_b'])
 
 
 if __name__ == '__main__':
