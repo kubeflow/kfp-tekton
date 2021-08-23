@@ -250,9 +250,9 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.many_results import many_results_pipeline
     self._test_pipeline_workflow(many_results_pipeline, 'many_results.yaml')
 
-  def test_many_results_workflow(self):
+  def test_many_results_with_warnings_workflow(self):
     """
-    Test workflow with many results.
+    Test workflow with many results with warnings.
     """
     from .testdata.many_results_with_warnings import many_results_pipeline
     self._test_pipeline_workflow(many_results_pipeline, 'many_results_with_warnings.yaml')

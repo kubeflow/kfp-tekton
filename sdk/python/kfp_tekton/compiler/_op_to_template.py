@@ -65,10 +65,12 @@ def _get_copy_result_step_template(step_number: int, result_maps: list):
     """
     args = [""]
     for key in result_maps[step_number].keys():
-        args[0] += "mv %s%s $(results.%s.path);\n" % (TEKTON_HOME_RESULT_PATH, key, key)
+        sanitize_key = sanitize_k8s_name(key)
+        args[0] += "mv %s%s $(results.%s.path);\n" % (TEKTON_HOME_RESULT_PATH, sanitize_key, sanitize_key)
     if step_number > 0:
         for key in result_maps[step_number - 1].keys():
-            args[0] += "mv $(results.%s.path) %s%s;\n" % (key, TEKTON_HOME_RESULT_PATH, key)
+            sanitize_key = sanitize_k8s_name(key)
+            args[0] += "mv $(results.%s.path) %s%s;\n" % (sanitize_key, TEKTON_HOME_RESULT_PATH, sanitize_key)
     return {
         "name": "copy-results-%s" % str(step_number),
         "args": args,
@@ -544,7 +546,8 @@ def _op_to_template(op: BaseOp,
         except ValueError:
             raise("tekton-result-sizes annotation is not a valid JSON")
         # Normalize estimated result size keys.
-        result_size_map = {sanitize_k8s_name(key): value for key, value in result_size_map.items()}
+        result_size_map = {sanitize_k8s_name(key, allow_capital_underscore=True): value
+                           for key, value in result_size_map.items()}
         # Sort key orders based on values
         result_size_map = dict(sorted(result_size_map.items(), key=lambda item: item[1], reverse=True))
         max_byte_size = 2048
@@ -595,11 +598,12 @@ def _op_to_template(op: BaseOp,
                     for key in result_size_map.keys():
                         # Replace main step results that are not in the first bin to the Tekton home path
                         if key not in verified_result_size_map[0].keys():
+                            sanitize_key = sanitize_k8s_name(key)
                             for i, a in enumerate(step['args']):
-                                a = a.replace('$(results.%s.path)' % key, '%s%s' % (TEKTON_HOME_RESULT_PATH, key))
+                                a = a.replace('$(results.%s.path)' % sanitize_key, '%s%s' % (TEKTON_HOME_RESULT_PATH, sanitize_key))
                                 step['args'][i] = a
                             for i, c in enumerate(step['command']):
-                                c = c.replace('$(results.%s.path)' % key, '%s%s' % (TEKTON_HOME_RESULT_PATH, key))
+                                c = c.replace('$(results.%s.path)' % sanitize_key, '%s%s' % (TEKTON_HOME_RESULT_PATH, sanitize_key))
                                 step['command'][i] = c
             # Append new steps to move result files between each step, so Tekton controller can record all results without
             # exceeding the Kubernetes termination log limit.
