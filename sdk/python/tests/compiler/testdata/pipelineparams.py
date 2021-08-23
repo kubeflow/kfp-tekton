@@ -58,7 +58,7 @@ def pipelineparams_pipeline(tag: str = 'latest', sleep_ms: int = 10):
         - -c
         args:
         - |
-          echo $MSG $1
+          echo $MSG $0
         - {inputValue: message}
     """)(op1.output)
     op2.container.add_env_variable(V1EnvVar(name='MSG', value='pipelineParams: '))

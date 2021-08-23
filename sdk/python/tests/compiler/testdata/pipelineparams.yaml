@@ -90,7 +90,7 @@ spec:
         - name: main
           args:
           - |
-            echo $MSG $1
+            echo $MSG $0
           - $(inputs.params.download-data)
           command:
           - sh
@@ -108,7 +108,7 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec: '{"description": "echo", "implementation":
-              {"container": {"args": ["echo $MSG $1\n", {"inputValue": "message"}],
+              {"container": {"args": ["echo $MSG $0\n", {"inputValue": "message"}],
               "command": ["sh", "-c"], "image": "library/bash"}}, "inputs": [{"name":
               "message", "type": "String"}], "name": "echo"}'
             tekton.dev/template: ''
