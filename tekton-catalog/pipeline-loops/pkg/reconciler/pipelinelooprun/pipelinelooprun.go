@@ -46,6 +46,7 @@ import (
 	"gomodules.xyz/jsonpatch/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
@@ -244,10 +245,19 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	// Run is cancelled, just cancel all the running instance and return
 	if run.IsCancelled() {
 		if len(failedPrs) > 0 {
-			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String(),
+			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
+				"Run %s/%s was failed",
+				run.Namespace, run.Name)
+		} else {
+			reason := pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String()
+			if run.HasTimedOut() { // This check is only possible if we are on tekton 0.27.0 +
+				reason = v1alpha1.RunReasonTimedOut
+			}
+			run.Status.MarkRunFailed(reason,
 				"Run %s/%s was cancelled",
 				run.Namespace, run.Name)
 		}
+
 		for _, currentRunningPr := range currentRunningPrs {
 			logger.Infof("Run %s/%s is cancelled.  Cancelling PipelineRun %s.", run.Namespace, run.Name, currentRunningPr.Name)
 			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
@@ -378,14 +388,14 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 
 	// Create name for PipelineRun from Run name plus iteration number.
 	prName := names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("%s-%s", run.Name, fmt.Sprintf("%05d", iteration)))
-
 	pr := &v1beta1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            prName,
-			Namespace:       run.Namespace,
-			OwnerReferences: []metav1.OwnerReference{run.GetOwnerReference()},
-			Labels:          getPipelineRunLabels(run, strconv.Itoa(iteration)),
-			Annotations:     getPipelineRunAnnotations(run),
+			Name:      prName,
+			Namespace: run.Namespace,
+			OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(run,
+				schema.GroupVersionKind{Group: "tekton.dev", Version: "v1alpha1", Kind: "Run"})},
+			Labels:      getPipelineRunLabels(run, strconv.Itoa(iteration)),
+			Annotations: getPipelineRunAnnotations(run),
 		},
 		Spec: v1beta1.PipelineRunSpec{
 			Params:             getParameters(run, tls, iteration),

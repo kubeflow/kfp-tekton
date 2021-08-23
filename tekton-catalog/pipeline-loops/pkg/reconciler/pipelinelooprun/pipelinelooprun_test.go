@@ -68,22 +68,6 @@ func loopRunning(run *v1alpha1.Run) *v1alpha1.Run {
 	return runWithStatus
 }
 
-func requestCancel(run *v1alpha1.Run) *v1alpha1.Run {
-	runWithCancelStatus := run.DeepCopy()
-	runWithCancelStatus.Spec.Status = v1alpha1.RunSpecStatusCancelled
-	return runWithCancelStatus
-}
-
-func running(tr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
-	trWithStatus := tr.DeepCopy()
-	trWithStatus.Status.SetCondition(&apis.Condition{
-		Type:   apis.ConditionSucceeded,
-		Status: corev1.ConditionUnknown,
-		Reason: v1beta1.PipelineRunReasonRunning.String(),
-	})
-	return trWithStatus
-}
-
 func successful(pr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
 	prWithStatus := pr.DeepCopy()
 	prWithStatus.Status.SetCondition(&apis.Condition{
