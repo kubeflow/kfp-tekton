@@ -14,31 +14,45 @@
 
 import sys
 
-from kfp import dsl
+from kfp import dsl, components
 from pathlib import Path
 
 sys.path.insert(0, __file__ + '/../../../../')
 
 
-def component_with_inline_input_artifact(text: str):
-    return dsl.ContainerOp(
-        name='component_with_inline_input_artifact',
-        image='alpine',
-        command=['cat', dsl.InputArgumentPath(text, path='/tmp/inputs/text/data', input='text')],  # path and input are optional
-    )
+component_with_inline_input_artifact = components.load_component_from_text("""
+name: component_with_inline_input_artifact
+description: component_with_inline_input_artifact
+inputs:
+    - {name: text, type: String}
+implementation:
+    container:
+        image: alpine
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          cat $0
+        - {inputPath: text}
+""")
 
-
-def component_with_input_artifact(text):
-    """A component that passes text as input artifact"""
-
-    return dsl.ContainerOp(
-        name='component_with_input_artifact',
-        artifact_argument_paths=[
-            dsl.InputArgumentPath(argument=text, path='/tmp/inputs/text/data', input='text'),  # path and input are optional
-        ],
-        image='alpine',
-        command=['cat', '/tmp/inputs/text/data'],
-    )
+component_with_input_artifact = components.load_component_from_text("""
+name: component_with_input_artifact
+description: component_with_input_artifact
+inputs:
+    - {name: text, type: String}
+implementation:
+    container:
+        image: alpine
+        command:
+        - sh
+        - -c
+        args:
+        - |
+          cat $0
+        - {inputPath: text}
+""")
 
 
 def component_with_hardcoded_input_artifact_value():
@@ -52,7 +66,7 @@ def component_with_input_artifact_value_from_file(file_path):
 
 
 @dsl.pipeline(
-    name='Pipeline with artifact input raw argument value.',
+    name='pipeline-with-artifact-input-raw-argument-value',
     description='Pipeline shows how to define artifact inputs and pass raw artifacts to them.'
 )
 def input_artifact_pipeline():

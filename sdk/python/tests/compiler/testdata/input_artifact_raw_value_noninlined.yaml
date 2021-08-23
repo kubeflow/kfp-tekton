@@ -27,8 +27,7 @@ metadata:
       []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Pipeline shows how to
-      define artifact inputs and pass raw artifacts to them.", "name": "Pipeline with
-      artifact input raw argument value."}'
+      define artifact inputs and pass raw artifacts to them.", "name": "pipeline-with-artifact-input-raw-argument-value"}'
 spec:
   pipelineSpec:
     tasks:
@@ -42,9 +41,13 @@ spec:
             set -exo pipefail
             echo -n "Constant artifact value" > /tmp/inputs/text/data
         - name: main
-          command:
-          - cat
+          args:
+          - |
+            cat $0
           - /tmp/inputs/text/data
+          command:
+          - sh
+          - -c
           image: alpine
         metadata:
           labels:
@@ -52,6 +55,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "component_with_inline_input_artifact",
+              "implementation": {"container": {"args": ["cat $0\n", {"inputPath":
+              "text"}], "command": ["sh", "-c"], "image": "alpine"}}, "inputs": [{"name":
+              "text", "type": "String"}], "name": "component_with_inline_input_artifact"}'
             tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
@@ -71,9 +78,13 @@ spec:
             set -exo pipefail
             echo -n "Constant artifact value" > /tmp/inputs/text/data
         - name: main
-          command:
-          - cat
+          args:
+          - |
+            cat $0
           - /tmp/inputs/text/data
+          command:
+          - sh
+          - -c
           image: alpine
         metadata:
           labels:
@@ -81,6 +92,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "component_with_input_artifact",
+              "implementation": {"container": {"args": ["cat $0\n", {"inputPath":
+              "text"}], "command": ["sh", "-c"], "image": "alpine"}}, "inputs": [{"name":
+              "text", "type": "String"}], "name": "component_with_input_artifact"}'
             tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
@@ -100,9 +115,13 @@ spec:
             set -exo pipefail
             echo -n "hard-coded artifact value" > /tmp/inputs/text/data
         - name: main
-          command:
-          - cat
+          args:
+          - |
+            cat $0
           - /tmp/inputs/text/data
+          command:
+          - sh
+          - -c
           image: alpine
         metadata:
           labels:
@@ -110,6 +129,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "component_with_input_artifact",
+              "implementation": {"container": {"args": ["cat $0\n", {"inputPath":
+              "text"}], "command": ["sh", "-c"], "image": "alpine"}}, "inputs": [{"name":
+              "text", "type": "String"}], "name": "component_with_input_artifact"}'
             tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
@@ -130,9 +153,13 @@ spec:
             echo -n "Text from a file with hard-coded artifact value
             " > /tmp/inputs/text/data
         - name: main
-          command:
-          - cat
+          args:
+          - |
+            cat $0
           - /tmp/inputs/text/data
+          command:
+          - sh
+          - -c
           image: alpine
         metadata:
           labels:
@@ -140,6 +167,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "component_with_input_artifact",
+              "implementation": {"container": {"args": ["cat $0\n", {"inputPath":
+              "text"}], "command": ["sh", "-c"], "image": "alpine"}}, "inputs": [{"name":
+              "text", "type": "String"}], "name": "component_with_input_artifact"}'
             tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
