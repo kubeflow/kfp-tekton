@@ -974,10 +974,11 @@ class TektonCompiler(Compiler):
     # add timeout params to task_refs, instead of task.
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      # Custom task doesn't support timeout feature
-      if task.get('taskSpec', '') and 'apiVersion' not in task['taskSpec']:
+      if not (task.get('taskRef', '') != '' or task.get('taskSpec', '') != '' and 'apiVersion' in task['taskSpec']):
         if op != None and (not TEKTON_GLOBAL_DEFAULT_TIMEOUT or op.timeout):
           task['timeout'] = '%ds' % op.timeout
+      elif op.timeout > 0:  # i.e. incase of custom task, don't set timeout field by default.
+        task['timeout'] = '%ds' % op.timeout
 
     # handle resourceOp cases in pipeline
     self._process_resourceOp(task_refs, pipeline)

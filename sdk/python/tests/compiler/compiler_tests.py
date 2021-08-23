@@ -278,6 +278,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.custom_task_ref import custom_task_pipeline
     self._test_pipeline_workflow(custom_task_pipeline, 'custom_task_ref.yaml', skip_noninlined=True)
 
+  def test_custom_task_ref_timeout_workflow(self):
+    """
+    Test Tekton custom task with custom ref timeout workflow.
+    """
+    from .testdata.custom_task_ref_timeout import custom_task_pipeline
+    self._test_pipeline_workflow(custom_task_pipeline, 'custom_task_ref_timeout.yaml', skip_noninlined=True)
+
   def test_long_param_name_workflow(self):
     """
     Test long parameter name workflow.
