@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Google LLC
+ * Copyright 2018-2019 The Kubeflow Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -690,4 +690,17 @@ export default class WorkflowParser {
       return '';
     }
   }
+}
+
+function buildNodeToExecutionStateMap(
+  executions: Execution[] | undefined,
+): Map<string, Execution.State> {
+  const m = new Map<string, Execution.State>();
+  executions?.forEach(execution => {
+    const podname = ExecutionHelpers.getKfpPod(execution);
+    if (typeof podname === 'string') {
+      m.set(podname, execution.getLastKnownState());
+    }
+  });
+  return m;
 }

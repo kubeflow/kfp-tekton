@@ -1,0 +1,20 @@
+diff a/backend/src/crd/controller/scheduledworkflow/main.go b/backend/src/crd/controller/scheduledworkflow/main.go	(rejected hunks)
+@@ -19,8 +19,8 @@ import (
+ 	"strings"
+ 	"time"
+ 
+-	workflowclientSet "github.com/argoproj/argo/pkg/client/clientset/versioned"
+-	workflowinformers "github.com/argoproj/argo/pkg/client/informers/externalversions"
++	workflowclientSet "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned"
++	workflowinformers "github.com/argoproj/argo-workflows/v3/pkg/client/informers/externalversions"
+ 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
+ 	"github.com/kubeflow/pipelines/backend/src/crd/controller/scheduledworkflow/util"
+ 	swfclientset "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned"
+@@ -43,7 +43,6 @@ var (
+ )
+ 
+ func main() {
+-	initEnv()
+ 	flag.Parse()
+ 
+ 	// set up signals so we handle the first shutdown signal gracefully

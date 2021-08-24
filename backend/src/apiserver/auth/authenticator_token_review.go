@@ -23,6 +23,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
 	authv1 "k8s.io/api/authentication/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type TokenReviewAuthenticator struct {
@@ -51,7 +52,7 @@ func (tra *TokenReviewAuthenticator) GetUserIdentity(ctx context.Context) (strin
 		return "", err
 	}
 
-	userInfo, err := tra.doTokenReview(token)
+	userInfo, err := tra.doTokenReview(ctx, token)
 	if err != nil {
 		return "", util.Wrap(err, "Authentication failure")
 	}

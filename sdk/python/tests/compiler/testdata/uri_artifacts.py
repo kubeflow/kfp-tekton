@@ -115,4 +115,4 @@ def uri_artifact(text: str = 'Hello world!'):
 
 
 if __name__ == '__main__':
-  compiler.Compiler().compile(uri_artifact, __file__ + '.tar.gz')
+  compiler.Compiler(mode=dsl.PipelineExecutionMode.V2_COMPATIBLE).compile(uri_artifact, __file__.replace('.py', '.yaml'))

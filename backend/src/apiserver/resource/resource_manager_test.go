@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -127,6 +127,48 @@ func initWithExperimentAndPipeline(t *testing.T) (*FakeClientManager, *ResourceM
 	return store, manager, experiment, pipeline
 }
 
+func initWithExperimentAndPipelineAndRun(t *testing.T) (*FakeClientManager, *ResourceManager, *model.Experiment, *model.Pipeline, *model.RunDetail) {
+	store, manager, exp, pipeline := initWithExperimentAndPipeline(t)
+	// Create a new pipeline version with UUID being FakeUUID.
+	pipelineStore, ok := store.pipelineStore.(*storage.PipelineStore)
+	assert.True(t, ok)
+	pipelineStore.SetUUIDGenerator(util.NewFakeUUIDGeneratorOrFatal(FakeUUIDOne, nil))
+	_, err := manager.CreatePipelineVersion(&api.PipelineVersion{
+		Name: "version_for_run",
+		ResourceReferences: []*api.ResourceReference{
+			&api.ResourceReference{
+				Key: &api.ResourceKey{
+					Id:   pipeline.UUID,
+					Type: api.ResourceType_PIPELINE,
+				},
+				Relationship: api.Relationship_OWNER,
+			},
+		},
+	}, []byte(testWorkflow.ToStringForStore()), true)
+	assert.Nil(t, err)
+
+	// The pipeline specified via pipeline id will be converted to this
+	// pipeline's default version, which will be used to create run.
+	apiRun := &api.Run{
+		Name: "run1",
+		PipelineSpec: &api.PipelineSpec{
+			PipelineId: pipeline.UUID,
+			Parameters: []*api.Parameter{
+				{Name: "param1", Value: "world"},
+			},
+		},
+		ResourceReferences: []*api.ResourceReference{
+			{
+				Key:          &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: exp.UUID},
+				Relationship: api.Relationship_OWNER,
+			},
+		},
+	}
+	runDetail, err := manager.CreateRun(context.Background(), apiRun)
+	assert.Nil(t, err)
+	return store, manager, exp, pipeline, runDetail
+}
+
 // Util function to create an initial state with pipeline uploaded
 func initWithJob(t *testing.T) (*FakeClientManager, *ResourceManager, *model.Job) {
 	store, manager, exp := initWithExperiment(t)
@@ -141,7 +183,7 @@ func initWithJob(t *testing.T) (*FakeClientManager, *ResourceManager, *model.Job
 			},
 		},
 	}
-	j, err := manager.CreateJob(job)
+	j, err := manager.CreateJob(context.Background(), job)
 	assert.Nil(t, err)
 
 	return store, manager, j
@@ -166,7 +208,7 @@ func initWithPatchedRun(t *testing.T) (*FakeClientManager, *ResourceManager, *mo
 			},
 		},
 	}
-	runDetail, err := manager.CreateRun(apiRun)
+	runDetail, err := manager.CreateRun(context.Background(), apiRun)
 	assert.Nil(t, err)
 	return store, manager, runDetail
 }
@@ -240,7 +282,7 @@ func TestCreateRun_EmptyPipelineSpec(t *testing.T) {
 			},
 		},
 	}
-	_, err := manager.CreateRun(apiRun)
+	_, err := manager.CreateRun(context.Background(), apiRun)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Failed to fetch workflow spec")
 }
@@ -258,7 +300,7 @@ func TestCreateRun_InvalidWorkflowSpec(t *testing.T) {
 			},
 		},
 	}
-	_, err := manager.CreateRun(apiRun)
+	_, err := manager.CreateRun(context.Background(), apiRun)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Failed to unmarshal workflow spec manifest")
 }
@@ -269,7 +311,7 @@ func TestDeleteRun_RunNotExist(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	defer store.Close()
 	manager := NewResourceManager(store)
-	err := manager.DeleteRun("1")
+	err := manager.DeleteRun(context.Background(), "1")
 	assert.Equal(t, codes.NotFound, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "not found")
 }
@@ -336,7 +378,7 @@ func TestTerminateRun_RunNotExist(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	defer store.Close()
 	manager := NewResourceManager(store)
-	err := manager.TerminateRun("1")
+	err := manager.TerminateRun(context.Background(), "1")
 	assert.Equal(t, codes.NotFound, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "not found")
 }
@@ -347,7 +389,7 @@ func TestRetryRun_RunNotExist(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	defer store.Close()
 	manager := NewResourceManager(store)
-	err := manager.RetryRun("1")
+	err := manager.RetryRun(context.Background(), "1")
 	assert.Equal(t, codes.NotFound, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "not found")
 }
@@ -390,7 +432,7 @@ func TestEnableJob_JobNotExist(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	defer store.Close()
 	manager := NewResourceManager(store)
-	err := manager.EnableJob("1", false)
+	err := manager.EnableJob(context.Background(), "1", false)
 	assert.Equal(t, codes.NotFound, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "Job 1 not found")
 }
@@ -399,7 +441,7 @@ func TestEnableJob_CustomResourceFailure(t *testing.T) {
 	store, manager, job := initWithJob(t)
 	defer store.Close()
 	manager.swfClient = client.NewFakeSwfClientWithBadWorkflow()
-	err := manager.EnableJob(job.UUID, true)
+	err := manager.EnableJob(context.Background(), job.UUID, true)
 	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "Check job exist failed: some error")
 }
@@ -436,7 +478,7 @@ func TestEnableJob_DbFailure(t *testing.T) {
 	store, manager, job := initWithJob(t)
 	defer store.Close()
 	store.DB().Close()
-	err := manager.EnableJob(job.UUID, false)
+	err := manager.EnableJob(context.Background(), job.UUID, false)
 	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "database is closed")
 }
@@ -444,7 +486,7 @@ func TestEnableJob_DbFailure(t *testing.T) {
 func TestDeleteJob(t *testing.T) {
 	store, manager, job := initWithJob(t)
 	defer store.Close()
-	err := manager.DeleteJob(job.UUID)
+	err := manager.DeleteJob(context.Background(), job.UUID)
 	assert.Nil(t, err)
 
 	_, err = manager.GetJob(job.UUID)
@@ -456,7 +498,7 @@ func TestDeleteJob_JobNotExist(t *testing.T) {
 	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
 	defer store.Close()
 	manager := NewResourceManager(store)
-	err := manager.DeleteJob("1")
+	err := manager.DeleteJob(context.Background(), "1")
 	assert.Equal(t, codes.NotFound, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "Job 1 not found")
 }
@@ -466,7 +508,7 @@ func TestDeleteJob_CustomResourceFailure(t *testing.T) {
 	defer store.Close()
 
 	manager.swfClient = client.NewFakeSwfClientWithBadWorkflow()
-	err := manager.DeleteJob(job.UUID)
+	err := manager.DeleteJob(context.Background(), job.UUID)
 	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "Delete job CR failed: some error")
 }
@@ -494,7 +536,7 @@ func TestDeleteJob_DbFailure(t *testing.T) {
 	defer store.Close()
 
 	store.DB().Close()
-	err := manager.DeleteJob(job.UUID)
+	err := manager.DeleteJob(context.Background(), job.UUID)
 	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "database is closed")
 }

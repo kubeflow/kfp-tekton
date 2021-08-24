@@ -1,0 +1,7 @@
+diff a/sdk/python/tests/compiler/testdata/withparam_output_dict.py b/sdk/python/tests/compiler/testdata/withparam_output_dict.py	(rejected hunks)
+@@ -1,4 +1,4 @@
+-# Copyright 2018 Google LLC
++# Copyright 2018 The Kubeflow Authors
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.

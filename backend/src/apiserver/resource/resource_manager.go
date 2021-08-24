@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ type ClientManagerInterface interface {
 	PipelineStore() storage.PipelineStoreInterface
 	JobStore() storage.JobStoreInterface
 	RunStore() storage.RunStoreInterface
+	TaskStore() storage.TaskStoreInterface
 	ResourceReferenceStore() storage.ResourceReferenceStoreInterface
 	DBStatusStore() storage.DBStatusStoreInterface
 	DefaultExperimentStore() storage.DefaultExperimentStoreInterface
@@ -92,6 +93,7 @@ type ResourceManager struct {
 	pipelineStore             storage.PipelineStoreInterface
 	jobStore                  storage.JobStoreInterface
 	runStore                  storage.RunStoreInterface
+	taskStore                 storage.TaskStoreInterface
 	resourceReferenceStore    storage.ResourceReferenceStoreInterface
 	dBStatusStore             storage.DBStatusStoreInterface
 	defaultExperimentStore    storage.DefaultExperimentStoreInterface
@@ -114,6 +116,7 @@ func NewResourceManager(clientManager ClientManagerInterface) *ResourceManager {
 		pipelineStore:             clientManager.PipelineStore(),
 		jobStore:                  clientManager.JobStore(),
 		runStore:                  clientManager.RunStore(),
+		taskStore:                 clientManager.TaskStore(),
 		resourceReferenceStore:    clientManager.ResourceReferenceStore(),
 		dBStatusStore:             clientManager.DBStatusStore(),
 		defaultExperimentStore:    clientManager.DefaultExperimentStore(),
@@ -166,7 +169,7 @@ func (r *ResourceManager) DeleteExperiment(experimentID string) error {
 	return r.experimentStore.DeleteExperiment(experimentID)
 }
 
-func (r *ResourceManager) ArchiveExperiment(experimentId string) error {
+func (r *ResourceManager) ArchiveExperiment(ctx context.Context, experimentId string) error {
 	// To archive an experiment
 	// (1) update our persistent agent to disable CRDs of jobs in experiment
 	// (2) update database to
@@ -262,7 +265,14 @@ func (r *ResourceManager) UpdatePipelineDefaultVersion(pipelineId string, versio
 
 func (r *ResourceManager) CreatePipeline(name string, description string, namespace string, pipelineFile []byte) (*model.Pipeline, error) {
 	// Extract the parameter from the pipeline
-	params, err := util.GetParameters(pipelineFile)
+	wf, err := util.ValidateWorkflow(pipelineFile)
+	if err != nil {
+		return nil, util.Wrap(err, "Create pipeline failed")
+	}
+	if wf.IsV2() {
+		overrideV2PipelineName(wf, name, namespace)
+	}
+	paramsJson, err := util.MarshalParameters(wf.Spec.Arguments.Parameters)
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline failed")
 	}
@@ -271,12 +281,12 @@ func (r *ResourceManager) CreatePipeline(name string, description string, namesp
 	pipeline := &model.Pipeline{
 		Name:        name,
 		Description: description,
-		Parameters:  params,
+		Parameters:  paramsJson,
 		Status:      model.PipelineCreating,
 		Namespace:   namespace,
 		DefaultVersion: &model.PipelineVersion{
 			Name:       name,
-			Parameters: params,
+			Parameters: paramsJson,
 			Status:     model.PipelineVersionCreating}}
 	newPipeline, err := r.pipelineStore.CreatePipeline(pipeline)
 	if err != nil {
@@ -501,7 +511,7 @@ func (r *ResourceManager) UnarchiveRun(runId string) error {
 	return r.runStore.UnarchiveRun(runId)
 }
 
-func (r *ResourceManager) DeleteRun(runID string) error {
+func (r *ResourceManager) DeleteRun(ctx context.Context, runID string) error {
 	runDetail, err := r.checkRunExist(runID)
 	if err != nil {
 		return util.Wrap(err, "Delete run failed")
@@ -550,7 +560,7 @@ func TerminateWorkflow(wfClient workflowclient.PipelineRunInterface, name string
 	return err
 }
 
-func (r *ResourceManager) TerminateRun(runId string) error {
+func (r *ResourceManager) TerminateRun(ctx context.Context, runId string) error {
 	runDetail, err := r.checkRunExist(runId)
 	if err != nil {
 		return util.Wrap(err, "Terminate run failed")
@@ -566,14 +576,14 @@ func (r *ResourceManager) TerminateRun(runId string) error {
 		return util.Wrap(err, "Terminate run failed")
 	}
 
-	err = TerminateWorkflow(r.getWorkflowClient(namespace), runDetail.Run.Name)
+	err = TerminateWorkflow(ctx, r.getWorkflowClient(namespace), runDetail.Run.Name)
 	if err != nil {
 		return util.NewInternalServerError(err, "Failed to terminate the run")
 	}
 	return nil
 }
 
-func (r *ResourceManager) RetryRun(runId string) error {
+func (r *ResourceManager) RetryRun(ctx context.Context, runId string) error {
 	runDetail, err := r.checkRunExist(runId)
 	if err != nil {
 		return util.Wrap(err, "Retry run failed")
@@ -649,13 +659,13 @@ func (r *ResourceManager) readRunLogFromArchive(run *model.RunDetail, nodeId str
 	return nil
 }
 
-func (r *ResourceManager) ReadLog(runId string, nodeId string, follow bool, dst io.Writer) error {
+func (r *ResourceManager) ReadLog(ctx context.Context, runId string, nodeId string, follow bool, dst io.Writer) error {
 	run, err := r.checkRunExist(runId)
 	if err != nil {
 		return util.NewBadRequestError(errors.New("log cannot be read"), "Run does not exist")
 	}
 
-	err = r.readRunLogFromPod(run, nodeId, follow, dst)
+	err = r.readRunLogFromPod(ctx, run, nodeId, follow, dst)
 	if err != nil && r.logArchive != nil {
 		err = r.readRunLogFromArchive(run, nodeId, dst)
 	}
@@ -708,7 +718,7 @@ func (r *ResourceManager) GetJob(id string) (*model.Job, error) {
 	return r.jobStore.GetJob(id)
 }
 
-func (r *ResourceManager) CreateJob(apiJob *api.Job) (*model.Job, error) {
+func (r *ResourceManager) CreateJob(ctx context.Context, apiJob *api.Job) (*model.Job, error) {
 	// Get workflow from either of the two places:
 	// (1) raw pipeline manifest in pipeline_spec
 	// (2) pipeline version in resource_references
@@ -826,11 +836,11 @@ func (r *ResourceManager) CreateJob(apiJob *api.Job) (*model.Job, error) {
 	return r.jobStore.CreateJob(job)
 }
 
-func (r *ResourceManager) EnableJob(jobID string, enabled bool) error {
+func (r *ResourceManager) EnableJob(ctx context.Context, jobID string, enabled bool) error {
 	var job *model.Job
 	var err error
 	if enabled {
-		job, err = r.checkJobExist(jobID)
+		job, err = r.checkJobExist(ctx, jobID)
 	} else {
 		// We can skip custom resource existence verification, because disabling
 		// the job do not need to care about it.
@@ -887,7 +897,7 @@ func (r *ResourceManager) DeleteJob(jobID string) error {
 	return nil
 }
 
-func (r *ResourceManager) ReportWorkflowResource(workflow *util.Workflow) error {
+func (r *ResourceManager) ReportWorkflowResource(ctx context.Context, workflow *util.Workflow) error {
 	if _, ok := workflow.ObjectMeta.Labels[util.LabelKeyWorkflowRunId]; !ok {
 		// Skip reporting if the workflow doesn't have the run id label
 		return util.NewInvalidInputError("Workflow[%s] missing the Run ID label", workflow.Name)
@@ -920,9 +930,27 @@ func (r *ResourceManager) ReportWorkflowResource(workflow *util.Workflow) error 
 	if jobId == "" {
 		// If a run doesn't have job ID, it's a one-time run created by Pipeline API server.
 		// In this case the DB entry should already been created when argo workflow CR is created.
-		err := r.runStore.UpdateRun(runId, condition, workflow.FinishedAt(), workflow.ToStringForStore())
-		if err != nil {
-			return util.Wrap(err, "Failed to update the run.")
+		if updateError := r.runStore.UpdateRun(runId, condition, workflow.FinishedAt(), workflow.ToStringForStore()); updateError != nil {
+			if !util.IsUserErrorCodeMatch(updateError, codes.NotFound) {
+				return util.Wrap(updateError, "Failed to update the run.")
+			}
+			// Handle run not found in run store error.
+			// To avoid letting the workflow leak for ever, we need to GC it when its record does not exist in KFP DB.
+			glog.Errorf("Cannot find reported workflow name=%q namespace=%q runId=%q in run store. "+
+				"Deleting the workflow to avoid resource leaking. "+
+				"This can be caused by installing two KFP instances that try to manage the same workflows "+
+				"or an unknown bug. If you encounter this, recommend reporting more details in https://github.com/kubeflow/pipelines/issues/6189.",
+				workflow.GetName(), workflow.GetNamespace(), runId)
+			if err := r.getWorkflowClient(workflow.Namespace).Delete(ctx, workflow.Name, v1.DeleteOptions{}); err != nil {
+				if util.IsNotFound(err) {
+					return util.NewNotFoundError(err, "Failed to delete the obsolete workflow for run %s", runId)
+				}
+				return util.NewInternalServerError(err, "Failed to delete the obsolete workflow for run %s", runId)
+			}
+			// TODO(jingzhang36): find a proper way to pass collectMetricsFlag here.
+			workflowGCCounter.Inc()
+			// Note, persistence agent will not retry reporting this workflow again, because updateError is a not found error.
+			return util.Wrapf(updateError, "Failed to report workflow name=%q namespace=%q runId=%q", workflow.GetName(), workflow.GetNamespace(), runId)
 		}
 	} else {
 		// Get the experiment resource reference for job.
@@ -979,7 +1007,7 @@ func (r *ResourceManager) ReportWorkflowResource(workflow *util.Workflow) error 
 	}
 
 	if workflow.IsInFinalState() {
-		err := AddWorkflowLabel(r.getWorkflowClient(workflow.Namespace), workflow.Name, util.LabelKeyWorkflowPersistedFinalState, "true")
+		err := AddWorkflowLabel(ctx, r.getWorkflowClient(workflow.Namespace), workflow.Name, util.LabelKeyWorkflowPersistedFinalState, "true")
 		if err != nil {
 			message := fmt.Sprintf("Failed to add PersistedFinalState label to workflow %s", workflow.GetName())
 			// A fix for kubeflow/pipelines#4484, persistence agent might have an outdated item in its workqueue, so it will
@@ -1217,12 +1245,6 @@ func (r *ResourceManager) getDefaultSA() string {
 }
 
 func (r *ResourceManager) CreatePipelineVersion(apiVersion *api.PipelineVersion, pipelineFile []byte, updateDefaultVersion bool) (*model.PipelineVersion, error) {
-	// Extract the parameters from the pipeline
-	params, err := util.GetParameters(pipelineFile)
-	if err != nil {
-		return nil, util.Wrap(err, "Create pipeline version failed")
-	}
-
 	// Extract pipeline id
 	var pipelineId = ""
 	for _, resourceReference := range apiVersion.ResourceReferences {
@@ -1231,7 +1253,24 @@ func (r *ResourceManager) CreatePipelineVersion(apiVersion *api.PipelineVersion,
 		}
 	}
 	if len(pipelineId) == 0 {
-		return nil, util.Wrap(err, "Create pipeline version failed due to missing pipeline id")
+		return nil, util.NewInvalidInputError("Create pipeline version failed due to missing pipeline id")
+	}
+
+	// Extract the parameters from the pipeline & override pipeline name parameter.
+	wf, err := util.ValidateWorkflow(pipelineFile)
+	if err != nil {
+		return nil, util.Wrap(err, "Create pipeline version failed")
+	}
+	if wf.IsV2() {
+		pipeline, err := r.GetPipeline(pipelineId)
+		if err != nil {
+			return nil, util.Wrap(err, "Create pipeline version failed")
+		}
+		overrideV2PipelineName(wf, pipeline.Name, pipeline.Namespace)
+	}
+	paramsJson, err := util.MarshalParameters(wf.Spec.Arguments.Parameters)
+	if err != nil {
+		return nil, util.Wrap(err, "Create pipeline version failed")
 	}
 
 	// Construct model.PipelineVersion
@@ -1239,8 +1278,9 @@ func (r *ResourceManager) CreatePipelineVersion(apiVersion *api.PipelineVersion,
 		Name:          apiVersion.Name,
 		PipelineId:    pipelineId,
 		Status:        model.PipelineVersionCreating,
-		Parameters:    params,
+		Parameters:    paramsJson,
 		CodeSourceUrl: apiVersion.CodeSourceUrl,
+		Description:   apiVersion.Description,
 	}
 	version, err = r.pipelineStore.CreatePipelineVersion(version, updateDefaultVersion)
 	if err != nil {

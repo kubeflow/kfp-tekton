@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,6 +97,7 @@ func ToApiPipelineVersion(version *model.PipelineVersion) (*api.PipelineVersion,
 		Name:          version.Name,
 		CreatedAt:     &timestamp.Timestamp{Seconds: version.CreatedAtInSec},
 		Parameters:    params,
+		Description:   version.Description,
 		CodeSourceUrl: version.CodeSourceUrl,
 		ResourceReferences: []*api.ResourceReference{
 			&api.ResourceReference{
@@ -205,6 +206,26 @@ func ToApiRunDetail(run *model.RunDetail) *api.RunDetail {
 	}
 }
 
+func ToApiTask(task *model.Task) *api.Task {
+	return &api.Task{
+		Id:              task.UUID,
+		Namespace:       task.Namespace,
+		PipelineName:    task.PipelineName,
+		RunId:           task.RunUUID,
+		MlmdExecutionID: task.MLMDExecutionID,
+		CreatedAt:       &timestamp.Timestamp{Seconds: task.CreatedTimestamp},
+		FinishedAt:      &timestamp.Timestamp{Seconds: task.FinishedTimestamp},
+		Fingerprint:     task.Fingerprint,
+	}
+}
+
+func ToApiTasks(tasks []*model.Task) []*api.Task {
+	apiTasks := make([]*api.Task, 0)
+	for _, task := range tasks {
+		apiTasks = append(apiTasks, ToApiTask(task))
+	}
+	return apiTasks
+}
 func ToApiJob(job *model.Job) *api.Job {
 	params, err := toApiParameters(job.Parameters)
 	if err != nil {

@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ func (s *ReportServer) ReportWorkflow(ctx context.Context,
 	if err != nil {
 		return nil, util.Wrap(err, "Report workflow failed.")
 	}
-	err = s.resourceManager.ReportWorkflowResource(workflow)
+	err = s.resourceManager.ReportWorkflowResource(ctx, workflow)
 	if err != nil {
 		return nil, util.Wrap(err, "Report workflow failed.")
 	}

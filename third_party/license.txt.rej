@@ -1,0 +1,10 @@
+diff a/third_party/license.txt b/third_party/license.txt	(rejected hunks)
+@@ -2541,7 +2541,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ 
+ --------------------------------------------------------------------------------
+-vendor github.com argoproj argo LICENSE (vendor/github.com/argoproj/argo/LICENSE)
++vendor github.com argoproj argo LICENSE (vendor/github.com/argoproj/argo-workflows/LICENSE)
+ --------------------------------------------------------------------------------
+ 
+                                  Apache License

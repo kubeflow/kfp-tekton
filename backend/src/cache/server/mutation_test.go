@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2020 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,6 +96,13 @@ func GetFakeRequestFromPod(pod *corev1.Pod) *v1beta1.AdmissionRequest {
 	return &fakeRequest
 }
 
+func TestMain(m *testing.M) {
+	os.Setenv("CACHE_NODE_RESTRICTIONS", "true")
+	defer os.Unsetenv("CACHE_NODE_RESTRICTIONS")
+	code := m.Run()
+	os.Exit(code)
+}
+
 func TestMutatePodIfCachedWithErrorPodResource(t *testing.T) {
 	mockAdmissionRequest := &v1beta1.AdmissionRequest{
 		Resource: metav1.GroupVersionResource{
@@ -136,6 +143,12 @@ func TestMutatePodIfCachedWithTFXPod2(t *testing.T) {
 	tfxPod := *fakePod.DeepCopy()
 	tfxPod.Labels["pipelines.kubeflow.org/pipeline-sdk-type"] = "tfx"
 	patchOperation, err := MutatePodIfCached(GetFakeRequestFromPod(&tfxPod), fakeClientManager)
+	assert.Nil(t, patchOperation)
+	assert.Nil(t, err)
+	// test variation 2
+	tfxPod = *fakePod.DeepCopy()
+	tfxPod.Labels["pipelines.kubeflow.org/pipeline-sdk-type"] = "tfx-template"
+	patchOperation, err = MutatePodIfCached(GetFakeRequestFromPod(&tfxPod), fakeClientManager)
 	assert.Nil(t, patchOperation)
 	assert.Nil(t, err)
 }
@@ -208,6 +221,23 @@ func TestSetImage(t *testing.T) {
 	assert.Nil(t, err)
 	container := patchOperation[0].Value.([]corev1.Container)[0]
 	assert.Equal(t, testImage, container.Image)
+}
+
+func TestCacheNodeRestriction(t *testing.T) {
+	os.Setenv("CACHE_NODE_RESTRICTIONS", "false")
+
+	executionCache := &model.ExecutionCache{
+		ExecutionCacheKey: "f5fe913be7a4516ebfe1b5de29bcb35edd12ecc776b2f33f10ca19709ea3b2f0",
+		ExecutionOutput:   "testOutput",
+		ExecutionTemplate: `{"container":{"command":["echo", "Hello"],"image":"python:3.7"},"nodeSelector":{"disktype":"ssd"}}`,
+		MaxCacheStaleness: -1,
+	}
+	fakeClientManager.CacheStore().CreateExecutionCache(executionCache)
+	patchOperation, err := MutatePodIfCached(&fakeAdmissionRequest, fakeClientManager)
+	assert.Nil(t, err)
+	assert.Equal(t, OperationTypeRemove, patchOperation[1].Op)
+	assert.Nil(t, patchOperation[1].Value)
+	os.Setenv("CACHE_NODE_RESTRICTIONS", "true")
 }
 
 func TestMutatePodIfCachedWithTeamplateCleanup(t *testing.T) {

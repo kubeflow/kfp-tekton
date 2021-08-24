@@ -64,10 +64,11 @@ class TestApiPipeline(unittest.TestCase):
                         kfp_server_api.models.api_resource_reference.apiResourceReference(
                             key = kfp_server_api.models.api_resource_key.apiResourceKey(
                                 type = 'UNKNOWN_RESOURCE_TYPE', 
-                                id = '0', ), 
-                            name = '0', 
+                                id = '0', ),
+                            name = '0',
                             relationship = 'UNKNOWN_RELATIONSHIP', )
-                        ], ),
+                        ],
+                    description = '0', ),
                 resource_references = [
                     kfp_server_api.models.api_resource_reference.apiResourceReference(
                         key = kfp_server_api.models.api_resource_key.apiResourceKey(
