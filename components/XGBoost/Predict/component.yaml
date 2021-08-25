@@ -15,11 +15,7 @@ inputs:
 - {name: model, type: XGBoostModel}
 - {name: label_column, type: Integer, optional: true}
 outputs:
-- {name: predictions, type: Predictions}
-metadata:
-  annotations:
-    author: Alexey Volkov <alexey.volkov@ark-kun.com>
-    canonical_location: 'https://raw.githubusercontent.com/Ark-kun/pipeline_components/master/components/XGBoost/Predict/component.yaml'
+- {name: predictions, type: Text}
 implementation:
   container:
     image: python:3.7

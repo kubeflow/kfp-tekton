@@ -1,9 +1,7 @@
 name: Train pytorch model from csv
 description: Trains PyTorch model
 metadata:
-  annotations:
-    author: Alexey Volkov <alexey.volkov@ark-kun.com>
-    canonical_location: 'https://raw.githubusercontent.com/Ark-kun/pipeline_components/master/components/PyTorch/Train_PyTorch_model/from_CSV/component.yaml'
+  annotations: {author: Alexey Volkov <alexey.volkov@ark-kun.com>}
 inputs:
 - {name: model, type: PyTorchScriptModule}
 - {name: training_data, type: CSV}

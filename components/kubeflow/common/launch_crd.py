@@ -20,8 +20,6 @@ import time
 from kubernetes import client as k8s_client
 from kubernetes.client import rest
 
-logger = logging.getLogger(__name__)
-
 class K8sCR(object):
   def __init__(self, group, plural, version, client):
     self.group = group
@@ -54,7 +52,7 @@ class K8sCR(object):
         results = self.client.get_namespaced_custom_object(
           self.group, self.version, namespace, self.plural, name)
       except Exception as e:
-        logger.error("There was a problem waiting for %s/%s %s in namespace %s; Exception: %s",
+        logging.error("There was a problem waiting for %s/%s %s in namespace %s; Exception: %s",
                        self.group, self.plural, name, namespace, e)
         raise
 
@@ -63,12 +61,12 @@ class K8sCR(object):
           status_callback(results)
         expected, condition = self.is_expected_conditions(results, expected_conditions)
         if expected:
-          logger.info("%s/%s %s in namespace %s has reached the expected condition: %s.",
+          logging.info("%s/%s %s in namespace %s has reached the expected condition: %s.",
                        self.group, self.plural, name, namespace, condition)
           return results
         else:
           if condition:
-            logger.info("Current condition of %s/%s %s in namespace %s is %s.",
+            logging.info("Current condition of %s/%s %s in namespace %s is %s.",
                   self.group, self.plural, name, namespace, condition)
 
       if datetime.datetime.now() + polling_interval > end_time:
@@ -78,14 +76,8 @@ class K8sCR(object):
 
       time.sleep(polling_interval.seconds)
 
-  def is_expected_conditions(self, inst, expected_conditions):
-      conditions = inst.get('status', {}).get("conditions")
-      if not conditions:
-          return False, ""
-      if conditions[-1]["type"] in expected_conditions and conditions[-1]["status"] == "True":
-          return True, conditions[-1]["type"]
-      else:
-          return False, conditions[-1]["type"]
+  def is_expected_conditions(self, cr_object, expected_conditions):
+    return False, ""
 
   def create(self, spec):
     """Create a CR.
@@ -95,11 +87,11 @@ class K8sCR(object):
     try:
       # Create a Resource
       namespace = spec["metadata"].get("namespace", "default")
-      logger.info("Creating %s/%s %s in namespace %s.",
+      logging.info("Creating %s/%s %s in namespace %s.",
         self.group, self.plural, spec["metadata"]["name"], namespace)
       api_response = self.client.create_namespaced_custom_object(
         self.group, self.version, namespace, self.plural, spec)
-      logger.info("Created %s/%s %s in namespace %s.",
+      logging.info("Created %s/%s %s in namespace %s.",
         self.group, self.plural, spec["metadata"]["name"], namespace)
       return api_response
     except rest.ApiException as e:
@@ -112,7 +104,7 @@ class K8sCR(object):
         # owned references are deleted.
         "propagationPolicy": "Foreground",
       }
-      logger.info("Deleteing %s/%s %s in namespace %s.",
+      logging.info("Deleteing %s/%s %s in namespace %s.",
         self.group, self.plural, name, namespace)
       api_response = self.client.delete_namespaced_custom_object(
         self.group,
@@ -121,7 +113,7 @@ class K8sCR(object):
         self.plural,
         name,
         body)
-      logger.info("Deleted %s/%s %s in namespace %s.",
+      logging.info("Deleted %s/%s %s in namespace %s.",
         self.group, self.plural, name, namespace)
       return api_response
     except rest.ApiException as e:
@@ -136,9 +128,9 @@ class K8sCR(object):
         body = json.loads(ex.body)
         message = body.get("message")
       except ValueError:
-        logger.error("Exception when %s %s/%s: %s", action, self.group, self.plural, ex.body)
+        logging.error("Exception when %s %s/%s: %s", action, self.group, self.plural, ex.body)
         raise
 
-    logger.error("Exception when %s %s/%s: %s", action, self.group, self.plural, ex.body)
+    logging.error("Exception when %s %s/%s: %s", action, self.group, self.plural, ex.body)
     raise ex
 

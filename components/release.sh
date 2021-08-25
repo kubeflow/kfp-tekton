@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2018 The Kubeflow Authors
+# Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ images=(
   "ml-pipeline-kubeflow-tfjob"
   "ml-pipeline-local-confusion-matrix"
   "ml-pipeline-local-roc"
+  "ml-pipeline-gcp"
 )
 
 COMMIT_SHA=$1

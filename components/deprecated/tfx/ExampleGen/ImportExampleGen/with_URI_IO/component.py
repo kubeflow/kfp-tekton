@@ -1,21 +1,24 @@
+# flake8: noqa
+
 from typing import NamedTuple
 
 def ImportExampleGen(
+    input_uri: 'ExternalArtifactUri',
     output_examples_uri: 'ExamplesUri',
-    input_base: str,
     input_config: {'JsonObject': {'data_type': 'proto:tfx.components.example_gen.Input'}},
     output_config: {'JsonObject': {'data_type': 'proto:tfx.components.example_gen.Output'}},
-    range_config: {'JsonObject': {'data_type': 'proto:tfx.configs.RangeConfig'}} = None,
+    custom_config: {'JsonObject': {'data_type': 'proto:tfx.components.example_gen.CustomConfig'}} = None,
     beam_pipeline_args: list = None,
 ) -> NamedTuple('Outputs', [
     ('examples_uri', 'ExamplesUri'),
 ]):
-    from tfx.components.example_gen.import_example_gen.component import ImportExampleGen as component_class
+    from tfx.components import ImportExampleGen as component_class
 
     #Generated code
+    import json
     import os
     import tempfile
-    from tensorflow.io import gfile
+    import tensorflow
     from google.protobuf import json_format, message
     from tfx.types import channel_utils, artifact_utils
     from tfx.components.base import base_executor
@@ -43,33 +46,36 @@ def ImportExampleGen(
             artifact.uri = artifact_path.rstrip('/') + '/'  # Some TFX components require that the artifact URIs end with a slash
             if channel_parameter.type.PROPERTIES and 'split_names' in channel_parameter.type.PROPERTIES:
                 # Recovering splits
-                subdirs = gfile.listdir(artifact_path)
+                subdirs = tensorflow.io.gfile.listdir(artifact_path)
                 # Workaround for https://github.com/tensorflow/tensorflow/issues/39167
                 subdirs = [subdir.rstrip('/') for subdir in subdirs]
-                split_names = [subdir.replace('Split-', '') for subdir in subdirs]
-                artifact.split_names = artifact_utils.encode_split_names(sorted(split_names))
+                artifact.split_names = artifact_utils.encode_split_names(sorted(subdirs))
             component_class_args[name] = channel_utils.as_channel([artifact])
 
     component_class_instance = component_class(**component_class_args)
 
     input_dict = channel_utils.unwrap_channel_dict(component_class_instance.inputs.get_all())
-    output_dict = {}
+    output_dict = channel_utils.unwrap_channel_dict(component_class_instance.outputs.get_all())
     exec_properties = component_class_instance.exec_properties
 
     # Generating paths for output artifacts
-    for name, channel in component_class_instance.outputs.items():
-        artifact_path = arguments.get('output_' + name + '_uri') or arguments.get(name + '_path')
-        if artifact_path:
-            artifact = channel.type()
-            artifact.uri = artifact_path.rstrip('/') + '/'  # Some TFX components require that the artifact URIs end with a slash
-            artifact_list = [artifact]
-            channel._artifacts = artifact_list
-            output_dict[name] = artifact_list
+    for name, artifacts in output_dict.items():
+        base_artifact_path = arguments.get('output_' + name + '_uri') or arguments.get(name + '_path')
+        if base_artifact_path:
+            # Are there still cases where output channel has multiple artifacts?
+            for idx, artifact in enumerate(artifacts):
+                subdir = str(idx + 1) if idx > 0 else ''
+                artifact.uri = os.path.join(base_artifact_path, subdir)  # Ends with '/'
 
     print('component instance: ' + str(component_class_instance))
 
+    # Workaround for a TFX+Beam bug to make DataflowRunner work.
+    # Remove after the next release that has https://github.com/tensorflow/tfx/commit/ddb01c02426d59e8bd541e3fd3cbaaf68779b2df
+    import tfx
+    tfx.version.__version__ += 'dev'
+
     executor_context = base_executor.BaseExecutor.Context(
-        beam_pipeline_args=arguments.get('beam_pipeline_args'),
+        beam_pipeline_args=beam_pipeline_args,
         tmp_dir=tempfile.gettempdir(),
         unique_id='tfx_component',
     )
@@ -81,3 +87,12 @@ def ImportExampleGen(
     )
 
     return (output_examples_uri, )
+
+
+if __name__ == '__main__':
+    import kfp
+    kfp.components.create_component_from_func(
+        ImportExampleGen,
+        base_image='tensorflow/tfx:0.21.4',
+        output_component_file='component.yaml'
+    )
