@@ -15,6 +15,7 @@
 package server
 
 import (
+	"context"
 	"testing"
 
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
@@ -159,7 +160,7 @@ func initWithExperimentAndPipelineVersion(t *testing.T) (*resource.FakeClientMan
 	assert.Nil(t, err)
 
 	// Create a pipeline and then a pipeline version.
-	_, err = resourceManager.CreatePipeline("pipeline", "", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
+	_, err = resourceManager.CreatePipeline("pipeline", "", "", []byte(testWorkflow.ToStringForStore()))
 	assert.Nil(t, err)
 	_, err = resourceManager.CreatePipelineVersion(&api.PipelineVersion{
 		Name: "pipeline_version",

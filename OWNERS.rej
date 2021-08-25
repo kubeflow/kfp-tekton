@@ -1,8 +1,0 @@
-diff a/OWNERS b/OWNERS	(rejected hunks)
-@@ -1,5 +1,6 @@
- approvers:
-   - Bobgy
-+  - chensun
-   - IronPan
-   - paveldournov
-   - neuromage

@@ -23,6 +23,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/storage"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -453,7 +454,7 @@ func TestEnableJob_CustomResourceNotFound(t *testing.T) {
 	// Explicitly delete it to simulate the situation.
 	manager.getScheduledWorkflowClient(job.Namespace).Delete(context.Background(), job.Name, v1.DeleteOptions{})
 	// When swf CR is missing, enabling the job needs to fail.
-	err := manager.EnableJob(job.UUID, true)
+	err := manager.EnableJob(context.Background(), job.UUID, true)
 	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
 	assert.Contains(t, err.Error(), "Check job exist failed")
 	assert.Contains(t, err.Error(), "not found")
@@ -467,7 +468,7 @@ func TestDisableJob_CustomResourceNotFound(t *testing.T) {
 	// The swf CR can be missing when user reinstalled KFP using existing DB data.
 	// Explicitly delete it to simulate the situation.
 	manager.getScheduledWorkflowClient(job.Namespace).Delete(context.Background(), job.Name, v1.DeleteOptions{})
-	err := manager.EnableJob(job.UUID, false)
+	err := manager.EnableJob(context.Background(), job.UUID, false)
 	require.Nil(t, err, "Disabling the job should succeed even when the custom resource is missing.")
 	job, err = manager.GetJob(job.UUID)
 	require.Nil(t, err)
@@ -521,7 +522,7 @@ func TestDeleteJob_CustomResourceNotFound(t *testing.T) {
 	manager.getScheduledWorkflowClient(job.Namespace).Delete(context.Background(), job.Name, v1.DeleteOptions{})
 
 	// Now deleting job should still succeed when the swf CR is already deleted.
-	err := manager.DeleteJob(job.UUID)
+	err := manager.DeleteJob(context.Background(), job.UUID)
 	assert.Nil(t, err)
 
 	// And verify Job has been deleted from DB too.

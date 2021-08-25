@@ -51,7 +51,6 @@ func initEnv() {
 }
 
 func main() {
-	initEnv()
 	flag.Parse()
 
 	// set up signals so we handle the first shutdown signal gracefully

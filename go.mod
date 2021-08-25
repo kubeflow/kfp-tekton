@@ -3,10 +3,9 @@ module github.com/kubeflow/pipelines
 require (
 	github.com/Masterminds/squirrel v0.0.0-20190107164353-fa735ea14f09
 	github.com/VividCortex/mysqlerr v0.0.0-20170204212430-6c6b55f8796f
-	github.com/argoproj/argo v0.0.0-20200506223611-54154c61eb4f
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/ghodss/yaml v1.0.0
+	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-ini/ini v1.62.0 // indirect
 	github.com/go-openapi/errors v0.19.9
 	github.com/go-openapi/runtime v0.19.24
@@ -19,10 +18,10 @@ require (
 	github.com/google/addlicense v0.0.0-20200906110928-a0294312aa76
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.2.0
-	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/grpc-gateway v1.14.8
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/jinzhu/gorm v1.9.12
+	github.com/lestrrat-go/strftime v1.0.4
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/peterhellberg/duration v0.0.0-20191119133758-ec6baeebcd10
@@ -35,28 +34,30 @@ require (
 	github.com/tektoncd/pipeline v0.27.0
 	go.uber.org/zap v1.18.1
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
-	google.golang.org/api v0.36.0
 	google.golang.org/genproto v0.0.0-20210416161957-9910b6c460de
 	google.golang.org/grpc v1.38.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
-	google.golang.org/protobuf v1.26.0
-	gopkg.in/yaml.v2 v2.4.0
+	google.golang.org/protobuf v1.27.1
 	k8s.io/api v0.20.7
 	k8s.io/apimachinery v0.20.7
-	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
+	k8s.io/client-go v0.20.7
 	k8s.io/code-generator v0.20.7
-	sigs.k8s.io/controller-runtime v0.6.4
+	sigs.k8s.io/controller-runtime v0.7.0
 )
 
 replace (
-	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.2.0
-	k8s.io/api => k8s.io/api v0.18.12
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.12
-	k8s.io/apimachinery => k8s.io/apimachinery v0.18.12
-	k8s.io/apiserver => k8s.io/apiserver v0.18.12
-	k8s.io/client-go => k8s.io/client-go v0.18.12
-	k8s.io/code-generator => k8s.io/code-generator v0.18.12
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29
+	cloud.google.com/go => cloud.google.com/go v0.55.0
+	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
+	// TODO: remove temporary patch
+	github.com/kubeflow/pipelines/api => ./api
+	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.9.0
+	github.com/prometheus/common => github.com/prometheus/common v0.15.0
+	k8s.io/api => k8s.io/api v0.19.6
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.6
+	k8s.io/apimachinery => k8s.io/apimachinery v0.19.6
+	k8s.io/apiserver => k8s.io/apiserver v0.19.6
+	k8s.io/client-go => k8s.io/client-go v0.19.6
+	k8s.io/code-generator => k8s.io/code-generator v0.19.6
 )
 
 go 1.13

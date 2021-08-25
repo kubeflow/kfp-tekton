@@ -133,13 +133,17 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            author: Alexey Volkov <alexey.volkov@ark-kun.com>
+            canonical_location: https://raw.githubusercontent.com/Ark-kun/pipeline_components/master/components/filesystem/get_subdirectory/component.yaml
             pipelines.kubeflow.org/component_spec: '{"description": "Get subdirectory
               from directory.", "implementation": {"container": {"command": ["sh",
               "-ex", "-c", "mkdir -p \"$(dirname \"$2\")\"\ncp -r \"$0/$1\" \"$2\"\n",
               {"inputPath": "Directory"}, {"inputValue": "Subpath"}, {"outputPath":
               "Subdir"}], "image": "alpine"}}, "inputs": [{"name": "Directory", "type":
-              "Directory"}, {"name": "Subpath", "type": "String"}], "name": "Get subdirectory",
-              "outputs": [{"name": "Subdir", "type": "Directory"}]}'
+              "Directory"}, {"name": "Subpath", "type": "String"}], "metadata": {"annotations":
+              {"author": "Alexey Volkov <alexey.volkov@ark-kun.com>", "canonical_location":
+              "https://raw.githubusercontent.com/Ark-kun/pipeline_components/master/components/filesystem/get_subdirectory/component.yaml"}},
+              "name": "Get subdirectory", "outputs": [{"name": "Subdir", "type": "Directory"}]}'
             tekton.dev/template: ''
         workspaces:
         - name: get-subdirectory
@@ -173,12 +177,16 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            author: Alexey Volkov <alexey.volkov@ark-kun.com>
+            canonical_location: https://raw.githubusercontent.com/Ark-kun/pipeline_components/master/components/filesystem/list_items/component.yaml
             pipelines.kubeflow.org/component_spec: '{"description": "Recursively list
               directory contents.", "implementation": {"container": {"command": ["sh",
               "-ex", "-c", "mkdir -p \"$(dirname \"$1\")\"\n#ls --almost-all --recursive
               \"$0\" > \"$1\"\nls -A -R \"$0\" > \"$1\"\n", {"inputPath": "Directory"},
               {"outputPath": "Items"}], "image": "alpine"}}, "inputs": [{"name": "Directory",
-              "type": "Directory"}], "name": "List items", "outputs": [{"name": "Items"}]}'
+              "type": "Directory"}], "metadata": {"annotations": {"author": "Alexey
+              Volkov <alexey.volkov@ark-kun.com>", "canonical_location": "https://raw.githubusercontent.com/Ark-kun/pipeline_components/master/components/filesystem/list_items/component.yaml"}},
+              "name": "List items", "outputs": [{"name": "Items"}]}'
             tekton.dev/template: ''
         workspaces:
         - name: list-items

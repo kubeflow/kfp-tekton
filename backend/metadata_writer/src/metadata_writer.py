@@ -126,8 +126,10 @@ def artifact_to_uri(artifact: dict) -> str:
 
 
 def is_tfx_pod(pod) -> bool:
-    # Later versions of TFX pods do not match the pattern in command line, but now they have this label.
-    if pod.metadata.labels.get(KFP_SDK_TYPE_LABEL_KEY) == TFX_SDK_TYPE_VALUE:
+    # The label defaults to 'tfx', but is overridable.
+    # Official tfx templates override the value to 'tfx-template', so
+    # we loosely match the word 'tfx'.
+    if TFX_SDK_TYPE_VALUE in pod.metadata.labels.get(KFP_SDK_TYPE_LABEL_KEY, ''):
         return True
     main_step_name = 'step-main' if PIPELINE_RUNTIME == "tekton" else 'main'
     main_containers = [container for container in pod.spec.containers if container.name == main_step_name]

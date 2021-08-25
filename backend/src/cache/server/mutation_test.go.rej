@@ -1,9 +1,0 @@
-diff a/backend/src/cache/server/mutation_test.go b/backend/src/cache/server/mutation_test.go	(rejected hunks)
-@@ -53,6 +53,7 @@ var (
- 					Command: []string{"python"},
- 				},
- 			},
-+			NodeSelector: map[string]string{"disktype": "ssd"},
- 		},
- 	}
- 	fakeAdmissionRequest = v1beta1.AdmissionRequest{

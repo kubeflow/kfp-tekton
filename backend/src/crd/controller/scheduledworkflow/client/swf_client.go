@@ -61,9 +61,9 @@ func (p *ScheduledWorkflowClient) Get(namespace string, name string) (*util.Sche
 }
 
 // Update Updates a ScheduledWorkflow in the Kubernetes API server.
-func (p *ScheduledWorkflowClient) Update(namespace string,
+func (p *ScheduledWorkflowClient) Update(ctx context.Context, namespace string,
 	schedule *util.ScheduledWorkflow) error {
 	_, err := p.clientSet.ScheduledworkflowV1beta1().ScheduledWorkflows(namespace).
-		Update(context.Background(), schedule.Get(), metav1.UpdateOptions{})
+		Update(ctx, schedule.Get(), metav1.UpdateOptions{})
 	return err
 }

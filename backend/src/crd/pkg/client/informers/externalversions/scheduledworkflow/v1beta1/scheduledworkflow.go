@@ -53,19 +53,20 @@ func NewScheduledWorkflowInformer(client versioned.Interface, namespace string, 
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
 func NewFilteredScheduledWorkflowInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+	ctx := context.Background()
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ScheduledworkflowV1beta1().ScheduledWorkflows(namespace).List(context.TODO(), options)
+				return client.ScheduledworkflowV1beta1().ScheduledWorkflows(namespace).List(ctx, options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ScheduledworkflowV1beta1().ScheduledWorkflows(namespace).Watch(context.TODO(), options)
+				return client.ScheduledworkflowV1beta1().ScheduledWorkflows(namespace).Watch(ctx, options)
 			},
 		},
 		&scheduledworkflowv1beta1.ScheduledWorkflow{},

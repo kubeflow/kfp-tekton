@@ -1,7 +1,0 @@
-diff a/sdk/python/tests/local_runner_test.py b/sdk/python/tests/local_runner_test.py	(rejected hunks)
-@@ -1,4 +1,4 @@
--# Copyright 2021 Google LLC
-+# Copyright 2021 The Kubeflow Authors
- #
- # Licensed under the Apache License, Version 2.0 (the "License");
- # you may not use this file except in compliance with the License.

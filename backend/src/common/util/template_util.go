@@ -27,6 +27,32 @@ const (
 	tektonK8sResource = "PipelineRun"
 )
 
+func UnmarshalParameters(paramsString string) ([]tektonV1Beta1.Param, error) {
+	if paramsString == "" {
+		return nil, nil
+	}
+	var params []tektonV1Beta1.Param
+	err := json.Unmarshal([]byte(paramsString), &params)
+	if err != nil {
+		return nil, NewInternalServerError(err, "Parameters have wrong format")
+	}
+	return params, nil
+}
+
+func MarshalParameters(params []tektonV1Beta1.Param) (string, error) {
+	if params == nil {
+		return "[]", nil
+	}
+	paramBytes, err := json.Marshal(params)
+	if err != nil {
+		return "", NewInvalidInputErrorWithDetails(err, "Failed to marshal the parameter.")
+	}
+	if len(paramBytes) > MaxParameterBytes {
+		return "", NewInvalidInputError("The input parameter length exceed maximum size of %v.", MaxParameterBytes)
+	}
+	return string(paramBytes), nil
+}
+
 func GetParameters(template []byte) (string, error) {
 	return GetTektonParameters(template)
 }
@@ -50,7 +76,7 @@ func GetTektonParameters(template []byte) (string, error) {
 	return string(paramBytes), nil
 }
 
-func ValidatePipelineRun(template []byte) (*tektonV1Beta1.PipelineRun, error) {
+func ValidatePipelineRun(template []byte) (*Workflow, error) {
 	var wf tektonV1Beta1.PipelineRun
 	err := yaml.Unmarshal(template, &wf)
 	if err != nil {
@@ -62,5 +88,5 @@ func ValidatePipelineRun(template []byte) (*tektonV1Beta1.PipelineRun, error) {
 	if wf.Kind != tektonK8sResource {
 		return nil, NewInvalidInputError("Unexpected resource type. Expected: %v. Received: %v", tektonK8sResource, wf.Kind)
 	}
-	return &wf, nil
+	return NewWorkflow(&wf), nil
 }

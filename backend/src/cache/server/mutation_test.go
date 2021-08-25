@@ -60,6 +60,7 @@ var (
 					Args:    []string{"-entrypoint", "/bin/bash", "--", "-c", "printf 'This step output is taken from cache.\n\n'", "printf '200'"},
 				},
 			},
+			NodeSelector: map[string]string{"disktype": "ssd"},
 		},
 	}
 	fakeAdmissionRequest = v1beta1.AdmissionRequest{

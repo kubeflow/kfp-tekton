@@ -15,14 +15,11 @@
 package server
 
 import (
-	"encoding/json"
-
 	"github.com/golang/protobuf/ptypes/timestamp"
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 func ToApiExperiment(experiment *model.Experiment) *api.Experiment {
@@ -132,12 +129,11 @@ func toApiParameters(paramsString string) ([]*api.Parameter, error) {
 	if paramsString == "" {
 		return nil, nil
 	}
-	apiParams := make([]*api.Parameter, 0)
-	var params []v1beta1.Param
-	err := json.Unmarshal([]byte(paramsString), &params)
+	params, err := util.UnmarshalParameters(paramsString)
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Parameter with wrong format is stored")
 	}
+	apiParams := make([]*api.Parameter, 0)
 	for _, param := range params {
 		var value string
 		if &param.Value.StringVal != nil {

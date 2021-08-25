@@ -108,6 +108,11 @@ func (FakePodClient) GetLogs(name string, opts *corev1.PodLogOptions) *rest.Requ
 	return nil
 }
 
+func (FakePodClient) ProxyGet(scheme string, name string, port string, path string, params map[string]string) rest.ResponseWrapper {
+	glog.Error("This fake method is not yet implemented.")
+	return nil
+}
+
 type FakeBadPodClient struct {
 	FakePodClient
 }

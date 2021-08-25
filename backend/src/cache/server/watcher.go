@@ -27,7 +27,7 @@ const (
 	MaxCacheStalenessKey   string = "pipelines.kubeflow.org/max_cache_staleness"
 )
 
-func WatchPods(namespaceToWatch string, clientManager ClientManagerInterface) {
+func WatchPods(ctx context.Context, namespaceToWatch string, clientManager ClientManagerInterface) {
 	zapLog, _ := zap.NewProduction()
 	logger := zapLog.Sugar()
 	defer zapLog.Sync()
@@ -39,7 +39,7 @@ func WatchPods(namespaceToWatch string, clientManager ClientManagerInterface) {
 			Watch:         true,
 			LabelSelector: CacheIDLabelKey,
 		}
-		watcher, err := k8sCore.PodClient(namespaceToWatch).Watch(context.Background(), listOptions)
+		watcher, err := k8sCore.PodClient(namespaceToWatch).Watch(ctx, listOptions)
 
 		if err != nil {
 			logger.Errorf("Watcher error: %v", err)
@@ -102,7 +102,7 @@ func WatchPods(namespaceToWatch string, clientManager ClientManagerInterface) {
 				continue
 			}
 
-			err = patchCacheID(k8sCore, pod, namespaceToWatch, cacheEntryCreated.ID, logger)
+			err = patchCacheID(ctx, k8sCore, pod, namespaceToWatch, cacheEntryCreated.ID, logger)
 			if err != nil {
 				logger.Errorf("Patch Pod: %s failed", pod.ObjectMeta.Name)
 			}
@@ -166,7 +166,7 @@ func isCacheWriten(labels map[string]string) bool {
 	return cacheID != ""
 }
 
-func patchCacheID(k8sCore client.KubernetesCoreInterface, podToPatch *corev1.Pod, namespaceToWatch string, id int64, logger *zap.SugaredLogger) error {
+func patchCacheID(ctx context.Context, k8sCore client.KubernetesCoreInterface, podToPatch *corev1.Pod, namespaceToWatch string, id int64, logger *zap.SugaredLogger) error {
 	labels := podToPatch.ObjectMeta.Labels
 	labels[CacheIDLabelKey] = strconv.FormatInt(id, 10)
 	logger.Infof("Cache id: %d", id)
@@ -182,7 +182,7 @@ func patchCacheID(k8sCore client.KubernetesCoreInterface, podToPatch *corev1.Pod
 		logger.Errorf("Marshal patch for pod: %s failed", podToPatch.ObjectMeta.Name)
 		return fmt.Errorf("Unable to patch cache_id to pod: %s", podToPatch.ObjectMeta.Name)
 	}
-	_, err = k8sCore.PodClient(namespaceToWatch).Patch(context.Background(), podToPatch.ObjectMeta.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{})
+	_, err = k8sCore.PodClient(namespaceToWatch).Patch(ctx, podToPatch.ObjectMeta.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{})
 	if err != nil {
 		logger.Errorf("Unable to patch cache_id to pod: %s", podToPatch.ObjectMeta.Name)
 		return err

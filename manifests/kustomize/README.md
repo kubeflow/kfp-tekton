@@ -1,85 +1,58 @@
-# Kubeflow Pipelines Kustomize Manifest Folder
+# Install Kubeflow Pipelines Tekton Standalone using Kustomize Manifests
 
-## Install Kubeflow Pipelines
+This folder contains [Kubeflow Pipelines Standalone](https://www.kubeflow.org/docs/components/pipelines/installation/standalone-deployment/)
+Kustomize manifests.
 
-This folder contains Kubeflow Pipelines Kustomize manifests for a light weight
-deployment. You can follow the instruction and deploy Kubeflow Pipelines in an
-existing cluster.
+Kubeflow Pipelines Standalone is one option to install Kubeflow Pipelines. You can review all other options in
+[Installation Options for Kubeflow Pipelines](https://www.kubeflow.org/docs/components/pipelines/installation/overview/).
 
-To install Kubeflow Pipelines, you have several options.
+## Install options for different envs
 
-- Via an upcoming commandline tool.
-- Via Kubectl with Kustomize, it's detailed here.
+To install Kubeflow Pipelines Standalone, follow [Kubeflow Pipelines Standalone Deployment documentation](https://www.kubeflow.org/docs/components/pipelines/installation/standalone-deployment/).
 
-### Install via Kustomize
+There are environment specific installation instructions not covered in the official deployment documentation, they are listed below.
 
-Deploy latest version of Kubeflow Pipelines.
+### (env/platform-agnostic) install on any Kubernetes cluster
 
-It uses following default settings.
-
-- image: latest released images
-- namespace: kubeflow
-- application name: pipeline
-
-#### Option-1 Install it to any K8s cluster
-
-It's based on in-cluster PersistentVolumeClaim storage.
+Install:
 
 ```bash
+KFP_ENV=platform-agnostic
 kubectl apply -k cluster-scoped-resources/
 kubectl wait crd/applications.app.k8s.io --for condition=established --timeout=60s
-kubectl apply -k env/platform-agnostic/
+kubectl apply -k "env/${KFP_ENV}/"
 kubectl wait pods -l application-crd-id=kubeflow-pipelines -n kubeflow --for condition=Ready --timeout=1800s
 kubectl port-forward -n kubeflow svc/ml-pipeline-ui 8080:80
 ```
 
-Now you can access it via localhost:8080
+Now you can access Kubeflow Pipelines UI in your browser by <http://localhost:8080>.
 
-#### Option-2 Install it to GCP with in-cluster PersistentVolumeClaim storage
+You can install them by changing `KFP_ENV` in above instructions to the variation you want.
 
-It's based on in-cluster PersistentVolumeClaim storage.
-Additionally, it introduced a proxy in GCP to allow user easily access KFP safely.
+Data:
 
-```bash
-kubectl apply -k cluster-scoped-resources/
-kubectl wait crd/applications.app.k8s.io --for condition=established --timeout=60s
+Application data are persisted in in-cluster PersistentVolumeClaim storage.
 
-kubectl apply -k env/dev/
-kubectl wait applications/pipeline -n kubeflow --for condition=Ready --timeout=1800s
+### (env/ibm) install on IBM Cloud with in-cluster PersistentVolumeClaim storage
 
-# Or visit http://console.cloud.google.com/ai-platform/pipelines
-kubectl describe configmap inverse-proxy-config -n kubeflow | grep googleusercontent.com
-```
-
-#### Option-3 Install it to GCP with CloudSQL & GCS-Minio managed storage
-
-Its storage is based on CloudSQL & GCS. It's better than others for production usage.
-
-Please following [sample](sample/README.md) for a customized installation.
-
-#### Option-4 Install it to AWS with S3 and RDS MySQL
-
-Its storage is based on S3 & AWS RDS. It's more natural for AWS users to use this option.
-
-Please following [AWS Instructions](env/aws/README.md) for installation.
-
-Note: Community maintains a repo [e2fyi/kubeflow-aws](https://github.com/e2fyi/kubeflow-aws/tree/master/pipelines) for AWS.
-
-#### Option-5 Install it to IBM Cloud with in-cluster PersistentVolumeClaim storage
-
-It's based on in-cluster PersistentVolumeClaim storage.
-Additionally, it uses the ibm cloud NFS storage with UID support to make sure all pods can run as non-root users.
+IBM Cloud uses the NFS storage with UID support to make sure all pods can run as non-root users.
 
 Please follow the [IKS group ID storage setup](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#ibm-cloud-group-id-storage-setup)
-before running the below commands.
+before running the above standalone install commands.
 
-```bash
-kubectl apply -k cluster-scoped-resources/
-kubectl wait crd/applications.app.k8s.io --for condition=established --timeout=60s
-kubectl apply -k env/platform-agnostic/
-kubectl wait pods -l application-crd-id=kubeflow-pipelines -n kubeflow --for condition=Ready --timeout=1800s
-kubectl port-forward -n kubeflow svc/ml-pipeline-ui 8080:80
-```
+### (env/gcp) install on Google Cloud with Cloud Storage and Cloud SQL
+
+Cloud Storage and Cloud SQL are better for operating a production cluster.
+
+Refer to [Google Cloud Instructions](sample/README.md) for installation.
+
+### (env/aws) install on AWS with S3 and RDS MySQL
+
+S3 and RDS MySQL are better for operating a production cluster.
+
+Refer to [AWS Instructions](env/aws/README.md) for installation.
+
+Note: Community maintains a different opinionated installation manifests for AWS, refer to [e2fyi/kubeflow-aws](https://github.com/e2fyi/kubeflow-aws/tree/master/pipelines).
 
 ## Uninstall
 

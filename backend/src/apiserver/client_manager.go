@@ -50,6 +50,7 @@ const (
 	mysqlExtraParams       = "DBConfig.ExtraParams"
 	archiveLogFileName     = "ARCHIVE_LOG_FILE_NAME"
 	archiveLogPathPrefix   = "ARCHIVE_LOG_PATH_PREFIX"
+	dbConMaxLifeTimeSec    = "DBConfig.ConMaxLifeTimeSec"
 
 	visualizationServiceHost = "ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_HOST"
 	visualizationServicePort = "ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_PORT"
@@ -81,6 +82,10 @@ type ClientManager struct {
 	uuid                      util.UUIDGeneratorInterface
 	authenticators            []auth.Authenticator
 	tektonClient              client.TektonClientInterface
+}
+
+func (c *ClientManager) TaskStore() storage.TaskStoreInterface {
+	return c.taskStore
 }
 
 func (c *ClientManager) ExperimentStore() storage.ExperimentStoreInterface {

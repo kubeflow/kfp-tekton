@@ -58,8 +58,8 @@ const (
 	TaskName                   string = "tekton.dev/pipelineTask"
 	PipelineName               string = "pipelines.kubeflow.org/pipelinename"
 	Generation                 string = "pipelines.kubeflow.org/generation"
-	PipelineRun               string = "tekton.dev/pipelineRun"
-	CachedPipeline            string = "pipelines.kubeflow.org/cached_pipeline_run"
+	PipelineRun                string = "tekton.dev/pipelineRun"
+	CachedPipeline             string = "pipelines.kubeflow.org/cached_pipeline_run"
 
 	TektonGroup        string = "tekton.dev/v1beta1"
 	TektonTaskKind     string = "TaskRun"
@@ -203,7 +203,24 @@ func MutatePodIfCached(req *v1beta1.AdmissionRequest, clientMgr ClientManagerInt
 			Path:  SpecContainersPath,
 			Value: dummyContainers,
 		})
-
+		node_restrictions, err := getEnvBool("CACHE_NODE_RESTRICTIONS")
+		if err != nil {
+			return nil, err
+		}
+		if !node_restrictions {
+			if pod.Spec.Affinity != nil {
+				patches = append(patches, patchOperation{
+					Op:   OperationTypeRemove,
+					Path: "spec/affinity",
+				})
+			}
+			if pod.Spec.NodeSelector != nil {
+				patches = append(patches, patchOperation{
+					Op:   OperationTypeRemove,
+					Path: "spec/nodeSelector",
+				})
+			}
+		}
 		// Handler init containers, do or not?
 		if pod.Spec.InitContainers != nil || len(pod.Spec.InitContainers) != 0 {
 			dummyInitContainers, err := prepareInitContainer(&pod, logger)
@@ -365,7 +382,10 @@ func isLabeledCorrect(pod *corev1.Pod, logger *zap.SugaredLogger) bool {
 }
 
 func isTFXPod(pod *corev1.Pod, logger *zap.SugaredLogger) bool {
-	if pod.Labels[SdkTypeLabel] == TfxSdkTypeLabel {
+	// The label defaults to 'tfx', but is overridable.
+	// Official tfx templates override the value to 'tfx-template', so
+	// we loosely match the word 'tfx'.
+	if strings.Contains(pod.Labels[SdkTypeLabel], TfxSdkTypeLabel) {
 		return true
 	}
 	containers := pod.Spec.Containers

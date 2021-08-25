@@ -40,6 +40,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	workflowclient "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1beta1"
+	"google.golang.org/grpc/codes"
 	authorizationv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -265,14 +266,14 @@ func (r *ResourceManager) UpdatePipelineDefaultVersion(pipelineId string, versio
 
 func (r *ResourceManager) CreatePipeline(name string, description string, namespace string, pipelineFile []byte) (*model.Pipeline, error) {
 	// Extract the parameter from the pipeline
-	wf, err := util.ValidateWorkflow(pipelineFile)
+	wf, err := util.ValidatePipelineRun(pipelineFile)
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline failed")
 	}
 	if wf.IsV2() {
 		overrideV2PipelineName(wf, name, namespace)
 	}
-	paramsJson, err := util.MarshalParameters(wf.Spec.Arguments.Parameters)
+	paramsJson, err := util.MarshalParameters(wf.Spec.Params)
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline failed")
 	}
@@ -358,7 +359,7 @@ func (r *ResourceManager) AuthenticateRequest(ctx context.Context) (string, erro
 	return "", utilerrors.NewAggregate(errlist)
 }
 
-func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
+func (r *ResourceManager) CreateRun(ctx context.Context, apiRun *api.Run) (*model.RunDetail, error) {
 	// Get workflow from either of the two places:
 	// (1) raw pipeline manifest in pipeline_spec
 	// (2) pipeline version in resource_references
@@ -461,6 +462,7 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Tekton Preprocessing Failed")
 	}
+	workflow.SetLabels(util.LabelKeyWorkflowRunId, runId)
 
 	// Marking auto-added artifacts as optional. Otherwise most older workflows will start failing after upgrade to Argo 2.3.
 	// TODO: Fix the components to explicitly declare the artifacts they really output.
@@ -476,7 +478,7 @@ func (r *ResourceManager) CreateRun(apiRun *api.Run) (*model.RunDetail, error) {
 	// }
 
 	// Create Tekton pipelineRun CRD resource
-	newWorkflow, err := r.getWorkflowClient(namespace).Create(context.Background(), workflow.Get(), v1.CreateOptions{})
+	newWorkflow, err := r.getWorkflowClient(namespace).Create(ctx, workflow.Get(), v1.CreateOptions{})
 	wfs, _ := json.Marshal(newWorkflow)
 	glog.Infof(string(wfs))
 	if err != nil {
@@ -520,7 +522,7 @@ func (r *ResourceManager) DeleteRun(ctx context.Context, runID string) error {
 	if err != nil {
 		return util.Wrap(err, "Delete run failed")
 	}
-	err = r.getWorkflowClient(namespace).Delete(context.Background(), runDetail.Name, v1.DeleteOptions{})
+	err = r.getWorkflowClient(namespace).Delete(ctx, runDetail.Name, v1.DeleteOptions{})
 	if err != nil {
 		// API won't need to delete the workflow CR
 		// once persistent agent sync the state to DB and set TTL for it.
@@ -533,13 +535,37 @@ func (r *ResourceManager) DeleteRun(ctx context.Context, runID string) error {
 	return nil
 }
 
+func (r *ResourceManager) CreateTask(ctx context.Context, apiTask *api.Task) (*model.Task, error) {
+	uuid, err := r.uuid.NewRandom()
+	if err != nil {
+		return nil, util.NewInternalServerError(err, "Failed to generate task ID.")
+	}
+	id := uuid.String()
+	task := model.Task{
+		UUID:              id,
+		Namespace:         apiTask.Namespace,
+		PipelineName:      apiTask.PipelineName,
+		RunUUID:           apiTask.RunId,
+		MLMDExecutionID:   apiTask.MlmdExecutionID,
+		CreatedTimestamp:  apiTask.CreatedAt.AsTime().Unix(),
+		FinishedTimestamp: apiTask.FinishedAt.AsTime().Unix(),
+		Fingerprint:       apiTask.Fingerprint,
+	}
+	return r.taskStore.CreateTask(&task)
+}
+
+func (r *ResourceManager) ListTasks(filterContext *common.FilterContext,
+	opts *list.Options) (tasks []*model.Task, total_size int, nextPageToken string, err error) {
+	return r.taskStore.ListTasks(filterContext, opts)
+}
+
 func (r *ResourceManager) ListJobs(filterContext *common.FilterContext,
 	opts *list.Options) (jobs []*model.Job, total_size int, nextPageToken string, err error) {
 	return r.jobStore.ListJobs(filterContext, opts)
 }
 
 // TerminateWorkflow terminates a pipelinerun by setting its status to Cancelled
-func TerminateWorkflow(wfClient workflowclient.PipelineRunInterface, name string) error {
+func TerminateWorkflow(ctx context.Context, wfClient workflowclient.PipelineRunInterface, name string) error {
 	patchObj := map[string]interface{}{
 		"spec": map[string]interface{}{
 			"status": common.GetTerminateStatus(),
@@ -552,7 +578,7 @@ func TerminateWorkflow(wfClient workflowclient.PipelineRunInterface, name string
 	}
 
 	var operation = func() error {
-		_, err = wfClient.Patch(context.Background(), name, types.MergePatchType, patch, v1.PatchOptions{})
+		_, err = wfClient.Patch(ctx, name, types.MergePatchType, patch, v1.PatchOptions{})
 		return err
 	}
 	var backoffPolicy = backoff.WithMaxRetries(backoff.NewConstantBackOff(100), 10)
@@ -606,16 +632,16 @@ func (r *ResourceManager) RetryRun(ctx context.Context, runId string) error {
 		return util.Wrap(err, "Retry run failed.")
 	}
 
-	if err = deletePods(r.k8sCoreClient, podsToDelete, namespace); err != nil {
+	if err = deletePods(ctx, r.k8sCoreClient, podsToDelete, namespace); err != nil {
 		return util.NewInternalServerError(err, "Retry run failed. Failed to clean up the failed pods from previous run.")
 	}
 
 	// First try to update workflow
-	updateError := r.updateWorkflow(newWorkflow, namespace)
+	updateError := r.updateWorkflow(ctx, newWorkflow, namespace)
 	if updateError != nil {
 		// Remove resource version
 		newWorkflow.ResourceVersion = ""
-		newCreatedWorkflow, createError := r.getWorkflowClient(namespace).Create(context.Background(), newWorkflow.PipelineRun, v1.CreateOptions{})
+		newCreatedWorkflow, createError := r.getWorkflowClient(namespace).Create(ctx, newWorkflow.PipelineRun, v1.CreateOptions{})
 		if createError != nil {
 			return util.NewInternalServerError(createError,
 				"Retry run failed. Failed to create or update the run. Update Error: %s, Create Error: %s",
@@ -681,11 +707,11 @@ func (r *ResourceManager) getPodLogOptions(follow bool) corev1.PodLogOptions {
 	}
 }
 
-func (r *ResourceManager) readRunLogFromPod(run *model.RunDetail, nodeId string, follow bool, dst io.Writer) error {
+func (r *ResourceManager) readRunLogFromPod(ctx context.Context, run *model.RunDetail, nodeId string, follow bool, dst io.Writer) error {
 	logOptions := r.getPodLogOptions(follow)
 
 	req := r.k8sCoreClient.PodClient(run.Namespace).GetLogs(nodeId, &logOptions)
-	podLogs, err := req.Stream(context.Background())
+	podLogs, err := req.Stream(ctx)
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			glog.Errorf("Failed to access Pod log: %v", err)
@@ -702,15 +728,15 @@ func (r *ResourceManager) readRunLogFromPod(run *model.RunDetail, nodeId string,
 	return nil
 }
 
-func (r *ResourceManager) updateWorkflow(newWorkflow *util.Workflow, namespace string) error {
+func (r *ResourceManager) updateWorkflow(ctx context.Context, newWorkflow *util.Workflow, namespace string) error {
 	// If fail to get the workflow, return error.
-	latestWorkflow, err := r.getWorkflowClient(namespace).Get(context.Background(), newWorkflow.Name, v1.GetOptions{})
+	latestWorkflow, err := r.getWorkflowClient(namespace).Get(ctx, newWorkflow.Name, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
 	// Update the workflow's resource version to latest.
 	newWorkflow.ResourceVersion = latestWorkflow.ResourceVersion
-	_, err = r.getWorkflowClient(namespace).Update(context.Background(), newWorkflow.PipelineRun, v1.UpdateOptions{})
+	_, err = r.getWorkflowClient(namespace).Update(ctx, newWorkflow.PipelineRun, v1.UpdateOptions{})
 	return err
 }
 
@@ -820,7 +846,7 @@ func (r *ResourceManager) CreateJob(ctx context.Context, apiJob *api.Job) (*mode
 	// 	}
 	// }
 
-	newScheduledWorkflow, err := r.getScheduledWorkflowClient(namespace).Create(context.Background(), scheduledWorkflow, v1.CreateOptions{})
+	newScheduledWorkflow, err := r.getScheduledWorkflowClient(namespace).Create(ctx, scheduledWorkflow, v1.CreateOptions{})
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Failed to create a scheduled workflow for (%s)", scheduledWorkflow.Name)
 	}
@@ -871,13 +897,13 @@ func (r *ResourceManager) EnableJob(ctx context.Context, jobID string, enabled b
 	return nil
 }
 
-func (r *ResourceManager) DeleteJob(jobID string) error {
+func (r *ResourceManager) DeleteJob(ctx context.Context, jobID string) error {
 	job, err := r.jobStore.GetJob(jobID)
 	if err != nil {
 		return util.Wrap(err, "Delete job failed")
 	}
 
-	err = r.getScheduledWorkflowClient(job.Namespace).Delete(context.Background(), job.Name, v1.DeleteOptions{})
+	err = r.getScheduledWorkflowClient(job.Namespace).Delete(ctx, job.Name, v1.DeleteOptions{})
 	if err != nil {
 		if !util.IsNotFound(err) {
 			// For any error other than NotFound
@@ -910,7 +936,7 @@ func (r *ResourceManager) ReportWorkflowResource(ctx context.Context, workflow *
 
 	if workflow.PersistedFinalState() {
 		// If workflow's final state has being persisted, the workflow should be garbage collected.
-		err := r.getWorkflowClient(workflow.Namespace).Delete(context.Background(), workflow.Name, v1.DeleteOptions{})
+		err := r.getWorkflowClient(workflow.Namespace).Delete(ctx, workflow.Name, v1.DeleteOptions{})
 		if err != nil {
 			// A fix for kubeflow/pipelines#4484, persistence agent might have an outdated item in its workqueue, so it will
 			// report workflows that no longer exist. It's important to return a not found error, so that persistence
@@ -1025,7 +1051,7 @@ func (r *ResourceManager) ReportWorkflowResource(ctx context.Context, workflow *
 }
 
 // AddWorkflowLabel add label for a workflow
-func AddWorkflowLabel(wfClient workflowclient.PipelineRunInterface, name string, labelKey string, labelValue string) error {
+func AddWorkflowLabel(ctx context.Context, wfClient workflowclient.PipelineRunInterface, name string, labelKey string, labelValue string) error {
 	patchObj := map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"labels": map[string]interface{}{
@@ -1040,7 +1066,7 @@ func AddWorkflowLabel(wfClient workflowclient.PipelineRunInterface, name string,
 	}
 
 	var operation = func() error {
-		_, err = wfClient.Patch(context.Background(), name, types.MergePatchType, patch, v1.PatchOptions{})
+		_, err = wfClient.Patch(ctx, name, types.MergePatchType, patch, v1.PatchOptions{})
 		return err
 	}
 	var backoffPolicy = backoff.WithMaxRetries(backoff.NewConstantBackOff(100), 10)
@@ -1055,13 +1081,13 @@ func (r *ResourceManager) ReportScheduledWorkflowResource(swf *util.ScheduledWor
 // checkJobExist The Kubernetes API doesn't support CRUD by UID. This method
 // retrieve the job metadata from the database, then retrieve the CR
 // using the job name, and compare the given job id is same as the CR.
-func (r *ResourceManager) checkJobExist(jobID string) (*model.Job, error) {
+func (r *ResourceManager) checkJobExist(ctx context.Context, jobID string) (*model.Job, error) {
 	job, err := r.jobStore.GetJob(jobID)
 	if err != nil {
 		return nil, util.Wrap(err, "Check job exist failed")
 	}
 
-	scheduledWorkflow, err := r.getScheduledWorkflowClient(job.Namespace).Get(context.Background(), job.Name, v1.GetOptions{})
+	scheduledWorkflow, err := r.getScheduledWorkflowClient(job.Namespace).Get(ctx, job.Name, v1.GetOptions{})
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Check job exist failed")
 	}
@@ -1257,7 +1283,7 @@ func (r *ResourceManager) CreatePipelineVersion(apiVersion *api.PipelineVersion,
 	}
 
 	// Extract the parameters from the pipeline & override pipeline name parameter.
-	wf, err := util.ValidateWorkflow(pipelineFile)
+	wf, err := util.ValidatePipelineRun(pipelineFile)
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline version failed")
 	}
@@ -1268,7 +1294,7 @@ func (r *ResourceManager) CreatePipelineVersion(apiVersion *api.PipelineVersion,
 		}
 		overrideV2PipelineName(wf, pipeline.Name, pipeline.Namespace)
 	}
-	paramsJson, err := util.MarshalParameters(wf.Spec.Arguments.Parameters)
+	paramsJson, err := util.MarshalParameters(wf.Spec.Params)
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline version failed")
 	}
@@ -1353,7 +1379,7 @@ func (r *ResourceManager) GetPipelineVersionTemplate(versionId string) ([]byte, 
 	return template, nil
 }
 
-func (r *ResourceManager) IsRequestAuthorized(userIdentity string, resourceAttributes *authorizationv1.ResourceAttributes) error {
+func (r *ResourceManager) IsRequestAuthorized(ctx context.Context, userIdentity string, resourceAttributes *authorizationv1.ResourceAttributes) error {
 	result, err := r.subjectAccessReviewClient.Create(
 		context.Background(),
 		&authorizationv1.SubjectAccessReview{
