@@ -291,7 +291,7 @@ namespace="kubeflow-user-example-com"
 training_steps="200"
 
 @dsl.pipeline(
-    name="End to End Pipeline",
+    name="end-to-end-pipeline",
     description="An end to end mnist example including hyperparameter tuning, train and inference"
 )
 def mnist_pipeline(name=name, namespace=namespace, training_steps=training_steps):
