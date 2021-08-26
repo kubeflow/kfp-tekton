@@ -35,6 +35,11 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py
 COPY sdk/python/requirements.txt .
 RUN python3 -m pip install -r requirements.txt --no-cache-dir
 
+WORKDIR /go/src/github.com/kubeflow/pipelines
+COPY sdk sdk
+WORKDIR /go/src/github.com/kubeflow/pipelines/sdk/python
+RUN python3 setup.py install
+
 WORKDIR /
 COPY ./samples /samples
 COPY backend/src/apiserver/config/sample_config.json /samples/
@@ -48,7 +53,7 @@ RUN set -e; \
         mode=`< /samples/sample_config.json jq ".[] | select(.file == \"${pipeline_yaml}\") | (if .mode == null then \"V1\" else .mode end)" --raw-output`; \
         mv "$pipeline_py" "${pipeline_py}.tmp"; \
         echo 'import kfp; kfp.components.default_base_image_or_builder="gcr.io/google-appengine/python:2020-03-31-141326"' | cat - "${pipeline_py}.tmp" > "$pipeline_py"; \
-        dsl-compile --py "$pipeline_py" --output "$pipeline_yaml" --mode "$mode" || python3 "$pipeline_py"; \
+        dsl-compile-tekton --py "$pipeline_py" --output "$pipeline_yaml" --mode "$mode" || python3 "$pipeline_py"; \
     done
 
 
