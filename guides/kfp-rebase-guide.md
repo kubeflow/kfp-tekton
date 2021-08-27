@@ -20,6 +20,8 @@ account.
     - [6. Apply the `.patch`](#6-apply-the-patch)
     - [7. Remove unwanted files, like `OWNERS` in subdirectories](#7-remove-unwanted-files-like-owners-in-subdirectories)
     - [8. Report number of changed files and the number of rejects](#8-report-number-of-changed-files-and-the-number-of-rejects)
+  - [Revert the Undesired Code Changes](#revert-the-undesired-code-changes)
+    - [Find and Revert Undesired Changes to the `dsl-compile-tekton` Command](#find-and-revert-undesired-changes-to-the-dsl-compile-tekton-command)
   - [Create a Pull Request with the Latest KFP Changes](#create-a-pull-request-with-the-latest-kfp-changes)
   - [How to Accept a PR on the Rebase Branch](#how-to-accept-a-pr-on-the-rebase-branch)
 
@@ -106,8 +108,16 @@ git checkout -b kfp_${KFP_VERSION_NEW}_rebase
 
 ### 6. Apply the `.patch`
 
+**Note:** We need to exclude files that should not get duplicated from the KFP repository.
+
 ```Bash
-git apply --reject --whitespace=fix  temp/git_diff_${KFP_VERSION_OLD}_to_${KFP_VERSION_NEW}.patch
+git apply --reject --whitespace=fix \
+    --exclude=sdk/* \
+    --exclude=samples/* \
+    --exclude=components/* \
+    --exclude=OWNERS \
+    --exclude=VERSION \
+    temp/git_diff_${KFP_VERSION_OLD}_to_${KFP_VERSION_NEW}.patch
 ```
 
 
@@ -124,6 +134,27 @@ find . -mindepth 2 -type f -name "OWNERS" -exec rm -f {} \;
 echo "Files changed:    $(git diff --name-only | wc -l)"
 echo "Rejected changes: $(find .  -name "*.rej" -type f -not -path "*/temp/*" | wc -l)"
 ```
+
+
+## Revert the Undesired Code Changes
+
+Since the `kfp-tekton` project was "branched" off of the `kubeflow/pipelines` (`kfp`)
+project, there are quite a few files and folders with content that has diverged.
+Some of those files are excluded when applying the patch, others will have merge
+conflicts which are reported in `.rej` files.
+
+However, there may be some changes that are undesired but are not causing a merge
+conflict. Here is a working list (to be extended) of some undesired changes to 
+look out for:
+
+### Find and Revert Undesired Changes to the `dsl-compile-tekton` Command
+
+Use this command to find the files with changes to the `dsl-compile-tekton` command:
+
+```Bash
+git diff -G "dsl-compile-tekton" | grep -E "^diff |dsl-compile" --color
+```
+
 
 
 ## Create a Pull Request with the Latest KFP Changes
@@ -153,7 +184,19 @@ git log -1 --format=fuller
 
 # push as the bot user
 git push -f https://'kfp-tekton-bot':${KFP_TEKTON_BOT_API_TOKEN}@github.com/kfp-tekton-bot/kfp-tekton.git
+
+# it may be helpful to call out the reject files in the PR comments
+find .  -name "*.rej" -type f -not -path "*/temp/*"
 ```
+
+Now log into GitHub as the `kp-tekton-bot` user and create the pull request.
+
+For reference, [here](https://github.com/kubeflow/kfp-tekton/pulls?q=is%3Apr+is%3Aclosed+KFP+Rebase+author%3Akfp-tekton-bot)
+are some of the pull requests for previous KFP rebases:
+
+- KFP 1.5.0 Rebase: https://github.com/kubeflow/kfp-tekton/pull/555
+- KFP 1.4.0 Rebase: https://github.com/kubeflow/kfp-tekton/pull/481
+- KFP 1.3.0 Rebase: https://github.com/kubeflow/kfp-tekton/pull/423
 
 
 ## How to Accept a PR on the Rebase Branch
@@ -169,12 +212,19 @@ git pull origin kfp_${KFP_VERSION_NEW}_rebase
 # check last 10 commits
 git log --format="%h  %<(10,trunc)%ae  %<(50,trunc)%s  (%cd)  %d" --date=short -10
 
-# Do NOT keep the commit with a non-bot author!
+# Do NOT keep commits with a non-bot author!
 # unstage last commit, or more (n number of commits) "HEAD~n" 
 git reset HEAD~1
+
+# double check all prior commits (on this branch) are authored by the kfp-tekton-bot
 git log --format="%h  %<(10,trunc)%ae  %<(50,trunc)%s  (%cd)  %d" --date=short -10
 
-# now re-commit staged files as bot user: "kfp-tekton-bot"
-...
+# now re-commit staged files as "kfp-tekton-bot" user
+git commit -m "< message >" --author="${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>"
 
+# push the branch with force (-f) since we are rewriting commit history
+git push -f
+
+# check for remaining reject files and update the PR comments
+find .  -name "*.rej" -type f -not -path "*/temp/*"
 ```
