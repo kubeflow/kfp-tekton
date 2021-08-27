@@ -27,8 +27,8 @@ import (
 	"time"
 
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
+	"knative.dev/pkg/logging"
 
-	"github.com/golang/glog"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	pb "github.com/kubeflow/pipelines/v2/third_party/ml_metadata"
 	"google.golang.org/grpc"
@@ -638,12 +638,13 @@ func (c *Client) GetEventsByArtifactIDs(ctx context.Context, artifactIds []int64
 }
 
 func (c *Client) GetArtifactName(ctx context.Context, artifactId int64) (string, error) {
+	logger := logging.FromContext(ctx)
 	mlmdEvents, err := c.GetEventsByArtifactIDs(ctx, []int64{artifactId})
 	if err != nil {
 		return "", fmt.Errorf("faild when getting events with artifact id %v: %w", artifactId, err)
 	}
 	if len(mlmdEvents) == 0 {
-		glog.Infof("can't find any events with artifact id %v", artifactId)
+		logger.Infof("can't find any events with artifact id %v", artifactId)
 		return "", nil
 	}
 	event := mlmdEvents[0]
@@ -711,9 +712,9 @@ func SchemaToArtifactType(schema string) (*pb.ArtifactType, error) {
 	}
 
 	// TODO: Also parse properties.
-	if so.Title == "" {
-		glog.Fatal("No title specified")
-	}
+	// if so.Title == "" {
+	// 	glog.Fatal("No title specified")
+	// }
 	at := &pb.ArtifactType{Name: proto.String(so.Title)}
 	return at, nil
 }

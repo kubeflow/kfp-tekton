@@ -6,12 +6,12 @@ import (
 	"path"
 	"strings"
 
-	"github.com/golang/glog"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/v2/config"
 	"github.com/kubeflow/pipelines/v2/metadata"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"knative.dev/pkg/logging"
 )
 
 // Driver options
@@ -64,6 +64,7 @@ type Execution struct {
 }
 
 func RootDAG(ctx context.Context, opts Options, mlmd *metadata.Client) (execution *Execution, err error) {
+	logger := logging.FromContext(ctx)
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("driver.RootDAG(%s) failed: %w", opts.info(), err)
@@ -76,7 +77,7 @@ func RootDAG(ctx context.Context, opts Options, mlmd *metadata.Client) (executio
 	// TODO(v2): in pipeline spec, rename GCS output directory to pipeline root.
 	pipelineRoot := opts.RuntimeConfig.GetGcsOutputDirectory()
 	if pipelineRoot != "" {
-		glog.Infof("PipelineRoot=%q", pipelineRoot)
+		logger.Infof("PipelineRoot=%q", pipelineRoot)
 	} else {
 		restConfig, err := rest.InClusterConfig()
 		if err != nil {
@@ -91,7 +92,7 @@ func RootDAG(ctx context.Context, opts Options, mlmd *metadata.Client) (executio
 			return nil, err
 		}
 		pipelineRoot = cfg.DefaultPipelineRoot()
-		glog.Infof("PipelineRoot=%q from default config", pipelineRoot)
+		logger.Infof("PipelineRoot=%q from default config", pipelineRoot)
 	}
 	// TODO(Bobgy): fill in run resource.
 	pipeline, err := mlmd.GetPipeline(ctx, opts.PipelineName, opts.RunID, opts.Namespace, "run-resource", pipelineRoot)
@@ -113,7 +114,7 @@ func RootDAG(ctx context.Context, opts Options, mlmd *metadata.Client) (executio
 	if err != nil {
 		return nil, err
 	}
-	glog.Infof("Created execution: %s", exec)
+	logger.Infof("Created execution: %s", exec)
 	// No need to return ExecutorInput, because tasks in the DAG will resolve
 	// needed info from MLMD.
 	return &Execution{ID: exec.GetID(), Context: pipeline.GetRunCtxID()}, nil
@@ -154,6 +155,7 @@ func validateRootDAG(opts Options) (err error) {
 
 // TODO(Bobgy): 7-17, continue to build CLI args for container driver
 func Container(ctx context.Context, opts Options, mlmd *metadata.Client) (execution *Execution, err error) {
+	logger := logging.FromContext(ctx)
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("driver.Container(%s) failed: %w", opts.info(), err)
@@ -173,7 +175,7 @@ func Container(ctx context.Context, opts Options, mlmd *metadata.Client) (execut
 	if err != nil {
 		return nil, err
 	}
-	glog.Infof("parent DAG: %+v", dag.Execution)
+	logger.Infof("parent DAG: %+v", dag.Execution)
 	inputs, err := resolveInputs(ctx, dag, opts.Task, mlmd)
 	if err != nil {
 		return nil, err
@@ -192,7 +194,7 @@ func Container(ctx context.Context, opts Options, mlmd *metadata.Client) (execut
 	if err != nil {
 		return nil, err
 	}
-	glog.Infof("Created execution: %s", createdExecution)
+	logger.Infof("Created execution: %s", createdExecution)
 	return &Execution{
 		ID:            createdExecution.GetID(),
 		ExecutorInput: executorInput,
@@ -230,11 +232,12 @@ func validateContainer(opts Options) (err error) {
 }
 
 func resolveInputs(ctx context.Context, dag *metadata.DAG, task *pipelinespec.PipelineTaskSpec, mlmd *metadata.Client) (*pipelinespec.ExecutorInput_Inputs, error) {
+	logger := logging.FromContext(ctx)
 	inputParams, _, err := dag.Execution.GetParameters()
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve inputs: %w", err)
 	}
-	glog.Infof("parent DAG input parameters %+v", inputParams)
+	logger.Infof("parent DAG input parameters %+v", inputParams)
 	inputs := &pipelinespec.ExecutorInput_Inputs{
 		Parameters: make(map[string]*pipelinespec.Value),
 		Artifacts:  make(map[string]*pipelinespec.ArtifactList),

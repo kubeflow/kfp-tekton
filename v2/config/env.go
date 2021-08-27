@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/golang/glog"
 	k8errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"knative.dev/pkg/logging"
 )
 
 const (
@@ -24,10 +24,11 @@ type Config struct {
 
 // FromConfigMap loads config from a kfp-launcher Kubernetes config map.
 func FromConfigMap(ctx context.Context, clientSet kubernetes.Interface, namespace string) (*Config, error) {
+	logger := logging.FromContext(ctx)
 	config, err := clientSet.CoreV1().ConfigMaps(namespace).Get(ctx, configMapName, metav1.GetOptions{})
 	if err != nil {
 		if k8errors.IsNotFound(err) {
-			glog.Infof("cannot find launcher configmap: name=%q namespace=%q", configMapName, namespace)
+			logger.Infof("cannot find launcher configmap: name=%q namespace=%q", configMapName, namespace)
 			// LauncherConfig is optional, so ignore not found error.
 			return nil, nil
 		}

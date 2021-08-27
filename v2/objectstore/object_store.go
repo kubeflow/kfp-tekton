@@ -29,11 +29,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/golang/glog"
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/s3blob"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"knative.dev/pkg/logging"
 )
 
 type Config struct {
@@ -203,6 +203,7 @@ func ParseBucketConfig(path string) (*Config, error) {
 
 // TODO(neuromage): Move these helper functions to a storage package and add tests.
 func uploadFile(ctx context.Context, bucket *blob.Bucket, localFilePath, blobFilePath string) error {
+	logger := logging.FromContext(ctx)
 	errorF := func(err error) error {
 		return fmt.Errorf("uploadFile(): unable to complete copying %q to remote storage %q: %w", localFilePath, blobFilePath, err)
 	}
@@ -226,7 +227,7 @@ func uploadFile(ctx context.Context, bucket *blob.Bucket, localFilePath, blobFil
 		return errorF(fmt.Errorf("failed to close Writer for bucket: %w", err))
 	}
 
-	glog.Infof("uploadFile(localFilePath=%q, blobFilePath=%q)", localFilePath, blobFilePath)
+	logger.Infof("uploadFile(localFilePath=%q, blobFilePath=%q)", localFilePath, blobFilePath)
 	return nil
 }
 
@@ -282,7 +283,7 @@ func MinioDefaultEndpoint() string {
 		return minioHost + ":" + minioPort
 	}
 	// If the env vars do not exist, we guess that we are running in KFP multi user mode, so default minio service should be `minio-service.kubeflow:9000`.
-	glog.Infof("Cannot detect minio-service in the same namespace, default to %s as MinIO endpoint.", defaultMinioEndpointInMultiUserMode)
+	// glog.Infof("Cannot detect minio-service in the same namespace, default to %s as MinIO endpoint.", defaultMinioEndpointInMultiUserMode)
 	return defaultMinioEndpointInMultiUserMode
 }
 

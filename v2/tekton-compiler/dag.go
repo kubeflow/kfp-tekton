@@ -6,8 +6,6 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	pipeline "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	k8score "k8s.io/api/core/v1"
-	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (c *pipelineCompiler) DAG(name string, componentSpec *pipelinespec.ComponentSpec, dagSpec *pipelinespec.DagSpec) error {
@@ -47,10 +45,22 @@ func (c *pipelineCompiler) DAG(name string, componentSpec *pipelinespec.Componen
 			return fmt.Errorf("DAG: marshaling component spec to proto JSON failed: %w", err)
 		}
 		c.addPipelineTask(&pipeline.PipelineTask{
-			Name:     kfpTask.GetTaskInfo().GetName() + "-driver",
-			TaskRef:  &pipeline.TaskRef{Name: c.containerTask.Name},
+			Name: kfpTask.GetTaskInfo().GetName() + "-driver",
+			TaskRef: &pipeline.TaskRef{
+				APIVersion: "kfp-driver.tekton.dev/v1alpha1",
+				Kind:       "KFPDriver",
+				Name:       "kfp-driver",
+			},
 			RunAfter: append(kfpTask.GetDependentTasks(), driverTask.Name),
 			Params: []pipeline.Param{
+				{
+					Name:  paramType,
+					Value: pipeline.ArrayOrString{Type: "string", StringVal: "CONTAINER"},
+				},
+				{
+					Name:  paramPipelineName,
+					Value: pipeline.ArrayOrString{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
+				},
 				{
 					Name:  paramDAGContextID,
 					Value: pipeline.ArrayOrString{Type: "string", StringVal: outputs.contextID},
@@ -70,6 +80,18 @@ func (c *pipelineCompiler) DAG(name string, componentSpec *pipelinespec.Componen
 				{
 					Name:  paramRunId,
 					Value: pipeline.ArrayOrString{Type: "string", StringVal: runID()},
+				},
+				{
+					Name:  paramExecutionID,
+					Value: pipeline.ArrayOrString{Type: "string", StringVal: paramExecutionID},
+				},
+				{
+					Name:  paramContextID,
+					Value: pipeline.ArrayOrString{Type: "string", StringVal: paramContextID},
+				},
+				{
+					Name:  paramExecutorInput,
+					Value: pipeline.ArrayOrString{Type: "string", StringVal: paramExecutorInput},
 				},
 			},
 		})
@@ -105,12 +127,24 @@ func (c *pipelineCompiler) dagDriverTask(
 	}
 
 	// generate DAG task template if needed
-	dagTaskName := c.addDAGDriverTaskTemplate()
+	// dagTaskName := c.addDAGDriverTaskTemplate()
 
 	t := &pipeline.PipelineTask{
-		Name:    name,
-		TaskRef: &pipeline.TaskRef{Name: dagTaskName},
+		Name: name,
+		TaskRef: &pipeline.TaskRef{
+			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
+			Kind:       "KFPDriver",
+			Name:       "kfp-driver",
+		},
 		Params: []pipeline.Param{
+			{
+				Name:  paramType,
+				Value: pipeline.ArrayOrString{Type: "string", StringVal: "ROOT_DAG"},
+			},
+			{
+				Name:  paramPipelineName,
+				Value: pipeline.ArrayOrString{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
+			},
 			{
 				Name:  paramComponent,
 				Value: pipeline.ArrayOrString{Type: "string", StringVal: componentJson},
@@ -123,6 +157,14 @@ func (c *pipelineCompiler) dagDriverTask(
 				Name:  paramRunId,
 				Value: pipeline.ArrayOrString{Type: "string", StringVal: runID()},
 			},
+			{
+				Name:  paramExecutionID,
+				Value: pipeline.ArrayOrString{Type: "string", StringVal: paramExecutionID},
+			},
+			{
+				Name:  paramContextID,
+				Value: pipeline.ArrayOrString{Type: "string", StringVal: paramContextID},
+			},
 		},
 	}
 	return t, &dagDriverOutputs{
@@ -132,71 +174,71 @@ func (c *pipelineCompiler) dagDriverTask(
 }
 
 //Generate task template for DAG driver
-func (c *pipelineCompiler) addDAGDriverTaskTemplate() string {
-	if c.dagTask != nil {
-		return c.dagTask.Name
-	}
+// func (c *pipelineCompiler) addDAGDriverTaskTemplate() string {
+// 	if c.dagTask != nil {
+// 		return c.dagTask.Name
+// 	}
 
-	driver := &pipeline.Task{
-		TypeMeta: k8smeta.TypeMeta{
-			APIVersion: "tekton.dev/v1beta1",
-			Kind:       "Task",
-		},
-		ObjectMeta: k8smeta.ObjectMeta{
-			Name: fmt.Sprintf("system-dag-driver-%s", c.uid),
-			Annotations: map[string]string{
-				"pipelines.kubeflow.org/v2_pipeline": "true",
-			},
-			Labels: map[string]string{
-				"pipelines.kubeflow.org/v2_component": "true",
-				"pipeline-uid":                        c.uid,
-			},
-		},
-		Spec: pipeline.TaskSpec{
-			Params: []pipeline.ParamSpec{
-				{Name: paramComponent, Type: "string"},     // --component
-				{Name: paramRuntimeConfig, Type: "string"}, // --runtime_config
-				{Name: paramParentContextID, Type: "string",
-					Default: &pipeline.ArrayOrString{Type: "string", StringVal: ""}},
-				{Name: paramRunId, Type: "string"},
-			},
-			Results: []pipeline.TaskResult{
-				{Name: paramExecutionID, Description: "execution id"},
-				{Name: paramContextID, Description: "context id"},
-			},
-			Steps: []pipeline.Step{
-				{Container: k8score.Container{
-					Name:    "dag-driver-main",
-					Image:   c.driverImage,
-					Command: []string{"driver"},
-					Args: []string{
-						"--type", "ROOT_DAG",
-						"--pipeline_name", c.spec.GetPipelineInfo().GetName(),
-						"--run_id", inputParameter(paramRunId),
-						"--component", inputParameter(paramComponent),
-						"--runtime_config", inputParameter(paramRuntimeConfig),
-						"--execution_id_path", outputPath(paramExecutionID),
-						"--context_id_path", outputPath(paramContextID),
-						"--mlmd_server_address", // METADATA_GRPC_SERVICE_* come from metadata-grpc-configmap
-						"$(METADATA_GRPC_SERVICE_HOST)",
-						"--mlmd_server_port",
-						"$(METADATA_GRPC_SERVICE_PORT)",
-					},
-					Env: []k8score.EnvVar{{
-						Name:  "METADATA_GRPC_SERVICE_HOST",
-						Value: "metadata-grpc-service.kubeflow.svc.cluster.local",
-					}, {
-						Name:  "METADATA_GRPC_SERVICE_PORT",
-						Value: "8080",
-					}},
-				}},
-			},
-		},
-	}
-	c.addTask(driver, driver.Name)
-	c.dagTask = driver
-	return driver.Name
-}
+// 	driver := &pipeline.Task{
+// 		TypeMeta: k8smeta.TypeMeta{
+// 			APIVersion: "tekton.dev/v1beta1",
+// 			Kind:       "Task",
+// 		},
+// 		ObjectMeta: k8smeta.ObjectMeta{
+// 			Name: fmt.Sprintf("system-dag-driver-%s", c.uid),
+// 			Annotations: map[string]string{
+// 				"pipelines.kubeflow.org/v2_pipeline": "true",
+// 			},
+// 			Labels: map[string]string{
+// 				"pipelines.kubeflow.org/v2_component": "true",
+// 				"pipeline-uid":                        c.uid,
+// 			},
+// 		},
+// 		Spec: pipeline.TaskSpec{
+// 			Params: []pipeline.ParamSpec{
+// 				{Name: paramComponent, Type: "string"},     // --component
+// 				{Name: paramRuntimeConfig, Type: "string"}, // --runtime_config
+// 				{Name: paramParentContextID, Type: "string",
+// 					Default: &pipeline.ArrayOrString{Type: "string", StringVal: ""}},
+// 				{Name: paramRunId, Type: "string"},
+// 			},
+// 			Results: []pipeline.TaskResult{
+// 				{Name: paramExecutionID, Description: "execution id"},
+// 				{Name: paramContextID, Description: "context id"},
+// 			},
+// 			Steps: []pipeline.Step{
+// 				{Container: k8score.Container{
+// 					Name:    "dag-driver-main",
+// 					Image:   c.driverImage,
+// 					Command: []string{"driver"},
+// 					Args: []string{
+// 						"--type", "ROOT_DAG",
+// 						"--pipeline_name", c.spec.GetPipelineInfo().GetName(),
+// 						"--run_id", inputParameter(paramRunId),
+// 						"--component", inputParameter(paramComponent),
+// 						"--runtime_config", inputParameter(paramRuntimeConfig),
+// 						"--execution_id_path", outputPath(paramExecutionID),
+// 						"--context_id_path", outputPath(paramContextID),
+// 						"--mlmd_server_address", // METADATA_GRPC_SERVICE_* come from metadata-grpc-configmap
+// 						"$(METADATA_GRPC_SERVICE_HOST)",
+// 						"--mlmd_server_port",
+// 						"$(METADATA_GRPC_SERVICE_PORT)",
+// 					},
+// 					Env: []k8score.EnvVar{{
+// 						Name:  "METADATA_GRPC_SERVICE_HOST",
+// 						Value: "metadata-grpc-service.kubeflow.svc.cluster.local",
+// 					}, {
+// 						Name:  "METADATA_GRPC_SERVICE_PORT",
+// 						Value: "8080",
+// 					}},
+// 				}},
+// 			},
+// 		},
+// 	}
+// 	c.addTask(driver, driver.Name)
+// 	c.dagTask = driver
+// 	return driver.Name
+// }
 
 func addImplicitDependencies(dagSpec *pipelinespec.DagSpec) error {
 	for _, task := range dagSpec.GetTasks() {

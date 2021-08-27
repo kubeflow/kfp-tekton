@@ -113,8 +113,8 @@ type pipelineCompiler struct {
 	launcherImage    string
 	uid              string
 	dagPipelineTasks []*pipeline.PipelineTask
-	dagTask          *pipeline.Task
-	containerTask    *pipeline.Task
+	// dagTask          *pipeline.Task
+	// containerTask    *pipeline.Task
 }
 
 func (c *pipelineCompiler) Importer(name string, component *pipelinespec.ComponentSpec, importer *pipelinespec.PipelineDeploymentConfig_ImporterSpec) error {
@@ -148,6 +148,8 @@ func (c *pipelineCompiler) taskName(componentName string) string {
 }
 
 const (
+	paramType            = "type"
+	paramPipelineName    = "pipeline-name"
 	paramComponent       = "component"      // component spec
 	paramTask            = "task"           // task spec
 	paramRuntimeConfig   = "runtime-config" // job runtime config, pipeline level inputs

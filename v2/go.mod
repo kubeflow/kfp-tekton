@@ -22,6 +22,7 @@ require (
 	k8s.io/api v0.20.7
 	k8s.io/apimachinery v0.21.2
 	k8s.io/client-go v0.20.7
+	knative.dev/pkg v0.0.0-20210730172132-bb4aaf09c430
 )
 
 replace github.com/kubeflow/pipelines/api => ../api
