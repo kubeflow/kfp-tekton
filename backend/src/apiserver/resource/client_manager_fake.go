@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ type FakeClientManager struct {
 	pipelineStore                 storage.PipelineStoreInterface
 	jobStore                      storage.JobStoreInterface
 	runStore                      storage.RunStoreInterface
+	taskStore                     storage.TaskStoreInterface
 	resourceReferenceStore        storage.ResourceReferenceStoreInterface
 	dBStatusStore                 storage.DBStatusStoreInterface
 	defaultExperimentStore        storage.DefaultExperimentStoreInterface
@@ -78,6 +79,7 @@ func NewFakeClientManager(time util.TimeInterface, uuid util.UUIDGeneratorInterf
 		pipelineStore:                 storage.NewPipelineStore(db, time, uuid),
 		jobStore:                      storage.NewJobStore(db, time),
 		runStore:                      storage.NewRunStore(db, time),
+		taskStore:                     storage.NewTaskStore(db, time, uuid),
 		resourceReferenceStore:        storage.NewResourceReferenceStore(db),
 		dBStatusStore:                 storage.NewDBStatusStore(db),
 		defaultExperimentStore:        storage.NewDefaultExperimentStore(db),
@@ -140,6 +142,10 @@ func (f *FakeClientManager) JobStore() storage.JobStoreInterface {
 
 func (f *FakeClientManager) RunStore() storage.RunStoreInterface {
 	return f.runStore
+}
+
+func (f *FakeClientManager) TaskStore() storage.TaskStoreInterface {
+	return f.taskStore
 }
 
 func (f *FakeClientManager) ResourceReferenceStore() storage.ResourceReferenceStoreInterface {

@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ const (
 	mysqlExtraParams       = "DBConfig.ExtraParams"
 	archiveLogFileName     = "ARCHIVE_LOG_FILE_NAME"
 	archiveLogPathPrefix   = "ARCHIVE_LOG_PATH_PREFIX"
+	dbConMaxLifeTimeSec    = "DBConfig.ConMaxLifeTimeSec"
 
 	visualizationServiceHost = "ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_HOST"
 	visualizationServicePort = "ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_PORT"
@@ -67,6 +68,7 @@ type ClientManager struct {
 	pipelineStore             storage.PipelineStoreInterface
 	jobStore                  storage.JobStoreInterface
 	runStore                  storage.RunStoreInterface
+	taskStore                 storage.TaskStoreInterface
 	resourceReferenceStore    storage.ResourceReferenceStoreInterface
 	dBStatusStore             storage.DBStatusStoreInterface
 	defaultExperimentStore    storage.DefaultExperimentStoreInterface
@@ -80,6 +82,10 @@ type ClientManager struct {
 	uuid                      util.UUIDGeneratorInterface
 	authenticators            []auth.Authenticator
 	tektonClient              client.TektonClientInterface
+}
+
+func (c *ClientManager) TaskStore() storage.TaskStoreInterface {
+	return c.taskStore
 }
 
 func (c *ClientManager) ExperimentStore() storage.ExperimentStoreInterface {
@@ -153,6 +159,7 @@ func (c *ClientManager) Authenticators() []auth.Authenticator {
 func (c *ClientManager) init() {
 	glog.Info("Initializing client manager")
 	db := initDBClient(common.GetDurationConfig(initConnectionTimeout))
+	db.SetConnMaxLifetime(common.GetDurationConfig(dbConMaxLifeTimeSec))
 
 	// time
 	c.time = util.NewRealTime()
@@ -164,6 +171,7 @@ func (c *ClientManager) init() {
 	c.experimentStore = storage.NewExperimentStore(db, c.time, c.uuid)
 	c.pipelineStore = storage.NewPipelineStore(db, c.time, c.uuid)
 	c.jobStore = storage.NewJobStore(db, c.time)
+	c.taskStore = storage.NewTaskStore(db, c.time, c.uuid)
 	c.resourceReferenceStore = storage.NewResourceReferenceStore(db)
 	c.dBStatusStore = storage.NewDBStatusStore(db)
 	c.defaultExperimentStore = storage.NewDefaultExperimentStore(db)
@@ -236,6 +244,7 @@ func initDBClient(initConnectionTimeout time.Duration) *storage.DB {
 		&model.ResourceReference{},
 		&model.RunDetail{},
 		&model.RunMetric{},
+		&model.Task{},
 		&model.DBStatus{},
 		&model.DefaultExperiment{})
 
@@ -282,6 +291,11 @@ func initDBClient(initConnectionTimeout time.Duration) *storage.DB {
 		AddForeignKey("PipelineId", "pipelines(UUID)", "CASCADE" /* onDelete */, "CASCADE" /* update */)
 	if response.Error != nil {
 		glog.Fatalf("Failed to create a foreign key for PipelineId in pipeline_versions table. Error: %s", response.Error)
+	}
+	response = db.Model(&model.Task{}).
+		AddForeignKey("RunUUID", "run_details(UUID)", "CASCADE" /* onDelete */, "CASCADE" /* update */)
+	if response.Error != nil {
+		glog.Fatalf("Failed to create a foreign key for RunUUID in task table. Error: %s", response.Error)
 	}
 
 	// Data backfill for pipeline_versions if this is the first time for

@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -130,9 +130,9 @@ func retrieveIndex(workflow *workflowapi.PipelineRun) int64 {
 }
 
 // Create creates a workflow given a namespace and its specification.
-func (p *WorkflowClient) Create(namespace string, workflow *commonutil.Workflow) (
+func (p *WorkflowClient) Create(ctx context.Context, namespace string, workflow *commonutil.Workflow) (
 	*commonutil.Workflow, error) {
-	result, err := p.clientSet.TektonV1beta1().PipelineRuns(namespace).Create(context.Background(), workflow.Get(), metav1.CreateOptions{})
+	result, err := p.clientSet.TektonV1beta1().PipelineRuns(namespace).Create(ctx, workflow.Get(), metav1.CreateOptions{})
 	if err != nil {
 		return nil, wraperror.Wrapf(err, "Error creating workflow in namespace (%v): %v: %+v", namespace,
 			err, workflow.Get())

@@ -25,7 +25,7 @@ import (
 type FakeSubjectAccessReviewClient struct {
 }
 
-func (FakeSubjectAccessReviewClient) Create(ctx context.Context, auth *authzv1.SubjectAccessReview, options v1.CreateOptions) (*authzv1.SubjectAccessReview, error) {
+func (FakeSubjectAccessReviewClient) Create(context.Context, *authzv1.SubjectAccessReview, v1.CreateOptions) (*authzv1.SubjectAccessReview, error) {
 	return &authzv1.SubjectAccessReview{Status: authzv1.SubjectAccessReviewStatus{
 		Allowed:         true,
 		Denied:          false,
@@ -41,7 +41,7 @@ func NewFakeSubjectAccessReviewClient() FakeSubjectAccessReviewClient {
 type FakeSubjectAccessReviewClientUnauthorized struct {
 }
 
-func (FakeSubjectAccessReviewClientUnauthorized) Create(ctx context.Context, auth *authzv1.SubjectAccessReview, options v1.CreateOptions) (*authzv1.SubjectAccessReview, error) {
+func (FakeSubjectAccessReviewClientUnauthorized) Create(context.Context, *authzv1.SubjectAccessReview, v1.CreateOptions) (*authzv1.SubjectAccessReview, error) {
 	return &authzv1.SubjectAccessReview{Status: authzv1.SubjectAccessReviewStatus{
 		Allowed:         false,
 		Denied:          false,

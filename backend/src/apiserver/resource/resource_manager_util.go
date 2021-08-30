@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -181,9 +181,9 @@ func formulateRetryWorkflow(wf *util.Workflow) (*util.Workflow, []string, error)
 	return util.NewWorkflow(newWF), podsToDelete, nil
 }
 
-func deletePods(k8sCoreClient client.KubernetesCoreInterface, podsToDelete []string, namespace string) error {
+func deletePods(ctx context.Context, k8sCoreClient client.KubernetesCoreInterface, podsToDelete []string, namespace string) error {
 	for _, podId := range podsToDelete {
-		err := k8sCoreClient.PodClient(namespace).Delete(context.Background(), podId, metav1.DeleteOptions{})
+		err := k8sCoreClient.PodClient(namespace).Delete(ctx, podId, metav1.DeleteOptions{})
 		if err != nil && !apierr.IsNotFound(err) {
 			return util.NewInternalServerError(err, "Failed to delete pods.")
 		}
@@ -265,4 +265,17 @@ func convertPipelineIdToDefaultPipelineVersion(pipelineSpec *api.PipelineSpec, r
 		Relationship: api.Relationship_CREATOR,
 	})
 	return nil
+}
+
+// Override pipeline name parameter if this is a v2 compatible pipeline.
+func overrideV2PipelineName(wf *util.Workflow, name string, namespace string) {
+	var pipelineRef string
+	if namespace != "" {
+		pipelineRef = fmt.Sprintf("namespace/%s/pipeline/%s", namespace, name)
+	} else {
+		pipelineRef = fmt.Sprintf("pipeline/%s", name)
+	}
+	overrides := make(map[string]string)
+	overrides["pipeline-name"] = pipelineRef
+	wf.OverrideParameters(overrides)
 }

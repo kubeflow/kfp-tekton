@@ -22,11 +22,11 @@ import (
 	"github.com/golang/glog"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	authzv1 "k8s.io/api/authorization/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type SubjectAccessReviewInterface interface {
-	Create(ctx context.Context, sar *authzv1.SubjectAccessReview, opts metav1.CreateOptions) (result *authzv1.SubjectAccessReview, err error)
+	Create(ctx context.Context, sar *authzv1.SubjectAccessReview, opts v1.CreateOptions) (result *authzv1.SubjectAccessReview, err error)
 }
 
 func createSubjectAccessReviewClient(clientParams util.ClientParameters) (SubjectAccessReviewInterface, error) {

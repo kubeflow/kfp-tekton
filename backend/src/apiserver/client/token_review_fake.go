@@ -20,13 +20,13 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/pkg/errors"
 	authv1 "k8s.io/api/authentication/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type FakeTokenReviewClient struct {
 }
 
-func (FakeTokenReviewClient) Create(context.Context, *authv1.TokenReview, metav1.CreateOptions) (*authv1.TokenReview, error) {
+func (FakeTokenReviewClient) Create(context.Context, *authv1.TokenReview, v1.CreateOptions) (*authv1.TokenReview, error) {
 	return &authv1.TokenReview{Status: authv1.TokenReviewStatus{
 		Authenticated: true,
 		User:          authv1.UserInfo{Username: "test"},
@@ -42,7 +42,7 @@ func NewFakeTokenReviewClient() FakeTokenReviewClient {
 type FakeTokenReviewClientUnauthenticated struct {
 }
 
-func (FakeTokenReviewClientUnauthenticated) Create(context.Context, *authv1.TokenReview, metav1.CreateOptions) (*authv1.TokenReview, error) {
+func (FakeTokenReviewClientUnauthenticated) Create(context.Context, *authv1.TokenReview, v1.CreateOptions) (*authv1.TokenReview, error) {
 	return &authv1.TokenReview{Status: authv1.TokenReviewStatus{
 		Authenticated: false,
 		User:          authv1.UserInfo{},
@@ -58,7 +58,7 @@ func NewFakeTokenReviewClientUnauthenticated() FakeTokenReviewClientUnauthentica
 type FakeTokenReviewClientError struct {
 }
 
-func (FakeTokenReviewClientError) Create(context.Context, *authv1.TokenReview, metav1.CreateOptions) (*authv1.TokenReview, error) {
+func (FakeTokenReviewClientError) Create(context.Context, *authv1.TokenReview, v1.CreateOptions) (*authv1.TokenReview, error) {
 	return nil, errors.New("failed to create token review")
 }
 

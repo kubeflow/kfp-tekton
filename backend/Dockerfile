@@ -1,19 +1,32 @@
 ### Updated base image to golang in order to build with go modules
 ### Bazel build cannot work with the Tekton library because the current
 ### KFP Bazel does not support go.mod "replace" on key dependencies.
+# Copyright 2021 The Kubeflow Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 # 1. Build api server application
 # Use golang:1.13.1-stretch to keep GLIBC at 2.24 https://github.com/gotify/server/issues/225
 FROM golang:1.13.1-stretch as builder
 RUN apt-get update && apt-get install -y cmake clang musl-dev openssl
-
 WORKDIR /go/src/github.com/kubeflow/pipelines
 COPY . .
-RUN go mod vendor
 RUN GO111MODULE=on go build -o /bin/apiserver backend/src/apiserver/*.go
-
-RUN mkdir -p /go/src/github.com/kubeflow/pipelines/bazel-bin/backend/src/apiserver/
-RUN go build -o /go/src/github.com/kubeflow/pipelines/bazel-bin/backend/src/apiserver/apiserver ./backend/src/apiserver
+# Check licenses and comply with license terms.
+RUN ./hack/install-go-licenses.sh
+RUN go-licenses csv /bin/apiserver > /tmp/licenses.csv && \
+    diff /tmp/licenses.csv backend/third_party_licenses/apiserver.csv && \
+    go-licenses save /tmp/licenses.csv --save_path /tmp/NOTICES
 
 # 2. Compile preloaded pipeline samples
 FROM python:3.7 as compiler
@@ -21,10 +34,6 @@ RUN apt-get update -y && apt-get install --no-install-recommends -y -q default-j
 RUN wget https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py
 COPY sdk/python/requirements.txt .
 RUN python3 -m pip install -r requirements.txt --no-cache-dir
-
-# Downloading Argo CLI so that the samples are validated, but doesn't need it for Tekton.
-# ADD  https://github.com/argoproj/argo/releases/download/v2.7.5/argo-linux-amd64 /usr/local/bin/argo
-# RUN chmod +x /usr/local/bin/argo
 
 WORKDIR /go/src/github.com/kubeflow/pipelines
 COPY sdk sdk
@@ -40,13 +49,16 @@ COPY backend/src/apiserver/config/sample_config.json /samples/
 RUN set -e; \
     < /samples/sample_config.json jq .[].file --raw-output | while read pipeline_yaml; do \
         pipeline_py="${pipeline_yaml%.yaml}.py"; \
+        pipeline_py="${pipeline_yaml%.yaml}.py"; \
+        mode=`< /samples/sample_config.json jq ".[] | select(.file == \"${pipeline_yaml}\") | (if .mode == null then \"V1\" else .mode end)" --raw-output`; \
         mv "$pipeline_py" "${pipeline_py}.tmp"; \
         echo 'import kfp; kfp.components.default_base_image_or_builder="gcr.io/google-appengine/python:2020-03-31-141326"' | cat - "${pipeline_py}.tmp" > "$pipeline_py"; \
-        dsl-compile-tekton --py "$pipeline_py" --output "$pipeline_yaml" || python3 "$pipeline_py"; \
+        dsl-compile-tekton --py "$pipeline_py" --output "$pipeline_yaml" --mode "$mode" || python3 "$pipeline_py"; \
     done
 
+
 # 3. Start api web server
-FROM golang:1.13.0
+FROM debian:stretch
 
 ARG COMMIT_SHA=unknown
 ENV COMMIT_SHA=${COMMIT_SHA}
@@ -55,10 +67,12 @@ ENV TAG_NAME=${TAG_NAME}
 
 WORKDIR /bin
 
-COPY third_party/license.txt /bin/license.txt
 COPY backend/src/apiserver/config/ /config
-
 COPY --from=builder /bin/apiserver /bin/apiserver
+
+# Copy licenses and notices.
+COPY --from=builder /tmp/licenses.csv /third_party/licenses.csv
+COPY --from=builder /tmp/NOTICES /third_party/NOTICES
 COPY --from=compiler /samples/ /samples/
 RUN chmod +x /bin/apiserver
 

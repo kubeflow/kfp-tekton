@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Google LLC
+ * Copyright 2018-2019 The Kubeflow Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,9 @@ import { Constants } from './Constants';
 import { parseTaskDisplayName } from './ParserUtils';
 import { KeyValue } from './StaticGraphParser';
 import { NodePhase, statusToBgColor, statusToPhase } from './StatusUtils';
+import { Execution } from 'src/third_party/mlmd/generated/ml_metadata/proto/metadata_store_pb';
+import { isV2Pipeline } from './v2/WorkflowUtils';
+import { ExecutionHelpers } from 'src/mlmd/MlmdUtils';
 
 export enum StorageService {
   GCS = 'gcs',
@@ -43,7 +46,11 @@ export interface StoragePath {
 }
 
 export default class WorkflowParser {
-  public static createRuntimeGraph(workflow: any): dagre.graphlib.Graph {
+  public static createRuntimeGraph(
+    workflow: any,
+    executions: Execution[] | undefined,
+  ): dagre.graphlib.Graph {
+    const nodeStateMap = buildNodeToExecutionStateMap(executions);
     const graph = new dagre.graphlib.Graph();
     graph.setGraph({});
     graph.setDefaultEdgeLabel(() => ({}));
@@ -196,10 +203,15 @@ export default class WorkflowParser {
         const statusColoring = exitHandlers.includes(task['name'])
           ? '#fef7f0'
           : statusToBgColor(phase, '');
+        let mlmdState: Execution.State | undefined;
+        if (isV2Pipeline(workflow)) {
+          mlmdState = nodeStateMap.get(taskId);
+        }
+        const taskStatusJson = statusMap.get(task['name']) || {status: {startTime:"", completionTime: ""}}
         // Add a node for the Task
         graph.setNode(taskId, {
           height: Constants.NODE_HEIGHT,
-          icon: statusToIcon(status),
+          icon: statusToIcon(status,taskStatusJson["status"]["startTime"], taskStatusJson["status"]["completionTime"], "", mlmdState),
           label: parseTaskDisplayName(task['taskSpec'] || task['taskRef']) || task['name'],
           statusColoring: statusColoring,
           width: Constants.NODE_WIDTH,
@@ -690,4 +702,17 @@ export default class WorkflowParser {
       return '';
     }
   }
+}
+
+function buildNodeToExecutionStateMap(
+  executions: Execution[] | undefined,
+): Map<string, Execution.State> {
+  const m = new Map<string, Execution.State>();
+  executions?.forEach(execution => {
+    const podname = ExecutionHelpers.getKfpPod(execution);
+    if (typeof podname === 'string') {
+      m.set(podname, execution.getLastKnownState());
+    }
+  });
+  return m;
 }

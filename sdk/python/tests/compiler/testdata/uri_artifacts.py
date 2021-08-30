@@ -41,7 +41,7 @@ name: Write to GCS
 inputs:
 - {name: text, type: String, description: 'Content to be written to GCS'}
 outputs:
-- {name: output_gcs_path, type: GCSPath, description: 'GCS file path'}
+- {name: output_gcs_path, type: Artifact, description: 'GCS file path'}
 implementation:
   container:
     image: google/cloud-sdk:slim
@@ -58,7 +58,7 @@ implementation:
 read_from_gcs = components.load_component_from_text("""
 name: Read from GCS
 inputs:
-- {name: input_gcs_path, type: GCSPath, description: 'GCS file path'}
+- {name: input_gcs_path, type: Artifact, description: 'GCS file path'}
 implementation:
   container:
     image: google/cloud-sdk:slim
@@ -115,4 +115,4 @@ def uri_artifact(text: str = 'Hello world!'):
 
 
 if __name__ == '__main__':
-  compiler.Compiler().compile(uri_artifact, __file__ + '.tar.gz')
+  compiler.Compiler(mode=dsl.PipelineExecutionMode.V2_COMPATIBLE).compile(uri_artifact, __file__.replace('.py', '.yaml'))

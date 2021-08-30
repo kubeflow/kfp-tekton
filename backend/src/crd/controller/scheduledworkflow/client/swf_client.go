@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,9 +61,9 @@ func (p *ScheduledWorkflowClient) Get(namespace string, name string) (*util.Sche
 }
 
 // Update Updates a ScheduledWorkflow in the Kubernetes API server.
-func (p *ScheduledWorkflowClient) Update(namespace string,
+func (p *ScheduledWorkflowClient) Update(ctx context.Context, namespace string,
 	schedule *util.ScheduledWorkflow) error {
 	_, err := p.clientSet.ScheduledworkflowV1beta1().ScheduledWorkflows(namespace).
-		Update(context.Background(), schedule.Get(), metav1.UpdateOptions{})
+		Update(ctx, schedule.Get(), metav1.UpdateOptions{})
 	return err
 }

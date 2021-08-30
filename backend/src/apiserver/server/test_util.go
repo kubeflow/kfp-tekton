@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package server
 
 import (
+	"context"
 	"testing"
 
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
@@ -159,7 +160,7 @@ func initWithExperimentAndPipelineVersion(t *testing.T) (*resource.FakeClientMan
 	assert.Nil(t, err)
 
 	// Create a pipeline and then a pipeline version.
-	_, err = resourceManager.CreatePipeline("pipeline", "", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
+	_, err = resourceManager.CreatePipeline("pipeline", "", "", []byte(testWorkflow.ToStringForStore()))
 	assert.Nil(t, err)
 	_, err = resourceManager.CreatePipelineVersion(&api.PipelineVersion{
 		Name: "pipeline_version",
@@ -192,7 +193,7 @@ func initWithOneTimeRun(t *testing.T) (*resource.FakeClientManager, *resource.Re
 			},
 		},
 	}
-	runDetail, err := manager.CreateRun(apiRun)
+	runDetail, err := manager.CreateRun(context.Background(), apiRun)
 	assert.Nil(t, err)
 	return clientManager, manager, runDetail
 }

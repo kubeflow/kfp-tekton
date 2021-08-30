@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2018 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -445,11 +445,11 @@ func (s *RunStore) UpdateRun(runID string, condition string, finishedAtInSec int
 		return util.NewInternalServerError(errors.New("Failed to update run"), "Failed to update run %s. More than 1 rows affected", runID)
 	} else if r == 0 {
 		tx.Rollback()
-		return util.NewInternalServerError(errors.New("Failed to update run"), "Failed to update run %s. Row not found", runID)
+		return util.Wrap(util.NewResourceNotFoundError("Run", fmt.Sprint(runID)), "Failed to update run")
 	}
 
 	if err := tx.Commit(); err != nil {
-		return util.NewInternalServerError(err, "failed to commit transaction")
+		return util.NewInternalServerError(err, "failed to commit transaction for run %s", runID)
 	}
 	return nil
 }

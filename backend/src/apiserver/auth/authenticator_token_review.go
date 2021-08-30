@@ -17,12 +17,11 @@ package auth
 import (
 	"context"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
 	authv1 "k8s.io/api/authentication/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type TokenReviewAuthenticator struct {
@@ -51,7 +50,7 @@ func (tra *TokenReviewAuthenticator) GetUserIdentity(ctx context.Context) (strin
 		return "", err
 	}
 
-	userInfo, err := tra.doTokenReview(token)
+	userInfo, err := tra.doTokenReview(ctx, token)
 	if err != nil {
 		return "", util.Wrap(err, "Authentication failure")
 	}
@@ -75,16 +74,16 @@ func (tra *TokenReviewAuthenticator) ensureAudience(audience []string) bool {
 	return true
 }
 
-func (tra *TokenReviewAuthenticator) doTokenReview(userIdentity string) (*authv1.UserInfo, error) {
+func (tra *TokenReviewAuthenticator) doTokenReview(ctx context.Context, userIdentity string) (*authv1.UserInfo, error) {
 	review, err := tra.client.Create(
-		context.Background(),
+		ctx,
 		&authv1.TokenReview{
 			Spec: authv1.TokenReviewSpec{
 				Token:     userIdentity,
 				Audiences: tra.audiences,
 			},
 		},
-		metav1.CreateOptions{},
+		v1.CreateOptions{},
 	)
 	if err != nil {
 		return nil, util.NewUnauthenticatedError(err, "Request header error: Failed to review the token provided")

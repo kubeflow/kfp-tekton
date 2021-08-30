@@ -203,8 +203,9 @@ func (w *Workflow) OverrideName(name string) {
 	w.Name = name
 }
 
-// SetAnnotations sets annotations on all templates in a Workflow
-func (w *Workflow) SetAnnotationsToAllTemplates(key string, value string) {
+// SetAnnotationsToAllTemplatesIfKeyNotExist sets annotations on all templates in a Workflow
+// if the annotation key does not exist
+func (w *Workflow) SetAnnotationsToAllTemplatesIfKeyNotExist(key string, value string) {
 	// No metadata object within pipelineRun task
 	return
 }
@@ -313,4 +314,10 @@ func (w *Workflow) PersistedFinalState() bool {
 		return true
 	}
 	return false
+}
+
+// IsV2 whether the workflow is a v2 compatible pipeline.
+func (w *Workflow) IsV2() bool {
+	value := w.GetObjectMeta().GetAnnotations()["pipelines.kubeflow.org/v2_pipeline"]
+	return value == "true"
 }

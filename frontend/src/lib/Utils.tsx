@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google LLC
+ * Copyright 2018 The Kubeflow Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,14 @@ export function formatDateString(date: Date | string | undefined): string {
   } else {
     return date ? date.toLocaleString() : '-';
   }
+}
+
+/** Title cases a string by capitalizing the first letter of each word. */
+export function titleCase(str: string): string {
+  return str
+    .split(/[\s_-]/)
+    .map(w => `${w.charAt(0).toUpperCase()}${w.slice(1)}`)
+    .join(' ');
 }
 
 // TODO: add tests

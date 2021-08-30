@@ -16,7 +16,7 @@ for demos.
 
 ## Architecture 
 
-We are currently using [Kubeflow Pipelines 1.5.0](https://github.com/kubeflow/pipelines/releases/tag/1.5.0) and
+We are currently using [Kubeflow Pipelines 1.7.0](https://github.com/kubeflow/pipelines/releases/tag/1.7.0) and
 [Tekton >= 0.27.0](https://github.com/tektoncd/pipeline/releases/tag/v0.27.0)
 for this project. 
 

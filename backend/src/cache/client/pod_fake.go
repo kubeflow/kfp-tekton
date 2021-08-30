@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2020 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,6 +104,11 @@ func (FakePodClient) Evict(ctx context.Context, eviction *v1beta1.Eviction) erro
 }
 
 func (FakePodClient) GetLogs(name string, opts *corev1.PodLogOptions) *rest.Request {
+	glog.Error("This fake method is not yet implemented.")
+	return nil
+}
+
+func (FakePodClient) ProxyGet(scheme string, name string, port string, path string, params map[string]string) rest.ResponseWrapper {
 	glog.Error("This fake method is not yet implemented.")
 	return nil
 }

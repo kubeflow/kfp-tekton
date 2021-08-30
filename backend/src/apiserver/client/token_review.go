@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/kubeflow/pipelines/backend/src/common/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
@@ -28,7 +28,7 @@ import (
 )
 
 type TokenReviewInterface interface {
-	Create(ctx context.Context, tokenReview *authv1.TokenReview, opts metav1.CreateOptions) (result *authv1.TokenReview, err error)
+	Create(ctx context.Context, tokenReview *authv1.TokenReview, opts v1.CreateOptions) (result *authv1.TokenReview, err error)
 }
 
 func createTokenReviewClient(clientParams util.ClientParameters) (TokenReviewInterface, error) {
