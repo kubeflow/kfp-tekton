@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-import { Context, Execution } from '@kubeflow/frontend';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import { flatten } from 'lodash';
 import * as React from 'react';
 import { Link, Redirect } from 'react-router-dom';
+import { ExternalLink } from 'src/atoms/ExternalLink';
+import InputOutputTab from 'src/components/tabs/InputOutputTab';
+import { MetricsTab } from 'src/components/tabs/MetricsTab';
 import { GkeMetadata, GkeMetadataContext } from 'src/lib/GkeMetadata';
 import { useNamespaceChangeEvent } from 'src/lib/KubeflowClient';
-import { ExecutionHelpers, getExecutionsFromContext, getRunContext } from 'src/lib/MlmdUtils';
+import { ExecutionHelpers, getExecutionsFromContext, getRunContext } from 'src/mlmd/MlmdUtils';
+import { isV2Pipeline } from 'src/lib/v2/WorkflowUtils';
+import { Context, Execution } from 'src/third_party/mlmd';
 import { classes, stylesheet } from 'typestyle';
 import { NodePhase as ArgoNodePhase } from '../../third_party/argo-ui/argo_template';
 import { ApiExperiment } from '../apis/experiment';
-import { ApiRun, RunStorageState } from '../apis/run';
+import { ApiRun, ApiRunStorageState } from '../apis/run';
 import { ApiVisualization, ApiVisualizationType } from '../apis/visualization';
 import Hr from '../atoms/Hr';
 import MD2Tabs from '../atoms/MD2Tabs';
@@ -55,33 +59,31 @@ import Buttons, { ButtonKeys } from '../lib/Buttons';
 import CompareUtils from '../lib/CompareUtils';
 import { OutputArtifactLoader } from '../lib/OutputArtifactLoader';
 import RunUtils from '../lib/RunUtils';
-import { KeyValue, transitiveReduction, compareGraphEdges } from '../lib/StaticGraphParser';
+import { compareGraphEdges, KeyValue, transitiveReduction } from '../lib/StaticGraphParser';
 import { hasFinished, NodePhase, statusToPhase } from '../lib/StatusUtils';
 import {
+  decodeCompressedNodes,
   errorToMessage,
   formatDateString,
+  getRunDurationFromNode,
   getRunDurationFromWorkflow,
   logger,
   serviceErrorToString,
-  decodeCompressedNodes,
-  getRunDurationFromNode,
 } from '../lib/Utils';
 import WorkflowParser from '../lib/WorkflowParser';
 import { ExecutionDetailsContent } from './ExecutionDetails';
 import { Page, PageProps } from './Page';
 import { statusToIcon } from './Status';
-import { ExternalLink } from 'src/atoms/ExternalLink';
-import ReduceGraphSwitch from '../components/ReduceGraphSwitch';
 
-enum SidePaneTab {
+export enum SidePanelTab {
   INPUT_OUTPUT,
   VISUALIZATIONS,
-  ML_METADATA,
   TASK_DETAILS,
   VOLUMES,
   LOGS,
   POD,
   EVENTS,
+  ML_METADATA,
   MANIFEST,
 }
 
@@ -127,12 +129,13 @@ interface RunDetailsState {
   selectedNodeDetails: SelectedNodeDetails | null;
   sidepanelBannerMode: Mode;
   sidepanelBusy: boolean;
-  sidepanelSelectedTab: SidePaneTab;
+  sidepanelSelectedTab: SidePanelTab;
   workflow?: any;
   mlmdRunContext?: Context;
   mlmdExecutions?: Execution[];
   showReducedGraph?: boolean;
   cachedPipelineRun?: string;
+  namespace?: string;
 }
 
 export const css = stylesheet({
@@ -329,21 +332,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
                             )}
                             <div className={commonCss.page}>
                               <MD2Tabs
-                                tabs={[
-                                  'Input/Output',
-                                  'Visualizations',
-                                  'ML Metadata',
-                                  'Details',
-                                  'Volumes',
-                                  'Logs',
-                                  'Pod',
-                                  'Events',
-                                  // NOTE: it's only possible to conditionally add a tab at the end
-                                  ...(WorkflowParser.getNodeManifest(workflow, selectedNodeId)
-                                    .length > 0
-                                    ? ['Manifest']
-                                    : []),
-                                ]}
+                                tabs={this.getTabNames(workflow, selectedNodeId)}
                                 selectedTab={sidepanelSelectedTab}
                                 onSwitch={(panelTab: number) => {
                                   this.setStateSafe({
@@ -651,7 +640,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       </div>
     );
   }
-  getTabNames(workflow: Workflow, selectedNodeId: string): string[] {
+  getTabNames(workflow: any, selectedNodeId: string): string[] {
     // NOTE: it's only possible to conditionally add a tab at the end
     const tabNameList = [];
     for (let tab in SidePanelTab) {
@@ -866,8 +855,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
         logger.warn(err);
       }
 
-      let templateString = workflow;
-      const graph = WorkflowParser.createRuntimeGraph(templateString);
+      const graph = WorkflowParser.createRuntimeGraph(workflow, mlmdExecutions)
 
       let reducedGraph = graph
         ? // copy graph before removing edges
@@ -1114,7 +1102,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       this.setStateSafe({ selectedNodeDetails, sidepanelSelectedTab: tab, sidepanelBannerMode });
 
       switch (tab) {
-        case SidePaneTab.LOGS:
+        case SidePanelTab.LOGS:
           if (
             node &&
             node.status &&
