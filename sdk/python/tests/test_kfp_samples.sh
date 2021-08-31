@@ -52,7 +52,7 @@ function help {
 # process command line parameters
 while (( $# > 0 )); do
   case "$1" in
-    -v|--kfp-version)          KFP_VERSION="$2";            shift 2 ;;  # KFP SDK version, default: 1.5.0
+    -v|--kfp-version)          KFP_VERSION="$2";            shift 2 ;;  # KFP SDK version, default: 1.7.2
     -a|--include-all-samples)  ALL_SAMPLES="TRUE";          shift 1 ;;  # Compile all DSL scripts in KFP repo
     -s|--dont-list-files)      SKIP_FILES="TRUE";           shift 1 ;;  # Suppress compile status for each DSL file
     -e|--print-error-details)  PRINT_ERRORS="TRUE";         shift 1 ;;  # Print summary of compilation errors
@@ -63,8 +63,8 @@ while (( $# > 0 )); do
 done
 
 # define global variables
-KFP_GIT_VERSION=${KFP_VERSION:-1.5.0}
-KFP_SDK_VERSION=${KFP_VERSION:-1.7.1}
+KFP_GIT_VERSION=${KFP_VERSION:-1.7.0}
+KFP_SDK_VERSION=${KFP_VERSION:-1.7.2}
 KFP_REPO_URL="https://github.com/kubeflow/pipelines.git"
 SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)"
 PROJECT_DIR="${TRAVIS_BUILD_DIR:-$(cd "${SCRIPT_DIR%/sdk/python/tests}"; pwd)}"

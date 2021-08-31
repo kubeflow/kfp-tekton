@@ -27,7 +27,7 @@ You should see an output similar to the one below, outlining which test scripts 
 which are failing:
 
 ```YAML
-KFP SDK version: 1.7.1
+KFP SDK version: 1.7.2
 
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_passing_using_volume.py
@@ -140,5 +140,5 @@ Occurences of other Errors:
 
 ## Disclaimer
 
-**Note:** The reports above were created for the pipeline scripts found in KFP SDK version `1.7.1` since
-the `kfp_tekton` `0.9.0` compiler code is based on the `kfp` SDK compiler version `1.7.1`.
+**Note:** The reports above were created for the pipeline scripts found in KFP SDK version `1.7.2` since
+the `kfp_tekton` `1.0.0` compiler code is based on the `kfp` SDK compiler version `1.7.2`.
