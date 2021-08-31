@@ -35,7 +35,7 @@ WORKDIR /bin
 
 COPY --from=builder /bin/cache_server /bin/cache_server
 # Copy licenses and notices.
-COPY --from=builder /tmp/licenses.csv /third_party/licenses.csv
-COPY --from=builder /tmp/NOTICES /third_party/NOTICES
+# COPY --from=builder /tmp/licenses.csv /third_party/licenses.csv
+# COPY --from=builder /tmp/NOTICES /third_party/NOTICES
 
 ENTRYPOINT [ "/bin/cache_server" ]

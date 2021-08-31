@@ -34,8 +34,8 @@ WORKDIR /bin
 
 COPY --from=builder /bin/controller /bin/controller
 # Copy licenses and notices.
-COPY --from=builder /tmp/licenses.csv /third_party/licenses.csv
-COPY --from=builder /tmp/NOTICES /third_party/NOTICES
+# COPY --from=builder /tmp/licenses.csv /third_party/licenses.csv
+# COPY --from=builder /tmp/NOTICES /third_party/NOTICES
 RUN chmod +x /bin/controller
 RUN apk --no-cache add tzdata
 
