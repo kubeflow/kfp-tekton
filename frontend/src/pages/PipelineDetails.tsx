@@ -304,21 +304,16 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
     if (templateString) {
       try {
         const template = JsYaml.safeLoad(templateString);
-        if (WorkflowUtils.isArgoWorkflowTemplate(template)) {
+        if (isFeatureEnabled(FeatureKey.V2)) {
+          const pipelineSpec = WorkflowUtils.convertJsonToV2PipelineSpec(templateString);
+          graphV2 = convertFlowElements(pipelineSpec);
+        } else {
           graph = StaticGraphParser.createGraph(template!);
 
           reducedGraph = graph ? transitiveReduction(graph) : undefined;
           if (graph && reducedGraph && compareGraphEdges(graph, reducedGraph)) {
             reducedGraph = undefined; // disable reduction switch
           }
-        } else if (isFeatureEnabled(FeatureKey.V2)) {
-          const pipelineSpec = WorkflowUtils.convertJsonToV2PipelineSpec(templateString);
-          graphV2 = convertFlowElements(pipelineSpec);
-        } else {
-          throw new Error(
-            'Unable to convert string response from server to Argo workflow template' +
-              ': https://argoproj.github.io/argo-workflows/workflow-templates/',
-          );
         }
       } catch (err) {
         await this.showPageError('Error: failed to generate Pipeline graph.', err);
