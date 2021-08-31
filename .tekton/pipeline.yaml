@@ -298,6 +298,10 @@ spec:
         name: build-binaries
       runAfter:
         - test
+        - build-images-api-server
+        - build-images-persistenceagent
+        - build-images-cacheserver
+        - build-images-scheduledworkflow
       params:
         - name: build-dir
           value: tekton-catalog/pipeline-loops
@@ -309,6 +313,10 @@ spec:
         name: build-binaries
       runAfter:
         - test
+        - build-images-api-server
+        - build-images-persistenceagent
+        - build-images-cacheserver
+        - build-images-scheduledworkflow
       params:
         - name: build-dir
           value: tekton-catalog/any-sequencer
@@ -320,6 +328,10 @@ spec:
         name: build-binaries
       runAfter:
         - test
+        - build-images-api-server
+        - build-images-persistenceagent
+        - build-images-cacheserver
+        - build-images-scheduledworkflow
       params:
         - name: build-dir
           value: tekton-catalog/kubectl-wrapper
