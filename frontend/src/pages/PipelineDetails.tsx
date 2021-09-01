@@ -304,16 +304,21 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
     if (templateString) {
       try {
         const template = JsYaml.safeLoad(templateString);
-        if (isFeatureEnabled(FeatureKey.V2)) {
-          const pipelineSpec = WorkflowUtils.convertJsonToV2PipelineSpec(templateString);
-          graphV2 = convertFlowElements(pipelineSpec);
-        } else {
+        if (WorkflowUtils.isTektonPipelineRunTemplate(template)) {
           graph = StaticGraphParser.createGraph(template!);
 
           reducedGraph = graph ? transitiveReduction(graph) : undefined;
           if (graph && reducedGraph && compareGraphEdges(graph, reducedGraph)) {
             reducedGraph = undefined; // disable reduction switch
           }
+        } else if (isFeatureEnabled(FeatureKey.V2)) {
+          const pipelineSpec = WorkflowUtils.convertJsonToV2PipelineSpec(templateString);
+          graphV2 = convertFlowElements(pipelineSpec);
+        } else {
+          throw new Error(
+            'Unable to convert string response from server to Tekton Pipelinerun template' +
+              ': https://tekton.dev/docs/pipelines/pipelineruns/',
+          );
         }
       } catch (err) {
         await this.showPageError('Error: failed to generate Pipeline graph.', err);
