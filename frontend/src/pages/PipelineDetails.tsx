@@ -304,7 +304,7 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
     if (templateString) {
       try {
         const template = JsYaml.safeLoad(templateString);
-        if (WorkflowUtils.isArgoWorkflowTemplate(template)) {
+        if (WorkflowUtils.isTektonPipelineRunTemplate(template)) {
           graph = StaticGraphParser.createGraph(template!);
 
           reducedGraph = graph ? transitiveReduction(graph) : undefined;
@@ -316,8 +316,8 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
           graphV2 = convertFlowElements(pipelineSpec);
         } else {
           throw new Error(
-            'Unable to convert string response from server to Argo workflow template' +
-              ': https://argoproj.github.io/argo-workflows/workflow-templates/',
+            'Unable to convert string response from server to Tekton Pipelinerun template' +
+              ': https://tekton.dev/docs/pipelines/pipelineruns/',
           );
         }
       } catch (err) {

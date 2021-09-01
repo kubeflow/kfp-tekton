@@ -27,6 +27,13 @@ export function isArgoWorkflowTemplate(template: Workflow): boolean {
   return false;
 }
 
+export function isTektonPipelineRunTemplate(template: Workflow): boolean {
+  if (template?.kind === 'PipelineRun' && template?.apiVersion?.startsWith('tekton.dev/')) {
+    return true;
+  }
+  return false;
+}
+
 // Assuming template is the JSON format of PipelineJob in api/v2alpha1/pipeline_spec.proto
 // TODO(zijianjoy): We need to change `template` format to PipelineSpec once SDK support is in.
 export function convertJsonToV2PipelineSpec(template: string): PipelineSpec {
