@@ -878,6 +878,14 @@ class TektonCompiler(Compiler):
       if parent_group:
         if condition_refs.get(parent_group[-2], []):
           task['when'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2], [])
+          # Travser the rest of the parent indices to check whether there are nested when conditions
+          parent_index = -3
+          while abs(parent_index) <= len(op_name_to_parent_groups[task['name']]):
+            if 'condition-' in op_name_to_parent_groups[task['name']][parent_index]:
+              task['when'].extend(condition_refs.get(op_name_to_parent_groups[task['name']][parent_index], []))
+              parent_index -= 1
+            else:
+              break
       if op != None and op.dependent_names:
         task['runAfter'] = op.dependent_names
 

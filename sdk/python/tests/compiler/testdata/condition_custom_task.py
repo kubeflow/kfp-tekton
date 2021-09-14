@@ -30,7 +30,7 @@ implementation:
     - sh
     - -c
     - |
-      python -c "import random; print(random.randint($0, $1))" | tee $2'
+      python -c "import random; print(random.randint($0, $1))" | tee $2
     - {inputValue: low}
     - {inputValue: high}
     - {outputPath: output}

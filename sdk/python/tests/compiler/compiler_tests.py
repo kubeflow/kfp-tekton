@@ -163,6 +163,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.nested_recur_params import double_recursion_test
     self._test_pipeline_workflow(double_recursion_test, 'nested_recur_params.yaml')
 
+  def test_nested_custom_conditions_workflow(self):
+    """
+    Test compiling a nested custom conditions workflow.
+    """
+    from .testdata.nested_custom_conditions import nested_condition_test
+    self._test_pipeline_workflow(nested_condition_test, 'nested_custom_conditions.yaml')
+
   def test_custom_task_recur_with_cond_workflow(self):
     """
     Test compiling a custom task conditional recursive workflow.
