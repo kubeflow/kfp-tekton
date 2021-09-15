@@ -1,0 +1,110 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: nested-condition-test
+  annotations:
+    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/stdout.tgz",
+      "name": "print-stdout", "path": "/tmp/outputs/stdout/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print": [["stdout", "$(results.stdout.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"name": "a", "type": "Integer"},
+      {"name": "b", "type": "Integer"}, {"name": "c", "type": "Integer"}], "name":
+      "nested-condition-test"}'
+spec:
+  params:
+  - name: a
+    value: ''
+  - name: b
+    value: ''
+  - name: c
+    value: ''
+  pipelineSpec:
+    params:
+    - name: a
+    - name: b
+    - name: c
+    tasks:
+    - name: cel-exprs
+      params:
+      - name: ab
+        value: $(params.a) < $(params.b)
+      - name: bc
+        value: $(params.b) < $(params.c)
+      taskRef:
+        name: cel_exprs
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: CelExprs
+    - name: print
+      params:
+      - name: a
+        value: $(params.a)
+      - name: b
+        value: $(params.b)
+      - name: c
+        value: $(params.c)
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - echo $(inputs.params.a) < $(inputs.params.b) < $(inputs.params.c)
+          image: alpine:3.6
+        - image: busybox
+          name: copy-results
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            cp /tmp/outputs/stdout/data $(results.stdout.path);
+        params:
+        - name: a
+        - name: b
+        - name: c
+        results:
+        - name: stdout
+          description: /tmp/outputs/stdout/data
+        stepTemplate:
+          volumeMounts:
+          - name: stdout
+            mountPath: /tmp/outputs/stdout
+        volumes:
+        - name: stdout
+          emptyDir: {}
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"command": [{"concat": ["echo ", {"inputValue": "msg"}]}], "image":
+              "alpine:3.6"}}, "inputs": [{"name": "msg"}], "name": "print", "outputs":
+              [{"name": "stdout"}]}'
+            tekton.dev/template: ''
+      when:
+      - input: $(tasks.cel-exprs.results.bc)
+        operator: in
+        values:
+        - "true"
+      - input: $(tasks.cel-exprs.results.ab)
+        operator: in
+        values:
+        - "true"
+      timeout: 0s
+  timeout: 0s
