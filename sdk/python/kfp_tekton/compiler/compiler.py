@@ -895,10 +895,8 @@ class TektonCompiler(Compiler):
                 if when_task['name'] == when_task_name[0][0]:
                   if when_task.get('when', []):
                     for when_dependent in when_task['when']:
-                      when_depended_task_name = re.findall('\$\(tasks.([^ \t\n.:,;{}]+).results.([^ \t\n.:,;{}]+)\)',
-                                                           when_dependent.get("input", ""))
-                      if when_depended_task_name:
-                        depended_conditions.append(when_depended_task_name[0][0])
+                      if when_dependent.get("input", ""):
+                        depended_conditions.append(when_dependent.get("input", ""))
           get_when_task(task['when'][0].get("input", ""), depended_conditions)
           parent_index = -3
           while abs(parent_index) <= len(op_name_to_parent_groups[task['name']]):
@@ -906,9 +904,8 @@ class TektonCompiler(Compiler):
               # If the nested when conditions already have parent when dependency, then skip
               for when_exp in condition_refs.get(op_name_to_parent_groups[task['name']][parent_index], []):
                 get_when_task(when_exp.get("input", ""), depended_conditions)
-                when_name = re.findall('\$\(tasks.([^ \t\n.:,;{}]+).results.([^ \t\n.:,;{}]+)\)', when_exp.get("input", ""))
-                if when_name:
-                  if when_name[0][0] not in depended_conditions:
+                if when_exp.get("input", ""):
+                  if when_exp.get("input", "") not in depended_conditions:
                     task['when'].append(when_exp)
                 else:
                   task['when'].append(when_exp)
