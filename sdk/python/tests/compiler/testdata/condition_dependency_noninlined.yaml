@@ -155,10 +155,6 @@ spec:
         operator: in
         values:
         - "true"
-      - input: $(tasks.condition-1.results.outcome)
-        operator: in
-        values:
-        - "true"
       timeout: 0s
     - name: print-2
       params:

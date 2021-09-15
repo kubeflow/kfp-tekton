@@ -155,10 +155,6 @@ spec:
         operator: in
         values:
         - "true"
-      - input: $(tasks.condition-cel.results.outcome)
-        operator: in
-        values:
-        - "true"
       timeout: 0s
     - name: print-2
       params:
@@ -187,10 +183,6 @@ spec:
       when:
       - input: $(tasks.condition-cel-2.results.outcome)
         operator: notin
-        values:
-        - "true"
-      - input: $(tasks.condition-cel.results.outcome)
-        operator: in
         values:
         - "true"
       timeout: 0s
@@ -272,10 +264,6 @@ spec:
         operator: in
         values:
         - "true"
-      - input: $(tasks.condition-cel.results.outcome)
-        operator: notin
-        values:
-        - "true"
       timeout: 0s
     - name: print-4
       params:
@@ -303,10 +291,6 @@ spec:
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel-3.results.outcome)
-        operator: notin
-        values:
-        - "true"
-      - input: $(tasks.condition-cel.results.outcome)
         operator: notin
         values:
         - "true"

@@ -879,10 +879,39 @@ class TektonCompiler(Compiler):
         if condition_refs.get(parent_group[-2], []):
           task['when'] = condition_refs.get(op_name_to_parent_groups[task['name']][-2], [])
           # Travser the rest of the parent indices to check whether there are nested when conditions
+          depended_conditions = []
+          # flatten condition ref to list
+          condition_task_refs_temp = []
+          for condition_task_ref in condition_task_refs.values():
+            for ref in condition_task_ref:
+              if not string_condition_refs.get(ref['name'], False):
+                condition_task_refs_temp.append(ref)
+
+          # Get depended parent when expression
+          def get_when_task(input_task_when, depended_conditions):
+            when_task_name = re.findall('\$\(tasks.([^ \t\n.:,;{}]+).results.([^ \t\n.:,;{}]+)\)', input_task_when)
+            if when_task_name:
+              for when_task in task_refs + condition_task_refs_temp:
+                if when_task['name'] == when_task_name[0][0]:
+                  if when_task.get('when', []):
+                    for when_dependent in when_task['when']:
+                      when_depended_task_name = re.findall('\$\(tasks.([^ \t\n.:,;{}]+).results.([^ \t\n.:,;{}]+)\)',
+                                                           when_dependent.get("input", ""))
+                      if when_depended_task_name:
+                        depended_conditions.append(when_depended_task_name[0][0])
+          get_when_task(task['when'][0].get("input", ""), depended_conditions)
           parent_index = -3
           while abs(parent_index) <= len(op_name_to_parent_groups[task['name']]):
             if 'condition-' in op_name_to_parent_groups[task['name']][parent_index]:
-              task['when'].extend(condition_refs.get(op_name_to_parent_groups[task['name']][parent_index], []))
+              # If the nested when conditions already have parent when dependency, then skip
+              for when_exp in condition_refs.get(op_name_to_parent_groups[task['name']][parent_index], []):
+                get_when_task(when_exp.get("input", ""), depended_conditions)
+                when_name = re.findall('\$\(tasks.([^ \t\n.:,;{}]+).results.([^ \t\n.:,;{}]+)\)', when_exp.get("input", ""))
+                if when_name:
+                  if when_name[0][0] not in depended_conditions:
+                    task['when'].append(when_exp)
+                else:
+                  task['when'].append(when_exp)
               parent_index -= 1
             else:
               break
