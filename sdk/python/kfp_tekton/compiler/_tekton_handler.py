@@ -54,6 +54,7 @@ def _process_argo_vars(workflow):
         workflow = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], workflow)
     return workflow
 
+
 def _handle_tekton_pipeline_variables(pipeline_run):
     """
     Handle tekton pipeline level variables, such as context.pipelineRun.name
