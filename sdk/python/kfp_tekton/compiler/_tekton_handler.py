@@ -18,6 +18,43 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 from kfp_tekton.tekton import LOOP_GROUP_NAME_LENGTH
 
 
+def _process_argo_vars(workflow):
+    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
+    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
+    # https://github.com/argoproj/argo/blob/master/docs/variables.md
+    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
+    # using regular expression.
+    tekton_var_regex_rules = [
+        {
+        'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}',
+        'tekton_rule': '$(inputs.params.\g<1>)'
+        },
+        {
+        'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}',
+        'tekton_rule': '$(results.\g<1>.path)'
+        },
+        {
+        'argo_rule': '{{workflow.uid}}',
+        'tekton_rule': '$(context.pipelineRun.uid)'
+        },
+        {
+        'argo_rule': '{{workflow.name}}',
+        'tekton_rule': '$(context.pipelineRun.name)'
+        },
+        {
+        'argo_rule': '{{workflow.namespace}}',
+        'tekton_rule': '$(context.pipelineRun.namespace)'
+        },
+        {
+        'argo_rule': '{{workflow.parameters.([^ \t\n.:,;{}]+)}}',
+        'tekton_rule': '$(params.\g<1>)'
+        }
+    ]
+    for regex_rule in tekton_var_regex_rules:
+        workflow = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], workflow)
+    return workflow
+
+
 def _handle_tekton_pipeline_variables(pipeline_run):
     """
     Handle tekton pipeline level variables, such as context.pipelineRun.name
@@ -44,6 +81,7 @@ def _handle_tekton_pipeline_variables(pipeline_run):
             continue
         for key, val in pipeline_variables.items():
             task_str = json.dumps(task['taskSpec']['steps'])
+            task_str = _process_argo_vars(task_str)
             if val in task_str:
                 task_str = task_str.replace(val, '$(params.' + key + ')')
                 task['taskSpec']['steps'] = json.loads(task_str)

@@ -40,7 +40,7 @@ from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
-from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task
+from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task, _process_argo_vars
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPUT_KEYWORD, LOOP_PIPELINE_NAME_LENGTH, LOOP_GROUP_NAME_LENGTH
@@ -1288,42 +1288,17 @@ class TektonCompiler(Compiler):
       package_path: file path to be written. If not specified, a yaml_text string
         will be returned.
     """
-    yaml_text = dump_yaml(workflow)
 
-    # Use regex to replace all the Argo variables to Tekton variables. For variables that are unique to Argo,
-    # we raise an Error to alert users about the unsupported variables. Here is the list of Argo variables.
-    # https://github.com/argoproj/argo/blob/master/docs/variables.md
-    # Since Argo variables can be used in anywhere in the yaml, we need to dump and then parse the whole yaml
-    # using regular expression.
-    tekton_var_regex_rules = [
-        {
-          'argo_rule': '{{inputs.parameters.([^ \t\n.:,;{}]+)}}',
-          'tekton_rule': '$(inputs.params.\g<1>)'
-        },
-        {
-          'argo_rule': '{{outputs.parameters.([^ \t\n.:,;{}]+).path}}',
-          'tekton_rule': '$(results.\g<1>.path)'
-        },
-        {
-          'argo_rule': '{{workflow.uid}}',
-          'tekton_rule': '$(context.pipelineRun.uid)'
-        },
-        {
-          'argo_rule': '{{workflow.name}}',
-          'tekton_rule': '$(context.pipelineRun.name)'
-        },
-        {
-          'argo_rule': '{{workflow.namespace}}',
-          'tekton_rule': '$(context.pipelineRun.namespace)'
-        },
-        {
-          'argo_rule': '{{workflow.parameters.([^ \t\n.:,;{}]+)}}',
-          'tekton_rule': '$(params.\g<1>)'
-        }
-    ]
-    for regex_rule in tekton_var_regex_rules:
-      yaml_text = re.sub(regex_rule['argo_rule'], regex_rule['tekton_rule'], yaml_text)
+    yaml_text = ""
+    pipeline_run = workflow
+    if pipeline_run.get("spec", {}) and pipeline_run["spec"].get("pipelineSpec", {}) and \
+      pipeline_run["spec"]["pipelineSpec"].get("tasks", []):
+      yaml_text = dump_yaml(_handle_tekton_pipeline_variables(pipeline_run))
+    else:
+      yaml_text = dump_yaml(workflow)
 
+    # Convert Argo variables to Tekton variables.
+    yaml_text = _process_argo_vars(yaml_text)
     unsupported_vars = re.findall(r"{{[^ \t\n.:,;{}]+\.[^ \t\n:,;{}]+}}", yaml_text)
     if unsupported_vars:
       raise ValueError('These Argo variables are not supported in Tekton Pipeline: %s' % ", ".join(str(v) for v in set(unsupported_vars)))
@@ -1332,11 +1307,6 @@ class TektonCompiler(Compiler):
           'Internal compiler error: Found unresolved PipelineParam. '
           'Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues '
           'attaching the pipeline DSL code and the pipeline YAML.')
-
-    pipeline_run = yaml.load(yaml_text, Loader=yaml.FullLoader)
-    if pipeline_run.get("spec", {}) and pipeline_run["spec"].get("pipelineSpec", {}) and \
-      pipeline_run["spec"]["pipelineSpec"].get("tasks", []):
-      yaml_text = dump_yaml(_handle_tekton_pipeline_variables(pipeline_run))
 
     if package_path is None:
       return yaml_text
