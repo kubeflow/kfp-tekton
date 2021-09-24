@@ -613,6 +613,6 @@ def _op_to_template(op: BaseOp,
         # Update actifact item location to the latest stage in order to properly track and store all the artifacts.
         for i, artifact in enumerate(artifact_items[op.name]):
             if artifact[0] not in verified_result_size_map[step_counter].keys():
-                artifact[1] = '%s%s' % (TEKTON_HOME_RESULT_PATH, artifact[0])
+                artifact[1] = '%s%s' % (TEKTON_HOME_RESULT_PATH, sanitize_k8s_name(artifact[0]))
                 artifact_items[op.name][i] = artifact
     return template
