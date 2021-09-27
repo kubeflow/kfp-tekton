@@ -1,0 +1,454 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: data-passing-pipeline
+  annotations:
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"consume-anything-as-file": [], "consume-anything-as-file-2":
+      [], "consume-anything-as-file-3": [], "consume-something-as-file": [], "consume-something-as-file-2":
+      [], "consume-string-as-file": [], "consume-string-as-file-2": []}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "anything_param",
+      "name": "anything_param", "optional": true}, {"default": "something_param",
+      "name": "something_param", "optional": true, "type": "Something"}, {"default":
+      "string_param", "name": "string_param", "optional": true, "type": "String"}],
+      "name": "data_passing_pipeline"}'
+spec:
+  params:
+  - name: anything_param
+    value: anything_param
+  - name: something_param
+    value: something_param
+  - name: string_param
+    value: string_param
+  pipelineSpec:
+    params:
+    - name: anything_param
+      default: anything_param
+    - name: something_param
+      default: something_param
+    - name: string_param
+      default: string_param
+    tasks:
+    - name: consume-anything-as-file
+      taskSpec:
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "anything_param" > $(workspaces.consume-anything-as-file.path)/anything_param
+        - name: main
+          args:
+          - --data
+          - $(workspaces.consume-anything-as-file.path)/anything_param
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def consume_anything_as_file(data_path):
+                with open(data_path) as f:
+                    print("consume_anything_as_file: " + f.read())
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Consume anything as file', description='')
+            _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = consume_anything_as_file(**_parsed_args)
+          image: python:3.7
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["--data", {"inputPath": "data"}], "command": ["sh", "-ec",
+              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def consume_anything_as_file(data_path):\n    with
+              open(data_path) as f:\n        print(\"consume_anything_as_file: \"
+              + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Consume
+              anything as file'', description='''')\n_parser.add_argument(\"--data\",
+              dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "data"}], "name": "Consume
+              anything as file"}'
+            tekton.dev/template: ''
+        workspaces:
+        - name: consume-anything-as-file
+      timeout: 0s
+      workspaces:
+      - name: consume-anything-as-file
+        workspace: data-passing-pipeline
+    - name: consume-anything-as-file-2
+      taskSpec:
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "something_param" > $(workspaces.consume-anything-as-file-2.path)/something_param
+        - name: main
+          args:
+          - --data
+          - $(workspaces.consume-anything-as-file-2.path)/something_param
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def consume_anything_as_file(data_path):
+                with open(data_path) as f:
+                    print("consume_anything_as_file: " + f.read())
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Consume anything as file', description='')
+            _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = consume_anything_as_file(**_parsed_args)
+          image: python:3.7
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["--data", {"inputPath": "data"}], "command": ["sh", "-ec",
+              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def consume_anything_as_file(data_path):\n    with
+              open(data_path) as f:\n        print(\"consume_anything_as_file: \"
+              + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Consume
+              anything as file'', description='''')\n_parser.add_argument(\"--data\",
+              dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "data"}], "name": "Consume
+              anything as file"}'
+            tekton.dev/template: ''
+        workspaces:
+        - name: consume-anything-as-file-2
+      timeout: 0s
+      workspaces:
+      - name: consume-anything-as-file-2
+        workspace: data-passing-pipeline
+    - name: consume-anything-as-file-3
+      taskSpec:
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "string_param" > $(workspaces.consume-anything-as-file-3.path)/string_param
+        - name: main
+          args:
+          - --data
+          - $(workspaces.consume-anything-as-file-3.path)/string_param
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def consume_anything_as_file(data_path):
+                with open(data_path) as f:
+                    print("consume_anything_as_file: " + f.read())
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Consume anything as file', description='')
+            _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = consume_anything_as_file(**_parsed_args)
+          image: python:3.7
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["--data", {"inputPath": "data"}], "command": ["sh", "-ec",
+              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def consume_anything_as_file(data_path):\n    with
+              open(data_path) as f:\n        print(\"consume_anything_as_file: \"
+              + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Consume
+              anything as file'', description='''')\n_parser.add_argument(\"--data\",
+              dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "data"}], "name": "Consume
+              anything as file"}'
+            tekton.dev/template: ''
+        workspaces:
+        - name: consume-anything-as-file-3
+      timeout: 0s
+      workspaces:
+      - name: consume-anything-as-file-3
+        workspace: data-passing-pipeline
+    - name: consume-something-as-file
+      taskSpec:
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "anything_param" > $(workspaces.consume-something-as-file.path)/anything_param
+        - name: main
+          args:
+          - --data
+          - $(workspaces.consume-something-as-file.path)/anything_param
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def consume_something_as_file(data_path):
+                with open(data_path) as f:
+                    print("consume_something_as_file: " + f.read())
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Consume something as file', description='')
+            _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = consume_something_as_file(**_parsed_args)
+          image: python:3.7
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["--data", {"inputPath": "data"}], "command": ["sh", "-ec",
+              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def consume_something_as_file(data_path):\n    with
+              open(data_path) as f:\n        print(\"consume_something_as_file: \"
+              + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Consume
+              something as file'', description='''')\n_parser.add_argument(\"--data\",
+              dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = consume_something_as_file(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "data", "type": "Something"}],
+              "name": "Consume something as file"}'
+            tekton.dev/template: ''
+        workspaces:
+        - name: consume-something-as-file
+      timeout: 0s
+      workspaces:
+      - name: consume-something-as-file
+        workspace: data-passing-pipeline
+    - name: consume-something-as-file-2
+      taskSpec:
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "something_param" > $(workspaces.consume-something-as-file-2.path)/something_param
+        - name: main
+          args:
+          - --data
+          - $(workspaces.consume-something-as-file-2.path)/something_param
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def consume_something_as_file(data_path):
+                with open(data_path) as f:
+                    print("consume_something_as_file: " + f.read())
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Consume something as file', description='')
+            _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = consume_something_as_file(**_parsed_args)
+          image: python:3.7
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["--data", {"inputPath": "data"}], "command": ["sh", "-ec",
+              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def consume_something_as_file(data_path):\n    with
+              open(data_path) as f:\n        print(\"consume_something_as_file: \"
+              + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Consume
+              something as file'', description='''')\n_parser.add_argument(\"--data\",
+              dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = consume_something_as_file(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "data", "type": "Something"}],
+              "name": "Consume something as file"}'
+            tekton.dev/template: ''
+        workspaces:
+        - name: consume-something-as-file-2
+      timeout: 0s
+      workspaces:
+      - name: consume-something-as-file-2
+        workspace: data-passing-pipeline
+    - name: consume-string-as-file
+      taskSpec:
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "anything_param" > $(workspaces.consume-string-as-file.path)/anything_param
+        - name: main
+          args:
+          - --data
+          - $(workspaces.consume-string-as-file.path)/anything_param
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def consume_string_as_file(data_path):
+                with open(data_path) as f:
+                    print("consume_string_as_file: " + f.read())
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Consume string as file', description='')
+            _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = consume_string_as_file(**_parsed_args)
+          image: python:3.7
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["--data", {"inputPath": "data"}], "command": ["sh", "-ec",
+              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def consume_string_as_file(data_path):\n    with
+              open(data_path) as f:\n        print(\"consume_string_as_file: \" +
+              f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Consume
+              string as file'', description='''')\n_parser.add_argument(\"--data\",
+              dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = consume_string_as_file(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "data", "type": "String"}],
+              "name": "Consume string as file"}'
+            tekton.dev/template: ''
+        workspaces:
+        - name: consume-string-as-file
+      timeout: 0s
+      workspaces:
+      - name: consume-string-as-file
+        workspace: data-passing-pipeline
+    - name: consume-string-as-file-2
+      taskSpec:
+        steps:
+        - image: busybox
+          name: copy-inputs
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "string_param" > $(workspaces.consume-string-as-file-2.path)/string_param
+        - name: main
+          args:
+          - --data
+          - $(workspaces.consume-string-as-file-2.path)/string_param
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def consume_string_as_file(data_path):
+                with open(data_path) as f:
+                    print("consume_string_as_file: " + f.read())
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Consume string as file', description='')
+            _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = consume_string_as_file(**_parsed_args)
+          image: python:3.7
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+              {"args": ["--data", {"inputPath": "data"}], "command": ["sh", "-ec",
+              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
+              -u \"$program_path\" \"$@\"\n", "def consume_string_as_file(data_path):\n    with
+              open(data_path) as f:\n        print(\"consume_string_as_file: \" +
+              f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Consume
+              string as file'', description='''')\n_parser.add_argument(\"--data\",
+              dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = consume_string_as_file(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "data", "type": "String"}],
+              "name": "Consume string as file"}'
+            tekton.dev/template: ''
+        workspaces:
+        - name: consume-string-as-file-2
+      timeout: 0s
+      workspaces:
+      - name: consume-string-as-file-2
+        workspace: data-passing-pipeline
+    workspaces:
+    - name: data-passing-pipeline
+  timeout: 0s
+  workspaces:
+  - name: data-passing-pipeline
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteMany
+        resources:
+          requests:
+            storage: 2Gi
