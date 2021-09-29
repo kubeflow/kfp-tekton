@@ -126,6 +126,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.loop_in_recursion import flipcoin
     self._test_pipeline_workflow(flipcoin, 'loop_in_recursion.yaml')
 
+  def test_data_passing_pipeline_param_as_file(self):
+    """
+    Test compiling a pipeline_param_as_file workflow.
+    """
+    from .testdata.data_passing_pipeline_param_as_file import data_passing_pipeline
+    self._test_pipeline_workflow(data_passing_pipeline, 'data_passing_pipeline_param_as_file.yaml')
+
   def test_recur_nested_workflow(self):
     """
     Test compiling a nested recursive workflow.

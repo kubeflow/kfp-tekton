@@ -300,7 +300,8 @@ def fix_big_data_passing(workflow: dict) -> dict:
 
     # Use workspaces to tasks if big data passing instead of 'results', 'copy-inputs'
     for task_template in container_templates:
-        task_template = big_data_passing_tasks(task_template,
+        task_template = big_data_passing_tasks(pipelinerun_name,
+                                               task_template,
                                                pipelinerun_template,
                                                inputs_consumed_as_artifacts,
                                                outputs_consumed_as_artifacts)
@@ -470,8 +471,8 @@ def big_data_passing_pipelinerun(name: str, pr: dict, pw: set):
     return pr, prw
 
 
-def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
-                           inputs_tasks: set, outputs_tasks: set) -> dict:
+def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
+                            inputs_tasks: set, outputs_tasks: set) -> dict:
     task_name = task.get('name')
     task_spec = task.get('taskSpec', {})
     # Data passing for the task outputs
@@ -524,6 +525,16 @@ def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
             # add input artifact processes
             task = input_artifacts_tasks(task, task_artifact)
 
+        if (prname, task_artifact.get('name')) in inputs_tasks:
+            # add input artifact processes for pipeline parameter
+            if not task_artifact.setdefault('raw', {}):
+                for i in range(len(pipelinerun_template['spec']['params'])):
+                    param_name = pipelinerun_template['spec']['params'][i]['name']
+                    param_value = pipelinerun_template['spec']['params'][i]['value']
+                    if (task_artifact.get('name') == param_name):
+                        task_artifact['raw']['data'] = param_value
+                        task = input_artifacts_tasks_pr_params(task, task_artifact)
+
     # Remove artifacts parameter from params
     task.get("taskSpec", {})['params'] = [
         param for param in task_spec.get('params', [])
@@ -535,6 +546,24 @@ def big_data_passing_tasks(task: dict, pipelinerun_template: dict,
         del task['taskSpec']['artifacts']
 
     return task
+
+
+def input_artifacts_tasks_pr_params(template: dict, artifact: dict) -> dict:
+    copy_inputs_step = _get_base_step('copy-inputs')
+    task_name = template.get('name')
+    task_spec = template.get('taskSpec', {})
+    task_params = task_spec.get('params', [])
+    for task_param in task_params:
+        workspaces_parameter = '$(workspaces.%s.path)/%s' % (
+                task_name, task_param.get('name'))
+        if 'raw' in artifact:
+            copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (
+                artifact['raw']['data'], workspaces_parameter)
+
+    template['taskSpec']['steps'] = _prepend_steps(
+        [copy_inputs_step], template['taskSpec']['steps'])
+
+    return template
 
 
 def input_artifacts_tasks(template: dict, artifact: dict) -> dict:
