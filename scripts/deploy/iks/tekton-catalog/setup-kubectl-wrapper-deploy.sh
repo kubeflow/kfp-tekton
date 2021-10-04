@@ -20,14 +20,12 @@ KUBECTL_WRAPPER_IMAGE_URL="${KUBECTL_WRAPPER_IMAGE_URL:=docker.io/aipipeline/kub
 IMAGE_TAG="${IMAGE_TAG:=nightly}"
 
 BUILD_DIR="sdk/python/tests/compiler/testdata"
-MANIFEST="${MANIFEST:="resourceop_basic.yaml"}"
-
-pushd $BUILD_DIR > /dev/null
+RESOURCE_MANIFEST="${RESOURCE_MANIFEST:="resourceop_basic.yaml"}" pushd $BUILD_DIR > /dev/null
 
 # Ensure image fields exists
-yq eval --exit-status '.spec.pipelineSpec.tasks[0].taskSpec.params[] | select(.name == "image") | .default' $MANIFEST
+yq eval --exit-status '.spec.pipelineSpec.tasks[0].taskSpec.params[] | select(.name == "image") | .default' $RESOURCE_MANIFEST
 
 # Replace images inplace
-yq eval --inplace ''".spec.pipelineSpec.tasks[0].taskSpec.params[] |= select(.name == \"image\") |= .default = \"$KUBECTL_WRAPPER_IMAGE_URL:$IMAGE_TAG\""'' $MANIFEST
+yq eval --inplace ''".spec.pipelineSpec.tasks[0].taskSpec.params[] |= select(.name == \"image\") |= .default = \"$KUBECTL_WRAPPER_IMAGE_URL:$IMAGE_TAG\""'' $RESOURCE_MANIFEST
 
 popd > /dev/null

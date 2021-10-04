@@ -22,7 +22,7 @@ set -ex
 # - KUBEFLOW_NS:                        namespace for kfp-tekton, defulat: kubeflow
 
 MAX_RETRIES="${MAX_RETRIES:-5}"
-SLEEP_TIME="${SLEEP_TIME:-10}"
+SLEEP_TIME="${SLEEP_TIME:-20}"
 EXIT_CODE=0
 
 KUSTOMIZE_DIR="${KUSTOMIZE_DIR:-"manifests/kustomize/env/platform-agnostic"}"
