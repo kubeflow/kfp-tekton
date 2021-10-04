@@ -751,17 +751,19 @@ class TektonCompiler(Compiler):
             for key, value in custom_task_args.items():
               if key not in non_param_keys:
                 task_params.append({'name': key, 'value': value})
+            task_orig_params = task_ref['params']
             task_ref = {
               'name': template['metadata']['name'],
               'params': task_params,
               # For processing Tekton parameter mapping later on.
-              'orig_params': task_ref['params'],
+              'orig_params': task_orig_params,
               'taskRef': {
                 'name': custom_task_args['name'],
                 'apiVersion': custom_task_args['apiVersion'],
                 'kind': custom_task_args['kind']
               }
             }
+
             # Only one of --taskRef and --taskSpec allowed.
             if custom_task_args.get('taskRef', '') and custom_task_args.get('taskSpec', ''):
               raise("Custom task invalid configuration %s, Only one of --taskRef and --taskSpec allowed." % custom_task_args)
@@ -790,8 +792,7 @@ class TektonCompiler(Compiler):
                 task_ref = {
                   'name': template['metadata']['name'],
                   'params': task_params,
-                  # For processing Tekton parameter mapping later on.
-                  'orig_params': task_ref['params'],
+                  'orig_params': task_orig_params,
                   'taskSpec': {
                     'apiVersion': custom_task_args['apiVersion'],
                     'kind': custom_task_args['kind'],
