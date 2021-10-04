@@ -110,7 +110,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
     kubectl rollout restart -n istio-system statefulset/authservice
     ```
 
-    Then, redo the [Kubeflow install](https://www.kubeflow.org/docs/distributions/ibm/deploy/install-kubeflow-on-iks/#installation) section to redeploy Kubeflow with the [Storage setup for a Classic IBM Cloud Kubernetes cluster](https://www.kubeflow.org/docs/distributions/ibm/deploy/install-kubeflow-on-iks/#storage-setup-for-a-classic-ibm-cloud-kubernetes-cluster) or [storage setup for vpc-gen2 IBM Cloud Kubernetes cluster](https://www.kubeflow.org/docs/distributions/ibm/deploy/install-kubeflow-on-iks/#storage-setup-for-vpc-gen2-ibm-cloud-kubernetes-cluster)
+    Then, redo the [Kubeflow install](https://www.kubeflow.org/docs/distributions/ibm/deploy/install-kubeflow-on-iks/#installation) section to redeploy Kubeflow with the appropriate storage setup. Either for a [Classic IBM Cloud Kubernetes cluster](https://www.kubeflow.org/docs/distributions/ibm/deploy/install-kubeflow-on-iks/#storage-setup-for-a-classic-ibm-cloud-kubernetes-cluster) or a [vpc-gen2 IBM Cloud Kubernetes cluster](https://www.kubeflow.org/docs/distributions/ibm/deploy/install-kubeflow-on-iks/#storage-setup-for-vpc-gen2-ibm-cloud-kubernetes-cluster).
 
 - If you redeploy Kubeflow and some components are not showing up, it was due to the [dynamic created webhook issue](https://github.com/kubeflow/manifests/issues/1379). This issue will be [fixed](https://github.com/kubeflow/pipelines/pull/4429) in the next release of KFP.
     ```shell
