@@ -5,8 +5,8 @@ This page introduces different ways to configure the kfp-tekton admin settings s
 ## Table of Contents
 
 - [Disable Artifact Tracking](#disable-artifact-tracking)
-- [Enable Log Archival](#enable-log-archival)
-- [Enable Auto Strip for End of File newlines](#enable-auto-strip-for-end-of-file-newlines)
+- [Disable Log Archival](#disable-log-archival)
+- [Disable Auto Strip for End of File newlines](#disable-auto-strip-for-end-of-file-newlines)
 - [Customize Artifact Image to do your own post processing](#customize-artifact-image-to-do-your-own-post-processing)
 - [Customize S3 Endpoint for KFP Tekton artifacts](#customize-s3-endpoint-for-kfp-tekton-artifacts)
 - [Disable Auto Apply for Tekton Custom Resources](#disable-auto-apply-for-tekton-custom-resources)
@@ -23,27 +23,27 @@ kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"track_artifacts":"f
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 ```
 
-## Enable Log Archival
+## Disable Log Archival
 
-Log Archival will capture the log from each task and archived to the artifact storage as an output artifact. By default this feature is disabled. To enable this feafure, run the following commands:
+Log Archival will capture the log from each task and archived to the artifact storage as an output artifact. By default this feature is enabled. To disable this feafure, run the following commands:
 
 ```shell
-kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"archive_logs":"true"}}'
+kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"archive_logs":"false"}}'
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 kubectl rollout restart deploy/metadata-writer -n kubeflow
 ```
 
-Archived logs are disabled in the KFP-Tekton UI by default. To enable this feature, run the following command:
+Archived logs are enabled in the KFP-Tekton UI by default. To disable this feature, run the following command:
 
 ```shell
-kubectl set env -n kubeflow deploy/ml-pipeline-ui ARGO_ARCHIVE_LOGS=true
+kubectl set env -n kubeflow deploy/ml-pipeline-ui ARGO_ARCHIVE_LOGS=false
 ```
 
-## Enable Auto Strip for End of File newlines
+## Disable Auto Strip for End of File newlines
 
-Tekton by design are passing parameter outputs as it including unintentional End of File (EOF) newlines. Tekton are expecting users to know this behavior when designing their components. Therefore, the kfp-tekton team designed an experimental feature to auto strip the EOF newlines for a better user experience. This feature is disabled by default and only works for files that are not depended on EOF newlines. To enable this feature, run the following commands:
+Tekton by design are passing parameter outputs as it including unintentional End of File (EOF) newlines. Tekton are expecting users to know this behavior when designing their components. Therefore, the kfp-tekton team designed an experimental feature to auto strip the EOF newlines for a better user experience. This feature is enabled by default and only works for files that are not depended on EOF newlines. To disable this feature, run the following commands:
 ```shell
-kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"strip_eof":"true"}}'
+kubectl patch cm kfp-tekton-config -n kubeflow -p '{"data":{"strip_eof":"false"}}'
 kubectl rollout restart deploy/ml-pipeline -n kubeflow
 ```
 
