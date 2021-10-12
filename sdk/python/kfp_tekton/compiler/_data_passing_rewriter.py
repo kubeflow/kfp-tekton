@@ -92,7 +92,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
 
     pipeline_template = workflow["spec"]["pipelineSpec"]
 
-    pipelinerun_template = workflow
+    pipelinerun_template = load_annotations(workflow)
 
     # 1. Index the pipelines to understand how data is being passed and which
     #  inputs/outputs are connected to each other.
@@ -367,10 +367,10 @@ def fix_big_data_passing(workflow: dict) -> dict:
                     argument_placeholder_parts[2],
                     sanitize_k8s_name(argument_placeholder_parts[3]))
 
+    workflow = jsonify_annotations(workflow)
     # Need to confirm:
     # I didn't find the use cases to support workflow parameter consumed as artifacts downstream in tekton.
     # Whether this case need to be supporting?
-
     clean_up_empty_workflow_structures(workflow)
     return workflow
 
@@ -490,19 +490,17 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                 task_name, task_name, task_output.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
                 task.get("taskSpec", {}), placeholder, workspaces_parameter)
-            pipelinerun_template['metadata']['annotations'] = replace_big_data_placeholder(
-                pipelinerun_template['metadata']['annotations'], placeholder, workspaces_parameter)
+            artifact_items = pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items']
+            artifact_items[task['name']] = replace_big_data_placeholder(
+                artifact_items[task['name']], placeholder, workspaces_parameter)
+            pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items'] = \
+                artifact_items
 
-    # Remove artifacts outputs from results
-    task.get("taskSpec", {})['results'] = [
-        result for result in task_outputs
-        if (task_name, result.get('name')) not in outputs_tasks
-    ]
-
-    # Data passing for task inputs
     task_spec = task.get('taskSpec', {})
     task_params = task_spec.get('params', [])
     task_artifacts = task_spec.get('artifacts', [])
+
+    # Data passing for task inputs
     for task_param in task_params:
         if (task_name, task_param.get('name')) in inputs_tasks:
             if not task_spec.setdefault('workspaces', []):
@@ -534,6 +532,34 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                     if (task_artifact.get('name') == param_name):
                         task_artifact['raw']['data'] = param_value
                         task = input_artifacts_tasks_pr_params(task, task_artifact)
+
+    # If a task produces a result and artifact, add a step to copy artifact to results.
+    artifact_items = pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items']
+    add_copy_results_artifacts_step = False
+    if task.get("taskSpec", {}):
+        if task_spec.get('results', []):
+            copy_results_artifact_step = _get_base_step('copy-results-artifacts')
+            copy_results_artifact_step['onError'] = 'continue'  # supported by v0.27+ of tekton.
+            copy_results_artifact_step['script'] += 'TOTAL_SIZE=0\n'
+            for result in task_spec['results']:
+                if task['name'] in artifact_items:
+                    artifact_i = artifact_items[task['name']]
+                    for index, artifact_tuple in enumerate(artifact_i):
+                        artifact_name, artifact = artifact_tuple
+                        src = artifact
+                        dst = '$(results.%s.path)' % sanitize_k8s_name(result['name'])
+                        if artifact_name == result['name'] and src != dst:
+                            add_copy_results_artifacts_step = True
+                            copy_results_artifact_step['script'] += (
+                                    'ARTIFACT_SIZE=`wc -c %s | awk \'{print $1}\'`\n' % src +
+                                    'TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)\n' +
+                                    'touch ' + dst + '\n' +  # create an empty file by default.
+                                    'if [[ $TOTAL_SIZE -lt 3072 ]]; then\n' +
+                                    '  cp ' + src + ' ' + dst + '\n' +
+                                    'fi\n'
+                            )
+            if add_copy_results_artifacts_step:
+                task['taskSpec']['steps'].append(copy_results_artifact_step)
 
     # Remove artifacts parameter from params
     task.get("taskSpec", {})['params'] = [
@@ -610,3 +636,17 @@ def clean_up_empty_workflow_structures(workflow: list):
             del task['artifacts']
     if not workflow['spec']['pipelineSpec'].setdefault('finally', []):
         del workflow['spec']['pipelineSpec']['finally']
+
+
+def load_annotations(template: dict):
+    artifact_items = json.loads(
+        str(template['metadata']['annotations']['tekton.dev/artifact_items']))
+    template['metadata']['annotations']['tekton.dev/artifact_items'] = \
+        artifact_items
+    return template
+
+
+def jsonify_annotations(template: dict):
+    template['metadata']['annotations']['tekton.dev/artifact_items'] = \
+        json.dumps(template['metadata']['annotations']['tekton.dev/artifact_items'])
+    return template

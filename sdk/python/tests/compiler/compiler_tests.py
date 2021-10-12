@@ -131,7 +131,14 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a pipeline_param_as_file workflow.
     """
     from .testdata.data_passing_pipeline_param_as_file import data_passing_pipeline
-    self._test_pipeline_workflow(data_passing_pipeline, 'data_passing_pipeline_param_as_file.yaml')
+    self._test_pipeline_workflow(data_passing_pipeline, 'data_passing_pipeline_param_as_file.yaml', skip_noninlined=True)
+
+  def test_data_passing_pipeline_complete(self):
+    """
+    Test compiling a pipeline_param_as_file workflow.
+    """
+    from .testdata.data_passing_pipeline_complete import data_passing_pipeline
+    self._test_pipeline_workflow(data_passing_pipeline, 'data_passing_pipeline_complete.yaml', skip_noninlined=True)
 
   def test_recur_nested_workflow(self):
     """

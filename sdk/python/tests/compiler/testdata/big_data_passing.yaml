@@ -38,7 +38,7 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"gen-params": [["Output", "$(workspaces.sum-numbers.path)/sum-numbers-Output"]],
+    tekton.dev/artifact_items: '{"gen-params": [["Output", "$(results.output.path)"]],
       "print-params": [], "print-text": [], "print-text-2": [], "print-text-3": [],
       "print-text-4": [], "print-text-5": [], "repeat-line": [["output_text", "$(workspaces.repeat-line.path)/repeat-line-output_text"]],
       "split-text-lines": [["even_lines", "$(workspaces.split-text-lines.path)/split-text-lines-even_lines"],
@@ -89,6 +89,22 @@ spec:
 
             _outputs = repeat_line(**_parsed_args)
           image: python:3.7
+        - image: busybox
+          name: copy-results-artifacts
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            TOTAL_SIZE=0
+            ARTIFACT_SIZE=`wc -c $(workspaces.repeat-line.path)/repeat-line-output_text | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.output-text.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              cp $(workspaces.repeat-line.path)/repeat-line-output_text $(results.output-text.path)
+            fi
+          onError: continue
+        results:
+        - name: output-text
+          description: /tmp/outputs/output_text/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -244,6 +260,30 @@ spec:
 
             _outputs = split_text_lines(**_parsed_args)
           image: python:3.7
+        - image: busybox
+          name: copy-results-artifacts
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            TOTAL_SIZE=0
+            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/split-text-lines-odd_lines | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.odd-lines.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              cp $(workspaces.split-text-lines.path)/split-text-lines-odd_lines $(results.odd-lines.path)
+            fi
+            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/split-text-lines-even_lines | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.even-lines.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              cp $(workspaces.split-text-lines.path)/split-text-lines-even_lines $(results.even-lines.path)
+            fi
+          onError: continue
+        results:
+        - name: odd-lines
+          description: /tmp/outputs/odd_lines/data
+        - name: even-lines
+          description: /tmp/outputs/even_lines/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -439,6 +479,22 @@ spec:
 
             _outputs = write_numbers(**_parsed_args)
           image: python:3.7
+        - image: busybox
+          name: copy-results-artifacts
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            TOTAL_SIZE=0
+            ARTIFACT_SIZE=`wc -c $(workspaces.write-numbers.path)/write-numbers-numbers | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.numbers.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              cp $(workspaces.write-numbers.path)/write-numbers-numbers $(results.numbers.path)
+            fi
+          onError: continue
+        results:
+        - name: numbers
+          description: /tmp/outputs/numbers/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -586,6 +642,22 @@ spec:
                 with open(output_file, 'w') as f:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
+        - image: busybox
+          name: copy-results-artifacts
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            TOTAL_SIZE=0
+            ARTIFACT_SIZE=`wc -c $(workspaces.sum-numbers.path)/sum-numbers-Output | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.output.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              cp $(workspaces.sum-numbers.path)/sum-numbers-Output $(results.output.path)
+            fi
+          onError: continue
+        results:
+        - name: output
+          description: /tmp/outputs/Output/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
