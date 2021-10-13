@@ -38,13 +38,13 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"gen-params": [["Output", "$(workspaces.sum-numbers.path)/sum-numbers-Output"]],
+    tekton.dev/artifact_items: '{"gen-params": [["Output", "$(workspaces.sum-numbers.path)/artifacts/$(context.pipelineRun.name)/sum-numbers/Output"]],
       "print-params": [], "print-text": [], "print-text-2": [], "print-text-3": [],
-      "print-text-4": [], "print-text-5": [], "repeat-line": [["output_text", "$(workspaces.repeat-line.path)/repeat-line-output_text"]],
-      "split-text-lines": [["even_lines", "$(workspaces.split-text-lines.path)/split-text-lines-even_lines"],
-      ["odd_lines", "$(workspaces.split-text-lines.path)/split-text-lines-odd_lines"]],
-      "sum-numbers": [["Output", "$(workspaces.sum-numbers.path)/sum-numbers-Output"]],
-      "write-numbers": [["numbers", "$(workspaces.write-numbers.path)/write-numbers-numbers"]]}'
+      "print-text-4": [], "print-text-5": [], "repeat-line": [["output_text", "$(workspaces.repeat-line.path)/artifacts/$(context.pipelineRun.name)/repeat-line/output_text"]],
+      "split-text-lines": [["even_lines", "$(workspaces.split-text-lines.path)/artifacts/$(context.pipelineRun.name)/split-text-lines/even_lines"],
+      ["odd_lines", "$(workspaces.split-text-lines.path)/artifacts/$(context.pipelineRun.name)/split-text-lines/odd_lines"]],
+      "sum-numbers": [["Output", "$(workspaces.sum-numbers.path)/artifacts/$(context.pipelineRun.name)/sum-numbers/Output"]],
+      "write-numbers": [["numbers", "$(workspaces.write-numbers.path)/artifacts/$(context.pipelineRun.name)/write-numbers/numbers"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Big data passing"}'
 spec:
@@ -60,7 +60,7 @@ spec:
           - --count
           - '5000'
           - --output-text
-          - $(workspaces.repeat-line.path)/repeat-line-output_text
+          - $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-name)/repeat-line/output_text
           command:
           - sh
           - -ec
@@ -119,17 +119,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: repeat-line
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: repeat-line
         workspace: big-data-passing
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: print-text
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text.path)/repeat-line-output_text
+          - $(workspaces.print-text.path)/artifacts/$(params.pipelineRun-name)/repeat-line/output_text
           command:
           - sh
           - -ec
@@ -174,12 +179,17 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: print-text
         workspace: big-data-passing
       runAfter:
       - repeat-line
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: split-text-lines
       taskSpec:
         steps:
@@ -203,9 +213,9 @@ spec:
           - --source
           - /tmp/inputs/source/data
           - --odd-lines
-          - $(workspaces.split-text-lines.path)/split-text-lines-odd_lines
+          - $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/odd_lines
           - --even-lines
-          - $(workspaces.split-text-lines.path)/split-text-lines-even_lines
+          - $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/even_lines
           command:
           - sh
           - -ec
@@ -282,17 +292,22 @@ spec:
         volumes:
         - name: source
           emptyDir: {}
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: split-text-lines
         workspace: big-data-passing
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: print-text-2
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-2.path)/split-text-lines-odd_lines
+          - $(workspaces.print-text-2.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/odd_lines
           command:
           - sh
           - -ec
@@ -337,19 +352,24 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-2
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: print-text-2
         workspace: big-data-passing
       runAfter:
       - split-text-lines
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: print-text-3
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-3.path)/split-text-lines-even_lines
+          - $(workspaces.print-text-3.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/even_lines
           command:
           - sh
           - -ec
@@ -394,12 +414,17 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-3
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: print-text-3
         workspace: big-data-passing
       runAfter:
       - split-text-lines
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: write-numbers
       taskSpec:
         steps:
@@ -410,7 +435,7 @@ spec:
           - --count
           - '100000'
           - --numbers
-          - $(workspaces.write-numbers.path)/write-numbers-numbers
+          - $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-name)/write-numbers/numbers
           command:
           - sh
           - -ec
@@ -469,17 +494,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: write-numbers
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: write-numbers
         workspace: big-data-passing
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: print-text-4
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-4.path)/write-numbers-numbers
+          - $(workspaces.print-text-4.path)/artifacts/$(params.pipelineRun-name)/write-numbers/numbers
           command:
           - sh
           - -ec
@@ -524,21 +554,26 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-4
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: print-text-4
         workspace: big-data-passing
       runAfter:
       - write-numbers
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: sum-numbers
       taskSpec:
         steps:
         - name: main
           args:
           - --numbers
-          - $(workspaces.sum-numbers.path)/write-numbers-numbers
+          - $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-name)/write-numbers/numbers
           - '----output-paths'
-          - $(workspaces.sum-numbers.path)/sum-numbers-Output
+          - $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-name)/sum-numbers/Output
           command:
           - sh
           - -ec
@@ -615,19 +650,24 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: sum-numbers
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: sum-numbers
         workspace: big-data-passing
       runAfter:
       - write-numbers
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: print-text-5
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-5.path)/sum-numbers-Output
+          - $(workspaces.print-text-5.path)/artifacts/$(params.pipelineRun-name)/sum-numbers/Output
           command:
           - sh
           - -ec
@@ -672,12 +712,17 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-5
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: print-text-5
         workspace: big-data-passing
       runAfter:
       - sum-numbers
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: gen-params
       taskSpec:
         steps:

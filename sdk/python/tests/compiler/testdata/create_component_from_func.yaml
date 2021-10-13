@@ -32,10 +32,10 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"get-subdirectory": [["Subdir", "$(workspaces.get-subdirectory.path)/get-subdirectory-Subdir"]],
+    tekton.dev/artifact_items: '{"get-subdirectory": [["Subdir", "$(workspaces.get-subdirectory.path)/artifacts/$(context.pipelineRun.name)/get-subdirectory/Subdir"]],
       "list-items": [["Items", "$(results.items.path)"]], "list-items-2": [["Items",
       "$(results.items.path)"]], "produce-dir-with-files-python-op": [["output_dir",
-      "$(workspaces.produce-dir-with-files-python-op.path)/produce-dir-with-files-python-op-output_dir"]]}'
+      "$(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(context.pipelineRun.name)/produce-dir-with-files-python-op/output_dir"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"name": "create-component-from-function"}'
 spec:
@@ -49,7 +49,7 @@ spec:
           - --num-files
           - '15'
           - --output-dir
-          - $(workspaces.produce-dir-with-files-python-op.path)/produce-dir-with-files-python-op-output_dir
+          - $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir
           command:
           - sh
           - -ec
@@ -108,10 +108,15 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: produce-dir-with-files-python-op
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: produce-dir-with-files-python-op
         workspace: create-component-from-function
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: get-subdirectory
       taskSpec:
         steps:
@@ -123,9 +128,9 @@ spec:
           - |
             mkdir -p "$(dirname "$2")"
             cp -r "$0/$1" "$2"
-          - $(workspaces.get-subdirectory.path)/produce-dir-with-files-python-op-output_dir
+          - $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir
           - subdir
-          - $(workspaces.get-subdirectory.path)/get-subdirectory-Subdir
+          - $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-name)/get-subdirectory/Subdir
           image: alpine
         metadata:
           labels:
@@ -143,12 +148,17 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: get-subdirectory
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: get-subdirectory
         workspace: create-component-from-function
       runAfter:
       - produce-dir-with-files-python-op
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: list-items
       taskSpec:
         steps:
@@ -161,7 +171,7 @@ spec:
             mkdir -p "$(dirname "$1")"
             #ls --almost-all --recursive "$0" > "$1"
             ls -A -R "$0" > "$1"
-          - $(workspaces.list-items.path)/get-subdirectory-Subdir
+          - $(workspaces.list-items.path)/artifacts/$(params.pipelineRun-name)/get-subdirectory/Subdir
           - $(results.items.path)
           image: alpine
         results:
@@ -182,12 +192,17 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: list-items
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: list-items
         workspace: create-component-from-function
       runAfter:
       - get-subdirectory
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: list-items-2
       taskSpec:
         steps:
@@ -200,8 +215,8 @@ spec:
             mkdir -p "$(dirname "$2")"
             ls -A -R "$0" > "$2"
             ls -A -R "$1" >> "$2"
-          - $(workspaces.list-items-2.path)/get-subdirectory-Subdir
-          - $(workspaces.list-items-2.path)/produce-dir-with-files-python-op-output_dir
+          - $(workspaces.list-items-2.path)/artifacts/$(params.pipelineRun-name)/get-subdirectory/Subdir
+          - $(workspaces.list-items-2.path)/artifacts/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir
           - $(results.items.path)
           image: alpine
         results:
@@ -224,6 +239,8 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: list-items-2
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: list-items-2
@@ -231,6 +248,9 @@ spec:
       runAfter:
       - get-subdirectory
       - produce-dir-with-files-python-op
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     workspaces:
     - name: create-component-from-function
   timeout: 0s

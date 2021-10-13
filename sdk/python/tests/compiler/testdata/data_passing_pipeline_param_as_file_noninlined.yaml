@@ -56,11 +56,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "anything_param" > $(workspaces.consume-anything-as-file.path)/anything_param
+            mkdir -p $(workspaces.consume-anything-as-file.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file
+            echo -n "anything_param" > $(workspaces.consume-anything-as-file.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file/anything_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file.path)/anything_param
+          - $(workspaces.consume-anything-as-file.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file/anything_param
           command:
           - sh
           - -ec
@@ -100,10 +101,15 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: consume-anything-as-file
         workspace: data-passing-pipeline
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: consume-anything-as-file-2
       taskSpec:
         steps:
@@ -112,11 +118,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "something_param" > $(workspaces.consume-anything-as-file-2.path)/something_param
+            mkdir -p $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-2
+            echo -n "something_param" > $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-2/something_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-2.path)/something_param
+          - $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-2/something_param
           command:
           - sh
           - -ec
@@ -156,10 +163,15 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-2
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: consume-anything-as-file-2
         workspace: data-passing-pipeline
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: consume-anything-as-file-3
       taskSpec:
         steps:
@@ -168,11 +180,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "string_param" > $(workspaces.consume-anything-as-file-3.path)/string_param
+            mkdir -p $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-3
+            echo -n "string_param" > $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-3/string_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-3.path)/string_param
+          - $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-3/string_param
           command:
           - sh
           - -ec
@@ -212,10 +225,15 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-3
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: consume-anything-as-file-3
         workspace: data-passing-pipeline
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: consume-something-as-file
       taskSpec:
         steps:
@@ -224,11 +242,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "anything_param" > $(workspaces.consume-something-as-file.path)/anything_param
+            mkdir -p $(workspaces.consume-something-as-file.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file
+            echo -n "anything_param" > $(workspaces.consume-something-as-file.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file/anything_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file.path)/anything_param
+          - $(workspaces.consume-something-as-file.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file/anything_param
           command:
           - sh
           - -ec
@@ -268,10 +287,15 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: consume-something-as-file
         workspace: data-passing-pipeline
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: consume-something-as-file-2
       taskSpec:
         steps:
@@ -280,11 +304,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "something_param" > $(workspaces.consume-something-as-file-2.path)/something_param
+            mkdir -p $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file-2
+            echo -n "something_param" > $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file-2/something_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file-2.path)/something_param
+          - $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file-2/something_param
           command:
           - sh
           - -ec
@@ -324,10 +349,15 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-2
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: consume-something-as-file-2
         workspace: data-passing-pipeline
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: consume-string-as-file
       taskSpec:
         steps:
@@ -336,11 +366,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "anything_param" > $(workspaces.consume-string-as-file.path)/anything_param
+            mkdir -p $(workspaces.consume-string-as-file.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file
+            echo -n "anything_param" > $(workspaces.consume-string-as-file.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file/anything_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file.path)/anything_param
+          - $(workspaces.consume-string-as-file.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file/anything_param
           command:
           - sh
           - -ec
@@ -380,10 +411,15 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: consume-string-as-file
         workspace: data-passing-pipeline
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     - name: consume-string-as-file-2
       taskSpec:
         steps:
@@ -392,11 +428,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "string_param" > $(workspaces.consume-string-as-file-2.path)/string_param
+            mkdir -p $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file-2
+            echo -n "string_param" > $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file-2/string_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file-2.path)/string_param
+          - $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file-2/string_param
           command:
           - sh
           - -ec
@@ -436,10 +473,15 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-2
+        params:
+        - name: pipelineRun-name
       timeout: 0s
       workspaces:
       - name: consume-string-as-file-2
         workspace: data-passing-pipeline
+      params:
+      - name: pipelineRun-name
+        value: $(context.pipelineRun.name)
     workspaces:
     - name: data-passing-pipeline
   timeout: 0s
