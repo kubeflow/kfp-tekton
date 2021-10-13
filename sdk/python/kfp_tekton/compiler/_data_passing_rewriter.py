@@ -515,6 +515,8 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                 if task_artifact.get('name') == task_param.get('name'):
                     placeholder = task_artifact.get('path')
             task_param_names = task_param.get('name').rsplit('-', 1)
+            # If the param name doesn't have '-', then param is not passed from another task.
+            # Thus, use the current task_name as the path prefix
             if len(task_param_names) == 2:
                 workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
                     task_name, task_param_names[0], task_param_names[1])
@@ -560,6 +562,8 @@ def input_artifacts_tasks_pr_params(template: dict, artifact: dict) -> dict:
     task_params = task_spec.get('params', [])
     for task_param in task_params:
         task_param_names = task_param.get('name').rsplit('-', 1)
+        # If the param name doesn't have '-', then param is not passed from another task.
+        # Thus, use the current task_name as the path prefix
         if len(task_param_names) == 2:
             workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
                 task_name, task_param_names[0], task_param_names[1])
