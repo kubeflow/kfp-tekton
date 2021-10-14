@@ -191,6 +191,7 @@ func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
 	defaults, _ := config.NewDefaultsFromMap(map[string]string{})
 	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{
 		"enable-custom-tasks": "true",
+		"enable-api-fields" : "alpha",
 	})
 	artifactBucket, _ := config.NewArtifactBucketFromMap(map[string]string{})
 	artifactPVC, _ := config.NewArtifactPVCFromMap(map[string]string{})
