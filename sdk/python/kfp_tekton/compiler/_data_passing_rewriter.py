@@ -454,10 +454,12 @@ def big_data_passing_pipelinerun(name: str, pr: dict, pw: set):
         # User could modify default size of storage in the yaml file mannually if necessary.
         DEFAULT_ACCESSMODES = env.get('DEFAULT_ACCESSMODES', 'ReadWriteMany')
         DEFAULT_STORAGE_SIZE = env.get('DEFAULT_STORAGE_SIZE', '2Gi')
+        DEFAULT_STORAGE_CLASS = env.get('DEFAULT_STORAGE_CLASS', 'csi-s3')
         pr['spec']['workspaces'].append({
             "name": pipelinerun_name,
             "volumeClaimTemplate": {
                 "spec": {
+                    "storageClassName": DEFAULT_STORAGE_CLASS,
                     "accessModes": [DEFAULT_ACCESSMODES],
                     "resources": {
                         "requests": {
