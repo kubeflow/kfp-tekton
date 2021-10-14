@@ -107,6 +107,31 @@ spec:
           - sh
           - -c
           image: library/bash
+        - image: busybox
+          name: copy-results-artifacts
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            TOTAL_SIZE=0
+            ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/param2 | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.param2.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              cp /tekton/home/tep-results/param2 $(results.param2.path)
+            fi
+            ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/param3 | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.param3.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              cp /tekton/home/tep-results/param3 $(results.param3.path)
+            fi
+            ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              cp /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
+            fi
+          onError: continue
         results:
         - name: param1
           description: /tmp/outputs/param1/data

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from kfp import dsl, components
-from tests.compiler.testdata.custom_task_ref import CUSTOM_STR
 
 MY_CUSTOM_TASK_IMAGE_NAME = "veryunique/image:latest"
 from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES

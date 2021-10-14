@@ -34,6 +34,9 @@
 # Parallelism
 `Parallelism` is to define the number of pipelineruns can be created at the same time. It must be eqaul to or bigger than 1. If it's not set then the default value will be 1. If it's bigger than the total iterations in the loop then the number will be total iterations.
 
+# Break
+It's common to break the loop when some condition is met, like what we do in programming languages. This can be done by specifying the task name with the `last-loop-task` label. When the task specified the label is skipped during pipelineloop iteration, the loop will be marked `Succeeded` with a `pass` condition, and no more iteration will be started. The common use case is to check the condition in the task with `when` expression so that to decide whether to break the loop or just continue.
+
 # Verification
 - check controller and the webhook. `kubectl get po -n tekton-pipelines`
    ```
