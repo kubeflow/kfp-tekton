@@ -46,6 +46,8 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const OutputMetadataFilepath = "/tmp/kfp_outputs/output_metadata.json"
+
 // Launcher is used to launch KFP components. It handles the recording of the
 // appropriate metadata for lineage.
 type Launcher struct {

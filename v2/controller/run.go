@@ -16,6 +16,7 @@ import (
 	reconciler "knative.dev/pkg/reconciler"
 
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
+	"github.com/kubeflow/pipelines/v2/cacheutils"
 	"github.com/kubeflow/pipelines/v2/driver"
 	"github.com/kubeflow/pipelines/v2/metadata"
 )
@@ -44,13 +45,15 @@ type outputParams struct {
 	executionID   string
 	contextID     string
 	executorInput string
+	cacheDecision string
 }
 
 type driverOptions struct {
-	driverType string
-	options    driver.Options
-	mlmdClient *metadata.Client
-	outputs    outputParams
+	driverType  string
+	options     driver.Options
+	mlmdClient  *metadata.Client
+	cacheClient *cacheutils.Client
+	outputs     outputParams
 }
 
 // Check that our Reconciler implements Interface
@@ -107,7 +110,7 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]v1alpha1.RunRes
 	case "ROOT_DAG":
 		execution, err = driver.RootDAG(ctx, options.options, options.mlmdClient)
 	case "CONTAINER":
-		execution, err = driver.Container(ctx, options.options, options.mlmdClient)
+		execution, err = driver.Container(ctx, options.options, options.mlmdClient, options.cacheClient)
 	default:
 		err = fmt.Errorf("unknown driverType %s", options.driverType)
 	}
@@ -144,6 +147,11 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]v1alpha1.RunRes
 			Value: fmt.Sprint(executorInputJSON),
 		})
 	}
+	runResults = append(runResults, v1alpha1.RunResult{
+		Name:  options.outputs.cacheDecision,
+		Value: strconv.FormatBool(execution.Cached),
+	})
+
 	return &runResults, nil
 }
 
@@ -219,6 +227,8 @@ func parseParams(run *v1alpha1.Run) (*driverOptions, *apis.FieldError) {
 			opts.outputs.contextID = param.Value.StringVal
 		case "executor-input":
 			opts.outputs.executorInput = param.Value.StringVal
+		case "cached-decision":
+			opts.outputs.cacheDecision = param.Value.StringVal
 		}
 	}
 
@@ -240,5 +250,10 @@ func parseParams(run *v1alpha1.Run) (*driverOptions, *apis.FieldError) {
 		return nil, apis.ErrGeneric(fmt.Sprintf("can't estibalish MLMD connection: %v", err))
 	}
 	opts.mlmdClient = client
+	cacheClient, err := cacheutils.NewClient()
+	if err != nil {
+		return nil, apis.ErrGeneric(fmt.Sprintf("can't estibalish cache connection: %v", err))
+	}
+	opts.cacheClient = cacheClient
 	return opts, nil
 }
