@@ -85,7 +85,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 ## Upgrade to Multi-User KFP-Tekton on Kubeflow
 
-1. If you haven't installed Kubeflow, Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#kubeflow-installation) to install Kubeflow with multi-user capabilities.
+1. Starting from Kubeflow 1.3 and beyond, both Kubeflow single and multi-user deployment use the multi-user mode of Kubeflow pipelines to support authentication. If you haven't installed Kubeflow, Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#kubeflow-installation) to install Kubeflow Pipelines with multi-user capabilities.
 
 2. To upgrade to the Multi-User version of KFP-Tekton, custom task controllers, and core Tekton controller, please run
 
