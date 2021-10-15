@@ -19,8 +19,18 @@ import (
 // Visitor interface is called when each component is visited.
 // The specific method called depends on the component's type.
 type Visitor interface {
-	Container(name string, nameInDAG string, component *pipelinespec.ComponentSpec, container *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec) error
-	Importer(name string, component *pipelinespec.ComponentSpec, importer *pipelinespec.PipelineDeploymentConfig_ImporterSpec) error
+	Container(
+		name string, nameInDAG string, parentDAG string,
+		task *pipelinespec.PipelineTaskSpec,
+		component *pipelinespec.ComponentSpec,
+		container *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec,
+	) error
+	Importer(
+		name string, parentDAG string,
+		task *pipelinespec.PipelineTaskSpec,
+		component *pipelinespec.ComponentSpec,
+		importer *pipelinespec.PipelineDeploymentConfig_ImporterSpec,
+	) error
 	Resolver(name string, component *pipelinespec.ComponentSpec, resolver *pipelinespec.PipelineDeploymentConfig_ResolverSpec) error
 	DAG(name string, component *pipelinespec.ComponentSpec, dag *pipelinespec.DagSpec) error
 }
@@ -57,7 +67,7 @@ func Accept(job *pipelinespec.PipelineJob, v Visitor) error {
 		visited: make(map[string]bool),
 	}
 
-	return state.dfs(rootComponentName, rootComponentName, spec.GetRoot())
+	return state.dfs(rootComponentName, rootComponentName, "", nil, spec.GetRoot())
 }
 
 type pipelineDFS struct {
@@ -68,13 +78,17 @@ type pipelineDFS struct {
 	visited map[string]bool
 }
 
-func (state *pipelineDFS) dfs(name string, nameInDAG string, component *pipelinespec.ComponentSpec) error {
+func (state *pipelineDFS) dfs(
+	name string, nameInDAG string, parentDAG string,
+	task *pipelinespec.PipelineTaskSpec,
+	component *pipelinespec.ComponentSpec,
+) error {
 	// each component is only visited once
 	// TODO(Bobgy): return an error when circular reference detected
 	if state.visited[name] {
 		return nil
 	}
-
+	state.visited[name] = true
 	if component == nil {
 		return nil
 	}
@@ -91,17 +105,27 @@ func (state *pipelineDFS) dfs(name string, nameInDAG string, component *pipeline
 			return componentError(fmt.Errorf("executor(label=%q) not found in deployment config", executorLabel))
 		}
 		container := executor.GetContainer()
-		if container == nil {
-			return componentError(fmt.Errorf("executor(label=%q): non-container executor not implemented", executorLabel))
+		if container != nil {
+			return state.visitor.Container(name, nameInDAG, parentDAG, task, component, container)
 		}
-		//marked this component as visited, no need to generate task template
-		state.visited[name] = true
-		return state.visitor.Container(name, nameInDAG, component, container)
+		importer := executor.GetImporter()
+		if importer != nil {
+			return state.visitor.Importer(name, parentDAG, task, component, importer)
+		}
+
+		return componentError(fmt.Errorf("executor(label=%q): non-container executor not implemented", executorLabel))
 	}
 	dag := component.GetDag()
 	if dag == nil { // impl can only be executor or dag
 		return componentError(fmt.Errorf("unknown component implementation: %s", component))
 	}
+
+	// move this from DAG() to here
+	err := addImplicitDependencies(dag)
+	if err != nil {
+		return err
+	}
+
 	tasks := dag.GetTasks()
 	// Iterate through tasks in deterministic order to facilitate testing.
 	// Note, order doesn't affect compiler with real effect right now.
@@ -125,7 +149,7 @@ func (state *pipelineDFS) dfs(name string, nameInDAG string, component *pipeline
 		if !ok {
 			return componentError(fmt.Errorf("cannot find component ref name=%q", refName))
 		}
-		err := state.dfs(refName, key, subComponent)
+		err := state.dfs(refName, key, name, task, subComponent)
 		if err != nil {
 			return err
 		}

@@ -12,10 +12,6 @@ func (c *pipelineCompiler) DAG(name string, componentSpec *pipelinespec.Componen
 	if name != "root" {
 		return fmt.Errorf("SubDAG not implemented yet")
 	}
-	err := addImplicitDependencies(dagSpec)
-	if err != nil {
-		return err
-	}
 
 	task := &pipelinespec.PipelineTaskSpec{}
 	var runtimeConfig *pipelinespec.PipelineJob_RuntimeConfig
@@ -23,79 +19,12 @@ func (c *pipelineCompiler) DAG(name string, componentSpec *pipelinespec.Componen
 		// runtime config is input to the entire pipeline (root DAG)
 		runtimeConfig = c.job.GetRuntimeConfig()
 	}
-	driverTask, outputs, err := c.dagDriverTask(name+"-dag", componentSpec, task, runtimeConfig)
+	driverTask, err := c.dagDriverTask(getDAGDriverTaskName(name), componentSpec, task, runtimeConfig)
 	if err != nil {
 		return err
 	}
-
-	marshaler := jsonpb.Marshaler{}
-
 	//push current dag outputs to the dagOutputs queue
-	c.dagPipelineTasks = append(c.dagPipelineTasks, driverTask)
 	c.addPipelineTask(driverTask)
-
-	// create PipelineTask (taskRef: system-container-driver-<uuid>) for each task in a dag
-	for _, kfpTask := range dagSpec.GetTasks() {
-		taskJson, err := marshaler.MarshalToString(kfpTask)
-		if err != nil {
-			return fmt.Errorf("DAG: marshaling task spec to proto JSON failed: %w", err)
-		}
-		componentJson, err := marshaler.MarshalToString(c.spec.Components[kfpTask.ComponentRef.Name])
-		if err != nil {
-			return fmt.Errorf("DAG: marshaling component spec to proto JSON failed: %w", err)
-		}
-		c.addPipelineTask(&pipeline.PipelineTask{
-			Name: kfpTask.GetTaskInfo().GetName() + "-driver",
-			TaskRef: &pipeline.TaskRef{
-				APIVersion: "kfp-driver.tekton.dev/v1alpha1",
-				Kind:       "KFPDriver",
-				Name:       "kfp-driver",
-			},
-			RunAfter: append(kfpTask.GetDependentTasks(), driverTask.Name),
-			Params: []pipeline.Param{
-				{
-					Name:  paramType,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: "CONTAINER"},
-				},
-				{
-					Name:  paramPipelineName,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
-				},
-				{
-					Name:  paramDAGContextID,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: outputs.contextID},
-				},
-				{
-					Name:  paramDAGExecutionID,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: outputs.executionID},
-				},
-				{
-					Name:  paramTask,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: taskJson},
-				},
-				{
-					Name:  paramComponent,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: componentJson},
-				},
-				{
-					Name:  paramRunId,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: runID()},
-				},
-				{
-					Name:  paramExecutionID,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: paramExecutionID},
-				},
-				{
-					Name:  paramContextID,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: paramContextID},
-				},
-				{
-					Name:  paramExecutorInput,
-					Value: pipeline.ArrayOrString{Type: "string", StringVal: paramExecutorInput},
-				},
-			},
-		})
-	}
 
 	return err
 }
@@ -109,20 +38,28 @@ func (c *pipelineCompiler) dagDriverTask(
 	component *pipelinespec.ComponentSpec,
 	task *pipelinespec.PipelineTaskSpec,
 	runtimeConfig *pipelinespec.PipelineJob_RuntimeConfig,
-) (*pipeline.PipelineTask, *dagDriverOutputs, error) {
+) (*pipeline.PipelineTask, error) {
 	if component == nil {
-		return nil, nil, fmt.Errorf("dagDriverTask: component must be non-nil")
+		return nil, fmt.Errorf("dagDriverTask: component must be non-nil")
 	}
 	marshaler := jsonpb.Marshaler{}
 	componentJson, err := marshaler.MarshalToString(component)
 	if err != nil {
-		return nil, nil, fmt.Errorf("dagDriverTask: marlshaling component spec to proto JSON failed: %w", err)
+		return nil, fmt.Errorf("dagDriverTask: marlshaling component spec to proto JSON failed: %w", err)
 	}
+	// TODO(yhwang): not used by dag-driver, comment this out for now
+	// taskJson := "{}"
+	// if task != nil {
+	// 	taskJson, err = marshaler.MarshalToString(task)
+	// 	if err != nil {
+	// 		return nil, nil, fmt.Errorf("dagDriverTask: marshaling task spec to proto JSON failed: %w", err)
+	// 	}
+	// }
 	runtimeConfigJson := "{}"
 	if runtimeConfig != nil {
 		runtimeConfigJson, err = marshaler.MarshalToString(runtimeConfig)
 		if err != nil {
-			return nil, nil, fmt.Errorf("dagDriverTask: marshaling runtime config to proto JSON failed: %w", err)
+			return nil, fmt.Errorf("dagDriverTask: marshaling runtime config to proto JSON failed: %w", err)
 		}
 	}
 
@@ -146,16 +83,16 @@ func (c *pipelineCompiler) dagDriverTask(
 				Value: pipeline.ArrayOrString{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
 			{
+				Name:  paramRunId,
+				Value: pipeline.ArrayOrString{Type: "string", StringVal: runID()},
+			},
+			{
 				Name:  paramComponent,
 				Value: pipeline.ArrayOrString{Type: "string", StringVal: componentJson},
 			},
 			{
 				Name:  paramRuntimeConfig,
 				Value: pipeline.ArrayOrString{Type: "string", StringVal: runtimeConfigJson},
-			},
-			{
-				Name:  paramRunId,
-				Value: pipeline.ArrayOrString{Type: "string", StringVal: runID()},
 			},
 			{
 				Name:  paramExecutionID,
@@ -167,10 +104,7 @@ func (c *pipelineCompiler) dagDriverTask(
 			},
 		},
 	}
-	return t, &dagDriverOutputs{
-		contextID:   taskOutputParameter(name, paramContextID),
-		executionID: taskOutputParameter(name, paramExecutionID),
-	}, nil
+	return t, nil
 }
 
 //Generate task template for DAG driver

@@ -68,14 +68,13 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*PipelineCRDSet, 
 	}
 
 	compiler := &pipelineCompiler{
-		pipelineRun:      pipelineRun,
-		tasks:            make(map[string]*pipeline.Task),
-		driverImage:      "gcr.io/ml-pipeline/kfp-driver:latest",
-		launcherImage:    "gcr.io/ml-pipeline/kfp-launcher-v2:latest",
-		job:              job,
-		spec:             spec,
-		uid:              uid,
-		dagPipelineTasks: make([]*pipeline.PipelineTask, 5),
+		pipelineRun:   pipelineRun,
+		tasks:         make(map[string]*pipeline.Task),
+		driverImage:   "gcr.io/ml-pipeline/kfp-driver:latest",
+		launcherImage: "gcr.io/ml-pipeline/kfp-launcher-v2:latest",
+		job:           job,
+		spec:          spec,
+		uid:           uid,
 	}
 	if opts != nil {
 		if opts.DriverImage != "" {
@@ -107,25 +106,21 @@ type pipelineCompiler struct {
 	job  *pipelinespec.PipelineJob
 	spec *pipelinespec.PipelineSpec
 	// state
-	pipelineRun      *pipeline.PipelineRun
-	tasks            map[string]*pipeline.Task
-	driverImage      string
-	launcherImage    string
-	uid              string
-	dagPipelineTasks []*pipeline.PipelineTask
-	// dagTask          *pipeline.Task
-	// containerTask    *pipeline.Task
+	pipelineRun   *pipeline.PipelineRun
+	tasks         map[string]*pipeline.Task
+	driverImage   string
+	launcherImage string
+	uid           string
+	// currentDagSpec *pipelinespec.DagSpec
 }
 
-func (c *pipelineCompiler) Importer(name string, component *pipelinespec.ComponentSpec, importer *pipelinespec.PipelineDeploymentConfig_ImporterSpec) error {
-	return fmt.Errorf("importer not implemented yet")
-}
 func (c *pipelineCompiler) Resolver(name string, component *pipelinespec.ComponentSpec, resolver *pipelinespec.PipelineDeploymentConfig_ResolverSpec) error {
 	return fmt.Errorf("resolver not implemented yet")
 }
 
 var errAlreadyExists = fmt.Errorf("template already exists")
 
+// Add a Task CRD represents the task itself
 func (c *pipelineCompiler) addTask(t *pipeline.Task, name string) (string, error) {
 	t.Name = c.taskName(name)
 	_, ok := c.tasks[t.Name]
@@ -137,6 +132,7 @@ func (c *pipelineCompiler) addTask(t *pipeline.Task, name string) (string, error
 	return t.Name, nil
 }
 
+// Add a PipelineTask into a Pipeline as one of the tasks in its PipelineSpec
 func (c *pipelineCompiler) addPipelineTask(t *pipeline.PipelineTask) {
 	c.pipelineRun.Spec.PipelineSpec.Tasks = append(c.pipelineRun.Spec.PipelineSpec.Tasks, *t)
 }
@@ -152,23 +148,22 @@ const (
 	paramPipelineName    = "pipeline-name"
 	paramComponent       = "component"      // component spec
 	paramTask            = "task"           // task spec
+	paramContainer       = "container"      // container spec
+	paramImporter        = "importer"       // importer spec
 	paramRuntimeConfig   = "runtime-config" // job runtime config, pipeline level inputs
 	paramDAGContextID    = "dag-context-id"
-	paramParentContextID = "parent-context-id"
 	paramDAGExecutionID  = "dag-execution-id"
+	paramParentContextID = "parent-context-id"
 	paramExecutionID     = "execution-id"
 	paramContextID       = "context-id"
 	paramExecutorInput   = "executor-input"
 	paramRunId           = "run-id"
+	paramCachedDecision  = "cached-decision" // indicate hit cache or not
 )
 
 func runID() string {
 	// KFP API server converts this to KFP run ID.
 	return "$(context.pipelineRun.uid)"
-}
-
-func workflowParameter(name string) string {
-	return fmt.Sprintf("{{workflow.parameters.%s}}", name)
 }
 
 // In a container template, refer to inputs to the template.
@@ -188,4 +183,12 @@ func outputPath(parameter string) string {
 func taskOutputParameter(task string, param string) string {
 	//tasks.<taskName>.results.<resultName>
 	return fmt.Sprintf("$(tasks.%s.results.%s)", task, param)
+}
+
+func getDAGDriverTaskName(dagName string) string {
+	return fmt.Sprintf("%s-dag", dagName)
+}
+
+func getContainerDriverTaskName(name string) string {
+	return fmt.Sprintf("%s-driver", name)
 }
