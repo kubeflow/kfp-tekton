@@ -68,7 +68,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a initial container workflow.
     """
     from .testdata.init_container import init_container_pipeline
-    self._test_pipeline_workflow(init_container_pipeline, 'init_container.yaml')
+    self._test_pipeline_workflow(init_container_pipeline, 'init_container.yaml', skip_noninlined=True)
 
   def test_condition_workflow(self):
     """
@@ -82,28 +82,28 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a conditional workflow with custom task
     """
     from .testdata.condition_custom_task import flipcoin_pipeline
-    self._test_pipeline_workflow(flipcoin_pipeline, 'condition_custom_task.yaml')
+    self._test_pipeline_workflow(flipcoin_pipeline, 'condition_custom_task.yaml', skip_noninlined=True)
 
   def test_condition_dependency(self):
     """
     Test dependency on Tekton conditional task.
     """
     from .testdata.condition_dependency import flipcoin
-    self._test_pipeline_workflow(flipcoin, 'condition_dependency.yaml')
+    self._test_pipeline_workflow(flipcoin, 'condition_dependency.yaml', skip_noninlined=True)
 
   def test_sequential_workflow(self):
     """
     Test compiling a sequential workflow.
     """
     from .testdata.sequential import sequential_pipeline
-    self._test_pipeline_workflow(sequential_pipeline, 'sequential.yaml')
+    self._test_pipeline_workflow(sequential_pipeline, 'sequential.yaml', skip_noninlined=True)
 
   def test_parallel_join_workflow(self):
     """
     Test compiling a parallel join workflow.
     """
     from .testdata.parallel_join import download_and_join
-    self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml')
+    self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml', skip_noninlined=True)
 
   def test_recur_cond_workflow(self):
     """
@@ -161,7 +161,7 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recur_nested import flipcoin
     pipeline_conf = TektonPipelineConf()
     pipeline_conf.set_resource_in_separate_yaml(True)
-    self._test_pipeline_workflow(flipcoin, 'recur_nested_separate.yaml', tekton_pipeline_conf=pipeline_conf)
+    self._test_pipeline_workflow(flipcoin, 'recur_nested_separate.yaml', tekton_pipeline_conf=pipeline_conf, skip_noninlined=True)
 
   def test_nested_recur_custom_task_workflow(self):
     """
@@ -182,7 +182,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a nested custom conditions workflow.
     """
     from .testdata.nested_custom_conditions import nested_condition_test
-    self._test_pipeline_workflow(nested_condition_test, 'nested_custom_conditions.yaml')
+    self._test_pipeline_workflow(nested_condition_test, 'nested_custom_conditions.yaml', skip_noninlined=True)
 
   def test_custom_task_recur_with_cond_workflow(self):
     """
@@ -196,14 +196,14 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a parallel join workflow.
     """
     from .testdata.parallel_join_with_argo_vars import download_and_join_with_argo_vars
-    self._test_pipeline_workflow(download_and_join_with_argo_vars, 'parallel_join_with_argo_vars.yaml')
+    self._test_pipeline_workflow(download_and_join_with_argo_vars, 'parallel_join_with_argo_vars.yaml', skip_noninlined=True)
 
   def test_sidecar_workflow(self):
     """
     Test compiling a sidecar workflow.
     """
     from .testdata.sidecar import sidecar_pipeline
-    self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml')
+    self._test_pipeline_workflow(sidecar_pipeline, 'sidecar.yaml', skip_noninlined=True)
 
   def test_loop_parallelism_workflow(self):
     """
@@ -269,21 +269,21 @@ class TestTektonCompiler(unittest.TestCase):
     Test workflow with many results.
     """
     from .testdata.many_results import many_results_pipeline
-    self._test_pipeline_workflow(many_results_pipeline, 'many_results.yaml')
+    self._test_pipeline_workflow(many_results_pipeline, 'many_results.yaml', skip_noninlined=True)
 
   def test_many_results_with_warnings_workflow(self):
     """
     Test workflow with many results with warnings.
     """
     from .testdata.many_results_with_warnings import many_results_pipeline
-    self._test_pipeline_workflow(many_results_pipeline, 'many_results_with_warnings.yaml')
+    self._test_pipeline_workflow(many_results_pipeline, 'many_results_with_warnings.yaml', skip_noninlined=True)
 
   def test_tekton_custom_task_workflow(self):
     """
     Test Tekton custom task workflow.
     """
     from .testdata.tekton_custom_task import custom_task_pipeline
-    self._test_pipeline_workflow(custom_task_pipeline, 'tekton_custom_task.yaml')
+    self._test_pipeline_workflow(custom_task_pipeline, 'tekton_custom_task.yaml', skip_noninlined=True)
 
   def test_custom_task_spec_workflow(self):
     """
@@ -311,7 +311,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test long parameter name workflow.
     """
     from .testdata.long_param_name import main_fn
-    self._test_pipeline_workflow(main_fn, 'long_param_name.yaml')
+    self._test_pipeline_workflow(main_fn, 'long_param_name.yaml', skip_noninlined=True)
 
   def test_long_pipeline_name_workflow(self):
     """
@@ -371,28 +371,28 @@ class TestTektonCompiler(unittest.TestCase):
     Test conditions with global params in workflow.
     """
     from .testdata.conditions_with_global_params import conditions_with_global_params
-    self._test_pipeline_workflow(conditions_with_global_params, 'conditions_with_global_params.yaml')
+    self._test_pipeline_workflow(conditions_with_global_params, 'conditions_with_global_params.yaml', skip_noninlined=True)
 
   def test_pipelineparams_workflow(self):
     """
     Test compiling a pipelineparams workflow.
     """
     from .testdata.pipelineparams import pipelineparams_pipeline
-    self._test_pipeline_workflow(pipelineparams_pipeline, 'pipelineparams.yaml')
+    self._test_pipeline_workflow(pipelineparams_pipeline, 'pipelineparams.yaml', skip_noninlined=True)
 
   def test_retry_workflow(self):
     """
     Test compiling a retry task in workflow.
     """
     from .testdata.retry import retry_sample_pipeline
-    self._test_pipeline_workflow(retry_sample_pipeline, 'retry.yaml')
+    self._test_pipeline_workflow(retry_sample_pipeline, 'retry.yaml', skip_noninlined=True)
 
   def test_volume_workflow(self):
     """
     Test compiling a volume workflow.
     """
     from .testdata.volume import volume_pipeline
-    self._test_pipeline_workflow(volume_pipeline, 'volume.yaml')
+    self._test_pipeline_workflow(volume_pipeline, 'volume.yaml', skip_noninlined=True)
 
   def test_old_volume_error(self):
     """
@@ -407,28 +407,28 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a step level timeout workflow.
     """
     from .testdata.timeout import timeout_sample_pipeline
-    self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml')
+    self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml', skip_noninlined=True)
 
   def test_display_name_workflow(self):
     """
     Test compiling a step level timeout workflow.
     """
     from .testdata.set_display_name import echo_pipeline
-    self._test_pipeline_workflow(echo_pipeline, 'set_display_name.yaml')
+    self._test_pipeline_workflow(echo_pipeline, 'set_display_name.yaml', skip_noninlined=True)
 
   def test_resourceOp_workflow(self):
     """
     Test compiling a resourceOp basic workflow.
     """
     from .testdata.resourceop_basic import resourceop_basic
-    self._test_pipeline_workflow(resourceop_basic, 'resourceop_basic.yaml')
+    self._test_pipeline_workflow(resourceop_basic, 'resourceop_basic.yaml', skip_noninlined=True)
 
   def test_volumeOp_workflow(self):
     """
     Test compiling a volumeOp basic workflow.
     """
     from .testdata.volume_op import volumeop_basic
-    self._test_pipeline_workflow(volumeop_basic, 'volume_op.yaml')
+    self._test_pipeline_workflow(volumeop_basic, 'volume_op.yaml', skip_noninlined=True)
 
   def test_hidden_output_file_workflow(self):
     """
@@ -440,49 +440,49 @@ class TestTektonCompiler(unittest.TestCase):
       logging.warning("Skipping hidden_output workflow test for Python version < 3.6.0")
     else:
       from .testdata.hidden_output_file import hidden_output_file_pipeline
-      self._test_pipeline_workflow(hidden_output_file_pipeline, 'hidden_output_file.yaml')
+      self._test_pipeline_workflow(hidden_output_file_pipeline, 'hidden_output_file.yaml', skip_noninlined=True)
 
   def test_tolerations_workflow(self):
     """
     Test compiling a tolerations workflow.
     """
     from .testdata.tolerations import tolerations
-    self._test_pipeline_workflow(tolerations, 'tolerations.yaml')
+    self._test_pipeline_workflow(tolerations, 'tolerations.yaml', skip_noninlined=True)
 
   def test_affinity_workflow(self):
     """
     Test compiling a affinity workflow.
     """
     from .testdata.affinity import affinity_pipeline
-    self._test_pipeline_workflow(affinity_pipeline, 'affinity.yaml')
+    self._test_pipeline_workflow(affinity_pipeline, 'affinity.yaml', skip_noninlined=True)
 
   def test_node_selector_workflow(self):
     """
     Test compiling a node selector workflow.
     """
     from .testdata.node_selector import node_selector_pipeline
-    self._test_pipeline_workflow(node_selector_pipeline, 'node_selector.yaml')
+    self._test_pipeline_workflow(node_selector_pipeline, 'node_selector.yaml', skip_noninlined=True)
 
   def test_pipeline_transformers_workflow(self):
     """
     Test compiling a pipeline_transformers workflow with pod annotations and labels.
     """
     from .testdata.pipeline_transformers import transform_pipeline
-    self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml')
+    self._test_pipeline_workflow(transform_pipeline, 'pipeline_transformers.yaml', skip_noninlined=True)
 
   def test_input_artifact_raw_value_workflow(self):
     """
     Test compiling an input artifact workflow.
     """
     from .testdata.input_artifact_raw_value import input_artifact_pipeline
-    self._test_pipeline_workflow(input_artifact_pipeline, 'input_artifact_raw_value.yaml')
+    self._test_pipeline_workflow(input_artifact_pipeline, 'input_artifact_raw_value.yaml', skip_noninlined=True)
 
   def test_big_data_workflow(self):
     """
     Test compiling a big data passing workflow.
     """
     from .testdata.big_data_passing import file_passing_pipelines
-    self._test_pipeline_workflow(file_passing_pipelines, 'big_data_passing.yaml')
+    self._test_pipeline_workflow(file_passing_pipelines, 'big_data_passing.yaml', skip_noninlined=True)
 
   def test_create_component_from_func_workflow(self):
     """
@@ -502,21 +502,21 @@ class TestTektonCompiler(unittest.TestCase):
       logging.warning("Skipping katib workflow test for Python version < 3.6.0")
     else:
       from .testdata.katib import mnist_hpo
-      self._test_pipeline_workflow(mnist_hpo, 'katib.yaml')
+      self._test_pipeline_workflow(mnist_hpo, 'katib.yaml', skip_noninlined=True)
 
   def test_load_from_yaml_workflow(self):
     """
     Test compiling a pipeline with components loaded from yaml.
     """
     from .testdata.load_from_yaml import component_yaml_pipeline
-    self._test_pipeline_workflow(component_yaml_pipeline, 'load_from_yaml.yaml')
+    self._test_pipeline_workflow(component_yaml_pipeline, 'load_from_yaml.yaml', skip_noninlined=True)
 
   def test_imagepullsecrets_workflow(self):
     """
     Test compiling a imagepullsecrets workflow.
     """
     from .testdata.imagepullsecrets import imagepullsecrets_pipeline
-    self._test_pipeline_workflow(imagepullsecrets_pipeline, 'imagepullsecrets.yaml')
+    self._test_pipeline_workflow(imagepullsecrets_pipeline, 'imagepullsecrets.yaml', skip_noninlined=True)
 
   def test_basic_no_decorator(self):
     """
@@ -536,14 +536,14 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a exit handler workflow.
     """
     from .testdata.exit_handler import download_and_print
-    self._test_pipeline_workflow(download_and_print, 'exit_handler.yaml')
+    self._test_pipeline_workflow(download_and_print, 'exit_handler.yaml', skip_noninlined=True)
 
   def test_cache_workflow(self):
     """
     Test compiling a workflow with two tasks one with caching enabled and the other disabled.
     """
     from .testdata.cache import cache_pipeline
-    self._test_pipeline_workflow(cache_pipeline, 'cache.yaml')
+    self._test_pipeline_workflow(cache_pipeline, 'cache.yaml', skip_noninlined=True)
 
   def test_tekton_pipeline_conf(self):
     """
@@ -554,7 +554,9 @@ class TestTektonCompiler(unittest.TestCase):
     pipeline_conf.add_pipeline_label('test', 'label')
     pipeline_conf.add_pipeline_label('test2', 'label2')
     pipeline_conf.add_pipeline_annotation('test', 'annotation')
-    self._test_pipeline_workflow(echo_pipeline, 'tekton_pipeline_conf.yaml', tekton_pipeline_conf=pipeline_conf)
+    self._test_pipeline_workflow(echo_pipeline, 'tekton_pipeline_conf.yaml',
+                                 tekton_pipeline_conf=pipeline_conf,
+                                 skip_noninlined=True)
 
   def test_compose(self):
     """
@@ -569,7 +571,7 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.any_sequencer import any_sequence_pipeline
 
-    self._test_pipeline_workflow(any_sequence_pipeline, 'any_sequencer.yaml')
+    self._test_pipeline_workflow(any_sequence_pipeline, 'any_sequencer.yaml', skip_noninlined=True)
 
   def _test_pipeline_workflow_inlined_spec(self,
                               pipeline_function,
