@@ -62,6 +62,7 @@ func compile(specPath string) error {
 		if err != nil {
 			return err
 		}
+		os.Stdout.Write([]byte("---\n"))
 	}
 	err = stdoutCRD(crdSet.PipelineRun)
 	if err != nil {
@@ -79,7 +80,6 @@ func stdoutCRD(o interface{}) error {
 	if err != nil {
 		return err
 	}
-	os.Stdout.Write([]byte("---\n"))
 	return nil
 }
 

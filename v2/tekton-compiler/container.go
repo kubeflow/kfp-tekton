@@ -7,7 +7,6 @@ import (
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	pipeline "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	k8score "k8s.io/api/core/v1"
-	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -116,7 +115,7 @@ func (c *pipelineCompiler) Container(
 	t := c.containerExecutorTemplate(name, container, c.spec.PipelineInfo.GetName())
 	// TODO(Bobgy): how can we avoid template name collisions?
 	// For Tekton we use a Task to represent the executor driver
-	c.addTask(t, name+"-"+c.uid)
+	// c.addTask(t, name+"-"+c.uid)
 	if err != nil {
 		return err
 	}
@@ -125,7 +124,7 @@ func (c *pipelineCompiler) Container(
 	// name collisions?
 	c.addPipelineTask(&pipeline.PipelineTask{
 		Name:     nameInDAG,
-		TaskRef:  &pipeline.TaskRef{Name: t.Name},
+		TaskSpec: t,
 		RunAfter: []string{containerDriverName},
 		WhenExpressions: pipeline.WhenExpressions{
 			{
@@ -244,7 +243,7 @@ type containerDriverOutputs struct {
 func (c *pipelineCompiler) containerExecutorTemplate(
 	name string, container *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec,
 	pipelineName string,
-) *pipeline.Task {
+) *pipeline.EmbeddedTask {
 	userCmdArgs := make([]string, 0, len(container.Command)+len(container.Args))
 	userCmdArgs = append(userCmdArgs, container.Command...)
 	userCmdArgs = append(userCmdArgs, container.Args...)
@@ -266,13 +265,22 @@ func (c *pipelineCompiler) containerExecutorTemplate(
 		"--", // separater before user command and args
 	}
 	mlmdConfigOptional := true
-	return &pipeline.Task{
-		TypeMeta: k8smeta.TypeMeta{
-			APIVersion: "tekton.dev/v1beta1",
-			Kind:       "Task",
-		},
-		ObjectMeta: k8smeta.ObjectMeta{
-			Name: fmt.Sprintf("%s-%s", name, c.uid),
+	return &pipeline.EmbeddedTask{
+		// TypeMeta: k8smeta.TypeMeta{
+		// 	APIVersion: "tekton.dev/v1beta1",
+		// 	Kind:       "Task",
+		// },
+		// ObjectMeta: k8smeta.ObjectMeta{
+		// 	Name: fmt.Sprintf("%s-%s", name, c.uid),
+		// 	Annotations: map[string]string{
+		// 		"pipelines.kubeflow.org/v2_pipeline": "true",
+		// 	},
+		// 	Labels: map[string]string{
+		// 		"pipelines.kubeflow.org/v2_component": "true",
+		// 		"pipeline-uid":                        c.uid,
+		// 	},
+		// },
+		Metadata: pipeline.PipelineTaskMetadata{
 			Annotations: map[string]string{
 				"pipelines.kubeflow.org/v2_pipeline": "true",
 			},
@@ -281,7 +289,7 @@ func (c *pipelineCompiler) containerExecutorTemplate(
 				"pipeline-uid":                        c.uid,
 			},
 		},
-		Spec: pipeline.TaskSpec{
+		TaskSpec: pipeline.TaskSpec{
 			Params: []pipeline.ParamSpec{
 				{Name: paramExecutorInput, Type: "string"}, // --executor-input
 				{Name: paramExecutionID, Type: "string"},   // --execution-id
