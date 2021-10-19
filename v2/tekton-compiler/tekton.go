@@ -56,8 +56,8 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*PipelineCRDSet, 
 			},
 		},
 		Spec: pipeline.PipelineRunSpec{
-			PipelineSpec:       &pipeline.PipelineSpec{},
-			ServiceAccountName: "pipeline-runner",
+			PipelineSpec: &pipeline.PipelineSpec{},
+			// ServiceAccountName: "default-editor",
 		},
 	}
 
@@ -163,7 +163,7 @@ const (
 
 func runID() string {
 	// KFP API server converts this to KFP run ID.
-	return "$(context.pipelineRun.uid)"
+	return "{{workflow.uid}}"
 }
 
 // In a container template, refer to inputs to the template.

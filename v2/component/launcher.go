@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/glog"
+	// "github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/v2/cacheutils"
@@ -44,6 +44,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"knative.dev/pkg/logging"
 )
 
 const OutputMetadataFilepath = "/tmp/kfp_outputs/output_metadata.json"
@@ -126,6 +127,7 @@ const outputMetadataFilepath = "/tmp/kfp_outputs/output_metadata.json"
 // NewLauncher creates a new launcher object using the JSON-encoded runtimeInfo
 // and specified options.
 func NewLauncher(ctx context.Context, runtimeInfo string, options *LauncherOptions) (*Launcher, error) {
+	logger := logging.FromContext(ctx)
 	restConfig, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to initialize kubernetes client: %w", err)
@@ -144,7 +146,7 @@ func NewLauncher(ctx context.Context, runtimeInfo string, options *LauncherOptio
 			return nil, err
 		}
 		options.PipelineRoot = cfg.DefaultPipelineRoot()
-		glog.Infof("PipelineRoot defaults to %q.", options.PipelineRoot)
+		logger.Infof("PipelineRoot defaults to %q.", options.PipelineRoot)
 	}
 
 	rt, err := parseRuntimeInfo(runtimeInfo)
@@ -179,6 +181,7 @@ func NewLauncher(ctx context.Context, runtimeInfo string, options *LauncherOptio
 // RunComponent runs the current KFP component using the specified command and
 // arguments.
 func (l *Launcher) RunComponent(ctx context.Context) error {
+	logger := logging.FromContext(ctx)
 	pipeline, err := l.metadataClient.GetPipeline(ctx, l.options.PipelineName, l.options.RunID, l.options.Namespace, l.options.RunResource, l.options.PipelineRoot)
 	if err != nil {
 		return fmt.Errorf("unable to get pipeline with PipelineName %q PipelineRunID %q: %w", l.options.PipelineName, l.options.RunID, err)
@@ -193,7 +196,7 @@ func (l *Launcher) RunComponent(ctx context.Context) error {
 		return fmt.Errorf("failure while generating ExecutorInput: %w", err)
 	}
 	if l.options.EnableCaching {
-		glog.Infof("enable caching")
+		logger.Infof("enable caching")
 		return l.executeWithCacheEnabled(ctx, executorInput, pipeline)
 	} else {
 		return l.executeWithoutCacheEnabled(ctx, executorInput, pipeline)
@@ -270,6 +273,7 @@ func (l *Launcher) executeWithCacheEnabled(ctx context.Context, executorInput *p
 }
 
 func (l *Launcher) executeWithCacheHit(ctx context.Context, executorInput *pipelinespec.ExecutorInput, createdExecution *metadata.Execution, cachedMLMDExecutionID string) error {
+	logger := logging.FromContext(ctx)
 	if err := prepareOutputFolders(executorInput); err != nil {
 		return err
 	}
@@ -301,7 +305,7 @@ func (l *Launcher) executeWithCacheHit(ctx context.Context, executorInput *pipel
 	if err := l.metadataClient.PublishExecution(ctx, createdExecution, outputParameters, outputArtifacts, pb.Execution_CACHED); err != nil {
 		return fmt.Errorf("unable to publish execution: %w", err)
 	}
-	glog.Infof("Cached")
+	logger.Infof("Cached")
 	return nil
 }
 
@@ -454,7 +458,7 @@ func execute(ctx context.Context, executorInput *pipelinespec.ExecutorInput, cmd
 	executor.Stdin = os.Stdin
 	executor.Stdout = os.Stdout
 	executor.Stderr = os.Stderr
-	defer glog.Flush()
+	// defer glog.Flush()
 	if err := executor.Run(); err != nil {
 		return nil, err
 	}
@@ -533,6 +537,7 @@ type uploadOutputArtifactsOptions struct {
 
 func uploadOutputArtifacts(ctx context.Context, executorInput *pipelinespec.ExecutorInput, executorOutput *pipelinespec.ExecutorOutput, opts uploadOutputArtifactsOptions) ([]*metadata.OutputArtifact, error) {
 	// Register artifacts with MLMD.
+	logger := logging.FromContext(ctx)
 	outputArtifacts := make([]*metadata.OutputArtifact, 0, len(executorInput.GetOutputs().GetArtifacts()))
 	for name, artifactList := range executorInput.GetOutputs().GetArtifacts() {
 		if len(artifactList.Artifacts) == 0 {
@@ -549,7 +554,7 @@ func uploadOutputArtifacts(ctx context.Context, executorInput *pipelinespec.Exec
 		// Upload artifacts from local path to remote storages.
 		localDir, err := localPathForURI(outputArtifact.Uri)
 		if err != nil {
-			glog.Warningf("Output Artifact %q does not have a recognized storage URI %q. Skipping uploading to remote storage.", name, outputArtifact.Uri)
+			logger.Warnf("Output Artifact %q does not have a recognized storage URI %q. Skipping uploading to remote storage.", name, outputArtifact.Uri)
 		} else {
 			blobKey, err := opts.bucketConfig.KeyFromURI(outputArtifact.Uri)
 			if err != nil {
@@ -558,7 +563,7 @@ func uploadOutputArtifacts(ctx context.Context, executorInput *pipelinespec.Exec
 			if err := objectstore.UploadBlob(ctx, opts.bucket, localDir, blobKey); err != nil {
 				//  We allow components to not produce output files
 				if errors.Is(err, os.ErrNotExist) {
-					glog.Warningf("Local filepath %q does not exist", localDir)
+					logger.Warnf("Local filepath %q does not exist", localDir)
 				} else {
 					return nil, fmt.Errorf("failed to upload output artifact %q to remote storage URI %q: %w", name, outputArtifact.Uri, err)
 				}
@@ -665,6 +670,7 @@ func localPathForURI(uri string) (string, error) {
 
 func downloadArtifacts(ctx context.Context, executorInput *pipelinespec.ExecutorInput, bucket *blob.Bucket, bucketConfig *objectstore.Config) error {
 	// Read input artifact metadata.
+	logger := logging.FromContext(ctx)
 	for name, artifactList := range executorInput.Inputs.Artifacts {
 		// TODO(neuromage): Support concat-based placholders for arguments.
 		if len(artifactList.Artifacts) == 0 {
@@ -673,7 +679,7 @@ func downloadArtifacts(ctx context.Context, executorInput *pipelinespec.Executor
 		inputArtifact := artifactList.Artifacts[0]
 		localPath, err := localPathForURI(inputArtifact.Uri)
 		if err != nil {
-			glog.Warningf("Input Artifact %q does not have a recognized storage URI %q. Skipping downloading to local path.", name, inputArtifact.Uri)
+			logger.Warnf("Input Artifact %q does not have a recognized storage URI %q. Skipping downloading to local path.", name, inputArtifact.Uri)
 			continue
 		}
 		// Copy artifact to local storage.
@@ -834,7 +840,7 @@ func getExecutorOutputFile(path string) (*pipelinespec.ExecutorOutput, error) {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			glog.Infof("output metadata file does not exist in %s", path)
+			// glog.Infof("output metadata file does not exist in %s", path)
 			// If file doesn't exist, return an empty ExecutorOutput.
 			return executorOutput, nil
 		} else {
@@ -846,7 +852,7 @@ func getExecutorOutputFile(path string) (*pipelinespec.ExecutorOutput, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read output metadata file %q: %w", path, err)
 	}
-	glog.Infof("ExecutorOutput: %s", prettyPrint(string(b)))
+	// glog.Infof("ExecutorOutput: %s", prettyPrint(string(b)))
 
 	if err := protojson.Unmarshal(b, executorOutput); err != nil {
 		return nil, fmt.Errorf("failed to unmarshall ExecutorOutput in file %q: %w", path, err)

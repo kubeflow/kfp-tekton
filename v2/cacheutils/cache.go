@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/golang/glog"
+	// "github.com/golang/glog"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/cachekey"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	api "github.com/kubeflow/pipelines/v2/kfp-api"
@@ -117,7 +117,7 @@ type Client struct {
 // NewClient creates a Client.
 func NewClient() (*Client, error) {
 	cacheEndPoint := cacheDefaultEndpoint()
-	glog.Infof("Connecting to cache endpoint %s", cacheEndPoint)
+	// glog.Infof("Connecting to cache endpoint %s", cacheEndPoint)
 	conn, err := grpc.Dial(cacheEndPoint, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxClientGRPCMessageSize)), grpc.WithInsecure())
 	if err != nil {
 		return nil, fmt.Errorf("metadata.NewClient() failed: %w", err)
@@ -140,7 +140,7 @@ func cacheDefaultEndpoint() string {
 		return cacheHost + ":" + cachePort
 	}
 	// If the env vars do not exist, use default ml-pipeline grpc endpoint `ml-pipeline.kubeflow:8887`.
-	glog.Infof("Cannot detect ml-pipeline in the same namespace, default to %s as KFP endpoint.", defaultKfpApiEndpoint)
+	// glog.Infof("Cannot detect ml-pipeline in the same namespace, default to %s as KFP endpoint.", defaultKfpApiEndpoint)
 	return defaultKfpApiEndpoint
 }
 

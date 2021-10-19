@@ -147,6 +147,10 @@ func (c *pipelineCompiler) Container(
 				Name:  paramComponent,
 				Value: pipeline.ArrayOrString{Type: "string", StringVal: componentJson},
 			},
+			{
+				Name:  paramRunId,
+				Value: pipeline.ArrayOrString{Type: "string", StringVal: runID()},
+			},
 		},
 	})
 	return err
@@ -247,7 +251,7 @@ func (c *pipelineCompiler) containerExecutorTemplate(
 	launcherCmd := []string{
 		volumePathKFPLauncher + "/launch",
 		"--pipeline_name", pipelineName,
-		"--run_id", runID(),
+		"--run_id", inputValue(paramRunId),
 		"--execution_id", inputValue(paramExecutionID),
 		"--executor_input", inputValue(paramExecutorInput),
 		"--component_spec", inputValue(paramComponent),
@@ -282,6 +286,7 @@ func (c *pipelineCompiler) containerExecutorTemplate(
 				{Name: paramExecutorInput, Type: "string"}, // --executor-input
 				{Name: paramExecutionID, Type: "string"},   // --execution-id
 				{Name: paramComponent, Type: "string"},     // --component
+				{Name: paramRunId, Type: "string"},         // --run-id
 			},
 			Results: []pipeline.TaskResult{
 				{Name: paramExecutionID, Description: "execution id"},

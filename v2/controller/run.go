@@ -213,6 +213,15 @@ func parseParams(run *v1alpha1.Run) (*driverOptions, *apis.FieldError) {
 				)
 			}
 			opts.options.RuntimeConfig = runtimeConfig
+		case "container":
+			containerSpec := &pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec{}
+			if err := jsonpb.UnmarshalString(param.Value.StringVal, containerSpec); err != nil {
+				return nil, apis.ErrInvalidValue(
+					fmt.Sprintf("failed to unmarshal container spec, error: %v\ncontainerSpec: %v", err, param.Value.StringVal),
+					"container",
+				)
+			}
+			opts.options.Container = containerSpec
 		case "dag-context-id":
 			opts.options.DAGContextID, _ = strconv.ParseInt(param.Value.StringVal, 10, 64)
 		case "dag-execution-id":

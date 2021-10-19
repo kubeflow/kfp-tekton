@@ -38,7 +38,7 @@ func (c *pipelineCompiler) Importer(
 		"--component_spec", inputValue(paramComponent),
 		"--importer_spec", inputValue(paramImporter),
 		"--pipeline_name", c.spec.PipelineInfo.GetName(),
-		"--run_id", runID(),
+		"--run_id", inputValue(paramRunId),
 		"--pod_name",
 		"$(KFP_POD_NAME)",
 		"--pod_uid",
@@ -118,6 +118,10 @@ func (c *pipelineCompiler) Importer(
 			{
 				Name:  paramImporter,
 				Value: pipeline.ArrayOrString{Type: "string", StringVal: importerJson},
+			},
+			{
+				Name:  paramRunId,
+				Value: pipeline.ArrayOrString{Type: "string", StringVal: runID()},
 			},
 		},
 	}
