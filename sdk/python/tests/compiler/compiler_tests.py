@@ -75,7 +75,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a conditional workflow
     """
     from .testdata.condition import flipcoin
-    self._test_pipeline_workflow(flipcoin, 'condition.yaml')
+    self._test_pipeline_workflow(flipcoin, 'condition.yaml', skip_noninlined=True)
 
   def test_condition_custom_task_workflow(self):
     """
@@ -489,7 +489,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a creating component from func workflow.
     """
     from .testdata.create_component_from_func import create_component_pipeline
-    self._test_pipeline_workflow(create_component_pipeline, 'create_component_from_func.yaml')
+    self._test_pipeline_workflow(create_component_pipeline, 'create_component_from_func.yaml', skip_noninlined=True)
 
   def test_katib_workflow(self):
     """
