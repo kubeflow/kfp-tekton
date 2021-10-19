@@ -14,19 +14,18 @@ for demos.
 
 **Note**: If you are interested in a sister project built on top of Kubeflow Pipelines with Tekton, please try [Machine Learning eXchange (MLX)](https://github.com/machine-learning-exchange), Data and AI Assets Catalog and Execution Engine. It introduces a 'Component Registry' for Kubeflow Pipelines, amongst other things.
 
-## Architecture 
+## Architecture
 
 We are currently using [Kubeflow Pipelines 1.7.0](https://github.com/kubeflow/pipelines/releases/tag/1.7.0) and
 [Tekton >= 0.27.0](https://github.com/tektoncd/pipeline/releases/tag/v0.27.0)
-for this project. 
+for this project.
 
 ![kfp-tekton](images/kfp-tekton.png)
 
-Kubeflow Pipelines is a platform for building and deploying portable, scalable machine learning (ML) workflows. More architectural details about the Kubeflow Pipelines can be found on [Kubeflow website](https://www.kubeflow.org/docs/components/pipelines/overview/pipelines-overview/)
+Kubeflow Pipelines is a platform for building and deploying portable, scalable machine learning (ML) workflows. More architectural details about the Kubeflow Pipelines can be found on the [Kubeflow website](https://www.kubeflow.org/docs/components/pipelines/overview/pipelines-overview/).
 
 The Tekton Pipelines project provides Kubernetes-style resources for declaring
-CI/CD-style pipelines. Tekton introduces several [Custom Resource Definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs) including Task, Pipeline, TaskRun, and PipelineRun. A PipelineRun represents a single running instance of a Pipeline and is responsible for creating a Pod for each of its Tasks and as many containers within each Pod as it has Steps. Please
-look for more details in [Tekton repo](https://github.com/tektoncd/pipeline).
+CI/CD-style pipelines. Tekton introduces several [Custom Resource Definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs) including Task, Pipeline, TaskRun, and PipelineRun. A PipelineRun represents a single running instance of a Pipeline and is responsible for creating a Pod for each of its Tasks and as many containers within each Pod as it has Steps. Please look for more details in the [Tekton repo](https://github.com/tektoncd/pipeline).
 
 ### Get Started using Kubeflow Pipelines on Tekton
 
