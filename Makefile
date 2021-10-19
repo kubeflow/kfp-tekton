@@ -58,7 +58,7 @@ validate-generated-test-yamls:
 	@diff -a /tmp/validate-generated-test-yamls_total /tmp/validate-generated-test-yamls_valid
 	@echo "$@: OK"
 
-.PHONY: validate_testdata
+.PHONY: validate-testdata
 validate-testdata:
 	@cd tekton-catalog/pipeline-loops/ && make validate-testdata-python-sdk
 	@echo "$@: OK"
@@ -74,7 +74,7 @@ unit_test: venv ## Run compiler unit tests
 	@echo "$@: OK"
 
 .PHONY: ci_unit_test
-ci_unit_test: unit_test validate-testdata
+ci_unit_test: unit_test
 
 .PHONY: e2e_test
 e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)

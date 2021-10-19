@@ -26,8 +26,22 @@ jobs:
         run: python -m pip install -e sdk/python
       - name: Unit Tests
         run: VENV=$VIRTUAL_ENV make ci_unit_test
-      - name: Tests noninled yaml generate check
+  validate-testdata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: python -m pip install -e sdk/python
+      - name: "Generate testdata yaml files."
+        run: VENV=$VIRTUAL_ENV make unit_test GENERATE_GOLDEN_YAML=True
+      - name: "Test only required noninled yaml files are generated."
         run: make validate-generated-test-yamls
+      - name: "Tekton validation for testdata."
+        run: make validate-testdata
   progress-report:
     runs-on: ubuntu-latest
     steps:
