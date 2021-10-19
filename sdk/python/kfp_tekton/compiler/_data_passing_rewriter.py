@@ -15,6 +15,7 @@
 import copy
 import json
 import re
+import pathlib
 
 from typing import List, Optional, Set
 
@@ -512,15 +513,21 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             for task_artifact in task_artifacts:
                 if task_artifact.get('name') == task_param.get('name'):
                     placeholder = task_artifact.get('path')
-            task_param_names = task_param.get('name').rsplit('-', 1)
-            # If the param name doesn't have '-', then param is not passed from another task.
-            # Thus, use the current task_name as the path prefix
-            if len(task_param_names) == 2:
+            task_param_task_name = ""
+            task_param_param_name = ""
+            for o_task in outputs_tasks:
+                if '-'.join(o_task) == task_param.get('name'):
+                    task_param_task_name = o_task[0]
+                    task_param_param_name = o_task[1]
+                    break
+            # If the param name is constructed with task_name-param_name,
+            # use the current task_name as the path prefix
+            if task_param_task_name:
                 workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                    task_name, task_param_names[0], task_param_names[1])
+                    task_name, task_param_task_name, task_param_param_name)
             else:
                 workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                    task_name, task_name, task_param_names[0])
+                    task_name, task_name, task_param.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
                 task_spec, placeholder, workspaces_parameter)
             task_spec = task.get('taskSpec', {})
@@ -587,17 +594,12 @@ def input_artifacts_tasks_pr_params(template: dict, artifact: dict) -> dict:
     task_spec = template.get('taskSpec', {})
     task_params = task_spec.get('params', [])
     for task_param in task_params:
-        task_param_names = task_param.get('name').rsplit('-', 1)
-        # If the param name doesn't have '-', then param is not passed from another task.
-        # Thus, use the current task_name as the path prefix
-        if len(task_param_names) == 2:
-            workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                task_name, task_param_names[0], task_param_names[1])
-        else:
-            workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                task_name, task_name, task_param_names[0])
+        # For pipeline parameter input artifacts, it will never come from another task because pipeline
+        # params are global parameters. Thus, task_name will always be the executing task name.
+        workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
+            task_name, task_name, task_param.get('name'))
         if 'raw' in artifact:
-            copy_inputs_step['script'] += 'mkdir -p %s\n' % (workspaces_parameter.rsplit('/', 1)[0])
+            copy_inputs_step['script'] += 'mkdir -p %s\n' % pathlib.Path(workspaces_parameter).parent
             copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (
                 artifact['raw']['data'], workspaces_parameter)
 
