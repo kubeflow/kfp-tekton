@@ -1,16 +1,14 @@
 # Kubeflow Pipelines on Tekton
 
 Project bringing Kubeflow Pipelines and Tekton together. The project is driven
-according to this [design doc](http://bit.ly/kfp-tekton). The current code allows
-you run Kubeflow Pipelines with Tekton backend end to end.
+according to this [design doc](http://bit.ly/kfp-tekton). The current code allows you run Kubeflow Pipelines with Tekton backend end to end.
 
-* Create your Pipeline using Kubeflow Pipelines DSL, and compile it to Tekton YAML.
+* Create your Pipeline using Kubeflow Pipelines DSL, and compile it to Tekton
+  YAML.
 * Upload the compiled Tekton YAML to KFP engine (API and UI), and run end to end
   with logging and artifacts tracking enabled.
 
-For more details about the project please follow this detailed [blog post](https://developer.ibm.com/blogs/kubeflow-pipelines-with-tekton-and-watson/). For latest information and supported offerings, please follow the [Kubeflow Pipelines on Tekton 1.0 release blog](https://developer.ibm.com/blogs/kubeflow-pipelines-and-tekton-advances-data-workloads/). Additionally, look at these [slides](https://www.slideshare.net/AnimeshSingh/kubeflow-pipelines-with-tekton-236769976)
-as well as this [deep dive presentation](https://www.youtube.com/watch?v=AYIeNtXLT_k)
-for demos.
+For more details about the project please follow this detailed [blog post](https://developer.ibm.com/blogs/kubeflow-pipelines-with-tekton-and-watson/). For latest information and supported offerings, please follow the [Kubeflow Pipelines on Tekton 1.0 release blog](https://developer.ibm.com/blogs/kubeflow-pipelines-and-tekton-advances-data-workloads/). Additionally, look at these [slides](https://www.slideshare.net/AnimeshSingh/kubeflow-pipelines-with-tekton-236769976)as well as this [deep dive presentation](https://www.youtube.com/watch?v=AYIeNtXLT_k)for demos.
 
 **Note**: If you are interested in a sister project built on top of Kubeflow Pipelines with Tekton, please try [Machine Learning eXchange (MLX)](https://github.com/machine-learning-exchange), Data and AI Assets Catalog and Execution Engine. It introduces a 'Component Registry' for Kubeflow Pipelines, amongst other things.
 
