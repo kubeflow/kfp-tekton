@@ -42,7 +42,23 @@ $(VENV)/bin/activate: sdk/python/setup.py
 install: venv ## Install the kfp_tekton compiler in a virtual environment
 	@echo "Run 'source $(VENV)/bin/activate' to activate the virtual environment."
 
-.PHONY: validate_testdata
+.PHONY: validate-generated-test-yamls
+validate-generated-test-yamls:
+	@echo "=================================================================="
+	@echo "Reporting files with same non-inlined and inlined generated yamls in testdata:"
+	@find sdk/python/tests/compiler/testdata \
+		\( -type f -name "*yaml" -name "*noninlined.yaml" \) | sort -z >/tmp/validate-generated-test-yamls_total
+	@find sdk/python/tests/compiler/testdata \
+		\( -type f -name "*yaml" -name "*noninlined.yaml" \) | \
+		sed -n -e 's/\(.*\)_noninlined.yaml/\1/p' | \
+		xargs -n1 -I '{}' diff -q '{}.yaml' '{}_noninlined.yaml' | cut -f4 -d' ' | \
+		sort -z >/tmp/validate-generated-test-yamls_valid
+	@echo "=================================================================="
+	@echo "Noninlined and inlined testdata yamls, having same content."
+	@diff -a /tmp/validate-generated-test-yamls_total /tmp/validate-generated-test-yamls_valid
+	@echo "$@: OK"
+
+.PHONY: validate-testdata
 validate-testdata:
 	@cd tekton-catalog/pipeline-loops/ && make validate-testdata-python-sdk
 	@echo "$@: OK"
@@ -58,7 +74,7 @@ unit_test: venv ## Run compiler unit tests
 	@echo "$@: OK"
 
 .PHONY: ci_unit_test
-ci_unit_test: unit_test validate-testdata
+ci_unit_test: unit_test
 
 .PHONY: e2e_test
 e2e_test: venv ## Run compiler end-to-end tests (requires kubectl and tkn CLI)
