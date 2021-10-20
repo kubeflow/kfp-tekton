@@ -131,8 +131,8 @@ check_container_registry() {
   echo "=========================================================="
   echo "Checking registry current plan and quota"
   retry 3 3  ibmcloud cr login
-  ibmcloud cr plan || true
-  ibmcloud cr quota || true
+  retry 3 3  ibmcloud cr plan || true
+  retry 3 3  ibmcloud cr quota || true
   echo "If needed, discard older images using: ibmcloud cr image-rm"
   echo "Checking registry namespace: ${REGISTRY_NAMESPACE}"
   NS=$( ibmcloud cr namespaces | grep "${REGISTRY_NAMESPACE}" ||: )
@@ -144,7 +144,7 @@ check_container_registry() {
       echo "Registry namespace ${REGISTRY_NAMESPACE} found."
   fi
   echo -e "Existing images in registry"
-  ibmcloud cr images --restrict "${REGISTRY_NAMESPACE}/${IMAGE_NAME}"
+  retry 3 3 ibmcloud cr images --restrict "${REGISTRY_NAMESPACE}/${IMAGE_NAME}" || true
 }
 
 prune_images() {
@@ -156,13 +156,13 @@ prune_images() {
     if [[ "$COUNT" -lt "$KEEP" ]]; then
       echo "Keeping image digest: ${IMAGE_URL}"
     else
-      ibmcloud cr image-rm "${IMAGE_URL}"
+      retry 3 3 ibmcloud cr image-rm "${IMAGE_URL}"
     fi
     COUNT=$((COUNT+1))
   done <<< "$LIST"
 
   echo -e "Existing images in registry after clean up"
-  ibmcloud cr images --restrict "${REGISTRY_NAMESPACE}/${IMAGE_NAME}"
+  retry 3 3 ibmcloud cr images --restrict "${REGISTRY_NAMESPACE}/${IMAGE_NAME}" || true
 }
 
 build_image() {
@@ -178,7 +178,7 @@ build_image() {
   docker build "${BUILD_ARGS[@]}" -f "${DOCKER_FILE}" --tag "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" "${DOCKER_ROOT}"
   docker inspect "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
   docker push "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
-  ibmcloud cr images --restrict "${REGISTRY_NAMESPACE}/${IMAGE_NAME}"
+  retry 3 3 ibmcloud cr images --restrict "${REGISTRY_NAMESPACE}/${IMAGE_NAME}" || true
 }
 
 print_env_vars
