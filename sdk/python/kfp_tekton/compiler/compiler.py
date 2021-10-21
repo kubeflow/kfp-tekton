@@ -1285,7 +1285,7 @@ class TektonCompiler(Compiler):
     """Dump pipeline workflow into yaml spec and write out in the format specified by the user.
 
     Args:
-      workflow: Workflow spec of the pipline, dict.
+      workflow: Workflow spec of the pipeline, dict.
       package_path: file path to be written. If not specified, a yaml_text string
         will be returned.
     """
@@ -1333,7 +1333,22 @@ class TektonCompiler(Compiler):
           'The output path %s should end with one of the following formats: '
           '[.tar.gz, .tgz, .zip, .yaml, .yml]' % package_path)
 
-  def prepare_workflow(self, workflow: Dict[Text, Any]):
+  def prepare_workflow(self,
+                       pipeline_func: Callable,
+                       pipeline_name: Text = None,
+                       pipeline_description: Text = None,
+                       params_list: List[dsl.PipelineParam] = None,
+                       pipeline_conf: dsl.PipelineConf = None,
+                       ):
+    """Compile the given pipeline function and return a python Dict."""
+
+    workflow = self._create_workflow(
+      pipeline_func,
+      pipeline_name,
+      pipeline_description,
+      params_list,
+      pipeline_conf)
+
     # Separate loop workflow from the main workflow
     pipeline_loop_crs = []
     if self.loops_pipeline:
@@ -1373,14 +1388,14 @@ class TektonCompiler(Compiler):
                                  package_path: Text = None,
                                  ) -> None:
     """Compile the given pipeline function and dump it to specified file format."""
-    workflow = self._create_workflow(
-        pipeline_func,
-        pipeline_name,
-        pipeline_description,
-        params_list,
-        pipeline_conf)
 
-    pipeline_loop_crs, workflow = self.prepare_workflow(workflow)
+    pipeline_loop_crs, workflow = self.prepare_workflow(
+      pipeline_func,
+      pipeline_name,
+      pipeline_description,
+      params_list,
+      pipeline_conf)
+
     # create cr yaml for only those pipelineLoop cr which could not be converted to inlined spec.
     loop_package_annotations = []
     for i in range(len(pipeline_loop_crs)):
