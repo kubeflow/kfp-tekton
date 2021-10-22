@@ -59,9 +59,58 @@ from kfp_tekton.compiler import TektonCompiler
 TektonCompiler().compile(echo_pipeline, 'echo_pipeline.yaml')
 ```
 
-In addition, we can put the above python code into a python `__main__` function. Then, the compilation can be done in terminal with a simple python command.
+Place the above python code into a python `__main__` function. Then, the compilation can be done in terminal with a simple python command.
 ```shell
 python echo_pipeline.py
+```
+
+Additionally, if user wants to have a python dict of compiled output for further processing. Use `prepare_workflow` API.
+
+```python
+from kfp_tekton.compiler import TektonCompiler
+python_dict = TektonCompiler().prepare_workflow(echo_pipeline)
+
+pprint(python_dict)
+```
+
+This returns the tuple of `pipeline_loop_crs, workflow dict`. `pipeline_loop_crs` is a List of Dict (where each dict is 
+a custom resource for the `PipelineLoop` custom task ) and `workflow` is a dict containing the compiled tekton
+`PipelineRun`. By default, all except recursive pipelines, `pipelineloop` crs are embedded in workflow via 
+task inlining. So, for most pipelines first list will be empty.
+
+For example output of above snippet is:
+
+```
+([],
+ {'apiVersion': 'tekton.dev/v1beta1',
+  'kind': 'PipelineRun',
+  'metadata': {'annotations': {'pipelines.kubeflow.org/pipeline_spec': '{"description": '
+                                                                       '"echo '
+                                                                       'pipeline", '
+                                                                       '"name": '
+                                                                       '"echo"}',
+                               'sidecar.istio.io/inject': 'false',
+                               'tekton.dev/artifact_bucket': 'mlpipeline',
+                               'tekton.dev/artifact_endpoint': 'minio-service.kubeflow:9000',
+                               'tekton.dev/artifact_endpoint_scheme': 'http://',
+                               'tekton.dev/artifact_items': '{"echo": []}',
+                               'tekton.dev/input_artifacts': '{}',
+                               'tekton.dev/output_artifacts': '{}'},
+               'name': 'echo'},
+  'spec': {'pipelineSpec': {'tasks': [{'name': 'echo',
+                                       'taskSpec': {'metadata': {'annotations': {'tekton.dev/template': ''},
+                                                                 'labels': {'pipelines.kubeflow.org/cache_enabled': 'true',
+                                                                            'pipelines.kubeflow.org/generation': '',
+                                                                            'pipelines.kubeflow.org/pipelinename': ''}},
+                                                    'steps': [{'args': ['echo '
+                                                                        '"Got '
+                                                                        'scheduled"'],
+                                                               'command': ['sh',
+                                                                           '-c'],
+                                                               'image': 'busybox',
+                                                               'name': 'main'}]},
+                                       'timeout': '0s'}]},
+           'timeout': '0s'}})
 ```
 
 ### 2. Compile Pipelines Using the `dsl-compile-tekton` Bash Command Line Tool
