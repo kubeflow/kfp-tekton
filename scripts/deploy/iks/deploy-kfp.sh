@@ -136,6 +136,11 @@ fi
 # No need to build as long as deployed with "kubectl apply -k"
 pushd "$KUSTOMIZE_DIR" > /dev/null
 
+yq eval -i '.spec.template.spec.volumes[0]|=.emptyDir={}|del(.spec.template.spec.volumes[0].persistentVolumeClaim)' \
+  ../../third-party/mysql/base/mysql-deployment.yaml
+yq eval -i '(.spec.template.spec.volumes[0]|=.emptyDir={}|del(.spec.template.spec.volumes[0].persistentVolumeClaim)'   \
+  ../..//third-party/minio/base/minio-deployment.yaml
+
 kustomize edit set image "$API_SERVER_IMAGE=$NEW_API_SERVER_IMAGE"
 kustomize edit set image "$METADATA_WRITER_IMAGE=$NEW_METADATA_WRITER_IMAGE"
 kustomize edit set image "$PERSISTENCEAGENT_IMAGE=$NEW_PERSISTENCEAGENT_IMAGE"
