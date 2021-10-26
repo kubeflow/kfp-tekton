@@ -42,7 +42,7 @@ def trusted_ai(
         "apiVersion": "batch/v1",
         "kind": "Job",
         "metadata": {
-            "name": "trusted-ai-train-job",
+            "name": "trusted-ai-train-job-{{workflow.name}}",
             "namespace": namespace
         },
         "spec": {
