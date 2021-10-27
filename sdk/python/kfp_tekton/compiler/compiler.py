@@ -713,8 +713,14 @@ class TektonCompiler(Compiler):
                         return True
               return False
             if is_custom_task_output(condition_operand1) or is_custom_task_output(condition_operand2):
-              map_cel_vars = lambda a: '$(tasks.%s.results.%s)' % (sanitize_k8s_name(a['value'].split('.')[-1]),
-                sanitize_k8s_name(a['output_name'])) if a.get('type', '') == dsl.PipelineParam else a.get('value', '')
+              def map_cel_vars(a):
+                if a.get('type', '') == dsl.PipelineParam:
+                  op_name = sanitize_k8s_name(a['op_name'])
+                  output_name = sanitize_k8s_name(a['output_name'])
+                  return '$(tasks.%s.results.%s)' % (op_name, output_name)
+                else:
+                  return a.get('value', '')
+
               condition_refs[template['metadata']['name']] = [
                   {
                     'input': map_cel_vars(condition_operand1),
