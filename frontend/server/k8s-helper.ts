@@ -240,6 +240,7 @@ export function waitForTensorboardInstance(
   });
 }
 
+// Adjusted for use with Tekton Backend
 export function getPodLogs(podName: string, podNamespace?: string): Promise<string> {
   podNamespace = podNamespace || serverNamespace;
   if (!podNamespace) {

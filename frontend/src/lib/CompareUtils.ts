@@ -82,6 +82,7 @@ export default class CompareUtils {
     };
   }
 
+  // Adjusted for use with Tekton Backend
   /**
    * For a given run and its runtime workflow, a CompareTableProps object is returned containing:
    * xLabels: an array of unique meeric names produced during the run's execution

@@ -84,6 +84,7 @@ export function loadConfigs(argv: string[], env: ProcessEnv): UIConfigs {
     ARGO_ARCHIVE_ARTIFACTORY = 'minio',
     /** Bucket to retrive logs from */
     ARGO_ARCHIVE_BUCKETNAME = 'mlpipeline',
+    // Adjusted for use with Tekton Backend
     /** Prefix to logs. */
     ARGO_ARCHIVE_PREFIX = 'artifacts',
     /** Should use server API for log streaming? */

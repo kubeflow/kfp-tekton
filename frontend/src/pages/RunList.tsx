@@ -83,6 +83,7 @@ interface RunListState {
   runs: DisplayRun[];
 }
 
+// Adjusted for use with Tekton Backend
 class RunList extends React.PureComponent<RunListProps, RunListState> {
   private _tableRef = React.createRef<CustomTable>();
 

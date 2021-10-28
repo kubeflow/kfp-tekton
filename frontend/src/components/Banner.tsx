@@ -27,6 +27,7 @@ import { classes, stylesheet } from 'typestyle';
 
 import { color, commonCss, spacing } from '../Css';
 
+// Adjusted for use with Tekton Backend
 export type Mode = 'error' | 'warning' | 'info';
 
 export const css = stylesheet({
@@ -78,6 +79,7 @@ interface BannerState {
   dialogOpen: boolean;
 }
 
+// Adjusted for use with Tekton Backend
 class Banner extends React.Component<BannerProps, BannerState> {
   constructor(props: any) {
     super(props);

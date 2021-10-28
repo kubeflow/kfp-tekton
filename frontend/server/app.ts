@@ -89,6 +89,7 @@ export class UIServer {
   }
 }
 
+// Adjusted for use with Tekton Backend
 function createUIServer(options: UIConfigs) {
   const currDir = path.resolve(__dirname);
   const basePath = options.server.basePath;

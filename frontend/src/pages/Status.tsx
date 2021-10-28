@@ -30,6 +30,7 @@ import { logger, formatDateString } from '../lib/Utils';
 import { NodePhase, checkIfTerminated } from '../lib/StatusUtils';
 import { Execution } from 'src/third_party/mlmd/generated/ml_metadata/proto/metadata_store_pb';
 
+// Adjusted for use with Tekton Backend
 export function statusToIcon(
   status?: NodePhase,
   startDate?: Date | string,

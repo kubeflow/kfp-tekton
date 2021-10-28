@@ -27,6 +27,7 @@ export const statusBgColors = {
   warning: '#fef7f0',
 };
 
+// Adjusted for use with Tekton Backend
 export enum NodePhase {
   ERROR = 'Error',
   FAILED = 'Failed',
@@ -54,6 +55,7 @@ export enum NodePhase {
   OMITTED = 'Omitted',
 }
 
+// Adjusted for use with Tekton Backend
 export function hasFinished(status?: NodePhase): boolean {
   switch (status) {
     case NodePhase.COMPLETED: // Fall through
@@ -76,6 +78,7 @@ export function hasFinished(status?: NodePhase): boolean {
   }
 }
 
+// Adjusted for use with Tekton Backend
 export function statusToBgColor(status?: NodePhase, nodeMessage?: string): string {
   status = checkIfTerminated(status, nodeMessage);
   switch (status) {
@@ -134,6 +137,7 @@ function wasNodeCached(node: NodeStatus): boolean {
     : artifacts.some(artifact => artifact.s3 && !artifact.s3.key.includes(node.id));
 }
 
+// Adjusted for use with Tekton Backend
 export function statusToPhase(nodeStatus: string | undefined): NodePhase {
   if (!nodeStatus) return 'Unknown' as NodePhase;
   else if (nodeStatus === 'Completed' || nodeStatus === 'EvaluationSuccess')
