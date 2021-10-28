@@ -20,7 +20,7 @@ import (
 // The specific method called depends on the component's type.
 type Visitor interface {
 	Container(
-		name string, nameInDAG string, parentDAG string,
+		name string, taskInfoName string, parentDAG string,
 		task *pipelinespec.PipelineTaskSpec,
 		component *pipelinespec.ComponentSpec,
 		container *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec,
@@ -32,7 +32,7 @@ type Visitor interface {
 		importer *pipelinespec.PipelineDeploymentConfig_ImporterSpec,
 	) error
 	Resolver(name string, component *pipelinespec.ComponentSpec, resolver *pipelinespec.PipelineDeploymentConfig_ResolverSpec) error
-	DAG(name string, component *pipelinespec.ComponentSpec, dag *pipelinespec.DagSpec) error
+	DAG(name string, component *pipelinespec.ComponentSpec, dag *pipelinespec.DagSpec, deps []string) error
 }
 
 const (
@@ -61,10 +61,11 @@ func Accept(job *pipelinespec.PipelineJob, v Visitor) error {
 		return err
 	}
 	state := &pipelineDFS{
-		spec:    spec,
-		deploy:  deploy,
-		visitor: v,
-		visited: make(map[string]bool),
+		spec:     spec,
+		deploy:   deploy,
+		visitor:  v,
+		visited:  make(map[string]bool),
+		dagStack: make([]*pipelinespec.DagSpec, 0),
 	}
 
 	return state.dfs(rootComponentName, rootComponentName, "", nil, spec.GetRoot())
@@ -75,7 +76,8 @@ type pipelineDFS struct {
 	deploy  *pipelinespec.PipelineDeploymentConfig
 	visitor Visitor
 	// Records which DAG components are visited, map key is component name.
-	visited map[string]bool
+	visited  map[string]bool
+	dagStack []*pipelinespec.DagSpec
 }
 
 func (state *pipelineDFS) dfs(
@@ -119,7 +121,7 @@ func (state *pipelineDFS) dfs(
 	if dag == nil { // impl can only be executor or dag
 		return componentError(fmt.Errorf("unknown component implementation: %s", component))
 	}
-
+	state.dagStack = append(state.dagStack, dag)
 	// move this from DAG() to here
 	err := addImplicitDependencies(dag)
 	if err != nil {
@@ -149,6 +151,9 @@ func (state *pipelineDFS) dfs(
 		if !ok {
 			return componentError(fmt.Errorf("cannot find component ref name=%q", refName))
 		}
+		//check the dependencies
+		state.checkDependencies(task, dag)
+
 		err := state.dfs(refName, key, name, task, subComponent)
 		if err != nil {
 			return err
@@ -156,7 +161,35 @@ func (state *pipelineDFS) dfs(
 	}
 	// process tasks before DAG component, so that all sub-tasks are already
 	// ready by the time the DAG component is visited.
-	return state.visitor.DAG(name, component, dag)
+	if name != "root" {
+		// non-root DAG also has dependencies
+		state.checkDependencies(task, state.dagStack[len(state.dagStack)-1])
+	}
+	rev := state.visitor.DAG(name, component, dag, task.GetDependentTasks())
+	state.dagStack = state.dagStack[:len(state.dagStack)-1]
+	return rev
+}
+
+// if the dependency is a component with DAG, then replace the dependency with DAG's leaf nodes
+func (state *pipelineDFS) checkDependencies(task *pipelinespec.PipelineTaskSpec, dag *pipelinespec.DagSpec) {
+	tasks := task.GetDependentTasks()
+	newDeps := make([]string, 0)
+	for _, task := range tasks {
+		taskSpec, ok := dag.GetTasks()[task]
+		if ok {
+			comp, ok := state.spec.Components[taskSpec.GetComponentRef().GetName()]
+			if ok {
+				depDag := comp.GetDag()
+				//depends on a DAG
+				if depDag != nil {
+					newDeps = append(newDeps, getLeafNodes(depDag)...)
+					continue
+				}
+			}
+		}
+		newDeps = append(newDeps, task)
+	}
+	task.DependentTasks = newDeps
 }
 
 func getDeploymentConfig(spec *pipelinespec.PipelineSpec) (*pipelinespec.PipelineDeploymentConfig, error) {

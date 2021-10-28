@@ -15,7 +15,7 @@ const (
 )
 
 func (c *pipelineCompiler) Container(
-	name string, nameInDAG string, parentDAG string,
+	name string, taskInfoName string, parentDAG string,
 	task *pipelinespec.PipelineTaskSpec,
 	component *pipelinespec.ComponentSpec,
 	container *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec,
@@ -34,7 +34,7 @@ func (c *pipelineCompiler) Container(
 		return fmt.Errorf("workflowCompiler.Container: marlshaling pipeline container spec to proto JSON failed: %w", err)
 	}
 	dagDriverName := getDAGDriverTaskName(parentDAG)
-	containerDriverName := getContainerDriverTaskName(nameInDAG)
+	containerDriverName := getContainerDriverTaskName(taskInfoName)
 	// Need dag driver's output for container driver
 	dagDriverOutput := dagDriverOutputs{
 		contextID:   taskOutputParameter(dagDriverName, paramContextID),
@@ -123,7 +123,7 @@ func (c *pipelineCompiler) Container(
 	// create container driver in dag while iterating through the tasks
 	// name collisions?
 	c.addPipelineTask(&pipeline.PipelineTask{
-		Name:     nameInDAG,
+		Name:     taskInfoName,
 		TaskSpec: t,
 		RunAfter: []string{containerDriverName},
 		WhenExpressions: pipeline.WhenExpressions{

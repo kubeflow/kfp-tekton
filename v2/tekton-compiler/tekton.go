@@ -111,6 +111,7 @@ type pipelineCompiler struct {
 	driverImage   string
 	launcherImage string
 	uid           string
+	dagDeps       map[string][]string
 	// currentDagSpec *pipelinespec.DagSpec
 }
 

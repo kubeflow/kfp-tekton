@@ -8,18 +8,17 @@ import (
 	pipeline "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
-func (c *pipelineCompiler) DAG(name string, componentSpec *pipelinespec.ComponentSpec, dagSpec *pipelinespec.DagSpec) error {
-	if name != "root" {
-		return fmt.Errorf("SubDAG not implemented yet")
-	}
-
+func (c *pipelineCompiler) DAG(name string, componentSpec *pipelinespec.ComponentSpec, dagSpec *pipelinespec.DagSpec, deps []string) error {
+	// if name != "root" {
+	// 	return fmt.Errorf("SubDAG not implemented yet")
+	// }
 	task := &pipelinespec.PipelineTaskSpec{}
 	var runtimeConfig *pipelinespec.PipelineJob_RuntimeConfig
 	if name == "root" {
 		// runtime config is input to the entire pipeline (root DAG)
 		runtimeConfig = c.job.GetRuntimeConfig()
 	}
-	driverTask, err := c.dagDriverTask(getDAGDriverTaskName(name), componentSpec, task, runtimeConfig)
+	driverTask, err := c.dagDriverTask(getDAGDriverTaskName(name), componentSpec, task, runtimeConfig, deps)
 	if err != nil {
 		return err
 	}
@@ -38,6 +37,7 @@ func (c *pipelineCompiler) dagDriverTask(
 	component *pipelinespec.ComponentSpec,
 	task *pipelinespec.PipelineTaskSpec,
 	runtimeConfig *pipelinespec.PipelineJob_RuntimeConfig,
+	deps []string,
 ) (*pipeline.PipelineTask, error) {
 	if component == nil {
 		return nil, fmt.Errorf("dagDriverTask: component must be non-nil")
@@ -103,6 +103,9 @@ func (c *pipelineCompiler) dagDriverTask(
 				Value: pipeline.ArrayOrString{Type: "string", StringVal: paramContextID},
 			},
 		},
+	}
+	if len(deps) > 0 {
+		t.RunAfter = deps
 	}
 	return t, nil
 }
@@ -174,6 +177,7 @@ func (c *pipelineCompiler) dagDriverTask(
 // 	return driver.Name
 // }
 
+//add implicite dependencies for all tasks inside a DAG
 func addImplicitDependencies(dagSpec *pipelinespec.DagSpec) error {
 	for _, task := range dagSpec.GetTasks() {
 		wrap := func(err error) error {
@@ -224,4 +228,22 @@ func addImplicitDependencies(dagSpec *pipelinespec.DagSpec) error {
 		}
 	}
 	return nil
+}
+
+func getLeafNodes(dagSpec *pipelinespec.DagSpec) []string {
+	leaves := make(map[string]int)
+	tasks := dagSpec.GetTasks()
+	alldeps := make([]string, 0)
+	for _, task := range tasks {
+		leaves[task.GetTaskInfo().GetName()] = 0
+		alldeps = append(alldeps, task.GetDependentTasks()...)
+	}
+	for _, dep := range alldeps {
+		delete(leaves, dep)
+	}
+	rev := make([]string, 0, len(leaves))
+	for dep := range leaves {
+		rev = append(rev, dep)
+	}
+	return rev
 }
