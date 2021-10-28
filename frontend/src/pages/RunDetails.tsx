@@ -168,6 +168,7 @@ export const css = stylesheet({
   },
 });
 
+// Adjusted for use with Tekton Backend
 class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
   public state: RunDetailsState = {
     allArtifactConfigs: [],

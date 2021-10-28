@@ -29,6 +29,7 @@ export function parseTaskDisplayName(taskSpec?: any): string | undefined {
   return taskDisplayName || componentDisplayName;
 }
 
+// Adjusted for use with Tekton Backend
 export function parseTaskDisplayNameByNodeId(nodeId: string, workflow?: any): string {
   let node: any;
   for (const taskRunId of Object.getOwnPropertyNames(workflow.status.taskRuns)) {

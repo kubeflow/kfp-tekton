@@ -54,6 +54,7 @@ interface PipelineDetailsState {
   versions: ApiPipelineVersion[];
 }
 
+// Adjusted for use with Tekton Backend
 class PipelineDetails extends Page<{}, PipelineDetailsState> {
   constructor(props: any) {
     super(props);

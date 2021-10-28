@@ -104,6 +104,7 @@ function getDuration(start: Date, end: Date): string {
   return `${sign}${hours}:${minutes}:${seconds}`;
 }
 
+// Adjusted for use with Tekton Backend
 export function getRunDuration(run?: any): string {
   if (!run || !run.created_at || !run.finished_at || !hasFinished(run.status as NodePhase)) {
     return '-';
@@ -115,6 +116,7 @@ export function getRunDuration(run?: any): string {
   return getDuration(new Date(run.created_at), new Date(run.finished_at));
 }
 
+// Adjusted for use with Tekton Backend
 export function getRunDurationFromWorkflow(workflow?: any): string {
   if (
     !workflow ||

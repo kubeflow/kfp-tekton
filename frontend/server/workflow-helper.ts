@@ -53,6 +53,7 @@ export interface SecretSelector {
   name: string;
 }
 
+// Adjusted for use with Tekton Backend
 /**
  * Compose a pod logs stream handler - i.e. a stream handler returns a stream
  * containing the pod logs.
@@ -77,6 +78,7 @@ export function composePodLogsStreamHandler<T = Stream>(
   };
 }
 
+// Adjusted for use with Tekton Backend
 /**
  * Returns a stream containing the pod logs using kubernetes api.
  * @param podName name of the pod.
@@ -105,6 +107,7 @@ export const getPodLogsStreamFromWorkflow = toGetPodLogsStream(
   getPodLogsMinioRequestConfigfromWorkflow,
 );
 
+// Adjusted for use with Tekton Backend
 /**
  * Returns a function that retrieves the pod log streams using the provided
  * getMinioRequestConfig function (a MinioRequestConfig object specifies the
@@ -126,6 +129,7 @@ export function toGetPodLogsStream(
   };
 }
 
+// Adjusted for use with Tekton Backend
 /**
  * Returns a MinioRequestConfig with the provided minio options (a MinioRequestConfig
  * object contains the artifact bucket and keys, with the corresponding minio

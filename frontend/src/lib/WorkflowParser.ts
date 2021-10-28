@@ -45,6 +45,7 @@ export interface StoragePath {
   key: string;
 }
 
+// Adjusted for use with Tekton Backend
 export default class WorkflowParser {
   public static createRuntimeGraph(
     workflow: any,

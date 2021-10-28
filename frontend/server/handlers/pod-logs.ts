@@ -22,6 +22,7 @@ import {
 } from '../workflow-helper';
 import { ArgoConfigs, MinioConfigs, AWSConfigs } from '../configs';
 
+// Adjusted for use with Tekton Backend
 /**
  * Returns a handler which attempts to retrieve the logs for the specific pod,
  * in the following order:

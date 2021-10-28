@@ -81,6 +81,7 @@ export function _populateInfoFromTask(info: SelectedNodeInfo, task?: any): Selec
   return info;
 }
 
+// Adjusted for use with Tekton Backend
 export function createGraph(workflow: any): dagre.graphlib.Graph {
   const graph = new dagre.graphlib.Graph();
   graph.setGraph({});

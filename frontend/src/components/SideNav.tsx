@@ -203,6 +203,7 @@ interface SideNavState {
   manualCollapseState: boolean;
 }
 
+// Adjusted for use with Tekton Backend
 export class SideNav extends React.Component<SideNavInternalProps, SideNavState> {
   private _isMounted = true;
   private readonly _AUTO_COLLAPSE_WIDTH = 800;

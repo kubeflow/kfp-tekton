@@ -95,6 +95,7 @@ export class Apis {
     }
   }
 
+  // Adjusted for use with Tekton Backend
   /**
    * Get pod logs
    */
