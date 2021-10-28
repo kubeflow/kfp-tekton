@@ -67,7 +67,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 6. (OpenShift only) If you are running the standalone KFP-Tekton on OpenShift, apply the necessary security context constraint below
    ```shell
-   oc apply -f manifests/kustomize/third-party/openshift/standalone
+   oc apply -k manifests/kustomize/third-party/openshift/standalone
    ```
 
 ## Kubeflow installation including Kubeflow Pipelines with Tekton Backend
