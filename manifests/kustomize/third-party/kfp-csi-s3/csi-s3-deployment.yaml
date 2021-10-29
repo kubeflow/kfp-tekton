@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: csi-s3
+  name: kfp-csi-s3
   labels:
     app.kubernetes.io/name: "kubeflow"
   namespace: kubeflow
@@ -52,7 +52,7 @@ metadata:
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
-  name: csi-s3
+  name: kfp-csi-s3
   labels:
     app.kubernetes.io/name: "kubeflow"
 provisioner: ch.ctrox.csi.s3-driver
@@ -78,7 +78,7 @@ parameters:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-s3
+  name: kfp-csi-s3
   labels:
     app.kubernetes.io/name: "kubeflow"
   namespace: kubeflow
@@ -178,17 +178,17 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-s3
+  name: kfp-csi-s3
   labels:
     app.kubernetes.io/name: "kubeflow"
   namespace: kubeflow
 subjects:
   - kind: ServiceAccount
-    name: csi-s3
+    name: kfp-csi-s3
     namespace: kubeflow
 roleRef:
   kind: ClusterRole
-  name: csi-s3
+  name: kfp-csi-s3
   apiGroup: rbac.authorization.k8s.io
 ---
 # Source: dlf-chart/charts/csi-sidecars-rbac/templates/attacher-rbac.yaml
@@ -353,21 +353,21 @@ spec:
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: csi-s3
+  name: kfp-csi-s3
   labels:
     app.kubernetes.io/name: "kubeflow"
   namespace: kubeflow
 spec:
   selector:
     matchLabels:
-      app: csi-s3
+      app: kfp-csi-s3
   template:
     metadata:
       labels:
         app.kubernetes.io/name: "kubeflow"
-        app: csi-s3
+        app: kfp-csi-s3
     spec:
-      serviceAccountName: csi-s3
+      serviceAccountName: kfp-csi-s3
       containers:
         - name: driver-registrar
           image: "quay.io/k8scsi/csi-node-driver-registrar:v1.2.0"
@@ -375,7 +375,7 @@ spec:
           args:
             - --v=5
             - --csi-address=/csi/csi.sock
-            - --kubelet-registration-path=/var/data/kubelet/plugins/csi-s3/csi.sock
+            - --kubelet-registration-path=/var/data/kubelet/plugins/kfp-csi-s3/csi.sock
           securityContext:
             # This is necessary only for systems with SELinux, where
             # non-privileged sidecar containers cannot access unix domain socket
@@ -392,7 +392,7 @@ spec:
               name: socket-dir
             - mountPath: /registration
               name: registration-dir
-        - name: csi-s3
+        - name: kfp-csi-s3
           image: "quay.io/datashim/csi-s3:latest-amd64"
           imagePullPolicy: Always
           args:
@@ -411,19 +411,6 @@ spec:
               value: "off"
           securityContext:
             privileged: true
-          #          ports:
-          #            - containerPort: 9898
-          #              name: healthz
-          #              protocol: TCP
-          #          TODO make it configurable and build it for ppc64le
-          #          livenessProbe:
-          #            failureThreshold: 5
-          #            httpGet:
-          #              path: /healthz
-          #              port: healthz
-          #            initialDelaySeconds: 10
-          #            timeoutSeconds: 3
-          #            periodSeconds: 2
           volumeMounts:
             - mountPath: /csi
               name: socket-dir
@@ -432,18 +419,9 @@ spec:
               name: mountpoint-dir
             - mountPath: /dev
               name: dev-dir
-          ##TODO make it configurable and build it for ppc64le
-      #        - name: liveness-probe
-      #          volumeMounts:
-      #            - mountPath: /csi
-      #              name: socket-dir
-      #          image: quay.io/k8scsi/livenessprobe:v1.1.0
-      #          args:
-      #            - --csi-address=/csi/csi.sock
-      #            - --health-port=9898
       volumes:
         - hostPath:
-            path: /var/data/kubelet/plugins/csi-s3
+            path: /var/data/kubelet/plugins/kfp-csi-s3
             type: DirectoryOrCreate
           name: socket-dir
         - hostPath:
@@ -495,10 +473,9 @@ spec:
           volumeMounts:
           - mountPath: /csi
             name: socket-dir
-
       volumes:
         - hostPath:
-            path: /var/data/kubelet/plugins/csi-s3
+            path: /var/data/kubelet/plugins/kfp-csi-s3
             type: DirectoryOrCreate
           name: socket-dir
 ---
@@ -540,7 +517,7 @@ spec:
               name: socket-dir
       volumes:
         - hostPath:
-            path: /var/data/kubelet/plugins/csi-s3
+            path: /var/data/kubelet/plugins/kfp-csi-s3
             type: DirectoryOrCreate
           name: socket-dir
 ---

@@ -489,7 +489,7 @@ spec:
   - name: data-passing-pipeline
     volumeClaimTemplate:
       spec:
-        storageClassName: csi-s3
+        storageClassName: kfp-csi-s3
         accessModes:
         - ReadWriteMany
         resources:
