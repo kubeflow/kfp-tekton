@@ -146,13 +146,18 @@ in the same directory:
 When [big data files](/samples/big_data_passing/big_data_passing_description.ipynb)
 are defined in KFP. Tekton will create a workspace to share these big data files
 among tasks that run in the same pipeline. By default, the workspace is a
-Read Write Many PVC with 2Gi storage. But you can change these configuration
-using the environment variables below:
+Read Write Many PVC with 2Gi storage using the kfp-csi-s3 storage class to push artifacts to S3.
+But you can change these configuration using the environment variables below:
 
 ```shell
 export DEFAULT_ACCESSMODES=ReadWriteMany
 export DEFAULT_STORAGE_SIZE=2Gi
+export DEFAULT_STORAGE_CLASS=kfp-csi-s3
 ```
+
+To pass big data using cloud provider volumes, it's recommended to use the
+[volume_based_data_passing_method](/sdk/python/tests/compiler/testdata/artifact_passing_using_volume.py)
+for both Tekton and Argo runtime.
 
 
 ## Running the Compiled Pipeline on a Tekton Cluster

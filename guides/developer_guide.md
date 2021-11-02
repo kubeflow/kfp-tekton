@@ -39,6 +39,7 @@ If you would like to do it in development mode, or if you already have a Kubeflo
     git clone https://github.com/kubeflow/kfp-tekton.git
     cd kfp-tekton
     ```
+4. `kubectl` client version `v1.20.0`+ to support the new kustomize plugins.
 
 ## Install Tekton KFP with pre-built images
 1. Remove the old version of KFP from a previous Kubeflow deployment and webhooks if it exists on your cluster.

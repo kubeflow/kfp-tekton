@@ -290,6 +290,7 @@ spec:
   - name: create-component-from-function
     volumeClaimTemplate:
       spec:
+        storageClassName: kfp-csi-s3
         accessModes:
         - ReadWriteMany
         resources:

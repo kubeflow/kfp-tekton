@@ -929,6 +929,7 @@ spec:
   - name: big-data-passing
     volumeClaimTemplate:
       spec:
+        storageClassName: kfp-csi-s3
         accessModes:
         - ReadWriteMany
         resources:
