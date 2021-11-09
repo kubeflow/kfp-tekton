@@ -815,15 +815,17 @@ class TektonCompiler(Compiler):
         if task_ref.get('taskSpec', ''):
           task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
           task_labels = template['metadata'].get('labels', {})
-          task_ref['taskSpec']['metadata']['labels'] = task_labels
           task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
           task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
           cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
           task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
 
           task_annotations = template['metadata'].get('annotations', {})
-          task_ref['taskSpec']['metadata']['annotations'] = task_annotations
           task_annotations['tekton.dev/template'] = task_annotations.get('tekton.dev/template', '')
+
+          # Updata default metadata at the end.
+          task_ref['taskSpec']['metadata']['labels'] = task_labels
+          task_ref['taskSpec']['metadata']['annotations'] = task_annotations
 
         task_refs.append(task_ref)
 
