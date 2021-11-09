@@ -434,7 +434,7 @@ export default class WorkflowParser {
       workflow.spec.pipelineSpec.tasks.forEach((task: any) => {
         if (
           parentTask === task.name &&
-          task.taskSpec.metadata.labels['pipelines.kubeflow.org/cache_enabled'] === 'true' &&
+          ((((task.taskSpec||{}).metadata||{}).labels||{})['pipelines.kubeflow.org/cache_enabled']||'false') === 'true' &&
           cachedPipelineRun
         )
           pipelineRunID = cachedPipelineRun;
@@ -472,7 +472,7 @@ export default class WorkflowParser {
       workflow.spec.pipelineSpec.tasks.forEach((task: any) => {
         if (
           taskName === task.name &&
-          task.taskSpec.metadata.labels['pipelines.kubeflow.org/cache_enabled'] === 'true' &&
+          ((((task.taskSpec||{}).metadata||{}).labels||{})['pipelines.kubeflow.org/cache_enabled']||'false') === 'true' &&
           cachedPipelineRun
         )
           pipelineRunID = cachedPipelineRun;
