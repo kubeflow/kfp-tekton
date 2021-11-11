@@ -22,7 +22,6 @@ import (
 
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	defaultconfig "github.com/tektoncd/pipeline/pkg/apis/config"
-	"github.com/tektoncd/pipeline/pkg/contexts"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -66,7 +65,7 @@ func newDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher
 
 		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
 		func(ctx context.Context) context.Context {
-			return contexts.WithUpgradeViaDefaulting(store.ToContext(ctx))
+			return store.ToContext(ctx)
 		},
 
 		// Whether to disallow unknown fields.
@@ -91,7 +90,7 @@ func newValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 
 		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
 		func(ctx context.Context) context.Context {
-			return contexts.WithUpgradeViaDefaulting(store.ToContext(ctx))
+			return store.ToContext(ctx)
 		},
 
 		// Whether to disallow unknown fields.
