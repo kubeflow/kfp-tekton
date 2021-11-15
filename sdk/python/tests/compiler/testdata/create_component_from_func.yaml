@@ -32,10 +32,10 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"get-subdirectory": [["Subdir", "$(workspaces.get-subdirectory.path)/artifacts/$(context.pipelineRun.name)/get-subdirectory/Subdir"]],
+    tekton.dev/artifact_items: '{"get-subdirectory": [["Subdir", "$(workspaces.get-subdirectory.path)/artifacts/$(context.pipelineRun.uid)/$(context.pipelineRun.name)/get-subdirectory/Subdir"]],
       "list-items": [["Items", "$(results.items.path)"]], "list-items-2": [["Items",
       "$(results.items.path)"]], "produce-dir-with-files-python-op": [["output_dir",
-      "$(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(context.pipelineRun.name)/produce-dir-with-files-python-op/output_dir"]]}'
+      "$(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(context.pipelineRun.uid)/$(context.pipelineRun.name)/produce-dir-with-files-python-op/output_dir"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"name": "create-component-from-function"}'
 spec:
@@ -49,7 +49,7 @@ spec:
           - --num-files
           - '15'
           - --output-dir
-          - $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir
+          - $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir
           command:
           - sh
           - -ec
@@ -85,11 +85,11 @@ spec:
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.output-dir.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir $(results.output-dir.path)
+              cp $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir $(results.output-dir.path)
             fi
           onError: continue
         results:
@@ -126,6 +126,7 @@ spec:
         - name: produce-dir-with-files-python-op
         params:
         - name: pipelineRun-name
+        - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: produce-dir-with-files-python-op
@@ -133,6 +134,8 @@ spec:
       params:
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)
+      - name: pipelineRun-uid
+        value: $(context.pipelineRun.uid)
     - name: get-subdirectory
       taskSpec:
         steps:
@@ -144,9 +147,9 @@ spec:
           - |
             mkdir -p "$(dirname "$2")"
             cp -r "$0/$1" "$2"
-          - $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir
+          - $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir
           - subdir
-          - $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-name)/get-subdirectory/Subdir
+          - $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/get-subdirectory/Subdir
           image: alpine
         - image: busybox
           name: copy-results-artifacts
@@ -154,11 +157,11 @@ spec:
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-name)/get-subdirectory/Subdir | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/get-subdirectory/Subdir | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.subdir.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-name)/get-subdirectory/Subdir $(results.subdir.path)
+              cp $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/get-subdirectory/Subdir $(results.subdir.path)
             fi
           onError: continue
         results:
@@ -182,6 +185,7 @@ spec:
         - name: get-subdirectory
         params:
         - name: pipelineRun-name
+        - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: get-subdirectory
@@ -191,6 +195,8 @@ spec:
       params:
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)
+      - name: pipelineRun-uid
+        value: $(context.pipelineRun.uid)
     - name: list-items
       taskSpec:
         steps:
@@ -203,7 +209,7 @@ spec:
             mkdir -p "$(dirname "$1")"
             #ls --almost-all --recursive "$0" > "$1"
             ls -A -R "$0" > "$1"
-          - $(workspaces.list-items.path)/artifacts/$(params.pipelineRun-name)/get-subdirectory/Subdir
+          - $(workspaces.list-items.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/get-subdirectory/Subdir
           - $(results.items.path)
           image: alpine
         results:
@@ -226,6 +232,7 @@ spec:
         - name: list-items
         params:
         - name: pipelineRun-name
+        - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: list-items
@@ -235,6 +242,8 @@ spec:
       params:
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)
+      - name: pipelineRun-uid
+        value: $(context.pipelineRun.uid)
     - name: list-items-2
       taskSpec:
         steps:
@@ -247,8 +256,8 @@ spec:
             mkdir -p "$(dirname "$2")"
             ls -A -R "$0" > "$2"
             ls -A -R "$1" >> "$2"
-          - $(workspaces.list-items-2.path)/artifacts/$(params.pipelineRun-name)/get-subdirectory/Subdir
-          - $(workspaces.list-items-2.path)/artifacts/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir
+          - $(workspaces.list-items-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/get-subdirectory/Subdir
+          - $(workspaces.list-items-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/produce-dir-with-files-python-op/output_dir
           - $(results.items.path)
           image: alpine
         results:
@@ -273,6 +282,7 @@ spec:
         - name: list-items-2
         params:
         - name: pipelineRun-name
+        - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: list-items-2
@@ -283,6 +293,8 @@ spec:
       params:
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)
+      - name: pipelineRun-uid
+        value: $(context.pipelineRun.uid)
     workspaces:
     - name: create-component-from-function
   timeout: 0s

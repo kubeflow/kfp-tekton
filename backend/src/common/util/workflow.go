@@ -243,6 +243,7 @@ func (w *Workflow) SetAnnotations(key string, value string) {
 
 func (w *Workflow) ReplaceUID(id string) error {
 	newWorkflowString := strings.Replace(w.ToStringForStore(), "{{workflow.uid}}", id, -1)
+	newWorkflowString = strings.Replace(newWorkflowString, "$(context.pipelineRun.uid)", id, -1)
 	var workflow *workflowapi.PipelineRun
 	if err := json.Unmarshal([]byte(newWorkflowString), &workflow); err != nil {
 		return NewInternalServerError(err,

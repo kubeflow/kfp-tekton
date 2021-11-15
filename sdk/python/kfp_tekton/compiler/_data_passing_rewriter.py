@@ -23,6 +23,8 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path, _prepend_steps
 from os import environ as env
 
+BIG_DATA_MIDPATH = "artifacts/$(context.pipelineRun.uid)/$(context.pipelineRun.name)"
+
 
 def fix_big_data_passing(workflow: dict) -> dict:
     """
@@ -489,8 +491,8 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             # $(workspaces.task_name.path)/task_name-task_output.get('name')
             placeholder = '$(results.%s.path)' % (sanitize_k8s_name(
                 task_output.get('name')))
-            workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                task_name, task_name, task_output.get('name'))
+            workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
+                task_name, BIG_DATA_MIDPATH, task_name, task_output.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
                 task.get("taskSpec", {}), placeholder, workspaces_parameter)
             artifact_items = pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items']
@@ -525,11 +527,11 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             # If the param name is constructed with task_name-param_name,
             # use the current task_name as the path prefix
             if task_param_task_name:
-                workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                    task_name, task_param_task_name, task_param_param_name)
+                workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
+                    task_name, BIG_DATA_MIDPATH, task_param_task_name, task_param_param_name)
             else:
-                workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                    task_name, task_name, task_param.get('name'))
+                workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
+                    task_name, BIG_DATA_MIDPATH, task_name, task_param.get('name'))
             task['taskSpec'] = replace_big_data_placeholder(
                 task_spec, placeholder, workspaces_parameter)
             task_spec = task.get('taskSpec', {})
@@ -598,8 +600,8 @@ def input_artifacts_tasks_pr_params(template: dict, artifact: dict) -> dict:
     for task_param in task_params:
         # For pipeline parameter input artifacts, it will never come from another task because pipeline
         # params are global parameters. Thus, task_name will always be the executing task name.
-        workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-            task_name, task_name, task_param.get('name'))
+        workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
+            task_name, BIG_DATA_MIDPATH, task_name, task_param.get('name'))
         if 'raw' in artifact:
             copy_inputs_step['script'] += 'mkdir -p %s\n' % pathlib.Path(workspaces_parameter).parent
             copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (
