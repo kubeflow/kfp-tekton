@@ -56,12 +56,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-anything-as-file.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-anything-as-file
-            echo -n "anything_param" > $(workspaces.consume-anything-as-file.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-anything-as-file/anything_param
+            mkdir -p $(workspaces.consume-anything-as-file.path)/artifacts/$(params.pipelineRun-uid)/consume-anything-as-file
+            echo -n "anything_param" > $(workspaces.consume-anything-as-file.path)/artifacts/$(params.pipelineRun-uid)/consume-anything-as-file/anything_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-anything-as-file/anything_param
+          - $(workspaces.consume-anything-as-file.path)/artifacts/$(params.pipelineRun-uid)/consume-anything-as-file/anything_param
           command:
           - sh
           - -ec
@@ -102,15 +102,12 @@ spec:
         workspaces:
         - name: consume-anything-as-file
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: consume-anything-as-file
         workspace: data-passing-pipeline
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: consume-anything-as-file-2
@@ -121,12 +118,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-anything-as-file-2
-            echo -n "something_param" > $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-anything-as-file-2/something_param
+            mkdir -p $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/consume-anything-as-file-2
+            echo -n "something_param" > $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/consume-anything-as-file-2/something_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-anything-as-file-2/something_param
+          - $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/consume-anything-as-file-2/something_param
           command:
           - sh
           - -ec
@@ -167,15 +164,12 @@ spec:
         workspaces:
         - name: consume-anything-as-file-2
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: consume-anything-as-file-2
         workspace: data-passing-pipeline
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: consume-anything-as-file-3
@@ -186,12 +180,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-anything-as-file-3
-            echo -n "string_param" > $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-anything-as-file-3/string_param
+            mkdir -p $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-uid)/consume-anything-as-file-3
+            echo -n "string_param" > $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-uid)/consume-anything-as-file-3/string_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-anything-as-file-3/string_param
+          - $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-uid)/consume-anything-as-file-3/string_param
           command:
           - sh
           - -ec
@@ -232,15 +226,12 @@ spec:
         workspaces:
         - name: consume-anything-as-file-3
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: consume-anything-as-file-3
         workspace: data-passing-pipeline
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: consume-something-as-file
@@ -251,12 +242,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-something-as-file.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-something-as-file
-            echo -n "anything_param" > $(workspaces.consume-something-as-file.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-something-as-file/anything_param
+            mkdir -p $(workspaces.consume-something-as-file.path)/artifacts/$(params.pipelineRun-uid)/consume-something-as-file
+            echo -n "anything_param" > $(workspaces.consume-something-as-file.path)/artifacts/$(params.pipelineRun-uid)/consume-something-as-file/anything_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-something-as-file/anything_param
+          - $(workspaces.consume-something-as-file.path)/artifacts/$(params.pipelineRun-uid)/consume-something-as-file/anything_param
           command:
           - sh
           - -ec
@@ -297,15 +288,12 @@ spec:
         workspaces:
         - name: consume-something-as-file
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: consume-something-as-file
         workspace: data-passing-pipeline
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: consume-something-as-file-2
@@ -316,12 +304,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-something-as-file-2
-            echo -n "something_param" > $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-something-as-file-2/something_param
+            mkdir -p $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/consume-something-as-file-2
+            echo -n "something_param" > $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/consume-something-as-file-2/something_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-something-as-file-2/something_param
+          - $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/consume-something-as-file-2/something_param
           command:
           - sh
           - -ec
@@ -362,15 +350,12 @@ spec:
         workspaces:
         - name: consume-something-as-file-2
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: consume-something-as-file-2
         workspace: data-passing-pipeline
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: consume-string-as-file
@@ -381,12 +366,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-string-as-file.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-string-as-file
-            echo -n "anything_param" > $(workspaces.consume-string-as-file.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-string-as-file/anything_param
+            mkdir -p $(workspaces.consume-string-as-file.path)/artifacts/$(params.pipelineRun-uid)/consume-string-as-file
+            echo -n "anything_param" > $(workspaces.consume-string-as-file.path)/artifacts/$(params.pipelineRun-uid)/consume-string-as-file/anything_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-string-as-file/anything_param
+          - $(workspaces.consume-string-as-file.path)/artifacts/$(params.pipelineRun-uid)/consume-string-as-file/anything_param
           command:
           - sh
           - -ec
@@ -427,15 +412,12 @@ spec:
         workspaces:
         - name: consume-string-as-file
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: consume-string-as-file
         workspace: data-passing-pipeline
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: consume-string-as-file-2
@@ -446,12 +428,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-string-as-file-2
-            echo -n "string_param" > $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-string-as-file-2/string_param
+            mkdir -p $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/consume-string-as-file-2
+            echo -n "string_param" > $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/consume-string-as-file-2/string_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/consume-string-as-file-2/string_param
+          - $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-uid)/consume-string-as-file-2/string_param
           command:
           - sh
           - -ec
@@ -492,15 +474,12 @@ spec:
         workspaces:
         - name: consume-string-as-file-2
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: consume-string-as-file-2
         workspace: data-passing-pipeline
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     workspaces:

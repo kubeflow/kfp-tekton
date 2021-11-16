@@ -40,11 +40,11 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"gen-params": [["Output", "$(results.output.path)"]],
       "print-params": [], "print-text": [], "print-text-2": [], "print-text-3": [],
-      "print-text-4": [], "print-text-5": [], "repeat-line": [["output_text", "$(workspaces.repeat-line.path)/artifacts/$(context.pipelineRun.uid)/$(context.pipelineRun.name)/repeat-line/output_text"]],
-      "split-text-lines": [["even_lines", "$(workspaces.split-text-lines.path)/artifacts/$(context.pipelineRun.uid)/$(context.pipelineRun.name)/split-text-lines/even_lines"],
-      ["odd_lines", "$(workspaces.split-text-lines.path)/artifacts/$(context.pipelineRun.uid)/$(context.pipelineRun.name)/split-text-lines/odd_lines"]],
-      "sum-numbers": [["Output", "$(workspaces.sum-numbers.path)/artifacts/$(context.pipelineRun.uid)/$(context.pipelineRun.name)/sum-numbers/Output"]],
-      "write-numbers": [["numbers", "$(workspaces.write-numbers.path)/artifacts/$(context.pipelineRun.uid)/$(context.pipelineRun.name)/write-numbers/numbers"]]}'
+      "print-text-4": [], "print-text-5": [], "repeat-line": [["output_text", "$(workspaces.repeat-line.path)/artifacts/$(context.pipelineRun.uid)/repeat-line/output_text"]],
+      "split-text-lines": [["even_lines", "$(workspaces.split-text-lines.path)/artifacts/$(context.pipelineRun.uid)/split-text-lines/even_lines"],
+      ["odd_lines", "$(workspaces.split-text-lines.path)/artifacts/$(context.pipelineRun.uid)/split-text-lines/odd_lines"]],
+      "sum-numbers": [["Output", "$(workspaces.sum-numbers.path)/artifacts/$(context.pipelineRun.uid)/sum-numbers/Output"]],
+      "write-numbers": [["numbers", "$(workspaces.write-numbers.path)/artifacts/$(context.pipelineRun.uid)/write-numbers/numbers"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Big data passing"}'
 spec:
@@ -60,7 +60,7 @@ spec:
           - --count
           - '5000'
           - --output-text
-          - $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/repeat-line/output_text
+          - $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-uid)/repeat-line/output_text
           command:
           - sh
           - -ec
@@ -95,11 +95,11 @@ spec:
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/repeat-line/output_text | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-uid)/repeat-line/output_text | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.output-text.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/repeat-line/output_text $(results.output-text.path)
+              cp $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-uid)/repeat-line/output_text $(results.output-text.path)
             fi
           onError: continue
         results:
@@ -136,15 +136,12 @@ spec:
         workspaces:
         - name: repeat-line
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: repeat-line
         workspace: big-data-passing
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: print-text
@@ -153,7 +150,7 @@ spec:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/repeat-line/output_text
+          - $(workspaces.print-text.path)/artifacts/$(params.pipelineRun-uid)/repeat-line/output_text
           command:
           - sh
           - -ec
@@ -199,7 +196,6 @@ spec:
         workspaces:
         - name: print-text
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
@@ -208,8 +204,6 @@ spec:
       runAfter:
       - repeat-line
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: split-text-lines
@@ -235,9 +229,9 @@ spec:
           - --source
           - /tmp/inputs/source/data
           - --odd-lines
-          - $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/split-text-lines/odd_lines
+          - $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/split-text-lines/odd_lines
           - --even-lines
-          - $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/split-text-lines/even_lines
+          - $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/split-text-lines/even_lines
           command:
           - sh
           - -ec
@@ -282,17 +276,17 @@ spec:
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/split-text-lines/odd_lines | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/split-text-lines/odd_lines | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.odd-lines.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/split-text-lines/odd_lines $(results.odd-lines.path)
+              cp $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/split-text-lines/odd_lines $(results.odd-lines.path)
             fi
-            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/split-text-lines/even_lines | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/split-text-lines/even_lines | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.even-lines.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/split-text-lines/even_lines $(results.even-lines.path)
+              cp $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-uid)/split-text-lines/even_lines $(results.even-lines.path)
             fi
           onError: continue
         results:
@@ -339,15 +333,12 @@ spec:
         - name: source
           emptyDir: {}
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: split-text-lines
         workspace: big-data-passing
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: print-text-2
@@ -356,7 +347,7 @@ spec:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/split-text-lines/odd_lines
+          - $(workspaces.print-text-2.path)/artifacts/$(params.pipelineRun-uid)/split-text-lines/odd_lines
           command:
           - sh
           - -ec
@@ -402,7 +393,6 @@ spec:
         workspaces:
         - name: print-text-2
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
@@ -411,8 +401,6 @@ spec:
       runAfter:
       - split-text-lines
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: print-text-3
@@ -421,7 +409,7 @@ spec:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-3.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/split-text-lines/even_lines
+          - $(workspaces.print-text-3.path)/artifacts/$(params.pipelineRun-uid)/split-text-lines/even_lines
           command:
           - sh
           - -ec
@@ -467,7 +455,6 @@ spec:
         workspaces:
         - name: print-text-3
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
@@ -476,8 +463,6 @@ spec:
       runAfter:
       - split-text-lines
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: write-numbers
@@ -490,7 +475,7 @@ spec:
           - --count
           - '100000'
           - --numbers
-          - $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/write-numbers/numbers
+          - $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-uid)/write-numbers/numbers
           command:
           - sh
           - -ec
@@ -525,11 +510,11 @@ spec:
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/write-numbers/numbers | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-uid)/write-numbers/numbers | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.numbers.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/write-numbers/numbers $(results.numbers.path)
+              cp $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-uid)/write-numbers/numbers $(results.numbers.path)
             fi
           onError: continue
         results:
@@ -566,15 +551,12 @@ spec:
         workspaces:
         - name: write-numbers
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: write-numbers
         workspace: big-data-passing
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: print-text-4
@@ -583,7 +565,7 @@ spec:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-4.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/write-numbers/numbers
+          - $(workspaces.print-text-4.path)/artifacts/$(params.pipelineRun-uid)/write-numbers/numbers
           command:
           - sh
           - -ec
@@ -629,7 +611,6 @@ spec:
         workspaces:
         - name: print-text-4
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
@@ -638,8 +619,6 @@ spec:
       runAfter:
       - write-numbers
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: sum-numbers
@@ -648,9 +627,9 @@ spec:
         - name: main
           args:
           - --numbers
-          - $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/write-numbers/numbers
+          - $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-uid)/write-numbers/numbers
           - '----output-paths'
-          - $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/sum-numbers/Output
+          - $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-uid)/sum-numbers/Output
           command:
           - sh
           - -ec
@@ -704,11 +683,11 @@ spec:
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/sum-numbers/Output | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-uid)/sum-numbers/Output | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.output.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/sum-numbers/Output $(results.output.path)
+              cp $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-uid)/sum-numbers/Output $(results.output.path)
             fi
           onError: continue
         results:
@@ -744,7 +723,6 @@ spec:
         workspaces:
         - name: sum-numbers
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
@@ -753,8 +731,6 @@ spec:
       runAfter:
       - write-numbers
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: print-text-5
@@ -763,7 +739,7 @@ spec:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-5.path)/artifacts/$(params.pipelineRun-uid)/$(params.pipelineRun-name)/sum-numbers/Output
+          - $(workspaces.print-text-5.path)/artifacts/$(params.pipelineRun-uid)/sum-numbers/Output
           command:
           - sh
           - -ec
@@ -809,7 +785,6 @@ spec:
         workspaces:
         - name: print-text-5
         params:
-        - name: pipelineRun-name
         - name: pipelineRun-uid
       timeout: 0s
       workspaces:
@@ -818,8 +793,6 @@ spec:
       runAfter:
       - sum-numbers
       params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
     - name: gen-params

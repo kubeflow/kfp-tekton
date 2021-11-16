@@ -23,7 +23,7 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path, _prepend_steps
 from os import environ as env
 
-BIG_DATA_MIDPATH = "artifacts/$(context.pipelineRun.uid)/$(context.pipelineRun.name)"
+BIG_DATA_MIDPATH = "artifacts/$(context.pipelineRun.uid)"
 
 
 def fix_big_data_passing(workflow: dict) -> dict:
