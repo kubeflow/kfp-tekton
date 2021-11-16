@@ -154,7 +154,7 @@ spec:
     - name: print-text
       params:
       - name: repeat-line-trname
-        value: $(tasks.repeat-line.results.taskrun-name)
+        value: $(tasks.print-text.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -361,7 +361,7 @@ spec:
     - name: print-text-2
       params:
       - name: split-text-lines-trname
-        value: $(tasks.split-text-lines.results.taskrun-name)
+        value: $(tasks.print-text-2.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -426,7 +426,7 @@ spec:
     - name: print-text-3
       params:
       - name: split-text-lines-trname
-        value: $(tasks.split-text-lines.results.taskrun-name)
+        value: $(tasks.print-text-3.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -592,7 +592,7 @@ spec:
     - name: print-text-4
       params:
       - name: write-numbers-trname
-        value: $(tasks.write-numbers.results.taskrun-name)
+        value: $(tasks.print-text-4.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -657,7 +657,7 @@ spec:
     - name: sum-numbers
       params:
       - name: write-numbers-trname
-        value: $(tasks.write-numbers.results.taskrun-name)
+        value: $(tasks.sum-numbers.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -779,7 +779,7 @@ spec:
     - name: print-text-5
       params:
       - name: sum-numbers-trname
-        value: $(tasks.sum-numbers.results.taskrun-name)
+        value: $(tasks.print-text-5.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:

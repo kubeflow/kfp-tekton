@@ -536,8 +536,8 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             # If the param name is constructed with task_name-param_name,
             # use the current task_name as the path prefix
 
-            def append_taskrun_params(task_name: str):
-                taskrun_param_name = task_name + "-trname"
+            def append_taskrun_params(task_name_append: str):
+                taskrun_param_name = task_name_append + "-trname"
                 inserted_taskrun_param = False
                 for param in task['taskSpec'].get('params', []):
                     if param.get('name', "") == taskrun_param_name:
@@ -549,7 +549,8 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             if task_param_task_name:
                 workspaces_parameter = '$(workspaces.%s.path)/%s/$(params.%s-trname)/%s' % (
                     task_name, BIG_DATA_MIDPATH, task_param_task_name, task_param_param_name)
-                append_taskrun_params(task_param_task_name) # need to get taskrun name from parent path
+                if task_param_task_name != task_name:
+                    append_taskrun_params(task_param_task_name) # need to get taskrun name from parent path
             else:
                 workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
                     task_name, BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_param.get('name'))
