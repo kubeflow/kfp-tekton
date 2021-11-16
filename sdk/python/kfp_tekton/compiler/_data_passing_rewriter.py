@@ -550,7 +550,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                 workspaces_parameter = '$(workspaces.%s.path)/%s/$(params.%s-trname)/%s' % (
                     task_name, BIG_DATA_MIDPATH, task_param_task_name, task_param_param_name)
                 if task_param_task_name != task_name:
-                    append_taskrun_params(task_param_task_name) # need to get taskrun name from parent path
+                    append_taskrun_params(task_param_task_name)  # need to get taskrun name from parent path
             else:
                 workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
                     task_name, BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_param.get('name'))
