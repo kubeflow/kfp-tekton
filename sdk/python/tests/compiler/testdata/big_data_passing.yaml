@@ -151,6 +151,71 @@ spec:
       params:
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
+    - name: print-text
+      params:
+      - name: repeat-line-trname
+        value: $(tasks.repeat-line.results.taskrun-name)
+      - name: pipelineRun-uid
+        value: $(context.pipelineRun.uid)
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - --text
+          - $(workspaces.print-text.path)/artifacts/$(params.pipelineRun-uid)/$(params.repeat-line-trname)/output_text
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def print_text(
+                    text_path
+            ):  # The "text" input is untyped so that any data can be printed
+                '''Print text'''
+                with open(text_path, 'r') as reader:
+                    for line in reader:
+                        print(line, end='')
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Print text', description='Print text')
+            _parser.add_argument("--text", dest="text_path", type=str, required=True, default=argparse.SUPPRESS)
+            _parsed_args = vars(_parser.parse_args())
+
+            _outputs = print_text(**_parsed_args)
+          image: python:3.7
+        params:
+        - name: repeat-line-trname
+        - name: pipelineRun-uid
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec: '{"description": "Print text",
+              "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
+              "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
+              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
+              The \"text\" input is untyped so that any data can be printed\n    ''''''Print
+              text''''''\n    with open(text_path, ''r'') as reader:\n        for
+              line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
+              = argparse.ArgumentParser(prog=''Print text'', description=''Print text'')\n_parser.add_argument(\"--text\",
+              dest=\"text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+              = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
+              "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
+              text"}'
+            tekton.dev/template: ''
+        workspaces:
+        - name: print-text
+      timeout: 0s
+      workspaces:
+      - name: print-text
+        workspace: big-data-passing
+      runAfter:
+      - repeat-line
     - name: split-text-lines
       taskSpec:
         steps:
@@ -903,90 +968,6 @@ spec:
               "Integer"}], "name": "Print params"}'
             tekton.dev/template: ''
       timeout: 0s
-    - runAfter:
-      - repeat-line
-      name: big-data-passing-cbb29-for-loop-2
-      params:
-      - name: loop-item-param-1
-        value: '[1, 2]'
-      - name: repeat-line-output_text
-        value: $(tasks.repeat-line.results.output-text)
-      taskSpec:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: PipelineLoop
-        spec:
-          pipelineSpec:
-            params:
-            - name: loop-item-param-1
-              type: string
-            - name: repeat-line-output_text
-              type: string
-            tasks:
-            - name: print-text
-              params:
-              - name: repeat-line-trname
-                value: $(tasks.repeat-line.results.taskrun-name)
-              taskSpec:
-                steps:
-                - name: main
-                  args:
-                  - --text
-                  - $(workspaces.print-text.path)/artifacts/$(context.pipelineRun.uid)/$(params.repeat-line-trname)/output_text
-                  command:
-                  - sh
-                  - -ec
-                  - |
-                    program_path=$(mktemp)
-                    printf "%s" "$0" > "$program_path"
-                    python3 -u "$program_path" "$@"
-                  - |
-                    def print_text(
-                            text_path
-                    ):  # The "text" input is untyped so that any data can be printed
-                        '''Print text'''
-                        with open(text_path, 'r') as reader:
-                            for line in reader:
-                                print(line, end='')
-
-                    import argparse
-                    _parser = argparse.ArgumentParser(prog='Print text', description='Print text')
-                    _parser.add_argument("--text", dest="text_path", type=str, required=True, default=argparse.SUPPRESS)
-                    _parsed_args = vars(_parser.parse_args())
-
-                    _outputs = print_text(**_parsed_args)
-                  image: python:3.7
-                params:
-                - name: repeat-line-trname
-                  type: string
-                metadata:
-                  labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
-                  annotations:
-                    pipelines.kubeflow.org/component_spec: '{"description": "Print
-                      text", "implementation": {"container": {"args": ["--text", {"inputPath":
-                      "text"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
-                      \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\"
-                      \"$@\"\n", "def print_text(\n        text_path\n):  # The \"text\"
-                      input is untyped so that any data can be printed\n    ''''''Print
-                      text''''''\n    with open(text_path, ''r'') as reader:\n        for
-                      line in reader:\n            print(line, end='''')\n\nimport
-                      argparse\n_parser = argparse.ArgumentParser(prog=''Print text'',
-                      description=''Print text'')\n_parser.add_argument(\"--text\",
-                      dest=\"text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
-                      = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
-                      "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name":
-                      "Print text"}'
-                    tekton.dev/template: ''
-                workspaces:
-                - name: print-text
-              timeout: 0s
-              workspaces:
-              - name: print-text
-                workspace: big-data-passing
-              runAfter: []
-          iterateParam: loop-item-param-1
     workspaces:
     - name: big-data-passing
   timeout: 0s
