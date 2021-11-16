@@ -1762,7 +1762,7 @@ spec:
     - name: consume-anything-as-file-5
       params:
       - name: produce-anything-trname
-        value: $(tasks.consume-anything-as-file-5.results.taskrun-name)
+        value: $(tasks.produce-anything.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -1822,7 +1822,7 @@ spec:
     - name: consume-anything-as-file-6
       params:
       - name: produce-something-trname
-        value: $(tasks.consume-anything-as-file-6.results.taskrun-name)
+        value: $(tasks.produce-something.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -1882,7 +1882,7 @@ spec:
     - name: consume-anything-as-file-7
       params:
       - name: produce-string-trname
-        value: $(tasks.consume-anything-as-file-7.results.taskrun-name)
+        value: $(tasks.produce-string.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -1942,7 +1942,7 @@ spec:
     - name: consume-something-as-file-4
       params:
       - name: produce-anything-trname
-        value: $(tasks.consume-something-as-file-4.results.taskrun-name)
+        value: $(tasks.produce-anything.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -2002,7 +2002,7 @@ spec:
     - name: consume-something-as-file-5
       params:
       - name: produce-something-trname
-        value: $(tasks.consume-something-as-file-5.results.taskrun-name)
+        value: $(tasks.produce-something.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -2062,7 +2062,7 @@ spec:
     - name: consume-string-as-file-4
       params:
       - name: produce-anything-trname
-        value: $(tasks.consume-string-as-file-4.results.taskrun-name)
+        value: $(tasks.produce-anything.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -2122,7 +2122,7 @@ spec:
     - name: consume-string-as-file-5
       params:
       - name: produce-string-trname
-        value: $(tasks.consume-string-as-file-5.results.taskrun-name)
+        value: $(tasks.produce-string.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:

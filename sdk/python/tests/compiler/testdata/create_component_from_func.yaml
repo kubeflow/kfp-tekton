@@ -143,7 +143,7 @@ spec:
     - name: get-subdirectory
       params:
       - name: produce-dir-with-files-python-op-trname
-        value: $(tasks.get-subdirectory.results.taskrun-name)
+        value: $(tasks.produce-dir-with-files-python-op.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -211,7 +211,7 @@ spec:
     - name: list-items
       params:
       - name: get-subdirectory-trname
-        value: $(tasks.list-items.results.taskrun-name)
+        value: $(tasks.get-subdirectory.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:
@@ -258,9 +258,9 @@ spec:
     - name: list-items-2
       params:
       - name: get-subdirectory-trname
-        value: $(tasks.list-items-2.results.taskrun-name)
+        value: $(tasks.get-subdirectory.results.taskrun-name)
       - name: produce-dir-with-files-python-op-trname
-        value: $(tasks.list-items-2.results.taskrun-name)
+        value: $(tasks.produce-dir-with-files-python-op.results.taskrun-name)
       - name: pipelineRun-uid
         value: $(context.pipelineRun.uid)
       taskSpec:

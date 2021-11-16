@@ -545,7 +545,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                         break
                 if not inserted_taskrun_param:
                     task['taskSpec']['params'].append({"name": taskrun_param_name})
-                    task['params'].append({"name": taskrun_param_name, "value": "$(tasks.%s.results.taskrun-name)" % task_name})
+                    task['params'].append({"name": taskrun_param_name, "value": "$(tasks.%s.results.taskrun-name)" % task_name_append})
             if task_param_task_name:
                 workspaces_parameter = '$(workspaces.%s.path)/%s/$(params.%s-trname)/%s' % (
                     task_name, BIG_DATA_MIDPATH, task_param_task_name, task_param_param_name)
