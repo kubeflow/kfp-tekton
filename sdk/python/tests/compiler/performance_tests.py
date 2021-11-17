@@ -35,12 +35,14 @@ from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 # =============================================================================
 
 # TODO: remove defaults below, add instructions and/or script parameters
-PUBLIC_IP = env.get("PUBLIC_IP")  # mlx-demo
+PUBLIC_IP = env.get("PUBLIC_IP")
+NAMESPACE = env.get("NAMESPACE", None)
 USER_INFO = env.get("USER_INFO")
 CONNECT_SID = env.get("CONNECT_SID")
 
 print(f"Environment variables:\n"
       f"  PUBLIC_IP:   {PUBLIC_IP}\n"
+      f"  NAMESPACE:   {NAMESPACE}\n"
       f"  USER_INFO:   {USER_INFO}\n"
       f"  CONNECT_SID: {CONNECT_SID}\n")
 
@@ -56,8 +58,9 @@ experiment_name = "PERF_TEST"
 
 def get_client() -> TektonClient:
     host = f"http://{PUBLIC_IP}/pipeline"
-    cookies = f"connect.sid={CONNECT_SID}; userinfo={USER_INFO}"
+    cookies = f"connect.sid={CONNECT_SID}; userinfo={USER_INFO}" if CONNECT_SID and USER_INFO else None
     client = TektonClient(host=host, cookies=cookies)
+    client.set_user_namespace(NAMESPACE)  # overwrite system default with None if necessary
     return client
 
 
