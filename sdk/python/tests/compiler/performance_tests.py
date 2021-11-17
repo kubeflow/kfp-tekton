@@ -77,10 +77,10 @@ def compile_pipeline(pipeline_func: Callable) -> str:
 
 
 def run_pipeline(pipeline_file: str,
+                 run_name: str,
                  arguments: Mapping[str, str] = None):
+
     client = get_client()
-    pipeline_name = os.path.splitext(os.path.basename(pipeline_file))[0]
-    run_name = pipeline_name  # + ' ' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
     experiment = client.create_experiment(experiment_name)  # get or create
     run_result = None
     while run_result is None:
@@ -116,32 +116,32 @@ def wait_for_run_to_complete(run_id: str) -> ApiRun:
     return run
 
 
-def load_pipeline_functions() -> [Callable]:
+def load_pipeline_functions() -> [(Callable, str)]:
     pipeline_functions = []
 
     from testdata.sequential import sequential_pipeline
-    pipeline_functions.append(sequential_pipeline)
+    pipeline_functions.append((sequential_pipeline, "sequential_pipeline"))
 
     from testdata.condition import flipcoin
-    pipeline_functions.append(flipcoin)
+    pipeline_functions.append((flipcoin, "flipcoin"))
 
     from testdata.compose import save_most_frequent_word
-    pipeline_functions.append(save_most_frequent_word)
+    pipeline_functions.append((save_most_frequent_word, "compose"))
 
     from testdata.retry import retry_sample_pipeline
-    pipeline_functions.append(retry_sample_pipeline)
+    pipeline_functions.append((retry_sample_pipeline, "retry"))
 
     from testdata.loop_static import pipeline as loop_static
-    pipeline_functions.append(loop_static)
-
-    # from testdata.condition_custom_task import flipcoin_pipeline
-    # pipeline_functions.append(flipcoin_pipeline)
+    pipeline_functions.append((loop_static, "loop_static"))
 
     from testdata.conditions_and_loops import conditions_and_loops
-    pipeline_functions.append(conditions_and_loops)
+    pipeline_functions.append((conditions_and_loops, "conditions_and_loops"))
 
-    # from testdata.loop_in_recursion import flipcoin as loop_in_loop
-    # pipeline_functions.append(loop_in_loop)
+    from testdata.condition_custom_task import flipcoin_pipeline
+    pipeline_functions.append((flipcoin_pipeline, "condition_custom_task"))
+
+    from testdata.loop_in_recursion import flipcoin as loop_in_loop
+    pipeline_functions.append((loop_in_loop, "loop_in_recursion"))
 
     # TODO: add more pipelines
 
@@ -163,13 +163,13 @@ def run_performance_test():
 
     pipeline_functions = load_pipeline_functions()
 
-    for p in pipeline_functions:
+    for func, name in pipeline_functions:
         t = [dt.now()]
 
-        pipeline_file = compile_pipeline(p)
+        pipeline_file = compile_pipeline(func)
         t += [dt.now()]
 
-        run_id = run_pipeline(pipeline_file)
+        run_id = run_pipeline(pipeline_file, name)
         t += [dt.now()]
 
         run_details = wait_for_run_to_complete(run_id)  # noqa F841
@@ -177,7 +177,7 @@ def run_performance_test():
 
         with open(output_file, "a") as f:
             time_deltas = [str(t[i + 1] - t[i]) for i in range(len(t) - 1)]
-            f.write(output_sep.join([p.__name__] + time_deltas) + "\n")
+            f.write(output_sep.join([name] + time_deltas) + "\n")
 
 
 if __name__ == '__main__':
