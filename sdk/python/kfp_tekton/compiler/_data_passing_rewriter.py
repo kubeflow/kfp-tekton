@@ -712,6 +712,7 @@ def _append_original_pr_name_env_to_step(step):
                                 {"fieldRef":
                                     {"fieldPath": "metadata.labels['custom.tekton.dev/originalPipelineRun']"}}})
 
+
 def _append_original_pr_name_env(task_template):
     for step in task_template['taskSpec']['steps']:
         if step['name'] == 'main':
