@@ -150,9 +150,10 @@ def wait_for_run_to_complete(run_id: str) -> ApiRun:
             print(f"KFP Server Exception: {e.reason}")
             time.sleep(1)
         time.sleep(0.1)
-    print(f"{run.name} took {(run.finished_at - run.created_at)}:"
-          f" started at {run.created_at.strftime('%H:%M:%S.%f')[:-3]},"
-          f" `{run.status}` at {run.finished_at.strftime('%H:%M:%S.%f')[:-3]}")
+    print(f"{run.name.ljust(20)[:20]}"
+          f" {run.status.lower().ljust(10)[:10]}"
+          f" after {(run.finished_at - run.created_at)}"
+          f" ({run.created_at.strftime('%H:%M:%S')}->{run.finished_at.strftime('%H:%M:%S')})")
     return run
 
 
