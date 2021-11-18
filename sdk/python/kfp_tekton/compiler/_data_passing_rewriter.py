@@ -23,7 +23,7 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path, _prepend_steps
 from os import environ as env
 
-BIG_DATA_MIDPATH = "artifacts/$(context.pipelineRun.uid)"
+BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
 
 
 def fix_big_data_passing(workflow: dict) -> dict:
@@ -501,6 +501,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                 copy_taskrun_name_step['script'] += 'echo -n "%s" > $(results.taskrun-name.path)\n' % ("$(context.taskRun.name)")
                 task['taskSpec']['results'].append({"name": "taskrun-name"})
                 task['taskSpec']['steps'].append(copy_taskrun_name_step)
+                _append_original_pr_name_env(task)
                 appended_taskrun_name = True
             task['taskSpec'] = replace_big_data_placeholder(
                 task.get("taskSpec", {}), placeholder, workspaces_parameter)
@@ -554,6 +555,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             else:
                 workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
                     task_name, BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_param.get('name'))
+            _append_original_pr_name_env(task)
             task['taskSpec'] = replace_big_data_placeholder(
                 task_spec, placeholder, workspaces_parameter)
             task_spec = task.get('taskSpec', {})
@@ -598,6 +600,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                     '  cp ' + src + ' ' + dst + '\n' +
                                     'fi\n'
                             )
+            _append_original_pr_name_env_to_step(copy_results_artifact_step)
             if add_copy_results_artifacts_step:
                 task['taskSpec']['steps'].append(copy_results_artifact_step)
 
@@ -629,6 +632,7 @@ def input_artifacts_tasks_pr_params(template: dict, artifact: dict) -> dict:
             copy_inputs_step['script'] += 'mkdir -p %s\n' % pathlib.Path(workspaces_parameter).parent
             copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (
                 artifact['raw']['data'], workspaces_parameter)
+        _append_original_pr_name_env(template)
 
     template['taskSpec']['steps'] = _prepend_steps(
         [copy_inputs_step], template['taskSpec']['steps'])
@@ -694,3 +698,21 @@ def jsonify_annotations(template: dict):
     template['metadata']['annotations']['tekton.dev/artifact_items'] = \
         json.dumps(template['metadata']['annotations']['tekton.dev/artifact_items'])
     return template
+
+
+def _append_original_pr_name_env_to_step(step):
+    step.setdefault('env', [])
+    has_original_pr_name = False
+    for task_env in step['env']:
+        if task_env['name'] == "ORIG_PR_NAME":
+            has_original_pr_name = True
+    if not has_original_pr_name:
+        step['env'].append({"name": "ORIG_PR_NAME",
+                            "valueFrom":
+                                {"fieldRef":
+                                    {"fieldPath": "metadata.labels['custom.tekton.dev/originalPipelineRun']"}}})
+
+def _append_original_pr_name_env(task_template):
+    for step in task_template['taskSpec']['steps']:
+        if step['name'] == 'main':
+            _append_original_pr_name_env_to_step(step)

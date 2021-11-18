@@ -32,10 +32,10 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"get-subdirectory": [["Subdir", "$(workspaces.get-subdirectory.path)/artifacts/$(context.pipelineRun.uid)/$(context.taskRun.name)/Subdir"]],
+    tekton.dev/artifact_items: '{"get-subdirectory": [["Subdir", "$(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir"]],
       "list-items": [["Items", "$(results.items.path)"]], "list-items-2": [["Items",
       "$(results.items.path)"]], "produce-dir-with-files-python-op": [["output_dir",
-      "$(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(context.pipelineRun.uid)/$(context.taskRun.name)/output_dir"]]}'
+      "$(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/pipeline_spec: '{"name": "create-component-from-function"}'
 spec:
@@ -49,7 +49,7 @@ spec:
           - --num-files
           - '15'
           - --output-dir
-          - $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-uid)/$(context.taskRun.name)/output_dir
+          - $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir
           command:
           - sh
           - -ec
@@ -79,6 +79,11 @@ spec:
 
             _outputs = produce_dir_with_files_python_op(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
           script: |
@@ -91,13 +96,18 @@ spec:
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-uid)/$(context.taskRun.name)/output_dir | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.output-dir.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$(params.pipelineRun-uid)/$(context.taskRun.name)/output_dir $(results.output-dir.path)
+              cp $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir $(results.output-dir.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: output-dir
           description: /tmp/outputs/output_dir/data
@@ -131,21 +141,14 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: produce-dir-with-files-python-op
-        params:
-        - name: pipelineRun-uid
       timeout: 0s
       workspaces:
       - name: produce-dir-with-files-python-op
         workspace: create-component-from-function
-      params:
-      - name: pipelineRun-uid
-        value: $(context.pipelineRun.uid)
     - name: get-subdirectory
       params:
       - name: produce-dir-with-files-python-op-trname
         value: $(tasks.produce-dir-with-files-python-op.results.taskrun-name)
-      - name: pipelineRun-uid
-        value: $(context.pipelineRun.uid)
       taskSpec:
         steps:
         - name: main
@@ -156,10 +159,15 @@ spec:
           - |
             mkdir -p "$(dirname "$2")"
             cp -r "$0/$1" "$2"
-          - $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-uid)/$(params.produce-dir-with-files-python-op-trname)/output_dir
+          - $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(params.produce-dir-with-files-python-op-trname)/output_dir
           - subdir
-          - $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-uid)/$(context.taskRun.name)/Subdir
+          - $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir
           image: alpine
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
           script: |
@@ -172,16 +180,20 @@ spec:
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-uid)/$(context.taskRun.name)/Subdir | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.subdir.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.get-subdirectory.path)/artifacts/$(params.pipelineRun-uid)/$(context.taskRun.name)/Subdir $(results.subdir.path)
+              cp $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir $(results.subdir.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
         - name: produce-dir-with-files-python-op-trname
-        - name: pipelineRun-uid
         results:
         - name: subdir
           description: /tmp/outputs/Subdir/data
@@ -212,8 +224,6 @@ spec:
       params:
       - name: get-subdirectory-trname
         value: $(tasks.get-subdirectory.results.taskrun-name)
-      - name: pipelineRun-uid
-        value: $(context.pipelineRun.uid)
       taskSpec:
         steps:
         - name: main
@@ -225,12 +235,16 @@ spec:
             mkdir -p "$(dirname "$1")"
             #ls --almost-all --recursive "$0" > "$1"
             ls -A -R "$0" > "$1"
-          - $(workspaces.list-items.path)/artifacts/$(params.pipelineRun-uid)/$(params.get-subdirectory-trname)/Subdir
+          - $(workspaces.list-items.path)/artifacts/$ORIG_PR_NAME/$(params.get-subdirectory-trname)/Subdir
           - $(results.items.path)
           image: alpine
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
         - name: get-subdirectory-trname
-        - name: pipelineRun-uid
         results:
         - name: items
           description: /tmp/outputs/Items/data
@@ -261,8 +275,6 @@ spec:
         value: $(tasks.get-subdirectory.results.taskrun-name)
       - name: produce-dir-with-files-python-op-trname
         value: $(tasks.produce-dir-with-files-python-op.results.taskrun-name)
-      - name: pipelineRun-uid
-        value: $(context.pipelineRun.uid)
       taskSpec:
         steps:
         - name: main
@@ -274,14 +286,18 @@ spec:
             mkdir -p "$(dirname "$2")"
             ls -A -R "$0" > "$2"
             ls -A -R "$1" >> "$2"
-          - $(workspaces.list-items-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.get-subdirectory-trname)/Subdir
-          - $(workspaces.list-items-2.path)/artifacts/$(params.pipelineRun-uid)/$(params.produce-dir-with-files-python-op-trname)/output_dir
+          - $(workspaces.list-items-2.path)/artifacts/$ORIG_PR_NAME/$(params.get-subdirectory-trname)/Subdir
+          - $(workspaces.list-items-2.path)/artifacts/$ORIG_PR_NAME/$(params.produce-dir-with-files-python-op-trname)/output_dir
           - $(results.items.path)
           image: alpine
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
         - name: get-subdirectory-trname
         - name: produce-dir-with-files-python-op-trname
-        - name: pipelineRun-uid
         results:
         - name: items
           description: /tmp/outputs/Items/data

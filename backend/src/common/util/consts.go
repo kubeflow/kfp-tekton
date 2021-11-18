@@ -43,6 +43,8 @@ const (
 	LabelKeyWorkflowRunId               = "pipeline/runid"
 	LabelKeyWorkflowPersistedFinalState = "pipeline/persistedFinalState"
 
+	LabelOriginalPipelineRunName = "custom.tekton.dev/originalPipelineRun"
+
 	// LabelKeyWorkflowEpoch is a Workflow annotation key.
 	// It captures the the name of the Run.
 	AnnotationKeyRunName = "pipelines.kubeflow.org/run_name"
