@@ -23,11 +23,13 @@ import tempfile
 import time
 import threading
 
+from collections import defaultdict
 from datetime import datetime as dt
+from datetime import timedelta
 from os import environ as env
-from typing import Mapping, Callable
+from typing import Callable, Dict, Mapping
 
-from kfp_server_api import ApiRun, ApiRunDetail, ApiException
+from kfp_server_api import ApiException, ApiRun, ApiRunDetail
 from kfp_tekton.compiler import TektonCompiler
 from kfp_tekton._client import TektonClient
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
@@ -44,7 +46,7 @@ USER_INFO = env.get("USER_INFO")
 CONNECT_SID = env.get("CONNECT_SID")
 NUM_WORKERS = int(env.get("NUM_WORKERS", 1))
 EXPERIMENT = env.get("EXPERIMENT_NAME", "PERF_TEST")
-OUTPUT_FILE = env.get("OUTPUT_FILE", f"perf_test_{dt.now().strftime('%Y%m%d_%H%M%S')}_{PUBLIC_IP}.csv")
+OUTPUT_FILE = env.get("OUTPUT_FILE", f"perf_test_{dt.now().strftime('%Y%m%d_%H%M%S')}_N{NUM_WORKERS}_{PUBLIC_IP}.csv")
 OUTPUT_SEP = env.get("OUTPUT_SEP", ",")
 
 
@@ -60,18 +62,44 @@ print(f"Environment variables:\n\n"
 
 
 # =============================================================================
-#  local settings that are not loaded from env variables
+#  local variables
 # =============================================================================
 
 # kfp_tekton_root_dir = os.path.abspath(__file__).replace("sdk/python/tests/compiler/performance_tests.py", "")
 
+execution_times: Dict[str, Dict[str, timedelta]] = defaultdict(dict)
 
-def get_client() -> TektonClient:
-    host = f"http://{PUBLIC_IP}/pipeline"
-    cookies = f"connect.sid={CONNECT_SID}; userinfo={USER_INFO}" if CONNECT_SID and USER_INFO else None
-    client = TektonClient(host=host, cookies=cookies)
-    client.set_user_namespace(NAMESPACE)  # overwrite system default with None if necessary
-    return client
+
+def record_execution_time(pipeline_name: str,
+                          function_name: str,
+                          execution_time: timedelta):
+
+    execution_times[pipeline_name][function_name] = execution_time
+
+
+# method annotation to record execution times
+def time_it(function):
+
+    @functools.wraps(function)
+    def _function(*args, **kwargs):
+
+        start_time = dt.now()
+
+        functions_result = function(*args, **kwargs)
+
+        execution_time = dt.now() - start_time
+
+        if "pipeline_name" not in kwargs:
+            raise ValueError(f"The function '{function.__name__}' has to be invoked"
+                             f" with keyword argument parameter 'pipeline_name'.")
+
+        record_execution_time(pipeline_name=kwargs["pipeline_name"],
+                              function_name=function.__name__,
+                              execution_time=execution_time)
+
+        return functions_result
+
+    return _function
 
 
 # method annotation to ensure the wrapped function is executed synchronously
@@ -87,23 +115,23 @@ def synchronized(function):
     return _synchronized_function
 
 
-# TODO: synchronizing pipeline compilation skews recorded compile times since some
-#   pipelines will wait for others to be compiled, yet the recorded compilation
-#   start times are equal for all pipelines
-#   We need to change test design to run and time pipeline compilation sequentially
-#   and only execute pipelines in parallel
-if NUM_WORKERS > 1:
-    print("WARNING: pipeline compilation times are not accurate when running in parallel.\n")
-
-
 # TODO: cannot compile multiple pipelines in parallel due to use of static variables
 #   causing Exception "Nested pipelines are not allowed." in kfp/dsl/_pipeline.py
 #   def __enter__(self):
 #     if Pipeline._default_pipeline:
 #       raise Exception('Nested pipelines are not allowed.')
-@synchronized
-def compile_pipeline(pipeline_func: Callable) -> str:
-    pipeline_name = pipeline_func.__name__
+# NOTE: synchronizing the method compile_pipeline could skews the recorded compilation
+#   times since the start time for all pipelines are equal, but some pipelines will
+#   wait for others to be compiled with the wait time included in the total compilation
+#   time.
+#   We need to change test design to run and time pipeline compilation sequentially
+#   and only execute pipelines in parallel
+@synchronized  # keep decorator precedence: synchronize outside of (before) time_it
+@time_it       # time_it inside the synchronized block so idle wait is not recorded
+def compile_pipeline(*,  # force kwargs for time_it decorator to get pipeline_name
+                     pipeline_name: str,
+                     pipeline_func: Callable) -> str:
+
     file_name = pipeline_name + '.yaml'
     tmpdir = tempfile.gettempdir()  # TODO: keep compiled pipelines?
     pipeline_package_path = os.path.join(tmpdir, file_name)
@@ -114,9 +142,11 @@ def compile_pipeline(pipeline_func: Callable) -> str:
     return pipeline_package_path
 
 
-def run_pipeline(pipeline_file: str,
-                 run_name: str,
-                 arguments: Mapping[str, str] = None):
+@time_it
+def submit_pipeline_run(*,  # force kwargs for time_it decorator to get pipeline_name
+                        pipeline_name: str,
+                        pipeline_file: str,
+                        arguments: Mapping[str, str] = None):
 
     client = get_client()
     experiment = client.create_experiment(EXPERIMENT)  # get or create
@@ -125,7 +155,7 @@ def run_pipeline(pipeline_file: str,
         try:
             run_result: ApiRun = client.run_pipeline(
                 experiment_id=experiment.id,
-                job_name=run_name,
+                job_name=pipeline_name,
                 pipeline_package_path=pipeline_file,
                 params=arguments)
         except ApiException as e:
@@ -137,9 +167,13 @@ def run_pipeline(pipeline_file: str,
     return run_result.id
 
 
-def wait_for_run_to_complete(run_id: str) -> ApiRun:
+@time_it
+def wait_for_run_to_complete(*,  # force kwargs so the time_it decorator can get pipeline_name
+                             pipeline_name: str,
+                             run_id: str) -> ApiRun:
     client = get_client()
     status = None
+
     while status not in ["Succeeded", "Failed", "Error", "Skipped", "Terminated",
                          "Completed", "CouldntGetTask"]:
         try:
@@ -149,12 +183,25 @@ def wait_for_run_to_complete(run_id: str) -> ApiRun:
         except ApiException as e:  # TODO: add timeout or max retries on ApiError
             print(f"KFP Server Exception: {e.reason}")
             time.sleep(1)
+
         time.sleep(0.1)
-    print(f"{run.name.ljust(20)[:20]}"
+
+    print(f"{pipeline_name.ljust(20)[:20]}"
           f" {run.status.lower().ljust(10)[:10]}"
           f" after {(run.finished_at - run.created_at)}"
           f" ({run.created_at.strftime('%H:%M:%S')}->{run.finished_at.strftime('%H:%M:%S')})")
+
     return run
+
+
+def get_client() -> TektonClient:
+
+    host = f"http://{PUBLIC_IP}/pipeline"
+    cookies = f"connect.sid={CONNECT_SID}; userinfo={USER_INFO}" if CONNECT_SID and USER_INFO else None
+    client = TektonClient(host=host, cookies=cookies)
+    client.set_user_namespace(NAMESPACE)  # overwrite system default with None if necessary
+
+    return client
 
 
 def load_pipeline_functions() -> [(Callable, str)]:
@@ -194,25 +241,6 @@ def load_pipeline_functions() -> [(Callable, str)]:
     return pipeline_functions
 
 
-def run_single_pipeline_performance_test(pipeline_func: Callable, run_name: str) -> ApiRun:
-    t = [dt.now()]
-
-    pipeline_file = compile_pipeline(pipeline_func)
-    t += [dt.now()]
-
-    run_id = run_pipeline(pipeline_file, run_name)
-    t += [dt.now()]
-
-    run_details = wait_for_run_to_complete(run_id)  # noqa F841
-    t += [dt.now()]
-
-    with open(OUTPUT_FILE, "a") as f:
-        time_deltas = [str(t[i + 1] - t[i]) for i in range(len(t) - 1)]
-        f.write(OUTPUT_SEP.join([run_name] + time_deltas) + "\n")
-
-    return run_details
-
-
 def run_concurrently(pipelinefunc_name_tuples: [(Callable, str)]) -> [(str, str)]:
     pipeline_status = []
 
@@ -233,11 +261,38 @@ def run_concurrently(pipelinefunc_name_tuples: [(Callable, str)]) -> [(str, str)
     return pipeline_status
 
 
-def run_performance_tests():
+def run_single_pipeline_performance_test(pipeline_func: Callable,
+                                         pipeline_name: str) -> ApiRun:
+
+    pipeline_file = compile_pipeline(pipeline_name=pipeline_name, pipeline_func=pipeline_func)
+    run_id = submit_pipeline_run(pipeline_name=pipeline_name, pipeline_file=pipeline_file)
+    run_details = wait_for_run_to_complete(pipeline_name=pipeline_name, run_id=run_id)
+
+    append_exec_times_to_output_file(pipeline_name)
+
+    return run_details
+
+
+def append_exec_times_to_output_file(pipeline_name: str):
+
+    compile_time = str(execution_times[pipeline_name][compile_pipeline.__name__])
+    submit_time = str(execution_times[pipeline_name][submit_pipeline_run.__name__])
+    run_time = str(execution_times[pipeline_name][wait_for_run_to_complete.__name__])
+
+    with open(OUTPUT_FILE, "a") as f:
+        f.write(OUTPUT_SEP.join([pipeline_name, compile_time, submit_time, run_time]))
+        f.write("\n")
+
+
+def create_output_file():
 
     with open(OUTPUT_FILE, "w") as f:
         f.write(OUTPUT_SEP.join(["Pipeline", "Compile", "Submit", "Run"]) + "\n")
 
+
+def run_performance_tests():
+
+    create_output_file()
     pipeline_functions = load_pipeline_functions()
 
     if NUM_WORKERS == 1:  # TODO: use `run_concurrently()` even with 1 worker
