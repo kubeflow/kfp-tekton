@@ -711,6 +711,7 @@ var expectedPipelineRunIterationDict = &v1beta1.PipelineRun{
 		},
 		Annotations: map[string]string{
 			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": "{\"a\":1,\"b\":2}",
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
@@ -749,6 +750,7 @@ var expectedParaPipelineRun = &v1beta1.PipelineRun{
 		},
 		Annotations: map[string]string{
 			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
@@ -784,6 +786,7 @@ var expectedParaPipelineRun1 = &v1beta1.PipelineRun{
 		},
 		Annotations: map[string]string{
 			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item2"`,
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
@@ -819,6 +822,7 @@ var expectedPipelineRunIteration1 = &v1beta1.PipelineRun{
 		},
 		Annotations: map[string]string{
 			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
@@ -854,6 +858,7 @@ var expectedPipelineRunIterateNumeric1 = &v1beta1.PipelineRun{
 		},
 		Annotations: map[string]string{
 			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": "1",
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
@@ -890,6 +895,7 @@ var expectedPipelineRunIteration2 = &v1beta1.PipelineRun{
 		},
 		Annotations: map[string]string{
 			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item2"`,
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
@@ -925,6 +931,7 @@ var expectedPipelineRunWithInlineTaskIteration1 = &v1beta1.PipelineRun{
 		},
 		Annotations: map[string]string{
 			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
@@ -978,6 +985,7 @@ var expectedNestedPipelineRun = &v1beta1.PipelineRun{
 		},
 		Annotations: map[string]string{
 			"myTestAnnotation12": "myTestAnnotationValue12",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
@@ -1042,6 +1050,7 @@ var expectedConditionPipelineRunIteration1 = &v1beta1.PipelineRun{
 		},
 		Annotations: map[string]string{
 			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
