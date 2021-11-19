@@ -81,7 +81,7 @@ def record_execution_time(pipeline_name: str,
 def time_it(function):
 
     @functools.wraps(function)
-    def _function(*args, **kwargs):
+    def _timed_function(*args, **kwargs):
 
         start_time = dt.now()
 
@@ -89,9 +89,9 @@ def time_it(function):
 
         execution_time = dt.now() - start_time
 
-        if "pipeline_name" not in kwargs:
-            raise ValueError(f"The function '{function.__name__}' has to be invoked"
-                             f" with keyword argument parameter 'pipeline_name'.")
+        assert "pipeline_name" in kwargs, \
+            f"The function '{function.__name__}' has to be invoked with keyword" \
+            f" argument parameter 'pipeline_name'."
 
         record_execution_time(pipeline_name=kwargs["pipeline_name"],
                               function_name=function.__name__,
@@ -99,7 +99,7 @@ def time_it(function):
 
         return functions_result
 
-    return _function
+    return _timed_function
 
 
 # method annotation to ensure the wrapped function is executed synchronously
