@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"log"
 	"reflect"
 	"strconv"
@@ -278,13 +280,63 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		return nil
 	}
 
+	retriesDone := len(run.Status.RetriesStatus)
+	retries := run.Spec.Retries
+	if retriesDone < retries && failedPrs != nil && len(failedPrs) > 0 {
+		logger.Infof("RetriesDone: %d, Total Retries: %d", retriesDone, retries)
+		run.Status.RetriesStatus = append(run.Status.RetriesStatus, v1alpha1.RunStatus{
+			Status: duckv1.Status{
+				ObservedGeneration: 0,
+				Conditions:         run.Status.Conditions.DeepCopy(),
+				Annotations:        nil,
+			},
+			RunStatusFields: runv1alpha1.RunStatusFields{
+				StartTime:      run.Status.StartTime.DeepCopy(),
+				CompletionTime: run.Status.CompletionTime.DeepCopy(),
+				Results:        nil,
+				RetriesStatus:  nil,
+				ExtraFields:    runtime.RawExtension{},
+			},
+		})
+		// Without immediately updating here, wrong number of retries are performed.
+		_, err := c.pipelineClientSet.TektonV1alpha1().Runs(run.Namespace).UpdateStatus(ctx, run, metav1.UpdateOptions{})
+		if err != nil {
+			return err
+		}
+		for _, failedPr := range failedPrs {
+			// PipelineRun do not support a retry, we dispose off old PR and create a fresh one.
+			// instead of deleting we just label it deleted=True.
+			deletedLabel := map[string]string{"deleted": "True"}
+			mergePatch := map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"labels": deletedLabel,
+				},
+			}
+			patch, err := json.Marshal(mergePatch)
+			if err != nil {
+				return err
+			}
+			_, err = c.pipelineClientSet.TektonV1alpha1().PipelineRuns(failedPr.Namespace).
+				Patch(ctx, failedPr.Name, types.MergePatchType, patch, metav1.PatchOptions{})
+			pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, highestIteration, iterationElements)
+			if err != nil {
+				return fmt.Errorf("error creating PipelineRun from Run %s while retrying: %w", run.Name, err)
+			}
+			status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
+				Iteration: highestIteration,
+				Status:    &pr.Status,
+			}
+			logger.Infof("Retried failed pipelineRun: %s with new pipelineRun: %s", failedPr.Name, pr.Name)
+		}
+		return nil
+	}
+
 	// Check the status of the PipelineRun for the highest iteration.
 	for _, failedPr := range failedPrs {
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
 			"PipelineRun %s has failed", failedPr.Name)
 		return nil
 	}
-
 	// Mark run status Running
 	run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
 		"Iterations completed: %d", highestIteration-len(currentRunningPrs))
@@ -430,20 +482,6 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 
 }
 
-// func (c *Reconciler) retryPipelineRun(ctx context.Context, tr *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
-// 	newStatus := *tr.Status.DeepCopy()
-// 	newStatus.RetriesStatus = nil
-// 	tr.Status.RetriesStatus = append(tr.Status.RetriesStatus, newStatus)
-// 	tr.Status.StartTime = nil
-// 	tr.Status.CompletionTime = nil
-// 	tr.Status.PodName = ""
-// 	tr.Status.SetCondition(&apis.Condition{
-// 		Type:   apis.ConditionSucceeded,
-// 		Status: corev1.ConditionUnknown,
-// 	})
-// 	return c.pipelineClientSet.TektonV1beta1().PipelineRuns(tr.Namespace).UpdateStatus(ctx, tr, metav1.UpdateOptions{})
-// }
-
 func (c *Reconciler) updateLabelsAndAnnotations(ctx context.Context, run *v1alpha1.Run) error {
 	newRun, err := c.runLister.Runs(run.Namespace).Get(run.Name)
 	if err != nil {
@@ -484,6 +522,10 @@ func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1a
 	status.CurrentRunning = 0
 	for _, pr := range pipelineRuns {
 		lbls := pr.GetLabels()
+		if lbls["deleted"] == "True" {
+			// PipelineRun is already retried, skipping...
+			continue
+		}
 		iterationStr := lbls[pipelineloop.GroupName+pipelineLoopIterationLabelKey]
 		iteration, err := strconv.Atoi(iterationStr)
 		if err != nil {
