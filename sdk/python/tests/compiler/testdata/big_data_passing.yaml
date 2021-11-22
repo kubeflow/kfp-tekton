@@ -46,6 +46,7 @@ metadata:
       "sum-numbers": [["Output", "$(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output"]],
       "write-numbers": [["numbers", "$(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Big data passing"}'
 spec:
   pipelineSpec:

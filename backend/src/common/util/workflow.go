@@ -253,6 +253,17 @@ func (w *Workflow) ReplaceUID(id string) error {
 	return nil
 }
 
+func (w *Workflow) ReplaceOrignalPipelineRunName(name string) error {
+	newWorkflowString := strings.Replace(w.ToStringForStore(), "$ORIG_PR_NAME", name, -1)
+	var workflow *workflowapi.PipelineRun
+	if err := json.Unmarshal([]byte(newWorkflowString), &workflow); err != nil {
+		return NewInternalServerError(err,
+			"Failed to unmarshal workflow spec manifest. Workflow: %s", w.ToStringForStore())
+	}
+	w.PipelineRun = workflow
+	return nil
+}
+
 func (w *Workflow) SetCannonicalLabels(name string, nextScheduledEpoch int64, index int64) {
 	w.SetLabels(LabelKeyWorkflowScheduledWorkflowName, name)
 	w.SetLabels(LabelKeyWorkflowEpoch, FormatInt64ForLabel(nextScheduledEpoch))

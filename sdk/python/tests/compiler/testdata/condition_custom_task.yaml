@@ -36,6 +36,7 @@ metadata:
       [["output", "$(results.output.path)"]], "print": [], "print-2": [], "print-3":
       [], "print-4": []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition().",
       "name": "conditional-execution-pipeline"}'
 spec:

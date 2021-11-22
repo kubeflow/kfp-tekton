@@ -27,6 +27,7 @@ metadata:
     tekton.dev/artifact_items: '{"echo": [], "echo-2": [], "gcs-download": [["data",
       "$(results.data.path)"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Downloads a message and
       prints it. The exit handler will run after the pipeline finishes (successfully
       or not).", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",

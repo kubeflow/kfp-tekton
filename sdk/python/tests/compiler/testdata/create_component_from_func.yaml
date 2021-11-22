@@ -37,6 +37,7 @@ metadata:
       "$(results.items.path)"]], "produce-dir-with-files-python-op": [["output_dir",
       "$(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "create-component-from-function"}'
 spec:
   pipelineSpec:

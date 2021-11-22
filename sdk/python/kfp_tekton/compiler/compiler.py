@@ -37,7 +37,7 @@ from kfp.dsl._for_loop import LoopArguments
 from kfp.dsl._metadata import _extract_pipeline_metadata
 # KFP-Tekton imports
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
-from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing
+from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing, BIG_DATA_PATH_FORMAT
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task, _process_argo_vars
@@ -1076,6 +1076,9 @@ class TektonCompiler(Compiler):
       pipeline_run['metadata']['labels'].update(self.pipeline_labels)
       # Remove pipeline level label for 'pipelines.kubeflow.org/cache_enabled' as it overwrites task level label
       pipeline_run['metadata']['labels'].pop('pipelines.kubeflow.org/cache_enabled', None)
+
+    # Add big data passing path format
+    self.pipeline_annotations['pipelines.kubeflow.org/big_data_passing_format'] = BIG_DATA_PATH_FORMAT
 
     if self.pipeline_annotations:
       pipeline_run['metadata']['annotations'] = pipeline_run['metadata'].setdefault('annotations', {})

@@ -25,6 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{"my-in-coop1": [], "my-in-coop2": [], "my-inner-inner-coop":
       [], "my-out-cop": []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
       "optional": true, "type": "Integer"}], "name": "my-pipeline"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",

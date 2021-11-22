@@ -29,6 +29,7 @@ metadata:
       "flip-coin": [["Output", "$(results.output.path)"]], "sleepcomponent": [], "sleepcomponent-2":
       [], "sleepcomponent-3": [], "sleepcomponent-4": []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Any Sequencer Component
       Demo", "name": "any-sequencer"}'
 spec:

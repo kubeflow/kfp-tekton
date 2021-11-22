@@ -24,6 +24,7 @@ from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path,
 from os import environ as env
 
 BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
+BIG_DATA_PATH_FORMAT = "/".join(["$(workspaces.$TASK_NAME.path)", BIG_DATA_MIDPATH, "$TASKRUN_NAME", "$TASK_PARAM_NAME"])
 
 
 def fix_big_data_passing(workflow: dict) -> dict:

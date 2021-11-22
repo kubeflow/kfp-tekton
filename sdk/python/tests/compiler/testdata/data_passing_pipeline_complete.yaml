@@ -56,6 +56,7 @@ metadata:
       "produce-something": [["data", "$(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data"]],
       "produce-string": [["Output", "$(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "anything_param",
       "name": "anything_param", "optional": true}, {"default": "something_param",
       "name": "something_param", "optional": true, "type": "Something"}, {"default":

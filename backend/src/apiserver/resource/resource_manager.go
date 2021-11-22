@@ -435,6 +435,10 @@ func (r *ResourceManager) CreateRun(ctx context.Context, apiRun *api.Run) (*mode
 
 	// Add label to the workflow so it can be persisted by persistent agent later.
 	workflow.SetLabels(util.LabelOriginalPipelineRunName, workflow.Name)
+	err = workflow.ReplaceOrignalPipelineRunName(workflow.Name)
+	if err != nil {
+		return nil, util.NewInternalServerError(err, "Failed to replace workflow original pipelineRun name")
+	}
 
 	// Add a reference to the default experiment if run does not already have a containing experiment
 	ref, err := r.getDefaultExperimentIfNoExperiment(apiRun.GetResourceReferences())

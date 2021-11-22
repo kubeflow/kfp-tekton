@@ -30,6 +30,7 @@ metadata:
       "flip-coin-2": [["output_result", "$(results.output-result.path)"]], "print":
       []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
       custom task with KFP", "name": "tekton-custom-task-on-kubeflow-pipeline"}'
 spec:

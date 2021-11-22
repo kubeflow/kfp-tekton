@@ -29,6 +29,7 @@ metadata:
     tekton.dev/artifact_items: '{"echo": [], "gcs-download": [["data", "$(results.data.path)"]],
       "gcs-download-2": [["data", "$(results.data.path)"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Download two messages
       in parallel and prints the concatenated result.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
       "name": "url1", "optional": true, "type": "String"}, {"default": "gs://ml-pipeline-playground/shakespeare2.txt",

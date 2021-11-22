@@ -26,6 +26,7 @@ metadata:
       [], "consume-anything-as-file-3": [], "consume-something-as-file": [], "consume-something-as-file-2":
       [], "consume-string-as-file": [], "consume-string-as-file-2": []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "anything_param",
       "name": "anything_param", "optional": true}, {"default": "something_param",
       "name": "something_param", "optional": true, "type": "Something"}, {"default":
