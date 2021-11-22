@@ -233,7 +233,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 
 	// Determine how many iterations of the Task will be done.
-	totalIterations, interationElements, err := computeIterations(run, pipelineLoopSpec)
+	totalIterations, iterationElements, err := computeIterations(run, pipelineLoopSpec)
 	if err != nil {
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
 			"Cannot determine number of iterations: %s", err)
@@ -328,7 +328,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 
 	// Create PipelineRun to run this iteration based on parallelism
 	for i := 0; i < actualParallelism-len(currentRunningPrs); i++ {
-		pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, nextIteration, interationElements)
+		pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, nextIteration, iterationElements)
 		if err != nil {
 			return fmt.Errorf("error creating PipelineRun from Run %s: %w", run.Name, err)
 		}
@@ -388,16 +388,16 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 	return &pipelineLoopMeta, &pipelineLoopSpec, nil
 }
 
-func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, run *v1alpha1.Run, iteration int, interationElements []interface{}) (*v1beta1.PipelineRun, error) {
+func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, run *v1alpha1.Run, iteration int, iterationElements []interface{}) (*v1beta1.PipelineRun, error) {
 
 	// Create name for PipelineRun from Run name plus iteration number.
 	prName := names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("%s-%s", run.Name, fmt.Sprintf("%05d", iteration)))
 	pipelineRunAnnotations := getPipelineRunAnnotations(run)
 	currentIndex := iteration - 1
-	if currentIndex > len(interationElements) {
-		currentIndex = len(interationElements) - 1
+	if currentIndex > len(iterationElements) {
+		currentIndex = len(iterationElements) - 1
 	}
-	currentIterationItemBytes, _ := json.Marshal(interationElements[currentIndex])
+	currentIterationItemBytes, _ := json.Marshal(iterationElements[currentIndex])
 	pipelineRunAnnotations[pipelineloop.GroupName+pipelineLoopCurrentIterationItemAnnotationKey] = string(currentIterationItemBytes)
 
 	pr := &v1beta1.PipelineRun{
@@ -542,7 +542,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 	from := -1
 	step := -1
 	to := -1
-	interationElements := []interface{}{}
+	iterationElements := []interface{}{}
 	for _, p := range run.Spec.Params {
 		if tls.IterateNumeric != "" {
 			if p.Name == "from" {
@@ -566,31 +566,31 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 				errDictString := json.Unmarshal([]byte(p.Value.StringVal), &dictsString)
 				errDictInt := json.Unmarshal([]byte(p.Value.StringVal), &dictsInt)
 				if errString != nil && errInt != nil && errDictString != nil && errDictInt != nil {
-					return 0, interationElements, fmt.Errorf("The value of the iterate parameter %q can not transfer to array", tls.IterateParam)
+					return 0, iterationElements, fmt.Errorf("The value of the iterate parameter %q can not transfer to array", tls.IterateParam)
 				}
 
 				if errString == nil {
 					numberOfIterations = len(strings)
 					for _, v := range strings {
-						interationElements = append(interationElements, v)
+						iterationElements = append(iterationElements, v)
 					}
 					break
 				} else if errInt == nil {
 					numberOfIterations = len(ints)
 					for _, v := range ints {
-						interationElements = append(interationElements, v)
+						iterationElements = append(iterationElements, v)
 					}
 					break
 				} else if errDictString == nil {
 					numberOfIterations = len(dictsString)
 					for _, v := range dictsString {
-						interationElements = append(interationElements, v)
+						iterationElements = append(iterationElements, v)
 					}
 					break
 				} else if errDictInt == nil {
 					numberOfIterations = len(dictsInt)
 					for _, v := range dictsInt {
-						interationElements = append(interationElements, v)
+						iterationElements = append(iterationElements, v)
 					}
 					break
 				}
@@ -598,7 +598,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 			if p.Value.Type == v1beta1.ParamTypeArray {
 				numberOfIterations = len(p.Value.ArrayVal)
 				for _, v := range p.Value.ArrayVal {
-					interationElements = append(interationElements, v)
+					iterationElements = append(iterationElements, v)
 				}
 				break
 			}
@@ -606,7 +606,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 	}
 	if tls.IterateNumeric != "" {
 		if from == -1 || to == -1 {
-			return 0, interationElements, fmt.Errorf("The from or to parameters was not found in runs")
+			return 0, iterationElements, fmt.Errorf("The from or to parameters was not found in runs")
 		}
 		if step == -1 {
 			step = 1
@@ -614,12 +614,12 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 		// numberOfIterations is the number of (to - from) / step + 1
 		numberOfIterations = (to-from)/step + 1
 		for i := 0; i < numberOfIterations; i++ {
-			interationElements = append(interationElements, step*i+from)
+			iterationElements = append(iterationElements, step*i+from)
 		}
 	} else if numberOfIterations == -1 {
-		return 0, interationElements, fmt.Errorf("The iterate parameter %q was not found", tls.IterateParam)
+		return 0, iterationElements, fmt.Errorf("The iterate parameter %q was not found", tls.IterateParam)
 	}
-	return numberOfIterations, interationElements, nil
+	return numberOfIterations, iterationElements, nil
 }
 
 func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int) []v1beta1.Param {
