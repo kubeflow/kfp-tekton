@@ -104,6 +104,21 @@ func failed(pr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
 	return prWithStatus
 }
 
+func setRetries(run *v1alpha1.Run, retries int) *v1alpha1.Run {
+	run.Spec.Retries = retries
+	return run
+}
+
+func setDeleted(pr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
+	pr.Labels["deleted"] = "True"
+	return pr
+}
+
+func setPrName(pr *v1beta1.PipelineRun, name string) *v1beta1.PipelineRun {
+	pr.Name = name
+	return pr
+}
+
 // getPipelineLoopController returns an instance of the PipelineLoop controller/reconciler that has been seeded with
 // d, where d represents the state of the system (existing resources) needed for the test.
 func getPipelineLoopController(t *testing.T, d test.Data, pipelineloops []*pipelineloopv1alpha1.PipelineLoop) (test.Assets, func()) {
@@ -837,6 +852,78 @@ var expectedPipelineRunIteration1 = &v1beta1.PipelineRun{
 	},
 }
 
+var expectedPipelineRunFailed = &v1beta1.PipelineRun{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-pipelineloop-00001-failed",
+		Namespace: "foo",
+		OwnerReferences: []metav1.OwnerReference{{
+			APIVersion:         "tekton.dev/v1alpha1",
+			Kind:               "Run",
+			Name:               "run-pipelineloop",
+			Controller:         &trueB,
+			BlockOwnerDeletion: &trueB,
+		}},
+		Labels: map[string]string{
+			"custom.tekton.dev/originalPipelineRun":   "pr-loop-example",
+			"custom.tekton.dev/parentPipelineRun":     "pr-loop-example",
+			"custom.tekton.dev/pipelineLoop":          "a-pipelineloop",
+			"tekton.dev/run":                          "run-pipelineloop",
+			"custom.tekton.dev/pipelineLoopIteration": "1",
+			"myTestLabel":                             "myTestLabelValue",
+		},
+		Annotations: map[string]string{
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
+			"myTestAnnotation": "myTestAnnotationValue",
+		},
+	},
+	Spec: v1beta1.PipelineRunSpec{
+		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
+		Params: []v1beta1.Param{{
+			Name:  "additional-parameter",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
+		}},
+	},
+}
+
+var expectedPipelineRunRetry = &v1beta1.PipelineRun{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-pipelineloop-00001-9l9zj",
+		Namespace: "foo",
+		OwnerReferences: []metav1.OwnerReference{{
+			APIVersion:         "tekton.dev/v1alpha1",
+			Kind:               "Run",
+			Name:               "run-pipelineloop",
+			Controller:         &trueB,
+			BlockOwnerDeletion: &trueB,
+		}},
+		Labels: map[string]string{
+			"custom.tekton.dev/originalPipelineRun":   "pr-loop-example",
+			"custom.tekton.dev/parentPipelineRun":     "pr-loop-example",
+			"custom.tekton.dev/pipelineLoop":          "a-pipelineloop",
+			"tekton.dev/run":                          "run-pipelineloop",
+			"custom.tekton.dev/pipelineLoopIteration": "1",
+			"myTestLabel":                             "myTestLabelValue",
+		},
+		Annotations: map[string]string{
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
+			"myTestAnnotation": "myTestAnnotationValue",
+		},
+	},
+	Spec: v1beta1.PipelineRunSpec{
+		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
+		Params: []v1beta1.Param{{
+			Name:  "additional-parameter",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
+		}},
+	},
+}
+
 var expectedPipelineRunIterateNumeric1 = &v1beta1.PipelineRun{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "run-pipelineloop-00001-9l9zj",
@@ -1147,6 +1234,15 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedPipelineruns: []*v1beta1.PipelineRun{failed(expectedPipelineRunIteration1)},
 		expectedEvents:       []string{"Warning Failed PipelineRun " + expectedPipelineRunIteration1.Name + " has failed"},
 	}, {
+		name:                 "Reconcile a run with retries after the first PipelineRun has failed",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop,
+		run:                  loopRunning(setRetries(runPipelineLoop, 1)),
+		pipelineruns:         []*v1beta1.PipelineRun{failed(expectedPipelineRunFailed)},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{setDeleted(failed(expectedPipelineRunFailed)), expectedPipelineRunRetry},
+	}, {
 		name:                 "Reconcile a new run with a pipelineloop with Parallelism specified",
 		pipeline:             paraPipeline,
 		pipelineloop:         paraPipelineLoop,
@@ -1248,7 +1344,16 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 				if len(createdPipelineruns) == 0 {
 					t.Errorf("A PipelineRun should have been created but was not")
 				} else {
-					if d := cmp.Diff(tc.expectedPipelineruns, createdPipelineruns); d != "" {
+					pipelineRunsExpectedToBeCreated := make([]*v1beta1.PipelineRun, len(createdPipelineruns))
+					i := 0
+					for _, pr := range tc.expectedPipelineruns {
+						if pr.Labels["deleted"] != "True" {
+							pipelineRunsExpectedToBeCreated[i] = pr
+							i = i + 1 // skip the pr that were retried.
+						}
+					}
+
+					if d := cmp.Diff(pipelineRunsExpectedToBeCreated, createdPipelineruns); d != "" {
 						t.Errorf("Expected PipelineRun was not created. Diff %s", diff.PrintWantGot(d))
 					}
 				}
@@ -1260,8 +1365,12 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 
 			// Verify Run status contains status for all PipelineRuns.
 			expectedPipelineRuns := map[string]pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{}
-			for i, pr := range tc.expectedPipelineruns {
-				expectedPipelineRuns[pr.Name] = pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{Iteration: i + 1, Status: &pr.Status}
+			i := 1
+			for _, pr := range tc.expectedPipelineruns {
+				expectedPipelineRuns[pr.Name] = pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{Iteration: i, Status: &pr.Status}
+				if pr.Labels["deleted"] != "True" {
+					i = i + 1 // iteration remain same, incase previous pr was a retry.
+				}
 			}
 			checkRunStatus(t, reconciledRun, expectedPipelineRuns)
 
