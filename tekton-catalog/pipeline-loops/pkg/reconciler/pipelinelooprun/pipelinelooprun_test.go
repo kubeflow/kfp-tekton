@@ -872,6 +872,7 @@ var expectedPipelineRunFailed = &v1beta1.PipelineRun{
 			"myTestLabel":                             "myTestLabelValue",
 		},
 		Annotations: map[string]string{
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
 			"myTestAnnotation": "myTestAnnotationValue",
 		},
 	},
@@ -907,6 +908,7 @@ var expectedPipelineRunRetry = &v1beta1.PipelineRun{
 			"myTestLabel":                             "myTestLabelValue",
 		},
 		Annotations: map[string]string{
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
 			"myTestAnnotation": "myTestAnnotationValue",
 		},
 	},

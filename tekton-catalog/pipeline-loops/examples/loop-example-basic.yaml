@@ -22,7 +22,7 @@ spec:
             imagePullPolicy: IfNotPresent
             script: |
               #!/usr/bin/env bash
-              echo "$(params.message)"
+              echo "$(params.message)" && exit 1;
   iterateParam: message
 ---
 apiVersion: tekton.dev/v1beta1
