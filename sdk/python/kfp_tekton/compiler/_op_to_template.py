@@ -32,6 +32,10 @@ from .. import __version__
 RESOURCE_OP_IMAGE = ":".join(["aipipeline/kubectl-wrapper", __version__])
 TEKTON_HOME_RESULT_PATH = "/tekton/home/tep-results/"
 
+# The image to use in basic bash steps such as copying results in multi-step.
+TEKTON_BASH_STEP_IMAGE = 'busybox'
+TEKTON_COPY_RESULTS_STEP_IMAGE = 'library/bash'
+
 
 def _get_base_step(name: str):
     """Base image step for running bash commands.
@@ -45,7 +49,7 @@ def _get_base_step(name: str):
         Dict[Text, Any]
     """
     return {
-        'image': 'busybox',
+        'image': TEKTON_BASH_STEP_IMAGE,
         'name': name,
         'script': '#!/bin/sh\nset -exo pipefail\n'
     }
@@ -75,7 +79,7 @@ def _get_copy_result_step_template(step_number: int, result_maps: list):
         "name": "copy-results-%s" % str(step_number),
         "args": args,
         "command": ["sh", "-c"],
-        "image": "library/bash"
+        "image": TEKTON_COPY_RESULTS_STEP_IMAGE
     }
 
 
