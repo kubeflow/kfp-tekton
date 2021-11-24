@@ -34,6 +34,15 @@
 
 from kfp import dsl
 from kfp.components import func_to_container_op, InputPath, OutputPath
+from kfp_tekton.compiler import TektonCompiler
+
+
+class Coder:
+    def empty(self):
+        return ""
+
+
+TektonCompiler._get_unique_id_code = Coder.empty
 
 # %% [markdown]
 # ## Small data
@@ -221,6 +230,5 @@ def file_passing_pipelines():
 
 # General by kfp-tekton
 if __name__ == '__main__':
-    from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(file_passing_pipelines,
                              __file__.replace('.py', '.yaml'))

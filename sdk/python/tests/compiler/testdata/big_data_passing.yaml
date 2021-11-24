@@ -936,7 +936,7 @@ spec:
       timeout: 0s
     - runAfter:
       - repeat-line
-      name: big-data-passing-ce7fe-for-loop-2
+      name: big-data-passing-for-loop-2
       params:
       - name: loop-item-param-1
         value: '[1, 2]'
@@ -957,7 +957,7 @@ spec:
             - name: repeat-line-taskrun-name
               type: string
             tasks:
-            - name: big-data-passing-ce7fe-for-loop-4
+            - name: big-data-passing-for-loop-4
               params:
               - name: loop-item-param-3
                 value: '[1, 2]'

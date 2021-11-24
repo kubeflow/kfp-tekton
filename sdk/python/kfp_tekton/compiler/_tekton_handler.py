@@ -179,7 +179,6 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                             break
                     if run_after_task not in denpendency_list:
                         # check task name is task list
-                        append_run_after_task = False
                         for origin_task_name in task_list:
                             if origin_task_name in run_after_task:
                                 run_after_task_list.append(run_after_task)
