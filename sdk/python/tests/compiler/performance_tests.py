@@ -22,6 +22,7 @@ import sys  # noqa
 import tempfile
 import time
 import threading
+import json
 
 from collections import defaultdict
 from datetime import datetime as dt
@@ -170,7 +171,7 @@ def submit_pipeline_run(*,  # force kwargs for time_it decorator to get pipeline
 @time_it
 def wait_for_run_to_complete(*,  # force kwargs so the time_it decorator can get pipeline_name
                              pipeline_name: str,
-                             run_id: str) -> ApiRun:
+                             run_id: str) -> ApiRunDetail:
     client = get_client()
     status = None
 
@@ -191,7 +192,7 @@ def wait_for_run_to_complete(*,  # force kwargs so the time_it decorator can get
           f" after {(run.finished_at - run.created_at)}"
           f" ({run.created_at.strftime('%H:%M:%S')}->{run.finished_at.strftime('%H:%M:%S')})")
 
-    return run
+    return run_detail
 
 
 def get_client() -> TektonClient:
@@ -251,7 +252,7 @@ def run_concurrently(pipelinefunc_name_tuples: [(Callable, str)]) -> [(str, str)
         )
         for performance_test in concurrent.futures.as_completed(performance_tests):
             try:
-                run_details = performance_test.result()
+                run_details = performance_test.result().run
                 pipeline_status.append((run_details.name, run_details.status))
             except Exception as e:
                 error = f"{e.__class__.__name__}: {str(e)}"
@@ -262,32 +263,82 @@ def run_concurrently(pipelinefunc_name_tuples: [(Callable, str)]) -> [(str, str)
 
 
 def run_single_pipeline_performance_test(pipeline_func: Callable,
-                                         pipeline_name: str) -> ApiRun:
+                                         pipeline_name: str) -> ApiRunDetail:
 
     pipeline_file = compile_pipeline(pipeline_name=pipeline_name, pipeline_func=pipeline_func)
     run_id = submit_pipeline_run(pipeline_name=pipeline_name, pipeline_file=pipeline_file)
     run_details = wait_for_run_to_complete(pipeline_name=pipeline_name, run_id=run_id)
+    task_details = parse_run_details(run_details)
 
-    append_exec_times_to_output_file(pipeline_name)
+    append_exec_times_to_output_file(pipeline_name, task_details)
 
     return run_details
 
 
-def append_exec_times_to_output_file(pipeline_name: str):
+def parse_run_details(run_details: ApiRunDetail) -> dict:
+    rev = {}
+    pipelinerun = json.loads(run_details.to_dict()["pipeline_runtime"]["workflow_manifest"])
+    status = pipelinerun["status"]
+
+    def get_details(data):
+        info = {}
+        total = timedelta(0)
+        count = 0
+        for key in data.keys():
+            run = data[key]
+            status = run["status"]
+            conditions = status["conditions"]
+            state = conditions[len(conditions) - 1]['type']
+            elapsed = dt.strptime(status['completionTime'], "%Y-%m-%dT%H:%M:%SZ") - dt.strptime(status['startTime'], "%Y-%m-%dT%H:%M:%SZ")
+            info[run['pipelineTaskName']] = {
+                "elapsed": elapsed,
+                "status": state
+            }
+            count += 1
+            total += elapsed
+
+        info["count"] = count
+        info["total_elapsed"] = total
+        return info
+
+    if "taskRuns" in status:
+        rev["taskRuns"] = get_details(status["taskRuns"])
+
+    if "runs" in status:
+        rev["run"] = get_details(status["runs"])
+
+    return rev
+
+
+def append_exec_times_to_output_file(pipeline_name: str, tasks: dict):
 
     compile_time = str(execution_times[pipeline_name][compile_pipeline.__name__])
     submit_time = str(execution_times[pipeline_name][submit_pipeline_run.__name__])
     run_time = str(execution_times[pipeline_name][wait_for_run_to_complete.__name__])
+    taskruns = 0
+    taskrun_elapsed = timedelta(0)
+    runs = 0
+    run_elapsed = timedelta(0)
+    if "taskRuns" in tasks:
+        taskruns = tasks["taskRuns"]["count"]
+        taskrun_elapsed = tasks["taskRuns"]["total_elapsed"]
+    if "runs" in tasks:
+        runs = tasks["runs"]["count"]
+        run_elapsed = tasks["runs"]["total_elapsed"]
 
     with open(OUTPUT_FILE, "a") as f:
-        f.write(OUTPUT_SEP.join([pipeline_name, compile_time, submit_time, run_time]))
+        f.write(OUTPUT_SEP.join([
+            pipeline_name, compile_time, submit_time, run_time,
+            str(taskruns), str(runs), str(taskrun_elapsed), str(run_elapsed)
+        ]))
         f.write("\n")
 
 
 def create_output_file():
 
     with open(OUTPUT_FILE, "w") as f:
-        f.write(OUTPUT_SEP.join(["Pipeline", "Compile", "Submit", "Run"]) + "\n")
+        f.write(OUTPUT_SEP.join(["Pipeline", "Compile", "Submit", "Run",
+                "Num_TaskRuns", "Num_Runs", "Total_TaskRun_Time", "Total_Run_Time"]) + "\n")
 
 
 def run_performance_tests():
