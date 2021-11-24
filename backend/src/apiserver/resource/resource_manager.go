@@ -1518,68 +1518,70 @@ func (r *ResourceManager) injectArchivalStep(workflow util.Workflow, artifactIte
 		injectDefaultScript := common.IsInjectDefaultScript()
 		copyStepTemplate := common.GetCopyStepTemplate()
 
-		if (hasArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
-			artifactScript := common.GetArtifactScript()
-			if archiveLogs {
-				// Logging volumes
-				if task.TaskSpec.Volumes == nil {
-					task.TaskSpec.Volumes = []corev1.Volume{}
-				}
-				loggingVolumes := []corev1.Volume{
-					r.getHostPathVolumeSource("varlog", "/var/log"),
-					r.getHostPathVolumeSource("varlibdockercontainers", "/var/lib/docker/containers"),
-					r.getHostPathVolumeSource("varlibkubeletpods", "/var/lib/kubelet/pods"),
-					r.getHostPathVolumeSource("varlogpods", "/var/log/pods"),
-				}
-				task.TaskSpec.Volumes = append(task.TaskSpec.Volumes, loggingVolumes...)
+		if task.TaskSpec != nil {
+			if (hasArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
+				artifactScript := common.GetArtifactScript()
+				if archiveLogs {
+					// Logging volumes
+					if task.TaskSpec.Volumes == nil {
+						task.TaskSpec.Volumes = []corev1.Volume{}
+					}
+					loggingVolumes := []corev1.Volume{
+						r.getHostPathVolumeSource("varlog", "/var/log"),
+						r.getHostPathVolumeSource("varlibdockercontainers", "/var/lib/docker/containers"),
+						r.getHostPathVolumeSource("varlibkubeletpods", "/var/lib/kubelet/pods"),
+						r.getHostPathVolumeSource("varlogpods", "/var/log/pods"),
+					}
+					task.TaskSpec.Volumes = append(task.TaskSpec.Volumes, loggingVolumes...)
 
-				// Logging volumeMounts
-				if task.TaskSpec.StepTemplate == nil {
-					task.TaskSpec.StepTemplate = &corev1.Container{}
+					// Logging volumeMounts
+					if task.TaskSpec.StepTemplate == nil {
+						task.TaskSpec.StepTemplate = &corev1.Container{}
+					}
+					if task.TaskSpec.StepTemplate.VolumeMounts == nil {
+						task.TaskSpec.StepTemplate.VolumeMounts = []corev1.VolumeMount{}
+					}
+					loggingVolumeMounts := []corev1.VolumeMount{
+						{Name: "varlog", MountPath: "/var/log"},
+						{Name: "varlibdockercontainers", MountPath: "/var/lib/docker/containers", ReadOnly: true},
+						{Name: "varlibkubeletpods", MountPath: "/var/lib/kubelet/pods", ReadOnly: true},
+						{Name: "varlogpods", MountPath: "/var/log/pods", ReadOnly: true},
+					}
+					task.TaskSpec.StepTemplate.VolumeMounts = append(task.TaskSpec.StepTemplate.VolumeMounts, loggingVolumeMounts...)
 				}
-				if task.TaskSpec.StepTemplate.VolumeMounts == nil {
-					task.TaskSpec.StepTemplate.VolumeMounts = []corev1.VolumeMount{}
+
+				// Process the artifacts into minimum sh commands if running with minimum linux kernel
+				if injectDefaultScript {
+					artifactScript = r.injectDefaultScript(workflow, artifactScript, artifacts, hasArtifacts, archiveLogs, trackArtifacts, stripEOF)
 				}
-				loggingVolumeMounts := []corev1.VolumeMount{
-					{Name: "varlog", MountPath: "/var/log"},
-					{Name: "varlibdockercontainers", MountPath: "/var/lib/docker/containers", ReadOnly: true},
-					{Name: "varlibkubeletpods", MountPath: "/var/lib/kubelet/pods", ReadOnly: true},
-					{Name: "varlogpods", MountPath: "/var/log/pods", ReadOnly: true},
+
+				// Define post-processing step
+				container := *copyStepTemplate
+				if container.Name == "" {
+					container.Name = "copy-artifacts"
 				}
-				task.TaskSpec.StepTemplate.VolumeMounts = append(task.TaskSpec.StepTemplate.VolumeMounts, loggingVolumeMounts...)
-			}
+				if container.Image == "" {
+					container.Image = common.GetArtifactImage()
+				}
+				container.Env = append(container.Env,
+					r.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
+					r.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
+					r.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
+					r.getObjectFieldSelector("ARTIFACT_ITEMS", "metadata.annotations['tekton.dev/artifact_items']"),
+					r.getObjectFieldSelector("PIPELINETASK", "metadata.labels['tekton.dev/pipelineTask']"),
+					r.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
+					r.getObjectFieldSelector("PODNAME", "metadata.name"),
+					r.getObjectFieldSelector("NAMESPACE", "metadata.namespace"),
+					r.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
+					r.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
+					r.getEnvVar("ARCHIVE_LOGS", strconv.FormatBool(archiveLogs)),
+					r.getEnvVar("TRACK_ARTIFACTS", strconv.FormatBool(trackArtifacts)),
+					r.getEnvVar("STRIP_EOF", strconv.FormatBool(stripEOF)),
+				)
 
-			// Process the artifacts into minimum sh commands if running with minimum linux kernel
-			if injectDefaultScript {
-				artifactScript = r.injectDefaultScript(workflow, artifactScript, artifacts, hasArtifacts, archiveLogs, trackArtifacts, stripEOF)
+				step := workflowapi.Step{Container: container, Script: artifactScript}
+				task.TaskSpec.Steps = append(task.TaskSpec.Steps, step)
 			}
-
-			// Define post-processing step
-			container := *copyStepTemplate
-			if container.Name == "" {
-				container.Name = "copy-artifacts"
-			}
-			if container.Image == "" {
-				container.Image = common.GetArtifactImage()
-			}
-			container.Env = append(container.Env,
-				r.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
-				r.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
-				r.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
-				r.getObjectFieldSelector("ARTIFACT_ITEMS", "metadata.annotations['tekton.dev/artifact_items']"),
-				r.getObjectFieldSelector("PIPELINETASK", "metadata.labels['tekton.dev/pipelineTask']"),
-				r.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
-				r.getObjectFieldSelector("PODNAME", "metadata.name"),
-				r.getObjectFieldSelector("NAMESPACE", "metadata.namespace"),
-				r.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
-				r.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
-				r.getEnvVar("ARCHIVE_LOGS", strconv.FormatBool(archiveLogs)),
-				r.getEnvVar("TRACK_ARTIFACTS", strconv.FormatBool(trackArtifacts)),
-				r.getEnvVar("STRIP_EOF", strconv.FormatBool(stripEOF)),
-			)
-
-			step := workflowapi.Step{Container: container, Script: artifactScript}
-			task.TaskSpec.Steps = append(task.TaskSpec.Steps, step)
 		}
 	}
 }

@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"log"
 	"reflect"
 	"strconv"
@@ -68,6 +70,9 @@ const (
 
 	// pipelineLoopIterationLabelKey is the label identifier for the iteration number.  This label is added to the Run's PipelineRuns.
 	pipelineLoopIterationLabelKey = "/pipelineLoopIteration"
+
+	// pipelineLoopCurrentIterationItemAnnotationKey is the annotation identifier for the iteration items (string array). This annotation is added to the Run's PipelineRuns.
+	pipelineLoopCurrentIterationItemAnnotationKey = "/pipelineLoopCurrentIterationItem"
 
 	// LabelKeyWorkflowRunId is the label identifier a pipelinerun is managed by the Kubeflow Pipeline persistent agent.
 	LabelKeyWorkflowRunId = "pipeline/runid"
@@ -191,7 +196,7 @@ func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
 	defaults, _ := config.NewDefaultsFromMap(map[string]string{})
 	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{
 		"enable-custom-tasks": "true",
-		"enable-api-fields" : "alpha",
+		"enable-api-fields":   "alpha",
 	})
 	artifactBucket, _ := config.NewArtifactBucketFromMap(map[string]string{})
 	artifactPVC, _ := config.NewArtifactPVCFromMap(map[string]string{})
@@ -230,7 +235,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 
 	// Determine how many iterations of the Task will be done.
-	totalIterations, err := computeIterations(run, pipelineLoopSpec)
+	totalIterations, iterationElements, err := computeIterations(run, pipelineLoopSpec)
 	if err != nil {
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
 			"Cannot determine number of iterations: %s", err)
@@ -275,13 +280,63 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		return nil
 	}
 
+	retriesDone := len(run.Status.RetriesStatus)
+	retries := run.Spec.Retries
+	if retriesDone < retries && failedPrs != nil && len(failedPrs) > 0 {
+		logger.Infof("RetriesDone: %d, Total Retries: %d", retriesDone, retries)
+		run.Status.RetriesStatus = append(run.Status.RetriesStatus, v1alpha1.RunStatus{
+			Status: duckv1.Status{
+				ObservedGeneration: 0,
+				Conditions:         run.Status.Conditions.DeepCopy(),
+				Annotations:        nil,
+			},
+			RunStatusFields: runv1alpha1.RunStatusFields{
+				StartTime:      run.Status.StartTime.DeepCopy(),
+				CompletionTime: run.Status.CompletionTime.DeepCopy(),
+				Results:        nil,
+				RetriesStatus:  nil,
+				ExtraFields:    runtime.RawExtension{},
+			},
+		})
+		// Without immediately updating here, wrong number of retries are performed.
+		_, err := c.pipelineClientSet.TektonV1alpha1().Runs(run.Namespace).UpdateStatus(ctx, run, metav1.UpdateOptions{})
+		if err != nil {
+			return err
+		}
+		for _, failedPr := range failedPrs {
+			// PipelineRun do not support a retry, we dispose off old PR and create a fresh one.
+			// instead of deleting we just label it deleted=True.
+			deletedLabel := map[string]string{"deleted": "True"}
+			mergePatch := map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"labels": deletedLabel,
+				},
+			}
+			patch, err := json.Marshal(mergePatch)
+			if err != nil {
+				return err
+			}
+			_, err = c.pipelineClientSet.TektonV1alpha1().PipelineRuns(failedPr.Namespace).
+				Patch(ctx, failedPr.Name, types.MergePatchType, patch, metav1.PatchOptions{})
+			pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, highestIteration, iterationElements)
+			if err != nil {
+				return fmt.Errorf("error creating PipelineRun from Run %s while retrying: %w", run.Name, err)
+			}
+			status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
+				Iteration: highestIteration,
+				Status:    &pr.Status,
+			}
+			logger.Infof("Retried failed pipelineRun: %s with new pipelineRun: %s", failedPr.Name, pr.Name)
+		}
+		return nil
+	}
+
 	// Check the status of the PipelineRun for the highest iteration.
 	for _, failedPr := range failedPrs {
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
 			"PipelineRun %s has failed", failedPr.Name)
 		return nil
 	}
-
 	// Mark run status Running
 	run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
 		"Iterations completed: %d", highestIteration-len(currentRunningPrs))
@@ -325,7 +380,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 
 	// Create PipelineRun to run this iteration based on parallelism
 	for i := 0; i < actualParallelism-len(currentRunningPrs); i++ {
-		pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, nextIteration)
+		pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, nextIteration, iterationElements)
 		if err != nil {
 			return fmt.Errorf("error creating PipelineRun from Run %s: %w", run.Name, err)
 		}
@@ -385,10 +440,18 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 	return &pipelineLoopMeta, &pipelineLoopSpec, nil
 }
 
-func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, run *v1alpha1.Run, iteration int) (*v1beta1.PipelineRun, error) {
+func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, run *v1alpha1.Run, iteration int, iterationElements []interface{}) (*v1beta1.PipelineRun, error) {
 
 	// Create name for PipelineRun from Run name plus iteration number.
 	prName := names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("%s-%s", run.Name, fmt.Sprintf("%05d", iteration)))
+	pipelineRunAnnotations := getPipelineRunAnnotations(run)
+	currentIndex := iteration - 1
+	if currentIndex > len(iterationElements) {
+		currentIndex = len(iterationElements) - 1
+	}
+	currentIterationItemBytes, _ := json.Marshal(iterationElements[currentIndex])
+	pipelineRunAnnotations[pipelineloop.GroupName+pipelineLoopCurrentIterationItemAnnotationKey] = string(currentIterationItemBytes)
+
 	pr := &v1beta1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      prName,
@@ -396,13 +459,14 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 			OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(run,
 				schema.GroupVersionKind{Group: "tekton.dev", Version: "v1alpha1", Kind: "Run"})},
 			Labels:      getPipelineRunLabels(run, strconv.Itoa(iteration)),
-			Annotations: getPipelineRunAnnotations(run),
+			Annotations: pipelineRunAnnotations,
 		},
 		Spec: v1beta1.PipelineRunSpec{
 			Params:             getParameters(run, tls, iteration),
 			Timeout:            tls.Timeout,
 			ServiceAccountName: "",  // TODO: Implement service account name
 			PodTemplate:        nil, // TODO: Implement pod template
+			Workspaces:         tls.Workspaces,
 		}}
 
 	if tls.PipelineRef != nil {
@@ -418,20 +482,6 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 	return c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Create(ctx, pr, metav1.CreateOptions{})
 
 }
-
-// func (c *Reconciler) retryPipelineRun(ctx context.Context, tr *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
-// 	newStatus := *tr.Status.DeepCopy()
-// 	newStatus.RetriesStatus = nil
-// 	tr.Status.RetriesStatus = append(tr.Status.RetriesStatus, newStatus)
-// 	tr.Status.StartTime = nil
-// 	tr.Status.CompletionTime = nil
-// 	tr.Status.PodName = ""
-// 	tr.Status.SetCondition(&apis.Condition{
-// 		Type:   apis.ConditionSucceeded,
-// 		Status: corev1.ConditionUnknown,
-// 	})
-// 	return c.pipelineClientSet.TektonV1beta1().PipelineRuns(tr.Namespace).UpdateStatus(ctx, tr, metav1.UpdateOptions{})
-// }
 
 func (c *Reconciler) updateLabelsAndAnnotations(ctx context.Context, run *v1alpha1.Run) error {
 	newRun, err := c.runLister.Runs(run.Namespace).Get(run.Name)
@@ -473,6 +523,10 @@ func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1a
 	status.CurrentRunning = 0
 	for _, pr := range pipelineRuns {
 		lbls := pr.GetLabels()
+		if lbls["deleted"] == "True" {
+			// PipelineRun is already retried, skipping...
+			continue
+		}
 		iterationStr := lbls[pipelineloop.GroupName+pipelineLoopIterationLabelKey]
 		iteration, err := strconv.Atoi(iterationStr)
 		if err != nil {
@@ -525,12 +579,13 @@ func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1a
 	return highestIteration, currentRunningPrs, failedPrs, nil
 }
 
-func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec) (int, error) {
+func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec) (int, []interface{}, error) {
 	// Find the iterate parameter.
 	numberOfIterations := -1
 	from := -1
 	step := -1
 	to := -1
+	iterationElements := []interface{}{}
 	for _, p := range run.Spec.Params {
 		if tls.IterateNumeric != "" {
 			if p.Name == "from" {
@@ -554,42 +609,60 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 				errDictString := json.Unmarshal([]byte(p.Value.StringVal), &dictsString)
 				errDictInt := json.Unmarshal([]byte(p.Value.StringVal), &dictsInt)
 				if errString != nil && errInt != nil && errDictString != nil && errDictInt != nil {
-					return 0, fmt.Errorf("The value of the iterate parameter %q can not transfer to array", tls.IterateParam)
+					return 0, iterationElements, fmt.Errorf("The value of the iterate parameter %q can not transfer to array", tls.IterateParam)
 				}
 
 				if errString == nil {
 					numberOfIterations = len(strings)
+					for _, v := range strings {
+						iterationElements = append(iterationElements, v)
+					}
 					break
 				} else if errInt == nil {
 					numberOfIterations = len(ints)
+					for _, v := range ints {
+						iterationElements = append(iterationElements, v)
+					}
 					break
 				} else if errDictString == nil {
 					numberOfIterations = len(dictsString)
+					for _, v := range dictsString {
+						iterationElements = append(iterationElements, v)
+					}
 					break
 				} else if errDictInt == nil {
 					numberOfIterations = len(dictsInt)
+					for _, v := range dictsInt {
+						iterationElements = append(iterationElements, v)
+					}
 					break
 				}
 			}
 			if p.Value.Type == v1beta1.ParamTypeArray {
 				numberOfIterations = len(p.Value.ArrayVal)
+				for _, v := range p.Value.ArrayVal {
+					iterationElements = append(iterationElements, v)
+				}
 				break
 			}
 		}
 	}
 	if tls.IterateNumeric != "" {
 		if from == -1 || to == -1 {
-			return 0, fmt.Errorf("The from or to parameters was not found in runs")
+			return 0, iterationElements, fmt.Errorf("The from or to parameters was not found in runs")
 		}
 		if step == -1 {
 			step = 1
 		}
 		// numberOfIterations is the number of (to - from) / step + 1
 		numberOfIterations = (to-from)/step + 1
+		for i := 0; i < numberOfIterations; i++ {
+			iterationElements = append(iterationElements, step*i+from)
+		}
 	} else if numberOfIterations == -1 {
-		return 0, fmt.Errorf("The iterate parameter %q was not found", tls.IterateParam)
+		return 0, iterationElements, fmt.Errorf("The iterate parameter %q was not found", tls.IterateParam)
 	}
-	return numberOfIterations, nil
+	return numberOfIterations, iterationElements, nil
 }
 
 func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int) []v1beta1.Param {
