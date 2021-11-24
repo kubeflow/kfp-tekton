@@ -1253,7 +1253,7 @@ class TektonCompiler(Compiler):
         pipeline_conf,
     )
 
-    workflow = fix_big_data_passing(workflow)
+    workflow = fix_big_data_passing(workflow, self.loops_pipeline, '-'.join(self._group_names[:-1] + [""]))
 
     workflow.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = \
       json.dumps(pipeline_meta.to_dict(), sort_keys=True)
@@ -1364,6 +1364,11 @@ class TektonCompiler(Compiler):
     pipeline_loop_crs = []
     if self.loops_pipeline:
       pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
+      if workflow['spec'].get('workspaces', []):
+        for pipeline_loop_cr in pipeline_loop_crs:
+          pipeline_loop_cr['spec']['workspaces'] = workflow['spec'].get('workspaces', [])
+          pipeline_loop_cr['spec']['pipelineSpec']['workspaces'] = [
+            {'name': workspace['name']} for workspace in workflow['spec'].get('workspaces', [])]
       inlined_as_taskSpec: List[Text] = []
       recursive_tasks_names: List[Text] = [x['taskRef'].get('name', "") for x in self.recursive_tasks]
       if self.tekton_inline_spec:

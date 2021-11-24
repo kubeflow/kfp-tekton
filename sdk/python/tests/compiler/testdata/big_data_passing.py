@@ -112,8 +112,11 @@ def print_text(
 
 
 def print_repeating_lines_pipeline():
+    loop_args = [1, 2]
     repeat_lines_task = repeat_line(line='Hello', count=5000)
-    print_text(repeat_lines_task.output)  # Don't forget .output !
+    with dsl.ParallelFor(loop_args=loop_args) as item2:
+        with dsl.ParallelFor(loop_args=loop_args) as item:
+            print_text(repeat_lines_task.output)  # Don't forget .output !
 
 
 # %% [markdown]

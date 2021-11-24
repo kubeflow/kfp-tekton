@@ -27,7 +27,7 @@ BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
 BIG_DATA_PATH_FORMAT = "/".join(["$(workspaces.$TASK_NAME.path)", BIG_DATA_MIDPATH, "$TASKRUN_NAME", "$TASK_PARAM_NAME"])
 
 
-def fix_big_data_passing(workflow: dict) -> dict:
+def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix: str) -> dict:
     """
     fix_big_data_passing converts a workflow where some artifact data is passed
     as parameters and converts it to a workflow where this data is passed as
@@ -308,7 +308,9 @@ def fix_big_data_passing(workflow: dict) -> dict:
                                                task_template,
                                                pipelinerun_template,
                                                inputs_consumed_as_artifacts,
-                                               outputs_consumed_as_artifacts)
+                                               outputs_consumed_as_artifacts,
+                                               loops_pipeline,
+                                               loop_name_prefix)
 
     # Remove input parameters unless they're used downstream.
     # This also removes unused container template inputs if any.
@@ -480,7 +482,8 @@ def big_data_passing_pipelinerun(name: str, pr: dict, pw: set):
 
 
 def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
-                            inputs_tasks: set, outputs_tasks: set) -> dict:
+                            inputs_tasks: set, outputs_tasks: set, loops_pipeline: dict,
+                            loop_name_prefix: str) -> dict:
     task_name = task.get('name')
     task_spec = task.get('taskSpec', {})
     # Data passing for the task outputs
@@ -548,6 +551,19 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                 if not inserted_taskrun_param:
                     task['taskSpec']['params'].append({"name": taskrun_param_name})
                     task['params'].append({"name": taskrun_param_name, "value": "$(tasks.%s.results.taskrun-name)" % task_name_append})
+                    parent_task_queue = [task['name']]
+                    while parent_task_queue:
+                        current_task = parent_task_queue.pop(0)
+                        for loop_name, loop_spec in loops_pipeline.items():
+                            # print(loop_name, loop_spec)
+                            if current_task in loop_spec.get('task_list', []):
+                                parent_task_queue.append(loop_name.replace(loop_name_prefix, ""))
+                                loop_param_names = [loop_param['name'] for loop_param in loops_pipeline[loop_name]['spec']['params']]
+                                if task_name_append + '-taskrun-name' in loop_param_names:
+                                    continue
+                                loops_pipeline[loop_name]['spec']['params'].append({'name': task_name_append + '-taskrun-name',
+                                'value': '$(tasks.%s.results.taskrun-name)' % task_name_append})
+
             if task_param_task_name:
                 workspaces_parameter = '$(workspaces.%s.path)/%s/$(params.%s-trname)/%s' % (
                     task_name, BIG_DATA_MIDPATH, task_param_task_name, task_param_param_name)
