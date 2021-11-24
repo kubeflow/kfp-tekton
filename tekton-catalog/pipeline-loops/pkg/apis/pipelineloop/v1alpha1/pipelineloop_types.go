@@ -64,6 +64,10 @@ type PipelineLoopSpec struct {
 	// Retries represents how many times a task should be retried in case of task failure.
 	// +optional
 	Retries int `json:"retries,omitempty"`
+
+	// Workspace to a volume mapping to be consumed by a PipelineRun.
+	// +optional
+	Workspaces []v1beta1.WorkspaceBinding `json:"workspaces,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
