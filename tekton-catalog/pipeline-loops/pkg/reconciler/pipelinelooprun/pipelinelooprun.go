@@ -466,6 +466,7 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 			Timeout:            tls.Timeout,
 			ServiceAccountName: "",  // TODO: Implement service account name
 			PodTemplate:        nil, // TODO: Implement pod template
+			Workspaces:         tls.Workspaces,
 		}}
 
 	if tls.PipelineRef != nil {

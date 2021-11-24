@@ -46,11 +46,11 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 		pipelineRunInformer := pipelineruninformer.Get(ctx)
 
 		c := &Reconciler{
-			pipelineClientSet: pipelineclientset,
+			pipelineClientSet:     pipelineclientset,
 			pipelineloopClientSet: pipelineloopclientset,
-			runLister:         runInformer.Lister(),
+			runLister:             runInformer.Lister(),
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
-			pipelineRunLister: pipelineRunInformer.Lister(),
+			pipelineRunLister:     pipelineRunInformer.Lister(),
 		}
 
 		impl := runreconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
