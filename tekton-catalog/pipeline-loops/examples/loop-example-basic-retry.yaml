@@ -22,7 +22,7 @@ spec:
             imagePullPolicy: IfNotPresent
             script: |
               #!/usr/bin/env bash
-              echo "$(params.message)"
+              echo "$(params.message)" && exit 1;
   iterateParam: message
 ---
 apiVersion: tekton.dev/v1beta1
@@ -46,6 +46,7 @@ spec:
                 #!/usr/bin/env bash
                 echo "I am the first task before the loop task"
       - name: loop-task
+        retries: 3
         runAfter:
           - first-task
         params:
