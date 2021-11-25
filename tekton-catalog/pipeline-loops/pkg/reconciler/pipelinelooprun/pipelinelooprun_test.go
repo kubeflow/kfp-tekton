@@ -274,8 +274,9 @@ var aPipeline = &v1beta1.Pipeline{
 var aPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
 	ObjectMeta: metav1.ObjectMeta{Name: "a-pipelineloop", Namespace: "foo"},
 	Spec: pipelineloopv1alpha1.PipelineLoopSpec{
-		PipelineRef:  &v1beta1.PipelineRef{Name: "a-pipeline"},
-		IterateParam: "current-item",
+		PipelineRef:                 &v1beta1.PipelineRef{Name: "a-pipeline"},
+		IterateParam:                "current-item",
+		IterateParamStringSeparator: "separator",
 	},
 }
 
@@ -606,6 +607,40 @@ var runPipelineLoopWithInStringParams = &v1alpha1.Run{
 		Params: []v1beta1.Param{{
 			Name:  "current-item",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: `["item1", "item2"]`},
+		}, {
+			Name:  "additional-parameter",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}},
+		Ref: &v1alpha1.TaskRef{
+			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
+			Kind:       pipelineloop.PipelineLoopControllerName,
+			Name:       "a-pipelineloop",
+		},
+	},
+}
+
+var runPipelineLoopWithInStringSeparatorParams = &v1alpha1.Run{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-pipelineloop",
+		Namespace: "foo",
+		Labels: map[string]string{
+			"myTestLabel":                    "myTestLabelValue",
+			"custom.tekton.dev/pipelineLoop": "a-pipelineloop",
+			"tekton.dev/pipeline":            "pr-loop-example",
+			"tekton.dev/pipelineRun":         "pr-loop-example",
+			"tekton.dev/pipelineTask":        "loop-task",
+		},
+		Annotations: map[string]string{
+			"myTestAnnotation": "myTestAnnotationValue",
+		},
+	},
+	Spec: v1alpha1.RunSpec{
+		Params: []v1beta1.Param{{
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1|item2"},
+		}, {
+			Name:  "separator",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "|"},
 		}, {
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
@@ -1286,6 +1321,16 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIteration1},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
 	}, {
+		name:                 "Reconcile a new run with a pipelineloop and a string params with separator",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop,
+		run:                  runPipelineLoopWithInStringSeparatorParams,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIteration1},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
 		name:                 "Reconcile a new run with iterateNumeric defined",
 		pipeline:             nPipeline,
 		pipelineloop:         nPipelineLoop,
@@ -1374,6 +1419,8 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedPipelineruns: []*v1beta1.PipelineRun{successfulWithSkipedTasks(expectedConditionPipelineRunIteration1)},
 		expectedEvents:       []string{"Normal Succeeded PipelineRuns completed successfully with the conditions are met"},
 	}}
+
+	//testcases = testcases[1:3]
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
