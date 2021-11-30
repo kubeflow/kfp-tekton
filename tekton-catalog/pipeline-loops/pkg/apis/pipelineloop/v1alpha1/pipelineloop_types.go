@@ -53,7 +53,7 @@ type PipelineLoopSpec struct {
 
 	// The separator for IterateParam if the IterateParam is a strings with separator char, this field is optional.
 	// +optional
-	IterateParamStringSeparator string `json:"iterateParamStringSeparator,omitempty"`
+	IterateParamSeparator string `json:"iterateParamStringSeparator,omitempty"`
 
 	IterateNumeric string `json:"iterateNumeric"`
 

@@ -604,7 +604,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 		} else {
 			if p.Name == tls.IterateParam {
 				if p.Value.Type == v1beta1.ParamTypeString {
-					iterationParamStr = p.Value.StringVal
+					iterationParamStr = strings.Trim(p.Value.StringVal, " ")
 				}
 				if p.Value.Type == v1beta1.ParamTypeArray {
 					numberOfIterations = len(p.Value.ArrayVal)
@@ -614,7 +614,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 					break
 				}
 			}
-			if p.Name == tls.IterateParamStringSeparator {
+			if p.Name == tls.IterateParamSeparator {
 				iterationParamStrSeparator = p.Value.StringVal
 			}
 		}
@@ -698,7 +698,7 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 					item = p
 					iterationParam = &item
 				}
-			} else if p.Name == tls.IterateParamStringSeparator {
+			} else if p.Name == tls.IterateParamSeparator {
 				separator = p
 				iterationParamStrSeparator = &separator
 			} else {
@@ -707,7 +707,8 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 		}
 		if iterationParam != nil {
 			if iterationParamStrSeparator != nil {
-				stringArr := strings.Split(iterationParam.Value.StringVal, iterationParamStrSeparator.Value.StringVal)
+				iterationParamStr := strings.Trim(iterationParam.Value.StringVal, " ")
+				stringArr := strings.Split(iterationParamStr, iterationParamStrSeparator.Value.StringVal)
 				out = append(out, v1beta1.Param{
 					Name:  iterationParam.Name,
 					Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: stringArr[iteration-1]},
