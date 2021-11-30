@@ -51,6 +51,10 @@ type PipelineLoopSpec struct {
 	// IterateParam is the name of the task parameter that is iterated upon.
 	IterateParam string `json:"iterateParam"`
 
+	// The separator for IterateParam if the IterateParam is a strings with separator char, this field is optional.
+	// +optional
+	IterateParamSeparator string `json:"iterateParamStringSeparator,omitempty"`
+
 	IterateNumeric string `json:"iterateNumeric"`
 
 	// Time after which the TaskRun times out.
