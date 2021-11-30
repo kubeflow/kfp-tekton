@@ -81,7 +81,7 @@ func (w *Workflow) VerifyParameters(desiredParams map[string]string) error {
 	for k := range desiredParams {
 		_, ok := templateParamsMap[k]
 		if !ok {
-			glog.Warningf("Unrecognized input parameter : %v", k)
+			glog.Warningf("Unrecognized input parameter: %v", k)
 		}
 	}
 	return nil
