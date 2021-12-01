@@ -208,23 +208,38 @@ def get_client() -> TektonClient:
 def load_pipeline_functions() -> [(Callable, str)]:
     pipeline_functions = []
 
+    # Sequential pipelines
+    from testdata.condition_sample import flipcoin_pipeline as normal_flipcoin_pipeline
+    pipeline_functions.append((normal_flipcoin_pipeline, "flipcoin_normal_pipeline"))
+
+    from testdata.condition_custom import flipcoin_pipeline as custom_pipeline
+    pipeline_functions.append((custom_pipeline, "flipcoin_custom_pipeline"))
+
+    from testdata.trusted_ai import trusted_ai
+    pipeline_functions.append((trusted_ai, "trusted_ai"))
+
+    from testdata.calc_pipeline import calc_pipeline
+    pipeline_functions.append((calc_pipeline, "python_script_pipeline"))
+
     from testdata.sequential import sequential_pipeline
     pipeline_functions.append((sequential_pipeline, "sequential_pipeline"))
 
-    from testdata.condition import flipcoin
-    pipeline_functions.append((flipcoin, "flipcoin"))
 
-    from testdata.compose import save_most_frequent_word
-    pipeline_functions.append((save_most_frequent_word, "compose"))
+    # Parallel pipelines
+    # from testdata.withitem_nested import pipeline as nested_loop_pipeline
+    # pipeline_functions.append((nested_loop_pipeline, "nested_loop_pipeline"))
 
-    from testdata.retry import retry_sample_pipeline
-    pipeline_functions.append((retry_sample_pipeline, "retry"))
+    # from testdata.condition import flipcoin
+    # pipeline_functions.append((flipcoin, "flipcoin"))
 
-    from testdata.loop_static import pipeline as loop_static
-    pipeline_functions.append((loop_static, "loop_static"))
+    # from testdata.retry import retry_sample_pipeline
+    # pipeline_functions.append((retry_sample_pipeline, "retry"))
 
-    from testdata.conditions_and_loops import conditions_and_loops
-    pipeline_functions.append((conditions_and_loops, "conditions_and_loops"))
+    # from testdata.loop_static import pipeline as loop_static
+    # pipeline_functions.append((loop_static, "loop_static"))
+
+    # from testdata.conditions_and_loops import conditions_and_loops
+    # pipeline_functions.append((conditions_and_loops, "conditions_and_loops"))
 
     # from testdata.loop_in_recursion import flipcoin as loop_in_loop
     # pipeline_functions.append((loop_in_loop, "loop_in_recursion"))
@@ -305,16 +320,16 @@ def parse_run_details(run_details: ApiRunDetail) -> dict:
         rev["taskRuns"] = get_details(status["taskRuns"])
 
     if "runs" in status:
-        rev["run"] = get_details(status["runs"])
+        rev["runs"] = get_details(status["runs"])
 
     return rev
 
 
 def append_exec_times_to_output_file(pipeline_name: str, tasks: dict):
 
-    compile_time = str(execution_times[pipeline_name][compile_pipeline.__name__])
-    submit_time = str(execution_times[pipeline_name][submit_pipeline_run.__name__])
-    run_time = str(execution_times[pipeline_name][wait_for_run_to_complete.__name__])
+    compile_time = execution_times[pipeline_name][compile_pipeline.__name__]
+    submit_time = execution_times[pipeline_name][submit_pipeline_run.__name__]
+    run_time = execution_times[pipeline_name][wait_for_run_to_complete.__name__]
     taskruns = 0
     taskrun_elapsed = timedelta(0)
     runs = 0
@@ -328,7 +343,7 @@ def append_exec_times_to_output_file(pipeline_name: str, tasks: dict):
 
     with open(OUTPUT_FILE, "a") as f:
         f.write(OUTPUT_SEP.join([
-            pipeline_name, compile_time, submit_time, run_time,
+            pipeline_name, str(compile_time), str(submit_time), str(run_time),
             str(taskruns), str(runs), str(taskrun_elapsed), str(run_elapsed)
         ]))
         f.write("\n")
