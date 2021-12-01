@@ -15,8 +15,16 @@
 # pipelines to be loaded in performance_test.py
 #  relative paths are assumed to be relative to the project root
 pipeline_scripts:
-#  - name: "Sequential"
-#    path: "sdk/python/tests/compiler/testdata/sequential.py"
+  - name: "Flip-Coin-samples"
+    path: "sdk/python/tests/compiler/testdata/condition_sample.py" # condition with simple python
+  - name: "Flip-Coin-Custom-Task-samples"
+    path: "sdk/python/tests/compiler/testdata/condition_custom.py" # custom task condition with simple python
+  - name: "Trusted-AI-samples"
+    path: "sdk/python/tests/compiler/testdata/trusted_ai.py" # long-running python component with S3 file passing
+  - name: "Lightweight-component-samples"
+    path: "sdk/python/tests/compiler/testdata/calc_pipeline.py" # python in script with package install
+  - name: "Sequential"
+    path: "sdk/python/tests/compiler/testdata/sequential.py" # gcs client image to print text
 #  - name: "Flip-Coin-testdata"
 #    path: "sdk/python/tests/compiler/testdata/condition.py"
 #  - name: "Retry"
@@ -29,11 +37,11 @@ pipeline_scripts:
 #    path: "sdk/python/tests/compiler/testdata/withitem_nested.py"
 #  - name: "Condition-and-recur"
 #    path: "sdk/python/tests/compiler/testdata/cond_recur.py"
-  - name: "Flip-Coin-samples"
-    path: "samples/flip-coin/condition.py"               # condition with simple python
-  - name: "Flip-Coin-Custom-Task"
-    path: "samples/flip-coin-custom-task/condition.py"     # custom task condition with simple python
-  - path: "samples/lightweight-component/calc_pipeline.py"   # python in script with package install
-  - path: "samples/trusted-ai/trusted-ai.py"                  # long-running python component with S3 file passing
-  - path: "samples/nested-loops/withitem_nested.py"            # nested loop pipelines, many CRDs
+# - name: "Flip-Coin-samples"
+#   path: "samples/flip-coin/condition.py"               # condition with simple python
+# - name: "Flip-Coin-Custom-Task"
+#   path: "samples/flip-coin-custom-task/condition.py"     # custom task condition with simple python
+# - path: "samples/lightweight-component/calc_pipeline.py"   # python in script with package install
+# - path: "samples/trusted-ai/trusted-ai.py"                  # long-running python component with S3 file passing
+# - path: "samples/nested-loops/withitem_nested.py"            # nested loop pipelines, many CRDs
 #  - path: "sdk/python/tests/compiler/testdata/cond_recur.yaml"  # never finishes, calling itself 42 times recursively, controller cannot estimate duration
