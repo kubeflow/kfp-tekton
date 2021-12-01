@@ -1,0 +1,39 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# pipelines to be loaded in performance_test.py
+#  relative paths are assumed to be relative to the project root
+pipeline_scripts:
+#  - name: "Sequential"
+#    path: "sdk/python/tests/compiler/testdata/sequential.py"
+#  - name: "Flip-Coin-testdata"
+#    path: "sdk/python/tests/compiler/testdata/condition.py"
+#  - name: "Retry"
+#    path: "sdk/python/tests/compiler/testdata/retry.py"
+#  - name: "Loop-Static"
+#    path: "sdk/python/tests/compiler/testdata/loop_static.py"
+#  - name: "Conditions-and-Loops"
+#    path: "sdk/python/tests/compiler/testdata/conditions_and_loops.py"
+#  - name: "With-item-Nested"
+#    path: "sdk/python/tests/compiler/testdata/withitem_nested.py"
+#  - name: "Condition-and-recur"
+#    path: "sdk/python/tests/compiler/testdata/cond_recur.py"
+  - name: "Flip-Coin-samples"
+    path: "samples/flip-coin/condition.py"               # condition with simple python
+  - name: "Flip-Coin-Custom-Task"
+    path: "samples/flip-coin-custom-task/condition.py"     # custom task condition with simple python
+  - path: "samples/lightweight-component/calc_pipeline.py"   # python in script with package install
+  - path: "samples/trusted-ai/trusted-ai.py"                  # long-running python component with S3 file passing
+  - path: "samples/nested-loops/withitem_nested.py"            # nested loop pipelines, many CRDs
+#  - path: "sdk/python/tests/compiler/testdata/cond_recur.yaml"  # never finishes, calling itself 42 times recursively, controller cannot estimate duration
