@@ -82,6 +82,7 @@ def compile_pyfile(pyfile, function_name, output_path, type_check, tekton_pipeli
     _compile_pipeline_function(pipeline_funcs, function_name, output_path, type_check, tekton_pipeline_conf)
   finally:
     del sys.path[0]
+    sys.modules.pop(os.path.splitext(filename)[0])
 
 
 def main():
