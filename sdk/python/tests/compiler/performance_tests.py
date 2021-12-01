@@ -224,7 +224,6 @@ def load_pipeline_functions() -> [(Callable, str)]:
     from testdata.sequential import sequential_pipeline
     pipeline_functions.append((sequential_pipeline, "sequential_pipeline"))
 
-
     # Parallel pipelines
     # from testdata.withitem_nested import pipeline as nested_loop_pipeline
     # pipeline_functions.append((nested_loop_pipeline, "nested_loop_pipeline"))

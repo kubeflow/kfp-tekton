@@ -14,30 +14,29 @@
 
 from kfp import components, dsl
 
-fairness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/Trusted-AI/AIF360/master/mlops/kubeflow/bias_detector_pytorch/component.yaml')
-robustness_check_ops = components.load_component_from_url('https://raw.githubusercontent.com/Trusted-AI/adversarial-robustness-toolbox/main/utils/mlops/kubeflow/robustness_evaluation_fgsm_pytorch/component.yaml')
+fairness_check_ops = components.load_component_from_url(
+    'https://raw.githubusercontent.com/Trusted-AI/AIF360/master/mlops/kubeflow/bias_detector_pytorch/component.yaml')
+robustness_check_ops = components.load_component_from_url(
+    'https://raw.githubusercontent.com/Trusted-AI/adversarial-robustness-toolbox/main/utils/'
+    'mlops/kubeflow/robustness_evaluation_fgsm_pytorch/component.yaml')
+
 
 @dsl.pipeline(
     name="Launch trusted-ai pipeline",
     description="An example for trusted-ai integration."
 )
 def trusted_ai(
-        namespace:str = "kubeflow",
-        fgsm_attack_epsilon:str = '0.2',
-        model_class_file:str = 'PyTorchModel.py',
-        model_class_name:str = 'ThreeLayerCNN',
-        feature_testset_path:str = 'processed_data/X_test.npy',
-        label_testset_path:str = 'processed_data/y_test.npy',
-        protected_label_testset_path:str = 'processed_data/p_test.npy',
-        favorable_label:str = '0.0',
-        unfavorable_label:str = '1.0',
-        privileged_groups:str = "[{'race': 0.0}]",
-        unprivileged_groups:str = "[{'race': 4.0}]",
-        loss_fn:str = 'torch.nn.CrossEntropyLoss()',
-        optimizer:str = 'torch.optim.Adam(model.parameters(), lr=0.001)',
-        clip_values:str = '(0, 1)',
-        nb_classes:str = '2',
-        input_shape:str = '(1,3,64,64)'):
+        namespace: str = "kubeflow",
+        fgsm_attack_epsilon: str = '0.2',
+        model_class_file: str = 'PyTorchModel.py',
+        model_class_name: str = 'ThreeLayerCNN',
+        feature_testset_path: str = 'processed_data/X_test.npy',
+        label_testset_path: str = 'processed_data/y_test.npy',
+        loss_fn: str = 'torch.nn.CrossEntropyLoss()',
+        optimizer: str = 'torch.optim.Adam(model.parameters(), lr=0.001)',
+        clip_values: str = '(0, 1)',
+        nb_classes: str = '2',
+        input_shape: str = '(1,3,64,64)'):
     job_manifest = {
         "apiVersion": "batch/v1",
         "kind": "Job",

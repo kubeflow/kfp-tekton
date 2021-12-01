@@ -17,12 +17,13 @@ from kfp_tekton.tekton import CEL_ConditionOp
 from kfp import components
 
 
-def random_num(low:int, high:int) -> int:
+def random_num(low: int, high: int) -> int:
     """Generate a random number between low and high."""
     import random
     result = random.randint(low, high)
     print(result)
     return result
+
 
 def flip_coin() -> str:
     """Flip a coin and output heads or tails randomly."""
@@ -30,6 +31,7 @@ def flip_coin() -> str:
     result = 'heads' if random.randint(0, 1) == 0 else 'tails'
     print(result)
     return result
+
 
 def print_msg(msg: str):
     """Print a message."""

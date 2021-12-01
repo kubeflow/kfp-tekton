@@ -15,12 +15,14 @@
 from kfp import dsl
 from kfp import components
 
-def random_num(low:int, high:int) -> int:
+
+def random_num(low: int, high: int) -> int:
     """Generate a random number between low and high."""
     import random
     result = random.randint(low, high)
     print(result)
     return result
+
 
 def flip_coin() -> str:
     """Flip a coin and output heads or tails randomly."""
@@ -28,6 +30,7 @@ def flip_coin() -> str:
     result = 'heads' if random.randint(0, 1) == 0 else 'tails'
     print(result)
     return result
+
 
 def print_msg(msg: str):
     """Print a message."""
@@ -40,6 +43,7 @@ print_op = components.create_component_from_func(
     print_msg, base_image='python:alpine3.6')
 random_num_op = components.create_component_from_func(
     random_num, base_image='python:alpine3.6')
+
 
 @dsl.pipeline(
     name='conditional-execution-pipeline',
