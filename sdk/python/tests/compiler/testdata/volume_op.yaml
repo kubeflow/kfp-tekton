@@ -126,7 +126,7 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: cop
       params:
       - name: create-pvc-name
@@ -159,5 +159,5 @@ spec:
               {"args": ["echo foo > /mnt/file1"], "command": ["sh", "-c"], "image":
               "library/bash:4.4.23"}}, "name": "cop"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

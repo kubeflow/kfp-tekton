@@ -144,7 +144,7 @@ spec:
               {"name": "b", "type": "Integer"}], "name": "Add numbers", "outputs":
               [{"name": "Output", "type": "Integer"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: print-number
       params:
       - name: add-numbers-Output
@@ -231,7 +231,7 @@ spec:
               "image": "python:3.7"}}, "inputs": [{"name": "a", "type": "Integer"}],
               "name": "Print number", "outputs": [{"name": "Output", "type": "Integer"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: notify-success
       taskSpec:
         steps:
@@ -272,7 +272,7 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: notify-failure
       taskSpec:
         steps:
@@ -313,7 +313,7 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: condition-1
       params:
       - name: operand1
@@ -376,4 +376,4 @@ spec:
             f.write(outcome)
             f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
           image: python:alpine3.6
-  timeout: 0s
+  timeout: 525600m

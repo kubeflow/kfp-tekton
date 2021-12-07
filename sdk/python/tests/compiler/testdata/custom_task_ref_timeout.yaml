@@ -48,4 +48,5 @@ spec:
         kind: custom_task_kind
       runAfter:
       - any-name
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

@@ -50,10 +50,10 @@ spec:
               {"container": {"args": ["echo", "Found my node"], "command": ["sh",
               "-c"], "image": "busybox"}}, "name": "echo"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
   taskRunSpecs:
   - pipelineTaskName: echo
     taskPodTemplate:
       nodeSelector:
         kubernetes.io/os: linux
-  timeout: 0s
+  timeout: 525600m

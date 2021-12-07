@@ -103,7 +103,7 @@ spec:
         - name: consume-anything-as-file
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file
         workspace: data-passing-pipeline
@@ -165,7 +165,7 @@ spec:
         - name: consume-anything-as-file-2
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-2
         workspace: data-passing-pipeline
@@ -227,7 +227,7 @@ spec:
         - name: consume-anything-as-file-3
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-3
         workspace: data-passing-pipeline
@@ -289,7 +289,7 @@ spec:
         - name: consume-something-as-file
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-something-as-file
         workspace: data-passing-pipeline
@@ -351,7 +351,7 @@ spec:
         - name: consume-something-as-file-2
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-something-as-file-2
         workspace: data-passing-pipeline
@@ -413,7 +413,7 @@ spec:
         - name: consume-string-as-file
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-string-as-file
         workspace: data-passing-pipeline
@@ -475,7 +475,7 @@ spec:
         - name: consume-string-as-file-2
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-string-as-file-2
         workspace: data-passing-pipeline
@@ -484,7 +484,7 @@ spec:
         value: $(context.pipelineRun.name)
     workspaces:
     - name: data-passing-pipeline
-  timeout: 0s
+  timeout: 525600m
   workspaces:
   - name: data-passing-pipeline
     volumeClaimTemplate:

@@ -41,7 +41,7 @@ metadata:
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "produce-list-data_list-loop-item", "type": "string"}],
       "steps": [{"command": ["echo", "$(inputs.params.produce-list-data_list-loop-item)"],
-      "image": "busybox", "name": "main"}]}, "timeout": "0s"}]}}}]'
+      "image": "busybox", "name": "main"}]}, "timeout": "525600m"}]}}}]'
 spec:
   pipelineSpec:
     tasks:
@@ -70,7 +70,7 @@ spec:
               "data_list"}], "image": "busybox"}}, "name": "Produce list", "outputs":
               [{"name": "data_list", "type": "List"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - produce-list
       name: loop-over-lightweight-output-for-loop-1
@@ -81,4 +81,4 @@ spec:
       params:
       - name: produce-list-data_list-loop-item
         value: $(tasks.produce-list.results.data-list)
-  timeout: 0s
+  timeout: 525600m

@@ -56,7 +56,7 @@ spec:
               "data_list"}], "image": "busybox"}}, "name": "Produce list", "outputs":
               [{"name": "data_list", "type": "List"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - produce-list
       name: loop-over-lightweight-output-for-loop-1
@@ -97,6 +97,6 @@ spec:
                       "inputs": [{"name": "data", "type": "Integer"}], "name": "Consume
                       data"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
           iterateParam: produce-list-data_list-loop-item
-  timeout: 0s
+  timeout: 525600m

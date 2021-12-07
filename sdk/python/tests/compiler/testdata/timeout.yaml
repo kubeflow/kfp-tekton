@@ -80,5 +80,5 @@ spec:
               "command": ["python", "-c"], "image": "python:alpine3.6"}}, "inputs":
               [{"name": "exitcodes", "type": "String"}], "name": "random-failure"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
   timeout: 40s

@@ -167,7 +167,7 @@ spec:
               {"name": "param3_b", "type": "String"}, {"name": "param4c", "type":
               "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: print
       params:
       - name: print4results-param3_b
@@ -195,5 +195,5 @@ spec:
               "alpine:3.6"}}, "inputs": [{"name": "msg", "type": "String"}], "name":
               "print"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

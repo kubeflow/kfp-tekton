@@ -72,7 +72,7 @@ spec:
               "String"}], "name": "gcs-download", "outputs": [{"name": "data", "type":
               "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: echo-2
       params:
       - name: gcs-download-data
@@ -99,7 +99,7 @@ spec:
               {"inputValue": "text"}], "image": "library/bash:4.4.23"}}, "inputs":
               [{"name": "text", "type": "String"}], "name": "echo"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     finally:
     - name: echo
       taskSpec:
@@ -122,5 +122,5 @@ spec:
               {"inputValue": "text"}], "image": "library/bash:4.4.23"}}, "inputs":
               [{"name": "text", "type": "String"}], "name": "echo"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

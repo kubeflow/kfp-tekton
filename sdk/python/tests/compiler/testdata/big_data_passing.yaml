@@ -137,7 +137,7 @@ spec:
         - name: repeat-line
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: repeat-line
         workspace: big-data-passing
@@ -197,7 +197,7 @@ spec:
         - name: print-text
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: print-text
         workspace: big-data-passing
@@ -334,7 +334,7 @@ spec:
           emptyDir: {}
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: split-text-lines
         workspace: big-data-passing
@@ -394,7 +394,7 @@ spec:
         - name: print-text-2
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: print-text-2
         workspace: big-data-passing
@@ -456,7 +456,7 @@ spec:
         - name: print-text-3
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: print-text-3
         workspace: big-data-passing
@@ -552,7 +552,7 @@ spec:
         - name: write-numbers
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: write-numbers
         workspace: big-data-passing
@@ -612,7 +612,7 @@ spec:
         - name: print-text-4
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: print-text-4
         workspace: big-data-passing
@@ -724,7 +724,7 @@ spec:
         - name: sum-numbers
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: sum-numbers
         workspace: big-data-passing
@@ -786,7 +786,7 @@ spec:
         - name: print-text-5
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: print-text-5
         workspace: big-data-passing
@@ -873,7 +873,7 @@ spec:
               "image": "python:3.7"}}, "name": "Gen params", "outputs": [{"name":
               "Output", "type": "Integer"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: print-params
       params:
       - name: gen-params-Output
@@ -921,10 +921,10 @@ spec:
               "image": "python:3.7"}}, "inputs": [{"name": "numbers_parm", "type":
               "Integer"}], "name": "Print params"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     workspaces:
     - name: big-data-passing
-  timeout: 0s
+  timeout: 525600m
   workspaces:
   - name: big-data-passing
     volumeClaimTemplate:

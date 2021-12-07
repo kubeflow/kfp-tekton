@@ -46,7 +46,7 @@ metadata:
       ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
       "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "flip-coin-output",
       "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.flip-coin-output)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "0s", "when": [{"input":
+      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m", "when": [{"input":
       "$(tasks.condition-2.results.outcome)", "operator": "in", "values": ["true"]}]},
       {"name": "flip-coin-2", "runAfter": ["print"], "taskSpec": {"metadata": {"annotations":
       {"pipelines.kubeflow.org/component_spec": "{\"description\": \"flip coin\",
@@ -60,7 +60,7 @@ metadata:
       "/tmp/outputs/output/data", "name": "output"}], "steps": [{"args": ["python
       -c \"import random; result = ''heads'' if random.randint(0,1) == 0           else
       ''tails''; print(result)\" | tee $0\n", "$(results.output.path)"], "command":
-      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout": "0s",
+      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout": "525600m",
       "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator": "in",
       "values": ["true"]}]}, {"name": "condition-2", "params": [{"name": "operand1",
       "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "heads"},
@@ -114,7 +114,7 @@ spec:
               "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name": "output",
               "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: print-2
       params:
       - name: flip-coin-output
@@ -141,7 +141,7 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - recursion-pipeline-flip-component-1
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - flip-coin
       name: recursion-pipeline-flip-component-1
@@ -157,4 +157,4 @@ spec:
         - '1'
       - name: maxVal
         value: $(params.maxVal)
-  timeout: 0s
+  timeout: 525600m
