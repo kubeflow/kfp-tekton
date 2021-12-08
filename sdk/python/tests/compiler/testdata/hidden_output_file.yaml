@@ -71,7 +71,7 @@ spec:
               "String"}, {"description": "/tmp/results.txt", "name": "multiple_underscore_test",
               "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: echo
       params:
       - name: download-file-data
@@ -100,5 +100,5 @@ spec:
               "text1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
               "inputs": [{"name": "text1", "type": "String"}], "name": "echo"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

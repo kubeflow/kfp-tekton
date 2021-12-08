@@ -64,7 +64,7 @@ spec:
               "input1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
               "inputs": [{"name": "input1", "type": "String"}], "name": "static-loop-out-op"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: static-loop-pipeline-for-loop-2
       params:
       - name: with-item-name
@@ -118,7 +118,7 @@ spec:
                       "input1", "type": "Integer"}, {"name": "input2", "type": "String"}],
                       "name": "static-loop-inner-op1"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
             - name: static-loop-inner-op2
               params:
               - name: with-item-name
@@ -148,6 +148,6 @@ spec:
                       "input1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
                       "inputs": [{"name": "input1", "type": "Integer"}], "name": "static-loop-inner-op2"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
           iterateParam: with-item-name
-  timeout: 0s
+  timeout: 525600m

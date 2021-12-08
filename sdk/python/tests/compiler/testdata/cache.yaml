@@ -58,7 +58,7 @@ spec:
               "registry.access.redhat.com/ubi8/ubi-minimal"}}, "name": "cache-enabled",
               "outputs": [{"name": "out", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: cache-disabled
       taskSpec:
         steps:
@@ -84,5 +84,5 @@ spec:
               "registry.access.redhat.com/ubi8/ubi-minimal"}}, "name": "cache-disabled",
               "outputs": [{"name": "out", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

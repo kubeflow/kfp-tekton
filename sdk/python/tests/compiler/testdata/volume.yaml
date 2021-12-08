@@ -71,7 +71,7 @@ spec:
               ["sh", "-c"], "image": "google/cloud-sdk"}}, "name": "download", "outputs":
               [{"name": "downloaded", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: echo
       params:
       - name: download-downloaded
@@ -101,5 +101,5 @@ spec:
               "-c"], "image": "library/bash"}}, "inputs": [{"name": "msg", "type":
               "String"}], "name": "echo"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

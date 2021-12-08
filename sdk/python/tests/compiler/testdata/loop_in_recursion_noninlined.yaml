@@ -48,7 +48,7 @@ metadata:
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "flip-coin-output", "type": "string"}], "steps": [{"command":
       ["echo", "$(inputs.params.flip-coin-output)"], "image": "alpine:3.6", "name":
-      "main"}]}, "timeout": "0s", "when": [{"input": "$(tasks.condition-2.results.outcome)",
+      "main"}]}, "timeout": "525600m", "when": [{"input": "$(tasks.condition-2.results.outcome)",
       "operator": "in", "values": ["true"]}]}, {"name": "flip-coin-2", "runAfter":
       ["print"], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
       "{\"description\": \"flip coin\", \"implementation\": {\"container\": {\"args\":
@@ -62,7 +62,7 @@ metadata:
       "steps": [{"args": ["python -c \"import random; result = ''heads'' if random.randint(0,1)
       == 0             else ''tails''; print(result)\" | tee $0\n", "$(results.output.path)"],
       "command": ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout":
-      "0s", "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator":
+      "525600m", "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator":
       "in", "values": ["true"]}]}, {"name": "condition-2", "params": [{"name": "operand1",
       "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "heads"},
       {"name": "operator", "value": "=="}], "taskSpec": {"params": [{"name": "operand1",
@@ -103,7 +103,7 @@ metadata:
       "my_pipe_param", "type": "string"}], "steps": [{"args": ["echo op1 $0 $1\n",
       "$(inputs.params.loop-item-param-3-subvar-a)", "$(inputs.params.my_pipe_param)"],
       "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "0s"}, {"name": "my-in-coop2", "params": [{"name": "loop-item-param-3-subvar-b",
+      "timeout": "525600m"}, {"name": "my-in-coop2", "params": [{"name": "loop-item-param-3-subvar-b",
       "value": "$(params.loop-item-param-3-subvar-b)"}], "taskSpec": {"metadata":
       {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"description\":
       \"my in coop2\", \"implementation\": {\"container\": {\"args\": [\"echo op2
@@ -114,7 +114,7 @@ metadata:
       ""}}, "params": [{"name": "loop-item-param-3-subvar-b", "type": "string"}],
       "steps": [{"args": ["echo op2 $0\n", "$(inputs.params.loop-item-param-3-subvar-b)"],
       "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "0s"}, {"name": "loop-in-recursion-pipeline-for-loop-6", "params":
+      "timeout": "525600m"}, {"name": "loop-in-recursion-pipeline-for-loop-6", "params":
       [{"name": "flip-coin-output", "value": "$(params.flip-coin-output)"}, {"name":
       "loop-item-param-3-subvar-a", "value": "$(params.loop-item-param-3-subvar-a)"},
       {"name": "loop-item-param-5", "value": "[100, 200, 300]"}, {"name": "my_pipe_param",
@@ -141,7 +141,7 @@ metadata:
       "my_pipe_param", "type": "string"}], "steps": [{"args": ["echo op1 $0 $1 $2\n",
       "$(inputs.params.loop-item-param-3-subvar-a)", "$(inputs.params.loop-item-param-5)",
       "$(inputs.params.my_pipe_param)"], "command": ["sh", "-c"], "image": "library/bash:4.4.23",
-      "name": "main"}]}, "timeout": "0s"}]}}}]'
+      "name": "main"}]}, "timeout": "525600m"}]}}}]'
 spec:
   params:
   - name: maxVal
@@ -183,7 +183,7 @@ spec:
               "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name": "output",
               "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: print-2
       params:
       - name: flip-coin-output
@@ -210,7 +210,7 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - loop-in-recursion-pipeline-flip-component-1
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - flip-coin
       name: loop-in-recursion-pipeline-flip-component-1
@@ -228,4 +228,4 @@ spec:
         value: $(params.maxVal)
       - name: my_pipe_param
         value: $(params.my_pipe_param)
-  timeout: 0s
+  timeout: 525600m

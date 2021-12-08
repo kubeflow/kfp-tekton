@@ -45,18 +45,19 @@ metadata:
       ""}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
       [{"description": "/tmp/stdout", "name": "stdout"}], "steps": [{"args": ["echo
       Iter: $(inputs.params.condition-cel-outcome) > $(results.stdout.path)"], "command":
-      ["sh", "-c"], "image": "alpine:3.6", "name": "main"}]}, "timeout": "0s"}, {"name":
-      "condition-cel-3", "params": [{"name": "outcome", "value": "$(params.condition-cel-outcome)
+      ["sh", "-c"], "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m"},
+      {"name": "condition-cel-3", "params": [{"name": "outcome", "value": "$(params.condition-cel-outcome)
       + 1"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL",
-      "name": "cel_condition"}}, {"name": "condition-cel-4", "params": [{"name": "outcome",
-      "value": "$(tasks.condition-cel-3.results.outcome) < $(params.until)"}], "taskRef":
-      {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name": "cel_condition"}},
-      {"name": "recur", "params": [{"name": "just_one_iteration", "value": ["1"]},
-      {"name": "condition-cel-outcome", "value": "$(tasks.condition-cel-3.results.outcome)"},
-      {"name": "until", "value": "$(params.until)"}, {"name": "condition-cel-2-outcome",
-      "value": "$(params.condition-cel-2-outcome)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "name": "recursion-test-graph-recur-2"}, "when": [{"input":
-      "$(tasks.condition-cel-4.results.outcome)", "operator": "in", "values": ["true"]}]}]}}}]'
+      "name": "cel_condition"}, "timeout": "525600m"}, {"name": "condition-cel-4",
+      "params": [{"name": "outcome", "value": "$(tasks.condition-cel-3.results.outcome)
+      < $(params.until)"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind":
+      "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "recur", "params":
+      [{"name": "just_one_iteration", "value": ["1"]}, {"name": "condition-cel-outcome",
+      "value": "$(tasks.condition-cel-3.results.outcome)"}, {"name": "until", "value":
+      "$(params.until)"}, {"name": "condition-cel-2-outcome", "value": "$(params.condition-cel-2-outcome)"}],
+      "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
+      "name": "recursion-test-graph-recur-2"}, "when": [{"input": "$(tasks.condition-cel-4.results.outcome)",
+      "operator": "in", "values": ["true"]}]}]}}}]'
 spec:
   params:
   - name: until
@@ -74,6 +75,7 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+      timeout: 525600m
     - name: condition-cel-2
       params:
       - name: outcome
@@ -82,6 +84,7 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+      timeout: 525600m
     - name: recursion-test-graph-recur-2
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -102,4 +105,4 @@ spec:
         operator: in
         values:
         - "true"
-  timeout: 0s
+  timeout: 525600m

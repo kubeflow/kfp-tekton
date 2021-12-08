@@ -112,5 +112,5 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

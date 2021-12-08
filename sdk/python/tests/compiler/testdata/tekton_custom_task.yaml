@@ -63,7 +63,7 @@ spec:
               "image": "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name":
               "output_result", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: flip-coin-2
       taskSpec:
         steps:
@@ -92,7 +92,7 @@ spec:
               "image": "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name":
               "output_result", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: condition-cel
       params:
       - name: outcome
@@ -101,6 +101,7 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+      timeout: 525600m
     - name: print
       params:
       - name: condition-cel-outcome
@@ -125,5 +126,5 @@ spec:
               "alpine:3.6"}}, "inputs": [{"name": "msg", "type": "String"}], "name":
               "print"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

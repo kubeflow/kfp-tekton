@@ -126,7 +126,7 @@ spec:
         - name: produce-dir-with-files-python-op
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: produce-dir-with-files-python-op
         workspace: create-component-from-function
@@ -182,7 +182,7 @@ spec:
         - name: get-subdirectory
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: get-subdirectory
         workspace: create-component-from-function
@@ -226,7 +226,7 @@ spec:
         - name: list-items
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: list-items
         workspace: create-component-from-function
@@ -273,7 +273,7 @@ spec:
         - name: list-items-2
         params:
         - name: pipelineRun-name
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: list-items-2
         workspace: create-component-from-function
@@ -285,7 +285,7 @@ spec:
         value: $(context.pipelineRun.name)
     workspaces:
     - name: create-component-from-function
-  timeout: 0s
+  timeout: 525600m
   workspaces:
   - name: create-component-from-function
     volumeClaimTemplate:

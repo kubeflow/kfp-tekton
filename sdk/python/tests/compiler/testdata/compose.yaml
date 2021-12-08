@@ -82,7 +82,7 @@ spec:
               "type": "String"}], "name": "download", "outputs": [{"description":
               "file content.", "name": "downloaded", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: get-frequent
       params:
       - name: download-downloaded
@@ -118,7 +118,7 @@ spec:
               "Required. message", "name": "message", "type": "String"}], "name":
               "get-frequent", "outputs": [{"name": "word", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: save
       params:
       - name: get-frequent-word
@@ -154,5 +154,5 @@ spec:
               "String"}, {"description": "Required. output path", "name": "output_path",
               "type": "String"}], "name": "save"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

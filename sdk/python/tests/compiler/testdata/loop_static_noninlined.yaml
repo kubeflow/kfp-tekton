@@ -44,17 +44,18 @@ metadata:
       "type": "string"}, {"name": "my_pipe_param", "type": "string"}], "steps": [{"args":
       ["echo op1 $0 $1\n", "$(inputs.params.with-item-name)", "$(inputs.params.my_pipe_param)"],
       "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "0s"}, {"name": "static-loop-inner-op2", "params": [{"name": "with-item-name",
-      "value": "$(params.with-item-name)"}], "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec": "{\"description\": \"static-loop-inner-op2\",
-      \"implementation\": {\"container\": {\"args\": [\"echo op2 $0\\n\", {\"inputValue\":
-      \"input1\"}], \"command\": [\"sh\", \"-c\"], \"image\": \"library/bash:4.4.23\"}},
-      \"inputs\": [{\"name\": \"input1\", \"type\": \"Integer\"}], \"name\": \"static-loop-inner-op2\"}",
-      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "with-item-name", "type": "string"}], "steps": [{"args":
-      ["echo op2 $0\n", "$(inputs.params.with-item-name)"], "command": ["sh", "-c"],
-      "image": "library/bash:4.4.23", "name": "main"}]}, "timeout": "0s"}]}}}]'
+      "timeout": "525600m"}, {"name": "static-loop-inner-op2", "params": [{"name":
+      "with-item-name", "value": "$(params.with-item-name)"}], "taskSpec": {"metadata":
+      {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"description\":
+      \"static-loop-inner-op2\", \"implementation\": {\"container\": {\"args\": [\"echo
+      op2 $0\\n\", {\"inputValue\": \"input1\"}], \"command\": [\"sh\", \"-c\"], \"image\":
+      \"library/bash:4.4.23\"}}, \"inputs\": [{\"name\": \"input1\", \"type\": \"Integer\"}],
+      \"name\": \"static-loop-inner-op2\"}", "tekton.dev/template": ""}, "labels":
+      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "with-item-name",
+      "type": "string"}], "steps": [{"args": ["echo op2 $0\n", "$(inputs.params.with-item-name)"],
+      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
+      "timeout": "525600m"}]}}}]'
 spec:
   params:
   - name: my_pipe_param
@@ -92,7 +93,7 @@ spec:
               "input1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
               "inputs": [{"name": "input1", "type": "String"}], "name": "static-loop-out-op"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: static-loop-pipeline-for-loop-2
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -103,4 +104,4 @@ spec:
         value: '[1, 2, 3]'
       - name: my_pipe_param
         value: $(params.my_pipe_param)
-  timeout: 0s
+  timeout: 525600m
