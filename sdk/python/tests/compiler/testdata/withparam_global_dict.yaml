@@ -68,7 +68,7 @@ spec:
               "command": ["sh", "-c"], "image": "python:alpine3.6"}}, "name": "my-out-cop0",
               "outputs": [{"name": "out", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: my-out-cop2
       params:
       - name: my-out-cop0-out
@@ -98,7 +98,7 @@ spec:
               "output"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
               "inputs": [{"name": "output", "type": "String"}], "name": "my-out-cop2"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - my-out-cop0
       name: withparam-global-dict-for-loop-1
@@ -154,6 +154,6 @@ spec:
                       "type": "Integer"}], "name": "my-in-cop1"}'
                     tekton.dev/template: ''
               runAfter: []
-              timeout: 0s
+              timeout: 525600m
           iterateParam: loopidy_doop-loop-item
-  timeout: 0s
+  timeout: 525600m

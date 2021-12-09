@@ -57,7 +57,7 @@ spec:
               "downloaded"}], "command": ["sh", "-c"], "image": "busybox"}}, "name":
               "download", "outputs": [{"name": "downloaded", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
   taskRunSpecs:
   - pipelineTaskName: download
     taskPodTemplate:
@@ -66,4 +66,4 @@ spec:
         key: gpu
         operator: Equal
         value: run
-  timeout: 0s
+  timeout: 525600m

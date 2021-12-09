@@ -81,7 +81,7 @@ spec:
               "busy:placeholder"}}, "inputs": [{"name": "sleep_ms", "type": "Integer"}],
               "name": "download", "outputs": [{"name": "data", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: echo
       params:
       - name: download-data
@@ -113,5 +113,5 @@ spec:
               "command": ["sh", "-c"], "image": "library/bash"}}, "inputs": [{"name":
               "message", "type": "String"}], "name": "echo"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

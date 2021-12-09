@@ -117,7 +117,7 @@ spec:
               "image": "python:3.7"}}, "name": "Produce str", "outputs": [{"name":
               "Output", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: produce-list-of-strings
       taskSpec:
         steps:
@@ -200,7 +200,7 @@ spec:
               "image": "python:3.7"}}, "name": "Produce list of strings", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: produce-list-of-ints
       taskSpec:
         steps:
@@ -283,7 +283,7 @@ spec:
               "image": "python:3.7"}}, "name": "Produce list of ints", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: produce-list-of-dicts
       taskSpec:
         steps:
@@ -367,7 +367,7 @@ spec:
               "image": "python:3.7"}}, "name": "Produce list of dicts", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - produce-list-of-strings
       - produce-str
@@ -440,7 +440,7 @@ spec:
                       "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
                       "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
             - name: consume-2
               params:
               - name: produce-list-of-strings-Output-loop-item
@@ -489,7 +489,7 @@ spec:
                       "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
                       "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
             - name: consume-3
               params:
               - name: produce-str-Output
@@ -538,7 +538,7 @@ spec:
                       "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
                       "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
           iterateParam: produce-list-of-strings-Output-loop-item
     - runAfter:
       - produce-list-of-ints
@@ -607,7 +607,7 @@ spec:
                       "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
                       "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
             - name: consume-5
               params:
               - name: produce-list-of-ints-Output-loop-item
@@ -656,7 +656,7 @@ spec:
                       "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
                       "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
           iterateParam: produce-list-of-ints-Output-loop-item
     - runAfter:
       - produce-list-of-dicts
@@ -725,7 +725,7 @@ spec:
                       "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
                       "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
             - name: consume-7
               params:
               - name: produce-list-of-dicts-Output-loop-item-subvar-aaa
@@ -774,6 +774,6 @@ spec:
                       "image": "python:3.7"}}, "inputs": [{"name": "param1", "type":
                       "String"}], "name": "Consume"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
           iterateParam: produce-list-of-dicts-Output-loop-item
-  timeout: 0s
+  timeout: 525600m

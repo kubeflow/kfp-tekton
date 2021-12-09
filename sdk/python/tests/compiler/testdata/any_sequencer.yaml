@@ -56,7 +56,7 @@ spec:
               10, "description": "Sleep for some seconds", "name": "seconds", "type":
               "int"}], "name": "sleepComponent"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: sleepcomponent-2
       taskSpec:
         steps:
@@ -78,7 +78,7 @@ spec:
               10, "description": "Sleep for some seconds", "name": "seconds", "type":
               "int"}], "name": "sleepComponent"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: sleepcomponent-3
       taskSpec:
         steps:
@@ -100,7 +100,7 @@ spec:
               10, "description": "Sleep for some seconds", "name": "seconds", "type":
               "int"}], "name": "sleepComponent"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: flip-coin
       taskSpec:
         steps:
@@ -183,7 +183,7 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - sleepcomponent
-      timeout: 0s
+      timeout: 525600m
     - name: sleepcomponent-4
       taskSpec:
         steps:
@@ -207,7 +207,7 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - any-test
-      timeout: 0s
+      timeout: 525600m
     - name: any-test
       taskSpec:
         steps:
@@ -247,10 +247,10 @@ spec:
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace
-      timeout: 0s
+      timeout: 525600m
       params:
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)
       - name: pipelineRun-namespace
         value: $(context.pipelineRun.namespace)
-  timeout: 0s
+  timeout: 525600m

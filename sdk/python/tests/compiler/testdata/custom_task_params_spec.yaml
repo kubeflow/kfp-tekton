@@ -73,4 +73,5 @@ spec:
           annotations:
             valid_container: "false"
             tekton.dev/template: ''
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

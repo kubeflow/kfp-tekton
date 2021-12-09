@@ -95,7 +95,7 @@ spec:
                       "command": ["sh", "-c"], "image": "library/bash:4.4.23"}}, "inputs":
                       [{"name": "item", "type": "Integer"}], "name": "my-in-coop1"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
             - name: my-in-coop2
               params:
               - name: loop-item-param-1-subvar-b
@@ -126,7 +126,7 @@ spec:
                       "command": ["sh", "-c"], "image": "library/bash:4.4.23"}}, "inputs":
                       [{"name": "item", "type": "Integer"}], "name": "my-in-coop2"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
             - name: withitem-multiple-nesting-pipeline-for-loop-3
               params:
               - name: loop-item-param-1-subvar-a
@@ -189,7 +189,7 @@ spec:
                               "inputs": [{"name": "item", "type": "Integer"}, {"name":
                               "inner_item", "type": "Integer"}], "name": "my-inner-inner-coop"}'
                             tekton.dev/template: ''
-                      timeout: 0s
+                      timeout: 525600m
                     - name: withitem-multiple-nesting-pipeline-for-loop-5
                       params:
                       - name: loop-item-param-1-subvar-b
@@ -249,7 +249,7 @@ spec:
                                       "item", "type": "Integer"}, {"name": "inner_item",
                                       "type": "Integer"}], "name": "my-inner-inner-coop"}'
                                     tekton.dev/template: ''
-                              timeout: 0s
+                              timeout: 525600m
                             - name: withitem-multiple-nesting-pipeline-for-loop-6
                               params:
                               - name: loop-item-param-1-subvar-b
@@ -306,9 +306,9 @@ spec:
                                               "Integer"}, {"name": "inner_item", "type":
                                               "Integer"}], "name": "my-inner-inner-coop"}'
                                             tekton.dev/template: ''
-                                      timeout: 0s
+                                      timeout: 525600m
                                   iterateParam: my_pipe_param3-loop-item
                           iterateParam: loop-item-param-4
                   iterateParam: my_pipe_param-loop-item
           iterateParam: loop-item-param-1
-  timeout: 0s
+  timeout: 525600m

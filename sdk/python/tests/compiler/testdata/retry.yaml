@@ -57,7 +57,7 @@ spec:
               "type": "String"}], "name": "random-failure"}'
             tekton.dev/template: ''
       retries: 10
-      timeout: 0s
+      timeout: 525600m
     - name: random-failure-2
       taskSpec:
         steps:
@@ -84,5 +84,5 @@ spec:
               "type": "String"}], "name": "random-failure"}'
             tekton.dev/template: ''
       retries: 5
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

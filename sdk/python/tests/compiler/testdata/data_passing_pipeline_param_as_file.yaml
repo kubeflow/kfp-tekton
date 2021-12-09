@@ -107,7 +107,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file
         workspace: data-passing-pipeline
@@ -169,7 +169,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-2
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-2
         workspace: data-passing-pipeline
@@ -231,7 +231,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-3
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-3
         workspace: data-passing-pipeline
@@ -293,7 +293,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-something-as-file
         workspace: data-passing-pipeline
@@ -355,7 +355,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-2
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-something-as-file-2
         workspace: data-passing-pipeline
@@ -417,7 +417,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-string-as-file
         workspace: data-passing-pipeline
@@ -479,13 +479,13 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-2
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: consume-string-as-file-2
         workspace: data-passing-pipeline
     workspaces:
     - name: data-passing-pipeline
-  timeout: 0s
+  timeout: 525600m
   workspaces:
   - name: data-passing-pipeline
     volumeClaimTemplate:

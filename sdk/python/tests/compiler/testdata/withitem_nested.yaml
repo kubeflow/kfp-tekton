@@ -66,7 +66,7 @@ spec:
               "command": ["sh", "-c"], "image": "library/bash:4.4.23"}}, "inputs":
               [{"name": "my_pipe_param", "type": "Integer"}], "name": "my-out-cop"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: my-pipeline-for-loop-2
       params:
       - name: loop-item-param-1
@@ -121,7 +121,7 @@ spec:
                       "item", "type": "Integer"}, {"name": "my_pipe_param", "type":
                       "Integer"}], "name": "my-in-coop1"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
             - name: my-in-coop2
               params:
               - name: loop-item-param-1
@@ -152,7 +152,7 @@ spec:
                       "command": ["sh", "-c"], "image": "library/bash:4.4.23"}}, "inputs":
                       [{"name": "item", "type": "Integer"}], "name": "my-in-coop2"}'
                     tekton.dev/template: ''
-              timeout: 0s
+              timeout: 525600m
             - name: my-pipeline-for-loop-4
               params:
               - name: loop-item-param-1
@@ -218,7 +218,7 @@ spec:
                               "Integer"}, {"name": "my_pipe_param", "type": "Integer"}],
                               "name": "my-inner-inner-coop"}'
                             tekton.dev/template: ''
-                      timeout: 0s
+                      timeout: 525600m
                   iterateParam: loop-item-param-3
           iterateParam: loop-item-param-1
-  timeout: 0s
+  timeout: 525600m

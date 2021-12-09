@@ -59,7 +59,7 @@ spec:
               "download"}], "command": ["sh", "-c"], "image": "busybox"}}, "name":
               "download", "outputs": [{"name": "download", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: echo
       params:
       - name: download-download
@@ -87,5 +87,5 @@ spec:
               "-c"], "image": "library/bash"}}, "inputs": [{"name": "msg", "type":
               "String"}], "name": "echo"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

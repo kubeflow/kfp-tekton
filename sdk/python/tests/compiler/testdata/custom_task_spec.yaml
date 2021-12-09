@@ -53,6 +53,7 @@ spec:
               "command": ["any", "command"], "image": "veryunique/image:latest"}},
               "name": "any-name"}'
             tekton.dev/template: ''
+      timeout: 525600m
     - name: any-name-2
       params:
       - name: other_custom_task_argument_keys
@@ -78,4 +79,5 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - any-name
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

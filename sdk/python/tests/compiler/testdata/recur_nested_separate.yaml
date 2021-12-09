@@ -73,7 +73,7 @@ spec:
               "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name": "output",
               "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: print-3
       params:
       - name: flip-coin-output
@@ -100,7 +100,7 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - nested-recursion-pipeline-flip-component-1
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - flip-coin
       name: nested-recursion-pipeline-flip-component-1
@@ -116,4 +116,4 @@ spec:
         - '1'
       - name: maxVal
         value: $(params.maxVal)
-  timeout: 0s
+  timeout: 525600m

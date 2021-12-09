@@ -43,7 +43,7 @@ metadata:
       "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "my-out-cop0-out-loop-item",
       "type": "string"}], "steps": [{"args": ["set -e\necho no output global op1,
       item: \"$0\"\n", "$(inputs.params.my-out-cop0-out-loop-item)"], "command": ["sh",
-      "-c"], "image": "library/bash:4.4.23", "name": "main"}]}, "timeout": "0s"}]}}}]'
+      "-c"], "image": "library/bash:4.4.23", "name": "main"}]}, "timeout": "525600m"}]}}}]'
 spec:
   pipelineSpec:
     tasks:
@@ -75,7 +75,7 @@ spec:
               "command": ["sh", "-c"], "image": "python:alpine3.6"}}, "name": "my-out-cop0",
               "outputs": [{"name": "out", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: my-out-cop2
       params:
       - name: my-out-cop0-out
@@ -105,7 +105,7 @@ spec:
               "output"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
               "inputs": [{"name": "output", "type": "String"}], "name": "my-out-cop2"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - my-out-cop0
       name: withparam-output-for-loop-1
@@ -116,4 +116,4 @@ spec:
       params:
       - name: my-out-cop0-out-loop-item
         value: $(tasks.my-out-cop0.results.out)
-  timeout: 0s
+  timeout: 525600m

@@ -153,7 +153,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: repeat-line
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: repeat-line
         workspace: big-data-passing
@@ -300,7 +300,7 @@ spec:
         volumes:
         - name: source
           emptyDir: {}
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: split-text-lines
         workspace: big-data-passing
@@ -365,7 +365,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-2
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: print-text-2
         workspace: big-data-passing
@@ -432,7 +432,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-3
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: print-text-3
         workspace: big-data-passing
@@ -540,7 +540,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: write-numbers
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: write-numbers
         workspace: big-data-passing
@@ -605,7 +605,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-4
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: print-text-4
         workspace: big-data-passing
@@ -734,7 +734,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: sum-numbers
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: sum-numbers
         workspace: big-data-passing
@@ -801,7 +801,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-5
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: print-text-5
         workspace: big-data-passing
@@ -885,7 +885,7 @@ spec:
               "image": "python:3.7"}}, "name": "Gen params", "outputs": [{"name":
               "Output", "type": "Integer"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: print-params
       params:
       - name: gen-params-Output
@@ -933,7 +933,7 @@ spec:
               "image": "python:3.7"}}, "inputs": [{"name": "numbers_parm", "type":
               "Integer"}], "name": "Print params"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - repeat-line
       name: big-data-passing-for-loop-2
@@ -1043,7 +1043,7 @@ spec:
                             tekton.dev/template: ''
                         workspaces:
                         - name: print-text
-                      timeout: 0s
+                      timeout: 525600m
                       workspaces:
                       - name: print-text
                         workspace: big-data-passing
@@ -1076,7 +1076,7 @@ spec:
                     storage: 2Gi
     workspaces:
     - name: big-data-passing
-  timeout: 0s
+  timeout: 525600m
   workspaces:
   - name: big-data-passing
     volumeClaimTemplate:

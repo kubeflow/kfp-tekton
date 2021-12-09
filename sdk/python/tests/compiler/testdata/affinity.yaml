@@ -50,7 +50,7 @@ spec:
               "implementation": {"container": {"args": ["echo \"Got scheduled\""],
               "command": ["sh", "-c"], "image": "busybox"}}, "name": "echo"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
   taskRunSpecs:
   - pipelineTaskName: echo
     taskPodTemplate:
@@ -63,4 +63,4 @@ spec:
                 operator: In
                 values:
                 - linux
-  timeout: 0s
+  timeout: 525600m

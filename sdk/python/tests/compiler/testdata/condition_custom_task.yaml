@@ -69,7 +69,7 @@ spec:
               "output"}], "image": "python:alpine3.6"}}, "name": "flip-coin", "outputs":
               [{"name": "output", "type": "Integer"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: condition-cel
       params:
       - name: outcome
@@ -78,6 +78,7 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+      timeout: 525600m
     - name: generate-random-number
       taskSpec:
         steps:
@@ -113,7 +114,7 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: condition-cel-2
       params:
       - name: outcome
@@ -127,6 +128,7 @@ spec:
         operator: in
         values:
         - "true"
+      timeout: 525600m
     - name: print
       params:
       - name: generate-random-number-output
@@ -156,7 +158,7 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: print-2
       params:
       - name: generate-random-number-output
@@ -186,7 +188,7 @@ spec:
         operator: notin
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: generate-random-number-2
       taskSpec:
         steps:
@@ -222,7 +224,7 @@ spec:
         operator: notin
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: condition-cel-3
       params:
       - name: outcome
@@ -236,6 +238,7 @@ spec:
         operator: notin
         values:
         - "true"
+      timeout: 525600m
     - name: print-3
       params:
       - name: generate-random-number-2-output
@@ -265,7 +268,7 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: print-4
       params:
       - name: generate-random-number-2-output
@@ -295,5 +298,5 @@ spec:
         operator: notin
         values:
         - "true"
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

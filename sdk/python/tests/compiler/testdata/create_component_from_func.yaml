@@ -142,7 +142,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: produce-dir-with-files-python-op
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: produce-dir-with-files-python-op
         workspace: create-component-from-function
@@ -215,7 +215,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: get-subdirectory
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: get-subdirectory
         workspace: create-component-from-function
@@ -264,7 +264,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: list-items
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: list-items
         workspace: create-component-from-function
@@ -319,7 +319,7 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: list-items-2
-      timeout: 0s
+      timeout: 525600m
       workspaces:
       - name: list-items-2
         workspace: create-component-from-function
@@ -328,7 +328,7 @@ spec:
       - produce-dir-with-files-python-op
     workspaces:
     - name: create-component-from-function
-  timeout: 0s
+  timeout: 525600m
   workspaces:
   - name: create-component-from-function
     volumeClaimTemplate:

@@ -84,7 +84,7 @@ spec:
               "name": "message", "type": "String"}], "name": "frequent-word", "outputs":
               [{"name": "word", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: save-message
       params:
       - name: frequent-word-word
@@ -124,7 +124,7 @@ spec:
               "String"}, {"description": "Required. output path", "name": "output_path",
               "type": "String"}], "name": "save-message"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     finally:
     - name: exit-handler
       taskSpec:
@@ -145,10 +145,10 @@ spec:
               "implementation": {"container": {"command": ["sh", "-c", "echo \"exit!\""],
               "image": "python:3.6-jessie"}}, "name": "exit-handler"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
   taskRunSpecs:
   - pipelineTaskName: save-message
     taskPodTemplate:
       nodeSelector:
         kubernetes.io/os: linux
-  timeout: 0s
+  timeout: 525600m

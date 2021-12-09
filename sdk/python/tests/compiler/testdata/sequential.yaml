@@ -77,7 +77,7 @@ spec:
               "String"}], "name": "gcs-download", "outputs": [{"name": "data", "type":
               "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: echo
       params:
       - name: path
@@ -107,5 +107,5 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - gcs-download
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

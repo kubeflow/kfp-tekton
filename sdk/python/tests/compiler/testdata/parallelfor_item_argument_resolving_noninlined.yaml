@@ -65,8 +65,8 @@ metadata:
       argparse\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"], "image":
-      "python:3.7", "name": "main"}]}, "timeout": "0s"}, {"name": "consume-2", "params":
-      [{"name": "produce-list-of-strings-Output-loop-item", "value": "$(params.produce-list-of-strings-Output-loop-item)"}],
+      "python:3.7", "name": "main"}]}, "timeout": "525600m"}, {"name": "consume-2",
+      "params": [{"name": "produce-list-of-strings-Output-loop-item", "value": "$(params.produce-list-of-strings-Output-loop-item)"}],
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
       "{\"implementation\": {\"container\": {\"args\": [\"--param1\", {\"inputValue\":
       \"param1\"}], \"command\": [\"sh\", \"-ec\", \"program_path=$(mktemp)\\nprintf
@@ -85,26 +85,27 @@ metadata:
       argparse\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"], "image":
-      "python:3.7", "name": "main"}]}, "timeout": "0s"}, {"name": "consume-3", "params":
-      [{"name": "produce-str-Output", "value": "$(params.produce-str-Output)"}], "taskSpec":
-      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"implementation\":
-      {\"container\": {\"args\": [\"--param1\", {\"inputValue\": \"param1\"}], \"command\":
-      [\"sh\", \"-ec\", \"program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" >
-      \\\"$program_path\\\"\\npython3 -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def
-      consume(param1):\\n    print(param1)\\n\\nimport argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',
-      description='''')\\n_parser.add_argument(\\\"--param1\\\", dest=\\\"param1\\\",
-      type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args = vars(_parser.parse_args())\\n\\n_outputs
-      = consume(**_parsed_args)\\n\"], \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\":
-      \"param1\", \"type\": \"String\"}], \"name\": \"Consume\"}", "tekton.dev/template":
-      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
-      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "produce-str-Output",
-      "type": "string"}], "steps": [{"args": ["--param1", "$(inputs.params.produce-str-Output)"],
-      "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
+      "python:3.7", "name": "main"}]}, "timeout": "525600m"}, {"name": "consume-3",
+      "params": [{"name": "produce-str-Output", "value": "$(params.produce-str-Output)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
+      "{\"implementation\": {\"container\": {\"args\": [\"--param1\", {\"inputValue\":
+      \"param1\"}], \"command\": [\"sh\", \"-ec\", \"program_path=$(mktemp)\\nprintf
+      \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\\npython3 -u \\\"$program_path\\\"
+      \\\"$@\\\"\\n\", \"def consume(param1):\\n    print(param1)\\n\\nimport argparse\\n_parser
+      = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\"--param1\\\",
+      dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args
+      = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\n\"],
+      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\", \"type\": \"String\"}],
+      \"name\": \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "params": [{"name": "produce-str-Output", "type": "string"}], "steps":
+      [{"args": ["--param1", "$(inputs.params.produce-str-Output)"], "command": ["sh",
+      "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
       -u \"$program_path\" \"$@\"\n", "def consume(param1):\n    print(param1)\n\nimport
       argparse\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"], "image":
-      "python:3.7", "name": "main"}]}, "timeout": "0s"}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "python:3.7", "name": "main"}]}, "timeout": "525600m"}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "parallelfor-item-argument-resolving-for-loop-2"},
       "spec": {"iterateParam": "produce-list-of-ints-Output-loop-item", "pipelineSpec":
       {"params": [{"name": "produce-list-of-ints-Output", "type": "string"}, {"name":
@@ -128,8 +129,8 @@ metadata:
       argparse\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"], "image":
-      "python:3.7", "name": "main"}]}, "timeout": "0s"}, {"name": "consume-5", "params":
-      [{"name": "produce-list-of-ints-Output-loop-item", "value": "$(params.produce-list-of-ints-Output-loop-item)"}],
+      "python:3.7", "name": "main"}]}, "timeout": "525600m"}, {"name": "consume-5",
+      "params": [{"name": "produce-list-of-ints-Output-loop-item", "value": "$(params.produce-list-of-ints-Output-loop-item)"}],
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
       "{\"implementation\": {\"container\": {\"args\": [\"--param1\", {\"inputValue\":
       \"param1\"}], \"command\": [\"sh\", \"-ec\", \"program_path=$(mktemp)\\nprintf
@@ -148,7 +149,7 @@ metadata:
       argparse\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"], "image":
-      "python:3.7", "name": "main"}]}, "timeout": "0s"}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "python:3.7", "name": "main"}]}, "timeout": "525600m"}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "parallelfor-item-argument-resolving-for-loop-3"},
       "spec": {"iterateParam": "produce-list-of-dicts-Output-loop-item", "pipelineSpec":
       {"params": [{"name": "produce-list-of-dicts-Output", "type": "string"}, {"name":
@@ -172,27 +173,27 @@ metadata:
       argparse\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"], "image":
-      "python:3.7", "name": "main"}]}, "timeout": "0s"}, {"name": "consume-7", "params":
-      [{"name": "produce-list-of-dicts-Output-loop-item-subvar-aaa", "value": "$(params.produce-list-of-dicts-Output-loop-item-subvar-aaa)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
-      "{\"implementation\": {\"container\": {\"args\": [\"--param1\", {\"inputValue\":
-      \"param1\"}], \"command\": [\"sh\", \"-ec\", \"program_path=$(mktemp)\\nprintf
-      \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\\npython3 -u \\\"$program_path\\\"
-      \\\"$@\\\"\\n\", \"def consume(param1):\\n    print(param1)\\n\\nimport argparse\\n_parser
-      = argparse.ArgumentParser(prog=''Consume'', description='''')\\n_parser.add_argument(\\\"--param1\\\",
-      dest=\\\"param1\\\", type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args
-      = vars(_parser.parse_args())\\n\\n_outputs = consume(**_parsed_args)\\n\"],
-      \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\": \"param1\", \"type\": \"String\"}],
-      \"name\": \"Consume\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "produce-list-of-dicts-Output-loop-item-subvar-aaa",
+      "python:3.7", "name": "main"}]}, "timeout": "525600m"}, {"name": "consume-7",
+      "params": [{"name": "produce-list-of-dicts-Output-loop-item-subvar-aaa", "value":
+      "$(params.produce-list-of-dicts-Output-loop-item-subvar-aaa)"}], "taskSpec":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"implementation\":
+      {\"container\": {\"args\": [\"--param1\", {\"inputValue\": \"param1\"}], \"command\":
+      [\"sh\", \"-ec\", \"program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" >
+      \\\"$program_path\\\"\\npython3 -u \\\"$program_path\\\" \\\"$@\\\"\\n\", \"def
+      consume(param1):\\n    print(param1)\\n\\nimport argparse\\n_parser = argparse.ArgumentParser(prog=''Consume'',
+      description='''')\\n_parser.add_argument(\\\"--param1\\\", dest=\\\"param1\\\",
+      type=str, required=True, default=argparse.SUPPRESS)\\n_parsed_args = vars(_parser.parse_args())\\n\\n_outputs
+      = consume(**_parsed_args)\\n\"], \"image\": \"python:3.7\"}}, \"inputs\": [{\"name\":
+      \"param1\", \"type\": \"String\"}], \"name\": \"Consume\"}", "tekton.dev/template":
+      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
+      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "produce-list-of-dicts-Output-loop-item-subvar-aaa",
       "type": "string"}], "steps": [{"args": ["--param1", "$(inputs.params.produce-list-of-dicts-Output-loop-item-subvar-aaa)"],
       "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
       -u \"$program_path\" \"$@\"\n", "def consume(param1):\n    print(param1)\n\nimport
       argparse\n_parser = argparse.ArgumentParser(prog=''Consume'', description='''')\n_parser.add_argument(\"--param1\",
       dest=\"param1\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
       = vars(_parser.parse_args())\n\n_outputs = consume(**_parsed_args)\n"], "image":
-      "python:3.7", "name": "main"}]}, "timeout": "0s"}]}}}]'
+      "python:3.7", "name": "main"}]}, "timeout": "525600m"}]}}}]'
 spec:
   pipelineSpec:
     tasks:
@@ -269,7 +270,7 @@ spec:
               "image": "python:3.7"}}, "name": "Produce str", "outputs": [{"name":
               "Output", "type": "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: produce-list-of-strings
       taskSpec:
         steps:
@@ -352,7 +353,7 @@ spec:
               "image": "python:3.7"}}, "name": "Produce list of strings", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: produce-list-of-ints
       taskSpec:
         steps:
@@ -435,7 +436,7 @@ spec:
               "image": "python:3.7"}}, "name": "Produce list of ints", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: produce-list-of-dicts
       taskSpec:
         steps:
@@ -519,7 +520,7 @@ spec:
               "image": "python:3.7"}}, "name": "Produce list of dicts", "outputs":
               [{"name": "Output", "type": "JsonArray"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - produce-list-of-strings
       - produce-str
@@ -559,4 +560,4 @@ spec:
         value: $(tasks.produce-list-of-dicts.results.output)
       - name: produce-list-of-dicts-Output-loop-item
         value: $(tasks.produce-list-of-dicts.results.output)
-  timeout: 0s
+  timeout: 525600m

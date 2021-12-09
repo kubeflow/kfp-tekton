@@ -55,5 +55,5 @@ spec:
               {"container": {"args": ["echo", "Got scheduled"], "command": ["sh",
               "-c"], "image": "busybox"}}, "name": "echo"}'
             tekton.dev/template: ''
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m

@@ -84,7 +84,7 @@ spec:
               "type": "String"}], "name": "flip", "outputs": [{"name": "output", "type":
               "String"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: flip-2
       params:
       - name: forced_result2
@@ -126,7 +126,7 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: print
       params:
       - name: flip-2-output
@@ -156,7 +156,7 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: print-2
       params:
       - name: flip-output
@@ -186,7 +186,7 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: print-3
       taskSpec:
         steps:
@@ -209,7 +209,7 @@ spec:
       runAfter:
       - condition-1
       - condition-3
-      timeout: 0s
+      timeout: 525600m
     - name: condition-1
       params:
       - name: operand1
@@ -308,4 +308,4 @@ spec:
             f.write(outcome)
             f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
           image: python:alpine3.6
-  timeout: 0s
+  timeout: 525600m

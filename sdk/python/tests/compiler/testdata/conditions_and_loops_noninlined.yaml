@@ -81,7 +81,7 @@ metadata:
       = [_outputs]\n\n_output_serializers = [\n    _serialize_int,\n\n]\n\nimport
       os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
       OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
-      "image": "python:3.7", "name": "main"}]}, "timeout": "0s"}, {"name": "print-number",
+      "image": "python:3.7", "name": "main"}]}, "timeout": "525600m"}, {"name": "print-number",
       "params": [{"name": "add-numbers-Output", "value": "$(tasks.add-numbers.results.output)"}],
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
       "{\"implementation\": {\"container\": {\"args\": [\"--a\", {\"inputValue\":
@@ -119,7 +119,7 @@ metadata:
       = [_outputs]\n\n_output_serializers = [\n    _serialize_int,\n\n]\n\nimport
       os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
       OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
-      "image": "python:3.7", "name": "main"}]}, "timeout": "0s"}, {"name": "notify-success",
+      "image": "python:3.7", "name": "main"}]}, "timeout": "525600m"}, {"name": "notify-success",
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
       "{\"implementation\": {\"container\": {\"args\": [], \"command\": [\"sh\", \"-ec\",
       \"program_path=$(mktemp)\\nprintf \\\"%s\\\" \\\"$0\\\" > \\\"$program_path\\\"\\npython3
@@ -133,7 +133,7 @@ metadata:
       -u \"$program_path\" \"$@\"\n", "def notify_success():\n    print(''SUCCESS!'')\n\nimport
       argparse\n_parser = argparse.ArgumentParser(prog=''Notify success'', description='''')\n_parsed_args
       = vars(_parser.parse_args())\n\n_outputs = notify_success(**_parsed_args)\n"],
-      "image": "python:3.7", "name": "main"}]}, "timeout": "0s", "when": [{"input":
+      "image": "python:3.7", "name": "main"}]}, "timeout": "525600m", "when": [{"input":
       "$(tasks.condition-2.results.outcome)", "operator": "in", "values": ["true"]}]},
       {"name": "notify-failure", "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
       "{\"implementation\": {\"container\": {\"args\": [], \"command\": [\"sh\", \"-ec\",
@@ -148,7 +148,7 @@ metadata:
       -u \"$program_path\" \"$@\"\n", "def notify_failure():\n    print(''FAILED!'')\n\nimport
       argparse\n_parser = argparse.ArgumentParser(prog=''Notify failure'', description='''')\n_parsed_args
       = vars(_parser.parse_args())\n\n_outputs = notify_failure(**_parsed_args)\n"],
-      "image": "python:3.7", "name": "main"}]}, "timeout": "0s", "when": [{"input":
+      "image": "python:3.7", "name": "main"}]}, "timeout": "525600m", "when": [{"input":
       "$(tasks.condition-3.results.outcome)", "operator": "in", "values": ["true"]}]},
       {"name": "condition-2", "params": [{"name": "operand1", "value": "$(tasks.print-number.results.output)"},
       {"name": "operand2", "value": "$(params.threshold)"}, {"name": "operator", "value":
@@ -274,7 +274,7 @@ spec:
               "image": "python:3.7"}}, "inputs": [{"name": "n", "type": "Integer"}],
               "name": "Produce numbers", "outputs": [{"name": "Output", "type": "JsonArray"}]}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - runAfter:
       - produce-numbers
       name: conditions-and-loops-for-loop-1
@@ -287,4 +287,4 @@ spec:
         value: $(tasks.produce-numbers.results.output)
       - name: threshold
         value: $(params.threshold)
-  timeout: 0s
+  timeout: 525600m

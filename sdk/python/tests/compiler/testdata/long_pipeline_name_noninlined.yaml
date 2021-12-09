@@ -40,7 +40,7 @@ metadata:
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "arr-loop-item", "type": "string"}], "steps": [{"command":
       ["echo", "$(inputs.params.arr-loop-item)"], "image": "alpine:3.6", "name": "main"}]},
-      "timeout": "0s"}]}}}]'
+      "timeout": "525600m"}]}}}]'
 spec:
   params:
   - name: arr
@@ -58,4 +58,4 @@ spec:
       params:
       - name: arr-loop-item
         value: $(params.arr)
-  timeout: 0s
+  timeout: 525600m

@@ -53,6 +53,7 @@ spec:
         name: cel_exprs
         apiVersion: custom.tekton.dev/v1alpha1
         kind: CelExprs
+      timeout: 525600m
     - name: print
       params:
       - name: a
@@ -107,5 +108,5 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 0s
-  timeout: 0s
+      timeout: 525600m
+  timeout: 525600m
