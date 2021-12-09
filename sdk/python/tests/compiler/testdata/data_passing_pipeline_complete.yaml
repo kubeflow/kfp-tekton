@@ -52,10 +52,11 @@ metadata:
       [], "consume-string-as-file-2": [], "consume-string-as-file-3": [], "consume-string-as-file-4":
       [], "consume-string-as-file-5": [], "consume-string-as-value": [], "consume-string-as-value-2":
       [], "consume-string-as-value-3": [], "consume-string-as-value-4": [], "consume-string-as-value-5":
-      [], "produce-anything": [["data", "$(workspaces.produce-anything.path)/artifacts/$(context.pipelineRun.name)/produce-anything/data"]],
-      "produce-something": [["data", "$(workspaces.produce-something.path)/artifacts/$(context.pipelineRun.name)/produce-something/data"]],
-      "produce-string": [["Output", "$(workspaces.produce-string.path)/artifacts/$(context.pipelineRun.name)/produce-string/Output"]]}'
+      [], "produce-anything": [["data", "$(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data"]],
+      "produce-something": [["data", "$(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data"]],
+      "produce-string": [["Output", "$(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "anything_param",
       "name": "anything_param", "optional": true}, {"default": "something_param",
       "name": "something_param", "optional": true, "type": "Something"}, {"default":
@@ -84,7 +85,7 @@ spec:
         - name: main
           args:
           - --data
-          - $(workspaces.produce-anything.path)/artifacts/$(params.pipelineRun-name)/produce-anything/data
+          - $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data
           command:
           - sh
           - -ec
@@ -109,22 +110,39 @@ spec:
 
             _outputs = produce_anything(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.produce-anything.path)/artifacts/$(params.pipelineRun-name)/produce-anything/data | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.data.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.produce-anything.path)/artifacts/$(params.pipelineRun-name)/produce-anything/data $(results.data.path)
+              cp $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: data
           description: /tmp/outputs/data/data
+        - name: taskrun-name
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -146,22 +164,17 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: produce-anything
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: produce-anything
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: produce-something
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.produce-something.path)/artifacts/$(params.pipelineRun-name)/produce-something/data
+          - $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data
           command:
           - sh
           - -ec
@@ -186,22 +199,39 @@ spec:
 
             _outputs = produce_something(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.produce-something.path)/artifacts/$(params.pipelineRun-name)/produce-something/data | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.data.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.produce-something.path)/artifacts/$(params.pipelineRun-name)/produce-something/data $(results.data.path)
+              cp $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: data
           description: /tmp/outputs/data/data
+        - name: taskrun-name
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -223,22 +253,17 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: produce-something
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: produce-something
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: produce-string
       taskSpec:
         steps:
         - name: main
           args:
           - '----output-paths'
-          - $(workspaces.produce-string.path)/artifacts/$(params.pipelineRun-name)/produce-string/Output
+          - $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output
           command:
           - sh
           - -ec
@@ -279,22 +304,39 @@ spec:
                 with open(output_file, 'w') as f:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.produce-string.path)/artifacts/$(params.pipelineRun-name)/produce-string/Output | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.output.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.produce-string.path)/artifacts/$(params.pipelineRun-name)/produce-string/Output $(results.output.path)
+              cp $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.output.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: output
           description: /tmp/outputs/Output/data
+        - name: taskrun-name
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -320,15 +362,10 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: produce-string
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: produce-string
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-anything-as-value
       taskSpec:
         steps:
@@ -976,12 +1013,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-2
-            echo -n "anything_param" > $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-2/anything_param
+            mkdir -p $(workspaces.consume-anything-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
+            echo -n "anything_param" > $(workspaces.consume-anything-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/anything_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-2/anything_param
+          - $(workspaces.consume-anything-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/anything_param
           command:
           - sh
           - -ec
@@ -1001,6 +1038,11 @@ spec:
 
             _outputs = consume_anything_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1021,15 +1063,10 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-2
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-2
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-anything-as-file-3
       taskSpec:
         steps:
@@ -1038,12 +1075,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-3
-            echo -n "something_param" > $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-3/something_param
+            mkdir -p $(workspaces.consume-anything-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
+            echo -n "something_param" > $(workspaces.consume-anything-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/something_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-3/something_param
+          - $(workspaces.consume-anything-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/something_param
           command:
           - sh
           - -ec
@@ -1063,6 +1100,11 @@ spec:
 
             _outputs = consume_anything_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1083,15 +1125,10 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-3
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-3
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-anything-as-file-4
       taskSpec:
         steps:
@@ -1100,12 +1137,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-anything-as-file-4.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-4
-            echo -n "string_param" > $(workspaces.consume-anything-as-file-4.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-4/string_param
+            mkdir -p $(workspaces.consume-anything-as-file-4.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
+            echo -n "string_param" > $(workspaces.consume-anything-as-file-4.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/string_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-4.path)/artifacts/$(params.pipelineRun-name)/consume-anything-as-file-4/string_param
+          - $(workspaces.consume-anything-as-file-4.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/string_param
           command:
           - sh
           - -ec
@@ -1125,6 +1162,11 @@ spec:
 
             _outputs = consume_anything_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1145,15 +1187,10 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-4
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-4
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-something-as-file-2
       taskSpec:
         steps:
@@ -1162,12 +1199,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file-2
-            echo -n "anything_param" > $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file-2/anything_param
+            mkdir -p $(workspaces.consume-something-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
+            echo -n "anything_param" > $(workspaces.consume-something-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/anything_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file-2/anything_param
+          - $(workspaces.consume-something-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/anything_param
           command:
           - sh
           - -ec
@@ -1187,6 +1224,11 @@ spec:
 
             _outputs = consume_something_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1207,15 +1249,10 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-2
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-something-as-file-2
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-something-as-file-3
       taskSpec:
         steps:
@@ -1224,12 +1261,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-something-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file-3
-            echo -n "something_param" > $(workspaces.consume-something-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file-3/something_param
+            mkdir -p $(workspaces.consume-something-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
+            echo -n "something_param" > $(workspaces.consume-something-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/something_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-something-as-file-3/something_param
+          - $(workspaces.consume-something-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/something_param
           command:
           - sh
           - -ec
@@ -1249,6 +1286,11 @@ spec:
 
             _outputs = consume_something_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1269,15 +1311,10 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-3
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-something-as-file-3
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-string-as-file-2
       taskSpec:
         steps:
@@ -1286,12 +1323,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file-2
-            echo -n "anything_param" > $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file-2/anything_param
+            mkdir -p $(workspaces.consume-string-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
+            echo -n "anything_param" > $(workspaces.consume-string-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/anything_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file-2.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file-2/anything_param
+          - $(workspaces.consume-string-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/anything_param
           command:
           - sh
           - -ec
@@ -1311,6 +1348,11 @@ spec:
 
             _outputs = consume_string_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1331,15 +1373,10 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-2
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-string-as-file-2
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-string-as-file-3
       taskSpec:
         steps:
@@ -1348,12 +1385,12 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            mkdir -p $(workspaces.consume-string-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file-3
-            echo -n "string_param" > $(workspaces.consume-string-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file-3/string_param
+            mkdir -p $(workspaces.consume-string-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
+            echo -n "string_param" > $(workspaces.consume-string-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/string_param
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file-3.path)/artifacts/$(params.pipelineRun-name)/consume-string-as-file-3/string_param
+          - $(workspaces.consume-string-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/string_param
           command:
           - sh
           - -ec
@@ -1373,6 +1410,11 @@ spec:
 
             _outputs = consume_string_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1393,15 +1435,10 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-3
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-string-as-file-3
         workspace: data-passing-pipeline
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-anything-as-value-5
       params:
       - name: produce-anything-data
@@ -1739,12 +1776,15 @@ spec:
             tekton.dev/template: ''
       timeout: 525600m
     - name: consume-anything-as-file-5
+      params:
+      - name: produce-anything-trname
+        value: $(tasks.produce-anything.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-5.path)/artifacts/$(params.pipelineRun-name)/produce-anything/data
+          - $(workspaces.consume-anything-as-file-5.path)/artifacts/$ORIG_PR_NAME/$(params.produce-anything-trname)/data
           command:
           - sh
           - -ec
@@ -1764,6 +1804,13 @@ spec:
 
             _outputs = consume_anything_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: produce-anything-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1784,24 +1831,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-5
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-5
         workspace: data-passing-pipeline
       runAfter:
       - produce-anything
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-anything-as-file-6
+      params:
+      - name: produce-something-trname
+        value: $(tasks.produce-something.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-6.path)/artifacts/$(params.pipelineRun-name)/produce-something/data
+          - $(workspaces.consume-anything-as-file-6.path)/artifacts/$ORIG_PR_NAME/$(params.produce-something-trname)/data
           command:
           - sh
           - -ec
@@ -1821,6 +1866,13 @@ spec:
 
             _outputs = consume_anything_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: produce-something-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1841,24 +1893,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-6
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-6
         workspace: data-passing-pipeline
       runAfter:
       - produce-something
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-anything-as-file-7
+      params:
+      - name: produce-string-trname
+        value: $(tasks.produce-string.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-7.path)/artifacts/$(params.pipelineRun-name)/produce-string/Output
+          - $(workspaces.consume-anything-as-file-7.path)/artifacts/$ORIG_PR_NAME/$(params.produce-string-trname)/Output
           command:
           - sh
           - -ec
@@ -1878,6 +1928,13 @@ spec:
 
             _outputs = consume_anything_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: produce-string-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1898,24 +1955,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-7
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-7
         workspace: data-passing-pipeline
       runAfter:
       - produce-string
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-something-as-file-4
+      params:
+      - name: produce-anything-trname
+        value: $(tasks.produce-anything.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file-4.path)/artifacts/$(params.pipelineRun-name)/produce-anything/data
+          - $(workspaces.consume-something-as-file-4.path)/artifacts/$ORIG_PR_NAME/$(params.produce-anything-trname)/data
           command:
           - sh
           - -ec
@@ -1935,6 +1990,13 @@ spec:
 
             _outputs = consume_something_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: produce-anything-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1955,24 +2017,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-4
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-something-as-file-4
         workspace: data-passing-pipeline
       runAfter:
       - produce-anything
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-something-as-file-5
+      params:
+      - name: produce-something-trname
+        value: $(tasks.produce-something.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file-5.path)/artifacts/$(params.pipelineRun-name)/produce-something/data
+          - $(workspaces.consume-something-as-file-5.path)/artifacts/$ORIG_PR_NAME/$(params.produce-something-trname)/data
           command:
           - sh
           - -ec
@@ -1992,6 +2052,13 @@ spec:
 
             _outputs = consume_something_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: produce-something-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -2012,24 +2079,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-5
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-something-as-file-5
         workspace: data-passing-pipeline
       runAfter:
       - produce-something
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-string-as-file-4
+      params:
+      - name: produce-anything-trname
+        value: $(tasks.produce-anything.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file-4.path)/artifacts/$(params.pipelineRun-name)/produce-anything/data
+          - $(workspaces.consume-string-as-file-4.path)/artifacts/$ORIG_PR_NAME/$(params.produce-anything-trname)/data
           command:
           - sh
           - -ec
@@ -2049,6 +2114,13 @@ spec:
 
             _outputs = consume_string_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: produce-anything-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -2069,24 +2141,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-4
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-string-as-file-4
         workspace: data-passing-pipeline
       runAfter:
       - produce-anything
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: consume-string-as-file-5
+      params:
+      - name: produce-string-trname
+        value: $(tasks.produce-string.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file-5.path)/artifacts/$(params.pipelineRun-name)/produce-string/Output
+          - $(workspaces.consume-string-as-file-5.path)/artifacts/$ORIG_PR_NAME/$(params.produce-string-trname)/Output
           command:
           - sh
           - -ec
@@ -2106,6 +2176,13 @@ spec:
 
             _outputs = consume_string_as_file(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: produce-string-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -2126,17 +2203,12 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-5
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: consume-string-as-file-5
         workspace: data-passing-pipeline
       runAfter:
       - produce-string
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     workspaces:
     - name: data-passing-pipeline
   timeout: 525600m

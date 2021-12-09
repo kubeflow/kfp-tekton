@@ -178,7 +178,11 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                             run_after_task = '-'.join(group_names[:-1] + [run_after_task])
                             break
                     if run_after_task not in denpendency_list:
-                        run_after_task_list.append(run_after_task)
+                        # check task name is task list
+                        for origin_task_name in task_list:
+                            if origin_task_name in run_after_task:
+                                run_after_task_list.append(run_after_task)
+                                break
                 if task.get('runAfter', []):
                     task['runAfter'] = run_after_task_list
                 custom_task_cr_tasks.append(task)
@@ -233,8 +237,8 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
 
         # need to process task parameters to replace out of scope results
         # because nested graph cannot refer to task results outside of the sub-pipeline.
-        custom_task_cr_task_names = [custom_task_cr_task['name'] for custom_task_cr_task in custom_task_cr_tasks]
-        for task in custom_task_cr_tasks:
+        custom_task_cr_task_names = [custom_task_cr_task['name'] for custom_task_cr_task in custom_task_cr['spec']['pipelineSpec']['tasks']]
+        for task in custom_task_cr['spec']['pipelineSpec']['tasks']:
             for task_param in task.get('params', []):
                 if '$(tasks.' in task_param['value']:
                     param_results = re.findall('\$\(tasks.([^ \t\n.:,;\{\}]+).results.([^ \t\n.:,;\{\}]+)\)', task_param['value'])

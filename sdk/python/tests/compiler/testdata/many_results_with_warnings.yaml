@@ -33,6 +33,7 @@ metadata:
       ["param2", "/tekton/home/tep-results/param2"], ["param3", "/tekton/home/tep-results/param3"],
       ["superlongnamesuperlongnamesuperlongnamesuperlongnamesuper", "/tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline that produce
       many results.", "name": "many-results-pipeline"}'
 spec:
@@ -132,6 +133,11 @@ spec:
               cp /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: param1
           description: /tmp/outputs/param1/data

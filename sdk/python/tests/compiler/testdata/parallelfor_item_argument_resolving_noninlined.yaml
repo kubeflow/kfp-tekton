@@ -39,6 +39,7 @@ metadata:
       "$(results.output.path)"]], "produce-list-of-strings": [["Output", "$(results.output.path)"]],
       "produce-str": [["Output", "$(results.output.path)"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "parallelfor-item-argument-resolving"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "parallelfor-item-argument-resolving-for-loop-1"},

@@ -30,6 +30,7 @@ metadata:
       "flip-coin-2": [["output", "$(results.output.path)"]], "my-in-coop1": [], "my-in-coop2":
       [], "my-inner-inner-coop": [], "print": [], "print-2": []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use graph_component
       and recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
       true, "type": "Integer"}, {"default": "10", "name": "my_pipe_param", "optional":

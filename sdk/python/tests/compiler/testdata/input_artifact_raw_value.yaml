@@ -26,6 +26,7 @@ metadata:
       [], "component-with-input-artifact-2": [], "component-with-input-artifact-3":
       []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Pipeline shows how to
       define artifact inputs and pass raw artifacts to them.", "name": "pipeline-with-artifact-input-raw-argument-value"}'
 spec:

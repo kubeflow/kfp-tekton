@@ -20,6 +20,7 @@ for this project.
 
 ![kfp-tekton](images/kfp-tekton.png)
 
+
 Kubeflow Pipelines is a platform for building and deploying portable, scalable machine learning (ML) workflows. More architectural details about the Kubeflow Pipelines can be found on the [Kubeflow website](https://www.kubeflow.org/docs/components/pipelines/overview/).
 
 The Tekton Pipelines project provides Kubernetes-style resources for declaring

@@ -25,6 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{"my-in-coop1": [], "my-in-coop2": [], "my-inner-inner-coop":
       [], "my-inner-inner-coop-2": [], "my-inner-inner-coop-3": []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[100, 200]", "name":
       "my_pipe_param", "optional": true, "type": "JsonArray"}, {"default": "[1, 2]",
       "name": "my_pipe_param3", "optional": true, "type": "JsonArray"}], "name": "withitem-multiple-nesting-pipeline"}'

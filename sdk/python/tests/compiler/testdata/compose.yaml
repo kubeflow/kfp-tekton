@@ -30,6 +30,7 @@ metadata:
     tekton.dev/artifact_items: '{"download": [["downloaded", "$(results.downloaded.path)"]],
       "get-frequent": [["word", "$(results.word.path)"]], "save": []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Download and Get Most
       Frequent Word and Save to GCS", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
       "name": "url", "optional": true, "type": "String"}, {"default": "/tmp/output.txt",

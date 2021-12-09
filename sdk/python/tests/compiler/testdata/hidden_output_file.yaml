@@ -31,6 +31,7 @@ metadata:
       ["multiple_underscore_test", "$(results.multiple-underscore-test.path)"], ["underscore_test",
       "$(results.underscore-test.path)"]], "echo": []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Run a script that passes
       file to a non configurable path", "name": "hidden-output-file-pipeline"}'
 spec:

@@ -26,6 +26,7 @@ metadata:
     tekton.dev/artifact_items: '{"consume-data": [], "produce-list": [["data_list",
       "$(results.data-list.path)"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Test pipeline to verify
       functions of par loop.", "name": "loop-over-lightweight-output"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",

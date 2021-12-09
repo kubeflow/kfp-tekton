@@ -40,12 +40,13 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"gen-params": [["Output", "$(results.output.path)"]],
       "print-params": [], "print-text": [], "print-text-2": [], "print-text-3": [],
-      "print-text-4": [], "print-text-5": [], "repeat-line": [["output_text", "$(workspaces.repeat-line.path)/artifacts/$(context.pipelineRun.name)/repeat-line/output_text"]],
-      "split-text-lines": [["even_lines", "$(workspaces.split-text-lines.path)/artifacts/$(context.pipelineRun.name)/split-text-lines/even_lines"],
-      ["odd_lines", "$(workspaces.split-text-lines.path)/artifacts/$(context.pipelineRun.name)/split-text-lines/odd_lines"]],
-      "sum-numbers": [["Output", "$(workspaces.sum-numbers.path)/artifacts/$(context.pipelineRun.name)/sum-numbers/Output"]],
-      "write-numbers": [["numbers", "$(workspaces.write-numbers.path)/artifacts/$(context.pipelineRun.name)/write-numbers/numbers"]]}'
+      "print-text-4": [], "print-text-5": [], "repeat-line": [["output_text", "$(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text"]],
+      "split-text-lines": [["even_lines", "$(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines"],
+      ["odd_lines", "$(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines"]],
+      "sum-numbers": [["Output", "$(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output"]],
+      "write-numbers": [["numbers", "$(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Big data passing"}'
 spec:
   pipelineSpec:
@@ -60,7 +61,7 @@ spec:
           - --count
           - '5000'
           - --output-text
-          - $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-name)/repeat-line/output_text
+          - $(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text
           command:
           - sh
           - -ec
@@ -89,22 +90,39 @@ spec:
 
             _outputs = repeat_line(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-name)/repeat-line/output_text | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.output-text.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.repeat-line.path)/artifacts/$(params.pipelineRun-name)/repeat-line/output_text $(results.output-text.path)
+              cp $(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text $(results.output-text.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: output-text
           description: /tmp/outputs/output_text/data
+        - name: taskrun-name
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -135,77 +153,10 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: repeat-line
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: repeat-line
         workspace: big-data-passing
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
-    - name: print-text
-      taskSpec:
-        steps:
-        - name: main
-          args:
-          - --text
-          - $(workspaces.print-text.path)/artifacts/$(params.pipelineRun-name)/repeat-line/output_text
-          command:
-          - sh
-          - -ec
-          - |
-            program_path=$(mktemp)
-            printf "%s" "$0" > "$program_path"
-            python3 -u "$program_path" "$@"
-          - |
-            def print_text(
-                    text_path
-            ):  # The "text" input is untyped so that any data can be printed
-                '''Print text'''
-                with open(text_path, 'r') as reader:
-                    for line in reader:
-                        print(line, end='')
-
-            import argparse
-            _parser = argparse.ArgumentParser(prog='Print text', description='Print text')
-            _parser.add_argument("--text", dest="text_path", type=str, required=True, default=argparse.SUPPRESS)
-            _parsed_args = vars(_parser.parse_args())
-
-            _outputs = print_text(**_parsed_args)
-          image: python:3.7
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
-          annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Print text",
-              "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
-              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
-              The \"text\" input is untyped so that any data can be printed\n    ''''''Print
-              text''''''\n    with open(text_path, ''r'') as reader:\n        for
-              line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
-              = argparse.ArgumentParser(prog=''Print text'', description=''Print text'')\n_parser.add_argument(\"--text\",
-              dest=\"text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
-              = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
-              "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
-              text"}'
-            tekton.dev/template: ''
-        workspaces:
-        - name: print-text
-        params:
-        - name: pipelineRun-name
-      timeout: 525600m
-      workspaces:
-      - name: print-text
-        workspace: big-data-passing
-      runAfter:
-      - repeat-line
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: split-text-lines
       taskSpec:
         steps:
@@ -229,9 +180,9 @@ spec:
           - --source
           - /tmp/inputs/source/data
           - --odd-lines
-          - $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/odd_lines
+          - $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines
           - --even-lines
-          - $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/even_lines
+          - $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines
           command:
           - sh
           - -ec
@@ -270,30 +221,47 @@ spec:
 
             _outputs = split_text_lines(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/odd_lines | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.odd-lines.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/odd_lines $(results.odd-lines.path)
+              cp $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines $(results.odd-lines.path)
             fi
-            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/even_lines | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.even-lines.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.split-text-lines.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/even_lines $(results.even-lines.path)
+              cp $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines $(results.even-lines.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: odd-lines
           description: /tmp/outputs/odd_lines/data
         - name: even-lines
           description: /tmp/outputs/even_lines/data
+        - name: taskrun-name
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -332,22 +300,20 @@ spec:
         volumes:
         - name: source
           emptyDir: {}
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: split-text-lines
         workspace: big-data-passing
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: print-text-2
+      params:
+      - name: split-text-lines-trname
+        value: $(tasks.split-text-lines.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-2.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/odd_lines
+          - $(workspaces.print-text-2.path)/artifacts/$ORIG_PR_NAME/$(params.split-text-lines-trname)/odd_lines
           command:
           - sh
           - -ec
@@ -371,6 +337,13 @@ spec:
 
             _outputs = print_text(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: split-text-lines-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -392,24 +365,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-2
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: print-text-2
         workspace: big-data-passing
       runAfter:
       - split-text-lines
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: print-text-3
+      params:
+      - name: split-text-lines-trname
+        value: $(tasks.split-text-lines.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-3.path)/artifacts/$(params.pipelineRun-name)/split-text-lines/even_lines
+          - $(workspaces.print-text-3.path)/artifacts/$ORIG_PR_NAME/$(params.split-text-lines-trname)/even_lines
           command:
           - sh
           - -ec
@@ -433,6 +404,13 @@ spec:
 
             _outputs = print_text(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: split-text-lines-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -454,17 +432,12 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-3
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: print-text-3
         workspace: big-data-passing
       runAfter:
       - split-text-lines
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: write-numbers
       taskSpec:
         steps:
@@ -475,7 +448,7 @@ spec:
           - --count
           - '100000'
           - --numbers
-          - $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-name)/write-numbers/numbers
+          - $(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers
           command:
           - sh
           - -ec
@@ -504,22 +477,39 @@ spec:
 
             _outputs = write_numbers(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-name)/write-numbers/numbers | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.numbers.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.write-numbers.path)/artifacts/$(params.pipelineRun-name)/write-numbers/numbers $(results.numbers.path)
+              cp $(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers $(results.numbers.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: numbers
           description: /tmp/outputs/numbers/data
+        - name: taskrun-name
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -550,22 +540,20 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: write-numbers
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: write-numbers
         workspace: big-data-passing
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: print-text-4
+      params:
+      - name: write-numbers-trname
+        value: $(tasks.write-numbers.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-4.path)/artifacts/$(params.pipelineRun-name)/write-numbers/numbers
+          - $(workspaces.print-text-4.path)/artifacts/$ORIG_PR_NAME/$(params.write-numbers-trname)/numbers
           command:
           - sh
           - -ec
@@ -589,6 +577,13 @@ spec:
 
             _outputs = print_text(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: write-numbers-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -610,26 +605,24 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-4
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: print-text-4
         workspace: big-data-passing
       runAfter:
       - write-numbers
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: sum-numbers
+      params:
+      - name: write-numbers-trname
+        value: $(tasks.write-numbers.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --numbers
-          - $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-name)/write-numbers/numbers
+          - $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(params.write-numbers-trname)/numbers
           - '----output-paths'
-          - $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-name)/sum-numbers/Output
+          - $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output
           command:
           - sh
           - -ec
@@ -677,22 +670,41 @@ spec:
                 with open(output_file, 'w') as f:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
             #!/bin/sh
             set -exo pipefail
             TOTAL_SIZE=0
-            ARTIFACT_SIZE=`wc -c $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-name)/sum-numbers/Output | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.output.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.sum-numbers.path)/artifacts/$(params.pipelineRun-name)/sum-numbers/Output $(results.output.path)
+              cp $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.output.path)
             fi
           onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: write-numbers-trname
         results:
         - name: output
           description: /tmp/outputs/Output/data
+        - name: taskrun-name
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -722,24 +734,22 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: sum-numbers
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: sum-numbers
         workspace: big-data-passing
       runAfter:
       - write-numbers
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: print-text-5
+      params:
+      - name: sum-numbers-trname
+        value: $(tasks.sum-numbers.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-5.path)/artifacts/$(params.pipelineRun-name)/sum-numbers/Output
+          - $(workspaces.print-text-5.path)/artifacts/$ORIG_PR_NAME/$(params.sum-numbers-trname)/Output
           command:
           - sh
           - -ec
@@ -763,6 +773,13 @@ spec:
 
             _outputs = print_text(**_parsed_args)
           image: python:3.7
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: sum-numbers-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -784,17 +801,12 @@ spec:
             tekton.dev/template: ''
         workspaces:
         - name: print-text-5
-        params:
-        - name: pipelineRun-name
       timeout: 525600m
       workspaces:
       - name: print-text-5
         workspace: big-data-passing
       runAfter:
       - sum-numbers
-      params:
-      - name: pipelineRun-name
-        value: $(context.pipelineRun.name)
     - name: gen-params
       taskSpec:
         steps:
@@ -922,6 +934,146 @@ spec:
               "Integer"}], "name": "Print params"}'
             tekton.dev/template: ''
       timeout: 525600m
+    - runAfter:
+      - repeat-line
+      name: big-data-passing-for-loop-2
+      params:
+      - name: loop-item-param-1
+        value: '[1, 2]'
+      - name: repeat-line-output_text
+        value: $(tasks.repeat-line.results.output-text)
+      - name: repeat-line-taskrun-name
+        value: $(tasks.repeat-line.results.taskrun-name)
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: loop-item-param-1
+              type: string
+            - name: repeat-line-output_text
+              type: string
+            - name: repeat-line-taskrun-name
+              type: string
+            tasks:
+            - name: big-data-passing-for-loop-4
+              params:
+              - name: loop-item-param-3
+                value: '[1, 2]'
+              - name: repeat-line-output_text
+                value: $(params.repeat-line-output_text)
+              - name: repeat-line-taskrun-name
+                value: $(params.repeat-line-taskrun-name)
+              taskSpec:
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: PipelineLoop
+                spec:
+                  pipelineSpec:
+                    params:
+                    - name: loop-item-param-3
+                      type: string
+                    - name: repeat-line-output_text
+                      type: string
+                    - name: repeat-line-taskrun-name
+                      type: string
+                    tasks:
+                    - name: print-text
+                      params:
+                      - name: repeat-line-trname
+                        value: $(params.repeat-line-taskrun-name)
+                      taskSpec:
+                        steps:
+                        - name: main
+                          args:
+                          - --text
+                          - $(workspaces.print-text.path)/artifacts/$ORIG_PR_NAME/$(params.repeat-line-trname)/output_text
+                          command:
+                          - sh
+                          - -ec
+                          - |
+                            program_path=$(mktemp)
+                            printf "%s" "$0" > "$program_path"
+                            python3 -u "$program_path" "$@"
+                          - |
+                            def print_text(
+                                    text_path
+                            ):  # The "text" input is untyped so that any data can be printed
+                                '''Print text'''
+                                with open(text_path, 'r') as reader:
+                                    for line in reader:
+                                        print(line, end='')
+
+                            import argparse
+                            _parser = argparse.ArgumentParser(prog='Print text', description='Print text')
+                            _parser.add_argument("--text", dest="text_path", type=str, required=True, default=argparse.SUPPRESS)
+                            _parsed_args = vars(_parser.parse_args())
+
+                            _outputs = print_text(**_parsed_args)
+                          image: python:3.7
+                          env:
+                          - name: ORIG_PR_NAME
+                            valueFrom:
+                              fieldRef:
+                                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+                        params:
+                        - name: repeat-line-trname
+                          type: string
+                        metadata:
+                          labels:
+                            pipelines.kubeflow.org/pipelinename: ''
+                            pipelines.kubeflow.org/generation: ''
+                            pipelines.kubeflow.org/cache_enabled: "true"
+                          annotations:
+                            pipelines.kubeflow.org/component_spec: '{"description":
+                              "Print text", "implementation": {"container": {"args":
+                              ["--text", {"inputPath": "text"}], "command": ["sh",
+                              "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
+                              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+                              "def print_text(\n        text_path\n):  # The \"text\"
+                              input is untyped so that any data can be printed\n    ''''''Print
+                              text''''''\n    with open(text_path, ''r'') as reader:\n        for
+                              line in reader:\n            print(line, end='''')\n\nimport
+                              argparse\n_parser = argparse.ArgumentParser(prog=''Print
+                              text'', description=''Print text'')\n_parser.add_argument(\"--text\",
+                              dest=\"text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+                              = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
+                              "image": "python:3.7"}}, "inputs": [{"name": "text"}],
+                              "name": "Print text"}'
+                            tekton.dev/template: ''
+                        workspaces:
+                        - name: print-text
+                      timeout: 525600m
+                      workspaces:
+                      - name: print-text
+                        workspace: big-data-passing
+                      runAfter: []
+                    workspaces:
+                    - name: big-data-passing
+                  iterateParam: loop-item-param-3
+                  workspaces:
+                  - name: big-data-passing
+                    volumeClaimTemplate:
+                      spec:
+                        storageClassName: kfp-csi-s3
+                        accessModes:
+                        - ReadWriteMany
+                        resources:
+                          requests:
+                            storage: 2Gi
+            workspaces:
+            - name: big-data-passing
+          iterateParam: loop-item-param-1
+          workspaces:
+          - name: big-data-passing
+            volumeClaimTemplate:
+              spec:
+                storageClassName: kfp-csi-s3
+                accessModes:
+                - ReadWriteMany
+                resources:
+                  requests:
+                    storage: 2Gi
     workspaces:
     - name: big-data-passing
   timeout: 525600m

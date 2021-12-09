@@ -34,6 +34,15 @@
 
 from kfp import dsl
 from kfp.components import func_to_container_op, InputPath, OutputPath
+from kfp_tekton.compiler import TektonCompiler
+
+
+class Coder:
+    def empty(self):
+        return ""
+
+
+TektonCompiler._get_unique_id_code = Coder.empty
 
 # %% [markdown]
 # ## Small data
@@ -112,8 +121,11 @@ def print_text(
 
 
 def print_repeating_lines_pipeline():
+    loop_args = [1, 2]
     repeat_lines_task = repeat_line(line='Hello', count=5000)
-    print_text(repeat_lines_task.output)  # Don't forget .output !
+    with dsl.ParallelFor(loop_args=loop_args) as item2:
+        with dsl.ParallelFor(loop_args=loop_args) as item:
+            print_text(repeat_lines_task.output)  # Don't forget .output !
 
 
 # %% [markdown]
@@ -218,6 +230,5 @@ def file_passing_pipelines():
 
 # General by kfp-tekton
 if __name__ == '__main__':
-    from kfp_tekton.compiler import TektonCompiler
     TektonCompiler().compile(file_passing_pipelines,
                              __file__.replace('.py', '.yaml'))

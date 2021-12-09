@@ -23,8 +23,11 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path, _prepend_steps
 from os import environ as env
 
+BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
+BIG_DATA_PATH_FORMAT = "/".join(["$(workspaces.$TASK_NAME.path)", BIG_DATA_MIDPATH, "$TASKRUN_NAME", "$TASK_PARAM_NAME"])
 
-def fix_big_data_passing(workflow: dict) -> dict:
+
+def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix: str) -> dict:
     """
     fix_big_data_passing converts a workflow where some artifact data is passed
     as parameters and converts it to a workflow where this data is passed as
@@ -305,7 +308,9 @@ def fix_big_data_passing(workflow: dict) -> dict:
                                                task_template,
                                                pipelinerun_template,
                                                inputs_consumed_as_artifacts,
-                                               outputs_consumed_as_artifacts)
+                                               outputs_consumed_as_artifacts,
+                                               loops_pipeline,
+                                               loop_name_prefix)
 
     # Remove input parameters unless they're used downstream.
     # This also removes unused container template inputs if any.
@@ -317,6 +322,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
                     'name'
                 ),  # TODO: pipeline has no name, use pipelineRun name?
                 input_parameter['name']) in inputs_consumed_as_parameters
+                or input_parameter['name'].endswith("-trname")
         ]
 
     # Remove output parameters unless they're used downstream
@@ -354,6 +360,7 @@ def fix_big_data_passing(workflow: dict) -> dict:
                 (task['name'],
                 parameter_argument['name']) not in inputs_consumed_as_artifacts
                 or task['name'] in resource_template_names
+                or parameter_argument['name'].endswith("-trname")
             ]
 
         # tekton results doesn't support underscore
@@ -416,7 +423,7 @@ def big_data_passing_pipeline(name: str, template: dict, inputs_tasks: set(),
             input_name = parameter_argument['name']
             if (task.get('name'), input_name) in inputs_tasks:
                 pipeline_workspaces.add(pipeline_name)
-                # Add workspaces instead of parmas, for tasks of big data inputs
+                # Add workspaces instead of params, for tasks of big data inputs
                 if not task.setdefault('workspaces', []):
                     task['workspaces'].append({
                         "name": task.get('name'),
@@ -475,22 +482,31 @@ def big_data_passing_pipelinerun(name: str, pr: dict, pw: set):
 
 
 def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
-                            inputs_tasks: set, outputs_tasks: set) -> dict:
+                            inputs_tasks: set, outputs_tasks: set, loops_pipeline: dict,
+                            loop_name_prefix: str) -> dict:
     task_name = task.get('name')
     task_spec = task.get('taskSpec', {})
     # Data passing for the task outputs
-    task_outputs = task_spec.get('results', [])
-    for task_output in task_outputs:
+    appended_taskrun_name = False
+    for task_output in task.get('taskSpec', {}).get('results', []):
         if (task_name, task_output.get('name')) in outputs_tasks:
-            if not task_spec.setdefault('workspaces', []):
-                task_spec['workspaces'].append({"name": task_name})
+            if not task.get('taskSpec', {}).setdefault('workspaces', []):
+                task.get('taskSpec', {})['workspaces'].append({"name": task_name})
             # Replace the args for the outputs in the task_spec
             # $(results.task_output.get('name').path)  -->
             # $(workspaces.task_name.path)/task_name-task_output.get('name')
             placeholder = '$(results.%s.path)' % (sanitize_k8s_name(
                 task_output.get('name')))
-            workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                task_name, task_name, task_output.get('name'))
+            workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
+                task_name, BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_output.get('name'))
+            # For child nodes to know the taskrun name, it has to pass to results via /tekton/results emptydir
+            if not appended_taskrun_name:
+                copy_taskrun_name_step = _get_base_step('output-taskrun-name')
+                copy_taskrun_name_step['script'] += 'echo -n "%s" > $(results.taskrun-name.path)\n' % ("$(context.taskRun.name)")
+                task['taskSpec']['results'].append({"name": "taskrun-name"})
+                task['taskSpec']['steps'].append(copy_taskrun_name_step)
+                _append_original_pr_name_env(task)
+                appended_taskrun_name = True
             task['taskSpec'] = replace_big_data_placeholder(
                 task.get("taskSpec", {}), placeholder, workspaces_parameter)
             artifact_items = pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items']
@@ -524,12 +540,39 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                     break
             # If the param name is constructed with task_name-param_name,
             # use the current task_name as the path prefix
+
+            def append_taskrun_params(task_name_append: str):
+                taskrun_param_name = task_name_append + "-trname"
+                inserted_taskrun_param = False
+                for param in task['taskSpec'].get('params', []):
+                    if param.get('name', "") == taskrun_param_name:
+                        inserted_taskrun_param = True
+                        break
+                if not inserted_taskrun_param:
+                    task['taskSpec']['params'].append({"name": taskrun_param_name})
+                    task['params'].append({"name": taskrun_param_name, "value": "$(tasks.%s.results.taskrun-name)" % task_name_append})
+                    parent_task_queue = [task['name']]
+                    while parent_task_queue:
+                        current_task = parent_task_queue.pop(0)
+                        for loop_name, loop_spec in loops_pipeline.items():
+                            # print(loop_name, loop_spec)
+                            if current_task in loop_spec.get('task_list', []):
+                                parent_task_queue.append(loop_name.replace(loop_name_prefix, ""))
+                                loop_param_names = [loop_param['name'] for loop_param in loops_pipeline[loop_name]['spec']['params']]
+                                if task_name_append + '-taskrun-name' in loop_param_names:
+                                    continue
+                                loops_pipeline[loop_name]['spec']['params'].append({'name': task_name_append + '-taskrun-name',
+                                'value': '$(tasks.%s.results.taskrun-name)' % task_name_append})
+
             if task_param_task_name:
-                workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                    task_name, task_param_task_name, task_param_param_name)
+                workspaces_parameter = '$(workspaces.%s.path)/%s/$(params.%s-trname)/%s' % (
+                    task_name, BIG_DATA_MIDPATH, task_param_task_name, task_param_param_name)
+                if task_param_task_name != task_name:
+                    append_taskrun_params(task_param_task_name)  # need to get taskrun name from parent path
             else:
-                workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-                    task_name, task_name, task_param.get('name'))
+                workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
+                    task_name, BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_param.get('name'))
+            _append_original_pr_name_env(task)
             task['taskSpec'] = replace_big_data_placeholder(
                 task_spec, placeholder, workspaces_parameter)
             task_spec = task.get('taskSpec', {})
@@ -574,13 +617,15 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                     '  cp ' + src + ' ' + dst + '\n' +
                                     'fi\n'
                             )
+            _append_original_pr_name_env_to_step(copy_results_artifact_step)
             if add_copy_results_artifacts_step:
                 task['taskSpec']['steps'].append(copy_results_artifact_step)
 
     # Remove artifacts parameter from params
     task.get("taskSpec", {})['params'] = [
         param for param in task_spec.get('params', [])
-        if (task_name, param.get('name')) not in inputs_tasks
+        if (task_name, param.get('name')) not in inputs_tasks or
+            param.get('name').endswith("-trname")
     ]
 
     # Remove artifacts from task_spec
@@ -598,12 +643,13 @@ def input_artifacts_tasks_pr_params(template: dict, artifact: dict) -> dict:
     for task_param in task_params:
         # For pipeline parameter input artifacts, it will never come from another task because pipeline
         # params are global parameters. Thus, task_name will always be the executing task name.
-        workspaces_parameter = '$(workspaces.%s.path)/artifacts/$(context.pipelineRun.name)/%s/%s' % (
-            task_name, task_name, task_param.get('name'))
+        workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
+            task_name, BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_param.get('name'))
         if 'raw' in artifact:
             copy_inputs_step['script'] += 'mkdir -p %s\n' % pathlib.Path(workspaces_parameter).parent
             copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (
                 artifact['raw']['data'], workspaces_parameter)
+        _append_original_pr_name_env(template)
 
     template['taskSpec']['steps'] = _prepend_steps(
         [copy_inputs_step], template['taskSpec']['steps'])
@@ -669,3 +715,22 @@ def jsonify_annotations(template: dict):
     template['metadata']['annotations']['tekton.dev/artifact_items'] = \
         json.dumps(template['metadata']['annotations']['tekton.dev/artifact_items'])
     return template
+
+
+def _append_original_pr_name_env_to_step(step):
+    step.setdefault('env', [])
+    has_original_pr_name = False
+    for task_env in step['env']:
+        if task_env['name'] == "ORIG_PR_NAME":
+            has_original_pr_name = True
+    if not has_original_pr_name:
+        step['env'].append({"name": "ORIG_PR_NAME",
+                            "valueFrom":
+                                {"fieldRef":
+                                    {"fieldPath": "metadata.labels['custom.tekton.dev/originalPipelineRun']"}}})
+
+
+def _append_original_pr_name_env(task_template):
+    for step in task_template['taskSpec']['steps']:
+        if step['name'] == 'main':
+            _append_original_pr_name_env_to_step(step)

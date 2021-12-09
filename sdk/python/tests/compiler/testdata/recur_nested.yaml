@@ -32,6 +32,7 @@ metadata:
       "flip-coin-2": [["output", "$(results.output.path)"]], "flip-coin-3": [["output",
       "$(results.output.path)"]], "print": [], "print-2": [], "print-3": []}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use graph_component
       and nested recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
       true, "type": "Integer"}], "name": "nested-recursion-pipeline"}'
