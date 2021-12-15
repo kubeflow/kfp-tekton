@@ -112,6 +112,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recur_cond import recur_and_condition
     self._test_pipeline_workflow(recur_and_condition, 'recur_cond.yaml')
 
+  def test_recur_cond_workflow(self):
+    """
+    Test compiling a loop workflow using tekton loop dsl extension.
+    """
+    from .testdata.tekton_loop_dsl import pipeline
+    self._test_pipeline_workflow(pipeline, 'tekton_loop_dsl.yaml')
+
   def test_cond_recur_workflow(self):
     """
     Test compiling a conditional recursive workflow.
