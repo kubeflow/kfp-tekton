@@ -537,9 +537,9 @@ def _op_to_template(op: BaseOp,
         component_spec_digest = hashlib.sha256(json.dumps(component_spec_dict, sort_keys=True).encode()).hexdigest()
         component_name = component_spec_dict.get('name', op.name)
         component_version = component_name + '@sha256=' + component_spec_digest
-        digested_component_spec_dict = { 'name': component_name,
-                                         'outputs': component_spec_dict.get('outputs', []),
-                                         'version': component_version
+        digested_component_spec_dict = {'name': component_name,
+                                        'outputs': component_spec_dict.get('outputs', []),
+                                        'version': component_version
         }
         template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec_digest'] = \
             json.dumps(digested_component_spec_dict, sort_keys=True)
