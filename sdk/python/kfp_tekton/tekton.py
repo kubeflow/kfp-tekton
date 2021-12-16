@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Iterable, Union
+from typing import List, Iterable, Union, Optional, TypeVar
+from kfp.dsl import _pipeline_param, _for_loop
 from kfp import dsl
 from kfp import components
 from kfp.dsl._pipeline_param import ConditionOperator
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
+from kfp_tekton.compiler._op_to_template import TEKTON_BASH_STEP_IMAGE
 
 
 CEL_EVAL_IMAGE = "aipipeline/cel-eval:latest"
@@ -25,6 +27,7 @@ DEFAULT_CONDITION_OUTPUT_KEYWORD = "outcome"
 TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE]
 LOOP_PIPELINE_NAME_LENGTH = 40
 LOOP_GROUP_NAME_LENGTH = 16
+_Num = TypeVar('_Num', int, float)
 
 
 def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
@@ -177,3 +180,68 @@ def CEL_ConditionOp(condition_statement):
     ConditionOp = ConditionOp_template(condition_statement)
     ConditionOp.add_pod_annotation("valid_container", "false")
     return ConditionOp
+
+
+def Break():
+    '''A BreakOp template for Break Operation using PipelineLoop
+    '''
+    BreakOp_yaml = '''\
+    name: 'pipelineloop-break-operation'
+    description: 'Break Operation using PipelineLoop'
+    implementation:
+        container:
+            image: %s
+            command:
+            - sh
+            - -c
+            - |
+              echo "$0"
+            args:
+            - "break loop"
+    ''' % (TEKTON_BASH_STEP_IMAGE)
+    BreakOp_template = components.load_component_from_text(BreakOp_yaml)
+    BreakOp = BreakOp_template()
+    return BreakOp
+
+
+class Loop(dsl.ParallelFor):
+
+  @classmethod
+  def sequential(self,
+                 loop_args: _for_loop.ItemList):
+    return Loop(loop_args=loop_args, parallelism=1)
+
+  @classmethod
+  def from_string(self,
+                  loop_args: Union[str, _pipeline_param.PipelineParam],
+                  separator: Optional[str] = None,
+                  parallelism: Optional[int] = None):
+    return Loop(loop_args=loop_args, separator=separator, parallelism=parallelism)
+
+  @classmethod
+  def range(self,
+            a: _Num,
+            b: _Num,
+            c: Optional[_Num] = None,
+            parallelism: Optional[int] = None):
+    return Loop(start=a, step=b, end=c, parallelism=parallelism)
+
+  def __init__(self,
+               loop_args: Union[_for_loop.ItemList,
+                                _pipeline_param.PipelineParam] = None,
+               start: _Num = None,
+               end: _Num = None,
+               step: _Num = None,
+               separator: Optional[str] = None,
+               parallelism: Optional[int] = None):
+    tekton_params = (start, end, step, separator)
+    if loop_args and not [x for x in tekton_params if x is not None]:
+        super().__init__(loop_args=loop_args, parallelism=parallelism)
+    elif loop_args and separator:
+        # TODO: implement loop separator DSL extension
+        pass
+    elif start and end:
+        # TODO: implement loop start, end, step DSL extension
+        pass
+    else:
+        raise("loop_args or start/end parameters are missing for 'Loop' class")
