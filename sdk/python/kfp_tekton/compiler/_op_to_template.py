@@ -16,6 +16,7 @@ import json
 import re
 import yaml
 import logging
+import hashlib
 
 from collections import OrderedDict
 from typing import List, Text, Dict, Any
@@ -531,8 +532,16 @@ def _op_to_template(op: BaseOp,
         template['spec']['volumes'].sort(key=lambda x: x['name'])
 
     if isinstance(op, dsl.ContainerOp) and op._metadata:
-        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec'] = \
-            json.dumps(op._metadata.to_dict(), sort_keys=True)
+        component_spec_dict = op._metadata.to_dict()
+        component_spec_digest = hashlib.sha256(json.dumps(component_spec_dict, sort_keys=True).encode()).hexdigest()
+        component_name = component_spec_dict.get('name', op.name)
+        component_version = component_name + '@sha256=' + component_spec_digest
+        digested_component_spec_dict = { 'name': component_name,
+                                         'outputs': component_spec_dict.get('outputs', []),
+                                         'version': component_version
+        }
+        template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec_digest'] = \
+            json.dumps(digested_component_spec_dict, sort_keys=True)
 
     if isinstance(op, dsl.ContainerOp) and op.execution_options:
         if op.execution_options.caching_strategy.max_cache_staleness:

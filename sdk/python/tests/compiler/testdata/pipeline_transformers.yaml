@@ -47,10 +47,8 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             hobby: football
-            pipelines.kubeflow.org/component_spec: '{"description": "print out msg",
-              "implementation": {"container": {"command": ["echo", {"inputValue":
-              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
-              "String"}], "name": "print"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [], "version": "print@sha256=5311fb175a78bc1a90005ec5e77b6c0c5c574afe5fc779b99e9847e08615d618"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: print-2
@@ -69,10 +67,8 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             hobby: football
-            pipelines.kubeflow.org/component_spec: '{"description": "print out msg",
-              "implementation": {"container": {"command": ["echo", {"inputValue":
-              "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg", "type":
-              "String"}], "name": "print"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [], "version": "print@sha256=5311fb175a78bc1a90005ec5e77b6c0c5c574afe5fc779b99e9847e08615d618"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

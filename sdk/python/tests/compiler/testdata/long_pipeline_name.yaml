@@ -70,10 +70,8 @@ spec:
                     pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
-                    pipelines.kubeflow.org/component_spec: '{"description": "print",
-                      "implementation": {"container": {"command": ["echo", {"inputValue":
-                      "msg"}], "image": "alpine:3.6"}}, "inputs": [{"name": "msg",
-                      "type": "String"}], "name": "print"}'
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
+                      "outputs": [], "version": "print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d"}'
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: arr-loop-item

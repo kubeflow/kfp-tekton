@@ -57,12 +57,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Flip coin", "implementation":
-              {"container": {"args": ["python -c \"import random; result = ''heads''
-              if random.randint(0,1) == 0           else ''tails''; print(result)\"
-              | tee $0\n", {"outputPath": "output_result"}], "command": ["sh", "-c"],
-              "image": "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name":
-              "output_result", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
+              [{"name": "output_result", "type": "String"}], "version": "flip-coin@sha256=742164cb310e6ee3f29ee5491bdded83811f56531a8d045bb6052aac51f035fc"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: flip-coin-2
@@ -86,12 +82,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Flip coin", "implementation":
-              {"container": {"args": ["python -c \"import random; result = ''heads''
-              if random.randint(0,1) == 0           else ''tails''; print(result)\"
-              | tee $0\n", {"outputPath": "output_result"}], "command": ["sh", "-c"],
-              "image": "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name":
-              "output_result", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
+              [{"name": "output_result", "type": "String"}], "version": "flip-coin@sha256=742164cb310e6ee3f29ee5491bdded83811f56531a8d045bb6052aac51f035fc"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: condition-cel
@@ -122,10 +114,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Print", "implementation":
-              {"container": {"command": ["echo", {"inputValue": "msg"}], "image":
-              "alpine:3.6"}}, "inputs": [{"name": "msg", "type": "String"}], "name":
-              "print"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [], "version": "print@sha256=e5d74bd54bd5aaa77f1c40ad6346cae3fefcc749bea2f6d1561c09ca1f0fe867"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

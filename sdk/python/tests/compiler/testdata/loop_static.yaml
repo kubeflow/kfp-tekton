@@ -60,10 +60,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "static-loop-out-op",
-              "implementation": {"container": {"args": ["echo $0\n", {"inputValue":
-              "input1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
-              "inputs": [{"name": "input1", "type": "String"}], "name": "static-loop-out-op"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-out-op",
+              "outputs": [], "version": "static-loop-out-op@sha256=84e07ab9a7585349f4f6c1c53200dfae7cacee9fa6aa5bdeb26d7487dd58c203"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: static-loop-pipeline-for-loop-2
@@ -112,12 +110,8 @@ spec:
                     pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
-                    pipelines.kubeflow.org/component_spec: '{"description": "static-loop-inner-op1",
-                      "implementation": {"container": {"args": ["echo op1 $0 $1\n",
-                      {"inputValue": "input1"}, {"inputValue": "input2"}], "command":
-                      ["sh", "-c"], "image": "library/bash:4.4.23"}}, "inputs": [{"name":
-                      "input1", "type": "Integer"}, {"name": "input2", "type": "String"}],
-                      "name": "static-loop-inner-op1"}'
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-inner-op1",
+                      "outputs": [], "version": "static-loop-inner-op1@sha256=37bfbf9bbcc6525f9915ee1c07e8a8b482c487696eb3c10fd82c27049b1b55e9"}'
                     tekton.dev/template: ''
               timeout: 525600m
             - name: static-loop-inner-op2
@@ -144,10 +138,8 @@ spec:
                     pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
-                    pipelines.kubeflow.org/component_spec: '{"description": "static-loop-inner-op2",
-                      "implementation": {"container": {"args": ["echo op2 $0\n", {"inputValue":
-                      "input1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
-                      "inputs": [{"name": "input1", "type": "Integer"}], "name": "static-loop-inner-op2"}'
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-inner-op2",
+                      "outputs": [], "version": "static-loop-inner-op2@sha256=56d5b639d49c40d3d5eb06be4a8d277614742470a048197eb6f141c9c257324c"}'
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: with-item-name

@@ -129,27 +129,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Repeat the line
-              specified number of times", "implementation": {"container": {"args":
-              ["--line", {"inputValue": "line"}, {"if": {"cond": {"isPresent": "count"},
-              "then": ["--count", {"inputValue": "count"}]}}, "--output-text", {"outputPath":
-              "output_text"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
-              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def _make_parent_dirs_and_return_path(file_path: str):\n    import
-              os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
-              file_path\n\ndef repeat_line(line, output_text_path, count = 10):\n    ''''''Repeat
-              the line specified number of times''''''\n    with open(output_text_path,
-              ''w'') as writer:\n        for i in range(count):\n            writer.write(line
-              + ''\\n'')\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Repeat
-              line'', description=''Repeat the line specified number of times'')\n_parser.add_argument(\"--line\",
-              dest=\"line\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--count\",
-              dest=\"count\", type=int, required=False, default=argparse.SUPPRESS)\n_parser.add_argument(\"--output-text\",
-              dest=\"output_text_path\", type=_make_parent_dirs_and_return_path, required=True,
-              default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs
-              = repeat_line(**_parsed_args)\n"], "image": "python:3.7"}}, "inputs":
-              [{"name": "line", "type": "String"}, {"default": "10", "name": "count",
-              "optional": true, "type": "Integer"}], "name": "Repeat line", "outputs":
-              [{"name": "output_text", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Repeat line",
+              "outputs": [{"name": "output_text", "type": "String"}], "version": "Repeat
+              line@sha256=6ba4c40102b73739c02839c46d8897f9b07511608ff42f91916c29fc33ffde37"}'
             tekton.dev/template: ''
         workspaces:
         - name: repeat-line
@@ -268,28 +250,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": ["--source", {"inputPath": "source"}, "--odd-lines", {"outputPath":
-              "odd_lines"}, "--even-lines", {"outputPath": "even_lines"}], "command":
-              ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
-              -u \"$program_path\" \"$@\"\n", "def _make_parent_dirs_and_return_path(file_path:
-              str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
-              file_path\n\ndef split_text_lines(source_path,\n                     odd_lines_path,\n                     even_lines_path):\n    with
-              open(source_path, ''r'') as reader:\n        with open(odd_lines_path,
-              ''w'') as odd_writer:\n            with open(even_lines_path, ''w'')
-              as even_writer:\n                while True:\n                    line
-              = reader.readline()\n                    if line == \"\":\n                        break\n                    odd_writer.write(line)\n                    line
-              = reader.readline()\n                    if line == \"\":\n                        break\n                    even_writer.write(line)\n\nimport
-              argparse\n_parser = argparse.ArgumentParser(prog=''Split text lines'',
-              description='''')\n_parser.add_argument(\"--source\", dest=\"source_path\",
-              type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--odd-lines\",
-              dest=\"odd_lines_path\", type=_make_parent_dirs_and_return_path, required=True,
-              default=argparse.SUPPRESS)\n_parser.add_argument(\"--even-lines\", dest=\"even_lines_path\",
-              type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)\n_parsed_args
-              = vars(_parser.parse_args())\n\n_outputs = split_text_lines(**_parsed_args)\n"],
-              "image": "python:3.7"}}, "inputs": [{"name": "source", "type": "String"}],
-              "name": "Split text lines", "outputs": [{"name": "odd_lines", "type":
-              "String"}, {"name": "even_lines", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Split text lines",
+              "outputs": [{"name": "odd_lines", "type": "String"}, {"name": "even_lines",
+              "type": "String"}], "version": "Split text lines@sha256=2922d5cb527a21526cd87d19a93f6d38b9a7607603b85b5b50b700cb013568cb"}'
             tekton.dev/template: ''
         workspaces:
         - name: split-text-lines
@@ -350,18 +313,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Print text",
-              "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
-              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
-              The \"text\" input is untyped so that any data can be printed\n    ''''''Print
-              text''''''\n    with open(text_path, ''r'') as reader:\n        for
-              line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
-              = argparse.ArgumentParser(prog=''Print text'', description=''Print text'')\n_parser.add_argument(\"--text\",
-              dest=\"text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
-              = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
-              "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
-              text"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
+              "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
             tekton.dev/template: ''
         workspaces:
         - name: print-text-2
@@ -417,18 +370,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Print text",
-              "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
-              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
-              The \"text\" input is untyped so that any data can be printed\n    ''''''Print
-              text''''''\n    with open(text_path, ''r'') as reader:\n        for
-              line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
-              = argparse.ArgumentParser(prog=''Print text'', description=''Print text'')\n_parser.add_argument(\"--text\",
-              dest=\"text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
-              = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
-              "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
-              text"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
+              "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
             tekton.dev/template: ''
         workspaces:
         - name: print-text-3
@@ -516,27 +459,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": [{"if": {"cond": {"isPresent": "start"}, "then": ["--start",
-              {"inputValue": "start"}]}}, {"if": {"cond": {"isPresent": "count"},
-              "then": ["--count", {"inputValue": "count"}]}}, "--numbers", {"outputPath":
-              "numbers"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
-              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def _make_parent_dirs_and_return_path(file_path: str):\n    import
-              os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
-              file_path\n\ndef write_numbers(\n        numbers_path, start = 0, count
-              = 10):\n    with open(numbers_path, ''w'') as writer:\n        for i
-              in range(start, count):\n            writer.write(str(i) + ''\\n'')\n\nimport
-              argparse\n_parser = argparse.ArgumentParser(prog=''Write numbers'',
-              description='''')\n_parser.add_argument(\"--start\", dest=\"start\",
-              type=int, required=False, default=argparse.SUPPRESS)\n_parser.add_argument(\"--count\",
-              dest=\"count\", type=int, required=False, default=argparse.SUPPRESS)\n_parser.add_argument(\"--numbers\",
-              dest=\"numbers_path\", type=_make_parent_dirs_and_return_path, required=True,
-              default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs
-              = write_numbers(**_parsed_args)\n"], "image": "python:3.7"}}, "inputs":
-              [{"default": "0", "name": "start", "optional": true, "type": "Integer"},
-              {"default": "10", "name": "count", "optional": true, "type": "Integer"}],
-              "name": "Write numbers", "outputs": [{"name": "numbers", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Write numbers",
+              "outputs": [{"name": "numbers", "type": "String"}], "version": "Write
+              numbers@sha256=6a144669e9261686cc1f2365c56bc2ff9a575dd7d02049ea5580b1d40d2a2808"}'
             tekton.dev/template: ''
         workspaces:
         - name: write-numbers
@@ -590,18 +515,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Print text",
-              "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
-              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
-              The \"text\" input is untyped so that any data can be printed\n    ''''''Print
-              text''''''\n    with open(text_path, ''r'') as reader:\n        for
-              line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
-              = argparse.ArgumentParser(prog=''Print text'', description=''Print text'')\n_parser.add_argument(\"--text\",
-              dest=\"text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
-              = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
-              "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
-              text"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
+              "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
             tekton.dev/template: ''
         workspaces:
         - name: print-text-4
@@ -711,26 +626,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": ["--numbers", {"inputPath": "numbers"}, "----output-paths",
-              {"outputPath": "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
-              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def sum_numbers(numbers_path):\n    sum = 0\n    with open(numbers_path,
-              ''r'') as reader:\n        for line in reader:\n            sum = sum
-              + int(line)\n    return sum\n\ndef _serialize_int(int_value: int) ->
-              str:\n    if isinstance(int_value, str):\n        return int_value\n    if
-              not isinstance(int_value, int):\n        raise TypeError(''Value \"{}\"
-              has type \"{}\" instead of int.''.format(str(int_value), str(type(int_value))))\n    return
-              str(int_value)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Sum
-              numbers'', description='''')\n_parser.add_argument(\"--numbers\", dest=\"numbers_path\",
-              type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"----output-paths\",
-              dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args = vars(_parser.parse_args())\n_output_files
-              = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = sum_numbers(**_parsed_args)\n\n_outputs
-              = [_outputs]\n\n_output_serializers = [\n    _serialize_int,\n\n]\n\nimport
-              os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
-              OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
-              "image": "python:3.7"}}, "inputs": [{"name": "numbers", "type": "String"}],
-              "name": "Sum numbers", "outputs": [{"name": "Output", "type": "Integer"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Sum numbers",
+              "outputs": [{"name": "Output", "type": "Integer"}], "version": "Sum
+              numbers@sha256=02b544e3a20b1d1f0db48c877515c81540f371351746aaa4f472943784a7b2fc"}'
             tekton.dev/template: ''
         workspaces:
         - name: sum-numbers
@@ -786,18 +684,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Print text",
-              "implementation": {"container": {"args": ["--text", {"inputPath": "text"}],
-              "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
-              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def print_text(\n        text_path\n):  #
-              The \"text\" input is untyped so that any data can be printed\n    ''''''Print
-              text''''''\n    with open(text_path, ''r'') as reader:\n        for
-              line in reader:\n            print(line, end='''')\n\nimport argparse\n_parser
-              = argparse.ArgumentParser(prog=''Print text'', description=''Print text'')\n_parser.add_argument(\"--text\",
-              dest=\"text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
-              = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
-              "image": "python:3.7"}}, "inputs": [{"name": "text"}], "name": "Print
-              text"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
+              "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
             tekton.dev/template: ''
         workspaces:
         - name: print-text-5
@@ -867,23 +755,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": ["----output-paths", {"outputPath": "Output"}], "command":
-              ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
-              -u \"$program_path\" \"$@\"\n", "def gen_params():\n    import random\n    num
-              = random.randint(0, 9)\n    return num\n\ndef _serialize_int(int_value:
-              int) -> str:\n    if isinstance(int_value, str):\n        return int_value\n    if
-              not isinstance(int_value, int):\n        raise TypeError(''Value \"{}\"
-              has type \"{}\" instead of int.''.format(str(int_value), str(type(int_value))))\n    return
-              str(int_value)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Gen
-              params'', description='''')\n_parser.add_argument(\"----output-paths\",
-              dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args = vars(_parser.parse_args())\n_output_files
-              = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = gen_params(**_parsed_args)\n\n_outputs
-              = [_outputs]\n\n_output_serializers = [\n    _serialize_int,\n\n]\n\nimport
-              os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
-              OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
-              "image": "python:3.7"}}, "name": "Gen params", "outputs": [{"name":
-              "Output", "type": "Integer"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Gen params",
+              "outputs": [{"name": "Output", "type": "Integer"}], "version": "Gen
+              params@sha256=58a63effb92a97fcdd8ca8ba72550e11635d72ccb17441e5e97a2ef78d06ab6f"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: print-params
@@ -922,16 +796,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": ["--numbers-parm", {"inputValue": "numbers_parm"}], "command":
-              ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
-              -u \"$program_path\" \"$@\"\n", "def print_params(numbers_parm):\n    print(\"The
-              result number is: %d\" % numbers_parm)\n\nimport argparse\n_parser =
-              argparse.ArgumentParser(prog=''Print params'', description='''')\n_parser.add_argument(\"--numbers-parm\",
-              dest=\"numbers_parm\", type=int, required=True, default=argparse.SUPPRESS)\n_parsed_args
-              = vars(_parser.parse_args())\n\n_outputs = print_params(**_parsed_args)\n"],
-              "image": "python:3.7"}}, "inputs": [{"name": "numbers_parm", "type":
-              "Integer"}], "name": "Print params"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Print params",
+              "outputs": [], "version": "Print params@sha256=3fb942e817debe20ad7b6a10ff15f184d01b788e9908d665b20ecc89e7bb48da"}'
             tekton.dev/template: ''
       timeout: 525600m
     - runAfter:
@@ -1025,21 +891,8 @@ spec:
                             pipelines.kubeflow.org/generation: ''
                             pipelines.kubeflow.org/cache_enabled: "true"
                           annotations:
-                            pipelines.kubeflow.org/component_spec: '{"description":
-                              "Print text", "implementation": {"container": {"args":
-                              ["--text", {"inputPath": "text"}], "command": ["sh",
-                              "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
-                              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-                              "def print_text(\n        text_path\n):  # The \"text\"
-                              input is untyped so that any data can be printed\n    ''''''Print
-                              text''''''\n    with open(text_path, ''r'') as reader:\n        for
-                              line in reader:\n            print(line, end='''')\n\nimport
-                              argparse\n_parser = argparse.ArgumentParser(prog=''Print
-                              text'', description=''Print text'')\n_parser.add_argument(\"--text\",
-                              dest=\"text_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
-                              = vars(_parser.parse_args())\n\n_outputs = print_text(**_parsed_args)\n"],
-                              "image": "python:3.7"}}, "inputs": [{"name": "text"}],
-                              "name": "Print text"}'
+                            pipelines.kubeflow.org/component_spec_digest: '{"name":
+                              "Print text", "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
                             tekton.dev/template: ''
                         workspaces:
                         - name: print-text

@@ -75,12 +75,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "GCS - Download",
-              "implementation": {"container": {"args": ["gsutil cat $0 | tee $1\n",
-              {"inputValue": "url"}, {"outputPath": "data"}], "command": ["sh", "-c"],
-              "image": "google/cloud-sdk:279.0.0"}}, "inputs": [{"name": "url", "type":
-              "String"}], "name": "gcs-download", "outputs": [{"name": "data", "type":
-              "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
+              "outputs": [{"name": "data", "type": "String"}], "version": "gcs-download@sha256=511cfab40b31f87d8013514f1aee58997608048664cd54fa424e5167bcfcf97c"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: gcs-download-2
@@ -110,12 +106,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "GCS - Download",
-              "implementation": {"container": {"args": ["gsutil cat $0 | tee $1\n",
-              {"inputValue": "url"}, {"outputPath": "data"}], "command": ["sh", "-c"],
-              "image": "google/cloud-sdk:279.0.0"}}, "inputs": [{"name": "url", "type":
-              "String"}], "name": "gcs-download", "outputs": [{"name": "data", "type":
-              "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
+              "outputs": [{"name": "data", "type": "String"}], "version": "gcs-download@sha256=511cfab40b31f87d8013514f1aee58997608048664cd54fa424e5167bcfcf97c"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: echo
@@ -154,13 +146,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "echo", "implementation":
-              {"container": {"args": ["echo \"Text 1: $0\"; echo \"Text 2: $1\"; echo
-              \"$(inputs.params.gcs-download-data)\";          echo \"$(context.pipelineRun.name)\";
-              echo \"$(context.pipelineRun.namespace)\"; echo \"$(context.pipelineRun.uid)\"\n",
-              {"inputValue": "input1"}, {"inputValue": "input2"}], "command": ["sh",
-              "-c"], "image": "library/bash:4.4.23"}}, "inputs": [{"name": "input1",
-              "type": "String"}, {"name": "input2", "type": "String"}], "name": "echo"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
+              [], "version": "echo@sha256=8f8d23eb8a5175f0212ebf18b3f24dcd26effafb1ed421d18d897ccfdb14dcc0"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

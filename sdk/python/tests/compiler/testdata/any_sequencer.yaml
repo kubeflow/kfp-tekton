@@ -50,11 +50,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Component for
-              sleep\n", "implementation": {"container": {"args": [{"inputValue": "seconds"}],
-              "command": ["sleep"], "image": "alpine:latest"}}, "inputs": [{"default":
-              10, "description": "Sleep for some seconds", "name": "seconds", "type":
-              "int"}], "name": "sleepComponent"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
+              "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: sleepcomponent-2
@@ -72,11 +69,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Component for
-              sleep\n", "implementation": {"container": {"args": [{"inputValue": "seconds"}],
-              "command": ["sleep"], "image": "alpine:latest"}}, "inputs": [{"default":
-              10, "description": "Sleep for some seconds", "name": "seconds", "type":
-              "int"}], "name": "sleepComponent"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
+              "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: sleepcomponent-3
@@ -94,11 +88,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Component for
-              sleep\n", "implementation": {"container": {"args": [{"inputValue": "seconds"}],
-              "command": ["sleep"], "image": "alpine:latest"}}, "inputs": [{"default":
-              10, "description": "Sleep for some seconds", "name": "seconds", "type":
-              "int"}], "name": "sleepComponent"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
+              "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: flip-coin
@@ -161,25 +152,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Flip a coin and
-              output heads or tails randomly.", "implementation": {"container": {"args":
-              ["----output-paths", {"outputPath": "Output"}], "command": ["sh", "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
-              -u \"$program_path\" \"$@\"\n", "def flip_coin():\n    \"\"\"Flip a
-              coin and output heads or tails randomly.\"\"\"\n    import random\n    result
-              = ''heads'' if random.randint(0, 1) == 0 else ''tails''\n    print(result)\n    return
-              result\n\ndef _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value,
-              str):\n        raise TypeError(''Value \"{}\" has type \"{}\" instead
-              of str.''.format(str(str_value), str(type(str_value))))\n    return
-              str_value\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Flip
-              coin'', description=''Flip a coin and output heads or tails randomly.'')\n_parser.add_argument(\"----output-paths\",
-              dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args = vars(_parser.parse_args())\n_output_files
-              = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = flip_coin(**_parsed_args)\n\n_outputs
-              = [_outputs]\n\n_output_serializers = [\n    _serialize_str,\n\n]\n\nimport
-              os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
-              OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
-              "image": "python:alpine3.6"}}, "name": "Flip coin", "outputs": [{"name":
-              "Output", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Flip coin", "outputs":
+              [{"name": "Output", "type": "String"}], "version": "Flip coin@sha256=7eec77b07107adacc26d8ec075f6f2a62ca3e7f9ecc4110ce2724c964df4501d"}'
             tekton.dev/template: ''
       runAfter:
       - sleepcomponent
@@ -199,11 +173,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Component for
-              sleep\n", "implementation": {"container": {"args": [{"inputValue": "seconds"}],
-              "command": ["sleep"], "image": "alpine:latest"}}, "inputs": [{"default":
-              10, "description": "Sleep for some seconds", "name": "seconds", "type":
-              "int"}], "name": "sleepComponent"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
+              "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
             tekton.dev/template: ''
       runAfter:
       - any-test
@@ -235,14 +206,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Proceed when
-              any of the dependents completed successfully", "implementation": {"container":
-              {"args": ["--namespace", "$(context.pipelineRun.namespace)", "--prName",
-              "$(context.pipelineRun.name)", "--taskList", "sleepcomponent-2,sleepcomponent-3",
-              "--statusPath", {"outputPath": "status"}, "-c", "results_flip-coin_output
-              == ''heads''"], "command": ["any-task"], "image": "dspipelines/any-sequencer:latest"}},
-              "name": "any_test", "outputs": [{"description": "The output file to
-              create the status", "name": "status"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "any_test", "outputs":
+              [{"description": "The output file to create the status", "name": "status"}],
+              "version": "any_test@sha256=03b2b97be43cc77f2df70fd915a8fcd2e061341d7904af268cb4b2a4bbd86a76"}'
             tekton.dev/template: ''
         params:
         - name: pipelineRun-name

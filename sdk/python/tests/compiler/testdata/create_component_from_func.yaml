@@ -119,26 +119,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": [{"if": {"cond": {"isPresent": "num_files"}, "then": ["--num-files",
-              {"inputValue": "num_files"}]}}, "--output-dir", {"outputPath": "output_dir"}],
-              "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\"
-              > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def _make_parent_dirs_and_return_path(file_path:
-              str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
-              file_path\n\ndef produce_dir_with_files_python_op(output_dir_path, num_files
-              = 10):\n    import os\n    os.makedirs(os.path.join(output_dir_path,
-              ''subdir''), exist_ok=True)\n    for i in range(num_files):\n        file_path
-              = os.path.join(output_dir_path, ''subdir'', str(i) + ''.txt'')\n        with
-              open(file_path, ''w'') as f:\n            f.write(str(i))\n\nimport
-              argparse\n_parser = argparse.ArgumentParser(prog=''Produce dir with
-              files python op'', description='''')\n_parser.add_argument(\"--num-files\",
-              dest=\"num_files\", type=int, required=False, default=argparse.SUPPRESS)\n_parser.add_argument(\"--output-dir\",
-              dest=\"output_dir_path\", type=_make_parent_dirs_and_return_path, required=True,
-              default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs
-              = produce_dir_with_files_python_op(**_parsed_args)\n"], "image": "python:3.7"}},
-              "inputs": [{"default": "10", "name": "num_files", "optional": true,
-              "type": "Integer"}], "name": "Produce dir with files python op", "outputs":
-              [{"name": "output_dir"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce dir with
+              files python op", "outputs": [{"name": "output_dir"}], "version": "Produce
+              dir with files python op@sha256=402b8d5bfcc589729850713deab06f2a3bb111baf371a138147b7516c8a2f41c"}'
             tekton.dev/template: ''
         workspaces:
         - name: produce-dir-with-files-python-op
@@ -205,13 +188,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Get subdirectory
-              from directory.", "implementation": {"container": {"command": ["sh",
-              "-ex", "-c", "mkdir -p \"$(dirname \"$2\")\"\ncp -r \"$0/$1\" \"$2\"\n",
-              {"inputPath": "Directory"}, {"inputValue": "Subpath"}, {"outputPath":
-              "Subdir"}], "image": "alpine"}}, "inputs": [{"name": "Directory", "type":
-              "Directory"}, {"name": "Subpath", "type": "String"}], "name": "Get subdirectory",
-              "outputs": [{"name": "Subdir", "type": "Directory"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Get subdirectory",
+              "outputs": [{"name": "Subdir", "type": "Directory"}], "version": "Get
+              subdirectory@sha256=47f3ed80f84f97d86349edfe62e0aeae9c64b336250101ba3da09648c373b4c7"}'
             tekton.dev/template: ''
         workspaces:
         - name: get-subdirectory
@@ -255,12 +234,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Recursively list
-              directory contents.", "implementation": {"container": {"command": ["sh",
-              "-ex", "-c", "mkdir -p \"$(dirname \"$1\")\"\n#ls --almost-all --recursive
-              \"$0\" > \"$1\"\nls -A -R \"$0\" > \"$1\"\n", {"inputPath": "Directory"},
-              {"outputPath": "Items"}], "image": "alpine"}}, "inputs": [{"name": "Directory",
-              "type": "Directory"}], "name": "List items", "outputs": [{"name": "Items"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "List items",
+              "outputs": [{"name": "Items"}], "version": "List items@sha256=2c0fc3f181a67696494ed58c0b42e3e37ecbd7a8bce591eb0c7d6b7b38af8952"}'
             tekton.dev/template: ''
         workspaces:
         - name: list-items
@@ -308,14 +283,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Recursively list
-              directory contents.", "implementation": {"container": {"command": ["sh",
-              "-ex", "-c", "mkdir -p \"$(dirname \"$2\")\"\nls -A -R \"$0\" > \"$2\"\nls
-              -A -R \"$1\" >> \"$2\"\n", {"inputPath": "Directory1"}, {"inputPath":
-              "Directory2"}, {"outputPath": "Items"}], "image": "alpine"}}, "inputs":
-              [{"name": "Directory1", "type": "Directory"}, {"name": "Directory2",
-              "type": "Directory"}], "name": "List items 2", "outputs": [{"name":
-              "Items"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "List items 2",
+              "outputs": [{"name": "Items"}], "version": "List items 2@sha256=dc610eb161d4dc2d26801bab4f5ab95b32077d840f2c8e130cd29ec0e94241f1"}'
             tekton.dev/template: ''
         workspaces:
         - name: list-items-2

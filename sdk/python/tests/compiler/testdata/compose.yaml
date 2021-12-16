@@ -75,13 +75,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "downloads a message
-              and outputs it\n", "implementation": {"container": {"command": ["sh",
-              "-c", "set -e\ngsutil cat $0 | tee $1\n", {"inputValue": "url"}, {"outputPath":
-              "downloaded"}], "image": "google/cloud-sdk"}}, "inputs": [{"description":
-              "Required. the gcs url to download the message from", "name": "url",
-              "type": "String"}], "name": "download", "outputs": [{"description":
-              "file content.", "name": "downloaded", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "download", "outputs":
+              [{"description": "file content.", "name": "downloaded", "type": "String"}],
+              "version": "download@sha256=adbe5cc450dea8374d89decdd8103ebb99994acd1ed6f667e068e76f0cc4860f"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: get-frequent
@@ -110,14 +106,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Calculate the
-              frequent word from a text", "implementation": {"container": {"command":
-              ["sh", "-c", "python -c \"import sys; from collections import Counter;       input_text
-              = sys.argv[1];       words = Counter(input_text.split()); print(max(words,
-              key=words.get));\"       \"$0\" | tee $1\n", {"inputValue": "message"},
-              {"outputPath": "word"}], "image": "python:3.6-jessie"}}, "inputs": [{"description":
-              "Required. message", "name": "message", "type": "String"}], "name":
-              "get-frequent", "outputs": [{"name": "word", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "get-frequent",
+              "outputs": [{"name": "word", "type": "String"}], "version": "get-frequent@sha256=115de43852cde3c697855a408823f66c2ffbdc7b2ff70b1a583fe1601a0182e4"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: save
@@ -147,13 +137,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "save message
-              to a given output_path\n", "implementation": {"container": {"command":
-              ["sh", "-c", "set -e\necho \"$0\"| gsutil cp - \"$1\"\n", {"inputValue":
-              "message"}, {"inputValue": "output_path"}], "image": "google/cloud-sdk"}},
-              "inputs": [{"description": "Required. message", "name": "message", "type":
-              "String"}, {"description": "Required. output path", "name": "output_path",
-              "type": "String"}], "name": "save"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "save", "outputs":
+              [], "version": "save@sha256=6cf2594d27161c1ef289acc82ec53fc038580a22405354932ed32ce46df91687"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

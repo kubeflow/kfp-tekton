@@ -36,12 +36,10 @@ metadata:
       "type": "string"}, {"name": "just_one_iteration", "type": "string"}, {"name":
       "until", "type": "string"}], "tasks": [{"name": "print", "params": [{"name":
       "condition-cel-outcome", "value": "$(params.condition-cel-outcome)"}], "taskSpec":
-      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"implementation\":
-      {\"container\": {\"args\": [{\"concat\": [\"echo \", {\"inputValue\": \"msg\"},
-      \" > /tmp/stdout\"]}], \"command\": [\"sh\", \"-c\"], \"fileOutputs\": {\"stdout\":
-      \"/tmp/stdout\"}, \"image\": \"alpine:3.6\"}}, \"inputs\": [{\"name\": \"msg\",
-      \"type\": \"String\"}], \"name\": \"print\", \"outputs\": [{\"name\": \"stdout\",
-      \"type\": \"String\"}]}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print\", \"outputs\": [{\"name\": \"stdout\", \"type\": \"String\"}],
+      \"version\": \"print@sha256=823faa68fcc8685fb1248a51eedd18a6880137a4415c369714ed3f0060a7196d\"}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
       [{"description": "/tmp/stdout", "name": "stdout"}], "steps": [{"args": ["echo

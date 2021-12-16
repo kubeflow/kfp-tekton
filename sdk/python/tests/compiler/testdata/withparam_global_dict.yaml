@@ -62,11 +62,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": ["set -e\npython -c \"import json; import sys; json.dump([i
-              for i in range(20, 31)], open(''$0'', ''w''))\"\n", {"outputPath": "out"}],
-              "command": ["sh", "-c"], "image": "python:alpine3.6"}}, "name": "my-out-cop0",
-              "outputs": [{"name": "out", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop0",
+              "outputs": [{"name": "out", "type": "String"}], "version": "my-out-cop0@sha256=a450661d6f7ba02ab00054fcb4afae65774d94dfcf4611aff04ec134a0fcf9a3"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: my-out-cop2
@@ -93,10 +90,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": ["set -e\necho no output global op2, outp: \"$0\"\n", {"inputValue":
-              "output"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
-              "inputs": [{"name": "output", "type": "String"}], "name": "my-out-cop2"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop2",
+              "outputs": [], "version": "my-out-cop2@sha256=12b6747bf40c6d422bf91475437e40331e1809caa920e7012bc09c5fb81be91d"}'
             tekton.dev/template: ''
       timeout: 525600m
     - runAfter:
@@ -146,12 +141,8 @@ spec:
                     pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
-                    pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-                      {"args": ["set -e\necho no output global op1, item.a: \"$0\"
-                      , item.b: \"$1\"\n", {"inputValue": "item-a"}, {"inputValue":
-                      "item-b"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
-                      "inputs": [{"name": "item-a", "type": "Integer"}, {"name": "item-b",
-                      "type": "Integer"}], "name": "my-in-cop1"}'
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-cop1",
+                      "outputs": [], "version": "my-in-cop1@sha256=a5d6b8deed0ed377333b9790a4db5be7b5e48196c768bf502fd1da020ab55cac"}'
                     tekton.dev/template: ''
               runAfter: []
               timeout: 525600m

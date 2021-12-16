@@ -145,26 +145,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "mnist hpo", "implementation":
-              {"container": {"args": ["--name", {"inputValue": "name"}, "--namespace",
-              {"inputValue": "namespace"}, "--maxTrialCount", {"inputValue": "maxtrialcount"},
-              "--maxFailedTrialCount", {"inputValue": "maxfailedtrialcount"}, "--parallelTrialCount",
-              {"inputValue": "paralleltrialcount"}, "--objectiveConfig", {"inputValue":
-              "objectiveconfig"}, "--algorithmConfig", {"inputValue": "algorithmconfig"},
-              "--metricsCollector", {"inputValue": "metricscollector"}, "--trialTemplate",
-              {"inputValue": "trialtemplate"}, "--parameters", {"inputValue": "parameters"},
-              "--outputFile", {"outputPath": "bestHyperParameter"}, "--deleteAfterDone",
-              {"inputValue": "deleteafterdone"}, "--experimentTimeoutMinutes", {"inputValue":
-              "experimenttimeoutminutes"}], "image": "liuhougangxa/katib-experiment-launcher:latest"}},
-              "inputs": [{"name": "name", "type": "String"}, {"name": "namespace",
-              "type": "String"}, {"name": "maxtrialcount", "type": "Integer"}, {"name":
-              "maxfailedtrialcount", "type": "Integer"}, {"name": "paralleltrialcount",
-              "type": "Integer"}, {"name": "objectiveconfig", "type": "String"}, {"name":
-              "algorithmconfig", "type": "String"}, {"name": "metricscollector", "type":
-              "String"}, {"name": "trialtemplate", "type": "String"}, {"name": "parameters",
-              "type": "String"}, {"name": "deleteafterdone", "type": "Boolean"}, {"name":
-              "experimenttimeoutminutes", "type": "Integer"}], "name": "mnist-hpo",
-              "outputs": [{"name": "bestHyperParameter", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "mnist-hpo", "outputs":
+              [{"name": "bestHyperParameter", "type": "String"}], "version": "mnist-hpo@sha256=cc6b00fe46afdfcbe02820d928e4e1bffaa6bb93c7532886db04f63f8354087d"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: my-out-cop
@@ -189,10 +171,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "output component",
-              "implementation": {"container": {"command": ["sh", "-c", "echo hyperparameter:
-              $0\n", {"inputValue": "text"}], "image": "library/bash:4.4.23"}}, "inputs":
-              [{"name": "text", "type": "String"}], "name": "my-out-cop"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop",
+              "outputs": [], "version": "my-out-cop@sha256=1ba657e86cfa3fa4fd6256830c58aad6b9e7a75b92c522c818526530223a1533"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

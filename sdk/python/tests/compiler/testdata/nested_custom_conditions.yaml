@@ -94,10 +94,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"command": [{"concat": ["echo ", {"inputValue": "msg"}]}], "image":
-              "alpine:3.6"}}, "inputs": [{"name": "msg"}], "name": "print", "outputs":
-              [{"name": "stdout"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [{"name": "stdout"}], "version": "print@sha256=c71a843b7628df22a3d8a9c62a43127f451029e18218c53b06964df8d2bec3ed"}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.cel-exprs.results.bc)

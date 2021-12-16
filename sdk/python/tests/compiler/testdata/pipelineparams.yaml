@@ -75,11 +75,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "download", "implementation":
-              {"container": {"args": ["sleep $0; wget localhost:5678 -O $1\n", {"inputValue":
-              "sleep_ms"}, {"outputPath": "data"}], "command": ["sh", "-c"], "image":
-              "busy:placeholder"}}, "inputs": [{"name": "sleep_ms", "type": "Integer"}],
-              "name": "download", "outputs": [{"name": "data", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "download", "outputs":
+              [{"name": "data", "type": "String"}], "version": "download@sha256=fb6d2b7469c58ce09545cec241b553b0775cad9a2735166d21884035ff5410d0"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: echo
@@ -108,10 +105,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "echo", "implementation":
-              {"container": {"args": ["echo $MSG $0\n", {"inputValue": "message"}],
-              "command": ["sh", "-c"], "image": "library/bash"}}, "inputs": [{"name":
-              "message", "type": "String"}], "name": "echo"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
+              [], "version": "echo@sha256=c8973317486147e1eed93d9d1f6a734e64f27c8bf01778c946fa00c7431a7d9a"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

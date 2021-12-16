@@ -53,11 +53,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "cached component",
-              "implementation": {"container": {"command": ["/bin/bash", "-c", "sleep
-              30 | echo ''hello world'' | tee $0", {"outputPath": "out"}], "image":
-              "registry.access.redhat.com/ubi8/ubi-minimal"}}, "name": "cache-enabled",
-              "outputs": [{"name": "out", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "cache-enabled",
+              "outputs": [{"name": "out", "type": "String"}], "version": "cache-enabled@sha256=1922553b6419ee8f9e21a5cb174b86520f912014370528495bc1955d5db2bcaa"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: cache-disabled
@@ -79,11 +76,8 @@ spec:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "cached component",
-              "implementation": {"container": {"command": ["/bin/bash", "-c", "sleep
-              30 | echo ''hello world'' | tee $0", {"outputPath": "out"}], "image":
-              "registry.access.redhat.com/ubi8/ubi-minimal"}}, "name": "cache-disabled",
-              "outputs": [{"name": "out", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "cache-disabled",
+              "outputs": [{"name": "out", "type": "String"}], "version": "cache-disabled@sha256=c6b73e13a48ba7dfacb66ebd9987eda874087ace7615130da8180b2b46dd53c9"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

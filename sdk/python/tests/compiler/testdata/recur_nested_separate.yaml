@@ -66,12 +66,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "flip coin", "implementation":
-              {"container": {"args": ["python -c \"import random; result = ''heads''
-              if random.randint(0,1) == 0           else ''tails''; print(result)\"
-              | tee $0\n", {"outputPath": "output"}], "command": ["sh", "-c"], "image":
-              "python:alpine3.6"}}, "name": "flip-coin", "outputs": [{"name": "output",
-              "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
+              [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: print-3
@@ -93,10 +89,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "print msg", "implementation":
-              {"container": {"command": ["echo", {"inputValue": "msg"}], "image":
-              "alpine:3.6"}}, "inputs": [{"name": "msg", "type": "String"}], "name":
-              "print"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [], "version": "print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c"}'
             tekton.dev/template: ''
       runAfter:
       - nested-recursion-pipeline-flip-component-1
