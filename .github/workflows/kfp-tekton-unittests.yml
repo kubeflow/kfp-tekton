@@ -9,7 +9,7 @@ on:
 
 env:
   GITHUB_ACTION: "true"
-
+  SETUPTOOLS_USE_DISTUTILS: "stdlib"
 jobs:
   python-unittest:
     runs-on: ubuntu-latest

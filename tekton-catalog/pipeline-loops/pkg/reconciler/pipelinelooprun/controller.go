@@ -29,6 +29,7 @@ import (
 	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
 	pipelinecontroller "github.com/tektoncd/pipeline/pkg/controller"
 	"k8s.io/client-go/tools/cache"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -37,7 +38,7 @@ import (
 // NewController instantiates a new controller.Impl from knative.dev/pkg/controller
 func NewController(namespace string) func(context.Context, configmap.Watcher) *controller.Impl {
 	return func(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-
+		kubeclientset := kubeclient.Get(ctx)
 		logger := logging.FromContext(ctx)
 		pipelineclientset := pipelineclient.Get(ctx)
 		pipelineloopclientset := pipelineloopclient.Get(ctx)
@@ -46,6 +47,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 		pipelineRunInformer := pipelineruninformer.Get(ctx)
 
 		c := &Reconciler{
+			KubeClientSet:         kubeclientset,
 			pipelineClientSet:     pipelineclientset,
 			pipelineloopClientSet: pipelineloopclientset,
 			runLister:             runInformer.Lister(),

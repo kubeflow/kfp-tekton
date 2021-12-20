@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"github.com/hashicorp/go-multierror"
@@ -46,14 +47,12 @@ import (
 	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/pkg/names"
 	"github.com/tektoncd/pipeline/pkg/reconciler/events"
-	"go.uber.org/zap"
 	"gomodules.xyz/jsonpatch/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/apis"
-	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 )
 
@@ -82,6 +81,7 @@ const (
 
 // Reconciler implements controller.Reconciler for Configuration resources.
 type Reconciler struct {
+	KubeClientSet         kubernetes.Interface
 	pipelineClientSet     clientset.Interface
 	pipelineloopClientSet pipelineloopclientset.Interface
 	runLister             listersalpha.RunLister
@@ -93,6 +93,7 @@ var (
 	// Check that our Reconciler implements runreconciler.Interface
 	_                runreconciler.Interface = (*Reconciler)(nil)
 	cancelPatchBytes []byte
+	objectStore      = (*ObjectStoreConfig)(nil)
 )
 
 func init() {
@@ -108,17 +109,32 @@ func init() {
 	}
 }
 
+func bucketName(run *v1alpha1.Run) string {
+	// While the run is running we record their logs separately.
+	if run.HasStarted() && !run.IsDone() {
+		return fmt.Sprintf("%s-%s", run.Name, string(run.UID))
+	}
+	// Default place for logging. TODO: get the name of the running pod instance.
+	return "pipelineloop-default" // fmt.Sprintf("%s-%s", pod.Name, string(pod.UID))
+}
+
 // ReconcileKind compares the actual state with the desired, and attempts to converge the two.
 // It then updates the Status block of the Run resource with the current status of the resource.
 func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgreconciler.Event {
 	var merr error
-	logger := logging.FromContext(ctx)
-	logger.Infof("Reconciling Run %s/%s at %v", run.Namespace, run.Name, time.Now())
+	if objectStore == nil {
+		objectStore = &ObjectStoreConfig{}
+		err := objectStore.load(ctx, c.KubeClientSet)
+		if err != nil && objectStore.logger != nil {
+			objectStore.logger.Error(err)
+		}
+	}
+	objectStore.LogInfof(bucketName(run), "Reconciling Run %s/%s at %v", run.Namespace, run.Name, time.Now())
 	if run.Spec.Ref != nil && run.Spec.Spec != nil {
-		logger.Errorf("Run %s/%s can provide one of Run.Spec.Ref/Run.Spec.Spec", run.Namespace, run.Name)
+		objectStore.LogErrorf(bucketName(run), "Run %s/%s can provide one of Run.Spec.Ref/Run.Spec.Spec", run.Namespace, run.Name)
 	}
 	if run.Spec.Spec == nil && run.Spec.Ref == nil {
-		logger.Errorf("Run %s/%s does not provide a spec or ref.", run.Namespace, run.Name)
+		objectStore.LogErrorf(bucketName(run), "Run %s/%s does not provide a spec or ref.", run.Namespace, run.Name)
 		return nil
 	}
 	// Check that the Run references a PipelineLoop CRD.  The logic is controller.go should ensure that only this type of Run
@@ -126,24 +142,30 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	if run.Spec.Ref != nil &&
 		(run.Spec.Ref.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
 			run.Spec.Ref.Kind != pipelineloop.PipelineLoopControllerName) {
-		logger.Errorf("Received control for a Run %s/%s/%v that does not reference a PipelineLoop custom CRD ref", run.Namespace, run.Name, run.Spec.Ref)
+		objectStore.LogErrorf(bucketName(run), "Received control for a Run %s/%s/%v that does not reference a PipelineLoop custom CRD ref", run.Namespace, run.Name, run.Spec.Ref)
 		return nil
 	}
 
 	if run.Spec.Spec != nil &&
 		(run.Spec.Spec.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
 			run.Spec.Spec.Kind != pipelineloop.PipelineLoopControllerName) {
-		logger.Errorf("Received control for a Run %s/%s that does not reference a PipelineLoop custom CRD spec", run.Namespace, run.Name)
+		objectStore.LogErrorf(bucketName(run), "Received control for a Run %s/%s that does not reference a PipelineLoop custom CRD spec", run.Namespace, run.Name)
 		return nil
 	}
-	logger.Infof("Received control for a Run %s/%s %-v", run.Namespace, run.Name, run.Spec.Spec)
 	// If the Run has not started, initialize the Condition and set the start time.
 	if !run.HasStarted() {
-		logger.Infof("Starting new Run %s/%s", run.Namespace, run.Name)
+		objectStore.LogInfof(bucketName(run), "Starting new Run %s/%s", run.Namespace, run.Name)
+		err := objectStore.CreateNewBucket(fmt.Sprintf("%s-%s", run.Name, string(run.UID)))
+		if err != nil && !strings.Contains(err.Error(), "BucketAlreadyExists") {
+			objectStore.LogErrorf(bucketName(run), "error while creating bucket for object store"+
+				" with name: %s error: %s \n disabling object store.",
+				fmt.Sprintf("%s-%s", run.Name, string(run.UID)), err.Error())
+			objectStore.enable = false
+		}
 		run.Status.InitializeConditions()
 		// In case node time was not synchronized, when controller has been scheduled to other nodes.
 		if run.Status.StartTime.Sub(run.CreationTimestamp.Time) < 0 {
-			logger.Warnf("Run %s createTimestamp %s is after the Run started %s", run.Name, run.CreationTimestamp, run.Status.StartTime)
+			objectStore.LogInfof(bucketName(run), "Run %s createTimestamp %s is after the Run started %s", run.Name, run.CreationTimestamp, run.Status.StartTime)
 			run.Status.StartTime = &run.CreationTimestamp
 		}
 		// Emit events. During the first reconcile the status of the Run may change twice
@@ -156,7 +178,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	}
 
 	if run.IsDone() {
-		logger.Infof("Run %s/%s is done", run.Namespace, run.Name)
+		objectStore.LogInfof(bucketName(run), "Run %s/%s is done", run.Namespace, run.Name)
 		return nil
 	}
 
@@ -167,24 +189,24 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	if err := run.Status.DecodeExtraFields(status); err != nil {
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonInternalError.String(),
 			"Internal error calling DecodeExtraFields: %v", err)
-		logger.Errorf("DecodeExtraFields error: %v", err.Error())
+		objectStore.LogErrorf(bucketName(run), "DecodeExtraFields error: %v", err.Error())
 	}
 
 	// Reconcile the Run
 	if err := c.reconcile(ctx, run, status); err != nil {
-		logger.Errorf("Reconcile error: %v", err.Error())
+		objectStore.LogErrorf(bucketName(run), "Reconcile error: %v", err.Error())
 		merr = multierror.Append(merr, err)
 	}
 
 	if err := c.updateLabelsAndAnnotations(ctx, run); err != nil {
-		logger.Warn("Failed to update Run labels/annotations", zap.Error(err))
+		objectStore.LogWarnf(bucketName(run), "Failed to update Run labels/annotations %s", err.Error())
 		merr = multierror.Append(merr, err)
 	}
 
 	if err := run.Status.EncodeExtraFields(status); err != nil {
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonInternalError.String(),
 			"Internal error calling EncodeExtraFields: %v", err)
-		logger.Errorf("EncodeExtraFields error: %v", err.Error())
+		objectStore.LogErrorf(bucketName(run), "EncodeExtraFields error: %v", err.Error())
 	}
 
 	afterCondition := run.Status.GetCondition(apis.ConditionSucceeded)
@@ -213,7 +235,6 @@ func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
 
 func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
 	ctx = EnableCustomTaskFeatureFlag(ctx)
-	logger := logging.FromContext(ctx)
 
 	// Get the PipelineLoop referenced by the Run
 	pipelineLoopMeta, pipelineLoopSpec, err := c.getPipelineLoop(ctx, run)
@@ -245,7 +266,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 
 	// Update status of PipelineRuns.  Return the PipelineRun representing the highest loop iteration.
-	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(logger, run, status)
+	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(run, status)
 	if err != nil {
 		return fmt.Errorf("error updating PipelineRun status for Run %s/%s: %w", run.Namespace, run.Name, err)
 	}
@@ -267,7 +288,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		}
 
 		for _, currentRunningPr := range currentRunningPrs {
-			logger.Infof("Run %s/%s is cancelled.  Cancelling PipelineRun %s.", run.Namespace, run.Name, currentRunningPr.Name)
+			objectStore.LogInfof(bucketName(run), "Run %s/%s is cancelled.  Cancelling PipelineRun %s.", run.Namespace, run.Name, currentRunningPr.Name)
 			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
 				run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
 					"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
@@ -285,7 +306,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	retriesDone := len(run.Status.RetriesStatus)
 	retries := run.Spec.Retries
 	if retriesDone < retries && failedPrs != nil && len(failedPrs) > 0 {
-		logger.Infof("RetriesDone: %d, Total Retries: %d", retriesDone, retries)
+		objectStore.LogInfof(bucketName(run), "RetriesDone: %d, Total Retries: %d", retriesDone, retries)
 		run.Status.RetriesStatus = append(run.Status.RetriesStatus, v1alpha1.RunStatus{
 			Status: duckv1.Status{
 				ObservedGeneration: 0,
@@ -320,7 +341,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			}
 			_, err = c.pipelineClientSet.TektonV1alpha1().PipelineRuns(failedPr.Namespace).
 				Patch(ctx, failedPr.Name, types.MergePatchType, patch, metav1.PatchOptions{})
-			pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, highestIteration, iterationElements)
+			pr, err := c.createPipelineRun(ctx, pipelineLoopSpec, run, highestIteration, iterationElements)
 			if err != nil {
 				return fmt.Errorf("error creating PipelineRun from Run %s while retrying: %w", run.Name, err)
 			}
@@ -328,7 +349,8 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 				Iteration: highestIteration,
 				Status:    &pr.Status,
 			}
-			logger.Infof("Retried failed pipelineRun: %s with new pipelineRun: %s", failedPr.Name, pr.Name)
+			objectStore.LogInfof(bucketName(run),
+				"Retried failed pipelineRun: %s with new pipelineRun: %s", failedPr.Name, pr.Name)
 		}
 		return nil
 	}
@@ -349,7 +371,9 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if nextIteration > totalIterations {
 		// Still running which we already marked, just waiting
 		if len(currentRunningPrs) > 0 {
-			logger.Infof("Already started all pipelineruns for the loop, totally %d pipelineruns, waiting for complete.", totalIterations)
+			objectStore.LogInfof(bucketName(run),
+				"Already started all pipelineruns for the loop, totally %d pipelineruns, waiting for complete.",
+				totalIterations)
 			return nil
 		}
 		// All task finished
@@ -376,13 +400,14 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		actualParallelism = status.PipelineLoopSpec.Parallelism
 	}
 	if len(currentRunningPrs) >= actualParallelism {
-		logger.Infof("Currently %d pipelinerun started, meet parallelism %d, waiting...", len(currentRunningPrs), actualParallelism)
+		objectStore.LogInfof(bucketName(run),
+			"Currently %d pipelinerun started, meet parallelism %d, waiting...", len(currentRunningPrs), actualParallelism)
 		return nil
 	}
 
 	// Create PipelineRun to run this iteration based on parallelism
 	for i := 0; i < actualParallelism-len(currentRunningPrs); i++ {
-		pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, nextIteration, iterationElements)
+		pr, err := c.createPipelineRun(ctx, pipelineLoopSpec, run, nextIteration, iterationElements)
 		if err != nil {
 			return fmt.Errorf("error creating PipelineRun from Run %s: %w", run.Name, err)
 		}
@@ -393,7 +418,8 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		}
 		nextIteration++
 		if nextIteration > totalIterations {
-			logger.Infof("Started all pipelineruns for the loop, totally %d pipelineruns.", totalIterations)
+			objectStore.LogInfof(bucketName(run),
+				"Started all pipelineruns for the loop, totally %d pipelineruns.", totalIterations)
 			return nil
 		}
 	}
@@ -442,8 +468,7 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 	return &pipelineLoopMeta, &pipelineLoopSpec, nil
 }
 
-func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, run *v1alpha1.Run, iteration int, iterationElements []interface{}) (*v1beta1.PipelineRun, error) {
-
+func (c *Reconciler) createPipelineRun(ctx context.Context, tls *pipelineloopv1alpha1.PipelineLoopSpec, run *v1alpha1.Run, iteration int, iterationElements []interface{}) (*v1beta1.PipelineRun, error) {
 	// Create name for PipelineRun from Run name plus iteration number.
 	prName := names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("%s-%s", run.Name, fmt.Sprintf("%05d", iteration)))
 	pipelineRunAnnotations := getPipelineRunAnnotations(run)
@@ -480,9 +505,8 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 		pr.Spec.PipelineSpec = tls.PipelineSpec
 	}
 
-	logger.Infof("Creating a new PipelineRun object %s", prName)
+	objectStore.LogInfof(bucketName(run), "Creating a new PipelineRun object %s", prName)
 	return c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Create(ctx, pr, metav1.CreateOptions{})
-
 }
 
 func (c *Reconciler) updateLabelsAndAnnotations(ctx context.Context, run *v1alpha1.Run) error {
@@ -507,7 +531,7 @@ func (c *Reconciler) updateLabelsAndAnnotations(ctx context.Context, run *v1alph
 	return nil
 }
 
-func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
+func (c *Reconciler) updatePipelineRunStatus(run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
 	highestIteration := 0
 	var currentRunningPrs []*v1beta1.PipelineRun
 	var failedPrs []*v1beta1.PipelineRun
@@ -534,7 +558,7 @@ func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1a
 		if err != nil {
 			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
 				"Error converting iteration number in PipelineRun %s:  %#v", pr.Name, err)
-			logger.Errorf("Error converting iteration number in PipelineRun %s:  %#v", pr.Name, err)
+			objectStore.LogErrorf(bucketName(run), "Error converting iteration number in PipelineRun %s:  %#v", pr.Name, err)
 			return 0, nil, nil, nil
 		}
 		// when we just create pr in a forloop, the started time may be empty
