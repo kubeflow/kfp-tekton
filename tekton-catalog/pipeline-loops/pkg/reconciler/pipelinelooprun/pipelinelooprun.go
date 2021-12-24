@@ -211,6 +211,38 @@ func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
 	return config.ToContext(ctx, c)
 }
 
+// Check if this pipelineLoop starts other pipelineLoop(s)
+func isNestedPipelineLoop(pipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec) bool {
+	if pipelineLoopSpec.PipelineSpec == nil {
+		return false
+	}
+	for _, t := range pipelineLoopSpec.PipelineSpec.Tasks {
+		if t.TaskSpec != nil {
+			if t.TaskSpec.Kind == "PipelineLoop" {
+				return true
+			}
+		} else if t.TaskRef != nil {
+			if t.TaskRef.Kind == "PipelineLoop" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func getMaxRecursionDepth(pipelineLoopMeta *metav1.ObjectMeta) (int, error) {
+	maxRecursionDepth := pipelineLoopMeta.Annotations["maxRecursionDepth"]
+	if maxRecursionDepth != "" {
+		atoi, err := strconv.Atoi(maxRecursionDepth)
+		return atoi, err
+	}
+	return -1, nil // -1 indicates not set.
+}
+
+func setMaxRecursionDepth(pipelineLoopMeta *metav1.ObjectMeta, depth int) {
+	pipelineLoopMeta.Annotations["maxRecursionDepth"] = string(depth)
+}
+
 func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
 	ctx = EnableCustomTaskFeatureFlag(ctx)
 	logger := logging.FromContext(ctx)
@@ -220,7 +252,19 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if err != nil {
 		return nil
 	}
-
+	if isNestedPipelineLoop(pipelineLoopSpec) {
+		maxRecursionDepth, err := getMaxRecursionDepth(pipelineLoopMeta)
+		if err != nil {
+			logger.Errorf("Error parsing max recursion: %v", err.Error())
+			maxRecursionDepth = -1
+		}
+		if maxRecursionDepth > 0 {
+			maxRecursionDepth = maxRecursionDepth - 1
+			setMaxRecursionDepth(pipelineLoopMeta, maxRecursionDepth)
+		} else if maxRecursionDepth == 0 {
+			run.Status.MarkRunFailed("RecursionLimitExceeded", "Recursion depth limit reached.")
+		}
+	}
 	// Store the fetched PipelineLoopSpec on the Run for auditing
 	storePipelineLoopSpec(status, pipelineLoopSpec)
 
