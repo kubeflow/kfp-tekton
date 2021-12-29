@@ -239,8 +239,21 @@ func getMaxRecursionDepth(pipelineLoopMeta *metav1.ObjectMeta) (int, error) {
 	return -1, nil // -1 indicates not set.
 }
 
-func setMaxRecursionDepth(pipelineLoopMeta *metav1.ObjectMeta, depth int) {
-	pipelineLoopMeta.Annotations["maxRecursionDepth"] = string(depth)
+func setMaxRecursionDepth(pipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec, depth int) {
+	if pipelineLoopSpec.PipelineSpec == nil {
+		return
+	}
+	for _, t := range pipelineLoopSpec.PipelineSpec.Tasks {
+		if t.TaskSpec != nil {
+			if t.TaskSpec.Kind == "PipelineLoop" {
+				t.TaskSpec.Metadata.Annotations["maxRecursionDepth"] = string(depth)
+			}
+		} else if t.TaskRef != nil {
+			if t.TaskRef.Kind == "PipelineLoop" {
+				// t.TaskRef. in case of taskref recursion depth cannot be updated.
+			}
+		}
+	}
 }
 
 func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
@@ -260,7 +273,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		}
 		if maxRecursionDepth > 0 {
 			maxRecursionDepth = maxRecursionDepth - 1
-			setMaxRecursionDepth(pipelineLoopMeta, maxRecursionDepth)
+			setMaxRecursionDepth(pipelineLoopSpec, maxRecursionDepth)
 		} else if maxRecursionDepth == 0 {
 			run.Status.MarkRunFailed("RecursionLimitExceeded", "Recursion depth limit reached.")
 		}
