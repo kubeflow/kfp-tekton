@@ -383,6 +383,13 @@ var nestedPipeline = &v1beta1.Pipeline{
 	},
 }
 
+func setPipelineNestedStackDepth(pipeline *v1beta1.Pipeline, depth int) *v1beta1.Pipeline {
+	pl := pipeline.DeepCopy()
+	pl.Spec.Tasks[0].TaskSpec.Metadata.Annotations = map[string]string{MaxNestedStackDepthKey: fmt.Sprint(depth)}
+	fmt.Printf("Test: %#v\n", pipeline.Spec.Tasks[0].TaskSpec.Metadata)
+	return pl
+}
+
 var paraPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
 	ObjectMeta: metav1.ObjectMeta{Name: "para-pipelineloop", Namespace: "foo"},
 	Spec: pipelineloopv1alpha1.PipelineLoopSpec{
@@ -406,6 +413,12 @@ var nestedPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
 		PipelineSpec: &nestedPipeline.Spec,
 		IterateParam: "current-item",
 	},
+}
+
+func setPipelineLoopNestedStackDepth(pl *pipelineloopv1alpha1.PipelineLoop, depth int) *pipelineloopv1alpha1.PipelineLoop {
+	plCopy := pl.DeepCopy()
+	plCopy.Spec.PipelineSpec = &setPipelineNestedStackDepth(nestedPipeline, depth).Spec
+	return plCopy
 }
 
 var aPipelineLoopWithInlineTask = &pipelineloopv1alpha1.PipelineLoop{
@@ -526,6 +539,12 @@ var runNestedPipelineLoop = &v1alpha1.Run{
 			},
 		},
 	},
+}
+
+func setRunNestedStackDepth(run *v1alpha1.Run, depth int) *v1alpha1.Run {
+	r := run.DeepCopy()
+	r.Spec.Spec.Metadata.Annotations = map[string]string{MaxNestedStackDepthKey: fmt.Sprint(depth)}
+	return r
 }
 
 var paraRunPipelineLoop = &v1alpha1.Run{
@@ -1236,7 +1255,7 @@ var expectedNestedPipelineRun = &v1beta1.PipelineRun{
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
-		PipelineSpec: &nestedPipeline.Spec,
+		PipelineSpec: &setPipelineNestedStackDepth(nestedPipeline, 99).Spec,
 		Params: []v1beta1.Param{{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
@@ -1364,106 +1383,115 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
 		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIteration1},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
-	},
-		{
-			name:                 "Reconcile a new run with a pipelineloop and a string params with whitespace separator",
-			pipeline:             aPipeline,
-			pipelineloop:         aPipelineLoop,
-			run:                  runPipelineLoopWithSpaceSeparatorParams,
-			pipelineruns:         []*v1beta1.PipelineRun{},
-			expectedStatus:       corev1.ConditionUnknown,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-			expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIteration1},
-			expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
-		}, {
-			name:                 "Reconcile a new run with iterateNumeric defined",
-			pipeline:             nPipeline,
-			pipelineloop:         nPipelineLoop,
-			run:                  runPipelineLoopWithIterateNumeric,
-			pipelineruns:         []*v1beta1.PipelineRun{},
-			expectedStatus:       corev1.ConditionUnknown,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-			expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIterateNumeric1},
-			expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
-		}, {
-			name:                 "Reconcile a new run with a pipelineloop that contains an inline task",
-			pipelineloop:         aPipelineLoopWithInlineTask,
-			run:                  runPipelineLoopWithInlineTask,
-			pipelineruns:         []*v1beta1.PipelineRun{},
-			expectedStatus:       corev1.ConditionUnknown,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-			expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithInlineTaskIteration1},
-			expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
-		}, {
-			name:                 "Reconcile a new run with a pipelineloop that contains a workspace",
-			pipeline:             aPipeline,
-			pipelineloop:         wsPipelineLoop,
-			run:                  runWsPipelineLoop,
-			pipelineruns:         []*v1beta1.PipelineRun{},
-			expectedStatus:       corev1.ConditionUnknown,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-			expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithWorkSpace},
-			expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
-		}, {
-			name:                 "Reconcile a run after all PipelineRuns have succeeded",
-			pipeline:             aPipeline,
-			pipelineloop:         aPipelineLoop,
-			run:                  loopRunning(runPipelineLoop),
-			pipelineruns:         []*v1beta1.PipelineRun{successful(expectedPipelineRunIteration1), successful(expectedPipelineRunIteration2)},
-			expectedStatus:       corev1.ConditionTrue,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded,
-			expectedPipelineruns: []*v1beta1.PipelineRun{successful(expectedPipelineRunIteration1), successful(expectedPipelineRunIteration2)},
-			expectedEvents:       []string{"Normal Succeeded All PipelineRuns completed successfully"},
-		}, {
-			name:                 "Reconcile a run after the first PipelineRun has failed",
-			pipeline:             aPipeline,
-			pipelineloop:         aPipelineLoop,
-			run:                  loopRunning(runPipelineLoop),
-			pipelineruns:         []*v1beta1.PipelineRun{failed(expectedPipelineRunIteration1)},
-			expectedStatus:       corev1.ConditionFalse,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailed,
-			expectedPipelineruns: []*v1beta1.PipelineRun{failed(expectedPipelineRunIteration1)},
-			expectedEvents:       []string{"Warning Failed PipelineRun " + expectedPipelineRunIteration1.Name + " has failed"},
-		}, {
-			name:                 "Reconcile a run with retries after the first PipelineRun has failed",
-			pipeline:             aPipeline,
-			pipelineloop:         aPipelineLoop,
-			run:                  loopRunning(setRetries(runPipelineLoop, 1)),
-			pipelineruns:         []*v1beta1.PipelineRun{failed(expectedPipelineRunFailed)},
-			expectedStatus:       corev1.ConditionUnknown,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-			expectedPipelineruns: []*v1beta1.PipelineRun{setDeleted(failed(expectedPipelineRunFailed)), expectedPipelineRunRetry},
-		}, {
-			name:                 "Reconcile a new run with a pipelineloop with Parallelism specified",
-			pipeline:             paraPipeline,
-			pipelineloop:         paraPipelineLoop,
-			run:                  paraRunPipelineLoop,
-			pipelineruns:         []*v1beta1.PipelineRun{},
-			expectedStatus:       corev1.ConditionUnknown,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-			expectedPipelineruns: []*v1beta1.PipelineRun{expectedParaPipelineRun, expectedParaPipelineRun1},
-			expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
-		}, {
-			name:                 "Reconcile a new run with a nested pipelineloop",
-			pipeline:             nestedPipeline,
-			pipelineloop:         nestedPipelineLoop,
-			run:                  runNestedPipelineLoop,
-			pipelineruns:         []*v1beta1.PipelineRun{},
-			expectedStatus:       corev1.ConditionUnknown,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-			expectedPipelineruns: []*v1beta1.PipelineRun{expectedNestedPipelineRun},
-			expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
-		}, {
-			name:                 "Reconcile a run with condition pipelinerun, and the first PipelineRun condition check failed",
-			pipeline:             aPipeline,
-			pipelineloop:         aPipelineLoop,
-			run:                  loopRunning(conditionRunPipelineLoop),
-			pipelineruns:         []*v1beta1.PipelineRun{successfulWithSkipedTasks(expectedConditionPipelineRunIteration1)},
-			expectedStatus:       corev1.ConditionTrue,
-			expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded,
-			expectedPipelineruns: []*v1beta1.PipelineRun{successfulWithSkipedTasks(expectedConditionPipelineRunIteration1)},
-			expectedEvents:       []string{"Normal Succeeded PipelineRuns completed successfully with the conditions are met"},
-		}}
+	}, {
+		name:                 "Reconcile a new run with a pipelineloop and a string params with whitespace separator",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop,
+		run:                  runPipelineLoopWithSpaceSeparatorParams,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIteration1},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Reconcile a new run with iterateNumeric defined",
+		pipeline:             nPipeline,
+		pipelineloop:         nPipelineLoop,
+		run:                  runPipelineLoopWithIterateNumeric,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIterateNumeric1},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Reconcile a new run with a pipelineloop that contains an inline task",
+		pipelineloop:         aPipelineLoopWithInlineTask,
+		run:                  runPipelineLoopWithInlineTask,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithInlineTaskIteration1},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Reconcile a new run with a pipelineloop that contains a workspace",
+		pipeline:             aPipeline,
+		pipelineloop:         wsPipelineLoop,
+		run:                  runWsPipelineLoop,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithWorkSpace},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Reconcile a run after all PipelineRuns have succeeded",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop,
+		run:                  loopRunning(runPipelineLoop),
+		pipelineruns:         []*v1beta1.PipelineRun{successful(expectedPipelineRunIteration1), successful(expectedPipelineRunIteration2)},
+		expectedStatus:       corev1.ConditionTrue,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded,
+		expectedPipelineruns: []*v1beta1.PipelineRun{successful(expectedPipelineRunIteration1), successful(expectedPipelineRunIteration2)},
+		expectedEvents:       []string{"Normal Succeeded All PipelineRuns completed successfully"},
+	}, {
+		name:                 "Reconcile a run after the first PipelineRun has failed",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop,
+		run:                  loopRunning(runPipelineLoop),
+		pipelineruns:         []*v1beta1.PipelineRun{failed(expectedPipelineRunIteration1)},
+		expectedStatus:       corev1.ConditionFalse,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailed,
+		expectedPipelineruns: []*v1beta1.PipelineRun{failed(expectedPipelineRunIteration1)},
+		expectedEvents:       []string{"Warning Failed PipelineRun " + expectedPipelineRunIteration1.Name + " has failed"},
+	}, {
+		name:                 "Reconcile a run with retries after the first PipelineRun has failed",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop,
+		run:                  loopRunning(setRetries(runPipelineLoop, 1)),
+		pipelineruns:         []*v1beta1.PipelineRun{failed(expectedPipelineRunFailed)},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{setDeleted(failed(expectedPipelineRunFailed)), expectedPipelineRunRetry},
+	}, {
+		name:                 "Reconcile a new run with a pipelineloop with Parallelism specified",
+		pipeline:             paraPipeline,
+		pipelineloop:         paraPipelineLoop,
+		run:                  paraRunPipelineLoop,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedParaPipelineRun, expectedParaPipelineRun1},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Reconcile a new run with a nested pipelineloop",
+		pipeline:             nestedPipeline,
+		pipelineloop:         nestedPipelineLoop,
+		run:                  runNestedPipelineLoop,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedNestedPipelineRun},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Reconcile a new run with a recursive pipelineloop with max nested stack depth 0",
+		pipeline:             setPipelineNestedStackDepth(nestedPipeline, 0),
+		pipelineloop:         setPipelineLoopNestedStackDepth(nestedPipelineLoop, 0),
+		run:                  setRunNestedStackDepth(runNestedPipelineLoop, 0),
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionFalse,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonStackLimitExceeded,
+		expectedPipelineruns: []*v1beta1.PipelineRun{},
+		expectedEvents:       []string{"Normal Started ", "Warning Failed nested stack depth limit reached."},
+	}, {
+		name:                 "Reconcile a run with condition pipelinerun, and the first PipelineRun condition check failed",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop,
+		run:                  loopRunning(conditionRunPipelineLoop),
+		pipelineruns:         []*v1beta1.PipelineRun{successfulWithSkipedTasks(expectedConditionPipelineRunIteration1)},
+		expectedStatus:       corev1.ConditionTrue,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded,
+		expectedPipelineruns: []*v1beta1.PipelineRun{successfulWithSkipedTasks(expectedConditionPipelineRunIteration1)},
+		expectedEvents:       []string{"Normal Succeeded PipelineRuns completed successfully with the conditions are met"},
+	}}
 
 	//testcases = testcases[1:3]
 
