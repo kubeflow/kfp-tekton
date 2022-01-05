@@ -26,6 +26,7 @@ from distutils.util import strtobool
 import collections
 from os import environ as env
 from typing import Callable, List, Text, Dict, Any
+import hashlib
 
 import yaml
 # Kubeflow Pipeline imports
@@ -122,6 +123,7 @@ class TektonCompiler(Compiler):
     # Input and output artifacts are hash maps for metadata tracking.
     # artifact_items is the artifact dependency map
     # loops_pipeline recorde the loop tasks information for each loops
+    # produce_taskspec Produces task spec as part of Tekton pipelineRuns
     self.input_artifacts = {}
     self.output_artifacts = {}
     self.artifact_items = {}
@@ -134,6 +136,7 @@ class TektonCompiler(Compiler):
     self.pipeline_annotations = {}
     self.tekton_inline_spec = True
     self.resource_in_separate_yaml = False
+    self.produce_taskspec = True
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -1431,7 +1434,46 @@ class TektonCompiler(Compiler):
       workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(loop_package_annotations,
                                                                                         sort_keys=True)
     # Need to compiles after all the CRs being processed.
+    # Convert taskspec into task templates if specified.
+    if not self.produce_taskspec:
+      component_sha = {}
+      for task in workflow['spec']['pipelineSpec']['tasks']:
+        if task.get('taskSpec'):
+          component_spec_digest = hashlib.sha1(json.dumps(task['taskSpec'], sort_keys=True).encode()).hexdigest()
+          if component_spec_digest not in component_sha.keys():
+            task_template = {}
+            task_template['metadata'] = {}
+            if task['taskSpec'].get('metadata', None):
+              task_template['metadata'] = task['taskSpec'].pop('metadata', None)
+            if task['taskSpec'].get('apiVersion', None) and task['taskSpec'].get('kind', None):
+              task_template['apiVersion'] = task['taskSpec']['apiVersion']
+              task_template['kind'] = task['taskSpec']['kind']
+            else:
+              task_template['apiVersion'] = tekton_api_version
+              task_template['kind'] = 'Task'
+            task_template['spec'] = task['taskSpec']
+            task_template['metadata']['name'] = component_spec_digest
+            component_sha[component_spec_digest] = task_template
+          task.pop("taskSpec", None)
+          task['taskRef'] = {'name': component_spec_digest}
+      # Output task templates into individual files if specified, else append task templates to annotations
+      if self.resource_in_separate_yaml:
+        for key, value in component_sha.items():
+          TektonCompiler._write_workflow(workflow=value,
+                                         package_path=os.path.splitext(package_path)[0] +
+                                         key + '.yaml')
+      else:
+        resource_templates = workflow['metadata']['annotations'].get('tekton.dev/resource_templates', [])
+        if resource_templates:
+          resource_templates = json.loads(resource_templates)
+        for value in component_sha.values():
+          resource_templates.append(value)
+        if resource_templates:
+          workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(resource_templates,
+                                                                                            sort_keys=True)
+
     TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
+
     # Separate custom task CR from the main workflow
     for i in range(len(self.custom_task_crs)):
       TektonCompiler._write_workflow(workflow=self.custom_task_crs[i],
