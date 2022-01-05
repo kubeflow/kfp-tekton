@@ -386,7 +386,6 @@ var nestedPipeline = &v1beta1.Pipeline{
 func setPipelineNestedStackDepth(pipeline *v1beta1.Pipeline, depth int) *v1beta1.Pipeline {
 	pl := pipeline.DeepCopy()
 	pl.Spec.Tasks[0].TaskSpec.Metadata.Annotations = map[string]string{MaxNestedStackDepthKey: fmt.Sprint(depth)}
-	fmt.Printf("Test: %#v\n", pipeline.Spec.Tasks[0].TaskSpec.Metadata)
 	return pl
 }
 
