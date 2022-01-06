@@ -580,6 +580,17 @@ func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1a
 				}}
 			}
 		}
+		for _, taskRunStatus := range pr.Status.TaskRuns {
+			if strings.HasPrefix(taskRunStatus.PipelineTaskName, "pipelineloop-break-operation") {
+				// Mark run successful and stop the loop pipelinerun
+				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
+					"PipelineRuns completed successfully with the conditions are met")
+				run.Status.Results = []runv1alpha1.RunResult{{
+					Name:  "condition",
+					Value: "pass",
+				}}
+			}
+		}
 
 		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 			Iteration: iteration,
