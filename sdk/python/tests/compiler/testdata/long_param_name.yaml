@@ -70,13 +70,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "download", "implementation":
-              {"container": {"args": ["gsutil cat $0 | tee $1\n", {"inputValue": "url"},
-              {"outputPath": "datadatadatadatadatadatadatadatadatadata"}], "command":
-              ["sh", "-c"], "image": "google/cloud-sdk:279.0.0"}}, "inputs": [{"name":
-              "url", "type": "String"}], "name": "GCS - DownloadGCS - DownloadGCS
-              - DownloadGCS - Download", "outputs": [{"name": "datadatadatadatadatadatadatadatadatadata",
-              "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "GCS - DownloadGCS
+              - DownloadGCS - DownloadGCS - Download", "outputs": [{"name": "datadatadatadatadatadatadatadatadatadata",
+              "type": "String"}], "version": "GCS - DownloadGCS - DownloadGCS - DownloadGCS
+              - Download@sha256=d1e379f5379382e80ee2313b4c45d68ac45a256aef920dea02d3813ac2e1809c"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: printprintprintprintprintprintprintprintprintprint
@@ -98,10 +95,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "print", "implementation":
-              {"container": {"command": ["echo", {"inputValue": "text"}], "image":
-              "alpine:3.6"}}, "inputs": [{"name": "text", "type": "String"}], "name":
-              "printprintprintprintprintprintprintprintprintprint"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "printprintprintprintprintprintprintprintprintprint",
+              "outputs": [], "version": "printprintprintprintprintprintprintprintprintprint@sha256=0c820da4b0f6e1a730ec47930324fc44ffbc0be62e903fdbcc91dc36ab9580ef"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

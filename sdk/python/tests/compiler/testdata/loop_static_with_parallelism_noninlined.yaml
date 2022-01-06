@@ -35,11 +35,8 @@ metadata:
       "type": "string"}], "tasks": [{"name": "para-loop-inner-op1", "params": [{"name":
       "loop-item-param-1", "value": "$(params.loop-item-param-1)"}, {"name": "my_pipe_param",
       "value": "$(params.my_pipe_param)"}], "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec": "{\"description\": \"para-loop-inner-op1\",
-      \"implementation\": {\"container\": {\"args\": [\"echo op1 $0 $1\\n\", {\"inputValue\":
-      \"input1\"}, {\"inputValue\": \"input2\"}], \"command\": [\"sh\", \"-c\"], \"image\":
-      \"library/bash:4.4.23\"}}, \"inputs\": [{\"name\": \"input1\", \"type\": \"Integer\"},
-      {\"name\": \"input2\", \"type\": \"String\"}], \"name\": \"para-loop-inner-op1\"}",
+      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"para-loop-inner-op1\",
+      \"outputs\": [], \"version\": \"para-loop-inner-op1@sha256=3f0d81fcc84addea722cbc93871ed081edde0ee5273c7543470ece4dd530cd78\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "loop-item-param-1", "type": "string"}, {"name": "my_pipe_param",
@@ -47,11 +44,9 @@ metadata:
       "$(inputs.params.my_pipe_param)"], "command": ["sh", "-c"], "image": "library/bash:4.4.23",
       "name": "main"}]}, "timeout": "525600m"}, {"name": "para-loop-inner-op2", "params":
       [{"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"}], "taskSpec":
-      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec": "{\"description\":
-      \"para-loop-inner-op2\", \"implementation\": {\"container\": {\"args\": [\"echo
-      op2 $0\\n\", {\"inputValue\": \"input1\"}], \"command\": [\"sh\", \"-c\"], \"image\":
-      \"library/bash:4.4.23\"}}, \"inputs\": [{\"name\": \"input1\", \"type\": \"Integer\"}],
-      \"name\": \"para-loop-inner-op2\"}", "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"para-loop-inner-op2\", \"outputs\": [], \"version\": \"para-loop-inner-op2@sha256=fbc1104d87b80e5c2e81dedd9df4f8def400447d5ddb8f5972860eda7962c349\"}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "loop-item-param-1", "type": "string"}], "steps":
       [{"args": ["echo op2 $0\n", "$(inputs.params.loop-item-param-1)"], "command":
@@ -89,10 +84,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "para-loop-out-op",
-              "implementation": {"container": {"args": ["echo $0\n", {"inputValue":
-              "input1"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
-              "inputs": [{"name": "input1", "type": "String"}], "name": "para-loop-out-op"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "para-loop-out-op",
+              "outputs": [], "version": "para-loop-out-op@sha256=2ffc845c5b44a975d837ef6a728f691bf97fb1ae8168ed429af14d94aaafaf4d"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: para-loop-pipeline-for-loop-2

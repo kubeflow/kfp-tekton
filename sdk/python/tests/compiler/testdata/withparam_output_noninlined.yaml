@@ -34,16 +34,14 @@ metadata:
       "spec": {"iterateParam": "my-out-cop0-out-loop-item", "pipelineSpec": {"params":
       [{"name": "my-out-cop0-out-loop-item", "type": "string"}], "tasks": [{"name":
       "my-in-cop1", "params": [{"name": "my-out-cop0-out-loop-item", "value": "$(params.my-out-cop0-out-loop-item)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
-      "{\"implementation\": {\"container\": {\"args\": [\"set -e\\necho no output
-      global op1, item: \\\"$0\\\"\\n\", {\"inputValue\": \"item\"}], \"command\":
-      [\"sh\", \"-c\"], \"image\": \"library/bash:4.4.23\"}}, \"inputs\": [{\"name\":
-      \"item\", \"type\": \"Integer\"}], \"name\": \"my-in-cop1\"}", "tekton.dev/template":
-      ""}, "labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
-      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "my-out-cop0-out-loop-item",
-      "type": "string"}], "steps": [{"args": ["set -e\necho no output global op1,
-      item: \"$0\"\n", "$(inputs.params.my-out-cop0-out-loop-item)"], "command": ["sh",
-      "-c"], "image": "library/bash:4.4.23", "name": "main"}]}, "timeout": "525600m"}]}}}]'
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"my-in-cop1\", \"outputs\": [], \"version\": \"my-in-cop1@sha256=636096cc65b3fe23f6fd1d965dd294fae75e328c1fb46f036f9ccad27dc692eb\"}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "params": [{"name": "my-out-cop0-out-loop-item", "type": "string"}], "steps":
+      [{"args": ["set -e\necho no output global op1, item: \"$0\"\n", "$(inputs.params.my-out-cop0-out-loop-item)"],
+      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
+      "timeout": "525600m"}]}}}]'
 spec:
   pipelineSpec:
     tasks:
@@ -69,11 +67,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": ["set -e\npython -c \"import json; import sys; json.dump([i
-              for i in range(20, 31)], open(''$0'', ''w''))\"\n", {"outputPath": "out"}],
-              "command": ["sh", "-c"], "image": "python:alpine3.6"}}, "name": "my-out-cop0",
-              "outputs": [{"name": "out", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop0",
+              "outputs": [{"name": "out", "type": "String"}], "version": "my-out-cop0@sha256=a450661d6f7ba02ab00054fcb4afae65774d94dfcf4611aff04ec134a0fcf9a3"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: my-out-cop2
@@ -100,10 +95,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": ["set -e\necho no output global op2, outp: \"$0\"\n", {"inputValue":
-              "output"}], "command": ["sh", "-c"], "image": "library/bash:4.4.23"}},
-              "inputs": [{"name": "output", "type": "String"}], "name": "my-out-cop2"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop2",
+              "outputs": [], "version": "my-out-cop2@sha256=12b6747bf40c6d422bf91475437e40331e1809caa920e7012bc09c5fb81be91d"}'
             tekton.dev/template: ''
       timeout: 525600m
     - runAfter:

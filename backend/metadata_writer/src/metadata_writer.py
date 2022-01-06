@@ -68,6 +68,7 @@ PIPELINE_RUNTIME = os.getenv("PIPELINE_RUNTIME", "tekton").lower()
 ARGO_OUTPUTS_ANNOTATION_KEY = 'workflows.argoproj.io/outputs'
 ARGO_TEMPLATE_ANNOTATION_KEY = 'workflows.argoproj.io/template'
 KFP_COMPONENT_SPEC_ANNOTATION_KEY = 'pipelines.kubeflow.org/component_spec'
+KFP_COMPONENT_SPEC_DIGEST_ANNOTATION_KEY = 'pipelines.kubeflow.org/component_spec_digest'
 KFP_PARAMETER_ARGUMENTS_ANNOTATION_KEY = 'pipelines.kubeflow.org/arguments.parameters'
 METADATA_EXECUTION_ID_LABEL_KEY = 'pipelines.kubeflow.org/metadata_execution_id'
 METADATA_CONTEXT_ID_LABEL_KEY = 'pipelines.kubeflow.org/metadata_context_id'
@@ -257,7 +258,14 @@ while True:
             component_name = template_name
             component_version = component_name
             output_name_to_type = {}
-            if KFP_COMPONENT_SPEC_ANNOTATION_KEY in obj.metadata.annotations:
+            if KFP_COMPONENT_SPEC_DIGEST_ANNOTATION_KEY in obj.metadata.annotations:
+                component_spec_text = obj.metadata.annotations[KFP_COMPONENT_SPEC_DIGEST_ANNOTATION_KEY]
+                component_spec = json.loads(component_spec_text)
+                component_name = component_spec.get('name', component_name)
+                component_version = component_spec.get('version', component_name + '@sha256=')
+                output_name_to_type = {output['name']: output.get('type', None) for output in component_spec.get('outputs', [])}
+                output_name_to_type = {output_name_to_argo(k): v for k, v in output_name_to_type.items() if v}
+            elif KFP_COMPONENT_SPEC_ANNOTATION_KEY in obj.metadata.annotations:
                 component_spec_text = obj.metadata.annotations[KFP_COMPONENT_SPEC_ANNOTATION_KEY]
                 component_spec = json.loads(component_spec_text)
                 component_spec_digest = hashlib.sha256(component_spec_text.encode()).hexdigest()

@@ -75,14 +75,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Calculate the
-              frequent word from a text", "implementation": {"container": {"command":
-              ["sh", "-c", "python -c \"from collections import Counter;       words
-              = Counter(''$0''.split()); print(max(words, key=words.get))\"       |
-              tee $1\n", {"inputValue": "message"}, {"outputPath": "word"}], "image":
-              "python:3.6-jessie"}}, "inputs": [{"description": "Required. message",
-              "name": "message", "type": "String"}], "name": "frequent-word", "outputs":
-              [{"name": "word", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "frequent-word",
+              "outputs": [{"name": "word", "type": "String"}], "version": "frequent-word@sha256=8ffbb183d49c639c5884fc04232d3589916ed74ab82dc713617d8896180f6a65"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: save-message
@@ -116,13 +110,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "save message
-              to a given output_path\n", "implementation": {"container": {"command":
-              ["sh", "-c", "set -e\necho \"$0\"| gsutil cp - \"$1\"\n", {"inputValue":
-              "message"}, {"inputValue": "output_path"}], "image": "google/cloud-sdk"}},
-              "inputs": [{"description": "Required. message", "name": "message", "type":
-              "String"}, {"description": "Required. output path", "name": "output_path",
-              "type": "String"}], "name": "save-message"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "save-message",
+              "outputs": [], "version": "save-message@sha256=496ed803b1043558dc383b302185854d3e343fd33fd3a4c7a9e5d11598d0afe3"}'
             tekton.dev/template: ''
       timeout: 525600m
     finally:
@@ -141,9 +130,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "exit function",
-              "implementation": {"container": {"command": ["sh", "-c", "echo \"exit!\""],
-              "image": "python:3.6-jessie"}}, "name": "exit-handler"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "exit-handler",
+              "outputs": [], "version": "exit-handler@sha256=f602919c39b5b69833987b005c4e28a099a234d24e004890803e3de1900525bf"}'
             tekton.dev/template: ''
       timeout: 525600m
   taskRunSpecs:

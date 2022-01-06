@@ -73,11 +73,9 @@ metadata:
       "just_one_iteration", "type": "string"}], "tasks": [{"name": "print", "params":
       [{"name": "condition-cel-3-outcome", "value": "$(params.condition-cel-3-outcome)"},
       {"name": "condition-cel-outcome", "value": "$(params.condition-cel-outcome)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
-      "{\"implementation\": {\"container\": {\"command\": [\"sh\", \"-c\", \"echo
-      $0 | tee $1\\n\", {\"inputValue\": \"msg\"}, {\"outputPath\": \"output\"}],
-      \"image\": \"alpine:3.6\"}}, \"inputs\": [{\"name\": \"msg\", \"type\": \"String\"}],
-      \"name\": \"print\", \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}]}",
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print\", \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}],
+      \"version\": \"print@sha256=8bcd5db23262c19ef5c49e890dfd60507d8da6c514d628749e64239c78a27a92\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "condition-cel-3-outcome", "type": "string"}, {"name":

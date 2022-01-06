@@ -149,29 +149,10 @@ spec:
           annotations:
             tekton-result-sizes: '{"param1": 1500, "param2A": 700, "param3_b": 500,
               "param4c": 900}'
-            pipelines.kubeflow.org/component_spec: '{"description": "Print 4 long
-              results", "implementation": {"container": {"args": ["----output-paths",
-              {"outputPath": "param1"}, {"outputPath": "param2A"}, {"outputPath":
-              "param3_b"}, {"outputPath": "param4c"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
-              \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def print4results():\n   \"\"\"Print 4 long results\"\"\"\n   a = ''a''
-              * 1500\n   b = ''b'' * 700\n   c = ''c'' * 500\n   d = ''d'' * 900\n   from
-              collections import namedtuple\n   task_output = namedtuple(''taskOutput'',
-              [''param1'', ''param2A'', ''param3_b'', ''param4c''])\n   return task_output(a,
-              b, c, d)\n\ndef _serialize_str(str_value: str) -> str:\n    if not isinstance(str_value,
-              str):\n        raise TypeError(''Value \"{}\" has type \"{}\" instead
-              of str.''.format(str(str_value), str(type(str_value))))\n    return
-              str_value\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Print4results'',
-              description=''Print 4 long results'')\n_parser.add_argument(\"----output-paths\",
-              dest=\"_output_paths\", type=str, nargs=4)\n_parsed_args = vars(_parser.parse_args())\n_output_files
-              = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = print4results(**_parsed_args)\n\n_output_serializers
-              = [\n    _serialize_str,\n    _serialize_str,\n    _serialize_str,\n    _serialize_str,\n\n]\n\nimport
-              os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
-              OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
-              "image": "python:3.7"}}, "name": "Print4results", "outputs": [{"name":
-              "param1", "type": "String"}, {"name": "param2A", "type": "String"},
-              {"name": "param3_b", "type": "String"}, {"name": "param4c", "type":
-              "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Print4results",
+              "outputs": [{"name": "param1", "type": "String"}, {"name": "param2A",
+              "type": "String"}, {"name": "param3_b", "type": "String"}, {"name":
+              "param4c", "type": "String"}], "version": "Print4results@sha256=6b7840a72c9cfef1daa207b844908ddaff91d48e2cdc0f26e36bfd4a67dd3a80"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: print
@@ -196,10 +177,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"command": ["sh", "-c", "echo $0\n", {"inputValue": "msg"}], "image":
-              "alpine:3.6"}}, "inputs": [{"name": "msg", "type": "String"}], "name":
-              "print"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [], "version": "print@sha256=7414614ece3ba415ce2df0ef0612f4bbb087ebd4f7314a47f65db849f5dd1004"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

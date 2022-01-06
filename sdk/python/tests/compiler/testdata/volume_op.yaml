@@ -156,9 +156,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": ["echo foo > /mnt/file1"], "command": ["sh", "-c"], "image":
-              "library/bash:4.4.23"}}, "name": "cop"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "cop", "outputs":
+              [], "version": "cop@sha256=f639de5a5b68415d6b01ffa4b02ecda5641449bc5b10053298959202a7d27c5c"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

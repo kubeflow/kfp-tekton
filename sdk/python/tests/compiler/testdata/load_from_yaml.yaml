@@ -52,12 +52,9 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "Sample component
-              for testing\n", "implementation": {"container": {"args": ["start", {"inputValue":
-              "dummy_text"}, {"outputPath": "dummy_output_path"}, "end"], "command":
-              ["echo"], "image": "alpine:latest"}}, "inputs": [{"default": "", "description":
-              "Test empty input", "name": "dummy_text"}], "name": "busybox", "outputs":
-              [{"description": "Test unused output path", "name": "dummy_output_path"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "busybox", "outputs":
+              [{"description": "Test unused output path", "name": "dummy_output_path"}],
+              "version": "busybox@sha256=5bed7406f74106b6e31b3b155d13cb203e1f30e41fd93b53f9cd71331513e355"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

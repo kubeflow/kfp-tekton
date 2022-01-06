@@ -52,10 +52,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "download", "implementation":
-              {"container": {"args": ["sleep 10; wget localhost:5678 -O $0\n", {"outputPath":
-              "downloaded"}], "command": ["sh", "-c"], "image": "busybox"}}, "name":
-              "download", "outputs": [{"name": "downloaded", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "download", "outputs":
+              [{"name": "downloaded", "type": "String"}], "version": "download@sha256=efb8f7672208579e11f74f184af68742c8d27421ef95f4db23a3b5f55641d850"}'
             tekton.dev/template: ''
       timeout: 525600m
   taskRunSpecs:

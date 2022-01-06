@@ -37,19 +37,17 @@ metadata:
       "$(params.iter_num) - 1"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
       "kind": "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "print-iter",
       "params": [{"name": "condition-cel-outcome", "value": "$(tasks.condition-cel.results.outcome)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec":
-      "{\"description\": \"print msg\", \"implementation\": {\"container\": {\"args\":
-      [\"echo $0 > $1\\n\", {\"inputValue\": \"msg\"}, {\"outputPath\": \"stdout\"}],
-      \"command\": [\"sh\", \"-c\"], \"image\": \"alpine:3.6\"}}, \"inputs\": [{\"name\":
-      \"msg\", \"type\": \"String\"}], \"name\": \"print-iter\", \"outputs\": [{\"name\":
-      \"stdout\", \"type\": \"String\"}]}", "tekton.dev/template": ""}, "labels":
-      {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
-      "", "pipelines.kubeflow.org/pipelinename": ""}}, "params": [{"name": "condition-cel-outcome",
-      "type": "string"}], "results": [{"description": "/tmp/outputs/stdout/data",
-      "name": "stdout"}], "steps": [{"args": ["echo $0 > $1\n", "Iter: $(inputs.params.condition-cel-outcome)",
-      "$(results.stdout.path)"], "command": ["sh", "-c"], "image": "alpine:3.6", "name":
-      "main"}]}, "timeout": "525600m"}, {"name": "recur", "params": [{"name": "just_one_iteration",
-      "value": ["1"]}, {"name": "iter_num", "value": "$(tasks.condition-cel.results.outcome)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print-iter\", \"outputs\": [{\"name\": \"stdout\", \"type\": \"String\"}],
+      \"version\": \"print-iter@sha256=844cd18acdaf6be3957c770dc0c2cb0536a2dc27c965c3ca8205965879436b37\"}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
+      [{"description": "/tmp/outputs/stdout/data", "name": "stdout"}], "steps": [{"args":
+      ["echo $0 > $1\n", "Iter: $(inputs.params.condition-cel-outcome)", "$(results.stdout.path)"],
+      "command": ["sh", "-c"], "image": "alpine:3.6", "name": "main"}]}, "timeout":
+      "525600m"}, {"name": "recur", "params": [{"name": "just_one_iteration", "value":
+      ["1"]}, {"name": "iter_num", "value": "$(tasks.condition-cel.results.outcome)"}],
       "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
       "name": "recur-and-condition-graph-recur-1"}, "when": [{"input": "$(tasks.condition-cel.results.outcome)",
       "operator": "notin", "values": ["0"]}]}]}}}]'

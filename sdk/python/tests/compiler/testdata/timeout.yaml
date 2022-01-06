@@ -48,12 +48,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "random failure",
-              "implementation": {"container": {"args": ["import random; import sys;
-              exit_code = random.choice([$0]); print(exit_code);       import time;
-              time.sleep(30); sys.exit(exit_code)\n", {"inputValue": "exitcodes"}],
-              "command": ["python", "-c"], "image": "python:alpine3.6"}}, "inputs":
-              [{"name": "exitcodes", "type": "String"}], "name": "random-failure"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
+              "outputs": [], "version": "random-failure@sha256=7a3950e9d0afce355b325b09e2cd5710feb99e6233a330af889d80515c4aaac2"}'
             tekton.dev/template: ''
       timeout: 20s
     - name: random-failure-2
@@ -74,12 +70,8 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"description": "random failure",
-              "implementation": {"container": {"args": ["import random; import sys;
-              exit_code = random.choice([$0]); print(exit_code);       import time;
-              time.sleep(30); sys.exit(exit_code)\n", {"inputValue": "exitcodes"}],
-              "command": ["python", "-c"], "image": "python:alpine3.6"}}, "inputs":
-              [{"name": "exitcodes", "type": "String"}], "name": "random-failure"}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
+              "outputs": [], "version": "random-failure@sha256=7a3950e9d0afce355b325b09e2cd5710feb99e6233a330af889d80515c4aaac2"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 40s
