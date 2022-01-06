@@ -1254,7 +1254,7 @@ var expectedNestedPipelineRun = &v1beta1.PipelineRun{
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
-		PipelineSpec: &setPipelineNestedStackDepth(nestedPipeline, 99).Spec,
+		PipelineSpec: &setPipelineNestedStackDepth(nestedPipeline, 29).Spec,
 		Params: []v1beta1.Param{{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
