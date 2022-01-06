@@ -78,6 +78,10 @@ const (
 
 	// LabelKeyWorkflowRunId is the label identifier a pipelinerun is managed by the Kubeflow Pipeline persistent agent.
 	LabelKeyWorkflowRunId = "pipeline/runid"
+
+	DefaultNestedStackDepth = 30
+
+	MaxNestedStackDepthKey = "maxNestedStackDepth"
 )
 
 // Reconciler implements controller.Reconciler for Configuration resources.
@@ -211,6 +215,71 @@ func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
 	return config.ToContext(ctx, c)
 }
 
+// Check if this pipelineLoop starts other pipelineLoop(s)
+func isNestedPipelineLoop(pipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec) bool {
+	if pipelineLoopSpec.PipelineSpec == nil {
+		return false
+	}
+	for _, t := range pipelineLoopSpec.PipelineSpec.Tasks {
+		if t.TaskSpec != nil {
+			if t.TaskSpec.Kind == "PipelineLoop" {
+				return true
+			}
+		} else if t.TaskRef != nil {
+			if t.TaskRef.Kind == "PipelineLoop" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func getMaxNestedStackDepth(pipelineLoopMeta *metav1.ObjectMeta) (int, error) {
+	maxNestedStackDepth := pipelineLoopMeta.Annotations[MaxNestedStackDepthKey]
+	if maxNestedStackDepth != "" {
+		atoi, err := strconv.Atoi(maxNestedStackDepth)
+		return atoi, err
+	}
+	return DefaultNestedStackDepth, nil
+}
+
+func (c *Reconciler) setMaxNestedStackDepth(ctx context.Context, pipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec, run *v1alpha1.Run, depth int) {
+	logger := logging.FromContext(ctx)
+
+	if pipelineLoopSpec.PipelineSpec == nil {
+		return
+	}
+	for k, t := range pipelineLoopSpec.PipelineSpec.Tasks {
+		if t.TaskSpec != nil {
+			if t.TaskSpec.Kind == "PipelineLoop" {
+				if len(t.TaskSpec.Metadata.Annotations) == 0 {
+					t.TaskSpec.Metadata.Annotations = map[string]string{MaxNestedStackDepthKey: fmt.Sprint(depth)}
+				} else {
+					t.TaskSpec.Metadata.Annotations[MaxNestedStackDepthKey] = fmt.Sprint(depth)
+				}
+				pipelineLoopSpec.PipelineSpec.Tasks[k].TaskSpec.Metadata.Annotations = map[string]string{MaxNestedStackDepthKey: fmt.Sprint(depth)}
+			}
+		} else if t.TaskRef != nil {
+			if t.TaskRef.Kind == "PipelineLoop" {
+				tl, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(run.Namespace).Get(ctx, t.TaskRef.Name, metav1.GetOptions{})
+				if err == nil && tl != nil {
+					if len(tl.ObjectMeta.Annotations) == 0 {
+						tl.ObjectMeta.Annotations = map[string]string{MaxNestedStackDepthKey: fmt.Sprint(depth)}
+					} else {
+						tl.ObjectMeta.Annotations[MaxNestedStackDepthKey] = fmt.Sprint(depth)
+					}
+					_, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(run.Namespace).Update(ctx, tl, metav1.UpdateOptions{})
+					if err != nil {
+						logger.Errorf("Error while updating pipelineloop nested stack depth, %v", err)
+					}
+				} else if err != nil {
+					logger.Warnf("Unable to fetch pipelineLoop wiht name: %s error: %v", t.TaskRef.Name, err)
+				}
+			}
+		}
+	}
+}
+
 func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
 	ctx = EnableCustomTaskFeatureFlag(ctx)
 	logger := logging.FromContext(ctx)
@@ -220,7 +289,6 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if err != nil {
 		return nil
 	}
-
 	// Store the fetched PipelineLoopSpec on the Run for auditing
 	storePipelineLoopSpec(status, pipelineLoopSpec)
 
@@ -382,6 +450,21 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 
 	// Create PipelineRun to run this iteration based on parallelism
 	for i := 0; i < actualParallelism-len(currentRunningPrs); i++ {
+		if isNestedPipelineLoop(pipelineLoopSpec) {
+			maxNestedStackDepth, err := getMaxNestedStackDepth(pipelineLoopMeta)
+			if err != nil {
+				logger.Errorf("Error parsing max nested stack depth value: %v", err.Error())
+				maxNestedStackDepth = DefaultNestedStackDepth
+			}
+			if maxNestedStackDepth > 0 {
+				maxNestedStackDepth = maxNestedStackDepth - 1
+				c.setMaxNestedStackDepth(ctx, pipelineLoopSpec, run, maxNestedStackDepth)
+			} else if maxNestedStackDepth <= 0 {
+				run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonStackLimitExceeded.String(), "nested stack depth limit reached.")
+				return nil
+			}
+		}
+
 		pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, nextIteration, iterationElements)
 		if err != nil {
 			return fmt.Errorf("error creating PipelineRun from Run %s: %w", run.Name, err)

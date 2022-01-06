@@ -97,6 +97,9 @@ const (
 	// PipelineLoopRunReasonFailed indicates that one of the TaskRuns created from the Run failed
 	PipelineLoopRunReasonFailed PipelineLoopRunReason = "Failed"
 
+	// PipelineLoopRunReasonRecursionLimitExceeded indicates that one of the TaskRuns created from the Run has exceeded stack limit
+	PipelineLoopRunReasonStackLimitExceeded PipelineLoopRunReason = "NestedCallStackLimitExceeded"
+
 	// PipelineLoopRunReasonSucceeded indicates that all of the TaskRuns created from the Run completed successfully
 	PipelineLoopRunReasonSucceeded PipelineLoopRunReason = "Succeeded"
 
