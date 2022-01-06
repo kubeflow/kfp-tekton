@@ -79,7 +79,7 @@ const (
 	// LabelKeyWorkflowRunId is the label identifier a pipelinerun is managed by the Kubeflow Pipeline persistent agent.
 	LabelKeyWorkflowRunId = "pipeline/runid"
 
-	DefaultNestedStackDepth = 100
+	DefaultNestedStackDepth = 30
 
 	MaxNestedStackDepthKey = "maxNestedStackDepth"
 )
