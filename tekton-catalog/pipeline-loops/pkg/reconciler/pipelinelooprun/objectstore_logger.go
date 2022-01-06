@@ -36,7 +36,7 @@ import (
 )
 
 type ObjectStoreLogConfig struct {
-	enable              bool
+	Enable              bool
 	defaultBucketName   string
 	accessKey           string
 	secretKey           string
@@ -58,9 +58,9 @@ type Logger struct {
 	// Current size of the buffer.
 	size int64
 	// Sync irrespective of buffer size after elapsing this interval.
-	SyncInterval         time.Duration
-	mu                   sync.Mutex
-	objectStoreLogConfig *ObjectStoreLogConfig
+	SyncInterval time.Duration
+	mu           sync.Mutex
+	LogConfig    *ObjectStoreLogConfig
 }
 
 // ensure we always implement io.WriteCloser
@@ -84,7 +84,7 @@ func (l *Logger) Write(p []byte) (n int, err error) {
 
 func (l *Logger) syncBuffer() error {
 	fmt.Printf("Syncing buffer size : %d, MaxSize: %d \n", l.size, l.MaxSize)
-	err := l.objectStoreLogConfig.writeToObjectStore(l.objectStoreLogConfig.defaultBucketName,
+	err := l.LogConfig.writeToObjectStore(l.LogConfig.defaultBucketName,
 		time.Now().Format(time.RFC3339Nano), l.buffer.Bytes())
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (o *ObjectStoreLogConfig) load(ctx context.Context, kubeClientSet kubernete
 	if err != nil {
 		return err
 	}
-	if o.enable, err = strconv.ParseBool(configMap.Data["enable"]); err != nil || !o.enable {
+	if o.Enable, err = strconv.ParseBool(configMap.Data["enable"]); err != nil || !o.Enable {
 		return err
 	}
 
@@ -151,7 +151,7 @@ func (o *ObjectStoreLogConfig) load(ctx context.Context, kubeClientSet kubernete
 }
 
 func (o *ObjectStoreLogConfig) CreateNewBucket(bucketName string) error {
-	if !o.enable || bucketName == o.defaultBucketName {
+	if !o.Enable || bucketName == o.defaultBucketName {
 		return nil
 	}
 	input := &s3.CreateBucketInput{
@@ -162,7 +162,7 @@ func (o *ObjectStoreLogConfig) CreateNewBucket(bucketName string) error {
 }
 
 func (o *ObjectStoreLogConfig) writeToObjectStore(bucketName string, key string, content []byte) error {
-	if !o.enable {
+	if !o.Enable {
 		return nil
 	}
 	input := s3.PutObjectInput{
@@ -178,13 +178,13 @@ func (o *ObjectStoreLogConfig) writeToObjectStore(bucketName string, key string,
 
 func (l *Logger) LoadDefaults(ctx context.Context, kubeClientSet kubernetes.Interface) error {
 
-	if l.objectStoreLogConfig == nil {
-		l.objectStoreLogConfig = &ObjectStoreLogConfig{}
-		err := l.objectStoreLogConfig.load(ctx, kubeClientSet)
+	if l.LogConfig == nil {
+		l.LogConfig = &ObjectStoreLogConfig{}
+		err := l.LogConfig.load(ctx, kubeClientSet)
 		if err != nil {
 			return err
 		}
-		if !l.objectStoreLogConfig.enable {
+		if !l.LogConfig.Enable {
 			return fmt.Errorf("Object store logging is disabled. " +
 				"Please edit `object-store-config` configMap to setup logging.\n")
 		}

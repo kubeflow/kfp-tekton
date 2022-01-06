@@ -60,15 +60,15 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
 			pipelineRunLister:     pipelineRunInformer.Lister(),
 		}
-		ObjectStoreLogger := Logger{
+		objectStoreLogger := Logger{
 			MaxSize: 1024 * 100, // TODO make it configurable via a configmap.
 		}
-		err := ObjectStoreLogger.LoadDefaults(ctx, kubeclientset)
-		if err == nil {
+		err := objectStoreLogger.LoadDefaults(ctx, kubeclientset)
+		if err == nil && objectStoreLogger.LogConfig.Enable {
 			logger.Info("Loading object store logger...")
 			w := zapcore.NewMultiWriteSyncer(
 				zapcore.AddSync(os.Stdout),
-				zapcore.AddSync(&ObjectStoreLogger),
+				zapcore.AddSync(&objectStoreLogger),
 			)
 			core := zapcore.NewCore(
 				zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
@@ -89,13 +89,13 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			go func() {
 				for {
 					<-c
-					err = ObjectStoreLogger.Close()
+					err = objectStoreLogger.Close()
 					fmt.Printf("Synced with object store... %v", err)
 					os.Exit(0)
 				}
 			}()
 		} else {
-			logger.Errorf("Object store logging unavailable, %v ", err.Error())
+			logger.Errorf("Object store logging unavailable, %v ", err)
 		}
 
 		impl := runreconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
