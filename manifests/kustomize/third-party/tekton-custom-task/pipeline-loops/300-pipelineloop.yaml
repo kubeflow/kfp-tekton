@@ -9,7 +9,6 @@ metadata:
     version: "devel"
 spec:
   group: custom.tekton.dev
-  preserveUnknownFields: false
   versions:
   - name: v1alpha1
     served: true
