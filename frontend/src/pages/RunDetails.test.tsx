@@ -134,7 +134,7 @@ describe('RunDetails', () => {
 
   beforeEach(() => {
     // The RunDetails page uses timers to periodically refresh
-    jest.useFakeTimers();
+    jest.useFakeTimers('legacy');
     // TODO: mute error only for tests that are expected to have error
     jest.spyOn(console, 'error').mockImplementation(() => null);
 
@@ -680,7 +680,7 @@ describe('RunDetails', () => {
 
     jest.useRealTimers();
     await new Promise(resolve => setTimeout(resolve, 500));
-    jest.useFakeTimers();
+    jest.useFakeTimers('legacy');
 
     expect(getByTestId('graph')).toMatchInlineSnapshot(`
       <pre
@@ -706,7 +706,7 @@ describe('RunDetails', () => {
 
     jest.useRealTimers();
     await new Promise(resolve => setTimeout(resolve, 500));
-    jest.useFakeTimers();
+    jest.useFakeTimers('legacy');
 
     expect(queryAllByTestId('graph')).toEqual([]);
   });
@@ -1160,7 +1160,7 @@ describe('RunDetails', () => {
               className=""
             >
               Logs can also be viewed in
-               
+
               <a
                 className="link unstyled"
                 href="https://console.cloud.google.com/logs/viewer?project=test-project-id&interval=NO_LIMIT&advancedFilter=resource.type%3D\\"k8s_container\\"%0Aresource.labels.cluster_name:\\"test-cluster-name\\"%0Aresource.labels.pod_name:\\"node1\\""
@@ -1245,7 +1245,7 @@ describe('RunDetails', () => {
               className=""
             >
               Logs can also be viewed in
-               
+
               <a
                 className="link unstyled"
                 href="https://console.cloud.google.com/logs/viewer?project=test-project-id&interval=NO_LIMIT&advancedFilter=resource.type%3D\\"k8s_container\\"%0Aresource.labels.cluster_name:\\"test-cluster-name\\"%0Aresource.labels.pod_name:\\"node1\\""

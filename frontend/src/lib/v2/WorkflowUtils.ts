@@ -14,7 +14,7 @@
 
 import { PipelineSpec } from 'src/generated/pipeline_spec';
 import { ml_pipelines } from 'src/generated/pipeline_spec/pbjs_ml_pipelines';
-import { Workflow } from 'third_party/argo-ui/argo_template';
+import { Workflow } from 'src/third_party/mlmd/argo_template';
 
 export function isV2Pipeline(workflow: Workflow): boolean {
   return workflow?.metadata?.annotations?.['pipelines.kubeflow.org/v2_pipeline'] === 'true';
