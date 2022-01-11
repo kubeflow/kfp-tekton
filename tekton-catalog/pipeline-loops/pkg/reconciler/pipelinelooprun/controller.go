@@ -18,6 +18,10 @@ package pipelinelooprun
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
@@ -28,7 +32,10 @@ import (
 	pipelineruninformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/pipelinerun"
 	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
 	pipelinecontroller "github.com/tektoncd/pipeline/pkg/controller"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/client-go/tools/cache"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -37,7 +44,7 @@ import (
 // NewController instantiates a new controller.Impl from knative.dev/pkg/controller
 func NewController(namespace string) func(context.Context, configmap.Watcher) *controller.Impl {
 	return func(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-
+		kubeclientset := kubeclient.Get(ctx)
 		logger := logging.FromContext(ctx)
 		pipelineclientset := pipelineclient.Get(ctx)
 		pipelineloopclientset := pipelineloopclient.Get(ctx)
@@ -46,11 +53,49 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 		pipelineRunInformer := pipelineruninformer.Get(ctx)
 
 		c := &Reconciler{
+			KubeClientSet:         kubeclientset,
 			pipelineClientSet:     pipelineclientset,
 			pipelineloopClientSet: pipelineloopclientset,
 			runLister:             runInformer.Lister(),
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
 			pipelineRunLister:     pipelineRunInformer.Lister(),
+		}
+		objectStoreLogger := Logger{
+			MaxSize: 1024 * 100, // TODO make it configurable via a configmap.
+		}
+		err := objectStoreLogger.LoadDefaults(ctx, kubeclientset)
+		if err == nil && objectStoreLogger.LogConfig.Enable {
+			logger.Info("Loading object store logger...")
+			w := zapcore.NewMultiWriteSyncer(
+				zapcore.AddSync(os.Stdout),
+				zapcore.AddSync(&objectStoreLogger),
+			)
+			core := zapcore.NewCore(
+				zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+				w,
+				zap.InfoLevel,
+			)
+			logger := zap.New(core)
+			logger.Info("First log msg with object store logger.")
+			ctx = logging.WithLogger(ctx, logger.Sugar())
+
+			// set up SIGHUP to send logs to object store before shutdown.
+			signal.Ignore(syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT)
+			c := make(chan os.Signal, 3)
+			signal.Notify(c, syscall.SIGTERM)
+			signal.Notify(c, syscall.SIGINT)
+			signal.Notify(c, syscall.SIGHUP)
+
+			go func() {
+				for {
+					<-c
+					err = objectStoreLogger.Close()
+					fmt.Printf("Synced with object store... %v", err)
+					os.Exit(0)
+				}
+			}()
+		} else {
+			logger.Errorf("Object store logging unavailable, %v ", err)
 		}
 
 		impl := runreconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
