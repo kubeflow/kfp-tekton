@@ -15,12 +15,7 @@
  */
 
 import * as dagre from 'dagre';
-import {
-  NodeStatus,
-  Parameter,
-  S3Artifact,
-  Workflow,
-} from '../../third_party/argo-ui/argo_template';
+import { NodeStatus, Parameter, S3Artifact, Workflow } from '../third_party/mlmd/argo_template';
 import { statusToIcon } from '../pages/Status';
 import { Constants } from './Constants';
 import { parseTaskDisplayName } from './ParserUtils';
