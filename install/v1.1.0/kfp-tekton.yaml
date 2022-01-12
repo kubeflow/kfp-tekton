@@ -22,7 +22,7 @@ parameters:
   mounter: goofys
 provisioner: ch.ctrox.csi.s3-driver
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
@@ -39,20 +39,19 @@ spec:
     - tekton-pipelines
     kind: PipelineLoop
     plural: pipelineloops
-  preserveUnknownFields: false
   scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      type: object
-      x-kubernetes-preserve-unknown-fields: true
   versions:
   - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     served: true
     storage: true
+    subresources:
+      status: {}
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
@@ -71,10 +70,31 @@ spec:
   scope: Namespaced
   versions:
   - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            type: object
+            x-kubernetes-map-type: atomic
+            x-kubernetes-preserve-unknown-fields: true
+          status:
+            type: object
+            x-kubernetes-map-type: atomic
+            x-kubernetes-preserve-unknown-fields: true
+        required:
+        - spec
+        - status
+        type: object
     served: true
     storage: true
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
@@ -93,6 +113,22 @@ spec:
   scope: Namespaced
   versions:
   - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            type: object
+            x-kubernetes-map-type: atomic
+            x-kubernetes-preserve-unknown-fields: true
+        required:
+        - spec
+        type: object
     served: true
     storage: true
 ---
@@ -486,6 +522,7 @@ rules:
   - taskruns
   - conditions
   - runs
+  - tasks
   verbs:
   - create
   - get
@@ -616,6 +653,7 @@ rules:
   - taskruns
   - conditions
   - runs
+  - tasks
   verbs:
   - create
   - get
@@ -689,6 +727,7 @@ rules:
   - pipelineruns
   - taskruns
   - conditions
+  - tasks
   verbs:
   - create
   - get
@@ -822,6 +861,7 @@ rules:
   - taskruns
   - conditions
   - runs
+  - tasks
   verbs:
   - create
   - get
@@ -854,6 +894,7 @@ rules:
   - config-leader-election
   - config-logging
   - config-observability
+  - object-store-config
   resources:
   - configmaps
   verbs:
@@ -890,6 +931,7 @@ rules:
   - config-logging
   - config-observability
   - config-leader-election
+  - object-store-config
   resources:
   - configmaps
   verbs:
@@ -1501,7 +1543,7 @@ subjects:
   name: pipeline-runner
   namespace: kubeflow
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
@@ -1519,7 +1561,7 @@ subjects:
   name: tekton-pipelineloop-controller
   namespace: tekton-pipelines
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
@@ -1603,7 +1645,7 @@ subjects:
   name: kubeflow-pipelines-cache-deployer-sa
   namespace: kubeflow
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
@@ -1618,6 +1660,40 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: tekton-pipelineloop-controller
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: tekton-pipeline-loops
+  name: tekton-pipelineloop-controller-tenant-access
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-pipelineloop-controller-tenant-access
+subjects:
+- kind: ServiceAccount
+  name: tekton-pipelineloop-controller
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: tekton-pipeline-loops
+  name: tekton-pipelineloop-webhook-leaderelection
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-pipelineloop-leader-election
+subjects:
+- kind: ServiceAccount
+  name: tekton-pipelineloop-webhook
   namespace: tekton-pipelines
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -1641,23 +1717,6 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    app.kubernetes.io/component: controller
-    app.kubernetes.io/instance: default
-    app.kubernetes.io/part-of: tekton-pipeline-loops
-  name: tekton-pipelineloop-controller-tenant-access
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: tekton-pipelineloop-controller-tenant-access
-subjects:
-- kind: ServiceAccount
-  name: tekton-pipelineloop-controller
-  namespace: tekton-pipelines
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipeline-loops
@@ -1666,23 +1725,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: tekton-pipelineloop-webhook-cluster-access
-subjects:
-- kind: ServiceAccount
-  name: tekton-pipelineloop-webhook
-  namespace: tekton-pipelines
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app.kubernetes.io/component: webhook
-    app.kubernetes.io/instance: default
-    app.kubernetes.io/part-of: tekton-pipeline-loops
-  name: tekton-pipelineloop-webhook-leaderelection
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: tekton-pipelineloop-leader-election
 subjects:
 - kind: ServiceAccount
   name: tekton-pipelineloop-webhook
@@ -1806,6 +1848,26 @@ metadata:
     application-crd-id: kubeflow-pipelines
   name: pipeline-install-config
   namespace: kubeflow
+---
+apiVersion: v1
+data:
+  accessKey: minio
+  apiKey: <APIKEY-dummy-1231231231-123abcdefgh>
+  authEndpoint: https://iam.cloud.ibm.com/identity/token
+  defaultBucketName: pipelineloop-logs
+  enable: "false"
+  ibmStyleCredentials: "false"
+  region: us-south
+  secretKey: minio123
+  serviceEndpoint: http://minio-service.kubeflow:9000
+  serviceInstanceID: 'crn:v1:bluemix:public:cloud-object-storage:global:a/ID-dummy-1231231231-123abcdefgh:dummy-values::'
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: tekton-pipelines-loops
+  name: object-store-config
+  namespace: tekton-pipelines
 ---
 apiVersion: v1
 data:
@@ -2936,7 +2998,7 @@ spec:
           value: config-observability
         - name: METRICS_DOMAIN
           value: tekton.dev/pipeline
-        image: docker.io/aipipeline/pipelineloop-controller:1.0.0
+        image: docker.io/aipipeline/pipelineloop-controller:1.1.0
         name: tekton-pipelineloop-controller
       serviceAccountName: tekton-pipelineloop-controller
 ---
@@ -2993,7 +3055,7 @@ spec:
           value: tekton-pipelineloop-webhook-certs
         - name: METRICS_DOMAIN
           value: tekton.dev/pipeline
-        image: docker.io/aipipeline/pipelineloop-webhook:1.0.0
+        image: docker.io/aipipeline/pipelineloop-webhook:1.1.0
         name: webhook
         ports:
         - containerPort: 9090
