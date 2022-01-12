@@ -1669,6 +1669,23 @@ metadata:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipeline-loops
+  name: tekton-pipelineloop-controller-leaderelection
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-pipelineloop-leader-election
+subjects:
+- kind: ServiceAccount
+  name: tekton-pipelineloop-controller
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: tekton-pipeline-loops
   name: tekton-pipelineloop-controller-tenant-access
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1686,45 +1703,28 @@ metadata:
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipeline-loops
-  name: tekton-pipelineloop-webhook-leaderelection
+  name: tekton-pipelineloop-webhook-cluster-access
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: tekton-pipelineloop-leader-election
+  name: tekton-pipelineloop-webhook-cluster-access
 subjects:
 - kind: ServiceAccount
   name: tekton-pipelineloop-webhook
   namespace: tekton-pipelines
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app.kubernetes.io/component: controller
-    app.kubernetes.io/instance: default
-    app.kubernetes.io/part-of: tekton-pipeline-loops
-  name: tekton-pipelineloop-controller-leaderelection
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: tekton-pipelineloop-leader-election
-subjects:
-- kind: ServiceAccount
-  name: tekton-pipelineloop-controller
-  namespace: tekton-pipelines
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipeline-loops
-  name: tekton-pipelineloop-webhook-cluster-access
+  name: tekton-pipelineloop-webhook-leaderelection
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: tekton-pipelineloop-webhook-cluster-access
+  name: tekton-pipelineloop-leader-election
 subjects:
 - kind: ServiceAccount
   name: tekton-pipelineloop-webhook
@@ -3245,7 +3245,7 @@ spec:
   attachRequired: false
   podInfoOnMount: false
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   labels:
@@ -3265,7 +3265,7 @@ webhooks:
   name: webhook.pipelineloop.custom.tekton.dev
   sideEffects: None
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   labels:
