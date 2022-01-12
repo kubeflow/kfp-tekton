@@ -41,7 +41,7 @@ import {
   GetEventsByExecutionIDsResponse,
   GetExecutionsByContextRequest,
 } from 'src/third_party/mlmd';
-import { Workflow } from 'third_party/argo-ui/argo_template';
+import { Workflow } from 'src/third_party/mlmd/argo_template';
 
 async function getContext({ type, name }: { type: string; name: string }): Promise<Context> {
   if (type === '') {

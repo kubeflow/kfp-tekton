@@ -52,6 +52,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
@@ -86,6 +87,7 @@ const (
 
 // Reconciler implements controller.Reconciler for Configuration resources.
 type Reconciler struct {
+	KubeClientSet         kubernetes.Interface
 	pipelineClientSet     clientset.Interface
 	pipelineloopClientSet pipelineloopclientset.Interface
 	runLister             listersalpha.RunLister

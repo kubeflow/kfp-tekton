@@ -28,7 +28,7 @@ import { ExecutionHelpers, getExecutionsFromContext, getRunContext } from 'src/m
 import { isV2Pipeline } from 'src/lib/v2/WorkflowUtils';
 import { Context, Execution } from 'src/third_party/mlmd';
 import { classes, stylesheet } from 'typestyle';
-import { NodePhase as ArgoNodePhase } from '../../third_party/argo-ui/argo_template';
+import { NodePhase as ArgoNodePhase } from '../third_party/mlmd/argo_template';
 import { ApiExperiment } from '../apis/experiment';
 import { ApiRun, ApiRunStorageState } from '../apis/run';
 import { ApiVisualization, ApiVisualizationType } from '../apis/visualization';
