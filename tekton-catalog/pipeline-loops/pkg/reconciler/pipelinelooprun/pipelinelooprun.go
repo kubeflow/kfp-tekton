@@ -315,7 +315,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 
 	// Update status of PipelineRuns.  Return the PipelineRun representing the highest loop iteration.
-	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(logger, run, status)
+	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(ctx, run, status)
 	if err != nil {
 		return fmt.Errorf("error updating PipelineRun status for Run %s/%s: %w", run.Namespace, run.Name, err)
 	}
@@ -592,7 +592,26 @@ func (c *Reconciler) updateLabelsAndAnnotations(ctx context.Context, run *v1alph
 	return nil
 }
 
-func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
+func (c *Reconciler) cancelAllPipelineRuns(ctx context.Context, run *v1alpha1.Run) error {
+	logger := logging.FromContext(ctx)
+	pipelineRunLabels := getPipelineRunLabels(run, "")
+	currentRunningPrs, err := c.pipelineRunLister.PipelineRuns(run.Namespace).List(labels.SelectorFromSet(pipelineRunLabels))
+	if err != nil {
+		return fmt.Errorf("could not list PipelineRuns %#v", err)
+	}
+	for _, currentRunningPr := range currentRunningPrs {
+		logger.Infof("Cancelling PipelineRun %s.", currentRunningPr.Name)
+		if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
+			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
+				"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
+	logger := logging.FromContext(ctx)
 	highestIteration := 0
 	var currentRunningPrs []*v1beta1.PipelineRun
 	var failedPrs []*v1beta1.PipelineRun
@@ -656,6 +675,11 @@ func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1a
 		}
 		for _, runStatus := range pr.Status.Runs {
 			if strings.HasPrefix(runStatus.PipelineTaskName, "pipelineloop-break-operation") {
+				err = c.cancelAllPipelineRuns(ctx, run)
+				if err != nil {
+					return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to Run %s."+
+						" %#v", run.Name, err)
+				}
 				// Mark run successful and stop the loop pipelinerun
 				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 					"PipelineRuns completed successfully with the conditions are met")
@@ -663,6 +687,7 @@ func (c *Reconciler) updatePipelineRunStatus(logger *zap.SugaredLogger, run *v1a
 					Name:  "condition",
 					Value: "pass",
 				}}
+				break
 			}
 		}
 		for _, taskRunStatus := range pr.Status.TaskRuns {
