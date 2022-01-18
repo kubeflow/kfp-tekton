@@ -192,6 +192,8 @@ def sanitize_k8s_object(k8s_obj, type=None):
                     for sub_obj in k8s_obj)
     elif isinstance(k8s_obj, (datetime, date)):
       return k8s_obj
+    elif isinstance(k8s_obj, dsl.PipelineParam):
+      return k8s_obj
 
     if isinstance(k8s_obj, dict):
       return k8s_obj
