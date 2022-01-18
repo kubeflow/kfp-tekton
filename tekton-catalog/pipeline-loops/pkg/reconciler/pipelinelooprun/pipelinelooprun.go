@@ -600,11 +600,13 @@ func (c *Reconciler) cancelAllPipelineRuns(ctx context.Context, run *v1alpha1.Ru
 		return fmt.Errorf("could not list PipelineRuns %#v", err)
 	}
 	for _, currentRunningPr := range currentRunningPrs {
-		logger.Infof("Cancelling PipelineRun %s.", currentRunningPr.Name)
-		if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
-			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
-				"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
-			return nil
+		if !currentRunningPr.IsDone() && !currentRunningPr.IsCancelled() {
+			logger.Infof("Cancelling PipelineRun %s.", currentRunningPr.Name)
+			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
+				run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
+					"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
+				return nil
+			}
 		}
 	}
 	return nil
@@ -673,8 +675,16 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, run *v1alpha1.
 				}
 			}
 		}
-		for _, runStatus := range pr.Status.Runs {
-			if strings.HasPrefix(runStatus.PipelineTaskName, "pipelineloop-break-operation") {
+		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
+			Iteration: iteration,
+			Status:    &pr.Status,
+		}
+		if iteration > highestIteration {
+			highestIteration = iteration
+		}
+
+		for _, taskRunStatus := range pr.Status.TaskRuns {
+			if strings.HasPrefix(taskRunStatus.PipelineTaskName, "pipelineloop-break-operation") {
 				err = c.cancelAllPipelineRuns(ctx, run)
 				if err != nil {
 					return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to Run %s."+
@@ -689,25 +699,6 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, run *v1alpha1.
 				}}
 				break
 			}
-		}
-		for _, taskRunStatus := range pr.Status.TaskRuns {
-			if strings.HasPrefix(taskRunStatus.PipelineTaskName, "pipelineloop-break-operation") {
-				// Mark run successful and stop the loop pipelinerun
-				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
-					"PipelineRuns completed successfully with the conditions are met")
-				run.Status.Results = []runv1alpha1.RunResult{{
-					Name:  "condition",
-					Value: "pass",
-				}}
-			}
-		}
-
-		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
-			Iteration: iteration,
-			Status:    &pr.Status,
-		}
-		if iteration > highestIteration {
-			highestIteration = iteration
 		}
 	}
 	return highestIteration, currentRunningPrs, failedPrs, nil
