@@ -682,12 +682,28 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, run *v1alpha1.
 		if iteration > highestIteration {
 			highestIteration = iteration
 		}
-
+		for _, runStatus := range pr.Status.Runs {
+			if strings.HasPrefix(runStatus.PipelineTaskName, "pipelineloop-break-operation") {
+				err = c.cancelAllPipelineRuns(ctx, run)
+				if err != nil {
+					return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to Run %s."+
+						" %#v", run.Name, err)
+				}
+				// Mark run successful and stop the loop pipelinerun
+				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
+					"PipelineRuns completed successfully with the conditions are met")
+				run.Status.Results = []runv1alpha1.RunResult{{
+					Name:  "condition",
+					Value: "pass",
+				}}
+				break
+			}
+		}
 		for _, taskRunStatus := range pr.Status.TaskRuns {
 			if strings.HasPrefix(taskRunStatus.PipelineTaskName, "pipelineloop-break-operation") {
 				err = c.cancelAllPipelineRuns(ctx, run)
 				if err != nil {
-					return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to Run %s."+
+					return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to task run %s."+
 						" %#v", run.Name, err)
 				}
 				// Mark run successful and stop the loop pipelinerun
