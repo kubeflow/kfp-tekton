@@ -258,7 +258,7 @@ def load_pipeline_scripts() -> [(Path, str)]:
 
         path = path_name_dict["path"]
         name = path_name_dict.get("name") or Path(path).stem
-
+        copies = path_name_dict.get("copies", 1)
         if not path.startswith(pathsep):
             # path assumed to be relative to project root
             fp: Path = project_dir.joinpath(path)
@@ -267,8 +267,8 @@ def load_pipeline_scripts() -> [(Path, str)]:
             fp = Path(path)
 
         assert fp.exists(), f"Cannot find file: {fp.resolve()}"
-
-        pipeline_files_with_name.append((fp, name))
+        for i in range(int(copies)):
+            pipeline_files_with_name.append((fp, f'{name}{i}'))
 
     print(f"Loaded {len(pipeline_files_with_name)} pipelines from {TEST_CONFIG}\n")
 
