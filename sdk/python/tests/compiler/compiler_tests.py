@@ -387,6 +387,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.pipelineparams import pipelineparams_pipeline
     self._test_pipeline_workflow(pipelineparams_pipeline, 'pipelineparams.yaml', skip_noninlined=True)
 
+  def test_pipelineparam_env_workflow(self):
+    """
+    Test compiling a pipelineparams workflow.
+    """
+    from .testdata.pipelineparam_env import echo_pipeline
+    self._test_pipeline_workflow(echo_pipeline, 'pipelineparam_env.yaml', skip_noninlined=True)
+
   def test_retry_workflow(self):
     """
     Test compiling a retry task in workflow.
