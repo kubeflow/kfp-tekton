@@ -3,7 +3,6 @@ approvers:
  - ckadner
  - Tomcli
  - fenglixa
- - drewbutlerbb4
  - pugangxa
  - scrapcodes
 reviewers:
@@ -11,7 +10,7 @@ reviewers:
  - ckadner
  - Tomcli
  - fenglixa
- - drewbutlerbb4
  - pugangxa
  - jinchihe
  - scrapcodes
+ - yhwang
