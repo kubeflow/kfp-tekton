@@ -16,7 +16,7 @@ import (
 	
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-    cl "github.com/scrapcodes/cos-logger"
+	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/cos-logger/pkg/cos-logger"
 )
 
 func initializeLogger() {
