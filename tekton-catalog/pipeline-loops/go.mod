@@ -3,9 +3,9 @@ module github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops
 go 1.13
 
 require (
-	github.com/IBM/ibm-cos-sdk-go v1.8.0
 	github.com/google/go-cmp v0.5.6
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/kubeflow/kfp-tekton/tekton-catalog/cos-logger v0.0.0-20220119100302-3a19d5fa2f87
 	github.com/tektoncd/pipeline v0.30.0
 	go.uber.org/zap v1.19.1
 	gomodules.xyz/jsonpatch/v2 v2.2.0
