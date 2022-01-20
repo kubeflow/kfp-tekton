@@ -28,7 +28,7 @@ import (
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	pipelineloopclient "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/client"
 	pipelineloopinformer "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/informers/pipelineloop/v1alpha1/pipelineloop"
-	cl "github.com/scrapcodes/cos-logger"
+	cl "github.com/scrapcodes/kfp-tekton/tekton-catalog/cos-logger/pkg/cos-logger"
 	pipelineclient "github.com/tektoncd/pipeline/pkg/client/injection/client"
 	runinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1alpha1/run"
 	pipelineruninformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/pipelinerun"
