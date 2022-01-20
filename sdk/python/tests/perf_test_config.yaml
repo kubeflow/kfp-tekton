@@ -17,6 +17,7 @@
 pipeline_scripts:
   - name: "Flip-Coin-samples"
     path: "sdk/python/tests/compiler/testdata/condition_sample.py" # condition with simple python
+#    copies: 10 # Create multiple copies of same pipeline. It can be used with NUM_WORKERS env to Run same pipeline concurrently.
   - name: "Flip-Coin-Custom-Task-samples"
     path: "sdk/python/tests/compiler/testdata/condition_custom.py" # custom task condition with simple python
   - name: "Trusted-AI-samples"
