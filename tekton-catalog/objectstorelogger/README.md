@@ -1,4 +1,4 @@
-# cos-logger
+# objectstorelogger
 
 Log to cloud object storage for golang implemented as `io.Writer`.
 
@@ -7,7 +7,8 @@ Log to cloud object storage for golang implemented as `io.Writer`.
 Configure logger and add a multi write syncer for `zap` as follows,
 
 ```go
-package cos_logger
+package main
+
 import (
 	"fmt"
 	"os"
@@ -16,7 +17,7 @@ import (
 	
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/cos-logger/pkg/cos-logger"
+	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstorelogger/pkg/objectstorelogger"
 )
 
 func initializeLogger() {
@@ -62,7 +63,7 @@ func shutdownHook() {
 	go func() {
 		for {
 			<-c
-			err := objectStoreLogger.Close()
+			err := objectStoreLogger.Close() //causes a sync with object store.
 			fmt.Printf("Synced with object store... %v", err)
 			os.Exit(0)
 		}
