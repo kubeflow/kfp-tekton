@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"syscall"
 
-	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/cos-logger/pkg/cos-logger"
+	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstorelogger/pkg/objectstorelogger"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	pipelineloopclient "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/client"
@@ -107,9 +107,9 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 				w,
 				zap.InfoLevel,
 			)
-			logger := zap.New(core)
+			logger = zap.New(core).Sugar()
 			logger.Info("First log msg with object store logger.")
-			ctx = logging.WithLogger(ctx, logger.Sugar())
+			ctx = logging.WithLogger(ctx, logger)
 
 			// set up SIGHUP to send logs to object store before shutdown.
 			signal.Ignore(syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT)

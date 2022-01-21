@@ -18,7 +18,7 @@ limitations under the License.
 // package that can write to an io.Writer, including the standard library's log package.
 // or as an extension to uber-go/zap logger.
 
-package cos_logger
+package objectstorelogger
 
 import (
 	"bytes"
