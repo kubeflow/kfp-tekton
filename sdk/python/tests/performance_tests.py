@@ -369,10 +369,18 @@ def append_exec_times_to_output_file(pipeline_name: str,
         runs = tasks["runs"]["count"]
         run_elapsed = tasks["runs"]["total_elapsed"]
 
+    taskruns_average = taskrun_elapsed / taskruns if taskruns > 0 else taskrun_elapsed
+    runs_average = run_elapsed / runs if runs > 0 else run_elapsed
+    non_task_average = (taskrun_elapsed + run_elapsed) / (taskruns + runs) if (taskruns + runs) > 0 \
+                        else (taskrun_elapsed + run_elapsed)
+
     with open(OUTPUT_FILE, "a") as f:
         f.write(OUTPUT_SEP.join([
             pipeline_name, status, str(compile_time), str(submit_time), str(run_time),
-            str(taskruns), str(runs), str(taskrun_elapsed), str(run_elapsed)
+            str(taskruns), str(runs), str(taskrun_elapsed), str(run_elapsed),
+            str(taskrun_elapsed + run_elapsed), str(run_time - (taskrun_elapsed + run_elapsed)),
+            str(taskruns_average), str(runs_average),
+            str(taskruns + runs), str(non_task_average)
         ]))
         f.write("\n")
 
@@ -383,7 +391,9 @@ def create_output_file():
 
         f.write(OUTPUT_SEP.join([
             "Pipeline", "Status", "Compile_Time", "Submit_Time", "Run_Time",
-            "Num_TaskRuns", "Num_Runs", "Total_TaskRun_Time", "Total_Run_Time"
+            "Num_TaskRuns", "Num_Runs", "Total_TaskRun_Time", "Total_Run_Time",
+            "Total_Time_Spent_On_Tasks", "Time_Spent_Outside_Of_Tasks", "Average_Taskrun_Time",
+            "Average_RunCR_Time", "Total_Number_Of_Tasks", "Average_Time_Spent_Outside_Of_Tasks"
         ]))
         f.write("\n")
 
