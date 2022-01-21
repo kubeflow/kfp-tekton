@@ -23,12 +23,8 @@ metadata:
 data:
   enable: "false"
   defaultBucketName: "pipelineloop-default"
-  ibmStyleCredentials: "false"
   region: "us-south"
   accessKey: "<access key>"
   secretKey: "<secret key>"
-  # Below are IBM cloud specific credentials, available if the flag ibmStyleCredentials is true.
-  apiKey: "<APIKEY-dummy-1231231231-123abcdefgh>"
-  serviceInstanceID: "crn:v1:bluemix:public:cloud-object-storage:global:a/ID-dummy-1231231231-123abcdefgh:dummy-values::"
   serviceEndpoint: "https://s3.us-south.cloud-object-storage.appdomain.cloud"
-  authEndpoint: "https://iam.cloud.ibm.com/identity/token"
+  token: ""

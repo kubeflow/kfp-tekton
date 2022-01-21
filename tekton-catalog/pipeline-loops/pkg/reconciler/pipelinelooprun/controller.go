@@ -21,8 +21,10 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
+	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstorelogger/pkg/objectstorelogger"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	pipelineloopclient "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/client"
@@ -34,12 +36,35 @@ import (
 	pipelinecontroller "github.com/tektoncd/pipeline/pkg/controller"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/system"
 )
+
+func load(ctx context.Context, kubeClientSet kubernetes.Interface, o *cl.ObjectStoreLogConfig) error {
+	configMap, err := kubeClientSet.CoreV1().ConfigMaps(system.Namespace()).
+		Get(ctx, "object-store-config", metaV1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	if o.Enable, err = strconv.ParseBool(configMap.Data["enable"]); err != nil || !o.Enable {
+		return err
+	}
+
+	o.AccessKey = configMap.Data["accessKey"]
+	o.SecretKey = configMap.Data["secretKey"]
+	o.Region = configMap.Data["region"]
+	o.ServiceEndpoint = configMap.Data["serviceEndpoint"]
+	o.DefaultBucketName = configMap.Data["defaultBucketName"]
+	o.CreateBucket = false
+	o.Token = configMap.Data["token"]
+	return nil
+}
 
 // NewController instantiates a new controller.Impl from knative.dev/pkg/controller
 func NewController(namespace string) func(context.Context, configmap.Watcher) *controller.Impl {
@@ -60,10 +85,17 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
 			pipelineRunLister:     pipelineRunInformer.Lister(),
 		}
-		objectStoreLogger := Logger{
+		loggerConfig := cl.ObjectStoreLogConfig{}
+		objectStoreLogger := cl.Logger{
 			MaxSize: 1024 * 100, // TODO make it configurable via a configmap.
 		}
-		err := objectStoreLogger.LoadDefaults(ctx, kubeclientset)
+		err := load(ctx, kubeclientset, &loggerConfig)
+		if err == nil {
+			err = objectStoreLogger.LoadDefaults(loggerConfig)
+			if err == nil {
+				_ = objectStoreLogger.LogConfig.CreateNewBucket(loggerConfig.DefaultBucketName)
+			}
+		}
 		if err == nil && objectStoreLogger.LogConfig.Enable {
 			logger.Info("Loading object store logger...")
 			w := zapcore.NewMultiWriteSyncer(
@@ -75,9 +107,9 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 				w,
 				zap.InfoLevel,
 			)
-			logger := zap.New(core)
+			logger = zap.New(core).Sugar()
 			logger.Info("First log msg with object store logger.")
-			ctx = logging.WithLogger(ctx, logger.Sugar())
+			ctx = logging.WithLogger(ctx, logger)
 
 			// set up SIGHUP to send logs to object store before shutdown.
 			signal.Ignore(syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT)
