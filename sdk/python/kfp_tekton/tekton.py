@@ -16,7 +16,7 @@ from typing import List, Iterable, Union, Optional, TypeVar, Text
 from kfp.dsl import _pipeline_param, _for_loop, _pipeline
 from kfp import dsl
 from kfp import components
-from kfp.dsl._for_loop import LoopArguments, ItemList, LoopArgumentVariable
+from kfp.dsl._for_loop import LoopArguments, ItemList
 from kfp.dsl._pipeline_param import ConditionOperator, PipelineParam
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 from kfp_tekton.compiler._op_to_template import TEKTON_BASH_STEP_IMAGE
