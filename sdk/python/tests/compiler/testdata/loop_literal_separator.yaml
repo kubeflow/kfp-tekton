@@ -22,21 +22,25 @@ spec:
     - name: my_pipe_param
       default: '10'
     tasks:
-    - name: my-pipeline-for-loop-3
+    - name: my-pipeline-for-loop-4
       params:
+      - name: loop-item-param-2
+        value: 1,2
+      - name: loop-item-param-3
+        value: ','
       - name: my_pipe_param
         value: $(params.my_pipe_param)
-      - name: separator
-        value: ','
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         spec:
           pipelineSpec:
             params:
-            - name: my_pipe_param
+            - name: loop-item-param-2
               type: string
-            - name: separator
+            - name: loop-item-param-3
+              type: string
+            - name: my_pipe_param
               type: string
             tasks:
             - name: my-in-coop1
@@ -74,5 +78,5 @@ spec:
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: loop-item-param-2
-          iterateParamStringSeparator: ','
+          iterateParamStringSeparator: loop-item-param-3
   timeout: 525600m
