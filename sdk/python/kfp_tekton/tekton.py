@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import List, Iterable, Union, Optional, TypeVar, Text
 
-from typing import List, Iterable, Union, Optional, TypeVar
-from kfp.dsl import _pipeline_param, _for_loop
+from kfp.dsl import _pipeline_param, _for_loop, _pipeline
 from kfp import dsl
 from kfp import components
-from kfp.dsl._pipeline_param import ConditionOperator
+from kfp.dsl._for_loop import LoopArguments, ItemList, LoopArgumentVariable
+from kfp.dsl._pipeline_param import ConditionOperator, PipelineParam
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 from kfp_tekton.compiler._op_to_template import TEKTON_BASH_STEP_IMAGE
 
@@ -204,8 +205,23 @@ def Break():
     return BreakOp
 
 
-class Loop(dsl.ParallelFor):
+class TektonLoopArguments(LoopArguments):
+  def __init__(self,
+               items: Union[str, ItemList, dsl.PipelineParam],
+               code: Text,
+               name_override: Optional[Text] = None,
+               op_name: Optional[Text] = None,
+               *args,
+               **kwargs):
+    if isinstance(items, str):
+        # temporary list wrapping for validation to pass
+        super().__init__([items], code, name_override, op_name, *args, **kwargs)
+        self.items_or_pipeline_param = items
+    else:
+        super().__init__(items, code, name_override, op_name, *args, **kwargs)
 
+
+class Loop(dsl.ParallelFor):
   @classmethod
   def sequential(self,
                  loop_args: _for_loop.ItemList):
@@ -227,21 +243,33 @@ class Loop(dsl.ParallelFor):
     return Loop(start=a, step=b, end=c, parallelism=parallelism)
 
   def __init__(self,
-               loop_args: Union[_for_loop.ItemList,
+               loop_args: Union[str,
+                                _for_loop.ItemList,
                                 _pipeline_param.PipelineParam] = None,
-               start: _Num = None,
-               end: _Num = None,
-               step: _Num = None,
+               start: Union[_Num, PipelineParam, None] = None,
+               end: Union[_Num, PipelineParam, None] = None,
+               step: Union[_Num, PipelineParam, None] = None,
                separator: Optional[str] = None,
                parallelism: Optional[int] = None):
-    tekton_params = (start, end, step, separator)
-    if loop_args and not [x for x in tekton_params if x is not None]:
-        super().__init__(loop_args=loop_args, parallelism=parallelism)
-    elif loop_args and separator:
-        # TODO: implement loop separator DSL extension
-        pass
-    elif start and end:
-        # TODO: implement loop start, end, step DSL extension
-        pass
+    if start and end:
+        raise RuntimeError("Not Implemented Yet: start-step-end")
+
+    if loop_args is None and (start is None or end is None):
+        raise RuntimeError("loop_args or start/end parameters are missing for 'Loop' class")
+
+    if isinstance(loop_args, str):
+        # temporary list wrapping for validation to pass
+        super().__init__(loop_args=[loop_args], parallelism=parallelism)
+        self.loop_args = TektonLoopArguments(
+            loop_args,
+            code=str(
+                _pipeline.Pipeline.get_default_pipeline().get_next_group_id()
+            )
+        )
+        self.items_is_string = True
     else:
-        raise("loop_args or start/end parameters are missing for 'Loop' class")
+        super().__init__(loop_args=loop_args, parallelism=parallelism)
+        self.items_is_string = False
+
+    if separator is not None:
+        self.separator = separator
