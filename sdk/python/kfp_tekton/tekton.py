@@ -274,7 +274,6 @@ class Loop(dsl.ParallelFor):
         self.loop_args = TektonLoopArguments(
             loop_args,
             code=next_id(),
-            value=loop_args,
         )
         self.items_is_string = True
     else:
