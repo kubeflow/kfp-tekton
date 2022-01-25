@@ -42,12 +42,14 @@ implementation:
         - {inputValue: my_pipe_param}
 '''
 
+
 @dsl.pipeline(name='my-pipeline')
 def pipeline(my_pipe_param: int = 10):
     loop_args = '1,2'
     with Loop.from_string(loop_args, separator=',') as item:
         op1_template = components.load_component_from_text(op1_yaml)
         op1_template(item, my_pipe_param)
+
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
