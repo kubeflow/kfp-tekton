@@ -220,6 +220,14 @@ class TektonLoopArguments(LoopArguments):
     else:
         super().__init__(items, code, name_override, op_name, *args, **kwargs)
 
+  def to_str_for_task_yaml(self):
+    if isinstance(self.items_or_pipeline_param, str):
+      return self.items_or_pipeline_param
+    else:
+      raise ValueError(
+          'You should only call this method on loop args which are string literals, '
+          'not lists or pipeline param items.')
+
 
 class Loop(dsl.ParallelFor):
   @classmethod
@@ -257,19 +265,25 @@ class Loop(dsl.ParallelFor):
     if loop_args is None and (start is None or end is None):
         raise RuntimeError("loop_args or start/end parameters are missing for 'Loop' class")
 
+    def next_id():
+        return str(_pipeline.Pipeline.get_default_pipeline().get_next_group_id())
+
     if isinstance(loop_args, str):
         # temporary list wrapping for validation to pass
         super().__init__(loop_args=[loop_args], parallelism=parallelism)
         self.loop_args = TektonLoopArguments(
             loop_args,
-            code=str(
-                _pipeline.Pipeline.get_default_pipeline().get_next_group_id()
-            )
+            code=next_id(),
+            value=loop_args,
         )
         self.items_is_string = True
     else:
         super().__init__(loop_args=loop_args, parallelism=parallelism)
         self.items_is_string = False
 
+    self.separator = None
     if separator is not None:
-        self.separator = separator
+        self.separator = PipelineParam(
+            name=LoopArguments._make_name(next_id()),
+            value=separator
+        )
