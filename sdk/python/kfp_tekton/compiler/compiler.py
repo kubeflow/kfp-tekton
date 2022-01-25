@@ -331,6 +331,8 @@ class TektonCompiler(Compiler):
         'spec': {},
         'depends': []
       }
+      if hasattr(sub_group, 'separator') and sub_group.separator is not None:
+        self.loops_pipeline[group_name]['separator'] = sub_group.separator
       for subvarName in sub_group.loop_args.referenced_subvar_names:
         if subvarName != '__iter__':
           self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + subvarName)
@@ -368,6 +370,7 @@ class TektonCompiler(Compiler):
           withparam_value = '$(tasks.%s.results.%s)' % (
             sanitize_k8s_name(pipeline_param.op_name),
             param_name)
+
         self.loops_pipeline[group_name]['spec']['params'] = [{
           "name": sub_group.loop_args.full_name,
           "value": withparam_value
@@ -391,6 +394,15 @@ class TektonCompiler(Compiler):
           "name": sub_group.loop_args.full_name,
           "value": loop_args_str_value
         }]
+
+      if hasattr(sub_group, 'separator') and sub_group.separator is not None:
+        # separator should be added as a parameter
+        sep_param = {
+          "name": 'separator',
+          "value": sub_group.separator
+        }
+        self.loops_pipeline[group_name]['spec'].setdefault('params', []).append(sep_param)
+
       # get other input params
       for input in inputs.keys():
         if input == sub_group.name:
