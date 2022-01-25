@@ -239,6 +239,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.withitem_nested import pipeline
     self._test_pipeline_workflow(pipeline, 'withitem_nested.yaml')
 
+  def test_loop_with_literal_separator_workflow(self):
+    """
+    Test compiling a loop with literal separator in workflow.
+    """
+    from .testdata.loop_literal_separator import pipeline
+    self._test_pipeline_workflow(pipeline, 'loop_literal_separator.yaml')
+
   def test_nested_recur_runafter_workflow(self):
     """
     Test compiling a nested recursion pipeline with graph dependencies.

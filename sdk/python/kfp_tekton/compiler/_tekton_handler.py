@@ -230,6 +230,9 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 # remove from pipeline run spec
                 del custom_task[custom_task_key]['spec']['parallelism']
             custom_task_cr['spec']['iterateParam'] = custom_task[custom_task_key]['loop_args']
+            separator = custom_task[custom_task_key].get('separator')
+            if separator is not None:
+                custom_task_cr['spec']['iterateParamStringSeparator'] = separator
             for custom_task_param in custom_task[custom_task_key]['spec']['params']:
                 if custom_task_param['name'] != custom_task[custom_task_key]['loop_args'] and '$(tasks.' in custom_task_param['value']:
                     custom_task_cr = json.loads(
