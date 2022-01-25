@@ -223,24 +223,24 @@ class TektonLoopArguments(LoopArguments):
 
 class Loop(dsl.ParallelFor):
   @classmethod
-  def sequential(self,
+  def sequential(cls,
                  loop_args: _for_loop.ItemList):
-    return Loop(loop_args=loop_args, parallelism=1)
+    return cls(loop_args=loop_args, parallelism=1)
 
   @classmethod
-  def from_string(self,
+  def from_string(cls,
                   loop_args: Union[str, _pipeline_param.PipelineParam],
                   separator: Optional[str] = None,
                   parallelism: Optional[int] = None):
-    return Loop(loop_args=loop_args, separator=separator, parallelism=parallelism)
+    return cls(loop_args=loop_args, separator=separator, parallelism=parallelism)
 
   @classmethod
-  def range(self,
-            a: _Num,
-            b: _Num,
-            c: Optional[_Num] = None,
+  def range(cls,
+            start: _Num,
+            end: _Num,
+            step: Optional[_Num] = None,
             parallelism: Optional[int] = None):
-    return Loop(start=a, step=b, end=c, parallelism=parallelism)
+    return Loop(start=start, step=step, end=end, parallelism=parallelism)
 
   def __init__(self,
                loop_args: Union[str,
