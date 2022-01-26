@@ -248,7 +248,7 @@ class Loop(dsl.ParallelFor):
             end: _Num,
             step: Optional[_Num] = None,
             parallelism: Optional[int] = None):
-    return Loop(start=start, step=step, end=end, parallelism=parallelism)
+    return cls(start=start, step=step, end=end, parallelism=parallelism)
 
   def __init__(self,
                loop_args: Union[str,
@@ -259,30 +259,36 @@ class Loop(dsl.ParallelFor):
                step: Union[_Num, PipelineParam, None] = None,
                separator: Optional[str] = None,
                parallelism: Optional[int] = None):
+    self.start = None
+    self.end = None
+    self.step = None
     if start and end:
-        raise RuntimeError("Not Implemented Yet: start-step-end")
-
-    if loop_args is None and (start is None or end is None):
-        raise RuntimeError("loop_args or start/end parameters are missing for 'Loop' class")
-
-    def next_id():
-        return str(_pipeline.Pipeline.get_default_pipeline().get_next_group_id())
-
-    if isinstance(loop_args, str):
-        # temporary list wrapping for validation to pass
-        super().__init__(loop_args=[loop_args], parallelism=parallelism)
-        self.loop_args = TektonLoopArguments(
-            loop_args,
-            code=next_id(),
-        )
-        self.items_is_string = True
+        super().__init__(loop_args=["iteration"], parallelism=parallelism)
+        self.start = start
+        self.end = end
+        self.step = step if step is not None else None
     else:
-        super().__init__(loop_args=loop_args, parallelism=parallelism)
-        self.items_is_string = False
+        if loop_args is None and (start is None or end is None):
+            raise RuntimeError("loop_args or start/end parameters are missing for 'Loop' class")
 
-    self.separator = None
-    if separator is not None:
-        self.separator = PipelineParam(
-            name=LoopArguments._make_name(next_id()),
-            value=separator
-        )
+        def next_id():
+            return str(_pipeline.Pipeline.get_default_pipeline().get_next_group_id())
+
+        if isinstance(loop_args, str):
+            # temporary list wrapping for validation to pass
+            super().__init__(loop_args=[loop_args], parallelism=parallelism)
+            self.loop_args = TektonLoopArguments(
+                loop_args,
+                code=next_id(),
+            )
+            self.items_is_string = True
+        else:
+            super().__init__(loop_args=loop_args, parallelism=parallelism)
+            self.items_is_string = False
+
+        self.separator = None
+        if separator is not None:
+            self.separator = PipelineParam(
+                name=LoopArguments._make_name(next_id()),
+                value=separator
+            )

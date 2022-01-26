@@ -333,6 +333,10 @@ class TektonCompiler(Compiler):
       }
       if hasattr(sub_group, 'separator') and sub_group.separator is not None:
         self.loops_pipeline[group_name]['separator'] = sub_group.separator.full_name
+      if hasattr(sub_group, 'start') and sub_group.start is not None:
+        self.loops_pipeline[group_name]['start'] = sub_group.start
+        self.loops_pipeline[group_name]['end'] = sub_group.end
+        self.loops_pipeline[group_name]['step'] = sub_group.step
       for subvarName in sub_group.loop_args.referenced_subvar_names:
         if subvarName != '__iter__':
           self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + subvarName)
@@ -408,6 +412,40 @@ class TektonCompiler(Compiler):
           "value": sub_group.separator.value
         }
         self.loops_pipeline[group_name]['spec']['params'].append(sep_param)
+
+      if hasattr(sub_group, 'start') and sub_group.start is not None:
+        # start, end, step params should be added as a parameter
+        # isinstance(sub_group.start, dsl.PipelineParam)
+        def process_parameter(parameter):
+          parameter_value = str(parameter)
+          if isinstance(parameter, dsl.PipelineParam):
+            if parameter.op_name:
+              parameter_value = '$(tasks.' + parameter.op_name + '.results.' + sanitize_k8s_name(parameter.name) + ')'
+            else:
+              parameter_value = '$(params.' + parameter.name + ')'
+          return parameter_value
+
+        def get_spec_param_keys(param_specs):
+          spec_param_keys = []
+          for param_spec in param_specs:
+            spec_param_keys.append(param_spec['name'])
+          return spec_param_keys
+        start_param = {
+          "name": 'from',
+          "value": process_parameter(sub_group.start)
+        }
+        self.loops_pipeline[group_name]['spec']['params'].append(start_param)
+        end_param = {
+          "name": 'to',
+          "value": process_parameter(sub_group.end)
+        }
+        self.loops_pipeline[group_name]['spec']['params'].append(end_param)
+        if sub_group.step is not None:
+          step_param = {
+            "name": 'step',
+            "value": process_parameter(sub_group.step)
+          }
+          self.loops_pipeline[group_name]['spec']['params'].append(step_param)
 
       # get other input params
       for input in inputs.keys():
