@@ -64,8 +64,14 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
     ```shell
     kubectl get svc ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
     ```
+    
+6. (GPU worker nodes only) If your Kubernetes cluster has a mixture of CPU and GPU worker nodes, it's recommended to disable the Tekton default affinity assistant so that Tekton won't schedule too many CPU workloads on the GPU nodes.
+    ```shell
+    kubectl patch cm feature-flags -n tekton-pipelines \
+      -p '{"data":{"disable-affinity-assistant": "true"}}'
+    ```
 
-6. (OpenShift only) If you are running the standalone KFP-Tekton on OpenShift, apply the necessary security context constraint below
+7. (OpenShift only) If you are running the standalone KFP-Tekton on OpenShift, apply the necessary security context constraint below
    ```shell
    oc apply -k manifests/kustomize/third-party/openshift/standalone
    ```
