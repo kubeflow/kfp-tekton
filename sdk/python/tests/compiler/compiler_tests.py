@@ -84,6 +84,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.condition_custom_task import flipcoin_pipeline
     self._test_pipeline_workflow(flipcoin_pipeline, 'condition_custom_task.yaml', skip_noninlined=True)
 
+  def test_loop_with_params_in_json_workflow(self):
+    """
+    Test compiling a loop workflow with pipeline params in json
+    """
+    from .testdata.loop_with_params_in_json import parallelfor_pipeline_param_in_items_resolving
+    self._test_pipeline_workflow(parallelfor_pipeline_param_in_items_resolving, 'loop_with_params_in_json.yaml', skip_noninlined=True)
+
   def test_condition_dependency(self):
     """
     Test dependency on Tekton conditional task.
