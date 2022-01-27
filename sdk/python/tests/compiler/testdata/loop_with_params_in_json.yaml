@@ -1,0 +1,438 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: parallelfor-pipeline-param-in-items-resolving
+  annotations:
+    tekton.dev/output_artifacts: '{"produce-message": [{"key": "artifacts/$PIPELINERUN/produce-message/Output.tgz",
+      "name": "produce-message-Output", "path": "/tmp/outputs/Output/data"}], "produce-message-2":
+      [{"key": "artifacts/$PIPELINERUN/produce-message-2/Output.tgz", "name": "produce-message-2-Output",
+      "path": "/tmp/outputs/Output/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"consume": [], "consume-2": [], "consume-3": [],
+      "consume-4": [], "consume-5": [], "produce-message": [["Output", "$(results.output.path)"]],
+      "produce-message-2": [["Output", "$(results.output.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"name": "fname1", "type":
+      "String"}, {"name": "fname2", "type": "String"}], "name": "Parallelfor pipeline
+      param in items resolving"}'
+spec:
+  params:
+  - name: fname1
+    value: ''
+  - name: fname2
+    value: ''
+  pipelineSpec:
+    params:
+    - name: fname1
+    - name: fname2
+    tasks:
+    - name: produce-message
+      params:
+      - name: fname1
+        value: $(params.fname1)
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - --fname1
+          - $(inputs.params.fname1)
+          - '----output-paths'
+          - $(results.output.path)
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def produce_message(fname1):
+                return "My name is %s" % fname1
+
+            def _serialize_str(str_value: str) -> str:
+                if not isinstance(str_value, str):
+                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(str(str_value), str(type(str_value))))
+                return str_value
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Produce message', description='')
+            _parser.add_argument("--fname1", dest="fname1", type=str, required=True, default=argparse.SUPPRESS)
+            _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
+            _parsed_args = vars(_parser.parse_args())
+            _output_files = _parsed_args.pop("_output_paths", [])
+
+            _outputs = produce_message(**_parsed_args)
+
+            _outputs = [_outputs]
+
+            _output_serializers = [
+                _serialize_str,
+
+            ]
+
+            import os
+            for idx, output_file in enumerate(_output_files):
+                try:
+                    os.makedirs(os.path.dirname(output_file))
+                except OSError:
+                    pass
+                with open(output_file, 'w') as f:
+                    f.write(_output_serializers[idx](_outputs[idx]))
+          image: python:3.7
+        params:
+        - name: fname1
+        results:
+        - name: output
+          description: /tmp/outputs/Output/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce message",
+              "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
+              message@sha256=8b1a730905b7cb192c0dd1906d4332c8d3533193a3b8defef1adc2f15706e7ed"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+    - name: produce-message-2
+      params:
+      - name: fname2
+        value: $(params.fname2)
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - --fname1
+          - $(inputs.params.fname2)
+          - '----output-paths'
+          - $(results.output.path)
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def produce_message(fname1):
+                return "My name is %s" % fname1
+
+            def _serialize_str(str_value: str) -> str:
+                if not isinstance(str_value, str):
+                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(str(str_value), str(type(str_value))))
+                return str_value
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Produce message', description='')
+            _parser.add_argument("--fname1", dest="fname1", type=str, required=True, default=argparse.SUPPRESS)
+            _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
+            _parsed_args = vars(_parser.parse_args())
+            _output_files = _parsed_args.pop("_output_paths", [])
+
+            _outputs = produce_message(**_parsed_args)
+
+            _outputs = [_outputs]
+
+            _output_serializers = [
+                _serialize_str,
+
+            ]
+
+            import os
+            for idx, output_file in enumerate(_output_files):
+                try:
+                    os.makedirs(os.path.dirname(output_file))
+                except OSError:
+                    pass
+                with open(output_file, 'w') as f:
+                    f.write(_output_serializers[idx](_outputs[idx]))
+          image: python:3.7
+        params:
+        - name: fname2
+        results:
+        - name: output
+          description: /tmp/outputs/Output/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce message",
+              "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
+              message@sha256=8b1a730905b7cb192c0dd1906d4332c8d3533193a3b8defef1adc2f15706e7ed"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+    - name: parallelfor-pipeline-param-in-items-reso-for-loop-2
+      params:
+      - name: loop-item-param-1
+        value: '["My name is $(params.fname1)", "My name is $(params.fname2)"]'
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: loop-item-param-1
+              type: string
+            tasks:
+            - name: consume
+              params:
+              - name: loop-item-param-1
+                value: $(params.loop-item-param-1)
+              taskSpec:
+                steps:
+                - name: main
+                  args:
+                  - --param1
+                  - $(inputs.params.loop-item-param-1)
+                  command:
+                  - sh
+                  - -ec
+                  - |
+                    program_path=$(mktemp)
+                    printf "%s" "$0" > "$program_path"
+                    python3 -u "$program_path" "$@"
+                  - |
+                    def consume(param1):
+                        print(param1)
+
+                    import argparse
+                    _parser = argparse.ArgumentParser(prog='Consume', description='')
+                    _parser.add_argument("--param1", dest="param1", type=str, required=True, default=argparse.SUPPRESS)
+                    _parsed_args = vars(_parser.parse_args())
+
+                    _outputs = consume(**_parsed_args)
+                  image: python:3.7
+                params:
+                - name: loop-item-param-1
+                  type: string
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
+                      "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
+                    tekton.dev/template: ''
+              timeout: 525600m
+          iterateParam: loop-item-param-1
+    - name: parallelfor-pipeline-param-in-items-reso-for-loop-4
+      params:
+      - name: loop-item-param-3
+        value: '[{"first_name": "$(params.fname1)", "message": "My name is $(params.fname1)"},
+          {"first_name": "$(params.fname2)", "message": "My name is $(params.fname2)"}]'
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: loop-item-param-3-subvar-first_name
+              type: string
+            - name: loop-item-param-3-subvar-message
+              type: string
+            tasks:
+            - name: consume-2
+              params:
+              - name: loop-item-param-3-subvar-first_name
+                value: $(params.loop-item-param-3-subvar-first_name)
+              taskSpec:
+                steps:
+                - name: main
+                  args:
+                  - --param1
+                  - $(inputs.params.loop-item-param-3-subvar-first_name)
+                  command:
+                  - sh
+                  - -ec
+                  - |
+                    program_path=$(mktemp)
+                    printf "%s" "$0" > "$program_path"
+                    python3 -u "$program_path" "$@"
+                  - |
+                    def consume(param1):
+                        print(param1)
+
+                    import argparse
+                    _parser = argparse.ArgumentParser(prog='Consume', description='')
+                    _parser.add_argument("--param1", dest="param1", type=str, required=True, default=argparse.SUPPRESS)
+                    _parsed_args = vars(_parser.parse_args())
+
+                    _outputs = consume(**_parsed_args)
+                  image: python:3.7
+                params:
+                - name: loop-item-param-3-subvar-first_name
+                  type: string
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
+                      "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
+                    tekton.dev/template: ''
+              timeout: 525600m
+            - name: consume-3
+              params:
+              - name: loop-item-param-3-subvar-message
+                value: $(params.loop-item-param-3-subvar-message)
+              taskSpec:
+                steps:
+                - name: main
+                  args:
+                  - --param1
+                  - $(inputs.params.loop-item-param-3-subvar-message)
+                  command:
+                  - sh
+                  - -ec
+                  - |
+                    program_path=$(mktemp)
+                    printf "%s" "$0" > "$program_path"
+                    python3 -u "$program_path" "$@"
+                  - |
+                    def consume(param1):
+                        print(param1)
+
+                    import argparse
+                    _parser = argparse.ArgumentParser(prog='Consume', description='')
+                    _parser.add_argument("--param1", dest="param1", type=str, required=True, default=argparse.SUPPRESS)
+                    _parsed_args = vars(_parser.parse_args())
+
+                    _outputs = consume(**_parsed_args)
+                  image: python:3.7
+                params:
+                - name: loop-item-param-3-subvar-message
+                  type: string
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
+                      "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
+                    tekton.dev/template: ''
+              timeout: 525600m
+          iterateParam: loop-item-param-3
+    - name: parallelfor-pipeline-param-in-items-reso-for-loop-6
+      params:
+      - name: loop-item-param-5
+        value: '[{"first_name": "$(params.fname1)", "message": "$(tasks.produce-message.results.output)"},
+          {"first_name": "$(params.fname2)", "message": "$(tasks.produce-message-2.results.output)"}]'
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: loop-item-param-5-subvar-first_name
+              type: string
+            - name: loop-item-param-5-subvar-message
+              type: string
+            tasks:
+            - name: consume-4
+              params:
+              - name: loop-item-param-5-subvar-first_name
+                value: $(params.loop-item-param-5-subvar-first_name)
+              taskSpec:
+                steps:
+                - name: main
+                  args:
+                  - --param1
+                  - $(inputs.params.loop-item-param-5-subvar-first_name)
+                  command:
+                  - sh
+                  - -ec
+                  - |
+                    program_path=$(mktemp)
+                    printf "%s" "$0" > "$program_path"
+                    python3 -u "$program_path" "$@"
+                  - |
+                    def consume(param1):
+                        print(param1)
+
+                    import argparse
+                    _parser = argparse.ArgumentParser(prog='Consume', description='')
+                    _parser.add_argument("--param1", dest="param1", type=str, required=True, default=argparse.SUPPRESS)
+                    _parsed_args = vars(_parser.parse_args())
+
+                    _outputs = consume(**_parsed_args)
+                  image: python:3.7
+                params:
+                - name: loop-item-param-5-subvar-first_name
+                  type: string
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
+                      "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
+                    tekton.dev/template: ''
+              timeout: 525600m
+            - name: consume-5
+              params:
+              - name: loop-item-param-5-subvar-message
+                value: $(params.loop-item-param-5-subvar-message)
+              taskSpec:
+                steps:
+                - name: main
+                  args:
+                  - --param1
+                  - $(inputs.params.loop-item-param-5-subvar-message)
+                  command:
+                  - sh
+                  - -ec
+                  - |
+                    program_path=$(mktemp)
+                    printf "%s" "$0" > "$program_path"
+                    python3 -u "$program_path" "$@"
+                  - |
+                    def consume(param1):
+                        print(param1)
+
+                    import argparse
+                    _parser = argparse.ArgumentParser(prog='Consume', description='')
+                    _parser.add_argument("--param1", dest="param1", type=str, required=True, default=argparse.SUPPRESS)
+                    _parsed_args = vars(_parser.parse_args())
+
+                    _outputs = consume(**_parsed_args)
+                  image: python:3.7
+                params:
+                - name: loop-item-param-5-subvar-message
+                  type: string
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
+                      "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
+                    tekton.dev/template: ''
+              timeout: 525600m
+          iterateParam: loop-item-param-5
+  timeout: 525600m

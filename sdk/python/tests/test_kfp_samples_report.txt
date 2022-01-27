@@ -9,7 +9,7 @@ SUCCESS: input_artifact_raw_value.py
 SUCCESS: loop_over_lightweight_output.py
 SUCCESS: opsgroups.py
 SUCCESS: parallelfor_item_argument_resolving.py
-FAILURE: parallelfor_pipeline_param_in_items_resolving.py
+SUCCESS: parallelfor_pipeline_param_in_items_resolving.py
 SUCCESS: param_op_transform.py
 SUCCESS: param_substitutions.py
 SUCCESS: pipelineparams.py
