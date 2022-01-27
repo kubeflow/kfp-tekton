@@ -383,6 +383,18 @@ class TektonCompiler(Compiler):
         }]
       else:
         # Need to sanitize the dict keys for consistency.
+        def process_pipelineparam(s):
+          if "{{pipelineparam" in s:
+            pipe_params = re.findall(r"{{pipelineparam:op=([^ \t\n,]*);name=([^ \t\n,]*)}}", s)
+            for pipe_param in pipe_params:
+              if pipe_param[0] == '':
+                s = s.replace("{{pipelineparam:op=%s;name=%s}}" % pipe_param, '$(params.%s)' % pipe_param[1])
+              else:
+                param_name = sanitize_k8s_name(pipe_param[1])
+                s = s.replace("{{pipelineparam:op=%s;name=%s}}" % pipe_param, '$(tasks.%s.results.%s)' % (
+                  sanitize_k8s_name(pipe_param[0]),
+                  param_name))
+          return s
         loop_arg_value = sub_group.loop_args.to_list_for_task_yaml()
         loop_args_str_value = ''
         sanitized_tasks = []
@@ -390,10 +402,24 @@ class TektonCompiler(Compiler):
           for argument_set in loop_arg_value:
             c_dict = {}
             for k, v in argument_set.items():
+              if isinstance(v, dsl.PipelineParam):
+                if v.op_name is None:
+                  v = '$(params.%s)' % v.name
+                else:
+                  param_name = sanitize_k8s_name(v.name)
+                  v = '$(tasks.%s.results.%s)' % (
+                    sanitize_k8s_name(v.op_name),
+                    param_name)
+              else:
+                if isinstance(v, str):
+                  v = process_pipelineparam(v)
               c_dict[sanitize_k8s_name(k, True)] = v
             sanitized_tasks.append(c_dict)
           loop_args_str_value = json.dumps(sanitized_tasks, sort_keys=True)
         else:
+          for i, value in enumerate(loop_arg_value):
+            if isinstance(value, str):
+              loop_arg_value[i] = process_pipelineparam(value)
           loop_args_str_value = json.dumps(loop_arg_value)
 
         self.loops_pipeline[group_name]['spec']['params'] = [{
