@@ -223,7 +223,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     'type': 'string'
                 } for sub_param in custom_task[custom_task_key]['loop_sub_args']])
 
-            # add loop special filed
+            # add loop special fields
             custom_task_cr['kind'] = 'PipelineLoop'
             if custom_task[custom_task_key]['spec'].get('parallelism') is not None:
                 custom_task_cr['spec']['parallelism'] = custom_task[custom_task_key]['spec']['parallelism']
