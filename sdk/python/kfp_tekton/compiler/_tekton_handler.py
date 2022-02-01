@@ -235,12 +235,12 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 custom_task_cr['spec']['iterateParamStringSeparator'] = separator
             if custom_task[custom_task_key].get('start') is not None:
                 start_end_step_keys = ['from', 'to', 'step']
-                for i, value in enumerate(custom_task_cr['spec']['pipelineSpec']['params']):
-                    if value['name'] in start_end_step_keys:
-                        custom_task_cr['spec']['pipelineSpec']['params'].pop(i)
-                for i, custom_task_param in enumerate(custom_task[custom_task_key]['spec']['params']):
-                    if custom_task_param['name'] == custom_task_cr['spec']['iterateParam']:
-                        custom_task[custom_task_key]['spec']['params'].pop(i)
+                custom_task_cr['spec']['pipelineSpec']['params'] = [value for value
+                                                                    in custom_task_cr['spec']['pipelineSpec']['params']
+                                                                    if value['name'] not in start_end_step_keys]
+                custom_task[custom_task_key]['spec']['params'] = [custom_task_param for custom_task_param
+                                                                  in custom_task[custom_task_key]['spec']['params']
+                                                                  if custom_task_param['name'] != custom_task_cr['spec']['iterateParam']]
 
                 custom_task_cr['spec']['iterateNumeric'] = custom_task_cr['spec']['iterateParam']
                 custom_task_cr['spec'].pop('iterateParam')
@@ -367,11 +367,12 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
     for i, task in enumerate(workflow['spec']['pipelineSpec']['tasks']):
         searched_params = []
         if task.get('params'):
-            for j, workflow_param in enumerate(task['params']):
-                if workflow_param['name'] in searched_params:
-                    workflow['spec']['pipelineSpec']['tasks'][i]['params'].pop(j)
-                else:
+            new_params_spec = []
+            for workflow_param in task['params']:
+                if workflow_param['name'] not in searched_params:
+                    new_params_spec.append(workflow_param)
                     searched_params.append(workflow_param['name'])
+            workflow['spec']['pipelineSpec']['tasks'][i]['params'] = new_params_spec
     return custom_task_crs, workflow
 
 

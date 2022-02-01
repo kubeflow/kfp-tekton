@@ -451,11 +451,6 @@ class TektonCompiler(Compiler):
               parameter_value = '$(params.' + parameter.name + ')'
           return parameter_value
 
-        def get_spec_param_keys(param_specs):
-          spec_param_keys = []
-          for param_spec in param_specs:
-            spec_param_keys.append(param_spec['name'])
-          return spec_param_keys
         start_param = {
           "name": 'from',
           "value": process_parameter(sub_group.start)

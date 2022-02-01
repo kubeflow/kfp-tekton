@@ -133,6 +133,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.loop_with_numeric import pipeline
     self._test_pipeline_workflow(pipeline, 'loop_with_numeric.yaml')
 
+  def test_loop_with_step_workflow(self):
+    """
+    Test compiling a loop with literal separator in workflow.
+    """
+    from .testdata.loop_with_step import pipeline
+    self._test_pipeline_workflow(pipeline, 'loop_with_step.yaml')
+
   def test_cond_recur_workflow(self):
     """
     Test compiling a conditional recursive workflow.

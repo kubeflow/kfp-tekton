@@ -266,7 +266,7 @@ class Loop(dsl.ParallelFor):
         super().__init__(loop_args=["iteration"], parallelism=parallelism)
         self.start = start
         self.end = end
-        self.step = step if step is not None else None
+        self.step = step
     else:
         if loop_args is None and (start is None or end is None):
             raise RuntimeError("loop_args or start/end parameters are missing for 'Loop' class")
