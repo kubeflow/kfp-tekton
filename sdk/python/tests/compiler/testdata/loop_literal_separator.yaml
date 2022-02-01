@@ -52,8 +52,6 @@ spec:
             params:
             - name: loop-item-param-2
               type: string
-            - name: loop-item-param-3
-              type: string
             - name: my_pipe_param
               type: string
             tasks:
