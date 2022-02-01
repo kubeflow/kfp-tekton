@@ -238,6 +238,15 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     custom_task_cr = json.loads(
                         json.dumps(custom_task_cr).replace(custom_task_param['value'], '$(params.%s)' % custom_task_param['name']))
 
+            # remove separator from CR params
+            if custom_task[custom_task_key].get('separator') is not None:
+                separator_param = custom_task[custom_task_key]['separator']
+                custom_task_cr['spec']['pipelineSpec']['params'] = [
+                    param
+                    for param in custom_task_cr['spec']['pipelineSpec']['params']
+                    if param['name'] != separator_param
+                ]
+
         # need to process task parameters to replace out of scope results
         # because nested graph cannot refer to task results outside of the sub-pipeline.
         custom_task_cr_task_names = [custom_task_cr_task['name'] for custom_task_cr_task in custom_task_cr['spec']['pipelineSpec']['tasks']]
