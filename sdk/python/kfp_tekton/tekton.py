@@ -244,9 +244,9 @@ class Loop(dsl.ParallelFor):
 
   @classmethod
   def range(cls,
-            start: _Num,
-            end: _Num,
-            step: Optional[_Num] = None,
+            start: Union[_Num, PipelineParam],
+            end: Union[_Num, PipelineParam],
+            step: Optional[Union[_Num, PipelineParam]] = None,
             parallelism: Optional[int] = None):
     return cls(start=start, step=step, end=end, parallelism=parallelism)
 
