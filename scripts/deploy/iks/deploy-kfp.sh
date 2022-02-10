@@ -41,6 +41,12 @@ NEW_PERSISTENCEAGENT_IMAGE="${NEW_PERSISTENCEAGENT_IMAGE:-"${REGISTRY_URL}/${REG
 SCHEDULEDWORKFLOW_IMAGE="${SCHEDULEDWORKFLOW_IMAGE:-"docker.io/aipipeline/scheduledworkflow"}"
 NEW_SCHEDULEDWORKFLOW_IMAGE="${NEW_SCHEDULEDWORKFLOW_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}/scheduledworkflow:${IMAGE_TAG}"}"
 
+CACHESERVER_IMAGE="${CACHESERVER_IMAGE:-"docker.io/aipipeline/cache-server"}"
+NEW_CACHESERVER_IMAGE_IMAGE="${NEW_CACHESERVER_IMAGE_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}/cache-server:${IMAGE_TAG}"}"
+
+FRONTEND_IMAGE="${FRONTEND_IMAGE:-"docker.io/aipipeline/frontend"}"
+NEW_FRONTEND_IMAGE="${NEW_FRONTEND_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}/frontend:${IMAGE_TAG}"}"
+
 # Need to specify the image pull secret for these service accounts in order to
 # access images on ibm container registry: `kubeflow-pipelines-metadata-writer`,
 # `ml-pipeline`, `ml-pipeline-persistenceagent` `and ml-pipeline-scheduledworkflow`
@@ -81,6 +87,26 @@ metadata:
   labels:
     application-crd-id: kubeflow-pipelines
   name: ml-pipeline-scheduledworkflow
+  namespace: kubeflow
+imagePullSecrets:
+- name: all-icr-io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    application-crd-id: kubeflow-pipelines
+  name: kubeflow-pipelines-cache
+  namespace: kubeflow
+imagePullSecrets:
+- name: all-icr-io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    application-crd-id: kubeflow-pipelines
+  name: ml-pipeline-ui
   namespace: kubeflow
 imagePullSecrets:
 - name: all-icr-io
@@ -145,6 +171,8 @@ kustomize edit set image "$API_SERVER_IMAGE=$NEW_API_SERVER_IMAGE"
 kustomize edit set image "$METADATA_WRITER_IMAGE=$NEW_METADATA_WRITER_IMAGE"
 kustomize edit set image "$PERSISTENCEAGENT_IMAGE=$NEW_PERSISTENCEAGENT_IMAGE"
 kustomize edit set image "$SCHEDULEDWORKFLOW_IMAGE=$NEW_SCHEDULEDWORKFLOW_IMAGE"
+kustomize edit set image "$CACHESERVER_IMAGE=$NEW_CACHESERVER_IMAGE_IMAGE"
+kustomize edit set image "$FRONTEND_IMAGE=$NEW_FRONTEND_IMAGE"
 echo "$SA_PATCH" > sa_patch.yaml
 kustomize edit add patch sa_patch.yaml
 
