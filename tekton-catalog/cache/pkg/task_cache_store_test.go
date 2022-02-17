@@ -16,22 +16,19 @@ package cache
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 
-	"github.com/jinzhu/gorm"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/cache/model"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func NewTestingDb() (*gorm.DB, error) {
-	db, err := gorm.Open("sqlite3", ":memory:")
-	if err != nil {
-		return nil, fmt.Errorf("Could not create the GORM database: %v", err)
-	}
-	// Create tables
-	db.AutoMigrate(&model.TaskCache{})
-
-	return db, nil
+func newTestingCacheStore(disabled bool) (*TaskCacheStore, error) {
+	t := TaskCacheStore{Disabled: disabled}
+	err := t.Connect(db.ConnectionParams{DbDriver: "sqlite3", DbName: ":memory:"})
+	return &t, err
 }
 
 func createTaskCache(cacheKey string, cacheOutput string) *model.TaskCache {
@@ -42,12 +39,10 @@ func createTaskCache(cacheKey string, cacheOutput string) *model.TaskCache {
 }
 
 func TestPut(t *testing.T) {
-	db, err := NewTestingDb()
+	taskCacheStore, err := newTestingCacheStore(false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
-	taskCacheStore := TaskCacheStore{db: db, Enabled: true}
 	entry := createTaskCache("x", "y")
 	taskCache, err := taskCacheStore.Put(entry)
 	if err != nil {
@@ -65,12 +60,10 @@ func TestPut(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	db, err := NewTestingDb()
+	taskCacheStore, err := newTestingCacheStore(false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
-	taskCacheStore := TaskCacheStore{db: db, Enabled: true}
 	entry := createTaskCache("x", "y")
 	taskCache, err := taskCacheStore.Put(entry)
 	if err != nil {
@@ -78,7 +71,7 @@ func TestGet(t *testing.T) {
 	}
 	cacheResult, err := taskCacheStore.Get(taskCache.TaskHashKey)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if cacheResult.TaskHashKey != entry.TaskHashKey {
 		t.Errorf("Mismatached key. Expected %s Found: %s", entry.TaskHashKey,
@@ -93,12 +86,10 @@ func TestGet(t *testing.T) {
 
 // Get should get the latest entry each time.
 func TestGetLatest(t *testing.T) {
-	db, err := NewTestingDb()
+	taskCacheStore, err := newTestingCacheStore(false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
-	taskCacheStore := TaskCacheStore{db: db, Enabled: true}
 	for i := 1; i < 10; i++ {
 		entry := createTaskCache("x", fmt.Sprintf("y%d", i))
 		taskCache, err := taskCacheStore.Put(entry)
@@ -107,7 +98,7 @@ func TestGetLatest(t *testing.T) {
 		}
 		cacheResult, err := taskCacheStore.Get(taskCache.TaskHashKey)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 		if cacheResult.TaskHashKey != entry.TaskHashKey {
 			t.Errorf("Mismatached key. Expected %s Found: %s", entry.TaskHashKey,
@@ -118,5 +109,56 @@ func TestGetLatest(t *testing.T) {
 				entry.TaskOutput,
 				cacheResult.TaskOutput)
 		}
+	}
+}
+
+func TestDisabledCache(t *testing.T) {
+	taskCacheStore, err := newTestingCacheStore(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	taskCache, err := taskCacheStore.Get("random")
+	if err != nil {
+		t.Errorf("a disabled cache returned non nil error: %w", err)
+	}
+	if taskCache != nil {
+		t.Errorf("a disabled cache should return nil")
+	}
+}
+
+func TestPruneOlderThan(t *testing.T) {
+	taskCacheStore, err := newTestingCacheStore(false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hashKey := "cacheKey"
+	for i := 1; i < 10000000; i *= 100 {
+		t1 := &model.TaskCache{
+			TaskHashKey: hashKey,
+			TaskOutput:  "cacheOutput",
+			CreatedAt:   time.UnixMicro(int64(i * 100)),
+		}
+		_, err = taskCacheStore.Put(t1)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	taskCache, err := taskCacheStore.Get(hashKey)
+	if err != nil {
+		t.Error(err)
+	}
+	if taskCache == nil {
+		t.Error("TaskCache should be not nil.")
+	}
+	err = taskCacheStore.PruneOlderThan(time.UnixMicro(100000000))
+	if err != nil {
+		t.Fatal(err)
+	}
+	taskCache, err = taskCacheStore.Get(hashKey)
+	if err == nil {
+		t.Errorf("Expected error to be not nil")
+	}
+	if !strings.HasPrefix(err.Error(), "failed to get entry from cache") {
+		t.Error("Should fail with entry not found in cache.")
 	}
 }

@@ -15,25 +15,15 @@
 package db
 
 import (
-	"flag"
 	"fmt"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	"go.uber.org/zap"
-
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/cache/model"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
 )
 
-const (
-	mysqlDBDriverDefault            = "mysql"
-	mysqlDBHostDefault              = "mysql.kubeflow.svc.cluster.local"
-	mysqlDBPortDefault              = "3306"
-	mysqlDBGroupConcatMaxLenDefault = "4194304"
-)
-
-type DBConnectionParameters struct {
+type ConnectionParams struct {
 	DbDriver            string
 	DbHost              string
 	DbPort              string
@@ -44,28 +34,19 @@ type DBConnectionParameters struct {
 	DbExtraParams       string
 }
 
-func (params *DBConnectionParameters) LoadDefaults() {
-	flag.StringVar(&params.DbDriver, "db_driver", mysqlDBDriverDefault, "Database driver name, mysql is the default value")
-	flag.StringVar(&params.DbHost, "db_host", mysqlDBHostDefault, "Database host name.")
-	flag.StringVar(&params.DbPort, "db_port", mysqlDBPortDefault, "Database port number.")
-	flag.StringVar(&params.DbName, "db_name", "cachedb", "Database name.")
-	flag.StringVar(&params.DbUser, "db_user", "root", "Database user name.")
-	flag.StringVar(&params.DbPwd, "db_password", "", "Database password.")
-	flag.StringVar(&params.DbGroupConcatMaxLen, "db_group_concat_max_len", mysqlDBGroupConcatMaxLenDefault, "Database group concat max length.")
-	flag.Parse()
-}
-
-func InitDBClient(params DBConnectionParameters, initConnectionTimeout time.Duration, log *zap.SugaredLogger) (*gorm.DB, error) {
+func InitDBClient(params ConnectionParams, initConnectionTimeout time.Duration) (*gorm.DB, error) {
 	driverName := params.DbDriver
 	var arg string
 	var err error
 
 	switch driverName {
 	case mysqlDBDriverDefault:
-		arg, err = initMysql(params, initConnectionTimeout, log)
+		arg, err = initMysql(params, initConnectionTimeout)
 		if err != nil {
 			return nil, err
 		}
+	case sqliteDriverDefault:
+		arg = initSqlite(params.DbName)
 	default:
 		return nil, fmt.Errorf("driver %v is not supported", driverName)
 	}

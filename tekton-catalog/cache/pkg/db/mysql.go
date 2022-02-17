@@ -18,15 +18,37 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/cenkalti/backoff"
-	"go.uber.org/zap"
 	"time"
+
+	"github.com/cenkalti/backoff"
 
 	"github.com/go-sql-driver/mysql"
 )
 
-func initMysql(params DBConnectionParameters, initConnectionTimeout time.Duration, log *zap.SugaredLogger) (string, error) {
+const (
+	mysqlDBDriverDefault            = "mysql"
+	mysqlDBHostDefault              = "mysql.kubeflow.svc.cluster.local"
+	mysqlDBPortDefault              = "3306"
+	mysqlDBGroupConcatMaxLenDefault = "4194304"
+)
 
+func setDefault(field *string, defaultVal string) {
+	if *field == "" {
+		*field = defaultVal
+	}
+}
+
+func (params *ConnectionParams) LoadMySQLDefaults() {
+	setDefault(&params.DbDriver, mysqlDBDriverDefault)
+	setDefault(&params.DbHost, mysqlDBHostDefault)
+	setDefault(&params.DbPort, mysqlDBPortDefault)
+	setDefault(&params.DbName, "cachedb")
+	setDefault(&params.DbUser, "root")
+	setDefault(&params.DbPwd, "")
+	setDefault(&params.DbGroupConcatMaxLen, mysqlDBGroupConcatMaxLenDefault)
+}
+
+func initMysql(params ConnectionParams, initConnectionTimeout time.Duration) (string, error) {
 	var mysqlExtraParams = map[string]string{}
 	data := []byte(params.DbExtraParams)
 	_ = json.Unmarshal(data, &mysqlExtraParams)
@@ -64,7 +86,6 @@ func initMysql(params DBConnectionParameters, initConnectionTimeout time.Duratio
 		if err != nil {
 			return err
 		}
-		log.Infof("Backing database for cache is created")
 		return nil
 	}
 	b = backoff.NewExponentialBackOff()
@@ -88,8 +109,8 @@ func initMysql(params DBConnectionParameters, initConnectionTimeout time.Duratio
 	return mysqlConfig.FormatDSN(), nil
 }
 
-func CreateMySQLConfig(user, password string, mysqlServiceHost string,
-	mysqlServicePort string, dbName string, mysqlGroupConcatMaxLen string, mysqlExtraParams map[string]string) *mysql.Config {
+func CreateMySQLConfig(user, password, mysqlServiceHost, mysqlServicePort, dbName, mysqlGroupConcatMaxLen string,
+	mysqlExtraParams map[string]string) *mysql.Config {
 
 	params := map[string]string{
 		"charset":              "utf8",

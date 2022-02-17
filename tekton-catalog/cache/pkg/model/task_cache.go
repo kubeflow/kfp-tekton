@@ -19,8 +19,8 @@ import (
 )
 
 type TaskCache struct {
-	ID                int64     `gorm:"column:ID; not null; primary_key; AUTO_INCREMENT"`
-	TaskHashKey       string    `gorm:"column:TaskHashKey; not null; index:idx_cache_key"`
-	TaskOutput        string    `gorm:"column:TaskOutput; type:longtext; not null"`
-	CreatedAt         time.Time `gorm:"column:CreatedAt; autoCreateTime:nano; not null"`
+	ID          int64     `gorm:"column:ID; not null; primary_key; AUTO_INCREMENT"`
+	TaskHashKey string    `gorm:"column:TaskHashKey; not null; index:idx_cache_key"`
+	TaskOutput  string    `gorm:"column:TaskOutput; type:longtext; not null"`
+	CreatedAt   time.Time `gorm:"column:CreatedAt; autoCreateTime:nano; not null"`
 }

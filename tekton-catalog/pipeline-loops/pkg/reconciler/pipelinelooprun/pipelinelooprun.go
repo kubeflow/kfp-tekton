@@ -21,9 +21,6 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/cache"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/cache/db"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/cache/model"
 	"log"
 	"reflect"
 	"strconv"
@@ -34,7 +31,9 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"github.com/hashicorp/go-multierror"
-
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	pipelineloopclientset "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/clientset/versioned"
@@ -103,7 +102,7 @@ var (
 	// Check that our Reconciler implements runreconciler.Interface
 	_                runreconciler.Interface = (*Reconciler)(nil)
 	cancelPatchBytes []byte
-	params           db.DBConnectionParameters
+	params           db.ConnectionParams
 	cacheStore       cache.TaskCacheStore
 )
 
@@ -118,8 +117,17 @@ func init() {
 	if err != nil {
 		log.Fatalf("failed to marshal patch bytes in order to cancel: %v", err)
 	}
-	params = db.DBConnectionParameters{}
-	params.LoadDefaults()
+	params = db.ConnectionParams{}
+	params.LoadMySQLDefaults()
+	err = cacheStore.Connect(params)
+	if err != nil {
+		cacheStore.Disabled = true
+		log.Fatalf("Error connecting to cache store, %v", err)
+	}
+}
+
+func isCachingEnabled(run *v1alpha1.Run) bool {
+	return run.ObjectMeta.Annotations["pipelines.kubeflow.org/cache_enabled"] == "true"
 }
 
 // ReconcileKind compares the actual state with the desired, and attempts to converge the two.
@@ -127,10 +135,6 @@ func init() {
 func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgreconciler.Event {
 	var merr error
 	logger := logging.FromContext(ctx)
-	err := cacheStore.Connect(params, logger)
-	if err != nil {
-		logger.Errorf("Error connecting to cache store, %w", err)
-	}
 	logger.Infof("Reconciling Run %s/%s at %v", run.Namespace, run.Name, time.Now())
 	if run.Spec.Ref != nil && run.Spec.Spec != nil {
 		logger.Errorf("Run %s/%s can provide one of Run.Spec.Ref/Run.Spec.Spec", run.Namespace, run.Name)
@@ -174,11 +178,6 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 		events.Emit(ctx, nil, afterCondition, run)
 	}
 
-	if run.IsDone() {
-		logger.Infof("Run %s/%s is done", run.Namespace, run.Name)
-		return nil
-	}
-
 	// Store the condition before reconcile
 	beforeCondition := run.Status.GetCondition(apis.ConditionSucceeded)
 
@@ -189,6 +188,25 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 		logger.Errorf("DecodeExtraFields error: %v", err.Error())
 	}
 
+	if run.IsDone() {
+		if run.IsSuccessful() && !cacheStore.Disabled && isCachingEnabled(run) {
+			marshal, err := json.Marshal(status.PipelineLoopSpec)
+			if err == nil {
+				hashSum := fmt.Sprintf("%x", md5.Sum(marshal))
+				resultBytes, err := json.Marshal(run.Status.Results)
+				_, err = cacheStore.Put(&model.TaskCache{
+					TaskHashKey: hashSum,
+					TaskOutput:  string(resultBytes),
+				})
+				if err != nil {
+					logger.Errorf("Error while adding result to cache for run: %s, Error: %v", run.Name, err)
+					return fmt.Errorf("error while adding result to cache for run: %s, %w", run.Name, err)
+				}
+			}
+		}
+		logger.Infof("Run %s/%s is done", run.Namespace, run.Name)
+		return nil
+	}
 	// Reconcile the Run
 	if err := c.reconcile(ctx, run, status); err != nil {
 		logger.Errorf("Reconcile error: %v", err.Error())
@@ -304,23 +322,6 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if err != nil {
 		return nil
 	}
-	marshal, err := json.Marshal(pipelineLoopSpec)
-	if marshal != nil && err == nil {
-		hashSum = fmt.Sprintf("%x", md5.Sum(marshal))
-		taskCache, err := cacheStore.Get(hashSum)
-		logger.Infof("")
-		if err == nil && taskCache != nil {
-			err := json.Unmarshal([]byte(taskCache.TaskOutput), &run.Status.Results)
-			if err != nil {
-				logger.Errorf("error while unmarshal of task output. %v", err)
-			}
-			run.Status.MarkRunSucceeded("CacheHit", "A cached result of the previous run was found.")
-			return nil
-		}
-	}
-	if err != nil {
-		logger.Warnf("failed marshalling the spec, for pipelineloop: %s", pipelineLoopMeta.Name)
-	}
 	// Store the fetched PipelineLoopSpec on the Run for auditing
 	storePipelineLoopSpec(status, pipelineLoopSpec)
 
@@ -335,7 +336,25 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			pipelineLoopMeta.Namespace, pipelineLoopMeta.Name, err)
 		return nil
 	}
-
+	if !cacheStore.Disabled && isCachingEnabled(run) {
+		marshal, err := json.Marshal(pipelineLoopSpec)
+		if marshal != nil && err == nil {
+			hashSum = fmt.Sprintf("%x", md5.Sum(marshal))
+			taskCache, err := cacheStore.Get(hashSum)
+			if err == nil && taskCache != nil {
+				logger.Infof("Found a cached entry, for run: %s", run.Name)
+				err := json.Unmarshal([]byte(taskCache.TaskOutput), &run.Status.Results)
+				if err != nil {
+					logger.Errorf("error while unmarshal of task output. %v", err)
+				}
+				run.Status.MarkRunSucceeded("CacheHit", "A cached result of the previous run was found.")
+				return nil
+			}
+		}
+		if err != nil {
+			logger.Warnf("failed marshalling the spec, for pipelineloop: %s", pipelineLoopMeta.Name)
+		}
+	}
 	// Determine how many iterations of the Task will be done.
 	totalIterations, iterationElements, err := computeIterations(run, pipelineLoopSpec)
 	if err != nil {
@@ -379,14 +398,6 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 
 	// Run may be marked succeeded already by updatePipelineRunStatus
 	if run.IsSuccessful() {
-		resultBytes, err := json.Marshal(run.Status.Results)
-		_, err = cacheStore.Put(&model.TaskCache{
-			TaskHashKey: hashSum,
-			TaskOutput:  string(resultBytes),
-		})
-		if err != nil {
-			return err
-		}
 		return nil
 	}
 

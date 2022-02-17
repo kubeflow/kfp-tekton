@@ -16,11 +16,11 @@ package cache
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/cache/db"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/cache/model"
-	"go.uber.org/zap"
 	"time"
+
+	"github.com/jinzhu/gorm"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
 )
 
 const (
@@ -28,24 +28,21 @@ const (
 )
 
 type TaskCacheStore struct {
-	db      *gorm.DB
-	Enabled bool
+	db       *gorm.DB
+	Disabled bool
 }
 
-func (t *TaskCacheStore) Connect(params db.DBConnectionParameters, logger *zap.SugaredLogger) error {
-	if t.db != nil {
+func (t *TaskCacheStore) Connect(params db.ConnectionParams) error {
+	if t.db != nil || t.Disabled {
 		return nil
 	}
 	var err error
-	t.db, err = db.InitDBClient(params, DefaultConnectionTimeout, logger)
-	if err == nil {
-		t.Enabled = true
-	}
+	t.db, err = db.InitDBClient(params, DefaultConnectionTimeout)
 	return err
 }
 
 func (t *TaskCacheStore) Get(taskHashKey string) (*model.TaskCache, error) {
-	if !t.Enabled {
+	if t.Disabled || t.db == nil {
 		return nil, nil
 	}
 	entry := &model.TaskCache{}
@@ -58,7 +55,7 @@ func (t *TaskCacheStore) Get(taskHashKey string) (*model.TaskCache, error) {
 }
 
 func (t *TaskCacheStore) Put(entry *model.TaskCache) (*model.TaskCache, error) {
-	if !t.Enabled {
+	if t.Disabled || t.db == nil {
 		return nil, nil
 	}
 	ok := t.db.NewRecord(entry)
@@ -74,7 +71,7 @@ func (t *TaskCacheStore) Put(entry *model.TaskCache) (*model.TaskCache, error) {
 }
 
 func (t *TaskCacheStore) Delete(id string) error {
-	if !t.Enabled {
+	if t.Disabled || t.db == nil {
 		return nil
 	}
 	d := t.db.Delete(&model.TaskCache{}, "ID = ?", id)
@@ -85,7 +82,7 @@ func (t *TaskCacheStore) Delete(id string) error {
 }
 
 func (t *TaskCacheStore) PruneOlderThan(timestamp time.Time) error {
-	if !t.Enabled {
+	if t.Disabled || t.db == nil {
 		return nil
 	}
 	d := t.db.Delete(&model.TaskCache{}, "CreatedAt <= ?", timestamp)
