@@ -57,6 +57,10 @@ var (
 	trueB     = true
 )
 
+func init() {
+	CacheStore.Disabled = true
+}
+
 func getRunName(run *v1alpha1.Run) string {
 	return strings.Join([]string{run.Namespace, run.Name}, "/")
 }

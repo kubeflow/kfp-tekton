@@ -147,6 +147,7 @@ func validatePipelineSpec(p *v1beta1.PipelineSpec, name string) error {
 
 	// Validate the Tekton pipelineSpec
 	ctx := context.Background()
+	pipelinelooprun.CacheStore.Disabled = true
 	ctx = pipelinelooprun.EnableCustomTaskFeatureFlag(ctx)
 	p.SetDefaults(ctx)
 	errors := p.Validate(ctx)

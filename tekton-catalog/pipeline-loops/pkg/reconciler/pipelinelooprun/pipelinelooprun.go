@@ -103,7 +103,7 @@ var (
 	_                runreconciler.Interface = (*Reconciler)(nil)
 	cancelPatchBytes []byte
 	params           db.ConnectionParams
-	cacheStore       cache.TaskCacheStore
+	CacheStore       cache.TaskCacheStore
 )
 
 func init() {
@@ -119,11 +119,6 @@ func init() {
 	}
 	params = db.ConnectionParams{}
 	params.LoadMySQLDefaults()
-	err = cacheStore.Connect(params)
-	if err != nil {
-		cacheStore.Disabled = true
-		log.Fatalf("Error connecting to cache store, %v", err)
-	}
 }
 
 func isCachingEnabled(run *v1alpha1.Run) bool {
@@ -135,6 +130,11 @@ func isCachingEnabled(run *v1alpha1.Run) bool {
 func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgreconciler.Event {
 	var merr error
 	logger := logging.FromContext(ctx)
+	err := CacheStore.Connect(params)
+	if err != nil {
+		CacheStore.Disabled = true
+		log.Fatalf("Error connecting to cache store, %v", err)
+	}
 	logger.Infof("Reconciling Run %s/%s at %v", run.Namespace, run.Name, time.Now())
 	if run.Spec.Ref != nil && run.Spec.Spec != nil {
 		logger.Errorf("Run %s/%s can provide one of Run.Spec.Ref/Run.Spec.Spec", run.Namespace, run.Name)
@@ -189,12 +189,12 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	}
 
 	if run.IsDone() {
-		if run.IsSuccessful() && !cacheStore.Disabled && isCachingEnabled(run) {
+		if run.IsSuccessful() && !CacheStore.Disabled && isCachingEnabled(run) {
 			marshal, err := json.Marshal(status.PipelineLoopSpec)
 			if err == nil {
 				hashSum := fmt.Sprintf("%x", md5.Sum(marshal))
 				resultBytes, err := json.Marshal(run.Status.Results)
-				_, err = cacheStore.Put(&model.TaskCache{
+				_, err = CacheStore.Put(&model.TaskCache{
 					TaskHashKey: hashSum,
 					TaskOutput:  string(resultBytes),
 				})
@@ -336,11 +336,11 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			pipelineLoopMeta.Namespace, pipelineLoopMeta.Name, err)
 		return nil
 	}
-	if !cacheStore.Disabled && isCachingEnabled(run) {
+	if !CacheStore.Disabled && isCachingEnabled(run) {
 		marshal, err := json.Marshal(pipelineLoopSpec)
 		if marshal != nil && err == nil {
 			hashSum = fmt.Sprintf("%x", md5.Sum(marshal))
-			taskCache, err := cacheStore.Get(hashSum)
+			taskCache, err := CacheStore.Get(hashSum)
 			if err == nil && taskCache != nil {
 				logger.Infof("Found a cached entry, for run: %s", run.Name)
 				err := json.Unmarshal([]byte(taskCache.TaskOutput), &run.Status.Results)
