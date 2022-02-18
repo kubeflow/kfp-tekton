@@ -122,7 +122,7 @@ func init() {
 }
 
 func isCachingEnabled(run *v1alpha1.Run) bool {
-	return run.ObjectMeta.Annotations["pipelines.kubeflow.org/cache_enabled"] == "true"
+	return run.Labels["pipelines.kubeflow.org/cache_enabled"] == "true"
 }
 
 // ReconcileKind compares the actual state with the desired, and attempts to converge the two.
