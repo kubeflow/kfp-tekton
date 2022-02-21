@@ -4,8 +4,17 @@
 
 1. Setup.
 ```go
-    taskCacheStore := TaskCacheStore{}
-	err := taskCacheStore.Connect(db.ConnectionParams{DbDriver: "sqlite3", DbName: ":memory:"})
+
+import (
+    "fmt"
+	"time"
+	
+    "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
+    "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
+) 
+
+taskCacheStore := TaskCacheStore{Params: db.ConnectionParams{DbDriver: "sqlite3", DbName: "example.db"}}
+	err := taskCacheStore.Connect()
 	// Currently, mysql and sqlite3 are supported driver.
 ```
 

@@ -19,7 +19,6 @@ package pipelinelooprun
 import (
 	"context"
 	"fmt"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
 	"os"
 	"os/signal"
 	"strconv"
@@ -27,6 +26,7 @@ import (
 	"syscall"
 
 	taskCache "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
 	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstorelogger/pkg/objectstorelogger"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
@@ -100,7 +100,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			runLister:             runInformer.Lister(),
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
 			pipelineRunLister:     pipelineRunInformer.Lister(),
-			cacheStore: 		   cacheStore,
+			cacheStore:            cacheStore,
 		}
 		loggerConfig := cl.ObjectStoreLogConfig{}
 		objectStoreLogger := cl.Logger{
