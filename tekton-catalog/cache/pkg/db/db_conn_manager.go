@@ -1,4 +1,4 @@
-// Copyright 2020 The Kubeflow Authors
+// Copyright 2022 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ type ConnectionParams struct {
 	DbPwd               string
 	DbGroupConcatMaxLen string
 	DbExtraParams       string
+	Timeout				time.Duration
 }
 
 func InitDBClient(params ConnectionParams, initConnectionTimeout time.Duration) (*gorm.DB, error) {

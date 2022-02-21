@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"testing"
@@ -32,6 +33,7 @@ import (
 	fakeclient "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/client/fake"
 	fakepipelineloopinformer "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/informers/pipelineloop/v1alpha1/pipelineloop/fake"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/test"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	ttesting "github.com/tektoncd/pipeline/pkg/reconciler/testing"
@@ -58,7 +60,10 @@ var (
 )
 
 func init() {
-	CacheStore.Disabled = true
+	tmp := os.TempDir()
+	params.DbDriver = "sqlite3"
+	params.DbName = tmp + "/testing.db"
+	params.Timeout = 2 * time.Second
 }
 
 func getRunName(run *v1alpha1.Run) string {
@@ -69,6 +74,13 @@ func loopRunning(run *v1alpha1.Run) *v1alpha1.Run {
 	runWithStatus := run.DeepCopy()
 	runWithStatus.Status.InitializeConditions()
 	runWithStatus.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(), "")
+	return runWithStatus
+}
+
+func loopSucceeded(run *v1alpha1.Run) *v1alpha1.Run {
+	runWithStatus := run.DeepCopy()
+	runWithStatus.Status.InitializeConditions()
+	runWithStatus.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(), "")
 	return runWithStatus
 }
 
@@ -115,11 +127,6 @@ func setRetries(run *v1alpha1.Run, retries int) *v1alpha1.Run {
 
 func setDeleted(pr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
 	pr.Labels["deleted"] = "True"
-	return pr
-}
-
-func setPrName(pr *v1beta1.PipelineRun, name string) *v1beta1.PipelineRun {
-	pr.Name = name
 	return pr
 }
 
@@ -1685,6 +1692,88 @@ func TestReconcilePipelineLoopRunFailures(t *testing.T) {
 			}
 
 			if err := checkEvents(testAssets.Recorder, tc.name, tc.wantEvents); err != nil {
+				t.Errorf(err.Error())
+			}
+		})
+	}
+}
+
+func enableCacheForRun(run *v1alpha1.Run) *v1alpha1.Run {
+	run.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] = "true"
+	return run
+}
+
+func enableCacheForPr(pr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
+	pr.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] = "true"
+	return pr
+}
+
+func TestReconcilePipelineLoopRunCachedRun(t *testing.T) {
+	testcases := []struct {
+		name           string
+		pipeline       *v1beta1.Pipeline
+		pipelineloop   *pipelineloopv1alpha1.PipelineLoop
+		run            *v1alpha1.Run
+		pipelineruns   []*v1beta1.PipelineRun
+		expectedStatus corev1.ConditionStatus
+		expectedReason pipelineloopv1alpha1.PipelineLoopRunReason
+		expectedEvents []string
+	}{{
+		name:           "Reconcile a run successfully",
+		pipeline:       aPipeline,
+		pipelineloop:   aPipelineLoop,
+		run:            enableCacheForRun(loopSucceeded(runPipelineLoop)),
+		pipelineruns:   []*v1beta1.PipelineRun{successful(enableCacheForPr(expectedPipelineRunIteration1)), successful(enableCacheForPr(expectedPipelineRunIteration2))},
+		expectedStatus: corev1.ConditionTrue,
+		expectedReason: pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded,
+		expectedEvents: []string{},
+	}, {
+		name:           "Test fetch from cache for previously successful Run.",
+		pipeline:       aPipeline,
+		pipelineloop:   aPipelineLoop,
+		run:            enableCacheForRun(runPipelineLoop),
+		expectedStatus: corev1.ConditionTrue,
+		expectedReason: pipelineloopv1alpha1.PipelineLoopRunReasonCacheHit,
+		expectedEvents: []string{"Normal Started ", "Normal Succeeded A cached result of the previous run was found."},
+	}}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			names.TestingSeed()
+			optionalPipeline := []*v1beta1.Pipeline{tc.pipeline}
+			status := &pipelineloopv1alpha1.PipelineLoopRunStatus{}
+			tc.pipelineloop.Spec.SetDefaults(ctx)
+			status.PipelineLoopSpec = &tc.pipelineloop.Spec
+			err := tc.run.Status.EncodeExtraFields(status)
+			if err != nil {
+				t.Fatal("Failed to encode spec in the pipelineSpec:", err)
+			}
+			if tc.pipeline == nil {
+				optionalPipeline = nil
+			}
+
+			d := test.Data{
+				Runs:         []*v1alpha1.Run{tc.run},
+				Pipelines:    optionalPipeline,
+				PipelineRuns: tc.pipelineruns,
+			}
+
+			testAssets, _ := getPipelineLoopController(t, d, []*pipelineloopv1alpha1.PipelineLoop{tc.pipelineloop})
+			c := testAssets.Controller
+			clients := testAssets.Clients
+
+			if err := c.Reconciler.Reconcile(ctx, getRunName(tc.run)); err != nil {
+				t.Fatalf("Error reconciling: %s", err)
+			}
+			// Fetch the updated Run
+			reconciledRun, err := clients.Pipeline.TektonV1alpha1().Runs(tc.run.Namespace).Get(ctx, tc.run.Name, metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("Error getting reconciled run from fake client: %s", err)
+			}
+			// Verify that the Run has the expected status and reason.
+			checkRunCondition(t, reconciledRun, tc.expectedStatus, tc.expectedReason)
+			// Verify expected events were created.
+			if err := checkEvents(testAssets.Recorder, tc.name, tc.expectedEvents); err != nil {
 				t.Errorf(err.Error())
 			}
 		})

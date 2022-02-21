@@ -92,6 +92,9 @@ const (
 	PipelineLoopRunReasonStarted PipelineLoopRunReason = "Started"
 
 	// PipelineLoopRunReasonRunning indicates that the Run is in progress
+	PipelineLoopRunReasonCacheHit PipelineLoopRunReason = "CacheHit"
+
+	// PipelineLoopRunReasonRunning indicates that the Run is in progress
 	PipelineLoopRunReasonRunning PipelineLoopRunReason = "Running"
 
 	// PipelineLoopRunReasonFailed indicates that one of the TaskRuns created from the Run failed

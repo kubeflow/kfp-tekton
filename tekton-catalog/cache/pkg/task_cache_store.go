@@ -23,21 +23,19 @@ import (
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
 )
 
-const (
-	DefaultConnectionTimeout = time.Minute * 6
-)
 
 type TaskCacheStore struct {
 	db       *gorm.DB
 	Disabled bool
+	Params db.ConnectionParams
 }
 
-func (t *TaskCacheStore) Connect(params db.ConnectionParams) error {
+func (t *TaskCacheStore) Connect() error {
 	if t.db != nil || t.Disabled {
 		return nil
 	}
 	var err error
-	t.db, err = db.InitDBClient(params, DefaultConnectionTimeout)
+	t.db, err = db.InitDBClient(t.Params, t.Params.Timeout)
 	return err
 }
 

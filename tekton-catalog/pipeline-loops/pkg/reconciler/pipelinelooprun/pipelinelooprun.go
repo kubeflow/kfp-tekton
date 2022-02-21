@@ -32,7 +32,6 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
@@ -96,14 +95,13 @@ type Reconciler struct {
 	runLister             listersalpha.RunLister
 	pipelineLoopLister    listerspipelineloop.PipelineLoopLister
 	pipelineRunLister     listers.PipelineRunLister
+	cacheStore            *cache.TaskCacheStore
 }
 
 var (
 	// Check that our Reconciler implements runreconciler.Interface
 	_                runreconciler.Interface = (*Reconciler)(nil)
 	cancelPatchBytes []byte
-	params           db.ConnectionParams
-	CacheStore       cache.TaskCacheStore
 )
 
 func init() {
@@ -117,12 +115,10 @@ func init() {
 	if err != nil {
 		log.Fatalf("failed to marshal patch bytes in order to cancel: %v", err)
 	}
-	params = db.ConnectionParams{}
-	params.LoadMySQLDefaults()
 }
 
 func isCachingEnabled(run *v1alpha1.Run) bool {
-	return run.Labels["pipelines.kubeflow.org/cache_enabled"] == "true"
+	return run.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] == "true"
 }
 
 // ReconcileKind compares the actual state with the desired, and attempts to converge the two.
@@ -130,11 +126,6 @@ func isCachingEnabled(run *v1alpha1.Run) bool {
 func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgreconciler.Event {
 	var merr error
 	logger := logging.FromContext(ctx)
-	err := CacheStore.Connect(params)
-	if err != nil {
-		CacheStore.Disabled = true
-		log.Fatalf("Error connecting to cache store, %v", err)
-	}
 	logger.Infof("Reconciling Run %s/%s at %v", run.Namespace, run.Name, time.Now())
 	if run.Spec.Ref != nil && run.Spec.Spec != nil {
 		logger.Errorf("Run %s/%s can provide one of Run.Spec.Ref/Run.Spec.Spec", run.Namespace, run.Name)
@@ -189,12 +180,12 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	}
 
 	if run.IsDone() {
-		if run.IsSuccessful() && !CacheStore.Disabled && isCachingEnabled(run) {
+		if run.IsSuccessful() && !c.cacheStore.Disabled && isCachingEnabled(run) {
 			marshal, err := json.Marshal(status.PipelineLoopSpec)
 			if err == nil {
 				hashSum := fmt.Sprintf("%x", md5.Sum(marshal))
 				resultBytes, err := json.Marshal(run.Status.Results)
-				_, err = CacheStore.Put(&model.TaskCache{
+				_, err = c.cacheStore.Put(&model.TaskCache{
 					TaskHashKey: hashSum,
 					TaskOutput:  string(resultBytes),
 				})
@@ -202,6 +193,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 					logger.Errorf("Error while adding result to cache for run: %s, Error: %v", run.Name, err)
 					return fmt.Errorf("error while adding result to cache for run: %s, %w", run.Name, err)
 				}
+				logger.Infof("cached the results of successful run %s, with key: %s", run.Name, hashSum)
 			}
 		}
 		logger.Infof("Run %s/%s is done", run.Namespace, run.Name)
@@ -336,18 +328,19 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			pipelineLoopMeta.Namespace, pipelineLoopMeta.Name, err)
 		return nil
 	}
-	if !CacheStore.Disabled && isCachingEnabled(run) {
+	if !c.cacheStore.Disabled && isCachingEnabled(run) {
 		marshal, err := json.Marshal(pipelineLoopSpec)
 		if marshal != nil && err == nil {
 			hashSum = fmt.Sprintf("%x", md5.Sum(marshal))
-			taskCache, err := CacheStore.Get(hashSum)
+			taskCache, err := c.cacheStore.Get(hashSum)
 			if err == nil && taskCache != nil {
-				logger.Infof("Found a cached entry, for run: %s", run.Name)
+				logger.Infof("Found a cached entry, for run: %s, with key:", run.Name, hashSum)
 				err := json.Unmarshal([]byte(taskCache.TaskOutput), &run.Status.Results)
 				if err != nil {
 					logger.Errorf("error while unmarshal of task output. %v", err)
 				}
-				run.Status.MarkRunSucceeded("CacheHit", "A cached result of the previous run was found.")
+				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonCacheHit.String(),
+					"A cached result of the previous run was found.")
 				return nil
 			}
 		}

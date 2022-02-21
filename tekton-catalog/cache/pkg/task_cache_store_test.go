@@ -26,8 +26,11 @@ import (
 )
 
 func newTestingCacheStore(disabled bool) (*TaskCacheStore, error) {
-	t := TaskCacheStore{Disabled: disabled}
-	err := t.Connect(db.ConnectionParams{DbDriver: "sqlite3", DbName: ":memory:"})
+	t := TaskCacheStore{
+		Disabled: disabled,
+		Params:   db.ConnectionParams{DbDriver: "sqlite3", DbName: ":memory:"},
+	}
+	err := t.Connect()
 	return &t, err
 }
 

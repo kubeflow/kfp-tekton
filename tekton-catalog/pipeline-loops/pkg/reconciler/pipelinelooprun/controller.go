@@ -19,11 +19,14 @@ package pipelinelooprun
 import (
 	"context"
 	"fmt"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 
+	taskCache "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
 	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstorelogger/pkg/objectstorelogger"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
@@ -66,6 +69,8 @@ func load(ctx context.Context, kubeClientSet kubernetes.Interface, o *cl.ObjectS
 	return nil
 }
 
+var params db.ConnectionParams
+
 // NewController instantiates a new controller.Impl from knative.dev/pkg/controller
 func NewController(namespace string) func(context.Context, configmap.Watcher) *controller.Impl {
 	return func(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
@@ -76,7 +81,18 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 		runInformer := runinformer.Get(ctx)
 		pipelineLoopInformer := pipelineloopinformer.Get(ctx)
 		pipelineRunInformer := pipelineruninformer.Get(ctx)
-
+		params.LoadMySQLDefaults()
+		cacheStore := &taskCache.TaskCacheStore{Params: params}
+		if strings.EqualFold(os.Getenv("CACHE_STORE_DISABLED"), "true") {
+			cacheStore.Disabled = true
+		}
+		if !cacheStore.Disabled {
+			err := cacheStore.Connect()
+			if err != nil {
+				cacheStore.Disabled = true
+				logger.Errorf("Failed to connect to cache store backed, cache store disabled. err: %v", err)
+			}
+		}
 		c := &Reconciler{
 			KubeClientSet:         kubeclientset,
 			pipelineClientSet:     pipelineclientset,
@@ -84,6 +100,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			runLister:             runInformer.Lister(),
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
 			pipelineRunLister:     pipelineRunInformer.Lister(),
+			cacheStore: 		   cacheStore,
 		}
 		loggerConfig := cl.ObjectStoreLogConfig{}
 		objectStoreLogger := cl.Logger{

@@ -1,4 +1,4 @@
-// Copyright 2020 The Kubeflow Authors
+// Copyright 2022 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ const (
 	mysqlDBHostDefault              = "mysql.kubeflow.svc.cluster.local"
 	mysqlDBPortDefault              = "3306"
 	mysqlDBGroupConcatMaxLenDefault = "4194304"
+	DefaultConnectionTimeout        = time.Minute * 6
 )
 
 func setDefault(field *string, defaultVal string) {
@@ -46,6 +47,9 @@ func (params *ConnectionParams) LoadMySQLDefaults() {
 	setDefault(&params.DbUser, "root")
 	setDefault(&params.DbPwd, "")
 	setDefault(&params.DbGroupConcatMaxLen, mysqlDBGroupConcatMaxLenDefault)
+	if params.Timeout == 0 {
+		params.Timeout = DefaultConnectionTimeout
+	}
 }
 
 func initMysql(params ConnectionParams, initConnectionTimeout time.Duration) (string, error) {
