@@ -731,6 +731,17 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, run *v1alpha1.
 					return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to Run %s."+
 						" %#v", run.Name, err)
 				}
+				// Cancel the break task.
+				runBreakTask, err := c.pipelineClientSet.TektonV1alpha1().Runs(run.Namespace).Get(ctx, runStatus.PipelineTaskName, metav1.GetOptions{})
+				if err != nil {
+					logger.Errorf("could not cancel the break task run, %v", err)
+				}
+				runBreakTask.Status.InitializeConditions()
+				runBreakTask.Status.MarkRunFailed(v1beta1.PipelineRunReasonCancelled.String(), "Break task is a dummy task")
+				_, err = c.pipelineClientSet.TektonV1alpha1().Runs(run.Namespace).Update(ctx, runBreakTask, metav1.UpdateOptions{})
+				if err != nil {
+					logger.Errorf("could not cancel the break task run, %v", err)
+				}
 				// Mark run successful and stop the loop pipelinerun
 				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 					"PipelineRuns completed successfully with the conditions are met")
