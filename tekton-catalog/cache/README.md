@@ -7,7 +7,7 @@
 
 import (
     "fmt"
-	"time"
+    "time"
 	
     "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
     "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
