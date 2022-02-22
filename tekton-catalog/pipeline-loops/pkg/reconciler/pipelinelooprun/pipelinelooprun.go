@@ -18,6 +18,7 @@ package pipelinelooprun
 
 import (
 	"context"
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -30,7 +31,8 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"github.com/hashicorp/go-multierror"
-
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	pipelineloopclientset "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/clientset/versioned"
@@ -93,6 +95,7 @@ type Reconciler struct {
 	runLister             listersalpha.RunLister
 	pipelineLoopLister    listerspipelineloop.PipelineLoopLister
 	pipelineRunLister     listers.PipelineRunLister
+	cacheStore            *cache.TaskCacheStore
 }
 
 var (
@@ -114,6 +117,10 @@ func init() {
 	}
 }
 
+func isCachingEnabled(run *v1alpha1.Run) bool {
+	return run.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] == "true"
+}
+
 // ReconcileKind compares the actual state with the desired, and attempts to converge the two.
 // It then updates the Status block of the Run resource with the current status of the resource.
 func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgreconciler.Event {
@@ -122,6 +129,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	logger.Infof("Reconciling Run %s/%s at %v", run.Namespace, run.Name, time.Now())
 	if run.Spec.Ref != nil && run.Spec.Spec != nil {
 		logger.Errorf("Run %s/%s can provide one of Run.Spec.Ref/Run.Spec.Spec", run.Namespace, run.Name)
+		return nil
 	}
 	if run.Spec.Spec == nil && run.Spec.Ref == nil {
 		logger.Errorf("Run %s/%s does not provide a spec or ref.", run.Namespace, run.Name)
@@ -161,11 +169,6 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 		events.Emit(ctx, nil, afterCondition, run)
 	}
 
-	if run.IsDone() {
-		logger.Infof("Run %s/%s is done", run.Namespace, run.Name)
-		return nil
-	}
-
 	// Store the condition before reconcile
 	beforeCondition := run.Status.GetCondition(apis.ConditionSucceeded)
 
@@ -176,6 +179,26 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 		logger.Errorf("DecodeExtraFields error: %v", err.Error())
 	}
 
+	if run.IsDone() {
+		if run.IsSuccessful() && !c.cacheStore.Disabled && isCachingEnabled(run) {
+			marshal, err := json.Marshal(status.PipelineLoopSpec)
+			if err == nil {
+				hashSum := fmt.Sprintf("%x", md5.Sum(marshal))
+				resultBytes, err := json.Marshal(run.Status.Results)
+				_, err = c.cacheStore.Put(&model.TaskCache{
+					TaskHashKey: hashSum,
+					TaskOutput:  string(resultBytes),
+				})
+				if err != nil {
+					logger.Errorf("Error while adding result to cache for run: %s, Error: %v", run.Name, err)
+					return fmt.Errorf("error while adding result to cache for run: %s, %w", run.Name, err)
+				}
+				logger.Infof("cached the results of successful run %s, with key: %s", run.Name, hashSum)
+			}
+		}
+		logger.Infof("Run %s/%s is done", run.Namespace, run.Name)
+		return nil
+	}
 	// Reconcile the Run
 	if err := c.reconcile(ctx, run, status); err != nil {
 		logger.Errorf("Reconcile error: %v", err.Error())
@@ -285,7 +308,7 @@ func (c *Reconciler) setMaxNestedStackDepth(ctx context.Context, pipelineLoopSpe
 func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
 	ctx = EnableCustomTaskFeatureFlag(ctx)
 	logger := logging.FromContext(ctx)
-
+	var hashSum string
 	// Get the PipelineLoop referenced by the Run
 	pipelineLoopMeta, pipelineLoopSpec, err := c.getPipelineLoop(ctx, run)
 	if err != nil {
@@ -305,7 +328,26 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			pipelineLoopMeta.Namespace, pipelineLoopMeta.Name, err)
 		return nil
 	}
-
+	if !c.cacheStore.Disabled && isCachingEnabled(run) {
+		marshal, err := json.Marshal(pipelineLoopSpec)
+		if marshal != nil && err == nil {
+			hashSum = fmt.Sprintf("%x", md5.Sum(marshal))
+			taskCache, err := c.cacheStore.Get(hashSum)
+			if err == nil && taskCache != nil {
+				logger.Infof("Found a cached entry, for run: %s, with key:", run.Name, hashSum)
+				err := json.Unmarshal([]byte(taskCache.TaskOutput), &run.Status.Results)
+				if err != nil {
+					logger.Errorf("error while unmarshal of task output. %v", err)
+				}
+				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonCacheHit.String(),
+					"A cached result of the previous run was found.")
+				return nil
+			}
+		}
+		if err != nil {
+			logger.Warnf("failed marshalling the spec, for pipelineloop: %s", pipelineLoopMeta.Name)
+		}
+	}
 	// Determine how many iterations of the Task will be done.
 	totalIterations, iterationElements, err := computeIterations(run, pipelineLoopSpec)
 	if err != nil {
