@@ -91,7 +91,7 @@ const (
 	// PipelineLoopRunReasonStarted is the reason set when the Run has just started
 	PipelineLoopRunReasonStarted PipelineLoopRunReason = "Started"
 
-	// PipelineLoopRunReasonRunning indicates that the Run is in progress
+	// PipelineLoopRunReasonCacheHit indicates that the Run result was fetched from cache instead of performing an actual run.
 	PipelineLoopRunReasonCacheHit PipelineLoopRunReason = "CacheHit"
 
 	// PipelineLoopRunReasonRunning indicates that the Run is in progress
