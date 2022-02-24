@@ -32,7 +32,7 @@ metadata:
     tekton.dev/example-loop-pipeline: '{"spec":{"pipelineSpec":{"params":[{"name":"message","type":"string"}],"tasks":[{"name":"echo-loop-task","params":[{"name":"message","value":"$(params.message)"}],"taskSpec":{"params":[{"name":"message","type":"string"}],"steps":[{"name":"echo","image":"ubuntu","imagePullPolicy":"IfNotPresent","script":"#!/usr/bin/env bash\necho \"$(params.message)\"\n"}]}}]},"iterateParam":"message"}}'
   name: pr-loop-example
   labels:
-    pipelines.kubeflow.org/cache_enabled: true
+    pipelines.kubeflow.org/cache_enabled: "true"
 spec:
   pipelineSpec:
     tasks:
