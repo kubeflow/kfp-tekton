@@ -59,11 +59,15 @@ var (
 	trueB     = true
 )
 
-func init() {
+func initCacheParams() {
 	tmp := os.TempDir()
 	params.DbDriver = "sqlite3"
 	params.DbName = tmp + "/testing.db"
 	params.Timeout = 2 * time.Second
+}
+
+func init() {
+	initCacheParams()
 }
 
 func getRunName(run *v1alpha1.Run) string {
@@ -1751,11 +1755,17 @@ func TestReconcilePipelineLoopRunCachedRun(t *testing.T) {
 			if tc.pipeline == nil {
 				optionalPipeline = nil
 			}
-
+			cm := corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "cache-config",
+				},
+				Data: map[string]string{"driver": "sqlite3", "dbName": "/tmp/testing.db"},
+			}
 			d := test.Data{
 				Runs:         []*v1alpha1.Run{tc.run},
 				Pipelines:    optionalPipeline,
 				PipelineRuns: tc.pipelineruns,
+				ConfigMaps:   []*corev1.ConfigMap{&cm},
 			}
 
 			testAssets, _ := getPipelineLoopController(t, d, []*pipelineloopv1alpha1.PipelineLoop{tc.pipelineloop})

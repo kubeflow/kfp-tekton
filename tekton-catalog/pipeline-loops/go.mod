@@ -8,7 +8,7 @@ require (
 	github.com/kubeflow/kfp-tekton/tekton-catalog/cache v0.0.0
 	github.com/kubeflow/kfp-tekton/tekton-catalog/objectstorelogger v0.0.0
 	github.com/mattn/go-sqlite3 v1.14.0
-	github.com/tektoncd/pipeline v0.30.0
+	github.com/tektoncd/pipeline v0.30.1
 	go.uber.org/zap v1.19.1
 	gomodules.xyz/jsonpatch/v2 v2.2.0
 	k8s.io/api v0.21.4
