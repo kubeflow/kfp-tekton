@@ -19,6 +19,7 @@ import (
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/template"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 )
 
@@ -129,7 +130,7 @@ func toApiParameters(paramsString string) ([]*api.Parameter, error) {
 	if paramsString == "" {
 		return nil, nil
 	}
-	params, err := util.UnmarshalParameters(paramsString)
+	params, err := template.UnmarshalParameters(paramsString)
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Parameter with wrong format is stored")
 	}
@@ -287,7 +288,7 @@ func toApiResourceReferences(references []*model.ResourceReference) []*api.Resou
 	return apiReferences
 }
 
-func toApiResourceType(modelType common.ResourceType) api.ResourceType {
+func toApiResourceType(modelType model.ResourceType) api.ResourceType {
 	switch modelType {
 	case common.Experiment:
 		return api.ResourceType_EXPERIMENT
@@ -302,7 +303,7 @@ func toApiResourceType(modelType common.ResourceType) api.ResourceType {
 	}
 }
 
-func toApiRelationship(r common.Relationship) api.Relationship {
+func toApiRelationship(r model.Relationship) api.Relationship {
 	switch r {
 	case common.Creator:
 		return api.Relationship_CREATOR

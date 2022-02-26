@@ -15,6 +15,7 @@
 package client
 
 import (
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -62,7 +63,7 @@ func NewScheduledWorkflowClientOrFatal(initConnectionTimeout time.Duration, clie
 	}
 	glog.Infof("(Expected when in cluster) Failed to create scheduled workflow client by out of cluster kubeconfig. Error: %v", err)
 
-	glog.Infof("Starting to create scheduled workfloow client by in cluster config.")
+	glog.Infof("Starting to create scheduled workflow client by in cluster config.")
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = initConnectionTimeout
 	if err := backoff.Retry(operation, b); err != nil {
@@ -89,5 +90,9 @@ func newOutOfClusterSwfClient() (*SwfClient, error) {
 
 	// create the clientset
 	swfClientSet, err := swfclient.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("create swf client set: %w", err)
+	}
+
 	return &SwfClient{swfClientSet.ScheduledworkflowV1beta1()}, nil
 }

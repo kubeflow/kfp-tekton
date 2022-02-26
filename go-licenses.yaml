@@ -21,6 +21,7 @@ module:
     # collected third party licenses
     - third_party/license.txt
     - third_party/NOTICES
+    - third_party/ml-metadata # is a separate go module
     - backend/build # ignore built binaries
     - v2 # v2 is a separate sub-module
   - name: github.com/kubeflow/pipelines/api
@@ -53,7 +54,7 @@ module:
     excludePaths:
     - testdata
   - name: github.com/prometheus/common
-    version: v0.15.0
+    version: v0.26.0
     license:
       path: LICENSE
       spdxId: Apache-2.0
@@ -102,7 +103,7 @@ module:
     # We do not use UI code here.
     - third_party/swagger-ui/lib
   - name: cloud.google.com/go
-    version: v0.55.0
+    version: v0.81.0
     license:
       path: LICENSE
       spdxId: Apache-2.0
@@ -113,6 +114,10 @@ module:
         spdxId: BSD-2-Clause
         lineStart: 1
         lineEnd: 43
+    - path: third_party/pkgsite
+      license:
+        path: LICENSE
+        spdxId: BSD-3-Clause
   - name: cloud.google.com/go/storage
     version: v1.12.0
     license:

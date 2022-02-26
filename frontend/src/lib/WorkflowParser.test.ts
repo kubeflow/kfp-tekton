@@ -166,13 +166,7 @@ describe('WorkflowParser', () => {
             </div>
           }
         >
-          <span
-            style={
-              Object {
-                "height": 18,
-              }
-            }
-          >
+          <div>
             <StatusCached
               data-testid="node-status-sign"
               style={
@@ -183,7 +177,7 @@ describe('WorkflowParser', () => {
                 }
               }
             />
-          </span>
+          </div>
         </WithStyles(Tooltip)>
       `);
     });

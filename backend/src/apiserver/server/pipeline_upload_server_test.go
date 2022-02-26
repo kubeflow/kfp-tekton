@@ -34,100 +34,121 @@ import (
 const (
 	fakeVersionUUID = "123e4567-e89b-12d3-a456-526655440000"
 	fakeVersionName = "a_fake_version_name"
+	fakeDescription = "a_fake_description"
 )
 
-func TestUploadPipeline_YAML(t *testing.T) {
-	clientManager, server := setupClientManagerAndServer()
-	bytesBuffer, writer := setupWriter("")
-	setWriterWithBuffer("uploadfile", "hello-world.yaml", "apiVersion: tekton.dev/v1beta1\nkind: PipelineRun", writer)
-	response := uploadPipeline("/apis/v1beta1/pipelines/upload",
-		bytes.NewReader(bytesBuffer.Bytes()), writer, server.UploadPipeline)
-	assert.Equal(t, 200, response.Code)
-	// Verify time format is RFC3339.
-	parsedResponse := struct {
-		CreatedAt      string `json:"created_at"`
-		DefaultVersion struct {
-			CreatedAt string `json:"created_at"`
-		} `json:"default_version"`
-	}{}
-	json.Unmarshal(response.Body.Bytes(), &parsedResponse)
-	assert.Equal(t, "1970-01-01T00:00:01Z", parsedResponse.CreatedAt)
-	assert.Equal(t, "1970-01-01T00:00:01Z", parsedResponse.DefaultVersion.CreatedAt)
+// TODO: move other upload pipeline tests into this table driven test
+func TestUploadPipeline(t *testing.T) {
+	// TODO(v2): when we add a field to distinguish between v1 and v2 template, verify it's in the response
+	tt := []struct {
+		name string
+		spec []byte
+	}{{
+		name: "upload Tekton Pipelinerun YAML",
+		spec: []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"),
+	}, {
+		name: "upload pipeline v2 job in proto json",
+		spec: []byte(v2SpecHelloWorld),
+	}}
+	for _, test := range tt {
+		t.Run(test.name, func(t *testing.T) {
+			clientManager, server := setupClientManagerAndServer()
+			bytesBuffer, writer := setupWriter("")
+			setWriterWithBuffer("uploadfile", "hello-world.yaml", string(test.spec), writer)
+			response := uploadPipeline("/apis/v1beta1/pipelines/upload",
+				bytes.NewReader(bytesBuffer.Bytes()), writer, server.UploadPipeline)
+			if response.Code != 200 {
+				t.Fatalf("Upload response is not 200, message: %s", string(response.Body.Bytes()))
+			}
 
-	// Verify stored in object store
-	objStore := clientManager.ObjectStore()
-	template, err := objStore.GetFile(objStore.GetPipelineKey(resource.DefaultFakeUUID))
-	assert.Nil(t, err)
-	assert.NotNil(t, template)
+			// Verify time format is RFC3339.
+			parsedResponse := struct {
+				CreatedAt      string `json:"created_at"`
+				DefaultVersion struct {
+					CreatedAt string `json:"created_at"`
+				} `json:"default_version"`
+			}{}
+			json.Unmarshal(response.Body.Bytes(), &parsedResponse)
+			assert.Equal(t, "1970-01-01T00:00:01Z", parsedResponse.CreatedAt)
+			assert.Equal(t, "1970-01-01T00:00:01Z", parsedResponse.DefaultVersion.CreatedAt)
 
-	opts, err := list.NewOptions(&model.Pipeline{}, 2, "", nil)
-	assert.Nil(t, err)
+			// Verify stored in object store
+			objStore := clientManager.ObjectStore()
+			template, err := objStore.GetFile(objStore.GetPipelineKey(resource.DefaultFakeUUID))
+			assert.Nil(t, err)
+			assert.NotNil(t, template)
 
-	// Verify metadata in db
-	pkgsExpect := []*model.Pipeline{
-		{
-			UUID:             resource.DefaultFakeUUID,
-			CreatedAtInSec:   1,
-			Name:             "hello-world.yaml",
-			Parameters:       "[]",
-			Status:           model.PipelineReady,
-			DefaultVersionId: resource.DefaultFakeUUID,
-			DefaultVersion: &model.PipelineVersion{
-				UUID:           resource.DefaultFakeUUID,
-				CreatedAtInSec: 1,
-				Name:           "hello-world.yaml",
-				Parameters:     "[]",
-				Status:         model.PipelineVersionReady,
-				PipelineId:     resource.DefaultFakeUUID,
-			}}}
-	pkg, totalSize, str, err := clientManager.PipelineStore().ListPipelines(&common.FilterContext{}, opts)
-	assert.Nil(t, err)
-	assert.Equal(t, str, "")
-	assert.Equal(t, 1, totalSize)
-	assert.Equal(t, pkgsExpect, pkg)
+			opts, err := list.NewOptions(&model.Pipeline{}, 2, "", nil)
+			assert.Nil(t, err)
 
-	// Upload a new version under this pipeline
+			// Verify metadata in db
+			pkgsExpect := []*model.Pipeline{
+				{
+					UUID:             resource.DefaultFakeUUID,
+					CreatedAtInSec:   1,
+					Name:             "hello-world.yaml",
+					Parameters:       "[]",
+					Status:           model.PipelineReady,
+					DefaultVersionId: resource.DefaultFakeUUID,
+					DefaultVersion: &model.PipelineVersion{
+						UUID:           resource.DefaultFakeUUID,
+						CreatedAtInSec: 1,
+						Name:           "hello-world.yaml",
+						Parameters:     "[]",
+						Status:         model.PipelineVersionReady,
+						PipelineId:     resource.DefaultFakeUUID,
+					}}}
+			pkg, totalSize, str, err := clientManager.PipelineStore().ListPipelines(&common.FilterContext{}, opts)
+			assert.Nil(t, err)
+			assert.Equal(t, str, "")
+			assert.Equal(t, 1, totalSize)
+			assert.Equal(t, pkgsExpect, pkg)
 
-	// Set the fake uuid generator with a new uuid to avoid generate a same uuid as above.
-	server = updateClientManager(clientManager, util.NewFakeUUIDGeneratorOrFatal(fakeVersionUUID, nil))
-	response = uploadPipeline("/apis/v1beta1/pipelines/upload_version?name="+fakeVersionName+"&pipelineid="+resource.DefaultFakeUUID,
-		bytes.NewReader(bytesBuffer.Bytes()), writer, server.UploadPipelineVersion)
-	assert.Equal(t, 200, response.Code)
-	assert.Contains(t, response.Body.String(), `"created_at":"1970-01-01T00:00:02Z"`)
+			// Upload a new version under this pipeline
 
-	// Verify stored in object store
-	objStore = clientManager.ObjectStore()
-	template, err = objStore.GetFile(objStore.GetPipelineKey(fakeVersionUUID))
-	assert.Nil(t, err)
-	assert.NotNil(t, template)
-	opts, err = list.NewOptions(&model.PipelineVersion{}, 2, "", nil)
-	assert.Nil(t, err)
+			// Set the fake uuid generator with a new uuid to avoid generate a same uuid as above.
+			server = updateClientManager(clientManager, util.NewFakeUUIDGeneratorOrFatal(fakeVersionUUID, nil))
+			response = uploadPipeline("/apis/v1beta1/pipelines/upload_version?name="+fakeVersionName+"&pipelineid="+resource.DefaultFakeUUID+"&description="+fakeDescription,
+				bytes.NewReader(bytesBuffer.Bytes()), writer, server.UploadPipelineVersion)
+			assert.Equal(t, 200, response.Code)
+			assert.Contains(t, response.Body.String(), `"created_at":"1970-01-01T00:00:02Z"`)
 
-	// Verify metadata in db
-	versionsExpect := []*model.PipelineVersion{
-		{
-			UUID:           resource.DefaultFakeUUID,
-			CreatedAtInSec: 1,
-			Name:           "hello-world.yaml",
-			Parameters:     "[]",
-			Status:         model.PipelineVersionReady,
-			PipelineId:     resource.DefaultFakeUUID,
-		},
-		{
-			UUID:           fakeVersionUUID,
-			CreatedAtInSec: 2,
-			Name:           fakeVersionName,
-			Parameters:     "[]",
-			Status:         model.PipelineVersionReady,
-			PipelineId:     resource.DefaultFakeUUID,
-		},
+			// Verify stored in object store
+			objStore = clientManager.ObjectStore()
+			template, err = objStore.GetFile(objStore.GetPipelineKey(fakeVersionUUID))
+			assert.Nil(t, err)
+			assert.NotNil(t, template)
+			opts, err = list.NewOptions(&model.PipelineVersion{}, 2, "", nil)
+			assert.Nil(t, err)
+
+			// Verify metadata in db
+			versionsExpect := []*model.PipelineVersion{
+				{
+					UUID:           resource.DefaultFakeUUID,
+					CreatedAtInSec: 1,
+					Name:           "hello-world.yaml",
+					Parameters:     "[]",
+					Status:         model.PipelineVersionReady,
+					PipelineId:     resource.DefaultFakeUUID,
+				},
+				{
+					UUID:           fakeVersionUUID,
+					CreatedAtInSec: 2,
+					Name:           fakeVersionName,
+					Description:    fakeDescription,
+					Parameters:     "[]",
+					Status:         model.PipelineVersionReady,
+					PipelineId:     resource.DefaultFakeUUID,
+				},
+			}
+			// Expect 2 versions, one is created by default when creating pipeline and the other is what we manually created
+			versions, totalSize, str, err := clientManager.PipelineStore().ListPipelineVersions(resource.DefaultFakeUUID, opts)
+			assert.Nil(t, err)
+			assert.Equal(t, str, "")
+			assert.Equal(t, 2, totalSize)
+			assert.Equal(t, versionsExpect, versions)
+		})
 	}
-	// Expect 2 versions, one is created by default when creating pipeline and the other is what we manually created
-	versions, totalSize, str, err := clientManager.PipelineStore().ListPipelineVersions(resource.DefaultFakeUUID, opts)
-	assert.Nil(t, err)
-	assert.Equal(t, str, "")
-	assert.Equal(t, 2, totalSize)
-	assert.Equal(t, versionsExpect, versions)
 }
 
 func updateClientManager(clientManager *resource.FakeClientManager, uuid util.UUIDGeneratorInterface) PipelineUploadServer {
@@ -166,6 +187,78 @@ func setWriterWithBuffer(fieldname string, filename string, buffer string, write
 	io.Copy(part, bytes.NewBufferString(buffer))
 	writer.Close()
 }
+
+var v2SpecHelloWorld = `
+{
+  "components": {
+    "comp-hello-world": {
+      "executorLabel": "exec-hello-world",
+      "inputDefinitions": {
+	"parameters": {
+	  "text": {
+	    "type": "STRING"
+	  }
+	}
+      }
+    }
+  },
+  "deploymentSpec": {
+    "executors": {
+      "exec-hello-world": {
+	"container": {
+	  "args": [
+	    "--text",
+	    "{{$.inputs.parameters['text']}}"
+	  ],
+	  "command": [
+	    "sh",
+	    "-ec",
+	    "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+	    "def hello_world(text):\n    print(text)\n    return text\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Hello world', description='')\n_parser.add_argument(\"--text\", dest=\"text\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = hello_world(**_parsed_args)\n"
+	  ],
+	  "image": "python:3.7"
+	}
+      }
+    }
+  },
+  "pipelineInfo": {
+    "name": "hello-world"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+	"hello-world": {
+	  "cachingOptions": {
+	    "enableCache": true
+	  },
+	  "componentRef": {
+	    "name": "comp-hello-world"
+	  },
+	  "inputs": {
+	    "parameters": {
+	      "text": {
+		"componentInputParameter": "text"
+	      }
+	    }
+	  },
+	  "taskInfo": {
+	    "name": "hello-world"
+	  }
+	}
+      }
+    },
+    "inputDefinitions": {
+      "parameters": {
+	"text": {
+	  "type": "STRING"
+	}
+      }
+    }
+  },
+  "schemaVersion": "2.0.0",
+  "sdkVersion": "kfp-1.6.5"
+}
+`
 
 // Removed TestUploadPipeline tests because it expects argo spec in the tarball file.
 // Need to update the tarball spec once we finalized the Tekton custom multi-task loop client.

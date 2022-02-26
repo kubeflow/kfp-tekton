@@ -25,6 +25,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
+	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -39,6 +40,16 @@ func (FakePodClient) GetEphemeralContainers(context.Context, string, v1.GetOptio
 }
 
 func (FakePodClient) UpdateEphemeralContainers(context.Context, string, *corev1.EphemeralContainers, metav1.UpdateOptions) (*corev1.EphemeralContainers, error) {
+	glog.Error("This fake method is not yet implemented.")
+	return nil, nil
+}
+
+func (FakePodClient) Apply(ctx context.Context, pod *applyv1.PodApplyConfiguration, opts v1.ApplyOptions) (*corev1.Pod, error) {
+	glog.Error("This fake method is not yet implemented.")
+	return nil, nil
+}
+
+func (FakePodClient) ApplyStatus(ctx context.Context, pod *applyv1.PodApplyConfiguration, opts v1.ApplyOptions) (*corev1.Pod, error) {
 	glog.Error("This fake method is not yet implemented.")
 	return nil, nil
 }

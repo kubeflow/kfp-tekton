@@ -172,12 +172,12 @@ export function statusToIcon(
         </div>
       }
     >
-      <span style={{ height: 18 }}>
+      <div>
         <IconComponent
           data-testid='node-status-sign'
           style={{ color: iconColor, height: 18, width: 18 }}
         />
-      </span>
+      </div>
     </Tooltip>
   );
 }

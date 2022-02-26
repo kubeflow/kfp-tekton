@@ -17,107 +17,14 @@ package resource
 import (
 	"context"
 	"errors"
-	"fmt"
-	"regexp"
-	"strings"
-	"time"
 
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/client"
-	servercommon "github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
-	scheduledworkflow "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
-	wfv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func toCRDTrigger(apiTrigger *api.Trigger) *scheduledworkflow.Trigger {
-	var crdTrigger scheduledworkflow.Trigger
-	if apiTrigger.GetCronSchedule() != nil {
-		crdTrigger.CronSchedule = toCRDCronSchedule(apiTrigger.GetCronSchedule())
-	}
-	if apiTrigger.GetPeriodicSchedule() != nil {
-		crdTrigger.PeriodicSchedule = toCRDPeriodicSchedule(apiTrigger.GetPeriodicSchedule())
-	}
-	return &crdTrigger
-}
-
-func toCRDCronSchedule(cronSchedule *api.CronSchedule) *scheduledworkflow.CronSchedule {
-	if cronSchedule == nil || cronSchedule.Cron == "" {
-		return nil
-	}
-	crdCronSchedule := scheduledworkflow.CronSchedule{}
-	crdCronSchedule.Cron = cronSchedule.Cron
-
-	if cronSchedule.StartTime != nil {
-		startTime := v1.NewTime(time.Unix(cronSchedule.StartTime.Seconds, 0))
-		crdCronSchedule.StartTime = &startTime
-	}
-	if cronSchedule.EndTime != nil {
-		endTime := v1.NewTime(time.Unix(cronSchedule.EndTime.Seconds, 0))
-		crdCronSchedule.EndTime = &endTime
-	}
-	return &crdCronSchedule
-}
-
-func toCRDPeriodicSchedule(periodicSchedule *api.PeriodicSchedule) *scheduledworkflow.PeriodicSchedule {
-	if periodicSchedule == nil || periodicSchedule.IntervalSecond == 0 {
-		return nil
-	}
-	crdPeriodicSchedule := scheduledworkflow.PeriodicSchedule{}
-	crdPeriodicSchedule.IntervalSecond = periodicSchedule.IntervalSecond
-	if periodicSchedule.StartTime != nil {
-		startTime := v1.NewTime(time.Unix(periodicSchedule.StartTime.Seconds, 0))
-		crdPeriodicSchedule.StartTime = &startTime
-	}
-	if periodicSchedule.EndTime != nil {
-		endTime := v1.NewTime(time.Unix(periodicSchedule.EndTime.Seconds, 0))
-		crdPeriodicSchedule.EndTime = &endTime
-	}
-	return &crdPeriodicSchedule
-}
-
-func toCRDParameter(apiParams []*api.Parameter) []scheduledworkflow.Parameter {
-	var swParams []scheduledworkflow.Parameter
-	for _, apiParam := range apiParams {
-		swParam := scheduledworkflow.Parameter{
-			Name:  apiParam.Name,
-			Value: apiParam.Value,
-		}
-		swParams = append(swParams, swParam)
-	}
-	return swParams
-}
-
-// Process the job name to remove special char, prepend with "job-" prefix if empty, and
-// truncate size to <=25
-func toSWFCRDResourceGeneratedName(displayName string) (string, error) {
-	const (
-		// K8s resource name only allow lower case alphabetic char, number and -
-		swfCompatibleNameRegx = "[^a-z0-9-]+"
-	)
-	reg, err := regexp.Compile(swfCompatibleNameRegx)
-	if err != nil {
-		return "", util.NewInternalServerError(err, "Failed to compile ScheduledWorkflow name replacer Regex.")
-	}
-	processedName := reg.ReplaceAllString(strings.ToLower(displayName), "")
-	if processedName == "" {
-		processedName = "job-"
-	}
-	return util.Truncate(processedName, 25), nil
-}
-
-func toParametersMap(apiParams []*api.Parameter) map[string]string {
-	// Preprocess workflow by appending parameter and add pipeline specific labels
-	desiredParamsMap := make(map[string]string)
-	for _, param := range apiParams {
-		desiredParamsMap[param.Name] = param.Value
-	}
-	return desiredParamsMap
-}
 
 func formulateRetryWorkflow(wf *util.Workflow) (*util.Workflow, []string, error) {
 	if len(wf.Status.Status.Conditions) > 0 {
@@ -191,57 +98,6 @@ func deletePods(ctx context.Context, k8sCoreClient client.KubernetesCoreInterfac
 	return nil
 }
 
-// Mutate default values of specified pipeline spec.
-// Args:
-//  text: (part of) pipeline file in string.
-func PatchPipelineDefaultParameter(text string) (string, error) {
-	defaultBucket := servercommon.GetStringConfig(DefaultBucketNameEnvVar)
-	projectId := servercommon.GetStringConfig(ProjectIDEnvVar)
-	toPatch := map[string]string{
-		"{{kfp-default-bucket}}": defaultBucket,
-		"{{kfp-project-id}}":     projectId,
-	}
-	for key, value := range toPatch {
-		text = strings.Replace(text, key, value, -1)
-	}
-	return text, nil
-}
-
-// Patch the system-specified default parameters if available.
-func OverrideParameterWithSystemDefault(workflow util.Workflow, apiRun *api.Run) error {
-	// Patch the default value to workflow spec.
-	// Please be aware that Tekton doesn't have system default params
-	if servercommon.GetBoolConfigWithDefault(HasDefaultBucketEnvVar, false) {
-		patchedSlice := make([]wfv1.Param, 0)
-		for _, currentParam := range workflow.Spec.Params {
-			if currentParam.Value.StringVal != "" {
-				desiredValue, err := PatchPipelineDefaultParameter(currentParam.Value.StringVal)
-				if err != nil {
-					return fmt.Errorf("failed to patch default value to pipeline. Error: %v", err)
-				}
-				patchedSlice = append(patchedSlice, wfv1.Param{
-					Name: currentParam.Name,
-					Value: wfv1.ArrayOrString{
-						Type:      "string",
-						StringVal: *util.StringPointer(desiredValue),
-					},
-				})
-			}
-		}
-		workflow.Spec.Params = patchedSlice
-
-		// Patched the default value to apiRun
-		for _, param := range apiRun.PipelineSpec.Parameters {
-			var err error
-			param.Value, err = PatchPipelineDefaultParameter(param.Value)
-			if err != nil {
-				return fmt.Errorf("failed to patch default value to pipeline. Error: %v", err)
-			}
-		}
-	}
-	return nil
-}
-
 // Convert PipelineId in PipelineSpec to the pipeline's default pipeline version.
 // This is for legacy usage of pipeline id to create run. The standard way to
 // create run is by specifying the pipeline version.
@@ -265,17 +121,4 @@ func convertPipelineIdToDefaultPipelineVersion(pipelineSpec *api.PipelineSpec, r
 		Relationship: api.Relationship_CREATOR,
 	})
 	return nil
-}
-
-// Override pipeline name parameter if this is a v2 compatible pipeline.
-func overrideV2PipelineName(wf *util.Workflow, name string, namespace string) {
-	var pipelineRef string
-	if namespace != "" {
-		pipelineRef = fmt.Sprintf("namespace/%s/pipeline/%s", namespace, name)
-	} else {
-		pipelineRef = fmt.Sprintf("pipeline/%s", name)
-	}
-	overrides := make(map[string]string)
-	overrides["pipeline-name"] = pipelineRef
-	wf.OverrideParameters(overrides)
 }

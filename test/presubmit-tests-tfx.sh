@@ -17,6 +17,8 @@ source_root=$(pwd)
 
 # TODO(#5051) Unpin pip version once we figure out how to make the new dependency resolver in pip 20.3+ work in our case.
 python3 -m pip install --upgrade pip==20.2.3
+# TODO(#7142): remove future
+python3 -m pip install --upgrade future==0.18.2
 # TODO: unpin google-cloud-bigquery once TFX revert https://github.com/tensorflow/tfx/commit/f8c1dea2095197ceda60e1c4d67c4c90fc17ed44
 python3 -m pip install --upgrade google-cloud-bigquery==1.28.0
 python3 -m pip install -r "$source_root/sdk/python/requirements.txt"
@@ -41,7 +43,8 @@ chmod +x bazel_installer.sh
 
 # Install TFX from head
 cd $source_root
-git clone --depth 1 https://github.com/tensorflow/tfx.git
+# TODO(#6906): unpin release branch
+git clone --branch r1.4.0 --depth 1 https://github.com/tensorflow/tfx.git
 cd $source_root/tfx
 python3 -m pip install .[test] --upgrade \
   --extra-index-url https://pypi-nightly.tensorflow.org/simple

@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { PipelineSpec } from 'src/generated/pipeline_spec';
-import { ml_pipelines } from 'src/generated/pipeline_spec/pbjs_ml_pipelines';
+import jsyaml from 'js-yaml';
+import { FeatureKey, isFeatureEnabled } from 'src/features';
+import { ComponentSpec, PipelineSpec } from 'src/generated/pipeline_spec';
+import * as StaticGraphParser from 'src/lib/StaticGraphParser';
+import { convertFlowElements } from 'src/lib/v2/StaticFlow';
+import * as WorkflowUtils from 'src/lib/v2/WorkflowUtils';
 import { Workflow } from 'src/third_party/mlmd/argo_template';
 
 export function isV2Pipeline(workflow: Workflow): boolean {
@@ -34,13 +38,53 @@ export function isTektonPipelineRunTemplate(template: Workflow): boolean {
   return false;
 }
 
-// Assuming template is the JSON format of PipelineJob in api/v2alpha1/pipeline_spec.proto
-// TODO(zijianjoy): We need to change `template` format to PipelineSpec once SDK support is in.
+// Assuming template is the JSON format of PipelineSpec in api/v2alpha1/pipeline_spec.proto
 export function convertJsonToV2PipelineSpec(template: string): PipelineSpec {
-  const pipelineJob = JSON.parse(template);
+  const pipelineSpecJSON = JSON.parse(template);
+  const ts_pipelinespec = PipelineSpec.fromJSON(pipelineSpecJSON);
+  return ts_pipelinespec;
 
-  const message = ml_pipelines.PipelineSpec.fromObject(pipelineJob['pipelineSpec']);
-  const buffer = ml_pipelines.PipelineSpec.encode(message).finish();
-  const pipelineSpec = PipelineSpec.deserializeBinary(buffer);
-  return pipelineSpec;
+  // Archive: The following is used by protobuf.js.
+  // const message = ml_pipelines.PipelineSpec.fromObject(pipelineJob['pipelineSpec']);
+  // const message = ml_pipelines.PipelineSpec.fromObject(pipelineSpecJSON);
+  // const buffer = ml_pipelines.PipelineSpec.encode(message).finish();
+  // const pipelineSpec = PipelineSpec.deserializeBinary(buffer);
+  // return pipelineSpec;
+}
+
+// This needs to be changed to use pipeline_manifest vs workflow_manifest to distinguish V1 and V2.
+export function isPipelineSpec(templateString: string) {
+  if (!templateString) {
+    return false;
+  }
+  try {
+    const template = jsyaml.safeLoad(templateString);
+    if (WorkflowUtils.isArgoWorkflowTemplate(template)) {
+      StaticGraphParser.createGraph(template!);
+      return false;
+    } else if (isFeatureEnabled(FeatureKey.V2)) {
+      const pipelineSpec = WorkflowUtils.convertJsonToV2PipelineSpec(templateString);
+      convertFlowElements(pipelineSpec);
+      return true;
+    } else {
+      return false;
+    }
+  } catch (err) {
+    return false;
+  }
+}
+
+// Given the PipelineSpec payload and targeted componentSpec, returns
+// the `container` object for its image, command, arguments, etc.
+export function getContainer(componentSpec: ComponentSpec, templateString: string) {
+  const executionLabel = componentSpec?.executorLabel;
+
+  const jsonTemplate = JSON.parse(templateString);
+  const deploymentSpec = jsonTemplate['deploymentSpec'];
+
+  const executorsMap = deploymentSpec['executors'];
+  if (!executorsMap || !executionLabel) {
+    return null;
+  }
+  return executorsMap?.[executionLabel]?.['container'];
 }

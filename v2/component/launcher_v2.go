@@ -4,17 +4,28 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/kubeflow/pipelines/v2/cacheutils"
+	api "github.com/kubeflow/pipelines/v2/kfp-api"
 
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
+	pb "github.com/kubeflow/pipelines/third_party/ml-metadata/go/ml_metadata"
 	"github.com/kubeflow/pipelines/v2/metadata"
 	"github.com/kubeflow/pipelines/v2/objectstore"
-	pb "github.com/kubeflow/pipelines/v2/third_party/ml_metadata"
 	"gocloud.dev/blob"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -24,7 +35,9 @@ type LauncherV2Options struct {
 	PodName,
 	PodUID,
 	MLMDServerAddress,
-	MLMDServerPort string
+	MLMDServerPort,
+	PipelineName,
+	RunID string
 }
 
 type LauncherV2 struct {
@@ -38,6 +51,7 @@ type LauncherV2 struct {
 	// clients
 	metadataClient *metadata.Client
 	k8sClient      *kubernetes.Clientset
+	cacheClient    *cacheutils.Client
 }
 
 func NewLauncherV2(ctx context.Context, executionID int64, executorInputJSON, componentSpecJSON string, cmdArgs []string, opts *LauncherV2Options) (l *LauncherV2, err error) {
@@ -78,7 +92,8 @@ func NewLauncherV2(ctx context.Context, executionID int64, executorInputJSON, co
 	if err != nil {
 		return nil, err
 	}
-	if err = addOutputs(executorInput, component.GetOutputDefinitions()); err != nil {
+	cacheClient, err := cacheutils.NewClient()
+	if err != nil {
 		return nil, err
 	}
 	return &LauncherV2{
@@ -90,6 +105,7 @@ func NewLauncherV2(ctx context.Context, executionID int64, executorInputJSON, co
 		options:        *opts,
 		metadataClient: metadataClient,
 		k8sClient:      k8sClient,
+		cacheClient:    cacheClient,
 	}, nil
 }
 
@@ -99,10 +115,12 @@ func (l *LauncherV2) Execute(ctx context.Context) (err error) {
 			err = fmt.Errorf("failed to execute component: %w", err)
 		}
 	}()
+	executedStartedTime := time.Now().Unix()
 	execution, err := l.prePublish(ctx)
 	if err != nil {
 		return err
 	}
+	fingerPrint := execution.FingerPrint()
 	bucketConfig, err := objectstore.ParseBucketConfig(execution.GetPipeline().GetPipelineRoot())
 	if err != nil {
 		return err
@@ -114,11 +132,32 @@ func (l *LauncherV2) Execute(ctx context.Context) (err error) {
 	if err = prepareOutputFolders(l.executorInput); err != nil {
 		return err
 	}
-	executorOutput, outputArtifacts, err := executeV2(ctx, l.executorInput, l.component, l.command, l.args, bucket, bucketConfig, l.metadataClient)
+	executorOutput, outputArtifacts, err := executeV2(ctx, l.executorInput, l.component, l.command, l.args, bucket, bucketConfig, l.metadataClient, l.options.Namespace, l.k8sClient)
 	if err != nil {
 		return err
 	}
-	return l.publish(ctx, execution, executorOutput, outputArtifacts)
+	if err := l.publish(ctx, execution, executorOutput, outputArtifacts); err != nil {
+		return err
+	}
+	// if fingerPrint is not empty, it means this task enables cache but it does not hit cache, we need to create cache entry for this task
+	if fingerPrint != "" {
+		id := execution.GetID()
+		if id == 0 {
+			return fmt.Errorf("failed to get id from createdExecution")
+		}
+		task := &api.Task{
+			//TODO how to differentiate between shared pipeline and namespaced pipeline
+			PipelineName:    "pipeline/" + l.options.PipelineName,
+			Namespace:       l.options.Namespace,
+			RunId:           l.options.RunID,
+			MlmdExecutionID: strconv.FormatInt(id, 10),
+			CreatedAt:       &timestamp.Timestamp{Seconds: executedStartedTime},
+			FinishedAt:      &timestamp.Timestamp{Seconds: time.Now().Unix()},
+			Fingerprint:     fingerPrint,
+		}
+		return l.cacheClient.CreateExecutionCache(ctx, task)
+	}
+	return nil
 }
 
 func (l *LauncherV2) Info() string {
@@ -180,41 +219,15 @@ func (l *LauncherV2) publish(ctx context.Context, execution *metadata.Execution,
 			err = fmt.Errorf("failed to publish results to ML Metadata: %w", err)
 		}
 	}()
-	outputParameters, err := metadata.NewParameters(executorOutput.GetParameters())
-	if err != nil {
-		return err
-	}
+	outputParameters := executorOutput.GetParameterValues()
 	// TODO(Bobgy): upload output artifacts.
 	// TODO(Bobgy): when adding artifacts, we will need execution.pipeline to be non-nil, because we need
 	// to publish output artifacts to the context too.
 	return l.metadataClient.PublishExecution(ctx, execution, outputParameters, outputArtifacts, pb.Execution_COMPLETE)
 }
 
-// Add outputs info from component spec to executor input.
-func addOutputs(executorInput *pipelinespec.ExecutorInput, outputs *pipelinespec.ComponentOutputsSpec) error {
-	if executorInput == nil {
-		return fmt.Errorf("cannot add outputs to nil executor input")
-	}
-	if executorInput.Outputs == nil {
-		executorInput.Outputs = &pipelinespec.ExecutorInput_Outputs{}
-	}
-	if executorInput.Outputs.Parameters == nil {
-		executorInput.Outputs.Parameters = make(map[string]*pipelinespec.ExecutorInput_OutputParameter)
-	}
-	if executorInput.Outputs.OutputFile == "" {
-		executorInput.Outputs.OutputFile = outputMetadataFilepath
-	}
-	for name := range outputs.GetParameters() {
-		executorInput.Outputs.Parameters[name] = &pipelinespec.ExecutorInput_OutputParameter{
-			OutputFile: fmt.Sprintf("/tmp/kfp/outputs/%s", name),
-		}
-	}
-	// artifact outputs are added in driver
-	return nil
-}
-
-func executeV2(ctx context.Context, executorInput *pipelinespec.ExecutorInput, component *pipelinespec.ComponentSpec, cmd string, args []string, bucket *blob.Bucket, bucketConfig *objectstore.Config, metadataClient *metadata.Client) (*pipelinespec.ExecutorOutput, []*metadata.OutputArtifact, error) {
-	executorOutput, err := execute(ctx, executorInput, cmd, args, bucket, bucketConfig)
+func executeV2(ctx context.Context, executorInput *pipelinespec.ExecutorInput, component *pipelinespec.ComponentSpec, cmd string, args []string, bucket *blob.Bucket, bucketConfig *objectstore.Config, metadataClient *metadata.Client, namespace string, k8sClient *kubernetes.Clientset) (*pipelinespec.ExecutorOutput, []*metadata.OutputArtifact, error) {
+	executorOutput, err := execute(ctx, executorInput, cmd, args, bucket, bucketConfig, namespace, k8sClient)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -242,10 +255,10 @@ func executeV2(ctx context.Context, executorInput *pipelinespec.ExecutorInput, c
 // collectOutputParameters collect output parameters from local disk and add them
 // to executor output.
 func collectOutputParameters(executorInput *pipelinespec.ExecutorInput, executorOutput *pipelinespec.ExecutorOutput, component *pipelinespec.ComponentSpec) error {
-	if executorOutput.Parameters == nil {
-		executorOutput.Parameters = make(map[string]*pipelinespec.Value)
+	if executorOutput.ParameterValues == nil {
+		executorOutput.ParameterValues = make(map[string]*structpb.Value)
 	}
-	outputParameters := executorOutput.GetParameters()
+	outputParameters := executorOutput.GetParameterValues()
 	for name, param := range executorInput.GetOutputs().GetParameters() {
 		_, ok := outputParameters[name]
 		if ok {
@@ -259,30 +272,17 @@ func collectOutputParameters(executorInput *pipelinespec.ExecutorInput, executor
 			return fmt.Errorf("failed to find output parameter name=%q in component spec", name)
 		}
 		msg := func(err error) error {
-			return fmt.Errorf("failed to read output parameter name=%q type=%q path=%q: %w", name, paramSpec.GetType(), param.GetOutputFile(), err)
+			return fmt.Errorf("failed to read output parameter name=%q type=%q path=%q: %w", name, paramSpec.GetParameterType(), param.GetOutputFile(), err)
 		}
 		b, err := ioutil.ReadFile(param.GetOutputFile())
 		if err != nil {
 			return msg(err)
 		}
-		switch paramSpec.GetType() {
-		case pipelinespec.PrimitiveType_STRING:
-			outputParameters[name] = metadata.StringValue(string(b))
-		case pipelinespec.PrimitiveType_INT:
-			i, err := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 0)
-			if err != nil {
-				return msg(err)
-			}
-			outputParameters[name] = metadata.IntValue(i)
-		case pipelinespec.PrimitiveType_DOUBLE:
-			f, err := strconv.ParseFloat(strings.TrimSpace(string(b)), 0)
-			if err != nil {
-				return msg(err)
-			}
-			outputParameters[name] = metadata.DoubleValue(f)
-		default:
-			return msg(fmt.Errorf("unknown type. Expected STRING, INT or DOUBLE"))
+		value, err := metadata.TextToPbValue(string(b), paramSpec.GetParameterType())
+		if err != nil {
+			return msg(err)
 		}
+		outputParameters[name] = value
 	}
 	return nil
 }
@@ -294,4 +294,371 @@ func prettyPrint(jsonStr string) string {
 		return jsonStr
 	}
 	return string(prettyJSON.Bytes())
+}
+
+const OutputMetadataFilepath = "/tmp/kfp_outputs/output_metadata.json"
+
+func execute(ctx context.Context, executorInput *pipelinespec.ExecutorInput, cmd string, args []string, bucket *blob.Bucket, bucketConfig *objectstore.Config, namespace string, k8sClient *kubernetes.Clientset) (*pipelinespec.ExecutorOutput, error) {
+	if err := downloadArtifacts(ctx, executorInput, bucket, bucketConfig, namespace, k8sClient); err != nil {
+		return nil, err
+	}
+	if err := prepareOutputFolders(executorInput); err != nil {
+		return nil, err
+	}
+
+	// Fill in placeholders with runtime values.
+	placeholders, err := getPlaceholders(executorInput)
+	if err != nil {
+		return nil, err
+	}
+	for placeholder, replacement := range placeholders {
+		cmd = strings.ReplaceAll(cmd, placeholder, replacement)
+	}
+	for i := range args {
+		arg := args[i]
+		for placeholder, replacement := range placeholders {
+			arg = strings.ReplaceAll(arg, placeholder, replacement)
+		}
+		args[i] = arg
+	}
+
+	// Run user program.
+	executor := exec.Command(cmd, args...)
+	executor.Stdin = os.Stdin
+	executor.Stdout = os.Stdout
+	executor.Stderr = os.Stderr
+	defer glog.Flush()
+	if err := executor.Run(); err != nil {
+		return nil, err
+	}
+
+	// Collect outputs from output metadata file.
+	return getExecutorOutputFile(executorInput.GetOutputs().GetOutputFile())
+}
+
+type uploadOutputArtifactsOptions struct {
+	bucketConfig   *objectstore.Config
+	bucket         *blob.Bucket
+	metadataClient *metadata.Client
+}
+
+func uploadOutputArtifacts(ctx context.Context, executorInput *pipelinespec.ExecutorInput, executorOutput *pipelinespec.ExecutorOutput, opts uploadOutputArtifactsOptions) ([]*metadata.OutputArtifact, error) {
+	// Register artifacts with MLMD.
+	outputArtifacts := make([]*metadata.OutputArtifact, 0, len(executorInput.GetOutputs().GetArtifacts()))
+	for name, artifactList := range executorInput.GetOutputs().GetArtifacts() {
+		if len(artifactList.Artifacts) == 0 {
+			continue
+		}
+		// TODO: Support multiple artifacts someday, probably through the v2 engine.
+		outputArtifact := artifactList.Artifacts[0]
+
+		// Merge executor output artifact info with executor input
+		if list, ok := executorOutput.Artifacts[name]; ok && len(list.Artifacts) > 0 {
+			mergeRuntimeArtifacts(list.Artifacts[0], outputArtifact)
+		}
+
+		// Upload artifacts from local path to remote storages.
+		localDir, err := localPathForURI(outputArtifact.Uri)
+		if err != nil {
+			glog.Warningf("Output Artifact %q does not have a recognized storage URI %q. Skipping uploading to remote storage.", name, outputArtifact.Uri)
+		} else {
+			blobKey, err := opts.bucketConfig.KeyFromURI(outputArtifact.Uri)
+			if err != nil {
+				return nil, fmt.Errorf("failed to upload output artifact %q: %w", name, err)
+			}
+			if err := objectstore.UploadBlob(ctx, opts.bucket, localDir, blobKey); err != nil {
+				//  We allow components to not produce output files
+				if errors.Is(err, os.ErrNotExist) {
+					glog.Warningf("Local filepath %q does not exist", localDir)
+				} else {
+					return nil, fmt.Errorf("failed to upload output artifact %q to remote storage URI %q: %w", name, outputArtifact.Uri, err)
+				}
+			}
+		}
+
+		// Write out the metadata.
+		metadataErr := func(err error) error {
+			return fmt.Errorf("unable to produce MLMD artifact for output %q: %w", name, err)
+		}
+		// TODO(neuromage): Consider batching these instead of recording one by one.
+		schema, err := getArtifactSchema(outputArtifact.GetType())
+		if err != nil {
+			return nil, fmt.Errorf("failed to determine schema for output %q: %w", name, err)
+		}
+		mlmdArtifact, err := opts.metadataClient.RecordArtifact(ctx, name, schema, outputArtifact, pb.Artifact_LIVE)
+		if err != nil {
+			return nil, metadataErr(err)
+		}
+		outputArtifacts = append(outputArtifacts, mlmdArtifact)
+	}
+	return outputArtifacts, nil
+}
+
+func downloadArtifacts(ctx context.Context, executorInput *pipelinespec.ExecutorInput, defaultBucket *blob.Bucket, defaultBucketConfig *objectstore.Config, namespace string, k8sClient *kubernetes.Clientset) error {
+	// Read input artifact metadata.
+	nonDefaultBuckets, err := fetchNonDefaultBuckets(ctx, executorInput.Inputs.Artifacts, defaultBucketConfig, namespace, k8sClient)
+	closeNonDefaultBuckets := func(buckets map[string]*blob.Bucket) {
+		for name, bucket := range nonDefaultBuckets {
+			if closeBucketErr := bucket.Close(); closeBucketErr != nil {
+				glog.Warningf("failed to close bucket %q: %q", name, err.Error())
+			}
+		}
+	}
+	defer closeNonDefaultBuckets(nonDefaultBuckets)
+	if err != nil {
+		return fmt.Errorf("failed to fetch non default buckets: %w", err)
+	}
+	for name, artifactList := range executorInput.Inputs.Artifacts {
+		// TODO(neuromage): Support concat-based placholders for arguments.
+		if len(artifactList.Artifacts) == 0 {
+			continue
+		}
+		inputArtifact := artifactList.Artifacts[0]
+		localPath, err := localPathForURI(inputArtifact.Uri)
+		if err != nil {
+			glog.Warningf("Input Artifact %q does not have a recognized storage URI %q. Skipping downloading to local path.", name, inputArtifact.Uri)
+			continue
+		}
+		// Copy artifact to local storage.
+		copyErr := func(err error) error {
+			return fmt.Errorf("failed to download input artifact %q from remote storage URI %q: %w", name, inputArtifact.Uri, err)
+		}
+		// TODO: Selectively copy artifacts for which .path was actually specified
+		// on the command line.
+		bucket := defaultBucket
+		bucketConfig := defaultBucketConfig
+		if !strings.HasPrefix(inputArtifact.Uri, defaultBucketConfig.PrefixedBucket()) {
+			nonDefaultBucketConfig, err := objectstore.ParseBucketConfigForArtifactURI(inputArtifact.Uri)
+			if err != nil {
+				return fmt.Errorf("failed to parse bucketConfig for output artifact %q with uri %q: %w", name, inputArtifact.GetUri(), err)
+			}
+			nonDefaultBucket, ok := nonDefaultBuckets[nonDefaultBucketConfig.PrefixedBucket()]
+			if !ok {
+				return fmt.Errorf("failed to get bucket when downloading input artifact %s with bucket key %s: %w", name, nonDefaultBucketConfig.PrefixedBucket(), err)
+			}
+			bucket = nonDefaultBucket
+			bucketConfig = nonDefaultBucketConfig
+		}
+		blobKey, err := bucketConfig.KeyFromURI(inputArtifact.Uri)
+		if err != nil {
+			return copyErr(err)
+		}
+		if err := objectstore.DownloadBlob(ctx, bucket, localPath, blobKey); err != nil {
+			return copyErr(err)
+		}
+
+	}
+	return nil
+}
+
+func fetchNonDefaultBuckets(ctx context.Context, artifacts map[string]*pipelinespec.ArtifactList, defaultBucketConfig *objectstore.Config, namespace string, k8sClient *kubernetes.Clientset) (buckets map[string]*blob.Bucket, err error) {
+	nonDefaultBuckets := make(map[string]*blob.Bucket)
+	for name, artifactList := range artifacts {
+		if len(artifactList.Artifacts) == 0 {
+			continue
+		}
+		// TODO: Support multiple artifacts someday, probably through the v2 engine.
+		artifact := artifactList.Artifacts[0]
+		if !strings.HasPrefix(artifact.Uri, defaultBucketConfig.PrefixedBucket()) {
+			nonDefaultBucketConfig, err := objectstore.ParseBucketConfigForArtifactURI(artifact.Uri)
+			if err != nil {
+				return nonDefaultBuckets, fmt.Errorf("failed to parse bucketConfig for output artifact %q with uri %q: %w", name, artifact.GetUri(), err)
+			}
+			nonDefaultBucket, err := objectstore.OpenBucket(ctx, k8sClient, namespace, nonDefaultBucketConfig)
+			if err != nil {
+				return nonDefaultBuckets, fmt.Errorf("failed to open bucket for output artifact %q with uri %q: %w", name, artifact.GetUri(), err)
+			}
+			nonDefaultBuckets[nonDefaultBucketConfig.PrefixedBucket()] = nonDefaultBucket
+		}
+
+	}
+	return nonDefaultBuckets, nil
+
+}
+
+// Add executor input placeholders to provided map.
+func getPlaceholders(executorInput *pipelinespec.ExecutorInput) (placeholders map[string]string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("failed to get placeholders: %w", err)
+		}
+	}()
+	placeholders = make(map[string]string)
+	executorInputJSON, err := protojson.Marshal(executorInput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert ExecutorInput into JSON: %w", err)
+	}
+	placeholders["{{$}}"] = string(executorInputJSON)
+
+	// Read input artifact metadata.
+	for name, artifactList := range executorInput.Inputs.Artifacts {
+		if len(artifactList.Artifacts) == 0 {
+			continue
+		}
+		inputArtifact := artifactList.Artifacts[0]
+
+		// Prepare input uri placeholder.
+		key := fmt.Sprintf(`{{$.inputs.artifacts['%s'].uri}}`, name)
+		placeholders[key] = inputArtifact.Uri
+
+		localPath, err := localPathForURI(inputArtifact.Uri)
+		if err != nil {
+			// Input Artifact does not have a recognized storage URI
+			continue
+		}
+
+		// Prepare input path placeholder.
+		key = fmt.Sprintf(`{{$.inputs.artifacts['%s'].path}}`, name)
+		placeholders[key] = localPath
+	}
+
+	// Prepare output artifact placeholders.
+	for name, artifactList := range executorInput.GetOutputs().GetArtifacts() {
+		if len(artifactList.Artifacts) == 0 {
+			continue
+		}
+		outputArtifact := artifactList.Artifacts[0]
+		placeholders[fmt.Sprintf(`{{$.outputs.artifacts['%s'].uri}}`, name)] = outputArtifact.Uri
+
+		localPath, err := localPathForURI(outputArtifact.Uri)
+		if err != nil {
+			return nil, fmt.Errorf("resolve output artifact %q's local path: %w", name, err)
+		}
+		placeholders[fmt.Sprintf(`{{$.outputs.artifacts['%s'].path}}`, name)] = localPath
+	}
+
+	// Prepare input parameter placeholders.
+	for name, parameter := range executorInput.Inputs.ParameterValues {
+		key := fmt.Sprintf(`{{$.inputs.parameters['%s']}}`, name)
+		switch t := parameter.Kind.(type) {
+		case *structpb.Value_StringValue:
+			placeholders[key] = parameter.GetStringValue()
+		case *structpb.Value_NumberValue:
+			placeholders[key] = strconv.FormatFloat(parameter.GetNumberValue(), 'f', -1, 64)
+		case *structpb.Value_BoolValue:
+			placeholders[key] = strconv.FormatBool(parameter.GetBoolValue())
+		case *structpb.Value_ListValue:
+			b, err := json.Marshal(parameter.GetListValue())
+			if err != nil {
+				return nil, fmt.Errorf("failed to JSON-marshal list input parameter %q: %w", name, err)
+			}
+			placeholders[key] = string(b)
+		case *structpb.Value_StructValue:
+			b, err := json.Marshal(parameter.GetStructValue())
+			if err != nil {
+				return nil, fmt.Errorf("failed to JSON-marshal dict input parameter %q: %w", name, err)
+			}
+			placeholders[key] = string(b)
+		default:
+			return nil, fmt.Errorf("unknown PipelineSpec Value type %T", t)
+		}
+	}
+
+	// Prepare output parameter placeholders.
+	for name, parameter := range executorInput.GetOutputs().GetParameters() {
+		key := fmt.Sprintf(`{{$.outputs.parameters['%s'].output_file}}`, name)
+		placeholders[key] = parameter.OutputFile
+	}
+
+	return placeholders, nil
+}
+
+func getArtifactSchema(schema *pipelinespec.ArtifactTypeSchema) (string, error) {
+	switch t := schema.Kind.(type) {
+	case *pipelinespec.ArtifactTypeSchema_InstanceSchema:
+		return t.InstanceSchema, nil
+	case *pipelinespec.ArtifactTypeSchema_SchemaTitle:
+		return "title: " + t.SchemaTitle, nil
+	case *pipelinespec.ArtifactTypeSchema_SchemaUri:
+		return "", fmt.Errorf("SchemaUri is unsupported")
+	default:
+		return "", fmt.Errorf("unknown type %T in ArtifactTypeSchema %+v", t, schema)
+	}
+}
+
+func mergeRuntimeArtifacts(src, dst *pipelinespec.RuntimeArtifact) {
+	if len(src.Uri) > 0 {
+		dst.Uri = src.Uri
+	}
+
+	if src.Metadata != nil {
+		if dst.Metadata == nil {
+			dst.Metadata = src.Metadata
+		} else {
+			for k, v := range src.Metadata.Fields {
+				dst.Metadata.Fields[k] = v
+			}
+		}
+	}
+}
+
+func getExecutorOutputFile(path string) (*pipelinespec.ExecutorOutput, error) {
+	// collect user executor output file
+	executorOutput := &pipelinespec.ExecutorOutput{
+		ParameterValues: map[string]*structpb.Value{},
+		Artifacts:       map[string]*pipelinespec.ArtifactList{},
+	}
+
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			glog.Infof("output metadata file does not exist in %s", path)
+			// If file doesn't exist, return an empty ExecutorOutput.
+			return executorOutput, nil
+		} else {
+			return nil, fmt.Errorf("failed to stat output metadata file %q: %w", path, err)
+		}
+	}
+
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read output metadata file %q: %w", path, err)
+	}
+	glog.Infof("ExecutorOutput: %s", prettyPrint(string(b)))
+
+	if err := protojson.Unmarshal(b, executorOutput); err != nil {
+		return nil, fmt.Errorf("failed to unmarshall ExecutorOutput in file %q: %w", path, err)
+	}
+
+	return executorOutput, nil
+}
+
+func localPathForURI(uri string) (string, error) {
+	if strings.HasPrefix(uri, "gs://") {
+		return "/gcs/" + strings.TrimPrefix(uri, "gs://"), nil
+	}
+	if strings.HasPrefix(uri, "minio://") {
+		return "/minio/" + strings.TrimPrefix(uri, "minio://"), nil
+	}
+	if strings.HasPrefix(uri, "s3://") {
+		return "/s3/" + strings.TrimPrefix(uri, "s3://"), nil
+	}
+	return "", fmt.Errorf("failed to generate local path for URI %s: unsupported storage scheme", uri)
+}
+
+func prepareOutputFolders(executorInput *pipelinespec.ExecutorInput) error {
+	for name, parameter := range executorInput.GetOutputs().GetParameters() {
+		dir := filepath.Dir(parameter.OutputFile)
+		if err := os.MkdirAll(dir, 0644); err != nil {
+			return fmt.Errorf("failed to create directory %q for output parameter %q: %w", dir, name, err)
+		}
+	}
+
+	for name, artifactList := range executorInput.GetOutputs().GetArtifacts() {
+		if len(artifactList.Artifacts) == 0 {
+			continue
+		}
+		outputArtifact := artifactList.Artifacts[0]
+
+		localPath, err := localPathForURI(outputArtifact.Uri)
+		if err != nil {
+			return fmt.Errorf("failed to generate local storage path for output artifact %q: %w", name, err)
+		}
+
+		if err := os.MkdirAll(filepath.Dir(localPath), 0644); err != nil {
+			return fmt.Errorf("unable to create directory %q for output artifact %q: %w", filepath.Dir(localPath), name, err)
+		}
+	}
+
+	return nil
 }
