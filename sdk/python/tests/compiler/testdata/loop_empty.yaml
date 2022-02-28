@@ -1,0 +1,60 @@
+# Copyright 2020 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: empty-loop
+  annotations:
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "0", "name": "start",
+      "optional": true, "type": "Integer"}, {"default": "5", "name": "end", "optional":
+      true, "type": "Integer"}], "name": "empty-loop"}'
+spec:
+  params:
+  - name: end
+    value: '5'
+  - name: start
+    value: '0'
+  pipelineSpec:
+    params:
+    - name: end
+      default: '5'
+    - name: start
+      default: '0'
+    tasks:
+    - name: empty-loop-for-loop-2
+      params:
+      - name: from
+        value: $(params.start)
+      - name: to
+        value: $(params.end)
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: loop-item-param-1
+              type: string
+            tasks: []
+          iterateNumeric: loop-item-param-1
+  timeout: 525600m

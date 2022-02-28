@@ -91,6 +91,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.loop_with_params_in_json import parallelfor_pipeline_param_in_items_resolving
     self._test_pipeline_workflow(parallelfor_pipeline_param_in_items_resolving, 'loop_with_params_in_json.yaml', skip_noninlined=True)
 
+  def test_loop_empty(self):
+    """
+    Test compiling a loop workflow with pipeline params in json
+    """
+    from .testdata.loop_empty import loop_empty
+    self._test_pipeline_workflow(loop_empty, 'loop_empty.yaml', skip_noninlined=True)
+
   def test_condition_dependency(self):
     """
     Test dependency on Tekton conditional task.

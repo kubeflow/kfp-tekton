@@ -123,7 +123,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
     """
     custom_task_crs = []
     task_list = []
-    tasks = workflow['spec']['pipelineSpec']['tasks']
+    tasks = workflow['spec']['pipelineSpec'].get('tasks', [])
     new_tasks = []
     dependencies = []
     # handle dependecies
