@@ -1,0 +1,46 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: empty-loop
+  annotations:
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "0", "name": "start",
+      "optional": true, "type": "Integer"}, {"default": "5", "name": "end", "optional":
+      true, "type": "Integer"}], "name": "empty-loop"}'
+spec:
+  params:
+  - name: end
+    value: '5'
+  - name: start
+    value: '0'
+  pipelineSpec:
+    params:
+    - name: end
+      default: '5'
+    - name: start
+      default: '0'
+    tasks:
+    - name: empty-loop-for-loop-2
+      params:
+      - name: from
+        value: $(params.start)
+      - name: to
+        value: $(params.end)
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: loop-item-param-1
+              type: string
+            tasks: []
+          iterateNumeric: loop-item-param-1
+  timeout: 525600m
