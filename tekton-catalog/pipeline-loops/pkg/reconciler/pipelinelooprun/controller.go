@@ -198,12 +198,16 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 
 		logger.Info("Setting up event handlers")
 
-		// Add event handler for Runs
+		// Add event handler for Runs of Pipelineloop
 		runInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 			FilterFunc: pipelinecontroller.FilterRunRef(pipelineloopv1alpha1.SchemeGroupVersion.String(), pipelineloop.PipelineLoopControllerName),
 			Handler:    controller.HandleAll(impl.Enqueue),
 		})
-
+		// Add event handler for Runs of BreakTask
+		runInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+			FilterFunc: pipelinecontroller.FilterRunRef(pipelineloopv1alpha1.SchemeGroupVersion.String(), pipelineloop.BreakTaskName),
+			Handler:    controller.HandleAll(impl.Enqueue),
+		})
 		// Add event handler for PipelineRuns controlled by Run
 		pipelineRunInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 			FilterFunc: pipelinecontroller.FilterOwnerRunRef(runInformer.Lister(), pipelineloopv1alpha1.SchemeGroupVersion.String(), pipelineloop.PipelineLoopControllerName),

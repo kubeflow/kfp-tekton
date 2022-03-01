@@ -135,6 +135,16 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 		logger.Errorf("Run %s/%s does not provide a spec or ref.", run.Namespace, run.Name)
 		return nil
 	}
+	if (run.Spec.Ref != nil && run.Spec.Ref.Kind == pipelineloop.BreakTaskName) ||
+		(run.Spec.Spec != nil && run.Spec.Spec.Kind == pipelineloop.BreakTaskName) {
+		if !run.IsDone() {
+			run.Status.InitializeConditions()
+			run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
+				"Break task is a dummy task.")
+		}
+		logger.Infof("Break task encountered %s", run.Name)
+		return nil
+	}
 	// Check that the Run references a PipelineLoop CRD.  The logic is controller.go should ensure that only this type of Run
 	// is reconciled this controller but it never hurts to do some bullet-proofing.
 	if run.Spec.Ref != nil &&
@@ -736,25 +746,6 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, run *v1alpha1.
 				if err != nil {
 					return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to Run %s."+
 						" %#v", run.Name, err)
-				}
-				// Cancel the break task.
-				runBreakTaskList, err := c.pipelineClientSet.TektonV1alpha1().Runs(run.Namespace).List(ctx,
-					metav1.ListOptions{})
-				if err != nil {
-					logger.Errorf("could not cancel the break task run, %v", err)
-				}
-				for _, r := range runBreakTaskList.Items {
-					logger.Infof("updating run: %s", r.Name)
-					if strings.HasSuffix(r.Name, "pipelineloop-break-operation") {
-						getRun, err := c.pipelineClientSet.TektonV1alpha1().Runs(run.Namespace).Get(ctx, r.Name, metav1.GetOptions{})
-						getRun.Status.InitializeConditions()
-						getRun.Status.MarkRunSucceeded(v1beta1.PipelineRunReasonSuccessful.String(), "Break task is a dummy task")
-						updatedRun, err := c.pipelineClientSet.TektonV1alpha1().Runs(run.Namespace).Update(ctx, getRun, metav1.UpdateOptions{})
-						if err != nil {
-							logger.Errorf("could not cancel the break task for run: %s: Error: %v", r.Name, err)
-						}
-						logger.Infof("Updated run: %#v", updatedRun)
-					}
 				}
 				// Mark run successful and stop the loop pipelinerun
 				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
