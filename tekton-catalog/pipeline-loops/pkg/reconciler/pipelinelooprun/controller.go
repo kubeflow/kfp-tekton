@@ -22,8 +22,8 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
+	"time"
 
 	taskCache "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
@@ -49,7 +49,7 @@ import (
 	"knative.dev/pkg/system"
 )
 
-func load(ctx context.Context, kubeClientSet kubernetes.Interface, o *cl.ObjectStoreLogConfig) error {
+func loadObjectStoreConfig(ctx context.Context, kubeClientSet kubernetes.Interface, o *cl.ObjectStoreLogConfig) error {
 	configMap, err := kubeClientSet.CoreV1().ConfigMaps(system.Namespace()).
 		Get(ctx, "object-store-config", metaV1.GetOptions{})
 	if err != nil {
@@ -69,30 +69,117 @@ func load(ctx context.Context, kubeClientSet kubernetes.Interface, o *cl.ObjectS
 	return nil
 }
 
+func loadCacheConfig(ctx context.Context, kubeClientSet kubernetes.Interface, p *db.ConnectionParams) (bool, error) {
+	configMap, err := kubeClientSet.CoreV1().ConfigMaps(system.Namespace()).Get(ctx,
+		"cache-config", metaV1.GetOptions{})
+	if err != nil {
+		return false, err
+	}
+	if configMap.Data["disabled"] == "true" {
+		return true, nil
+	}
+	p.DbName = configMap.Data["dbName"]
+	p.DbDriver = configMap.Data["driver"]
+	p.DbHost = configMap.Data["host"]
+	p.DbPort = configMap.Data["port"]
+	p.DbExtraParams = configMap.Data["extraParams"]
+	p.DbUser = configMap.Data["user"]
+	p.DbPwd = configMap.Data["password"]
+	timeout, err := time.ParseDuration(configMap.Data["timeout"])
+	if err != nil {
+		return false, err
+	}
+	p.Timeout = timeout
+	return false, nil
+}
+
 var params db.ConnectionParams
+
+func initCache(ctx context.Context, kubeClientSet kubernetes.Interface, params db.ConnectionParams) *taskCache.TaskCacheStore {
+	logger := logging.FromContext(ctx)
+	disabled, err := loadCacheConfig(ctx, kubeClientSet, &params)
+	if err != nil {
+		logger.Errorf("Config map could not be loaded. Error : %w", err)
+		params.LoadMySQLDefaults()
+		params.Timeout = 10 * time.Second
+	}
+	cacheStore := &taskCache.TaskCacheStore{Params: params}
+	if disabled {
+		cacheStore.Disabled = true
+	}
+	if !cacheStore.Disabled {
+		logger.Infof("Params: %#v", params)
+		err := cacheStore.Connect()
+		if err != nil {
+			cacheStore.Disabled = true
+			logger.Errorf("Failed to connect to cache store backend, cache store disabled. err: %v", err)
+		} else {
+			logger.Infof("Cache store connected to db with Params: %#v", params)
+		}
+	}
+	return cacheStore
+}
+
+func initLogger(ctx context.Context, kubeClientSet kubernetes.Interface) *zap.SugaredLogger {
+	var logger = logging.FromContext(ctx)
+	loggerConfig := cl.ObjectStoreLogConfig{}
+	objectStoreLogger := cl.Logger{
+		MaxSize: 1024 * 100, // TODO make it configurable via a configmap.
+	}
+	err := loadObjectStoreConfig(ctx, kubeClientSet, &loggerConfig)
+	if err == nil {
+		err = objectStoreLogger.LoadDefaults(loggerConfig)
+		if err == nil {
+			_ = objectStoreLogger.LogConfig.CreateNewBucket(loggerConfig.DefaultBucketName)
+		}
+	}
+	if err == nil && objectStoreLogger.LogConfig.Enable {
+		logger.Info("Loading object store logger...")
+		w := zapcore.NewMultiWriteSyncer(
+			zapcore.AddSync(os.Stdout),
+			zapcore.AddSync(&objectStoreLogger),
+		)
+		core := zapcore.NewCore(
+			zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+			w,
+			zap.InfoLevel,
+		)
+		logger = zap.New(core).Sugar()
+		logger.Info("First log msg with object store logger.")
+
+		// set up SIGHUP to send logs to object store before shutdown.
+		signal.Ignore(syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT)
+		c := make(chan os.Signal, 3)
+		signal.Notify(c, syscall.SIGTERM)
+		signal.Notify(c, syscall.SIGINT)
+		signal.Notify(c, syscall.SIGHUP)
+
+		go func() {
+			for {
+				<-c
+				err = objectStoreLogger.Close()
+				fmt.Printf("Synced with object store... %v", err)
+				os.Exit(0)
+			}
+		}()
+	} else {
+		logger.Errorf("Object store logging unavailable, %v ", err)
+	}
+	return logger
+}
 
 // NewController instantiates a new controller.Impl from knative.dev/pkg/controller
 func NewController(namespace string) func(context.Context, configmap.Watcher) *controller.Impl {
 	return func(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
 		kubeclientset := kubeclient.Get(ctx)
-		logger := logging.FromContext(ctx)
 		pipelineclientset := pipelineclient.Get(ctx)
 		pipelineloopclientset := pipelineloopclient.Get(ctx)
 		runInformer := runinformer.Get(ctx)
 		pipelineLoopInformer := pipelineloopinformer.Get(ctx)
 		pipelineRunInformer := pipelineruninformer.Get(ctx)
-		params.LoadMySQLDefaults()
-		cacheStore := &taskCache.TaskCacheStore{Params: params}
-		if strings.EqualFold(os.Getenv("CACHE_STORE_DISABLED"), "true") {
-			cacheStore.Disabled = true
-		}
-		if !cacheStore.Disabled {
-			err := cacheStore.Connect()
-			if err != nil {
-				cacheStore.Disabled = true
-				logger.Errorf("Failed to connect to cache store backed, cache store disabled. err: %v", err)
-			}
-		}
+		logger := initLogger(ctx, kubeclientset)
+		ctx = logging.WithLogger(ctx, logger)
+		cacheStore := initCache(ctx, kubeclientset, params)
 		c := &Reconciler{
 			KubeClientSet:         kubeclientset,
 			pipelineClientSet:     pipelineclientset,
@@ -101,50 +188,6 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
 			pipelineRunLister:     pipelineRunInformer.Lister(),
 			cacheStore:            cacheStore,
-		}
-		loggerConfig := cl.ObjectStoreLogConfig{}
-		objectStoreLogger := cl.Logger{
-			MaxSize: 1024 * 100, // TODO make it configurable via a configmap.
-		}
-		err := load(ctx, kubeclientset, &loggerConfig)
-		if err == nil {
-			err = objectStoreLogger.LoadDefaults(loggerConfig)
-			if err == nil {
-				_ = objectStoreLogger.LogConfig.CreateNewBucket(loggerConfig.DefaultBucketName)
-			}
-		}
-		if err == nil && objectStoreLogger.LogConfig.Enable {
-			logger.Info("Loading object store logger...")
-			w := zapcore.NewMultiWriteSyncer(
-				zapcore.AddSync(os.Stdout),
-				zapcore.AddSync(&objectStoreLogger),
-			)
-			core := zapcore.NewCore(
-				zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-				w,
-				zap.InfoLevel,
-			)
-			logger = zap.New(core).Sugar()
-			logger.Info("First log msg with object store logger.")
-			ctx = logging.WithLogger(ctx, logger)
-
-			// set up SIGHUP to send logs to object store before shutdown.
-			signal.Ignore(syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT)
-			c := make(chan os.Signal, 3)
-			signal.Notify(c, syscall.SIGTERM)
-			signal.Notify(c, syscall.SIGINT)
-			signal.Notify(c, syscall.SIGHUP)
-
-			go func() {
-				for {
-					<-c
-					err = objectStoreLogger.Close()
-					fmt.Printf("Synced with object store... %v", err)
-					os.Exit(0)
-				}
-			}()
-		} else {
-			logger.Errorf("Object store logging unavailable, %v ", err)
 		}
 
 		impl := runreconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
