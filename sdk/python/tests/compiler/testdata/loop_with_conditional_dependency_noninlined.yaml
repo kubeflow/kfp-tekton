@@ -1,0 +1,168 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: empty-loop
+  annotations:
+    tekton.dev/output_artifacts: '{"print-0": [{"key": "artifacts/$PIPELINERUN/print-0/output_value.tgz",
+      "name": "print-0-output_value", "path": "/tmp/outputs/output_value/data"}],
+      "print-1": [{"key": "artifacts/$PIPELINERUN/print-1/output_value.tgz", "name":
+      "print-1-output_value", "path": "/tmp/outputs/output_value/data"}], "print-2":
+      [{"key": "artifacts/$PIPELINERUN/print-2/output_value.tgz", "name": "print-2-output_value",
+      "path": "/tmp/outputs/output_value/data"}], "print-3": [{"key": "artifacts/$PIPELINERUN/print-3/output_value.tgz",
+      "name": "print-3-output_value", "path": "/tmp/outputs/output_value/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print-0": [["output_value", "$(results.output-value.path)"]],
+      "print-1": [["output_value", "$(results.output-value.path)"]], "print-2": [["output_value",
+      "$(results.output-value.path)"]], "print-3": [["output_value", "$(results.output-value.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
+      \"c\"]", "name": "param", "optional": true, "type": "JsonArray"}], "name": "empty-loop"}'
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "empty-loop-for-loop-2"}, "spec":
+      {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name": "param-loop-item",
+      "type": "string"}], "tasks": [{"name": "print-3", "runAfter": [], "taskSpec":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print-3\", \"outputs\": [{\"description\": \"Represents an output
+      paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
+      \"print-3@sha256=5eed691c7d42c19cf0e5ca60612456bac19f7d8902ae2cf92ff0f37663cf4763\"}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
+      "output-value"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n",
+      "print-3", "$(results.output-value.path)"], "image": "alpine:3.6", "name": "main"}]},
+      "timeout": "525600m"}]}}}]'
+spec:
+  params:
+  - name: param
+    value: '["a", "b", "c"]'
+  pipelineSpec:
+    params:
+    - name: param
+      default: '["a", "b", "c"]'
+    tasks:
+    - name: print-0
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0 > $1
+          - print-0
+          - $(results.output-value.path)
+          image: alpine:3.6
+        results:
+        - name: output-value
+          description: /tmp/outputs/output_value/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print-0", "outputs":
+              [{"description": "Represents an output paramter.", "name": "output_value",
+              "type": "String"}], "version": "print-0@sha256=5dd3c506ec54281b82008ca8ec5d8142834eae18d74ce8a110a31dd6e371b40d"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+    - name: condition-cel
+      params:
+      - name: outcome
+        value: $(tasks.print-0.results.output-value) == "print-0"
+      taskRef:
+        name: cel_condition
+        apiVersion: cel.tekton.dev/v1alpha1
+        kind: CEL
+      timeout: 525600m
+    - name: print-1
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0 > $1
+          - print-1
+          - $(results.output-value.path)
+          image: alpine:3.6
+        results:
+        - name: output-value
+          description: /tmp/outputs/output_value/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print-1", "outputs":
+              [{"description": "Represents an output paramter.", "name": "output_value",
+              "type": "String"}], "version": "print-1@sha256=3b81342bc143f625b58ebdb01e7c83b145880dee807be35c1e16fdb835d46580"}'
+            tekton.dev/template: ''
+      when:
+      - input: $(tasks.condition-cel.results.outcome)
+        operator: in
+        values:
+        - "true"
+      timeout: 525600m
+    - name: print-2
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0 > $1
+          - print-2
+          - $(results.output-value.path)
+          image: alpine:3.6
+        results:
+        - name: output-value
+          description: /tmp/outputs/output_value/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print-2", "outputs":
+              [{"description": "Represents an output paramter.", "name": "output_value",
+              "type": "String"}], "version": "print-2@sha256=1a47ca9c21f0c4c30565a5cd490ec648a8e6b33dfa08a62ff2bfee67d6800e00"}'
+            tekton.dev/template: ''
+      runAfter:
+      - print-1
+      timeout: 525600m
+    - runAfter:
+      - print-1
+      name: empty-loop-for-loop-2
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: empty-loop-for-loop-2
+      params:
+      - name: param-loop-item
+        value: $(params.param)
+  timeout: 525600m

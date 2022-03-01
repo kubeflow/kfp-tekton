@@ -161,6 +161,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.loop_in_recursion import flipcoin
     self._test_pipeline_workflow(flipcoin, 'loop_in_recursion.yaml')
 
+  def test_loop_with_conditional_dependency_workflow(self):
+    """
+    Test compiling loops with conditional dependency workflow.
+    """
+    from .testdata.loop_with_conditional_dependency import condition_1
+    self._test_pipeline_workflow(condition_1, 'loop_with_conditional_dependency.yaml')
+
   def test_data_passing_pipeline_param_as_file(self):
     """
     Test compiling a pipeline_param_as_file workflow.

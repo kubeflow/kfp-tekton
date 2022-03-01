@@ -558,6 +558,70 @@ class TektonCompiler(Compiler):
 
     return templates
 
+  def _get_dependencies(self, pipeline, root_group, op_groups,
+                        opsgroups_groups, opsgroups, condition_params):
+      """Get dependent groups and ops for all ops and groups.
+      Returns:
+        A dict. Key is group/op name, value is a list of dependent groups/ops.
+        The dependencies are calculated in the following way: if op2 depends on op1,
+        and their ancestors are [root, G1, G2, op1] and [root, G1, G3, G4, op2],
+        then G3 is dependent on G2. Basically dependency only exists in the first uncommon
+        ancesters in their ancesters chain. Only sibling groups/ops can have dependencies.
+      """
+      dependencies = defaultdict(set)
+      for op in pipeline.ops.values():
+          upstream_op_names = set()
+          for param in op.inputs + list(condition_params[op.name]):
+              if param.op_name:
+                  upstream_op_names.add(param.op_name)
+          upstream_op_names |= set(op.dependent_names)
+
+          for upstream_op_name in upstream_op_names:
+              # the dependent op could be either a BaseOp or an opsgroup
+              if upstream_op_name in pipeline.ops:
+                  upstream_op = pipeline.ops[upstream_op_name]
+              elif upstream_op_name in opsgroups:
+                  upstream_op = opsgroups[upstream_op_name]
+              else:
+                  raise ValueError('compiler cannot find the ' +
+                                    upstream_op_name)
+
+              upstream_groups, downstream_groups = self._get_uncommon_ancestors(
+                  op_groups, opsgroups_groups, upstream_op, op)
+              # Convert Argo condition DAG dependency into Tekton condition task dependency
+              while len(upstream_groups) > 0 and 'condition-' in upstream_groups[0]:
+                upstream_groups.pop(0)
+              if len(upstream_groups) > 0:
+                dependencies[downstream_groups[0]].add(upstream_groups[0])
+
+      # Generate dependencies based on the recursive opsgroups
+      #TODO: refactor the following codes with the above
+      def _get_dependency_opsgroup(group, dependencies):
+          upstream_op_names = set(
+              [dependency.name for dependency in group.dependencies])
+          if group.recursive_ref:
+              for param in group.inputs + list(condition_params[group.name]):
+                  if param.op_name:
+                      upstream_op_names.add(param.op_name)
+
+          for op_name in upstream_op_names:
+              if op_name in pipeline.ops:
+                  upstream_op = pipeline.ops[op_name]
+              elif op_name in opsgroups:
+                  upstream_op = opsgroups[op_name]
+              else:
+                  raise ValueError('compiler cannot find the ' + op_name)
+              upstream_groups, downstream_groups = \
+                self._get_uncommon_ancestors(op_groups, opsgroups_groups, upstream_op, group)
+              dependencies[downstream_groups[0]].add(upstream_groups[0])
+
+          for subgroup in group.groups:
+              _get_dependency_opsgroup(subgroup, dependencies)
+
+      _get_dependency_opsgroup(root_group, dependencies)
+
+      return dependencies
+
   def _get_inputs_outputs(
           self,
           pipeline,
