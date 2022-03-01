@@ -595,7 +595,7 @@ class TektonCompiler(Compiler):
                 dependencies[downstream_groups[0]].add(upstream_groups[0])
 
       # Generate dependencies based on the recursive opsgroups
-      #TODO: refactor the following codes with the above
+      # TODO: refactor the following codes with the above
       def _get_dependency_opsgroup(group, dependencies):
           upstream_op_names = set(
               [dependency.name for dependency in group.dependencies])
@@ -613,7 +613,11 @@ class TektonCompiler(Compiler):
                   raise ValueError('compiler cannot find the ' + op_name)
               upstream_groups, downstream_groups = \
                 self._get_uncommon_ancestors(op_groups, opsgroups_groups, upstream_op, group)
-              dependencies[downstream_groups[0]].add(upstream_groups[0])
+              # Convert Argo condition DAG dependency into Tekton condition task dependency
+              while len(upstream_groups) > 0 and 'condition-' in upstream_groups[0]:
+                upstream_groups.pop(0)
+              if len(upstream_groups) > 0:
+                dependencies[downstream_groups[0]].add(upstream_groups[0])
 
           for subgroup in group.groups:
               _get_dependency_opsgroup(subgroup, dependencies)

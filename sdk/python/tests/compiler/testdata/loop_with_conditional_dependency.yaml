@@ -23,14 +23,17 @@ metadata:
       "print-1-output_value", "path": "/tmp/outputs/output_value/data"}], "print-2":
       [{"key": "artifacts/$PIPELINERUN/print-2/output_value.tgz", "name": "print-2-output_value",
       "path": "/tmp/outputs/output_value/data"}], "print-3": [{"key": "artifacts/$PIPELINERUN/print-3/output_value.tgz",
-      "name": "print-3-output_value", "path": "/tmp/outputs/output_value/data"}]}'
+      "name": "print-3-output_value", "path": "/tmp/outputs/output_value/data"}],
+      "print-4": [{"key": "artifacts/$PIPELINERUN/print-4/output_value.tgz", "name":
+      "print-4-output_value", "path": "/tmp/outputs/output_value/data"}]}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print-0": [["output_value", "$(results.output-value.path)"]],
       "print-1": [["output_value", "$(results.output-value.path)"]], "print-2": [["output_value",
-      "$(results.output-value.path)"]], "print-3": [["output_value", "$(results.output-value.path)"]]}'
+      "$(results.output-value.path)"]], "print-3": [["output_value", "$(results.output-value.path)"]],
+      "print-4": [["output_value", "$(results.output-value.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
@@ -181,6 +184,49 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-3",
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print-3@sha256=5eed691c7d42c19cf0e5ca60612456bac19f7d8902ae2cf92ff0f37663cf4763"}'
+                    tekton.dev/template: ''
+              timeout: 525600m
+          iterateParam: param-loop-item
+    - runAfter:
+      - print-1
+      name: empty-loop-for-loop-3
+      params:
+      - name: param-loop-item
+        value: $(params.param)
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: param-loop-item
+              type: string
+            tasks:
+            - name: print-4
+              taskSpec:
+                steps:
+                - name: main
+                  command:
+                  - sh
+                  - -c
+                  - |
+                    set -e
+                    echo $0 > $1
+                  - print-4
+                  - $(results.output-value.path)
+                  image: alpine:3.6
+                results:
+                - name: output-value
+                  description: /tmp/outputs/output_value/data
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "print-4",
+                      "outputs": [{"description": "Represents an output paramter.",
+                      "name": "output_value", "type": "String"}], "version": "print-4@sha256=612578686b564fc00e7052b345cd44d6a9cad721cdd6ceb3ecfc68c392a932f7"}'
                     tekton.dev/template: ''
               runAfter: []
               timeout: 525600m
