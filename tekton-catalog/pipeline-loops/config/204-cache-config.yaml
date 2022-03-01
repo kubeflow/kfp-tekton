@@ -21,7 +21,7 @@ metadata:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines-loops
 data:
-  disabled: "false"
+  disabled: "true"
   driver: "mysql"
   host: "mysql.kubeflow.svc.cluster.local"
   port: "3306"

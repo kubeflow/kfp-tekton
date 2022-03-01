@@ -22,7 +22,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
@@ -105,7 +104,7 @@ func initCache(ctx context.Context, kubeClientSet kubernetes.Interface, params d
 		params.Timeout = 10 * time.Second
 	}
 	cacheStore := &taskCache.TaskCacheStore{Params: params}
-	if disabled || strings.EqualFold(os.Getenv("CACHE_STORE_DISABLED"), "true") {
+	if disabled {
 		cacheStore.Disabled = true
 	}
 	if !cacheStore.Disabled {
