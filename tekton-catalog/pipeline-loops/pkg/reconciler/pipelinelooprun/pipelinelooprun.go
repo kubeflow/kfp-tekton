@@ -664,12 +664,6 @@ func (c *Reconciler) cancelAllPipelineRuns(ctx context.Context, run *v1alpha1.Ru
 	return nil
 }
 
-func getBreakTaskLabels(runName, taskName string) string {
-	return fmt.Sprintf(
-		`tekton.dev/run=%s
-				tekton.dev/pipelineTask=%s`, runName, taskName)
-}
-
 func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
 	logger := logging.FromContext(ctx)
 	highestIteration := 0
