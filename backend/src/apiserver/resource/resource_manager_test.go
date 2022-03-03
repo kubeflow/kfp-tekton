@@ -61,8 +61,47 @@ import (
 // "TestCreatePipelineVersion_ComplexPipelineVersion", "TestCreatePipelineVersion_CreatePipelineVersionFileError", "TestCreatePipelineVersion_GetParametersError",
 // "TestCreatePipelineVersion_StorePipelineVersionMetadataError", "TestDeletePipelineVersion", "TestDeletePipelineVersion_FileError"
 
+// Util function to create an initial state with pipeline uploaded
+func initWithJobV2(t *testing.T) (*FakeClientManager, *ResourceManager, *model.Job) {
+	store, manager, exp := initWithExperiment(t)
+	job := &api.Job{
+		Name:         "j1",
+		Enabled:      true,
+		PipelineSpec: &api.PipelineSpec{PipelineManifest: v2SpecHelloWorld},
+		ResourceReferences: []*api.ResourceReference{
+			{
+				Key:          &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: exp.UUID},
+				Relationship: api.Relationship_OWNER,
+			},
+		},
+	}
+	j, err := manager.CreateJob(context.Background(), job)
+	assert.Nil(t, err)
+
+	return store, manager, j
+}
+
 func initEnvVars() {
 	viper.Set(common.PodNamespace, "ns1")
+}
+
+func initWithOneTimeRunV2(t *testing.T) (*FakeClientManager, *ResourceManager, *model.RunDetail) {
+	store, manager, exp := initWithExperiment(t)
+	apiRun := &api.Run{
+		Name: "run1",
+		PipelineSpec: &api.PipelineSpec{
+			PipelineManifest: v2SpecHelloWorld,
+		},
+		ResourceReferences: []*api.ResourceReference{
+			{
+				Key:          &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: exp.UUID},
+				Relationship: api.Relationship_OWNER,
+			},
+		},
+	}
+	runDetail, err := manager.CreateRun(context.Background(), apiRun)
+	assert.Nil(t, err)
+	return store, manager, runDetail
 }
 
 type FakeBadObjectStore struct{}
@@ -222,32 +261,7 @@ func TestCreatePipeline_GetParametersError(t *testing.T) {
 	manager := NewResourceManager(store)
 	_, err := manager.CreatePipeline("pipeline1", "", "", []byte("I am invalid yaml"))
 	assert.Equal(t, codes.InvalidArgument, err.(*util.UserError).ExternalStatusCode())
-	assert.Contains(t, err.Error(), "Failed to parse the parameter")
-}
-
-func TestCreatePipeline_StorePipelineMetadataError(t *testing.T) {
-	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	defer store.Close()
-	store.DB().Close()
-	manager := NewResourceManager(store)
-	_, err := manager.CreatePipeline("pipeline1", "", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
-	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
-	assert.Contains(t, err.Error(), "Failed to start a transaction to create a new pipeline")
-}
-
-func TestCreatePipeline_CreatePipelineFileError(t *testing.T) {
-	store := NewFakeClientManagerOrFatal(util.NewFakeTimeForEpoch())
-	defer store.Close()
-	manager := NewResourceManager(store)
-	// Use a bad object store
-	manager.objectStore = &FakeBadObjectStore{}
-	_, err := manager.CreatePipeline("pipeline1", "", "", []byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"))
-	assert.Equal(t, codes.Internal, err.(*util.UserError).ExternalStatusCode())
-	assert.Contains(t, err.Error(), "bad object store")
-	// Verify there is a pipeline in DB with status PipelineCreating.
-	pipeline, err := manager.pipelineStore.GetPipelineWithStatus(DefaultFakeUUID, model.PipelineCreating)
-	assert.Nil(t, err)
-	assert.NotNil(t, pipeline)
+	assert.Contains(t, err.Error(), "InvalidInputError")
 }
 
 func TestGetPipelineTemplate(t *testing.T) {
@@ -285,7 +299,7 @@ func TestCreateRun_EmptyPipelineSpec(t *testing.T) {
 	}
 	_, err := manager.CreateRun(context.Background(), apiRun)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Failed to fetch workflow spec")
+	assert.Contains(t, err.Error(), "Failed to fetch manifest bytes")
 }
 
 func TestCreateRun_InvalidWorkflowSpec(t *testing.T) {
@@ -303,7 +317,7 @@ func TestCreateRun_InvalidWorkflowSpec(t *testing.T) {
 	}
 	_, err := manager.CreateRun(context.Background(), apiRun)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Failed to unmarshal workflow spec manifest")
+	assert.Contains(t, err.Error(), "InvalidInputError")
 }
 
 // Removed Argo related tests (check the top page comments for more details)
@@ -599,3 +613,75 @@ func TestGetPodLogOptions(t *testing.T) {
 	}
 	assert.Equal(t, expectedLogOptions, logOptions)
 }
+
+var v2SpecHelloWorld = `
+{
+  "components": {
+    "comp-hello-world": {
+      "executorLabel": "exec-hello-world",
+      "inputDefinitions": {
+	"parameters": {
+	  "text": {
+	    "type": "STRING"
+	  }
+	}
+      }
+    }
+  },
+  "deploymentSpec": {
+    "executors": {
+      "exec-hello-world": {
+	"container": {
+	  "args": [
+	    "--text",
+	    "{{$.inputs.parameters['text']}}"
+	  ],
+	  "command": [
+	    "sh",
+	    "-ec",
+	    "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+	    "def hello_world(text):\n    print(text)\n    return text\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Hello world', description='')\n_parser.add_argument(\"--text\", dest=\"text\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = hello_world(**_parsed_args)\n"
+	  ],
+	  "image": "python:3.7"
+	}
+      }
+    }
+  },
+  "pipelineInfo": {
+    "name": "hello-world"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+	"hello-world": {
+	  "cachingOptions": {
+	    "enableCache": true
+	  },
+	  "componentRef": {
+	    "name": "comp-hello-world"
+	  },
+	  "inputs": {
+	    "parameters": {
+	      "text": {
+		"componentInputParameter": "text"
+	      }
+	    }
+	  },
+	  "taskInfo": {
+	    "name": "hello-world"
+	  }
+	}
+      }
+    },
+    "inputDefinitions": {
+      "parameters": {
+	"text": {
+	  "type": "STRING"
+	}
+      }
+    }
+  },
+  "schemaVersion": "2.0.0",
+  "sdkVersion": "kfp-1.6.5"
+}
+`

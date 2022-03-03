@@ -27,6 +27,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/cache/client"
 	"github.com/kubeflow/pipelines/backend/src/cache/model"
 	"github.com/kubeflow/pipelines/backend/src/cache/storage"
+	"k8s.io/apimachinery/pkg/api/resource"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"go.uber.org/zap"
 	"k8s.io/api/admission/v1beta1"
@@ -211,13 +212,13 @@ func MutatePodIfCached(req *v1beta1.AdmissionRequest, clientMgr ClientManagerInt
 			if pod.Spec.Affinity != nil {
 				patches = append(patches, patchOperation{
 					Op:   OperationTypeRemove,
-					Path: "spec/affinity",
+					Path: "/spec/affinity",
 				})
 			}
 			if pod.Spec.NodeSelector != nil {
 				patches = append(patches, patchOperation{
 					Op:   OperationTypeRemove,
-					Path: "spec/nodeSelector",
+					Path: "/spec/nodeSelector",
 				})
 			}
 		}
@@ -306,6 +307,12 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 	firstOriginalContainer.Args = append(firstOriginalContainer.Args, "-c")
 	firstOriginalContainer.Args = append(firstOriginalContainer.Args, replacedArg)
 	firstOriginalContainer.Image = image
+	firstOriginalContainer.Resources = corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("0.01"),
+							corev1.ResourceMemory: resource.MustParse("16Mi"),
+						},
+					}
 
 	dummyContainers = append(dummyContainers, firstOriginalContainer)
 

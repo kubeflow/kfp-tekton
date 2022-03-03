@@ -5,11 +5,11 @@ import (
 
 	"path"
 
-	"github.com/ghodss/yaml"
 	"github.com/go-openapi/strfmt"
 	params "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
 	pipelineparams "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
 	pipelinemodel "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_model"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/template"
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -44,13 +44,18 @@ func getDefaultWorkflow() *workflowapi.PipelineRun {
 		}}
 }
 
+func getDefaultTemplate() template.Template {
+	tmpl, _ := template.NewTektonTemplateFromWorkflow(&workflowapi.PipelineRun{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "MY_NAMESPACE",
+			Name:      "MY_NAME",
+		}})
+	return tmpl
+}
+
 func getDefaultWorkflowAsString() string {
-	workflow := getDefaultWorkflow()
-	result, err := yaml.Marshal(workflow)
-	if err != nil {
-		return "no workflow"
-	}
-	return string(result)
+	tmpl := getDefaultTemplate()
+	return string(tmpl.Bytes())
 }
 
 type PipelineClientFake struct{}
@@ -89,12 +94,12 @@ func (c *PipelineClientFake) Delete(params *pipelineparams.DeletePipelineParams)
 }
 
 func (c *PipelineClientFake) GetTemplate(params *pipelineparams.GetTemplateParams) (
-	*workflowapi.PipelineRun, error) {
+	template.Template, error) {
 	switch params.ID {
 	case PipelineForClientErrorTest:
 		return nil, fmt.Errorf(ClientErrorString)
 	default:
-		return getDefaultWorkflow(), nil
+		return getDefaultTemplate(), nil
 	}
 }
 

@@ -826,9 +826,9 @@ subjects:
 apiVersion: v1
 data:
   # References:
-  # * https://github.com/argoproj/argo-workflows/blob/v3.1.6/config/config.go
-  # * https://github.com/argoproj/argo-workflows/blob/v3.1.6/docs/workflow-controller-configmap.md
-  # * https://github.com/argoproj/argo-workflows/blob/v3.1.6/docs/workflow-controller-configmap.yaml
+  # * https://github.com/argoproj/argo-workflows/blob/v3.2.3/config/config.go
+  # * https://github.com/argoproj/argo-workflows/blob/v3.2.3/docs/workflow-controller-configmap.md
+  # * https://github.com/argoproj/argo-workflows/blob/v3.2.3/docs/workflow-controller-configmap.yaml
 
   # emissary executor is a more portable default, see https://github.com/kubeflow/pipelines/issues/1654.
   containerRuntimeExecutor: 'emissary'
@@ -943,7 +943,7 @@ spec:
 
 ---
 # Source: kubeflow-pipelines/templates/pipeline.yaml
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: scheduledworkflows.kubeflow.org
@@ -961,10 +961,31 @@ spec:
   scope: Namespaced
   versions:
     - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              x-kubernetes-map-type: atomic
+            status:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              x-kubernetes-map-type: atomic
+          required:
+          - spec
+          - status
+          type: object
       served: true
       storage: true
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
@@ -982,6 +1003,22 @@ spec:
   scope: Namespaced
   versions:
     - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              x-kubernetes-map-type: atomic
+          required:
+          - spec
+          type: object
       served: true
       storage: true
 ---
@@ -1988,6 +2025,14 @@ spec:
     app: minio
     app.kubernetes.io/name: my-release
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mlpipeline-minio-artifact
+stringData:
+  accesskey: minio
+  secretkey: minio123
+---
 
 ---
 
@@ -2030,9 +2075,15 @@ spec:
             - /data
           env:
             - name: MINIO_ACCESS_KEY
-              value: minio
+              valueFrom:
+                secretKeyRef:
+                  name: mlpipeline-minio-artifact
+                  key: accesskey
             - name: MINIO_SECRET_KEY
-              value: minio123
+              valueFrom:
+                secretKeyRef:
+                  name: mlpipeline-minio-artifact
+                  key: secretkey
           image: gcr.io/ml-pipeline/google/pipelines/minio:dummy
           name: minio
           ports:
@@ -2063,7 +2114,7 @@ metadata:
 spec:
   descriptor:
     type: Kubeflow Pipelines
-    version: 1.7.0-rc.3
+    version: 1.8.0-alpha.0
     description: |-
       Reusable end-to-end ML workflow
     maintainers:

@@ -45,11 +45,6 @@ var testWorkflow = util.NewWorkflow(&v1beta1.PipelineRun{
 	ObjectMeta: v1.ObjectMeta{Name: "workflow-name", UID: "workflow1", Namespace: "ns1"},
 })
 
-var testWorkflow2 = util.NewWorkflow(&v1beta1.PipelineRun{
-	TypeMeta:   v1.TypeMeta{APIVersion: "tekton.dev/v1beta1", Kind: "PipelineRun"},
-	ObjectMeta: v1.ObjectMeta{Name: "workflow-name", UID: "workflow2"},
-})
-
 var testWorkflowPatch = util.NewWorkflow(&v1beta1.PipelineRun{
 	TypeMeta:   v1.TypeMeta{APIVersion: "tekton.dev/v1beta1", Kind: "PipelineRun"},
 	ObjectMeta: v1.ObjectMeta{Name: "workflow-name", UID: "workflow2"},
@@ -162,6 +157,7 @@ func initWithExperimentAndPipelineVersion(t *testing.T) (*resource.FakeClientMan
 	// Create a pipeline and then a pipeline version.
 	_, err = resourceManager.CreatePipeline("pipeline", "", "", []byte(testWorkflow.ToStringForStore()))
 	assert.Nil(t, err)
+	clientManager.UpdateUUID(util.NewFakeUUIDGeneratorOrFatal(resource.NonDefaultFakeUUID, nil))
 	_, err = resourceManager.CreatePipelineVersion(&api.PipelineVersion{
 		Name: "pipeline_version",
 		ResourceReferences: []*api.ResourceReference{
@@ -174,7 +170,7 @@ func initWithExperimentAndPipelineVersion(t *testing.T) (*resource.FakeClientMan
 			},
 		},
 	},
-		[]byte("apiVersion: tekton.dev/v1beta1\nkind: PipelineRun"), true)
+		[]byte("apiVersion: argoproj.io/v1alpha1\nkind: Workflow"), true)
 
 	return clientManager, resourceManager, experiment
 }

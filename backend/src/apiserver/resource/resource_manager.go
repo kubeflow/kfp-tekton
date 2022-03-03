@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"strings"
 
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
@@ -32,8 +31,8 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/apiserver/list"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/storage"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/template"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
-	scheduledworkflow "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	scheduledworkflowclient "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned/typed/scheduledworkflow/v1beta1"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -46,17 +45,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 
 	"k8s.io/apimachinery/pkg/types"
-)
-
-const (
-	defaultPipelineRunnerServiceAccount = "pipeline-runner"
-	HasDefaultBucketEnvVar              = "HAS_DEFAULT_BUCKET"
-	ProjectIDEnvVar                     = "PROJECT_ID"
-	DefaultBucketNameEnvVar             = "BUCKET_NAME"
 )
 
 // Metric variables. Please prefix the metric names with resource_manager_.
@@ -265,15 +255,14 @@ func (r *ResourceManager) UpdatePipelineDefaultVersion(pipelineId string, versio
 }
 
 func (r *ResourceManager) CreatePipeline(name string, description string, namespace string, pipelineFile []byte) (*model.Pipeline, error) {
-	// Extract the parameter from the pipeline
-	wf, err := util.ValidatePipelineRun(pipelineFile)
+	tmpl, err := template.New(pipelineFile)
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline failed")
 	}
-	if wf.IsV2() {
-		overrideV2PipelineName(wf, name, namespace)
+	if tmpl.IsV2() {
+		tmpl.OverrideV2PipelineName(name, namespace)
 	}
-	paramsJson, err := util.MarshalParameters(wf.Spec.Params)
+	paramsJSON, err := tmpl.ParametersJSON()
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline failed")
 	}
@@ -282,20 +271,21 @@ func (r *ResourceManager) CreatePipeline(name string, description string, namesp
 	pipeline := &model.Pipeline{
 		Name:        name,
 		Description: description,
-		Parameters:  paramsJson,
+		Parameters:  paramsJSON,
 		Status:      model.PipelineCreating,
 		Namespace:   namespace,
 		DefaultVersion: &model.PipelineVersion{
 			Name:       name,
-			Parameters: paramsJson,
-			Status:     model.PipelineVersionCreating}}
+			Parameters: paramsJSON,
+			Status:     model.PipelineVersionCreating,
+		}}
 	newPipeline, err := r.pipelineStore.CreatePipeline(pipeline)
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline failed")
 	}
 
 	// Store the pipeline file to a path dependent on pipeline version
-	err = r.objectStore.AddFile(pipelineFile,
+	err = r.objectStore.AddFile(tmpl.Bytes(),
 		r.objectStore.GetPipelineKey(fmt.Sprint(newPipeline.DefaultVersion.UUID)))
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline failed")
@@ -360,12 +350,12 @@ func (r *ResourceManager) AuthenticateRequest(ctx context.Context) (string, erro
 }
 
 func (r *ResourceManager) CreateRun(ctx context.Context, apiRun *api.Run) (*model.RunDetail, error) {
-	// Get workflow from either of the two places:
-	// (1) raw pipeline manifest in pipeline_spec
+	// Get manifest from either of the two places:
+	// (1) raw manifest in pipeline_spec
 	// (2) pipeline version in resource_references
-	// And the latter takes priority over the former when the pipeline manifest is from pipeline_spec.pipeline_id
-	// workflow manifest and pipeline id/version will not exist at the same time, guaranteed by the validation phase
-	workflowSpecManifestBytes, err := getWorkflowSpecManifestBytes(apiRun.PipelineSpec, &apiRun.ResourceReferences, r)
+	// And the latter takes priority over the former when the manifest is from pipeline_spec.pipeline_id
+	// workflow/pipeline manifest and pipeline id/version will not exist at the same time, guaranteed by the validation phase
+	manifestBytes, err := getManifestBytes(apiRun.PipelineSpec, &apiRun.ResourceReferences, r)
 	if err != nil {
 		return nil, err
 	}
@@ -377,67 +367,14 @@ func (r *ResourceManager) CreateRun(ctx context.Context, apiRun *api.Run) (*mode
 
 	runAt := r.time.Now().Unix()
 
-	var workflow util.Workflow
-	if err = json.Unmarshal(workflowSpecManifestBytes, &workflow); err != nil {
-		return nil, util.NewInternalServerError(err,
-			"Failed to unmarshal workflow spec manifest. Workflow bytes: %s", string(workflowSpecManifestBytes))
-	}
-	if workflow.PipelineRun == nil {
-		return nil, util.Wrap(
-			util.NewResourceNotFoundError("WorkflowSpecManifest", apiRun.GetName()),
-			"Failed to fetch PipelineRun spec manifest.")
-	}
-
-	parameters := toParametersMap(apiRun.GetPipelineSpec().GetParameters())
-	// Verify no additional parameter provided
-	if err = workflow.VerifyParameters(parameters); err != nil {
-		return nil, util.Wrap(err, "Failed to verify parameters.")
-	}
-	// Append provided parameter
-	workflow.OverrideParameters(parameters)
-
-	// Replace macros
-	formatter := util.NewRunParameterFormatter(uuid.String(), runAt)
-	formattedParams := formatter.FormatWorkflowParameters(workflow.GetWorkflowParametersAsMap())
-	workflow.OverrideParameters(formattedParams)
-
-	r.setDefaultServiceAccount(&workflow, apiRun.GetServiceAccount())
-
-	// Disable istio sidecar injection
-	workflow.SetAnnotations(util.AnnotationKeyIstioSidecarInject, util.AnnotationValueIstioSidecarInjectDisabled)
-	// Add a KFP specific label for cache service filtering. The cache_enabled flag here is a global control for whether cache server will
-	// receive targeting pods. Since cache server only receives pods in step level, the resource manager here will set this global label flag
-	// on every single step/pod so the cache server can understand.
-
-	// Don't override the cache flag if it's true so that users can flag which task they want to cache.
-	// If it's not true, override the value to disable all caching.
-	if strings.ToLower(common.IsCacheEnabled()) != "true" {
-		workflow.SetLabels(util.LabelKeyCacheEnabled, common.IsCacheEnabled())
-	}
-
-	err = OverrideParameterWithSystemDefault(workflow, apiRun)
+	tmpl, err := template.New(manifestBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	// Add label to the workflow so it can be persisted by persistent agent later.
-	workflow.SetLabels(util.LabelKeyWorkflowRunId, runId)
-	// Add run name annotation to the workflow so that it can be logged by the Metadata Writer.
-	workflow.SetAnnotations(util.AnnotationKeyRunName, apiRun.Name)
-
-	// Replace {{workflow.uid}} and $(context.pipelineRun.uid) with runId
-	err = workflow.ReplaceUID(runId)
-	if err != nil {
-		return nil, util.NewInternalServerError(err, "Failed to replace workflow ID")
-	}
-
-	workflow.Name = workflow.Name + "-" + runId[0:5]
-
-	// Add label to the workflow so it can be persisted by persistent agent later.
-	workflow.SetLabels(util.LabelOriginalPipelineRunName, workflow.Name)
-	err = workflow.ReplaceOrignalPipelineRunName(workflow.Name)
-	if err != nil {
-		return nil, util.NewInternalServerError(err, "Failed to replace workflow original pipelineRun name")
+	runWorkflowOptions := template.RunWorkflowOptions{
+		RunId: runId,
+		RunAt: runAt,
 	}
 
 	// Add a reference to the default experiment if run does not already have a containing experiment
@@ -454,35 +391,10 @@ func (r *ResourceManager) CreateRun(ctx context.Context, apiRun *api.Run) (*mode
 		return nil, err
 	}
 
-	// Predefine custom resource if resource_templates are provided and feature flag
-	// is enabled.
-	if strings.ToLower(common.IsApplyTektonCustomResource()) == "true" {
-		if tektonTemplates, ok := workflow.Annotations["tekton.dev/resource_templates"]; ok {
-			err = r.applyCustomResources(workflow, tektonTemplates, namespace)
-			if err != nil {
-				return nil, util.NewInternalServerError(err, "Apply Tekton Custom resource Failed")
-			}
-		}
-	}
-
-	err = r.tektonPreprocessing(workflow)
+	workflow, err := tmpl.RunWorkflow(apiRun, runWorkflowOptions, namespace)
 	if err != nil {
-		return nil, util.NewInternalServerError(err, "Tekton Preprocessing Failed")
+		return nil, util.NewInternalServerError(err, "failed to generate the workflow.")
 	}
-	workflow.SetLabels(util.LabelKeyWorkflowRunId, runId)
-
-	// Marking auto-added artifacts as optional. Otherwise most older workflows will start failing after upgrade to Argo 2.3.
-	// TODO: Fix the components to explicitly declare the artifacts they really output.
-
-	// The below section does not support in Tekton because Tekton doesn't have the concept of artifact in its API.
-
-	// for templateIdx, template := range workflow.Workflow.Spec.Templates {
-	// 	for artIdx, artifact := range template.Outputs.Artifacts {
-	// 		if artifact.Name == "mlpipeline-ui-metadata" || artifact.Name == "mlpipeline-metrics" {
-	// 			workflow.Workflow.Spec.Templates[templateIdx].Outputs.Artifacts[artIdx].Optional = true
-	// 		}
-	// 	}
-	// }
 
 	// Create Tekton pipelineRun CRD resource
 	newWorkflow, err := r.getWorkflowClient(namespace).Create(ctx, workflow.Get(), v1.CreateOptions{})
@@ -492,8 +404,19 @@ func (r *ResourceManager) CreateRun(ctx context.Context, apiRun *api.Run) (*mode
 		return nil, util.NewInternalServerError(err, "Failed to create a workflow for (%s)", workflow.Name)
 	}
 
+	// Patched the default value to apiRun
+	if common.GetBoolConfigWithDefault(common.HasDefaultBucketEnvVar, false) {
+		for _, param := range apiRun.PipelineSpec.Parameters {
+			var err error
+			param.Value, err = common.PatchPipelineDefaultParameter(param.Value)
+			if err != nil {
+				return nil, fmt.Errorf("failed to patch default value to pipeline. Error: %v", err)
+			}
+		}
+	}
+
 	// Store run metadata into database
-	runDetail, err := r.ToModelRunDetail(apiRun, runId, util.NewWorkflow(newWorkflow), string(workflowSpecManifestBytes))
+	runDetail, err := r.ToModelRunDetail(apiRun, runId, util.NewWorkflow(newWorkflow), string(manifestBytes), tmpl.GetTemplateType())
 	if err != nil {
 		return nil, util.Wrap(err, "Failed to convert run model")
 	}
@@ -757,57 +680,14 @@ func (r *ResourceManager) CreateJob(ctx context.Context, apiJob *api.Job) (*mode
 	// (2) pipeline version in resource_references
 	// 	And the latter takes priority over the former when the pipeline manifest is from pipeline_spec.pipeline_id
 	// workflow manifest and pipeline id/version will not exist at the same time, guaranteed by the validation phase
-	workflowSpecManifestBytes, err := getWorkflowSpecManifestBytes(apiJob.PipelineSpec, &apiJob.ResourceReferences, r)
+	manifestBytes, err := getManifestBytes(apiJob.PipelineSpec, &apiJob.ResourceReferences, r)
 	if err != nil {
 		return nil, err
 	}
 
-	var workflow util.Workflow
-	err = json.Unmarshal(workflowSpecManifestBytes, &workflow)
+	tmpl, err := template.New(manifestBytes)
 	if err != nil {
-		return nil, util.NewInternalServerError(err,
-			"Failed to unmarshal workflow spec manifest. Workflow bytes: %s", string(workflowSpecManifestBytes))
-	}
-	if workflow.PipelineRun == nil {
-		return nil, util.Wrap(
-			util.NewResourceNotFoundError("WorkflowSpecManifest", apiJob.GetName()),
-			"Failed to fetch PipelineRun spec manifest.")
-	}
-
-	// Verify no additional parameter provided
-	err = workflow.VerifyParameters(toParametersMap(apiJob.GetPipelineSpec().GetParameters()))
-	if err != nil {
-		return nil, util.Wrap(err, "Create job failed")
-	}
-
-	r.setDefaultServiceAccount(&workflow, apiJob.GetServiceAccount())
-
-	// Disable istio sidecar injection
-	workflow.SetAnnotations(util.AnnotationKeyIstioSidecarInject, util.AnnotationValueIstioSidecarInjectDisabled)
-
-	// Override cache flag if necessary
-	// Don't override the cache flag if it's true so that users can flag which task they want to cache.
-	// If it's not true, override the value to disable all caching.
-	if strings.ToLower(common.IsCacheEnabled()) != "true" {
-		workflow.SetLabels(util.LabelKeyCacheEnabled, common.IsCacheEnabled())
-	}
-
-	swfGeneratedName, err := toSWFCRDResourceGeneratedName(apiJob.Name)
-	if err != nil {
-		return nil, util.Wrap(err, "Create job failed")
-	}
-	scheduledWorkflow := &scheduledworkflow.ScheduledWorkflow{
-		ObjectMeta: v1.ObjectMeta{GenerateName: swfGeneratedName},
-		Spec: scheduledworkflow.ScheduledWorkflowSpec{
-			Enabled:        apiJob.Enabled,
-			MaxConcurrency: &apiJob.MaxConcurrency,
-			Trigger:        *toCRDTrigger(apiJob.Trigger),
-			Workflow: &scheduledworkflow.WorkflowResource{
-				Parameters: toCRDParameter(apiJob.GetPipelineSpec().GetParameters()),
-				Spec:       workflow.Spec,
-			},
-			NoCatchup: util.BoolPointer(apiJob.NoCatchup),
-		},
+		return nil, err
 	}
 
 	// Add a reference to the default experiment if run does not already have a containing experiment
@@ -824,41 +704,18 @@ func (r *ResourceManager) CreateJob(ctx context.Context, apiJob *api.Job) (*mode
 		return nil, err
 	}
 
-	// Predefine custom resource if resource_templates are provided and feature flag
-	// is enabled.
-	if strings.ToLower(common.IsApplyTektonCustomResource()) == "true" {
-		if tektonTemplates, ok := workflow.Annotations["tekton.dev/resource_templates"]; ok {
-			err = r.applyCustomResources(workflow, tektonTemplates, namespace)
-			if err != nil {
-				return nil, util.NewInternalServerError(err, "Apply Tekton Custom resource Failed")
-			}
-		}
-	}
+	scheduledWorkflow, err := tmpl.ScheduledWorkflow(apiJob, namespace)
 
-	err = r.tektonPreprocessing(workflow)
 	if err != nil {
-		return nil, util.NewInternalServerError(err, "Tekton Preprocessing Failed")
+		return nil, util.Wrap(err, "failed to generate the scheduledWorkflow.")
 	}
-
-	// Marking auto-added artifacts as optional. Otherwise most older workflows will start failing after upgrade to Argo 2.3.
-
-	// The below section does not support in Tekton because Tekton doesn't have the concept of artifact in its API.
-
-	// TODO: Fix the components to explicitly declare the artifacts they really output.
-	// for templateIdx, template := range scheduledWorkflow.Spec.Workflow.Spec.Templates {
-	// 	for artIdx, artifact := range template.Outputs.Artifacts {
-	// 		if artifact.Name == "mlpipeline-ui-metadata" || artifact.Name == "mlpipeline-metrics" {
-	// 			scheduledWorkflow.Spec.Workflow.Spec.Templates[templateIdx].Outputs.Artifacts[artIdx].Optional = true
-	// 		}
-	// 	}
-	// }
 
 	newScheduledWorkflow, err := r.getScheduledWorkflowClient(namespace).Create(ctx, scheduledWorkflow, v1.CreateOptions{})
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Failed to create a scheduled workflow for (%s)", scheduledWorkflow.Name)
 	}
 
-	job, err := r.ToModelJob(apiJob, util.NewScheduledWorkflow(newScheduledWorkflow), string(workflowSpecManifestBytes))
+	job, err := r.ToModelJob(apiJob, util.NewScheduledWorkflow(newScheduledWorkflow), string(manifestBytes), tmpl.GetTemplateType())
 	if err != nil {
 		return nil, util.Wrap(err, "Create job failed")
 	}
@@ -1122,7 +979,7 @@ func (r *ResourceManager) getWorkflowSpecBytesFromPipelineSpec(spec *api.Pipelin
 	return nil, util.NewInvalidInputError("Please provide a valid pipeline spec")
 }
 
-func (r *ResourceManager) getWorkflowSpecBytesFromPipelineVersion(references []*api.ResourceReference) ([]byte, error) {
+func (r *ResourceManager) getManifestBytesFromPipelineVersion(references []*api.ResourceReference) ([]byte, error) {
 	var pipelineVersionId = ""
 	for _, reference := range references {
 		if reference.Key.Type == api.ResourceType_PIPELINE_VERSION && reference.Relationship == api.Relationship_CREATOR {
@@ -1132,30 +989,31 @@ func (r *ResourceManager) getWorkflowSpecBytesFromPipelineVersion(references []*
 	if len(pipelineVersionId) == 0 {
 		return nil, util.NewInvalidInputError("No pipeline version.")
 	}
-	var workflow util.Workflow
-	err := r.objectStore.GetFromYamlFile(&workflow, r.objectStore.GetPipelineKey(pipelineVersionId))
+	manifestBytes, err := r.objectStore.GetFile(r.objectStore.GetPipelineKey(pipelineVersionId))
 	if err != nil {
-		return nil, util.Wrap(err, "Get pipeline YAML failed.")
+		return nil, util.Wrap(err, "Get manifest bytes from PipelineVersion failed.")
 	}
 
-	return []byte(workflow.ToStringForStore()), nil
+	return manifestBytes, nil
 }
 
-func getWorkflowSpecManifestBytes(pipelineSpec *api.PipelineSpec, resourceReferences *[]*api.ResourceReference, r *ResourceManager) ([]byte, error) {
-	var workflowSpecManifestBytes []byte
+func getManifestBytes(pipelineSpec *api.PipelineSpec, resourceReferences *[]*api.ResourceReference, r *ResourceManager) ([]byte, error) {
+	var manifestBytes []byte
 	if pipelineSpec.GetWorkflowManifest() != "" {
-		workflowSpecManifestBytes = []byte(pipelineSpec.GetWorkflowManifest())
+		manifestBytes = []byte(pipelineSpec.GetWorkflowManifest())
+	} else if pipelineSpec.GetPipelineManifest() != "" {
+		manifestBytes = []byte(pipelineSpec.GetPipelineManifest())
 	} else {
 		err := convertPipelineIdToDefaultPipelineVersion(pipelineSpec, resourceReferences, r)
 		if err != nil {
 			return nil, util.Wrap(err, "Failed to find default version to create run with pipeline id.")
 		}
-		workflowSpecManifestBytes, err = r.getWorkflowSpecBytesFromPipelineVersion(*resourceReferences)
+		manifestBytes, err = r.getManifestBytesFromPipelineVersion(*resourceReferences)
 		if err != nil {
-			return nil, util.Wrap(err, "Failed to fetch workflow spec.")
+			return nil, util.Wrap(err, "Failed to fetch manifest bytes.")
 		}
 	}
-	return workflowSpecManifestBytes, nil
+	return manifestBytes, nil
 }
 
 // Used to initialize the Experiment database with a default to be used for runs
@@ -1241,6 +1099,9 @@ func (r *ResourceManager) ReadArtifact(runID string, nodeID string, artifactName
 	if err != nil {
 		return nil, err
 	}
+	if run.WorkflowRuntimeManifest == "" {
+		return nil, util.NewInvalidInputError("read artifact from run with v2 IR spec is not supported")
+	}
 	var storageWorkflow workflowapi.PipelineRun
 	err = json.Unmarshal([]byte(run.WorkflowRuntimeManifest), &storageWorkflow)
 	if err != nil {
@@ -1273,10 +1134,6 @@ func (r *ResourceManager) MarkSampleLoaded() error {
 	return r.dBStatusStore.MarkSampleLoaded()
 }
 
-func (r *ResourceManager) getDefaultSA() string {
-	return common.GetStringConfigWithDefault(common.DefaultPipelineRunnerServiceAccount, defaultPipelineRunnerServiceAccount)
-}
-
 func (r *ResourceManager) CreatePipelineVersion(apiVersion *api.PipelineVersion, pipelineFile []byte, updateDefaultVersion bool) (*model.PipelineVersion, error) {
 	// Extract pipeline id
 	var pipelineId = ""
@@ -1289,19 +1146,18 @@ func (r *ResourceManager) CreatePipelineVersion(apiVersion *api.PipelineVersion,
 		return nil, util.NewInvalidInputError("Create pipeline version failed due to missing pipeline id")
 	}
 
-	// Extract the parameters from the pipeline & override pipeline name parameter.
-	wf, err := util.ValidatePipelineRun(pipelineFile)
+	tmpl, err := template.New(pipelineFile)
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline version failed")
 	}
-	if wf.IsV2() {
+	if tmpl.IsV2() {
 		pipeline, err := r.GetPipeline(pipelineId)
 		if err != nil {
 			return nil, util.Wrap(err, "Create pipeline version failed")
 		}
-		overrideV2PipelineName(wf, pipeline.Name, pipeline.Namespace)
+		tmpl.OverrideV2PipelineName(pipeline.Name, pipeline.Namespace)
 	}
-	paramsJson, err := util.MarshalParameters(wf.Spec.Params)
+	paramsJSON, err := tmpl.ParametersJSON()
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline version failed")
 	}
@@ -1311,7 +1167,7 @@ func (r *ResourceManager) CreatePipelineVersion(apiVersion *api.PipelineVersion,
 		Name:          apiVersion.Name,
 		PipelineId:    pipelineId,
 		Status:        model.PipelineVersionCreating,
-		Parameters:    paramsJson,
+		Parameters:    paramsJSON,
 		CodeSourceUrl: apiVersion.CodeSourceUrl,
 		Description:   apiVersion.Description,
 	}
@@ -1321,7 +1177,7 @@ func (r *ResourceManager) CreatePipelineVersion(apiVersion *api.PipelineVersion,
 	}
 
 	// Store the pipeline file
-	err = r.objectStore.AddFile(pipelineFile, r.objectStore.GetPipelineKey(fmt.Sprint(version.UUID)))
+	err = r.objectStore.AddFile(tmpl.Bytes(), r.objectStore.GetPipelineKey(fmt.Sprint(version.UUID)))
 	if err != nil {
 		return nil, util.Wrap(err, "Create pipeline version failed")
 	}
@@ -1457,19 +1313,6 @@ func (r *ResourceManager) GetNamespaceFromPipelineVersion(versionId string) (str
 	return r.GetNamespaceFromPipelineID(pipelineVersion.PipelineId)
 }
 
-func (r *ResourceManager) setDefaultServiceAccount(workflow *util.Workflow, serviceAccount string) {
-	if len(serviceAccount) > 0 {
-		workflow.SetServiceAccount(serviceAccount)
-		return
-	}
-	workflowServiceAccount := workflow.Spec.ServiceAccountName
-	if len(workflowServiceAccount) == 0 || workflowServiceAccount == defaultPipelineRunnerServiceAccount {
-		// To reserve SDK backward compatibility, the backend only replaces
-		// serviceaccount when it is empty or equal to default value set by SDK.
-		workflow.SetServiceAccount(r.getDefaultSA())
-	}
-}
-
 func (r *ResourceManager) getNamespaceFromExperiment(references []*api.ResourceReference) (string, error) {
 	experimentID := common.GetExperimentIDFromAPIResourceReferences(references)
 	experiment, err := r.GetExperiment(experimentID)
@@ -1486,260 +1329,4 @@ func (r *ResourceManager) getNamespaceFromExperiment(references []*api.ResourceR
 		}
 	}
 	return namespace, nil
-}
-
-// tektonPreprocessing injects artifacts and logging steps if it's enabled
-func (r *ResourceManager) tektonPreprocessing(workflow util.Workflow) error {
-	// Tekton: Update artifact cred using the KFP Tekton configmap
-	workflow.SetAnnotations(common.ArtifactBucketAnnotation, common.GetArtifactBucket())
-	workflow.SetAnnotations(common.ArtifactEndpointAnnotation, common.GetArtifactEndpoint())
-	workflow.SetAnnotations(common.ArtifactEndpointSchemeAnnotation, common.GetArtifactEndpointScheme())
-
-	// Process artifacts
-	artifactItems, exists := workflow.ObjectMeta.Annotations[common.ArtifactItemsAnnotation]
-
-	// Only inject artifacts if the necessary annotations are provided.
-	if exists {
-		var artifactItemsJSON map[string][][]interface{}
-		if err := json.Unmarshal([]byte(artifactItems), &artifactItemsJSON); err != nil {
-			return err
-		}
-		r.injectArchivalStep(workflow, artifactItemsJSON)
-	}
-	return nil
-}
-
-func (r *ResourceManager) injectArchivalStep(workflow util.Workflow, artifactItemsJSON map[string][][]interface{}) {
-	for _, task := range workflow.Spec.PipelineSpec.Tasks {
-		artifacts, hasArtifacts := artifactItemsJSON[task.Name]
-		archiveLogs := common.IsArchiveLogs()
-		trackArtifacts := common.IsTrackArtifacts()
-		stripEOF := common.IsStripEOF()
-		injectDefaultScript := common.IsInjectDefaultScript()
-		copyStepTemplate := common.GetCopyStepTemplate()
-
-		if task.TaskSpec != nil {
-			if (hasArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
-				artifactScript := common.GetArtifactScript()
-				if archiveLogs {
-					// Logging volumes
-					if task.TaskSpec.Volumes == nil {
-						task.TaskSpec.Volumes = []corev1.Volume{}
-					}
-					loggingVolumes := []corev1.Volume{
-						r.getHostPathVolumeSource("varlog", "/var/log"),
-						r.getHostPathVolumeSource("varlibdockercontainers", "/var/lib/docker/containers"),
-						r.getHostPathVolumeSource("varlibkubeletpods", "/var/lib/kubelet/pods"),
-						r.getHostPathVolumeSource("varlogpods", "/var/log/pods"),
-					}
-					task.TaskSpec.Volumes = append(task.TaskSpec.Volumes, loggingVolumes...)
-
-					// Logging volumeMounts
-					if task.TaskSpec.StepTemplate == nil {
-						task.TaskSpec.StepTemplate = &corev1.Container{}
-					}
-					if task.TaskSpec.StepTemplate.VolumeMounts == nil {
-						task.TaskSpec.StepTemplate.VolumeMounts = []corev1.VolumeMount{}
-					}
-					loggingVolumeMounts := []corev1.VolumeMount{
-						{Name: "varlog", MountPath: "/var/log"},
-						{Name: "varlibdockercontainers", MountPath: "/var/lib/docker/containers", ReadOnly: true},
-						{Name: "varlibkubeletpods", MountPath: "/var/lib/kubelet/pods", ReadOnly: true},
-						{Name: "varlogpods", MountPath: "/var/log/pods", ReadOnly: true},
-					}
-					task.TaskSpec.StepTemplate.VolumeMounts = append(task.TaskSpec.StepTemplate.VolumeMounts, loggingVolumeMounts...)
-				}
-
-				// Process the artifacts into minimum sh commands if running with minimum linux kernel
-				if injectDefaultScript {
-					artifactScript = r.injectDefaultScript(workflow, artifactScript, artifacts, hasArtifacts, archiveLogs, trackArtifacts, stripEOF)
-				}
-
-				// Define post-processing step
-				container := *copyStepTemplate
-				if container.Name == "" {
-					container.Name = "copy-artifacts"
-				}
-				if container.Image == "" {
-					container.Image = common.GetArtifactImage()
-				}
-				container.Env = append(container.Env,
-					r.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
-					r.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
-					r.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
-					r.getObjectFieldSelector("ARTIFACT_ITEMS", "metadata.annotations['tekton.dev/artifact_items']"),
-					r.getObjectFieldSelector("PIPELINETASK", "metadata.labels['tekton.dev/pipelineTask']"),
-					r.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
-					r.getObjectFieldSelector("PODNAME", "metadata.name"),
-					r.getObjectFieldSelector("NAMESPACE", "metadata.namespace"),
-					r.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
-					r.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
-					r.getEnvVar("ARCHIVE_LOGS", strconv.FormatBool(archiveLogs)),
-					r.getEnvVar("TRACK_ARTIFACTS", strconv.FormatBool(trackArtifacts)),
-					r.getEnvVar("STRIP_EOF", strconv.FormatBool(stripEOF)),
-				)
-
-				step := workflowapi.Step{Container: container, Script: artifactScript}
-				task.TaskSpec.Steps = append(task.TaskSpec.Steps, step)
-			}
-		}
-	}
-}
-
-func (r *ResourceManager) injectDefaultScript(workflow util.Workflow, artifactScript string,
-	artifacts [][]interface{}, hasArtifacts bool, archiveLogs bool, trackArtifacts bool, stripEOF bool) string {
-	// Need to represent as Raw String Literals
-	artifactScript += "\n"
-	if archiveLogs {
-		artifactScript += "push_log\n"
-	}
-
-	// Upload Artifacts if the artifact is enabled and the annoations are present
-	if hasArtifacts && len(artifacts) > 0 && trackArtifacts {
-		for _, artifact := range artifacts {
-			if len(artifact) == 2 {
-				artifactScript += fmt.Sprintf("push_artifact %s %s\n", artifact[0], artifact[1])
-			} else {
-				glog.Warningf("Artifact annotations are missing for run %v.", workflow.Name)
-			}
-		}
-	}
-
-	// Strip EOF if enabled, do it after artifact upload since it only applies to parameter outputs
-	if hasArtifacts && len(artifacts) > 0 && stripEOF {
-		for _, artifact := range artifacts {
-			if len(artifact) == 2 {
-				// The below solution is in experimental stage and didn't cover all edge cases.
-				artifactScript += fmt.Sprintf("strip_eof %s %s\n", artifact[0], artifact[1])
-			} else {
-				glog.Warningf("Artifact annotations are missing for run %v.", workflow.Name)
-			}
-		}
-	}
-	return artifactScript
-}
-
-func (r *ResourceManager) getObjectFieldSelector(name string, fieldPath string) corev1.EnvVar {
-	return corev1.EnvVar{
-		Name: name,
-		ValueFrom: &corev1.EnvVarSource{
-			FieldRef: &corev1.ObjectFieldSelector{
-				FieldPath: fieldPath,
-			},
-		},
-	}
-}
-
-func (r *ResourceManager) getSecretKeySelector(name string, objectName string, objectKey string) corev1.EnvVar {
-	return corev1.EnvVar{
-		Name: name,
-		ValueFrom: &corev1.EnvVarSource{
-			SecretKeyRef: &corev1.SecretKeySelector{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: objectName,
-				},
-				Key: objectKey,
-			},
-		},
-	}
-}
-
-func (r *ResourceManager) getEnvVar(name string, value string) corev1.EnvVar {
-	return corev1.EnvVar{
-		Name:  name,
-		Value: value,
-	}
-}
-
-func (r *ResourceManager) getHostPathVolumeSource(name string, path string) corev1.Volume {
-	return corev1.Volume{
-		Name: name,
-		VolumeSource: corev1.VolumeSource{
-			HostPath: &corev1.HostPathVolumeSource{
-				Path: path,
-			},
-		},
-	}
-}
-
-func (r *ResourceManager) applyCustomResources(workflow util.Workflow, tektonTemplates string, namespace string) error {
-	// Create kubeClient to deploy Tekton custom task crd
-	var config *rest.Config
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		glog.Errorf("error creating client configuration: %v", err)
-		return err
-	}
-	kubeClient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		glog.Errorf("Failed to create client: %v", err)
-		return err
-	}
-	var templates []interface{}
-	// Decode metadata into JSON payload.
-	err = json.Unmarshal([]byte(tektonTemplates), &templates)
-	if err != nil {
-		glog.Errorf("Failed to Unmarshal custom task CRD: %v", err)
-		return err
-	}
-	for i := range templates {
-		template := templates[i]
-		apiVersion, ok := template.(map[string]interface{})["apiVersion"].(string)
-		if !ok {
-			glog.Errorf("Failed to get Tekton custom task apiVersion")
-			return errors.New("Failed to get Tekton custom task apiVersion")
-		}
-		singlarKind, ok := template.(map[string]interface{})["kind"].(string)
-		if !ok {
-			glog.Errorf("Failed to get Tekton custom task kind")
-			return errors.New("Failed to get Tekton custom task kind")
-		}
-		api := strings.Split(apiVersion, "/")[0]
-		version := strings.Split(apiVersion, "/")[1]
-		resource := strings.ToLower(singlarKind) + "s"
-		name, ok := template.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string)
-		if !ok {
-			glog.Errorf("Failed to get Tekton custom task name")
-			return errors.New("Failed to get Tekton custom task name")
-		}
-		body, err := json.Marshal(template)
-		if err != nil {
-			glog.Errorf("Failed to convert to JSON: %v", err)
-			return err
-		}
-		// Check whether the resource is exist, if yes do a patch
-		// if not do a post(create)
-		_, err = kubeClient.RESTClient().
-			Get().
-			AbsPath("/apis/" + api + "/" + version).
-			Namespace(namespace).
-			Resource(resource).
-			Name(name).
-			DoRaw(context.Background())
-		if err != nil {
-			_, err = kubeClient.RESTClient().Post().
-				AbsPath(fmt.Sprintf("/apis/%s/%s", api, version)).
-				Namespace(namespace).
-				Resource(resource).
-				Body(body).
-				DoRaw(context.Background())
-			if err != nil {
-				glog.Errorf("Failed to create resource for pipeline: %s, %v", workflow.Name, err)
-				return err
-			}
-		} else {
-			_, err = kubeClient.RESTClient().Patch(types.MergePatchType).
-				AbsPath(fmt.Sprintf("/apis/%s/%s", api, version)).
-				Namespace(namespace).
-				Resource(resource).
-				Name(name).
-				Body(body).
-				DoRaw(context.Background())
-			if err != nil {
-				glog.Errorf("Failed to patch resource for pipeline: %s, %v", workflow.Name, err)
-				return err
-			}
-		}
-	}
-	return nil
 }

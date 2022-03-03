@@ -174,6 +174,7 @@ func TestGetExperiment(t *testing.T) {
 	createResult, err := server.CreateExperiment(nil, &api.CreateExperimentRequest{Experiment: experiment})
 	assert.Nil(t, err)
 	result, err := server.GetExperiment(nil, &api.GetExperimentRequest{Id: createResult.Id})
+	assert.Nil(t, err)
 	expectedExperiment := &api.Experiment{
 		Id:           createResult.Id,
 		Name:         "ex1",
@@ -252,6 +253,7 @@ func TestGetExperiment_Multiuser(t *testing.T) {
 	createResult, err := server.CreateExperiment(ctx, &api.CreateExperimentRequest{Experiment: experiment})
 	assert.Nil(t, err)
 	result, err := server.GetExperiment(ctx, &api.GetExperimentRequest{Id: createResult.Id})
+	assert.Nil(t, err)
 	expectedExperiment := &api.Experiment{
 		Id:                 createResult.Id,
 		Name:               "exp1",
@@ -279,6 +281,7 @@ func TestListExperiment(t *testing.T) {
 		CreatedAt:    &timestamp.Timestamp{Seconds: 1},
 		StorageState: api.Experiment_STORAGESTATE_AVAILABLE,
 	}}
+	assert.Nil(t, err)
 	assert.Equal(t, expectedExperiment, result.Experiments)
 }
 

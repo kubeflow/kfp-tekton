@@ -23,6 +23,7 @@ import (
 	api "github.com/kubeflow/pipelines/backend/api/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/template"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	"github.com/stretchr/testify/assert"
@@ -150,65 +151,81 @@ func TestToModelRunMetric(t *testing.T) {
 func TestToModelJob(t *testing.T) {
 	store, manager, experiment, pipeline := initWithExperimentAndPipeline(t)
 	defer store.Close()
-	apiJob := &api.Job{
-		Name:           "name1",
-		Enabled:        true,
-		MaxConcurrency: 1,
-		NoCatchup:      true,
-		Trigger: &api.Trigger{
-			Trigger: &api.Trigger_CronSchedule{CronSchedule: &api.CronSchedule{
-				StartTime: &timestamp.Timestamp{Seconds: 1},
-				Cron:      "1 * * * *",
-			}}},
-		ResourceReferences: []*api.ResourceReference{
-			{Key: &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID}, Relationship: api.Relationship_OWNER},
-		},
-		PipelineSpec: &api.PipelineSpec{PipelineId: pipeline.UUID, Parameters: []*api.Parameter{{Name: "param2", Value: "world"}}},
-	}
-	swf := util.NewScheduledWorkflow(&swfapi.ScheduledWorkflow{
-		ObjectMeta: v1.ObjectMeta{
-			Name:      "swf_name",
-			Namespace: "swf_namespace",
-			UID:       "swf_123",
-		},
-		Status: swfapi.ScheduledWorkflowStatus{
-			Conditions: []swfapi.ScheduledWorkflowCondition{{Type: swfapi.ScheduledWorkflowEnabled}}},
-	})
-	modelJob, err := manager.ToModelJob(apiJob, swf, "workflow spec")
-	assert.Nil(t, err)
-
-	expectedModelJob := &model.Job{
-		UUID:        "swf_123",
-		Name:        "swf_name",
-		Namespace:   "swf_namespace",
-		Conditions:  "Enabled",
-		DisplayName: "name1",
-		Enabled:     true,
-		Trigger: model.Trigger{
-			CronSchedule: model.CronSchedule{
-				CronScheduleStartTimeInSec: util.Int64Pointer(1),
-				Cron:                       util.StringPointer("1 * * * *"),
+	tests := []struct {
+		name             string
+		apiJob           *api.Job
+		swf              *util.ScheduledWorkflow
+		manifest         string
+		templateType     template.TemplateType
+		expectedModelJob *model.Job
+	}{
+		{name: "v1",
+			apiJob: &api.Job{
+				Name:           "name1",
+				Enabled:        true,
+				MaxConcurrency: 1,
+				NoCatchup:      true,
+				Trigger: &api.Trigger{
+					Trigger: &api.Trigger_CronSchedule{CronSchedule: &api.CronSchedule{
+						StartTime: &timestamp.Timestamp{Seconds: 1},
+						Cron:      "1 * * * *",
+					}}},
+				ResourceReferences: []*api.ResourceReference{
+					{Key: &api.ResourceKey{Type: api.ResourceType_EXPERIMENT, Id: experiment.UUID}, Relationship: api.Relationship_OWNER},
+				},
+				PipelineSpec: &api.PipelineSpec{PipelineId: pipeline.UUID, Parameters: []*api.Parameter{{Name: "param2", Value: "world"}}},
+			},
+			swf: util.NewScheduledWorkflow(&swfapi.ScheduledWorkflow{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      "swf_name",
+					Namespace: "swf_namespace",
+					UID:       "swf_123",
+				},
+				Status: swfapi.ScheduledWorkflowStatus{
+					Conditions: []swfapi.ScheduledWorkflowCondition{{Type: swfapi.ScheduledWorkflowEnabled}}},
+			}),
+			manifest:     "workflow spec",
+			templateType: template.V1,
+			expectedModelJob: &model.Job{
+				UUID:        "swf_123",
+				Name:        "swf_name",
+				Namespace:   "swf_namespace",
+				Conditions:  "Enabled",
+				DisplayName: "name1",
+				Enabled:     true,
+				Trigger: model.Trigger{
+					CronSchedule: model.CronSchedule{
+						CronScheduleStartTimeInSec: util.Int64Pointer(1),
+						Cron:                       util.StringPointer("1 * * * *"),
+					},
+				},
+				MaxConcurrency: 1,
+				NoCatchup:      true,
+				PipelineSpec: model.PipelineSpec{
+					PipelineId:           pipeline.UUID,
+					PipelineName:         pipeline.Name,
+					WorkflowSpecManifest: "workflow spec",
+					Parameters:           `[{"name":"param2","value":"world"}]`,
+				},
+				ResourceReferences: []*model.ResourceReference{
+					{
+						ResourceUUID:  "swf_123",
+						ResourceType:  common.Job,
+						ReferenceUUID: experiment.UUID,
+						ReferenceName: experiment.Name,
+						ReferenceType: common.Experiment,
+						Relationship:  common.Owner},
+				},
 			},
 		},
-		MaxConcurrency: 1,
-		NoCatchup:      true,
-		PipelineSpec: model.PipelineSpec{
-			PipelineId:           pipeline.UUID,
-			PipelineName:         pipeline.Name,
-			WorkflowSpecManifest: "workflow spec",
-			Parameters:           `[{"name":"param2","value":"world"}]`,
-		},
-		ResourceReferences: []*model.ResourceReference{
-			{
-				ResourceUUID:  "swf_123",
-				ResourceType:  common.Job,
-				ReferenceUUID: experiment.UUID,
-				ReferenceName: experiment.Name,
-				ReferenceType: common.Experiment,
-				Relationship:  common.Owner},
-		},
 	}
-	assert.Equal(t, expectedModelJob, modelJob)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			modelJob, err := manager.ToModelJob(tt.apiJob, tt.swf, tt.manifest, tt.templateType)
+			assert.Nil(t, err)
+			assert.Equal(t, tt.expectedModelJob, modelJob)
+		})
+	}
 }
 
 func TestToModelResourceReferences(t *testing.T) {

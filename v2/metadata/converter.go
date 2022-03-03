@@ -1,56 +1,97 @@
 package metadata
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
-	pb "github.com/kubeflow/pipelines/v2/third_party/ml_metadata"
+	pb "github.com/kubeflow/pipelines/third_party/ml-metadata/go/ml_metadata"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-func mlmdValueToPipelineSpecValue(v *pb.Value) (*pipelinespec.Value, error) {
-	switch t := v.Value.(type) {
-	case *pb.Value_StringValue:
-		return StringValue(t.StringValue), nil
-	case *pb.Value_DoubleValue:
-		return DoubleValue(t.DoubleValue), nil
-	case *pb.Value_IntValue:
-		return IntValue(t.IntValue), nil
+func PbValueToText(v *structpb.Value) (string, error) {
+	wrap := func(err error) error {
+		return fmt.Errorf("failed to convert protobuf.Value to text: %w", err)
+	}
+	if v == nil {
+		return "", nil
+	}
+	var text string
+	switch t := v.Kind.(type) {
+	case *structpb.Value_NullValue:
+		text = ""
+	case *structpb.Value_StringValue:
+		text = v.GetStringValue()
+	case *structpb.Value_NumberValue:
+		text = strconv.FormatFloat(v.GetNumberValue(), 'f', -1, 64)
+	case *structpb.Value_BoolValue:
+		text = strconv.FormatBool(v.GetBoolValue())
+	case *structpb.Value_ListValue:
+		b, err := json.Marshal(v.GetListValue())
+		if err != nil {
+			return "", wrap(fmt.Errorf("failed to JSON-marshal a list: %w", err))
+		}
+		text = string(b)
+	case *structpb.Value_StructValue:
+		b, err := json.Marshal(v.GetStructValue())
+		if err != nil {
+			return "", wrap(fmt.Errorf("failed to JSON-marshal a struct: %w", err))
+		}
+		text = string(b)
 	default:
-		return nil, fmt.Errorf("unknown value type %T", t)
+		return "", wrap(fmt.Errorf("unknown type %T", t))
 	}
+	return text, nil
 }
 
-func StringValue(v string) *pipelinespec.Value {
-	return &pipelinespec.Value{
-		Value: &pipelinespec.Value_StringValue{StringValue: v},
+func TextToPbValue(text string, t pipelinespec.ParameterType_ParameterTypeEnum) (*structpb.Value, error) {
+	msg := func(err error) error {
+		return fmt.Errorf("TextToPbValue(text=%q, type=%q) failed: %w", text, t, err)
 	}
-}
-
-func DoubleValue(v float64) *pipelinespec.Value {
-	return &pipelinespec.Value{
-		Value: &pipelinespec.Value_DoubleValue{DoubleValue: v},
-	}
-}
-
-func IntValue(v int64) *pipelinespec.Value {
-	return &pipelinespec.Value{
-		Value: &pipelinespec.Value_IntValue{IntValue: v},
-	}
-}
-
-func pipelineSpecValueToMLMDValue(v *pipelinespec.Value) (*pb.Value, error) {
-	switch t := v.Value.(type) {
-	case *pipelinespec.Value_StringValue:
-		return stringMLMDValue(v.GetStringValue()), nil
-	case *pipelinespec.Value_DoubleValue:
-		return doubleMLMDValue(v.GetDoubleValue()), nil
-	case *pipelinespec.Value_IntValue:
-		return intMLMDValue(v.GetIntValue()), nil
+	switch t {
+	case pipelinespec.ParameterType_STRING:
+		return structpb.NewStringValue(text), nil
+	case pipelinespec.ParameterType_NUMBER_INTEGER:
+		i, err := strconv.ParseInt(strings.TrimSpace(text), 10, 0)
+		if err != nil {
+			return nil, msg(err)
+		}
+		return structpb.NewNumberValue(float64(i)), nil
+	case pipelinespec.ParameterType_NUMBER_DOUBLE:
+		f, err := strconv.ParseFloat(strings.TrimSpace(text), 0)
+		if err != nil {
+			return nil, msg(err)
+		}
+		return structpb.NewNumberValue(f), nil
+	case pipelinespec.ParameterType_BOOLEAN:
+		v, err := strconv.ParseBool(strings.TrimSpace(text))
+		if err != nil {
+			return nil, msg(err)
+		}
+		return structpb.NewBoolValue(v), nil
+	case pipelinespec.ParameterType_LIST:
+		v := &structpb.Value{}
+		if err := v.UnmarshalJSON([]byte(text)); err != nil {
+			return nil, msg(err)
+		}
+		if _, ok := v.GetKind().(*structpb.Value_ListValue); !ok {
+			return nil, msg(fmt.Errorf("unexpected type"))
+		}
+		return v, nil
+	case pipelinespec.ParameterType_STRUCT:
+		v := &structpb.Value{}
+		if err := v.UnmarshalJSON([]byte(text)); err != nil {
+			return nil, msg(err)
+		}
+		if _, ok := v.GetKind().(*structpb.Value_StructValue); !ok {
+			return nil, msg(fmt.Errorf("unexpected type"))
+		}
+		return v, nil
 	default:
-		return nil, fmt.Errorf("unknown value type %T", t)
+		return nil, msg(fmt.Errorf("unknown type. Expected STRING, NUMBER_INTEGER, NUMBER_DOUBLE, BOOLEAN, LIST or STRUCT"))
 	}
 }
 
@@ -78,7 +119,7 @@ func toMLMDArtifact(runtimeArtifact *pipelinespec.RuntimeArtifact) (*pb.Artifact
 
 	if runtimeArtifact.Metadata != nil {
 		for k, v := range runtimeArtifact.Metadata.Fields {
-			value, err := structValueToMLMDValue(v)
+			value, err := StructValueToMLMDValue(v)
 			if err != nil {
 				return nil, errorF(err)
 			}
@@ -89,7 +130,7 @@ func toMLMDArtifact(runtimeArtifact *pipelinespec.RuntimeArtifact) (*pb.Artifact
 	return artifact, nil
 }
 
-func structValueToMLMDValue(v *structpb.Value) (*pb.Value, error) {
+func StructValueToMLMDValue(v *structpb.Value) (*pb.Value, error) {
 	boolToInt := func(b bool) int64 {
 		if b {
 			return 1

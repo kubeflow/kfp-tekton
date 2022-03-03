@@ -40,6 +40,7 @@ import { commonCss, padding } from '../Css';
 import {
   CollapsedAndExpandedRows,
   getExpandedRow,
+  getStringEnumKey,
   groupRows,
   rowCompareFn,
   rowFilterFn,
@@ -56,7 +57,10 @@ interface ArtifactListState {
 
 const ARTIFACT_PROPERTY_REPOS = [ArtifactProperties, ArtifactCustomProperties];
 const PIPELINE_WORKSPACE_FIELDS = ['RUN_ID', 'PIPELINE_NAME', 'WORKSPACE'];
-const NAME_FIELDS = ['NAME'];
+const NAME_FIELDS = [
+  getStringEnumKey(ArtifactCustomProperties, ArtifactCustomProperties.NAME),
+  getStringEnumKey(ArtifactCustomProperties, ArtifactCustomProperties.DISPLAY_NAME),
+];
 
 export class ArtifactList extends Page<{}, ArtifactListState> {
   private tableRef = React.createRef<CustomTable>();
@@ -224,8 +228,9 @@ export class ArtifactList extends Page<{}, ArtifactListState> {
                   artifact,
                   ARTIFACT_PROPERTY_REPOS,
                   PIPELINE_WORKSPACE_FIELDS,
-                ),
-                getResourcePropertyViaFallBack(artifact, ARTIFACT_PROPERTY_REPOS, NAME_FIELDS),
+                ) || '[unknown]',
+                getResourcePropertyViaFallBack(artifact, ARTIFACT_PROPERTY_REPOS, NAME_FIELDS) ||
+                  '[unknown]',
                 artifact.getId(),
                 type,
                 artifact.getUri(),
