@@ -32,7 +32,7 @@ KFP Python SDK version(s):
 kfp                      1.8.11
 kfp-pipeline-spec        0.1.13
 kfp-server-api           1.8.1
-kfp-tekton               1.1.1     /Users/tommyli/Desktop/kfp-sdk/sdk/python
+kfp-tekton               1.1.1
 
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_passing_using_volume.py
