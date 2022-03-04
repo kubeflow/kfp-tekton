@@ -160,5 +160,15 @@ spec:
                             tekton.dev/template: ''
                       timeout: 525600m
                   iterateNumeric: loop-item-param-3
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
           iterateNumeric: loop-item-param-1
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

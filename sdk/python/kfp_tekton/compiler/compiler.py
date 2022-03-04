@@ -1531,13 +1531,13 @@ class TektonCompiler(Compiler):
               # Preserve order of params, required by tests.
               pipeline_loop_crs[i]['spec']['pipelineSpec']['params'] =\
                 sorted(pipeline_loop_crs[i]['spec']['pipelineSpec']['params'], key=lambda kv: (kv['name']))
-            t, e = TektonCompiler._inline_tasks(pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'],
+            t, e = self._inline_tasks(pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'],
                                                 pipeline_loop_crs, recursive_tasks_names)
             if e:
               pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'] = t
               inlined_as_taskSpec.extend(e)
         # Step 2. inline pipeline_loop_crs in the workflow
-        workflow_tasks, e = TektonCompiler._inline_tasks(workflow['spec']['pipelineSpec']['tasks'],
+        workflow_tasks, e = self._inline_tasks(workflow['spec']['pipelineSpec']['tasks'],
                                                          pipeline_loop_crs, recursive_tasks_names)
         inlined_as_taskSpec.extend(e)
         workflow['spec']['pipelineSpec']['tasks'] = workflow_tasks
@@ -1626,8 +1626,7 @@ class TektonCompiler(Compiler):
                                                   "_customtask_cr" + str(i + 1) + '.yaml')
     _validate_workflow(workflow)
 
-  @staticmethod
-  def _inline_tasks(tasks: List[Dict[Text, Any]], crs: List[Dict[Text, Any]], recursive_tasks: List[Text]):
+  def _inline_tasks(self, tasks: List[Dict[Text, Any]], crs: List[Dict[Text, Any]], recursive_tasks: List[Text]):
     """
       Scan all the `tasks` and for each taskRef in `tasks` resolve it in `crs`
        and inline them as taskSpec.
@@ -1654,6 +1653,14 @@ class TektonCompiler(Compiler):
                  'spec': crs[i]['spec']}
               inlined_as_taskSpec.append(cr_ref_name)
               workflow_tasks[j].pop('taskRef')
+      if 'taskSpec' in workflow_tasks[j]:
+        workflow_tasks[j]['taskSpec']['metadata'] = workflow_tasks[j]['taskSpec'].get('metadata', {})
+        task_labels = workflow_tasks[j]['taskSpec']['metadata'].get('labels', {})
+        task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
+        task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
+        cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
+        task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
+        workflow_tasks[j]['taskSpec']['metadata']['labels'] = task_labels
     return workflow_tasks, inlined_as_taskSpec
 
 
