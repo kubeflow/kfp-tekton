@@ -19,4 +19,5 @@ package pipelineloop
 const (
 	// PipelineLoopControllerName holds the name of the TaskRun controller
 	PipelineLoopControllerName = "PipelineLoop"
+	BreakTaskName              = "BreakTask"
 )

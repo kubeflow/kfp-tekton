@@ -135,6 +135,16 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 		logger.Errorf("Run %s/%s does not provide a spec or ref.", run.Namespace, run.Name)
 		return nil
 	}
+	if (run.Spec.Ref != nil && run.Spec.Ref.Kind == pipelineloop.BreakTaskName) ||
+		(run.Spec.Spec != nil && run.Spec.Spec.Kind == pipelineloop.BreakTaskName) {
+		if !run.IsDone() {
+			run.Status.InitializeConditions()
+			run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
+				"Break task is a dummy task.")
+		}
+		logger.Infof("Break task encountered %s", run.Name)
+		return nil
+	}
 	// Check that the Run references a PipelineLoop CRD.  The logic is controller.go should ensure that only this type of Run
 	// is reconciled this controller but it never hurts to do some bullet-proofing.
 	if run.Spec.Ref != nil &&
