@@ -148,4 +148,4 @@ Occurences of other Errors:
 
 **Note:** The reports above were created for the pipeline scripts found in KFP SDK version `1.8.11` since
 the `kfp_tekton` `1.2.0` compiler code is based on the `kfp` SDK compiler version greater than or equals to
-`1.8.10` and less than `1.9.0`.
+`1.8.10` and less than `1.8.12`.
