@@ -116,7 +116,8 @@ spec:
 
             def _serialize_str(str_value: str) -> str:
                 if not isinstance(str_value, str):
-                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(str(str_value), str(type(str_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(
+                        str(str_value), str(type(str_value))))
                 return str_value
 
             import argparse
@@ -153,7 +154,7 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Flip coin", "outputs":
-              [{"name": "Output", "type": "String"}], "version": "Flip coin@sha256=7eec77b07107adacc26d8ec075f6f2a62ca3e7f9ecc4110ce2724c964df4501d"}'
+              [{"name": "Output", "type": "String"}], "version": "Flip coin@sha256=83ef617eda2e04a688908716a02461237baee3cd04754ea99894e441b1f0679a"}'
             tekton.dev/template: ''
       runAfter:
       - sleepcomponent

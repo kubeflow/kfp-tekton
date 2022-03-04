@@ -27,7 +27,12 @@ You should see an output similar to the one below, outlining which test scripts 
 which are failing:
 
 ```YAML
-KFP SDK version: 1.7.2
+KFP clone version: 1.8.0
+KFP Python SDK version(s):
+kfp                      1.8.11
+kfp-pipeline-spec        0.1.13
+kfp-server-api           1.8.1
+kfp-tekton               1.1.1
 
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_passing_using_volume.py
@@ -40,7 +45,7 @@ SUCCESS: input_artifact_raw_value.py
 SUCCESS: loop_over_lightweight_output.py
 SUCCESS: opsgroups.py
 SUCCESS: parallelfor_item_argument_resolving.py
-FAILURE: parallelfor_pipeline_param_in_items_resolving.py
+SUCCESS: parallelfor_pipeline_param_in_items_resolving.py
 SUCCESS: param_op_transform.py
 SUCCESS: param_substitutions.py
 SUCCESS: pipelineparams.py
@@ -49,6 +54,7 @@ SUCCESS: recursive_while.py
 SUCCESS: resourceop_basic.py
 SUCCESS: sidecar.py
 SUCCESS: timeout.py
+SUCCESS: two_step.py
 FAILURE: uri_artifacts.py
 SUCCESS: volume.py
 SUCCESS: volume_snapshotop_rokurl.py
@@ -66,11 +72,11 @@ SUCCESS: withparam_output_dict.py
 
 Compilation status for testdata DSL scripts:
 
-  Success: 32
-  Failure: 2
-  Total:   34
+  Success: 34
+  Failure: 1
+  Total:   35
 
-Overall success rate: 32/34 = 94%
+Overall success rate: 34/35 = 97%
 
 Compilation status report:   sdk/python/tests/test_kfp_samples_report.txt
 Accumulated compiler logs:   temp/test_kfp_samples_output.txt
@@ -140,6 +146,6 @@ Occurences of other Errors:
 
 ## Disclaimer
 
-**Note:** The reports above were created for the pipeline scripts found in KFP SDK version `1.7.2` since
-the `kfp_tekton` `1.0.1` compiler code is based on the `kfp` SDK compiler version greater than or equals to
-`1.7.1` and less than `1.8.0`.
+**Note:** The reports above were created for the pipeline scripts found in KFP SDK version `1.8.11` since
+the `kfp_tekton` `1.2.0` compiler code is based on the `kfp` SDK compiler version greater than or equals to
+`1.8.10` and less than `1.8.12`.

@@ -557,7 +557,8 @@ spec:
                 if isinstance(int_value, str):
                     return int_value
                 if not isinstance(int_value, int):
-                    raise TypeError('Value "{}" has type "{}" instead of int.'.format(str(int_value), str(type(int_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of int.'.format(
+                        str(int_value), str(type(int_value))))
                 return str(int_value)
 
             import argparse
@@ -628,7 +629,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Sum numbers",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Sum
-              numbers@sha256=02b544e3a20b1d1f0db48c877515c81540f371351746aaa4f472943784a7b2fc"}'
+              numbers@sha256=c3f155c05c526db1acfedc8894328f5abb2c00f9378e1c5f89d035682aa2e9d7"}'
             tekton.dev/template: ''
         workspaces:
         - name: sum-numbers
@@ -719,7 +720,8 @@ spec:
                 if isinstance(int_value, str):
                     return int_value
                 if not isinstance(int_value, int):
-                    raise TypeError('Value "{}" has type "{}" instead of int.'.format(str(int_value), str(type(int_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of int.'.format(
+                        str(int_value), str(type(int_value))))
                 return str(int_value)
 
             import argparse
@@ -757,7 +759,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Gen params",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Gen
-              params@sha256=58a63effb92a97fcdd8ca8ba72550e11635d72ccb17441e5e97a2ef78d06ab6f"}'
+              params@sha256=3453ee878d06fc3c3d7987bab4a5a1633c65c6b860fc9b41e745d8400a483a26"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: print-params
