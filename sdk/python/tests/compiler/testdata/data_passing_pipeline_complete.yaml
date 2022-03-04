@@ -258,7 +258,8 @@ spec:
 
             def _serialize_str(str_value: str) -> str:
                 if not isinstance(str_value, str):
-                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(str(str_value), str(type(str_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(
+                        str(str_value), str(type(str_value))))
                 return str_value
 
             import argparse
@@ -326,7 +327,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce string",
               "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
-              string@sha256=0a921b4ba48721c22e0355d5a30deb6ae92d3ed318e43d6cc6f7265c365db9db"}'
+              string@sha256=8eb027589d021d1968d4db71db08287540ac24f305da4d91f3bac15c41562281"}'
             tekton.dev/template: ''
         workspaces:
         - name: produce-string

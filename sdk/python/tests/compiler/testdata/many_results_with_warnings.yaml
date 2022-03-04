@@ -70,7 +70,8 @@ spec:
 
             def _serialize_str(str_value: str) -> str:
                 if not isinstance(str_value, str):
-                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(str(str_value), str(type(str_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(
+                        str(str_value), str(type(str_value))))
                 return str_value
 
             import argparse
@@ -159,7 +160,7 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print4results",
               "outputs": [{"name": "param1", "type": "String"}, {"name": "param2",
               "type": "String"}, {"name": "param3", "type": "String"}, {"name": "superlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongname",
-              "type": "String"}], "version": "Print4results@sha256=3796f17328986bb098f68d95709e8bba42eeaeedd679a9c41082b6ac7e7afcf8"}'
+              "type": "String"}], "version": "Print4results@sha256=2abb522200107ab144eafa6107bb8fde6c10e446a9bdc2a7f4d3a50df6e8a0d2"}'
             tekton.dev/template: ''
       timeout: 525600m
   timeout: 525600m

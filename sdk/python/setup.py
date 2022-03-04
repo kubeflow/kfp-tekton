@@ -54,7 +54,7 @@ development stage. Contributions are welcome: {}
 # NOTICE, after any updates to the following, ./requirements.in should be updated
 # accordingly.
 REQUIRES = [
-    "kfp>=1.7.1,<1.8.0",
+    "kfp>=1.8.10,<1.9.0",
 ]
 
 TESTS_REQUIRE = [

@@ -171,7 +171,8 @@ spec:
 
             def _serialize_str(str_value: str) -> str:
                 if not isinstance(str_value, str):
-                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(str(str_value), str(type(str_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(
+                        str(str_value), str(type(str_value))))
                 return str_value
 
             import argparse
@@ -209,7 +210,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce str",
               "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
-              str@sha256=fa86a086c2cb42fd75ea0c07149cc481b6558d349c1d5df15ab6643e57b85377"}'
+              str@sha256=56c6c051642ecf0f894b85f3ab46a6d6ac43e3576fe63d086ad1695f70663d84"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: produce-list-of-strings
@@ -234,11 +235,15 @@ spec:
                 if isinstance(obj, str):
                     return obj
                 import json
+
                 def default_serializer(obj):
                     if hasattr(obj, 'to_struct'):
                         return obj.to_struct()
                     else:
-                        raise TypeError("Object of type '%s' is not JSON serializable and does not have .to_struct() method." % obj.__class__.__name__)
+                        raise TypeError(
+                            "Object of type '%s' is not JSON serializable and does not have .to_struct() method."
+                            % obj.__class__.__name__)
+
                 return json.dumps(obj, default=default_serializer, sort_keys=True)
 
             import argparse
@@ -276,7 +281,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list
               of strings", "outputs": [{"name": "Output", "type": "JsonArray"}], "version":
-              "Produce list of strings@sha256=e29837998f9248598133d33a4b9db3ba70d4d44742f99dabbbc3ad7269316240"}'
+              "Produce list of strings@sha256=9400c06cbd8392297077b6f2c1fe3fc453e8a5676999bce8c307674c7e0bc9c6"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: produce-list-of-ints
@@ -301,11 +306,15 @@ spec:
                 if isinstance(obj, str):
                     return obj
                 import json
+
                 def default_serializer(obj):
                     if hasattr(obj, 'to_struct'):
                         return obj.to_struct()
                     else:
-                        raise TypeError("Object of type '%s' is not JSON serializable and does not have .to_struct() method." % obj.__class__.__name__)
+                        raise TypeError(
+                            "Object of type '%s' is not JSON serializable and does not have .to_struct() method."
+                            % obj.__class__.__name__)
+
                 return json.dumps(obj, default=default_serializer, sort_keys=True)
 
             import argparse
@@ -343,7 +352,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list
               of ints", "outputs": [{"name": "Output", "type": "JsonArray"}], "version":
-              "Produce list of ints@sha256=8454b12a9ca44e797cdd13a18152b947d56f732c89d5827096be97668473999a"}'
+              "Produce list of ints@sha256=35df856c301c60ddd768541bf53ee02243b70171db26d1c6bb36c3bf397c7c28"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: produce-list-of-dicts
@@ -368,11 +377,15 @@ spec:
                 if isinstance(obj, str):
                     return obj
                 import json
+
                 def default_serializer(obj):
                     if hasattr(obj, 'to_struct'):
                         return obj.to_struct()
                     else:
-                        raise TypeError("Object of type '%s' is not JSON serializable and does not have .to_struct() method." % obj.__class__.__name__)
+                        raise TypeError(
+                            "Object of type '%s' is not JSON serializable and does not have .to_struct() method."
+                            % obj.__class__.__name__)
+
                 return json.dumps(obj, default=default_serializer, sort_keys=True)
 
             import argparse
@@ -410,7 +423,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list
               of dicts", "outputs": [{"name": "Output", "type": "JsonArray"}], "version":
-              "Produce list of dicts@sha256=6b730d9a750d4807db6c25f397addf5332b85671fd227a62180405c001d3b769"}'
+              "Produce list of dicts@sha256=e731938bd64c449aa58656e82a0ef231eb3e8d5bea0e15e6b022d554b44cff48"}'
             tekton.dev/template: ''
       timeout: 525600m
     - runAfter:

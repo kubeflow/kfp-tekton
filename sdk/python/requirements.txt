@@ -20,8 +20,10 @@ cffi==1.14.5
 chardet==4.0.0
     # via requests
 click==7.1.2
-    # via kfp
-cloudpickle==1.6.0
+    # via
+    #   kfp
+    #   typer
+cloudpickle==2.0.0
     # via kfp
 deprecated==1.2.11
     # via kfp
@@ -64,9 +66,9 @@ idna==2.10
     # via requests
 jsonschema==3.2.0
     # via kfp
-kfp==1.7.2
+kfp==1.8.11
     # via -r sdk/python/requirements.in
-kfp-pipeline-spec==0.1.9
+kfp-pipeline-spec==0.1.13
     # via kfp
 kfp-server-api==1.3.0
     # via kfp
@@ -143,10 +145,16 @@ tabulate==0.8.9
     # via kfp
 termcolor==1.1.0
     # via fire
+typer==0.4.0
+    # via kfp
 typing-extensions==3.10.0.2
-    # via pydantic
+    # via
+    #   kfp
+    #   pydantic
 uritemplate==3.0.1
-    # via google-api-python-client
+    # via
+    #   google-api-python-client
+    #   kfp
 urllib3==1.26.3
     # via
     #   kfp-server-api

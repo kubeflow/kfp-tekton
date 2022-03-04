@@ -61,7 +61,7 @@ adding the `TektonCompiler` and the `TektonClient`:
 
 ## Project Prerequisites
 
- - Python: `3.6` or later
+ - Python: `3.7` or later
  - Tekton: [`v0.27.0`](https://github.com/tektoncd/pipeline/releases/tag/v0.27.0) or [later](https://github.com/tektoncd/pipeline/releases/latest)
  - Tekton CLI: [`0.17.2`](https://github.com/tektoncd/cli/releases/tag/v0.17.2)
  - Kubeflow Pipelines: [KFP with Tekton backend](/guides/kfp_tekton_install.md)

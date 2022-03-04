@@ -69,7 +69,8 @@ spec:
 
             def _serialize_str(str_value: str) -> str:
                 if not isinstance(str_value, str):
-                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(str(str_value), str(type(str_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(
+                        str(str_value), str(type(str_value))))
                 return str_value
 
             import argparse
@@ -110,7 +111,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce message",
               "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
-              message@sha256=8b1a730905b7cb192c0dd1906d4332c8d3533193a3b8defef1adc2f15706e7ed"}'
+              message@sha256=6e4c8f03cd84f6e00eb3593aa1f129b782b2b67caba7e9ff04214bb4dfb16db1"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: produce-message-2
@@ -138,7 +139,8 @@ spec:
 
             def _serialize_str(str_value: str) -> str:
                 if not isinstance(str_value, str):
-                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(str(str_value), str(type(str_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of str.'.format(
+                        str(str_value), str(type(str_value))))
                 return str_value
 
             import argparse
@@ -179,7 +181,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce message",
               "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
-              message@sha256=8b1a730905b7cb192c0dd1906d4332c8d3533193a3b8defef1adc2f15706e7ed"}'
+              message@sha256=6e4c8f03cd84f6e00eb3593aa1f129b782b2b67caba7e9ff04214bb4dfb16db1"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: parallelfor-pipeline-param-in-items-reso-for-loop-2

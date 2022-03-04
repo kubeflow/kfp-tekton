@@ -83,7 +83,8 @@ spec:
                 if isinstance(int_value, str):
                     return int_value
                 if not isinstance(int_value, int):
-                    raise TypeError('Value "{}" has type "{}" instead of int.'.format(str(int_value), str(type(int_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of int.'.format(
+                        str(int_value), str(type(int_value))))
                 return str(int_value)
 
             import argparse
@@ -126,7 +127,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Add numbers",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Add
-              numbers@sha256=9c06c9aac6224e3bc9ea879db96ba2fc2b804c84cb201006b2acb739eff9a9c6"}'
+              numbers@sha256=4a4bea3d4b7966f0ce3cdef5ad4d997a283ef6a895959791e037cf391732bb04"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: print-number
@@ -157,7 +158,8 @@ spec:
                 if isinstance(int_value, str):
                     return int_value
                 if not isinstance(int_value, int):
-                    raise TypeError('Value "{}" has type "{}" instead of int.'.format(str(int_value), str(type(int_value))))
+                    raise TypeError('Value "{}" has type "{}" instead of int.'.format(
+                        str(int_value), str(type(int_value))))
                 return str(int_value)
 
             import argparse
@@ -198,7 +200,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print number",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Print
-              number@sha256=7599c072446955ac048ca70635271640f9d8cd423459ad34c4678098c2d3ea2a"}'
+              number@sha256=7ad81f52d1b478fd168c0234b16a496672bdfc43da71a71fcdc5d688791f04cf"}'
             tekton.dev/template: ''
       timeout: 525600m
     - name: notify-success

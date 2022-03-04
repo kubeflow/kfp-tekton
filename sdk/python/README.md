@@ -101,15 +101,15 @@ To open the dashboard run:
 
 ## Origins of the KFP-Tekton Compiler Code
 
-The source code of the `kfp-tekton` compiler was created as an extension of the [`Kubeflow Pipelines SDK Compiler`](https://github.com/kubeflow/pipelines/tree/master/sdk/python/kfp/compiler).
+The source code of the `kfp-tekton` compiler was created as an extension of the [`Kubeflow Pipelines SDK Compiler`](https://github.com/kubeflow/pipelines/tree/sdk/release-1.8/sdk/python/kfp/compiler).
 This approach allowed us to leverage much of the existing [Kubeflow Pipelines Python SDK code](https://www.kubeflow.org/docs/pipelines/sdk/sdk-overview/#sdk-packages),
 like the DSL and components packages, but "override" or "replace" those parts of the compiler code required to generate
 the Tekton YAML instead of Argo YAML. Since the KFP SDK was not designed and implemented to easily be extended,
 _monkey-patching_ was used to replace non-class methods and functions at runtime.
 
 In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a
-specific version of the `kfp` SDK compiler. As of now the `kfp-tekton` SDK version is `1.1.0` which is aligned with KFP
-SDK version [`1.7.1`](https://pypi.org/project/kfp/1.7.1/) and [`1.7.2`](https://pypi.org/project/kfp/1.7.2/).
+specific version of the `kfp` SDK compiler. As of now the `kfp-tekton` SDK version is `1.2.0` which is aligned with KFP
+SDK version [`1.8.10`](https://pypi.org/project/kfp/1.8.10/) and [`1.8.11`](https://pypi.org/project/kfp/1.8.11/).
 
 
 ## Adding New Code
