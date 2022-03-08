@@ -467,6 +467,11 @@ spec:
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: produce-list-of-strings-Output-loop-item
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
     - runAfter:
       - produce-list-of-ints
       name: parallelfor-item-argument-resolving-for-loop-2
@@ -569,6 +574,11 @@ spec:
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: produce-list-of-ints-Output-loop-item
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
     - runAfter:
       - produce-list-of-dicts
       name: parallelfor-item-argument-resolving-for-loop-3
@@ -671,4 +681,9 @@ spec:
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: produce-list-of-dicts-Output-loop-item
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m
