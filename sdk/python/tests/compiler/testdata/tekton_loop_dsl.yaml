@@ -22,8 +22,7 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"my-in-coop1": [], "pipelineloop-break-operation":
-      []}'
+    tekton.dev/artifact_items: '{"my-in-coop1": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
@@ -98,26 +97,10 @@ spec:
                 kind: CEL
               timeout: 525600m
             - name: pipelineloop-break-operation
-              taskSpec:
-                steps:
-                - name: main
-                  args:
-                  - break loop
-                  command:
-                  - sh
-                  - -c
-                  - |
-                    echo "$0"
-                  image: busybox
-                metadata:
-                  labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
-                  annotations:
-                    pipelines.kubeflow.org/component_spec_digest: '{"name": "pipelineloop-break-operation",
-                      "outputs": [], "version": "pipelineloop-break-operation@sha256=5af6a53509f3978210157015be54bede97d788f3c06aab62cd6b8ff908e4ae1a"}'
-                    tekton.dev/template: ''
+              taskRef:
+                name: pipelineloop-break-operation
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: BreakTask
               when:
               - input: $(tasks.condition-cel.results.outcome)
                 operator: in
