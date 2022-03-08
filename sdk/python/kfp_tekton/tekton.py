@@ -19,13 +19,12 @@ from kfp import components
 from kfp.dsl._for_loop import LoopArguments, ItemList
 from kfp.dsl._pipeline_param import ConditionOperator, PipelineParam
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
-from kfp_tekton.compiler._op_to_template import TEKTON_BASH_STEP_IMAGE
 
-
+BREAK_TASK_IMAGE_NAME = "aipipeline/breaktask:latest"
 CEL_EVAL_IMAGE = "aipipeline/cel-eval:latest"
 ANY_SEQUENCER_IMAGE = "dspipelines/any-sequencer:latest"
 DEFAULT_CONDITION_OUTPUT_KEYWORD = "outcome"
-TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE]
+TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE, BREAK_TASK_IMAGE_NAME]
 LOOP_PIPELINE_NAME_LENGTH = 40
 LOOP_GROUP_NAME_LENGTH = 16
 _Num = TypeVar('_Num', int, float)
@@ -192,14 +191,13 @@ def Break():
     implementation:
         container:
             image: %s
-            command:
-            - sh
-            - -c
-            - |
-              echo "$0"
-            args:
-            - "break loop"
-    ''' % (TEKTON_BASH_STEP_IMAGE)
+            command: ['sh', '-c']
+            args: [
+             '--apiVersion', 'custom.tekton.dev/v1alpha1',
+             '--kind', 'BreakTask',
+             '--name', 'pipelineloop-break-operation',
+            ]
+    ''' % (BREAK_TASK_IMAGE_NAME)
     BreakOp_template = components.load_component_from_text(BreakOp_yaml)
     BreakOp = BreakOp_template()
     return BreakOp
