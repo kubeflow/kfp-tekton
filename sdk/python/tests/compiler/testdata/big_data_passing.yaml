@@ -916,11 +916,6 @@ spec:
                         resources:
                           requests:
                             storage: 2Gi
-                metadata:
-                  labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
             workspaces:
             - name: big-data-passing
           iterateParam: loop-item-param-1
@@ -934,11 +929,6 @@ spec:
                 resources:
                   requests:
                     storage: 2Gi
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
     workspaces:
     - name: big-data-passing
   timeout: 525600m

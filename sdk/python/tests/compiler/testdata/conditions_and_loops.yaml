@@ -406,11 +406,6 @@ spec:
                     f.write(outcome)
                     f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
                   image: python:alpine3.6
-                metadata:
-                  labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
             - name: condition-3
               params:
               - name: operand1
@@ -445,15 +440,5 @@ spec:
                     f.write(outcome)
                     f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
                   image: python:alpine3.6
-                metadata:
-                  labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
           iterateParam: produce-numbers-Output-loop-item
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

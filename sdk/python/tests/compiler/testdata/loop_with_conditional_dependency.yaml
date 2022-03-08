@@ -187,11 +187,6 @@ spec:
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: param-loop-item
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
     - runAfter:
       - print-1
       name: empty-loop-for-loop-3
@@ -236,9 +231,4 @@ spec:
               runAfter: []
               timeout: 525600m
           iterateParam: param-loop-item
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

@@ -19,7 +19,6 @@ from kfp import components
 from kfp.dsl._for_loop import LoopArguments, ItemList
 from kfp.dsl._pipeline_param import ConditionOperator, PipelineParam
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
-from kfp_tekton.compiler._op_to_template import TEKTON_BASH_STEP_IMAGE
 
 BREAK_TASK_IMAGE_NAME = "aipipeline/breaktask:latest"
 CEL_EVAL_IMAGE = "aipipeline/cel-eval:latest"

@@ -1,0 +1,69 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: pipeline
+  annotations:
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"my-in-coop1": []}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "param",
+      "optional": true, "type": "Integer"}], "name": "pipeline"}'
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "pipeline-for-loop-2"}, "spec":
+      {"iterateParam": "loop-item-param-1", "parallelism": 1, "pipelineSpec": {"params":
+      [{"name": "loop-item-param-1", "type": "string"}, {"name": "param", "type":
+      "string"}], "tasks": [{"name": "my-in-coop1", "params": [{"name": "loop-item-param-1",
+      "value": "$(params.loop-item-param-1)"}, {"name": "param", "value": "$(params.param)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"my-in-coop1\", \"outputs\": [], \"version\": \"my-in-coop1@sha256=8ccab3a28a39a406554d964865f2ccb0aed854a43b6de827f613eff2bccd6f8f\"}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "params": [{"name": "loop-item-param-1", "type": "string"}, {"name": "param",
+      "type": "string"}], "steps": [{"args": ["set -e\necho op1 \"$0\" \"$1\"\n",
+      "$(inputs.params.loop-item-param-1)", "$(inputs.params.param)"], "command":
+      ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]}, "timeout":
+      "525600m"}, {"name": "condition-cel", "params": [{"name": "outcome", "value":
+      "$(params.loop-item-param-1) == 2"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
+      "kind": "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "pipelineloop-break-operation",
+      "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "BreakTask",
+      "name": "pipelineloop-break-operation"}, "timeout": "525600m", "when": [{"input":
+      "$(tasks.condition-cel.results.outcome)", "operator": "in", "values": ["true"]}]}]}}}]'
+spec:
+  params:
+  - name: param
+    value: '10'
+  pipelineSpec:
+    params:
+    - name: param
+      default: '10'
+    tasks:
+    - name: pipeline-for-loop-2
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: pipeline-for-loop-2
+      params:
+      - name: loop-item-param-1
+        value: '[1, 2]'
+      - name: param
+        value: $(params.param)
+  timeout: 525600m

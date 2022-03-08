@@ -15,7 +15,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: my-pipeline
+  name: pipeline
   annotations:
     tekton.dev/output_artifacts: '{}'
     tekton.dev/input_artifacts: '{}'
@@ -25,23 +25,23 @@ metadata:
     tekton.dev/artifact_items: '{"my-in-coop1": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
-    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
-      "optional": true, "type": "Integer"}], "name": "my-pipeline"}'
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "param",
+      "optional": true, "type": "Integer"}], "name": "pipeline"}'
 spec:
   params:
-  - name: my_pipe_param
+  - name: param
     value: '10'
   pipelineSpec:
     params:
-    - name: my_pipe_param
+    - name: param
       default: '10'
     tasks:
-    - name: my-pipeline-for-loop-2
+    - name: pipeline-for-loop-2
       params:
       - name: loop-item-param-1
         value: '[1, 2]'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
+      - name: param
+        value: $(params.param)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
@@ -50,15 +50,15 @@ spec:
             params:
             - name: loop-item-param-1
               type: string
-            - name: my_pipe_param
+            - name: param
               type: string
             tasks:
             - name: my-in-coop1
               params:
               - name: loop-item-param-1
                 value: $(params.loop-item-param-1)
-              - name: my_pipe_param
-                value: $(params.my_pipe_param)
+              - name: param
+                value: $(params.param)
               taskSpec:
                 steps:
                 - name: main
@@ -67,7 +67,7 @@ spec:
                     set -e
                     echo op1 "$0" "$1"
                   - $(inputs.params.loop-item-param-1)
-                  - $(inputs.params.my_pipe_param)
+                  - $(inputs.params.param)
                   command:
                   - sh
                   - -c
@@ -75,7 +75,7 @@ spec:
                 params:
                 - name: loop-item-param-1
                   type: string
-                - name: my_pipe_param
+                - name: param
                   type: string
                 metadata:
                   labels:
@@ -84,13 +84,13 @@ spec:
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
-                      "outputs": [], "version": "my-in-coop1@sha256=42f0c6a60c7e435441b8afaeb382a771a9741fe3aabb203748fdbd72b25f1628"}'
+                      "outputs": [], "version": "my-in-coop1@sha256=8ccab3a28a39a406554d964865f2ccb0aed854a43b6de827f613eff2bccd6f8f"}'
                     tekton.dev/template: ''
               timeout: 525600m
             - name: condition-cel
               params:
               - name: outcome
-                value: $(params.loop-item-param-1) == 1
+                value: $(params.loop-item-param-1) == 2
               taskRef:
                 name: cel_condition
                 apiVersion: cel.tekton.dev/v1alpha1

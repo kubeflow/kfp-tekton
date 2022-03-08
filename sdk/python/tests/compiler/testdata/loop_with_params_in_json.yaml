@@ -239,11 +239,6 @@ spec:
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: loop-item-param-1
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
     - name: parallelfor-pipeline-param-in-items-reso-for-loop-4
       params:
       - name: loop-item-param-3
@@ -343,11 +338,6 @@ spec:
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: loop-item-param-3
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
     - name: parallelfor-pipeline-param-in-items-reso-for-loop-6
       params:
       - name: loop-item-param-5
@@ -447,9 +437,4 @@ spec:
                     tekton.dev/template: ''
               timeout: 525600m
           iterateParam: loop-item-param-5
-        metadata:
-          labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

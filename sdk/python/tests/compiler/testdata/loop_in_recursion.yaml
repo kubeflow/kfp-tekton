@@ -62,12 +62,11 @@ metadata:
       "525600m", "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator":
       "in", "values": ["true"]}]}, {"name": "condition-2", "params": [{"name": "operand1",
       "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "heads"},
-      {"name": "operator", "value": "=="}], "taskSpec": {"metadata": {"labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "operand1", "type": "string"}, {"name": "operand2",
-      "type": "string"}, {"name": "operator", "type": "string"}], "results": [{"description":
-      "Conditional task outcome", "name": "outcome"}], "steps": [{"image": "python:alpine3.6",
-      "script": "python -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
+      {"name": "operator", "value": "=="}], "taskSpec": {"params": [{"name": "operand1",
+      "type": "string"}, {"name": "operand2", "type": "string"}, {"name": "operator",
+      "type": "string"}], "results": [{"description": "Conditional task outcome",
+      "name": "outcome"}], "steps": [{"image": "python:alpine3.6", "script": "python
+      -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
       \"w\")\nf.write(outcome)\nf.close()'' ''$(inputs.params.operand1)'' ''$(inputs.params.operand2)''"}]}},
       {"name": "flip-component", "params": [{"name": "flip-coin-output", "value":
@@ -80,16 +79,15 @@ metadata:
       [{"name": "flip-coin-output", "value": "$(params.flip-coin-output)"}, {"name":
       "loop-item-param-3", "value": "[{\"a\": 1, \"b\": 2}, {\"a\": 10, \"b\": 20}]"},
       {"name": "my_pipe_param", "value": "$(params.my_pipe_param)"}], "taskSpec":
-      {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata":
-      {"labels": {"pipelines.kubeflow.org/cache_enabled": "true", "pipelines.kubeflow.org/generation":
-      "", "pipelines.kubeflow.org/pipelinename": ""}}, "spec": {"iterateParam": "loop-item-param-3",
-      "pipelineSpec": {"params": [{"name": "flip-coin-output", "type": "string"},
-      {"name": "loop-item-param-3-subvar-a", "type": "string"}, {"name": "loop-item-param-3-subvar-b",
-      "type": "string"}, {"name": "my_pipe_param", "type": "string"}], "tasks": [{"name":
-      "my-in-coop1", "params": [{"name": "loop-item-param-3-subvar-a", "value": "$(params.loop-item-param-3-subvar-a)"},
-      {"name": "my_pipe_param", "value": "$(params.my_pipe_param)"}], "taskSpec":
-      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
-      "{\"name\": \"my-in-coop1\", \"outputs\": [], \"version\": \"my-in-coop1@sha256=7cea0db49353eacc7cc6a63f30e125ca464ba08a6320ccf928eb803a1ff06ee0\"}",
+      {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "spec":
+      {"iterateParam": "loop-item-param-3", "pipelineSpec": {"params": [{"name": "flip-coin-output",
+      "type": "string"}, {"name": "loop-item-param-3-subvar-a", "type": "string"},
+      {"name": "loop-item-param-3-subvar-b", "type": "string"}, {"name": "my_pipe_param",
+      "type": "string"}], "tasks": [{"name": "my-in-coop1", "params": [{"name": "loop-item-param-3-subvar-a",
+      "value": "$(params.loop-item-param-3-subvar-a)"}, {"name": "my_pipe_param",
+      "value": "$(params.my_pipe_param)"}], "taskSpec": {"metadata": {"annotations":
+      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"my-in-coop1\",
+      \"outputs\": [], \"version\": \"my-in-coop1@sha256=7cea0db49353eacc7cc6a63f30e125ca464ba08a6320ccf928eb803a1ff06ee0\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "loop-item-param-3-subvar-a", "type": "string"}, {"name":
@@ -110,10 +108,8 @@ metadata:
       "loop-item-param-3-subvar-a", "value": "$(params.loop-item-param-3-subvar-a)"},
       {"name": "loop-item-param-5", "value": "[100, 200, 300]"}, {"name": "my_pipe_param",
       "value": "$(params.my_pipe_param)"}], "taskSpec": {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "spec": {"iterateParam": "loop-item-param-5", "pipelineSpec": {"params":
-      [{"name": "flip-coin-output", "type": "string"}, {"name": "loop-item-param-3-subvar-a",
+      "kind": "PipelineLoop", "spec": {"iterateParam": "loop-item-param-5", "pipelineSpec":
+      {"params": [{"name": "flip-coin-output", "type": "string"}, {"name": "loop-item-param-3-subvar-a",
       "type": "string"}, {"name": "loop-item-param-5", "type": "string"}, {"name":
       "my_pipe_param", "type": "string"}], "tasks": [{"name": "my-inner-inner-coop",
       "params": [{"name": "loop-item-param-3-subvar-a", "value": "$(params.loop-item-param-3-subvar-a)"},
