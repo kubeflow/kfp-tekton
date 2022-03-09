@@ -97,9 +97,9 @@ func TestCreateRun_Unauthorized(t *testing.T) {
 
 func TestCreateRun_Multiuser(t *testing.T) {
 	viper.Set(common.MultiUserMode, "true")
-	viper.Set(common.DefaultPipelineRunnerServiceAccount, "default-editor")
+	viper.Set(common.DefaultPipelineRunnerServiceAccountFlag, "default-editor")
 	defer viper.Set(common.MultiUserMode, "false")
-	defer viper.Set(common.DefaultPipelineRunnerServiceAccount, "pipeline-runner")
+	defer viper.Set(common.DefaultPipelineRunnerServiceAccountFlag, "pipeline-runner")
 
 	userIdentity := "user@google.com"
 	md := metadata.New(map[string]string{common.GoogleIAPUserIdentityHeader: common.GoogleIAPUserIdentityPrefix + userIdentity})
