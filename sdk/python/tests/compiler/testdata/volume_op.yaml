@@ -77,7 +77,7 @@ spec:
             is failure.
           name: failure-condition
           type: string
-        - default: aipipeline/kubectl-wrapper:1.1.1
+        - default: aipipeline/kubectl-wrapper:1.2.0
           description: Kubectl wrapper image
           name: image
           type: string
