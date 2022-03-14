@@ -46,7 +46,7 @@ type Writer struct {
 	mu                sync.Mutex
 }
 
-func (w *Writer) load(o ObjectStoreWriterConfig) error {
+func (w *Writer) Load(o ObjectStoreWriterConfig) error {
 	cosCredentials := credentials.NewStaticCredentials(o.AccessKey, o.SecretKey, o.Token)
 	// Create client config
 	var conf = aws.NewConfig().
@@ -90,7 +90,7 @@ func compress(data []byte) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (w *Writer) write(pipelineRunName, pipelineTaskName, resultName string, content []byte) error {
+func (w *Writer) Write(pipelineRunName, pipelineTaskName, resultName string, content []byte) error {
 	bucketName := fmt.Sprintf("%s/%s/%s/", w.DefaultBucketName, pipelineRunName, pipelineTaskName)
 	err := w.CreateNewBucket(bucketName)
 	if err != nil {
@@ -105,16 +105,5 @@ func (w *Writer) write(pipelineRunName, pipelineTaskName, resultName string, con
 	}
 
 	_, err = w.client.PutObject(&input)
-	return err
-}
-
-func (w *Writer) writeToObjectStore(bucketName string, key string, content []byte) error {
-	input := s3.PutObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(key),
-		Body:   bytes.NewReader(content),
-	}
-
-	_, err := w.client.PutObject(&input)
 	return err
 }
