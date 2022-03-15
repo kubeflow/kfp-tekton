@@ -1,4 +1,4 @@
-module github.com/scrapcodes/kfp-tekton/tekton-catalog/objectstore
+module github.com/kubeflow/kfp-tekton/tekton-catalog/objectstore
 
 require github.com/IBM/ibm-cos-sdk-go v1.8.0
 

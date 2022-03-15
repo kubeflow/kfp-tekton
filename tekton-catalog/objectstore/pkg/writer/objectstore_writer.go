@@ -91,7 +91,7 @@ func compress(data []byte) ([]byte, error) {
 }
 
 func (w *Writer) Write(pipelineRunName, pipelineTaskName, resultName string, content []byte) error {
-	bucketName := fmt.Sprintf("%s/%s/%s/", w.DefaultBucketName, pipelineRunName, pipelineTaskName)
+	bucketName := fmt.Sprintf("%s/artifacts/%s/%s/", w.DefaultBucketName, pipelineRunName, pipelineTaskName)
 	err := w.CreateNewBucket(bucketName)
 	if err != nil {
 		// TODO check if the failure is due to bucket already exists.
