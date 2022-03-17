@@ -1,0 +1,138 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: literal-params-test
+  annotations:
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"name": "foo", "type": "String"}],
+      "name": "literal-params-test"}'
+spec:
+  params:
+  - name: foo
+    value: ''
+  pipelineSpec:
+    params:
+    - name: foo
+    tasks:
+    - name: artifact-fetcher-0
+      params:
+      - name: bar
+        value: $(params.foo)
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-1
+      params:
+      - name: foo
+        value: $(params.foo)
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-10
+      params:
+      - name: foo
+        value: foo
+      - name: bar
+        value: $(params.foo)
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-11
+      params:
+      - name: foo
+        value: $(params.foo)
+      - name: bar
+        value: bar
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-20
+      params:
+      - name: bar
+        value: bar
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-21
+      params:
+      - name: bar
+        value: bar
+      - name: buzz
+        value: buzz
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-30
+      params:
+      - name: foo
+        value: foo
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-31
+      params:
+      - name: foo
+        value: bar
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-32
+      params:
+      - name: foo
+        value: foo
+      - name: bar
+        value: bar
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-33
+      params:
+      - name: foo
+        value: bar
+      - name: bar
+        value: foo
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+  timeout: 525600m

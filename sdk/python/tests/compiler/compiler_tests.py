@@ -233,6 +233,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.custom_task_recur_with_cond import recursion_test
     self._test_pipeline_workflow(recursion_test, 'custom_task_recur_with_cond.yaml')
 
+  def test_custom_task_with_literals(self):
+    """
+    Test compiling custom tasks with literals as parameters.
+    """
+    from .testdata.literal_params_test import literal_params_test
+    self._test_pipeline_workflow(literal_params_test, 'literal_params_test.yaml', skip_noninlined=True)
+
   def test_break_task_pipeline(self):
     """
     Test compiling a break task pipeline.
