@@ -25,6 +25,7 @@ TEKTON_CUSTOM_TASK_IMAGES = TEKTON_CUSTOM_TASK_IMAGES.append(ARTIFACT_FETCHER_IM
 
 _artifact_fetcher_no = 0
 
+
 def artifact_fetcher(**artifact_paths: str):
   '''A containerOp template resolving some artifacts, given their paths.'''
   global _artifact_fetcher_no
