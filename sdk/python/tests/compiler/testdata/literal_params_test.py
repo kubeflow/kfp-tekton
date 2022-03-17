@@ -42,7 +42,7 @@ def artifact_fetcher(**artifact_paths: str):
     'implementation': {
       'container': {
         'image': ARTIFACT_FETCHER_IMAGE_NAME,
-        'command': ['sh', '-c'], # irrelevant
+        'command': ['sh', '-c'],  # irrelevant
         'args': [
           '--apiVersion', 'fetcher.tekton.dev/v1alpha1',
           '--kind', 'FETCHER',
@@ -87,7 +87,7 @@ def literal_params_test(foo: str):
   #   matches the name of a pipeline param
   _artifact_fetcher_no = 30
   op30 = artifact_fetcher(foo="foo")
-  op31 = artifact_fetcher(foo="bar") # doesn't matter what the literal is
+  op31 = artifact_fetcher(foo="bar")  # doesn't matter what the literal is
   op32 = artifact_fetcher(foo="foo", bar="bar")
   op33 = artifact_fetcher(foo="bar", bar="foo")
 
