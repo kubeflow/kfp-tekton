@@ -857,7 +857,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 		if from == -1 || to == -1 {
 			return 0, iterationElements, fmt.Errorf("The from or to parameters was not found in runs")
 		}
-		if step == -1 {
+		if step <= 0 {
 			step = 1
 		}
 		// numberOfIterations is the number of (to - from) / step + 1
