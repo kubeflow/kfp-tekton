@@ -28,7 +28,7 @@ import (
 	"github.com/IBM/ibm-cos-sdk-go/service/s3"
 )
 
-type ObjectStoreWriterConfig struct {
+type ObjectStoreConfig struct {
 	CreateBucket      bool
 	DefaultBucketName string
 	AccessKey         string
@@ -41,12 +41,11 @@ type ObjectStoreWriterConfig struct {
 
 type Writer struct {
 	DefaultBucketName string
-	buffer            *bytes.Buffer
 	client            *s3.S3
 	mu                sync.Mutex
 }
 
-func (w *Writer) Load(o ObjectStoreWriterConfig) error {
+func (w *Writer) Load(o ObjectStoreConfig) error {
 	cosCredentials := credentials.NewStaticCredentials(o.AccessKey, o.SecretKey, o.Token)
 	// Create client config
 	var conf = aws.NewConfig().

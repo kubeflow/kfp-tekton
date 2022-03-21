@@ -6,7 +6,7 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/kubeflow/kfp-tekton/tekton-catalog/cache v0.0.0
-	github.com/kubeflow/kfp-tekton/tekton-catalog/objectstorelogger v0.0.0
+	github.com/kubeflow/kfp-tekton/tekton-catalog/objectstore v0.0.0
 	github.com/mattn/go-sqlite3 v1.14.0
 	github.com/tektoncd/pipeline v0.30.1
 	go.uber.org/zap v1.19.1
@@ -19,5 +19,5 @@ require (
 
 replace (
 	github.com/kubeflow/kfp-tekton/tekton-catalog/cache => ../cache/
-	github.com/kubeflow/kfp-tekton/tekton-catalog/objectstorelogger => ../objectstorelogger/
+	github.com/kubeflow/kfp-tekton/tekton-catalog/objectstore => ../objectstore/
 )

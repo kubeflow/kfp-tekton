@@ -1,6 +1,6 @@
 # objectstore
 
-Connect and store objects in object store. 
+## Connect and store objects in object store. 
 
 **Purpose**: use object store for storing the results of custom tasks.
 
@@ -11,7 +11,7 @@ Connect and store objects in object store.
 import 	"github.com/kubeflow/kfp-tekton/tekton-catalog/objectstore/pkg/writer"
 
 func init() {
-	config := writer.ObjectStoreWriterConfig{
+	config := writer.ObjectStoreConfig{
 		CreateBucket:      true,
 		DefaultBucketName: "testing-bucket",
 		AccessKey:         "<>",
@@ -51,3 +51,77 @@ result := fmt.Sprintf("%s", out.ConvertToType(types.StringType).Value())
 __Results are stored as:__
 
 `/artifacts/$PIPELINERUN/$PIPELINETASK/<tekton_result_name>.tgz`
+
+## Setup log to object store for golang.
+
+Log to cloud object storage for golang implemented as `io.Writer`.
+
+### Use it as a plugin/extension to [uber-go/zap](https://github.com/uber-go/zap) logger
+
+Configure logger and add a multi write syncer for `zap` as follows,
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstore/pkg/writer"
+)
+
+func initializeLogger() {
+
+	loggerConfig := cl.ObjectStoreConfig{}
+	objectStoreLogger := cl.Logger{
+		MaxSize: 1024 * 100, // After reaching this size the buffer syncs with object store.
+	}
+    
+	// Provide all the configuration.
+	loggerConfig.Enable = true
+	loggerConfig.AccessKey = "key"
+	loggerConfig.SecretKey = "key_secret"
+	loggerConfig.Region = "us-south"
+	loggerConfig.ServiceEndpoint = "<url>"
+	loggerConfig.DefaultBucketName = "<bucket_name>"
+	loggerConfig.CreateBucket = false // If the bucket already exists.
+
+	_ = objectStoreLogger.LoadDefaults(loggerConfig)
+	// setup a multi sync Writer as follows,
+	w := zapcore.NewMultiWriteSyncer(
+		zapcore.AddSync(os.Stdout),
+		zapcore.AddSync(&objectStoreLogger),
+	)
+	core := zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		w,
+		zap.InfoLevel,
+	)
+	logger := zap.New(core)
+	logger.Info("First log msg with object store logger.")
+}
+
+// If you wish to sync with object store before shutdown.
+func shutdownHook() {
+	// set up SIGHUP to send logs to object store before shutdown.
+	signal.Ignore(syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT)
+	c := make(chan os.Signal, 3)
+	signal.Notify(c, syscall.SIGTERM)
+	signal.Notify(c, syscall.SIGINT)
+	signal.Notify(c, syscall.SIGHUP)
+
+	go func() {
+		for {
+			<-c
+			err := objectStoreLogger.Close() //causes a sync with object store.
+			fmt.Printf("Synced with object store... %v", err)
+			os.Exit(0)
+		}
+	}()
+}
+
+```
