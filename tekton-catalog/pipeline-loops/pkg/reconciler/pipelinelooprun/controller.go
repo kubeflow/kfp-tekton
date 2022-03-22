@@ -128,10 +128,12 @@ func initLogger(ctx context.Context, kubeClientSet kubernetes.Interface) *zap.Su
 		MaxSize: 1024 * 100, // TODO make it configurable via a configmap.
 	}
 	enabled, err := loadObjectStoreConfig(ctx, kubeClientSet, &loggerConfig)
-	if err == nil {
+	if err == nil && enabled {
 		err = objectStoreLogger.LoadDefaults(loggerConfig)
 		if err == nil {
 			_ = objectStoreLogger.Writer.CreateNewBucket(loggerConfig.DefaultBucketName)
+		} else {
+			logger.Errorf("error connecting to the object store, %v", err)
 		}
 	}
 	if err == nil && enabled {
