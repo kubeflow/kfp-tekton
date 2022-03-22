@@ -118,6 +118,7 @@ def create_katib_experiment_task(experiment_name, experiment_namespace, training
     # Configure parameters for the Trial template.
     trial_template = V1beta1TrialTemplate(
         primary_container_name="tensorflow",
+        primary_pod_labels={"training.kubeflow.org/job-role": "master"},
         trial_parameters=[
             V1beta1TrialParameterSpec(
                 name="learningRate",
@@ -266,10 +267,10 @@ def create_tfjob_task(tfjob_name, tfjob_namespace, training_steps, katib_op, mod
     return op
 
 # You should define the model name, namespace, output of the TFJob and model volume tasks in the arguments.
-def create_kfserving_task(model_name, model_namespace, tfjob_op, model_volume_op):
+def create_kserve_task(model_name, model_namespace, tfjob_op, model_volume_op):
 
     inference_service = '''
-apiVersion: "serving.kubeflow.org/v1beta1"
+apiVersion: "serving.kserve.io/v1beta1"
 kind: "InferenceService"
 metadata:
   name: {}
@@ -282,9 +283,9 @@ spec:
       storageUri: "pvc://{}/"
 '''.format(model_name, model_namespace, str(model_volume_op.outputs["name"]))
 
-    kfserving_launcher_op = components.load_component_from_url(
-        'https://raw.githubusercontent.com/kubeflow/pipelines/master/components/kubeflow/kfserving/component.yaml')
-    kfserving_launcher_op(action="create", inferenceservice_yaml=inference_service).after(tfjob_op)
+    kserve_launcher_op = components.load_component_from_url(
+        'https://raw.githubusercontent.com/kubeflow/pipelines/master/components/kserve/component.yaml')
+    kserve_launcher_op(action="create", inferenceservice_yaml=inference_service).after(tfjob_op)
 
 name="mnist-e2e"
 namespace="kubeflow-user-example-com"
@@ -309,8 +310,8 @@ def mnist_pipeline(name=name, namespace=namespace, training_steps=training_steps
     # Run the distributive training with TFJob.
     tfjob_op = create_tfjob_task(name, namespace, training_steps, katib_op, model_volume_op)
 
-    # Create the KFServing inference.
-    create_kfserving_task(name, namespace, tfjob_op, model_volume_op)
+    # Create the KServe inference.
+    create_kserve_task(name, namespace, tfjob_op, model_volume_op)
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
