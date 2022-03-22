@@ -18,11 +18,10 @@ limitations under the License.
 // package that can write to an io.Writer, including the standard library's log package.
 // or as an extension to uber-go/zap logger.
 
-package objectstorelogger
+package writer
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -33,31 +32,17 @@ import (
 	"github.com/IBM/ibm-cos-sdk-go/service/s3"
 )
 
-type ObjectStoreLogConfig struct {
-	Enable            bool
-	DefaultBucketName string
-	CreateBucket      bool
-	AccessKey         string
-	SecretKey         string
-	Region            string
-	ServiceEndpoint   string
-	Token             string
-	S3ForcePathStyle  bool
-	client            *s3.S3
-}
-
 type Logger struct {
-	buffer *bytes.Buffer
+	Enabled bool
+	buffer  *bytes.Buffer
 	// When buffer reaches the size of MaxSize, it tries to sync with object store.
 	MaxSize int64
 	// Whether to compress before syncing the buffer.
 	Compress bool
 	// Current size of the buffer.
-	size int64
-	// Sync irrespective of buffer size after elapsing this interval.
-	SyncInterval time.Duration
-	mu           sync.Mutex
-	LogConfig    ObjectStoreLogConfig
+	size   int64
+	mu     sync.Mutex
+	Writer *Writer
 }
 
 // ensure we always implement io.WriteCloser
@@ -81,7 +66,7 @@ func (l *Logger) Write(p []byte) (n int, err error) {
 
 func (l *Logger) syncBuffer() error {
 	var err error
-	err = l.LogConfig.writeToObjectStore(l.LogConfig.DefaultBucketName,
+	err = l.writeToObjectStore(l.Writer.DefaultBucketName,
 		time.Now().Format(time.RFC3339Nano), l.buffer.Bytes())
 	if err != nil {
 		return err
@@ -97,7 +82,7 @@ func (l *Logger) Close() error {
 	return l.syncBuffer()
 }
 
-func (o *ObjectStoreLogConfig) load() error {
+func (l *Logger) load(o ObjectStoreConfig) error {
 	cosCredentials := credentials.NewStaticCredentials(o.AccessKey, o.SecretKey, o.Token)
 	// Create client config
 	var conf = aws.NewConfig().
@@ -107,12 +92,13 @@ func (o *ObjectStoreLogConfig) load() error {
 		WithS3ForcePathStyle(o.S3ForcePathStyle)
 
 	var sess = session.Must(session.NewSession())
-	o.client = s3.New(sess, conf)
+	l.Writer.DefaultBucketName = o.DefaultBucketName
+	l.Writer.client = s3.New(sess, conf)
 	input := &s3.CreateBucketInput{
 		Bucket: aws.String(o.DefaultBucketName),
 	}
 	if o.CreateBucket {
-		_, err := o.client.CreateBucket(input)
+		_, err := l.Writer.client.CreateBucket(input)
 		if err != nil {
 			return err
 		}
@@ -120,37 +106,19 @@ func (o *ObjectStoreLogConfig) load() error {
 	return nil
 }
 
-func (o *ObjectStoreLogConfig) CreateNewBucket(bucketName string) error {
-	if !o.Enable {
-		return nil
-	}
-	input := &s3.CreateBucketInput{
-		Bucket: aws.String(bucketName),
-	}
-	_, err := o.client.CreateBucket(input)
-	return err
-}
-
-func (o *ObjectStoreLogConfig) writeToObjectStore(bucketName string, key string, content []byte) error {
-	if !o.Enable {
-		return nil
-	}
+func (l *Logger) writeToObjectStore(bucketName string, key string, content []byte) error {
 	input := s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(key),
 		Body:   bytes.NewReader(content),
 	}
 
-	_, err := o.client.PutObject(&input)
+	_, err := l.Writer.client.PutObject(&input)
 	return err
 }
 
-func (l *Logger) LoadDefaults(config ObjectStoreLogConfig) error {
-	if !config.Enable {
-		return fmt.Errorf("cloud object store logging is disabled.")
-	}
-	l.LogConfig = config
-	err := l.LogConfig.load()
+func (l *Logger) LoadDefaults(config ObjectStoreConfig) error {
+	err := l.load(config)
 	if err != nil {
 		return err
 	}

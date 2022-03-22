@@ -27,7 +27,7 @@ import (
 
 	taskCache "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
-	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstorelogger/pkg/objectstorelogger"
+	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstore/pkg/writer"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	pipelineloopclient "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/client"
@@ -49,14 +49,15 @@ import (
 	"knative.dev/pkg/system"
 )
 
-func loadObjectStoreConfig(ctx context.Context, kubeClientSet kubernetes.Interface, o *cl.ObjectStoreLogConfig) error {
+func loadObjectStoreConfig(ctx context.Context, kubeClientSet kubernetes.Interface, o *cl.ObjectStoreConfig) (bool, error) {
 	configMap, err := kubeClientSet.CoreV1().ConfigMaps(system.Namespace()).
 		Get(ctx, "object-store-config", metaV1.GetOptions{})
 	if err != nil {
-		return err
+		return false, err
 	}
-	if o.Enable, err = strconv.ParseBool(configMap.Data["enable"]); err != nil || !o.Enable {
-		return err
+	var enable bool
+	if enable, err = strconv.ParseBool(configMap.Data["enable"]); err != nil || !enable {
+		return false, err
 	}
 
 	o.AccessKey = configMap.Data["accessKey"]
@@ -66,7 +67,7 @@ func loadObjectStoreConfig(ctx context.Context, kubeClientSet kubernetes.Interfa
 	o.DefaultBucketName = configMap.Data["defaultBucketName"]
 	o.CreateBucket = false
 	o.Token = configMap.Data["token"]
-	return nil
+	return true, nil
 }
 
 func loadCacheConfig(ctx context.Context, kubeClientSet kubernetes.Interface, p *db.ConnectionParams) (bool, error) {
@@ -122,18 +123,18 @@ func initCache(ctx context.Context, kubeClientSet kubernetes.Interface, params d
 
 func initLogger(ctx context.Context, kubeClientSet kubernetes.Interface) *zap.SugaredLogger {
 	var logger = logging.FromContext(ctx)
-	loggerConfig := cl.ObjectStoreLogConfig{}
+	loggerConfig := cl.ObjectStoreConfig{}
 	objectStoreLogger := cl.Logger{
 		MaxSize: 1024 * 100, // TODO make it configurable via a configmap.
 	}
-	err := loadObjectStoreConfig(ctx, kubeClientSet, &loggerConfig)
+	enabled, err := loadObjectStoreConfig(ctx, kubeClientSet, &loggerConfig)
 	if err == nil {
 		err = objectStoreLogger.LoadDefaults(loggerConfig)
 		if err == nil {
-			_ = objectStoreLogger.LogConfig.CreateNewBucket(loggerConfig.DefaultBucketName)
+			_ = objectStoreLogger.Writer.CreateNewBucket(loggerConfig.DefaultBucketName)
 		}
 	}
-	if err == nil && objectStoreLogger.LogConfig.Enable {
+	if err == nil && enabled {
 		logger.Info("Loading object store logger...")
 		w := zapcore.NewMultiWriteSyncer(
 			zapcore.AddSync(os.Stdout),
