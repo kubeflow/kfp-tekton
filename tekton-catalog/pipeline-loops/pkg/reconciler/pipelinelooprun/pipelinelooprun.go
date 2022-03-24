@@ -603,9 +603,10 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 		Spec: v1beta1.PipelineRunSpec{
 			Params:             getParameters(run, tls, iteration),
 			Timeout:            tls.Timeout,
-			ServiceAccountName: "",  // TODO: Implement service account name
-			PodTemplate:        nil, // TODO: Implement pod template
+			ServiceAccountName: tls.ServiceAccountName,
+			PodTemplate:        tls.PodTemplate,
 			Workspaces:         tls.Workspaces,
+			TaskRunSpecs:       tls.TaskRunSpecs,
 		}}
 
 	if tls.PipelineRef != nil {

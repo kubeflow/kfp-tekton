@@ -72,9 +72,20 @@ type PipelineLoopSpec struct {
 	// +optional
 	Retries int `json:"retries,omitempty"`
 
+	// PodTemplate holds pod specific configuration
+	// +optional
+	PodTemplate *v1beta1.PodTemplate `json:"podTemplate,omitempty"`
+
+	// +optional
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+
 	// Workspace to a volume mapping to be consumed by a PipelineRun.
 	// +optional
 	Workspaces []v1beta1.WorkspaceBinding `json:"workspaces,omitempty"`
+
+	// TaskRunSpecs holds a set of runtime specs
+	// +optional
+	TaskRunSpecs []v1beta1.PipelineTaskRunSpec `json:"taskRunSpecs,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

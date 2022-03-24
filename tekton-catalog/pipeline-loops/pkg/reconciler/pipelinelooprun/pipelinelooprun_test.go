@@ -292,6 +292,10 @@ var aPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
 		PipelineRef:           &v1beta1.PipelineRef{Name: "a-pipeline"},
 		IterateParam:          "current-item",
 		IterateParamSeparator: "separator",
+		ServiceAccountName:    "default",
+		PodTemplate: &v1beta1.PodTemplate{
+			HostNetwork: false,
+		},
 	},
 }
 
@@ -878,7 +882,9 @@ var expectedPipelineRunIterationDict = &v1beta1.PipelineRun{
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
-		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
+		PipelineRef:        &v1beta1.PipelineRef{Name: "a-pipeline"},
+		ServiceAccountName: "default",
+		PodTemplate:        &v1beta1.PodTemplate{},
 		Params: []v1beta1.Param{{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
@@ -989,7 +995,9 @@ var expectedPipelineRunIteration1 = &v1beta1.PipelineRun{
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
-		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
+		PipelineRef:        &v1beta1.PipelineRef{Name: "a-pipeline"},
+		ServiceAccountName: "default",
+		PodTemplate:        &v1beta1.PodTemplate{},
 		Params: []v1beta1.Param{{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
@@ -1025,7 +1033,9 @@ var expectedPipelineRunFailed = &v1beta1.PipelineRun{
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
-		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
+		PipelineRef:        &v1beta1.PipelineRef{Name: "a-pipeline"},
+		ServiceAccountName: "default",
+		PodTemplate:        &v1beta1.PodTemplate{},
 		Params: []v1beta1.Param{{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
@@ -1061,7 +1071,9 @@ var expectedPipelineRunRetry = &v1beta1.PipelineRun{
 		},
 	},
 	Spec: v1beta1.PipelineRunSpec{
-		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
+		PipelineRef:        &v1beta1.PipelineRef{Name: "a-pipeline"},
+		ServiceAccountName: "default",
+		PodTemplate:        &v1beta1.PodTemplate{},
 		Params: []v1beta1.Param{{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
