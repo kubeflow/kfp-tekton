@@ -92,8 +92,11 @@ func (l *Logger) load(o ObjectStoreConfig) error {
 		WithS3ForcePathStyle(o.S3ForcePathStyle)
 
 	var sess = session.Must(session.NewSession())
-	l.Writer.DefaultBucketName = o.DefaultBucketName
-	l.Writer.client = s3.New(sess, conf)
+	l.Writer = &Writer{
+		DefaultBucketName: o.DefaultBucketName,
+		client:            s3.New(sess, conf),
+		mu:                sync.Mutex{},
+	}
 	input := &s3.CreateBucketInput{
 		Bucket: aws.String(o.DefaultBucketName),
 	}
