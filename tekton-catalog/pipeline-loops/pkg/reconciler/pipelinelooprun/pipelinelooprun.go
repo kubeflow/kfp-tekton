@@ -31,7 +31,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
+	cache "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
@@ -367,7 +367,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 
 	// Update status of PipelineRuns.  Return the PipelineRun representing the highest loop iteration.
-	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(ctx, run, status)
+	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(ctx, iterationElements, run, status)
 	if err != nil {
 		return fmt.Errorf("error updating PipelineRun status for Run %s/%s: %w", run.Namespace, run.Name, err)
 	}
@@ -447,8 +447,9 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 				return fmt.Errorf("error creating PipelineRun from Run %s while retrying: %w", run.Name, err)
 			}
 			status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
-				Iteration: highestIteration,
-				Status:    &pr.Status,
+				Iteration:     highestIteration,
+				IterationItem: iterationElements[highestIteration-1],
+				Status:        &pr.Status,
 			}
 			logger.Infof("Retried failed pipelineRun: %s with new pipelineRun: %s", failedPr.Name, pr.Name)
 		}
@@ -523,10 +524,10 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		if err != nil {
 			return fmt.Errorf("error creating PipelineRun from Run %s: %w", run.Name, err)
 		}
-
 		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
-			Iteration: nextIteration,
-			Status:    &pr.Status,
+			Iteration:     nextIteration,
+			IterationItem: iterationElements[nextIteration-1],
+			Status:        &pr.Status,
 		}
 		nextIteration++
 		if nextIteration > totalIterations {
@@ -664,7 +665,7 @@ func (c *Reconciler) cancelAllPipelineRuns(ctx context.Context, run *v1alpha1.Ru
 	return nil
 }
 
-func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
+func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationElements []interface{}, run *v1alpha1.Run, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
 	logger := logging.FromContext(ctx)
 	highestIteration := 0
 	var currentRunningPrs []*v1beta1.PipelineRun
@@ -728,8 +729,9 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, run *v1alpha1.
 			}
 		}
 		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
-			Iteration: iteration,
-			Status:    &pr.Status,
+			Iteration:     iteration,
+			IterationItem: iterationElements[iteration-1],
+			Status:        &pr.Status,
 		}
 		if iteration > highestIteration {
 			highestIteration = iteration
