@@ -55,6 +55,9 @@ type PipelineLoopSpec struct {
 	// +optional
 	IterateParamSeparator string `json:"iterateParamStringSeparator,omitempty"`
 
+	// +optional
+	IterationNumberParam string `json:"iterationNumberParam,omitempty"`
+
 	IterateNumeric string `json:"iterateNumeric"`
 
 	// Time after which the TaskRun times out.
@@ -144,6 +147,7 @@ type PipelineLoopRunStatus struct {
 type PipelineLoopPipelineRunStatus struct {
 	// iteration number
 	Iteration int `json:"iteration,omitempty"`
+	
 	// Status is the TaskRunStatus for the corresponding TaskRun
 	// +optional
 	Status *v1beta1.PipelineRunStatus `json:"status,omitempty"`
