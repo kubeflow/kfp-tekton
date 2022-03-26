@@ -158,7 +158,8 @@ type PipelineLoopRunStatus struct {
 type PipelineLoopPipelineRunStatus struct {
 	// iteration number
 	Iteration int `json:"iteration,omitempty"`
-	
+	// the current iteration item
+	IterationItem interface{} `json:"iterationItem,omitempty"`
 	// Status is the TaskRunStatus for the corresponding TaskRun
 	// +optional
 	Status *v1beta1.PipelineRunStatus `json:"status,omitempty"`

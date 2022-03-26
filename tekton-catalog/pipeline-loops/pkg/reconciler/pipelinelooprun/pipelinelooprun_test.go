@@ -257,6 +257,12 @@ func checkRunStatus(t *testing.T, run *v1alpha1.Run, expectedStatus map[string]p
 			t.Errorf("Run status for PipelineRun %s has iteration number %d instead of %d",
 				expectedPipelineRunName, actualPipelineRunStatus.Iteration, expectedPipelineRunStatus.Iteration)
 		}
+		acturalIterationItem, error := json.Marshal(actualPipelineRunStatus.IterationItem)
+		expectedIterationItem, _ := json.Marshal(expectedPipelineRunStatus.IterationItem)
+		if error != nil || string(acturalIterationItem) != string(expectedIterationItem) {
+			t.Errorf("Run status for PipelineRun %s has iteration item %v instead of %v",
+				expectedPipelineRunName, actualPipelineRunStatus.IterationItem, expectedPipelineRunStatus.IterationItem)
+		}
 		if d := cmp.Diff(expectedPipelineRunStatus.Status, actualPipelineRunStatus.Status, cmpopts.IgnoreTypes(apis.Condition{}.LastTransitionTime.Inner.Time)); d != "" {
 			t.Errorf("Run status for PipelineRun %s is incorrect. Diff %s", expectedPipelineRunName, diff.PrintWantGot(d))
 		}
@@ -1718,10 +1724,11 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 			}
 
 			// Verify Run status contains status for all PipelineRuns.
+			_, iterationElements, _ := computeIterations(tc.run, &tc.pipelineloop.Spec)
 			expectedPipelineRuns := map[string]pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{}
 			i := 1
 			for _, pr := range tc.expectedPipelineruns {
-				expectedPipelineRuns[pr.Name] = pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{Iteration: i, Status: &pr.Status}
+				expectedPipelineRuns[pr.Name] = pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{Iteration: i, IterationItem: iterationElements[i-1], Status: &pr.Status}
 				if pr.Labels["deleted"] != "True" {
 					i = i + 1 // iteration remain same, incase previous pr was a retry.
 				}
