@@ -1,0 +1,116 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: separator-from-task
+  annotations:
+    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/output_value.tgz",
+      "name": "print-output_value", "path": "/tmp/outputs/output_value/data"}], "separator":
+      [{"key": "artifacts/$PIPELINERUN/separator/output_value.tgz", "name": "separator-output_value",
+      "path": "/tmp/outputs/output_value/data"}], "text": [{"key": "artifacts/$PIPELINERUN/text/output_value.tgz",
+      "name": "text-output_value", "path": "/tmp/outputs/output_value/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print": [["output_value", "$(results.output-value.path)"]],
+      "separator": [["output_value", "$(results.output-value.path)"]], "text": [["output_value",
+      "$(results.output-value.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "separator-from-task"}'
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "separator-from-task-for-loop-2"},
+      "spec": {"iterateParam": "text-output_value-loop-item", "iterateParamStringSeparator":
+      "loop-item-param-1", "pipelineSpec": {"params": [{"name": "text-output_value-loop-item",
+      "type": "string"}], "tasks": [{"name": "print", "taskSpec": {"metadata": {"annotations":
+      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"print\", \"outputs\":
+      [{\"description\": \"Represents an output paramter.\", \"name\": \"output_value\",
+      \"type\": \"String\"}], \"version\": \"print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766\"}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
+      "output-value"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n",
+      "print", "$(results.output-value.path)"], "image": "alpine:3.6", "name": "main"}]},
+      "timeout": "525600m"}]}}}]'
+spec:
+  pipelineSpec:
+    tasks:
+    - name: text
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0 > $1
+          - a,b,c
+          - $(results.output-value.path)
+          image: alpine:3.6
+        results:
+        - name: output-value
+          description: /tmp/outputs/output_value/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "text", "outputs":
+              [{"description": "Represents an output paramter.", "name": "output_value",
+              "type": "String"}], "version": "text@sha256=e358a06a35fc0f8f63375e0679b6d6d4b125f01cfd6b0bc025b10f3d50f70e86"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+    - name: separator
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0 > $1
+          - ','
+          - $(results.output-value.path)
+          image: alpine:3.6
+        results:
+        - name: output-value
+          description: /tmp/outputs/output_value/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "separator", "outputs":
+              [{"description": "Represents an output paramter.", "name": "output_value",
+              "type": "String"}], "version": "separator@sha256=176a29ae9edd6f2931e4ad6010305a84419ecedb4f4f3fbf82696746224b5c49"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+    - name: separator-from-task-for-loop-2
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: separator-from-task-for-loop-2
+      params:
+      - name: loop-item-param-1
+        value: $(tasks.separator.results.output-value)
+      - name: text-output_value-loop-item
+        value: $(tasks.text.results.output-value)
+  timeout: 525600m
