@@ -316,6 +316,33 @@ var wsPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
 	},
 }
 
+var newPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
+	ObjectMeta: metav1.ObjectMeta{Name: "new-pipelineloop", Namespace: "foo"},
+	Spec: pipelineloopv1alpha1.PipelineLoopSpec{
+		PipelineRef:        &v1beta1.PipelineRef{Name: "a-pipeline"},
+		IterateParam:       "current-item",
+		ServiceAccountName: "default",
+		PodTemplate: &v1beta1.PodTemplate{
+			HostAliases: []corev1.HostAlias{{
+				IP:        "0.0.0.0",
+				Hostnames: []string{"localhost"},
+			}},
+			HostNetwork: true,
+		},
+		TaskRunSpecs: []v1beta1.PipelineTaskRunSpec{{
+			PipelineTaskName:       "test-task",
+			TaskServiceAccountName: "test",
+			TaskPodTemplate: &v1beta1.PodTemplate{
+				HostAliases: []corev1.HostAlias{{
+					IP:        "0.0.0.0",
+					Hostnames: []string{"localhost"},
+				}},
+				HostNetwork: true,
+			},
+		}},
+	},
+}
+
 var nPipeline = &v1beta1.Pipeline{
 	ObjectMeta: metav1.ObjectMeta{Name: "n-pipeline", Namespace: "foo"},
 	Spec: v1beta1.PipelineSpec{
@@ -495,6 +522,34 @@ var runWsPipelineLoop = &v1alpha1.Run{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "ws-pipelineloop",
+		},
+	},
+}
+
+var runNewPipelineLoop = &v1alpha1.Run{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-new-pipelineloop",
+		Namespace: "foo",
+		Labels: map[string]string{
+			"myTestLabel":                    "myTestLabelValue",
+			"custom.tekton.dev/pipelineLoop": "new-pipelineloop",
+			"tekton.dev/pipeline":            "pr-loop-example",
+			"tekton.dev/pipelineRun":         "pr-loop-example",
+			"tekton.dev/pipelineTask":        "loop-task",
+		},
+		Annotations: map[string]string{
+			"myTestAnnotation": "myTestAnnotationValue",
+		},
+	},
+	Spec: v1alpha1.RunSpec{
+		Params: []v1beta1.Param{{
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeArray, ArrayVal: []string{"item1", "item2"}},
+		}},
+		Ref: &v1alpha1.TaskRef{
+			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
+			Kind:       pipelineloop.PipelineLoopControllerName,
+			Name:       "new-pipelineloop",
 		},
 	},
 }
@@ -1196,6 +1251,60 @@ var expectedPipelineRunWithWorkSpace = &v1beta1.PipelineRun{
 	},
 }
 
+var expectedPipelineRunWithPodTemplate = &v1beta1.PipelineRun{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-new-pipelineloop-00001-9l9zj",
+		Namespace: "foo",
+		OwnerReferences: []metav1.OwnerReference{{
+			APIVersion:         "tekton.dev/v1alpha1",
+			Kind:               "Run",
+			Name:               "run-new-pipelineloop",
+			Controller:         &trueB,
+			BlockOwnerDeletion: &trueB,
+		}},
+		Labels: map[string]string{
+			"custom.tekton.dev/originalPipelineRun":   "pr-loop-example",
+			"custom.tekton.dev/parentPipelineRun":     "pr-loop-example",
+			"custom.tekton.dev/pipelineLoop":          "new-pipelineloop",
+			"tekton.dev/run":                          "run-new-pipelineloop",
+			"custom.tekton.dev/pipelineLoopIteration": "1",
+			"myTestLabel":                             "myTestLabelValue",
+		},
+		Annotations: map[string]string{
+			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
+		},
+	},
+	Spec: v1beta1.PipelineRunSpec{
+		PipelineRef: &v1beta1.PipelineRef{
+			Name: "a-pipeline",
+		},
+		Params: []v1beta1.Param{{
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
+		}},
+		ServiceAccountName: "default",
+		PodTemplate: &v1beta1.PodTemplate{
+			HostAliases: []corev1.HostAlias{{
+				IP:        "0.0.0.0",
+				Hostnames: []string{"localhost"},
+			}},
+			HostNetwork: true,
+		},
+		TaskRunSpecs: []v1beta1.PipelineTaskRunSpec{{
+			PipelineTaskName:       "test-task",
+			TaskServiceAccountName: "test",
+			TaskPodTemplate: &v1beta1.PodTemplate{
+				HostAliases: []corev1.HostAlias{{
+					IP:        "0.0.0.0",
+					Hostnames: []string{"localhost"},
+				}},
+				HostNetwork: true,
+			},
+		}},
+	},
+}
+
 var expectedPipelineRunWithInlineTaskIteration1 = &v1beta1.PipelineRun{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "run-pipelineloop-with-inline-task-00001-9l9zj",
@@ -1511,6 +1620,16 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded,
 		expectedPipelineruns: []*v1beta1.PipelineRun{successfulWithSkipedTasks(expectedConditionPipelineRunIteration1)},
 		expectedEvents:       []string{"Normal Succeeded PipelineRuns completed successfully with the conditions are met"},
+	}, {
+		name:                 "Reconcile a new run with a pipelineloop that contains a PodTemplate, ServiceAccountName, TaskRunSpecs",
+		pipeline:             aPipeline,
+		pipelineloop:         newPipelineLoop,
+		run:                  runNewPipelineLoop,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithPodTemplate},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
 	}}
 
 	//testcases = testcases[1:3]
