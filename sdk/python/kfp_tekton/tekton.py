@@ -236,7 +236,7 @@ class Loop(dsl.ParallelFor):
   @classmethod
   def from_string(cls,
                   loop_args: Union[str, _pipeline_param.PipelineParam],
-                  separator: Optional[str] = None,
+                  separator: Optional[Union[str, _pipeline_param.PipelineParam]] = None,
                   parallelism: Optional[int] = None):
     return cls(loop_args=loop_args, separator=separator, parallelism=parallelism)
 
@@ -255,7 +255,7 @@ class Loop(dsl.ParallelFor):
                start: Union[_Num, PipelineParam, None] = None,
                end: Union[_Num, PipelineParam, None] = None,
                step: Union[_Num, PipelineParam, None] = None,
-               separator: Optional[str] = None,
+               separator: Optional[Union[str, _pipeline_param.PipelineParam]] = None,
                parallelism: Optional[int] = None):
     self.start = None
     self.end = None
