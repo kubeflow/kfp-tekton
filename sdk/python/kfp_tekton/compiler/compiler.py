@@ -431,26 +431,26 @@ class TektonCompiler(Compiler):
           "value": loop_args_str_value
         }]
 
+      # start, end, step params should be added as a parameter
+      # isinstance(sub_group.start, dsl.PipelineParam)
+      def process_parameter(parameter):
+        parameter_value = str(parameter)
+        if isinstance(parameter, dsl.PipelineParam):
+          if parameter.op_name:
+            parameter_value = '$(tasks.' + parameter.op_name + '.results.' + sanitize_k8s_name(parameter.name) + ')'
+          else:
+            parameter_value = '$(params.' + parameter.name + ')'
+        return parameter_value
+
       if hasattr(sub_group, 'separator') and sub_group.separator is not None:
         # separator should be added as a parameter
         sep_param = {
           "name": sub_group.separator.full_name,
-          "value": sub_group.separator.value
+          "value": process_parameter(sub_group.separator.value)
         }
         self.loops_pipeline[group_name]['spec']['params'].append(sep_param)
 
       if hasattr(sub_group, 'start') and sub_group.start is not None:
-        # start, end, step params should be added as a parameter
-        # isinstance(sub_group.start, dsl.PipelineParam)
-        def process_parameter(parameter):
-          parameter_value = str(parameter)
-          if isinstance(parameter, dsl.PipelineParam):
-            if parameter.op_name:
-              parameter_value = '$(tasks.' + parameter.op_name + '.results.' + sanitize_k8s_name(parameter.name) + ')'
-            else:
-              parameter_value = '$(params.' + parameter.name + ')'
-          return parameter_value
-
         start_param = {
           "name": 'from',
           "value": process_parameter(sub_group.start)
