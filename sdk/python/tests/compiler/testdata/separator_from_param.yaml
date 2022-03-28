@@ -1,0 +1,94 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: separator-from-param
+  annotations:
+    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/output_value.tgz",
+      "name": "print-output_value", "path": "/tmp/outputs/output_value/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print": [["output_value", "$(results.output-value.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "a,b,c", "name":
+      "text", "optional": true, "type": "String"}, {"default": ",", "name": "separator",
+      "optional": true, "type": "String"}], "name": "separator-from-param"}'
+spec:
+  params:
+  - name: separator
+    value: ','
+  - name: text
+    value: a,b,c
+  pipelineSpec:
+    params:
+    - name: separator
+      default: ','
+    - name: text
+      default: a,b,c
+    tasks:
+    - name: separator-from-param-for-loop-2
+      params:
+      - name: loop-item-param-1
+        value: $(params.separator)
+      - name: text-loop-item
+        value: $(params.text)
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: text-loop-item
+              type: string
+            tasks:
+            - name: print
+              taskSpec:
+                steps:
+                - name: main
+                  command:
+                  - sh
+                  - -c
+                  - |
+                    set -e
+                    echo $0 > $1
+                  - print
+                  - $(results.output-value.path)
+                  image: alpine:3.6
+                results:
+                - name: output-value
+                  description: /tmp/outputs/output_value/data
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
+                      "outputs": [{"description": "Represents an output paramter.",
+                      "name": "output_value", "type": "String"}], "version": "print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766"}'
+                    tekton.dev/template: ''
+              timeout: 525600m
+          iterateParam: text-loop-item
+          iterateParamStringSeparator: loop-item-param-1
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+  timeout: 525600m
