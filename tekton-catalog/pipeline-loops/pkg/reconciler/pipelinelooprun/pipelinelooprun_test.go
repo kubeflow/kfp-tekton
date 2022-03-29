@@ -301,6 +301,16 @@ var aPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
 	},
 }
 
+var aPipelineLoop2 = &pipelineloopv1alpha1.PipelineLoop{
+	ObjectMeta: metav1.ObjectMeta{Name: "a-pipelineloop2", Namespace: "foo"},
+	Spec: pipelineloopv1alpha1.PipelineLoopSpec{
+		PipelineRef:           &v1beta1.PipelineRef{Name: "a-pipeline"},
+		IterateParam:          "current-item",
+		IterateParamSeparator: "separator",
+		IterationNumberParam:  "additional-parameter",
+	},
+}
+
 var wsPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
 	ObjectMeta: metav1.ObjectMeta{Name: "ws-pipelineloop", Namespace: "foo"},
 	Spec: pipelineloopv1alpha1.PipelineLoopSpec{
@@ -581,6 +591,34 @@ var runPipelineLoop = &v1alpha1.Run{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
+		},
+	},
+}
+
+var runPipelineLoop2 = &v1alpha1.Run{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-pipelineloop",
+		Namespace: "foo",
+		Labels: map[string]string{
+			"myTestLabel":                    "myTestLabelValue",
+			"custom.tekton.dev/pipelineLoop": "a-pipelineloop2",
+			"tekton.dev/pipeline":            "pr-loop-example",
+			"tekton.dev/pipelineRun":         "pr-loop-example",
+			"tekton.dev/pipelineTask":        "loop-task",
+		},
+		Annotations: map[string]string{
+			"myTestAnnotation": "myTestAnnotationValue",
+		},
+	},
+	Spec: v1alpha1.RunSpec{
+		Params: []v1beta1.Param{{
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeArray, ArrayVal: []string{"item1", "item2"}},
+		}},
+		Ref: &v1alpha1.TaskRef{
+			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
+			Kind:       pipelineloop.PipelineLoopControllerName,
+			Name:       "a-pipelineloop2",
 		},
 	},
 }
@@ -1169,6 +1207,42 @@ var expectedPipelineRunIterateNumeric1 = &v1beta1.PipelineRun{
 	},
 }
 
+var expectedPipelineRunIterateNumericParam = &v1beta1.PipelineRun{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-pipelineloop-00001-9l9zj",
+		Namespace: "foo",
+		OwnerReferences: []metav1.OwnerReference{{
+			APIVersion:         "tekton.dev/v1alpha1",
+			Kind:               "Run",
+			Name:               "run-pipelineloop",
+			Controller:         &trueB,
+			BlockOwnerDeletion: &trueB,
+		}},
+		Labels: map[string]string{
+			"custom.tekton.dev/originalPipelineRun":   "pr-loop-example",
+			"custom.tekton.dev/parentPipelineRun":     "pr-loop-example",
+			"custom.tekton.dev/pipelineLoop":          "a-pipelineloop2",
+			"tekton.dev/run":                          "run-pipelineloop",
+			"custom.tekton.dev/pipelineLoopIteration": "1",
+			"myTestLabel":                             "myTestLabelValue",
+		},
+		Annotations: map[string]string{
+			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
+		},
+	},
+	Spec: v1beta1.PipelineRunSpec{
+		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
+		Params: []v1beta1.Param{{
+			Name:  "additional-parameter",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: `"item1"`},
+		}, {
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
+		}},
+	},
+}
+
 // Note: The pipelinerun for the second iteration has the same random suffix as the first due to the resetting of the seed on each test.
 var expectedPipelineRunIteration2 = &v1beta1.PipelineRun{
 	ObjectMeta: metav1.ObjectMeta{
@@ -1531,6 +1605,16 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
 		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIterateNumeric1},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Reconcile a new run with iterationNumberParam defined",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop2,
+		run:                  runPipelineLoop2,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIterateNumericParam},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Reconcile a new run with a pipelineloop that contains an inline task",
