@@ -64,7 +64,7 @@ type PipelineLoopSpec struct {
 	// +optional
 	Timeout *metav1.Duration `json:"timeout,omitempty"`
 
-	// Parallelism represents how many pipelines can be triggered simutaniously by the loop.
+	// Parallelism represents how many pipelines can be triggered simultaneously by the loop.
 	// +optional
 	Parallelism int `json:"parallelism,omitempty"`
 

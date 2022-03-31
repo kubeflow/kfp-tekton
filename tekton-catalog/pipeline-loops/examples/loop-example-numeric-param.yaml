@@ -3,28 +3,27 @@ kind: PipelineLoop
 metadata:
   name: pipelineloop
 spec:
-  # IterationNumberParam points to the param that stores the current loop item. Similar to IterateNumeric
-  # for numeric loop range.
-  iterationNumberParam: current-message
+  # IterationNumberParam points to the current index of the loop, starting from 1.
+  iterationNumberParam: message-index
   iterateParam: message
   pipelineSpec:
     params:
     - name: message
       type: string
-    - name: current-message
+    - name: message-index
       type: string
     tasks:
     - name: echo-loop-task
       params:
       - name: message
         value: $(params.message)
-      - name: current-message
-        value: $(params.current-message)
+      - name: message-index
+        value: $(params.message-index)
       taskSpec:
         params:
         - name: message
           type: string
-        - name: current-message
+        - name: message-index
           type: string
         steps:
           - name: echo
@@ -32,7 +31,7 @@ spec:
             imagePullPolicy: IfNotPresent
             script: |
               #!/usr/bin/env bash
-              echo "$(params.message) $(params.current-message)"
+              echo "$(params.message-index)) $(params.message)"
 ---
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
