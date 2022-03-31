@@ -337,6 +337,8 @@ class TektonCompiler(Compiler):
         self.loops_pipeline[group_name]['start'] = sub_group.start
         self.loops_pipeline[group_name]['end'] = sub_group.end
         self.loops_pipeline[group_name]['step'] = sub_group.step
+      if hasattr(sub_group, 'call_enumerate') and sub_group.call_enumerate and sub_group.iteration_number is not None:
+        self.loops_pipeline[group_name]['iteration_number'] = sub_group.iteration_number.full_name
       for subvarName in sub_group.loop_args.referenced_subvar_names:
         if subvarName != '__iter__':
           self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + subvarName)
