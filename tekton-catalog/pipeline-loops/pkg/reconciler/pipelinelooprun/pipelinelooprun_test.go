@@ -1235,7 +1235,7 @@ var expectedPipelineRunIterateNumericParam = &v1beta1.PipelineRun{
 		PipelineRef: &v1beta1.PipelineRef{Name: "a-pipeline"},
 		Params: []v1beta1.Param{{
 			Name:  "additional-parameter",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: `"item1"`},
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "1"},
 		}, {
 			Name:  "current-item",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
