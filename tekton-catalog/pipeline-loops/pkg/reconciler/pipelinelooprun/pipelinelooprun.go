@@ -602,7 +602,7 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 			Annotations: pipelineRunAnnotations,
 		},
 		Spec: v1beta1.PipelineRunSpec{
-			Params:             getParameters(run, tls, iteration, string(currentIterationItemBytes)),
+			Params:             getParameters(run, tls, iteration),
 			Timeout:            tls.Timeout,
 			ServiceAccountName: tls.ServiceAccountName,
 			PodTemplate:        tls.PodTemplate,
@@ -874,7 +874,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 	return numberOfIterations, iterationElements, nil
 }
 
-func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int, currentIterationItem string) []v1beta1.Param {
+func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int) []v1beta1.Param {
 	var out []v1beta1.Param
 	if tls.IterateParam != "" {
 		// IterateParam defined
@@ -960,7 +960,7 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 	if tls.IterationNumberParam != "" {
 		out = append(out, v1beta1.Param{
 			Name:  tls.IterationNumberParam,
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: currentIterationItem},
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(iteration)},
 		})
 	}
 	return out
