@@ -697,6 +697,11 @@ class TektonCompiler(Compiler):
                 loop_group = op_name_to_for_loop_op[group_name]
                 if loop_group.loop_args.name in param.name:
                   break
+                # apply the same rule to iteration_number which is used by enumerate()
+                # helper function. it shoudn't be an input to any of its parent groups
+                if hasattr(loop_group, 'iteration_number') and loop_group.iteration_number and \
+                    loop_group.iteration_number.full_name == param.name:
+                  break
 
     # Generate the input/output for recursive opsgroups
     # It propagates the recursive opsgroups IO to their ancester opsgroups
@@ -1115,6 +1120,10 @@ class TektonCompiler(Compiler):
     for key in self.loops_pipeline.keys():
       if self.loops_pipeline[key]['loop_sub_args'] != []:
         loop_args.extend(self.loops_pipeline[key]['loop_sub_args'])
+      # borrow loop_args to also include iteration_number param
+      # in this case, it would be treated as param
+      if 'iteration_number' in self.loops_pipeline[key]:
+        loop_args.append(self.loops_pipeline[key].get('iteration_number'))
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       # Substitute task paramters to the correct Tekton variables.

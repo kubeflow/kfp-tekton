@@ -1,0 +1,86 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: loop-with-enumerate-basic
+  annotations:
+    tekton.dev/output_artifacts: '{"produce-list": [{"key": "artifacts/$PIPELINERUN/produce-list/data_list.tgz",
+      "name": "produce-list-data_list", "path": "/tmp/outputs/data_list/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"consume-data": [], "produce-list": [["data_list",
+      "$(results.data-list.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Test pipeline to verify
+      functions of par loop.", "name": "loop-with-enumerate-basic"}'
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "loop-with-enumerate-basic-for-loop-1"},
+      "spec": {"iterateParam": "produce-list-data_list-loop-item", "iterationNumberParam":
+      "iteration-number-2", "pipelineSpec": {"params": [{"name": "iteration-number-2",
+      "type": "string"}, {"name": "produce-list-data_list-loop-item", "type": "string"}],
+      "tasks": [{"name": "consume-data", "params": [{"name": "iteration-number-2",
+      "value": "$(params.iteration-number-2)"}, {"name": "produce-list-data_list-loop-item",
+      "value": "$(params.produce-list-data_list-loop-item)"}], "taskSpec": {"metadata":
+      {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
+      \"Consume data\", \"outputs\": [], \"version\": \"Consume data@sha256=748cfc9398fb5667535b2ae5940d7947826385c62858c6b1b637b527d9b57e6e\"}",
+      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
+      ""}}, "params": [{"name": "iteration-number-2", "type": "string"}, {"name":
+      "produce-list-data_list-loop-item", "type": "string"}], "steps": [{"command":
+      ["echo", "$(inputs.params.iteration-number-2)", "$(inputs.params.produce-list-data_list-loop-item)"],
+      "image": "busybox", "name": "main"}]}, "timeout": "525600m"}]}}}]'
+spec:
+  pipelineSpec:
+    tasks:
+    - name: produce-list
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            echo "[1, 2, 3]" > "$0"
+          - $(results.data-list.path)
+          image: busybox
+        results:
+        - name: data-list
+          description: /tmp/outputs/data_list/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list",
+              "outputs": [{"name": "data_list", "type": "List"}], "version": "Produce
+              list@sha256=3d80b314916a06826def6fa78eab66cd69199497d7d92a8d199bd5d906706abe"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+    - runAfter:
+      - produce-list
+      name: loop-with-enumerate-basic-for-loop-1
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: loop-with-enumerate-basic-for-loop-1
+      params:
+      - name: produce-list-data_list-loop-item
+        value: $(tasks.produce-list.results.data-list)
+  timeout: 525600m

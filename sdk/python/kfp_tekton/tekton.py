@@ -227,7 +227,7 @@ class TektonLoopArguments(LoopArguments):
           'not lists or pipeline param items.')
 
 
-class TektonLoopIterationNumber(dsl.PipelineParam):
+class TektonLoopIterationNumber(PipelineParam):
     def __init__(self, name: str):
         super().__init__(name=name, param_type='Integer')
 
@@ -256,6 +256,9 @@ class Loop(dsl.ParallelFor):
             parallelism: Optional[int] = None):
     return cls(start=start, step=step, end=end, parallelism=parallelism)
 
+  def _next_id(self):
+    return str(_pipeline.Pipeline.get_default_pipeline().get_next_group_id())
+
   def __init__(self,
                loop_args: Union[str,
                                 _for_loop.ItemList,
@@ -279,15 +282,12 @@ class Loop(dsl.ParallelFor):
         if loop_args is None and (start is None or end is None):
             raise RuntimeError("loop_args or start/end parameters are missing for 'Loop' class")
 
-        def next_id():
-            return str(_pipeline.Pipeline.get_default_pipeline().get_next_group_id())
-
         if isinstance(loop_args, str):
             # temporary list wrapping for validation to pass
             super().__init__(loop_args=[loop_args], parallelism=parallelism)
             self.loop_args = TektonLoopArguments(
                 loop_args,
-                code=next_id(),
+                code=self._next_id(),
             )
             self.items_is_string = True
         else:
@@ -297,14 +297,14 @@ class Loop(dsl.ParallelFor):
         self.separator = None
         if separator is not None:
             self.separator = PipelineParam(
-                name=LoopArguments._make_name(next_id()),
+                name=LoopArguments._make_name(self._next_id()),
                 value=separator
             )
 
   def __enter__(self) -> Union[Tuple[TektonLoopIterationNumber, LoopArguments], _for_loop.LoopArguments]:
     rev = super().__enter__()
     if self.call_enumerate:
-      self.iteration_number = TektonLoopIterationNumber(name=self.name + '-' + self.ITERATION_NUMBER)
+      self.iteration_number = TektonLoopIterationNumber(name=self.ITERATION_NUMBER + '-' + self._next_id())
       return (self.iteration_number, self.loop_args)
     return rev
 

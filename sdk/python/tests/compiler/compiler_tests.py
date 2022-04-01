@@ -309,6 +309,27 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.separator_from_task import separator_from_task
     self._test_pipeline_workflow(separator_from_task, 'separator_from_task.yaml')
 
+  def test_loop_with_enumerate_basic(self):
+    """
+    Test compiling a Loop using enumerate() in workflow.
+    """
+    from .testdata.loop_with_enumerate_basic import pipeline
+    self._test_pipeline_workflow(pipeline, 'loop_with_enumerate_basic.yaml')
+
+  def test_loop_with_numeric_enumerate(self):
+    """
+    Test compiling a numeric Loop using enumerate() in workflow.
+    """
+    from .testdata.loop_with_numeric_enumerate import pipeline
+    self._test_pipeline_workflow(pipeline, 'loop_with_numeric_enumerate.yaml')
+
+  def test_loop_with_enumerate_withitem_multi_nested_workflow(self):
+    """
+    Test compiling a withitem multi nested also use enumerate in workflow.
+    """
+    from .testdata.loop_with_enumerate_withitem_multi_nested import pipeline
+    self._test_pipeline_workflow(pipeline, 'loop_with_enumerate_withitem_multi_nested.yaml')
+
   def test_nested_recur_runafter_workflow(self):
     """
     Test compiling a nested recursion pipeline with graph dependencies.
