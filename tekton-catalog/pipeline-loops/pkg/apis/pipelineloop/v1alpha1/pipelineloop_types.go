@@ -55,13 +55,16 @@ type PipelineLoopSpec struct {
 	// +optional
 	IterateParamSeparator string `json:"iterateParamStringSeparator,omitempty"`
 
+	// +optional
+	IterationNumberParam string `json:"iterationNumberParam,omitempty"`
+
 	IterateNumeric string `json:"iterateNumeric"`
 
 	// Time after which the TaskRun times out.
 	// +optional
 	Timeout *metav1.Duration `json:"timeout,omitempty"`
 
-	// Parallelism represents how many pipelines can be triggered simutaniously by the loop.
+	// Parallelism represents how many pipelines can be triggered simultaneously by the loop.
 	// +optional
 	Parallelism int `json:"parallelism,omitempty"`
 

@@ -957,6 +957,12 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(iteration)},
 		})
 	}
+	if tls.IterationNumberParam != "" {
+		out = append(out, v1beta1.Param{
+			Name:  tls.IterationNumberParam,
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(iteration)},
+		})
+	}
 	return out
 }
 
