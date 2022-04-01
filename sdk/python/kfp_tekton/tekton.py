@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Iterable, Union, Optional, TypeVar, Text
+from typing import List, Iterable, Union, Optional, TypeVar, Text, Tuple
 
 from kfp.dsl import _pipeline_param, _for_loop, _pipeline
 from kfp import dsl
@@ -227,7 +227,15 @@ class TektonLoopArguments(LoopArguments):
           'not lists or pipeline param items.')
 
 
+class TektonLoopIterationNumber(PipelineParam):
+    def __init__(self, name: str):
+        super().__init__(name=name, param_type='Integer')
+
+
 class Loop(dsl.ParallelFor):
+
+  ITERATION_NUMBER = 'iteration-number'
+
   @classmethod
   def sequential(cls,
                  loop_args: _for_loop.ItemList):
@@ -248,6 +256,9 @@ class Loop(dsl.ParallelFor):
             parallelism: Optional[int] = None):
     return cls(start=start, step=step, end=end, parallelism=parallelism)
 
+  def _next_id(self):
+    return str(_pipeline.Pipeline.get_default_pipeline().get_next_group_id())
+
   def __init__(self,
                loop_args: Union[str,
                                 _for_loop.ItemList,
@@ -260,6 +271,8 @@ class Loop(dsl.ParallelFor):
     self.start = None
     self.end = None
     self.step = None
+    self.call_enumerate = False
+    self.iteration_number = None
     if start and end:
         super().__init__(loop_args=["iteration"], parallelism=parallelism)
         self.start = start
@@ -269,15 +282,12 @@ class Loop(dsl.ParallelFor):
         if loop_args is None and (start is None or end is None):
             raise RuntimeError("loop_args or start/end parameters are missing for 'Loop' class")
 
-        def next_id():
-            return str(_pipeline.Pipeline.get_default_pipeline().get_next_group_id())
-
         if isinstance(loop_args, str):
             # temporary list wrapping for validation to pass
             super().__init__(loop_args=[loop_args], parallelism=parallelism)
             self.loop_args = TektonLoopArguments(
                 loop_args,
-                code=next_id(),
+                code=self._next_id(),
             )
             self.items_is_string = True
         else:
@@ -287,6 +297,17 @@ class Loop(dsl.ParallelFor):
         self.separator = None
         if separator is not None:
             self.separator = PipelineParam(
-                name=LoopArguments._make_name(next_id()),
+                name=LoopArguments._make_name(self._next_id()),
                 value=separator
             )
+
+  def __enter__(self) -> Union[Tuple[TektonLoopIterationNumber, LoopArguments], _for_loop.LoopArguments]:
+    rev = super().__enter__()
+    if self.call_enumerate:
+      self.iteration_number = TektonLoopIterationNumber(name=self.ITERATION_NUMBER + '-' + self._next_id())
+      return (self.iteration_number, self.loop_args)
+    return rev
+
+  def enumerate(self) -> dsl.ParallelFor:
+    self.call_enumerate = True
+    return self
