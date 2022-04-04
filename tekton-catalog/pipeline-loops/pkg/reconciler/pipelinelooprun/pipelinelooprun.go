@@ -602,7 +602,7 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 			Annotations: pipelineRunAnnotations,
 		},
 		Spec: v1beta1.PipelineRunSpec{
-			Params:             getParameters(run, tls, iteration),
+			Params:             getParameters(run, tls, iteration, string(currentIterationItemBytes)),
 			Timeout:            tls.Timeout,
 			ServiceAccountName: tls.ServiceAccountName,
 			PodTemplate:        tls.PodTemplate,
@@ -785,33 +785,31 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 	iterationParamStr := ""
 	iterationParamStrSeparator := ""
 	for _, p := range run.Spec.Params {
-		if tls.IterateNumeric != "" {
-			if p.Name == "from" {
-				from, _ = strconv.Atoi(p.Value.StringVal)
+		if p.Name == "from" {
+			from, _ = strconv.Atoi(p.Value.StringVal)
+		}
+		if p.Name == "step" {
+			step, _ = strconv.Atoi(p.Value.StringVal)
+		}
+		if p.Name == "to" {
+			to, _ = strconv.Atoi(p.Value.StringVal)
+		}
+		if p.Name == tls.IterateParam {
+			if p.Value.Type == v1beta1.ParamTypeString {
+				iterationParamStr = strings.Trim(p.Value.StringVal, " ")
 			}
-			if p.Name == "step" {
-				step, _ = strconv.Atoi(p.Value.StringVal)
-			}
-			if p.Name == "to" {
-				to, _ = strconv.Atoi(p.Value.StringVal)
-			}
-		} else {
-			if p.Name == tls.IterateParam {
-				if p.Value.Type == v1beta1.ParamTypeString {
-					iterationParamStr = strings.Trim(p.Value.StringVal, " ")
+			if p.Value.Type == v1beta1.ParamTypeArray {
+				numberOfIterations = len(p.Value.ArrayVal)
+				for _, v := range p.Value.ArrayVal {
+					iterationElements = append(iterationElements, v)
 				}
-				if p.Value.Type == v1beta1.ParamTypeArray {
-					numberOfIterations = len(p.Value.ArrayVal)
-					for _, v := range p.Value.ArrayVal {
-						iterationElements = append(iterationElements, v)
-					}
-					break
-				}
-			}
-			if p.Name == tls.IterateParamSeparator {
-				iterationParamStrSeparator = p.Value.StringVal
+				break
 			}
 		}
+		if p.Name == tls.IterateParamSeparator {
+			iterationParamStrSeparator = p.Value.StringVal
+		}
+
 	}
 	if iterationParamStr != "" {
 		// Transfer p.Value to Array.
@@ -856,7 +854,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 			}
 		}
 	}
-	if tls.IterateNumeric != "" {
+	if from != -1 || to != -1 {
 		if from == -1 || to == -1 {
 			return 0, iterationElements, fmt.Errorf("The from or to parameters was not found in runs")
 		}
@@ -874,7 +872,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 	return numberOfIterations, iterationElements, nil
 }
 
-func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int) []v1beta1.Param {
+func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int, currentIterationItem string) []v1beta1.Param {
 	var out []v1beta1.Param
 	if tls.IterateParam != "" {
 		// IterateParam defined
@@ -952,15 +950,17 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 				out = append(out, run.Spec.Params[i])
 			}
 		}
-		out = append(out, v1beta1.Param{
-			Name:  tls.IterateNumeric,
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(iteration)},
-		})
 	}
 	if tls.IterationNumberParam != "" {
 		out = append(out, v1beta1.Param{
 			Name:  tls.IterationNumberParam,
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(iteration)},
+		})
+	}
+	if tls.IterateNumeric != "" {
+		out = append(out, v1beta1.Param{
+			Name:  tls.IterateNumeric,
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: currentIterationItem},
 		})
 	}
 	return out
