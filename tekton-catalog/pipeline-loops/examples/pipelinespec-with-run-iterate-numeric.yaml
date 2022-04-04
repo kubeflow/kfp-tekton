@@ -5,16 +5,16 @@ metadata:
 spec:
   pipelineSpec:
     params:
-    - name: iteration
+    - name: iteration-item
       type: string
     tasks:
     - name: echo-good-morning
       params:
-      - name: iteration
-        value: $(params.iteration)
+      - name: iteration-item
+        value: $(params.iteration-item)
       taskSpec:
         params:
-        - name: iteration
+        - name: iteration-item
           type: string
         steps:
           - name: echo
@@ -22,8 +22,8 @@ spec:
             imagePullPolicy: IfNotPresent
             script: |
               #!/usr/bin/env bash
-              echo "$(params.iteration)"
-  iterateNumeric: iteration
+              echo "$(params.iteration-item)"
+  iterateNumeric: iteration-item
 
 ---
 apiVersion: tekton.dev/v1alpha1
@@ -33,11 +33,11 @@ metadata:
 spec:
   params:
     - name: from
-      value: '1'
+      value: '10'
     - name: step
       value: '1'
     - name: to
-      value: '3'
+      value: '15'
   ref:
     apiVersion: custom.tekton.dev/v1alpha1
     kind: PipelineLoop
