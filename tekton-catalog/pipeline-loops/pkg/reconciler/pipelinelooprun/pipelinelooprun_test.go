@@ -564,6 +564,42 @@ var runNewPipelineLoop = &v1alpha1.Run{
 	},
 }
 
+var runNewPipelineLoopWithPodTemplateAndSA = &v1alpha1.Run{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-a-pipelineloop",
+		Namespace: "foo",
+		Labels: map[string]string{
+			"myTestLabel":                    "myTestLabelValue",
+			"custom.tekton.dev/pipelineLoop": "a-pipelineloop",
+			"tekton.dev/pipeline":            "pr-loop-example",
+			"tekton.dev/pipelineRun":         "pr-loop-example",
+			"tekton.dev/pipelineTask":        "loop-task",
+		},
+		Annotations: map[string]string{
+			"myTestAnnotation": "myTestAnnotationValue",
+		},
+	},
+	Spec: v1alpha1.RunSpec{
+		Params: []v1beta1.Param{{
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeArray, ArrayVal: []string{"item1", "item2"}},
+		}},
+		ServiceAccountName: "pipeline-runner",
+		PodTemplate: &v1beta1.PodTemplate{
+			HostAliases: []corev1.HostAlias{{
+				IP:        "0.0.0.0",
+				Hostnames: []string{"localhost"},
+			}},
+			HostNetwork: true,
+		},
+		Ref: &v1alpha1.TaskRef{
+			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
+			Kind:       pipelineloop.PipelineLoopControllerName,
+			Name:       "a-pipelineloop",
+		},
+	},
+}
+
 var runPipelineLoop = &v1alpha1.Run{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "run-pipelineloop",
@@ -1325,6 +1361,49 @@ var expectedPipelineRunWithWorkSpace = &v1beta1.PipelineRun{
 	},
 }
 
+var expectedPipelineRunWithPodTemplateAndSA = &v1beta1.PipelineRun{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-a-pipelineloop-00001-9l9zj",
+		Namespace: "foo",
+		OwnerReferences: []metav1.OwnerReference{{
+			APIVersion:         "tekton.dev/v1alpha1",
+			Kind:               "Run",
+			Name:               "run-a-pipelineloop",
+			Controller:         &trueB,
+			BlockOwnerDeletion: &trueB,
+		}},
+		Labels: map[string]string{
+			"custom.tekton.dev/originalPipelineRun":   "pr-loop-example",
+			"custom.tekton.dev/parentPipelineRun":     "pr-loop-example",
+			"custom.tekton.dev/pipelineLoop":          "a-pipelineloop",
+			"tekton.dev/run":                          "run-a-pipelineloop",
+			"custom.tekton.dev/pipelineLoopIteration": "1",
+			"myTestLabel":                             "myTestLabelValue",
+		},
+		Annotations: map[string]string{
+			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": `"item1"`,
+		},
+	},
+	Spec: v1beta1.PipelineRunSpec{
+		PipelineRef: &v1beta1.PipelineRef{
+			Name: "a-pipeline",
+		},
+		Params: []v1beta1.Param{{
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
+		}},
+		ServiceAccountName: "pipeline-runner",
+		PodTemplate: &v1beta1.PodTemplate{
+			HostAliases: []corev1.HostAlias{{
+				IP:        "0.0.0.0",
+				Hostnames: []string{"localhost"},
+			}},
+			HostNetwork: true,
+		},
+	},
+}
+
 var expectedPipelineRunWithPodTemplate = &v1beta1.PipelineRun{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "run-new-pipelineloop-00001-9l9zj",
@@ -1714,9 +1793,20 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
 		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithPodTemplate},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
-	}}
+	}, {
+		name:                 "Reconcile a new run that contains a PodTemplate, ServiceAccountName",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop,
+		run:                  runNewPipelineLoopWithPodTemplateAndSA,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithPodTemplateAndSA},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	},
+	}
 
-	//testcases = testcases[1:3]
+	//testcases = testcases[len(testcases)-1:]
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {

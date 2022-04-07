@@ -577,6 +577,13 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 			run.Namespace, run.Name)
 		return nil, nil, fmt.Errorf("Missing spec.ref.name for Run %s", fmt.Sprintf("%s/%s", run.Namespace, run.Name))
 	}
+	// pass down the run's serviceAccountName and podTemplate if they were not configured in the loop spec
+	if pipelineLoopSpec.PodTemplate == nil && run.Spec.PodTemplate != nil {
+		pipelineLoopSpec.PodTemplate = run.Spec.PodTemplate
+	}
+	if pipelineLoopSpec.ServiceAccountName == "" && run.Spec.ServiceAccountName != "" && run.Spec.ServiceAccountName != "default" {
+		pipelineLoopSpec.ServiceAccountName = run.Spec.ServiceAccountName
+	}
 	return &pipelineLoopMeta, &pipelineLoopSpec, nil
 }
 
