@@ -36,7 +36,7 @@ A Kubernetes cluster `v1.20` that has least 8 vCPU and 16 GB memory.
 
 To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
 
-1. Install [Tekton v0.30.0](https://github.com/tektoncd/pipeline/blob/v0.30.0/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines or OpenShift Pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton/Openshift pipelines version is not v0.28.0+.
+1. Install [Tekton v0.31.4](https://github.com/tektoncd/pipeline/blob/v0.31.4/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines or OpenShift Pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton/Openshift pipelines version is not v0.28.0+.
 
 2. Enable custom task controller and other feature flags for kfp-tekton
    ```shell
