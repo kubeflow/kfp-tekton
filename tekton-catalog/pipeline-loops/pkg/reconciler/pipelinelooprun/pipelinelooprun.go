@@ -778,9 +778,9 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec) (int, []interface{}, error) {
 	// Find the iterate parameter.
 	numberOfIterations := -1
-	from := -1
-	step := -1
-	to := -1
+	from := 0
+	step := 1
+	to := 0
 	iterationElements := []interface{}{}
 	iterationParamStr := ""
 	iterationParamStrSeparator := ""
@@ -854,20 +854,25 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 			}
 		}
 	}
-	if from != -1 || to != -1 {
-		if from == -1 || to == -1 {
-			return 0, iterationElements, fmt.Errorf("The from or to parameters was not found in runs")
+	if from != to {
+		if step == 0 {
+			return 0, iterationElements, fmt.Errorf("invalid values step: %d found in runs", step)
 		}
-		if step <= 0 {
-			step = 1
+		if (from > to && step > 0) || (from < to && step < 0) {
+			return 0, iterationElements, fmt.Errorf("invalid values for from:%d, to:%d & step: %d found in runs", from, to, step)
 		}
-		// numberOfIterations is the number of (to - from) / step + 1
-		numberOfIterations = (to-from)/step + 1
-		for i := 0; i < numberOfIterations; i++ {
-			iterationElements = append(iterationElements, step*i+from)
+		numberOfIterations = 0
+		if step < 0 && from > to {
+			for i := from; i >= to; i = i + step {
+				numberOfIterations = numberOfIterations + 1
+				iterationElements = append(iterationElements, i)
+			}
+		} else {
+			for i := from; i <= to; i = i + step {
+				numberOfIterations = numberOfIterations + 1
+				iterationElements = append(iterationElements, i)
+			}
 		}
-	} else if numberOfIterations == -1 {
-		return 0, iterationElements, fmt.Errorf("The iterate parameter %q was not found", tls.IterateParam)
 	}
 	return numberOfIterations, iterationElements, nil
 }
