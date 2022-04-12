@@ -568,6 +568,20 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.node_selector import node_selector_pipeline
     self._test_pipeline_workflow(node_selector_pipeline, 'node_selector.yaml', skip_noninlined=True)
 
+  def test_node_selector_from_pipeline_workflow(self):
+    """
+    Test compiling a node selector workflow. node selector is from pipeline conf
+    """
+    from .testdata.node_selector_from_pipeline import node_selector_pipeline
+    self._test_pipeline_workflow(node_selector_pipeline, 'node_selector_from_pipeline.yaml', skip_noninlined=True)
+
+  def test_node_selector_from_pipeline_override_workflow(self):
+    """
+    Test compiling a node selector workflow. node selector from pipeline conf is override by op conf
+    """
+    from .testdata.node_selector_from_pipeline_override import node_selector_pipeline
+    self._test_pipeline_workflow(node_selector_pipeline, 'node_selector_from_pipeline_override.yaml', skip_noninlined=True)
+
   def test_pipeline_transformers_workflow(self):
     """
     Test compiling a pipeline_transformers workflow with pod annotations and labels.

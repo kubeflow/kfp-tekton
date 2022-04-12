@@ -21,6 +21,7 @@ import tarfile
 import textwrap
 import uuid
 import zipfile
+import copy
 from collections import defaultdict
 from distutils.util import strtobool
 import collections
@@ -1263,8 +1264,16 @@ class TektonCompiler(Compiler):
         task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
       if op.tolerations:
         task_spec["taskPodTemplate"]['tolerations'] = op.tolerations
+      # process pipeline level first
+      if pipeline_conf and hasattr(pipeline_conf, 'default_pod_node_selector') \
+          and len(pipeline_conf.default_pod_node_selector) > 0:
+        task_spec["taskPodTemplate"]['nodeSelector'] = copy.deepcopy(pipeline_conf.default_pod_node_selector)
+      # process op level and it may oeverride the pipeline level conf
       if op.node_selector:
-        task_spec["taskPodTemplate"]['nodeSelector'] = op.node_selector
+        if task_spec["taskPodTemplate"].get('nodeSelector'):
+          task_spec["taskPodTemplate"]['nodeSelector'].update(op.node_selector)
+        else:
+          task_spec["taskPodTemplate"]['nodeSelector'] = op.node_selector
       if bool(task_spec["taskPodTemplate"]):
         task_run_spec.append(task_spec)
     if len(task_run_spec) > 0:
