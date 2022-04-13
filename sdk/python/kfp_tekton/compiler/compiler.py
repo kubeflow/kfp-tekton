@@ -1264,11 +1264,7 @@ class TektonCompiler(Compiler):
         task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
       if op.tolerations:
         task_spec["taskPodTemplate"]['tolerations'] = op.tolerations
-      # process pipeline level first
-      if pipeline_conf and hasattr(pipeline_conf, 'default_pod_node_selector') \
-          and len(pipeline_conf.default_pod_node_selector) > 0:
-        task_spec["taskPodTemplate"]['nodeSelector'] = copy.deepcopy(pipeline_conf.default_pod_node_selector)
-      # process op level and it may oeverride the pipeline level conf
+      # process op level node_selector
       if op.node_selector:
         if task_spec["taskPodTemplate"].get('nodeSelector'):
           task_spec["taskPodTemplate"]['nodeSelector'].update(op.node_selector)
@@ -1291,7 +1287,11 @@ class TektonCompiler(Compiler):
       pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
       pipeline_run['spec']['podTemplate']['imagePullSecrets'] = [
         {"name": s.name} for s in pipeline.conf.image_pull_secrets]
-
+    # process pipeline level node_selector
+    if pipeline_conf and hasattr(pipeline_conf, 'default_pod_node_selector') \
+        and len(pipeline_conf.default_pod_node_selector) > 0:
+      pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
+      pipeline_run['spec']['podTemplate']['nodeSelector'] = copy.deepcopy(pipeline_conf.default_pod_node_selector)
     workflow = pipeline_run
 
     return workflow

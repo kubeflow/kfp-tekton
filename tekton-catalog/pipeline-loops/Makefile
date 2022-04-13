@@ -29,7 +29,7 @@ init:
 	mkdir -p ${BIN_DIR}
 
 .PHONY: cli
-cli: init $(info cli: build validation cli )
+cli: update init $(info cli: build validation cli )
 	go build -o=${BIN_DIR}/pipelineloop-cli ./cmd/cli
 
 .PHONY: validate-testdata-python-sdk
