@@ -359,7 +359,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                         task['params'] = sorted(task['params'], key=lambda k: k['name'])
                         if task['name'] in all_nested_loop:
                             for param in task['params']:
-                                if '$(params.' in param['value']:
+                                if '$(params.' in param['value'] and 'subvar-' not in param['value']:
                                     global_task_values.add(param['value'])
                 # Add any pipeline global params to the nested loop layers
                 all_params = []
