@@ -147,6 +147,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.loop_with_step import pipeline
     self._test_pipeline_workflow(pipeline, 'loop_with_step.yaml')
 
+  def test_nested_loop_global_param_workflow(self):
+    """
+    Test compiling a nested loop with global parameters in workflow.
+    """
+    from .testdata.nested_loop_global_param import nested_loop
+    self._test_pipeline_workflow(nested_loop, 'nested_loop_global_param.yaml')
+
   def test_cond_recur_workflow(self):
     """
     Test compiling a conditional recursive workflow.

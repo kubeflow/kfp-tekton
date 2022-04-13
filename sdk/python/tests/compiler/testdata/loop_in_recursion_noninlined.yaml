@@ -39,11 +39,11 @@ metadata:
       "kind": "PipelineLoop", "metadata": {"name": "loop-in-recursion-pipeline-flip-component-1"},
       "spec": {"iterateParam": "just_one_iteration", "pipelineSpec": {"params": [{"name":
       "flip-coin-output", "type": "string"}, {"name": "just_one_iteration", "type":
-      "string"}, {"name": "maxVal", "type": "string"}, {"name": "my_pipe_param", "type":
-      "string"}], "tasks": [{"name": "print", "params": [{"name": "flip-coin-output",
-      "value": "$(params.flip-coin-output)"}], "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"print\", \"outputs\":
-      [], \"version\": \"print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c\"}",
+      "string"}, {"name": "loop-item-param-3-subvar-a", "type": "string"}, {"name":
+      "maxVal", "type": "string"}, {"name": "my_pipe_param", "type": "string"}], "tasks":
+      [{"name": "print", "params": [{"name": "flip-coin-output", "value": "$(params.flip-coin-output)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print\", \"outputs\": [], \"version\": \"print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "flip-coin-output", "type": "string"}], "steps": [{"command":
@@ -206,6 +206,8 @@ spec:
       - name: just_one_iteration
         value:
         - '1'
+      - name: loop-item-param-3-subvar-a
+        value: $(params.loop-item-param-3-subvar-a)
       - name: maxVal
         value: $(params.maxVal)
       - name: my_pipe_param
