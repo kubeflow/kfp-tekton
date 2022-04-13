@@ -644,6 +644,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.imagepullsecrets import imagepullsecrets_pipeline
     self._test_pipeline_workflow(imagepullsecrets_pipeline, 'imagepullsecrets.yaml', skip_noninlined=True)
 
+  def test_imagepullsecrets_with_node_selector_workflow(self):
+    """
+    Test compiling a imagepullsecrets and node_selector workflow.
+    """
+    from .testdata.imagepullsecrets_with_node_selector import imagepullsecrets_pipeline
+    self._test_pipeline_workflow(imagepullsecrets_pipeline, 'imagepullsecrets_with_node_selector.yaml', skip_noninlined=True)
+
   def test_basic_no_decorator(self):
     """
     Test compiling a basic workflow with no pipeline decorator

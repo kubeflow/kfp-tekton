@@ -57,3 +57,6 @@ spec:
       nodeSelector:
         kubernetes.io/os: windows
   timeout: 525600m
+  podTemplate:
+    nodeSelector:
+      kubernetes.io/os: linux
