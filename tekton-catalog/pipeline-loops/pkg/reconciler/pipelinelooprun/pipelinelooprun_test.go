@@ -855,6 +855,22 @@ var runPipelineLoopWithSpaceSeparatorParams = &v1alpha1.Run{
 	},
 }
 
+func specifyLoopRange(from, to, step string, r *v1alpha1.Run) *v1alpha1.Run {
+	t := r.DeepCopy()
+	for n, i := range r.Spec.Params {
+		if i.Name == "from" {
+			t.Spec.Params[n].Value = v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: from}
+		}
+		if i.Name == "to" {
+			t.Spec.Params[n].Value = v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: to}
+		}
+		if i.Name == "step" {
+			t.Spec.Params[n].Value = v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: step}
+		}
+	}
+	return t
+}
+
 var runPipelineLoopWithIterateNumeric = &v1alpha1.Run{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "run-pipelineloop",
@@ -947,14 +963,23 @@ var runWithNonexistentPipelineLoop = &v1alpha1.Run{
 	},
 }
 
-var runWithMissingIterateParam = &v1alpha1.Run{
+var runWithInvalidRange = &v1alpha1.Run{
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      "bad-run-missing-iterate-param",
+		Name:      "run-invalid-range",
 		Namespace: "foo",
 	},
 	Spec: v1alpha1.RunSpec{
 		// current-item, which is the iterate parameter, is missing from parameters
 		Params: []v1beta1.Param{{
+			Name:  "from",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: `-11`},
+		}, {
+			Name:  "step",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: `1`},
+		}, {
+			Name:  "to",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: `-13`},
+		}, {
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
@@ -1239,6 +1264,42 @@ var expectedPipelineRunIterateNumeric1 = &v1beta1.PipelineRun{
 		}, {
 			Name:  "iteration",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "1"},
+		}},
+	},
+}
+
+var expectedPipelineRunIterateNumeric2 = &v1beta1.PipelineRun{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-pipelineloop-00001-9l9zj",
+		Namespace: "foo",
+		OwnerReferences: []metav1.OwnerReference{{
+			APIVersion:         "tekton.dev/v1alpha1",
+			Kind:               "Run",
+			Name:               "run-pipelineloop",
+			Controller:         &trueB,
+			BlockOwnerDeletion: &trueB,
+		}},
+		Labels: map[string]string{
+			"custom.tekton.dev/originalPipelineRun":   "pr-loop-example",
+			"custom.tekton.dev/parentPipelineRun":     "pr-loop-example",
+			"custom.tekton.dev/pipelineLoop":          "n-pipelineloop",
+			"tekton.dev/run":                          "run-pipelineloop",
+			"custom.tekton.dev/pipelineLoopIteration": "1",
+			"myTestLabel":                             "myTestLabelValue",
+		},
+		Annotations: map[string]string{
+			"myTestAnnotation": "myTestAnnotationValue",
+			"custom.tekton.dev/pipelineLoopCurrentIterationItem": "-10",
+		},
+	},
+	Spec: v1beta1.PipelineRunSpec{
+		PipelineRef: &v1beta1.PipelineRef{Name: "n-pipeline"},
+		Params: []v1beta1.Param{{
+			Name:  "additional-parameter",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}, {
+			Name:  "iteration",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "-10"},
 		}},
 	},
 }
@@ -1686,6 +1747,16 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIterateNumeric1},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
 	}, {
+		name:                 "Reconcile a new run with -ve numeric range defined",
+		pipeline:             nPipeline,
+		pipelineloop:         nPipelineLoop,
+		run:                  specifyLoopRange("-10", "-15", "-1", runPipelineLoopWithIterateNumeric),
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIterateNumeric2},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
 		name:                 "Reconcile a new run with iterationNumberParam defined",
 		pipeline:             aPipeline,
 		pipelineloop:         aPipelineLoop2,
@@ -1941,13 +2012,22 @@ func TestReconcilePipelineLoopRunFailures(t *testing.T) {
 			"Warning Failed Error retrieving PipelineLoop",
 		},
 	}, {
-		name:         "missing iterate parameter",
+		name:         "invalid range",
 		pipelineloop: aPipelineLoop,
-		run:          runWithMissingIterateParam,
+		run:          runWithInvalidRange,
 		reason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
 		wantEvents: []string{
 			"Normal Started ",
-			`Warning Failed Cannot determine number of iterations: The iterate parameter "current-item" was not found`,
+			`Warning Failed Cannot determine number of iterations: invalid values for from:-11, to:-13 & step: 1 found in runs`,
+		},
+	}, {
+		name:         "invalid range 2",
+		pipelineloop: aPipelineLoop,
+		run:          specifyLoopRange("10", "12", "-1", runWithInvalidRange),
+		reason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
+		wantEvents: []string{
+			"Normal Started ",
+			`Warning Failed Cannot determine number of iterations: invalid values for from:10, to:12 & step: -1 found in runs`,
 		},
 	}, {
 		name:         "iterate parameter not an array",
