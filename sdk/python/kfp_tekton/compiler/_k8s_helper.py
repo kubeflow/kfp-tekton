@@ -54,9 +54,6 @@ def sanitize_k8s_name(name,
     if not allow_slash:
       k8s_name = re.sub('[/]', '-', k8s_name)
 
-    # replace duplicate dashes, strip enclosing dashes
-    k8s_name = re.sub('-+', '-', k8s_name).strip('-')
-
     # truncate if length exceeds max_length
     max_length = max_length - suffix_space
     if len(k8s_name) > max_length:
@@ -64,6 +61,9 @@ def sanitize_k8s_name(name,
         k8s_name = k8s_name[len(k8s_name) - max_length:].strip('-')
       else:
         k8s_name = k8s_name[:max_length].rstrip('-')
+
+    # replace duplicate dashes, strip enclosing dashes
+    k8s_name = re.sub('-+', '-', k8s_name).strip('-')
 
     return k8s_name
 
