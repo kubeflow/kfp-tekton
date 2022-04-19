@@ -311,3 +311,39 @@ class Loop(dsl.ParallelFor):
   def enumerate(self) -> dsl.ParallelFor:
     self.call_enumerate = True
     return self
+
+
+class AddOnGroup(dsl.OpsGroup):
+    """
+    Represents an AddOn group containing ops and group of OpsGroups.
+    This class is the base class for a customized OpsGroup. Users can
+    develop their own OpsGroup. The customized OpsGroup maps to a
+    custom task in Tekton.
+    """
+    TYPE_NAME = 'addon_group'
+    TASK_TYPE = 'task'
+    RUN_TYPE = 'run'  # means custom task
+    DEFAULT_KIND = 'AddOnGroup'
+    DEFAULT_APIVERSION = 'custom.tekton.dev/v1alpha1'
+
+    def __init__(self, task_type: str = RUN_TYPE,
+                kind: str = DEFAULT_KIND,
+                api_version: str = DEFAULT_APIVERSION,
+                is_finally: bool = False,
+                parallelism: int = None,
+                params: List[Union[dsl.PipelineParam, int, str]] = []):
+        self.task_type = task_type  # not been used yet
+        self.kind = kind
+        self.api_version = api_version
+        self.params = params  # list of PipelineParams, or value
+        if is_finally:
+            pl = dsl._pipeline.Pipeline.get_default_pipeline()
+            if pl.groups[-1].type != 'pipeline':
+                raise ValueError(
+                    'You can only create a finally OpsGroup under the root OpsGroup of a Pipeline')
+        self.is_finally = is_finally  # a regular task or finally task
+        super().__init__(self.TYPE_NAME, parallelism=parallelism)
+
+    def post_update(self, task_yaml: dict) -> dict:
+        """provide a post-hook api to update the task YAML"""
+        return task_yaml

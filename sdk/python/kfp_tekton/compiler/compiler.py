@@ -45,7 +45,8 @@ from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task, _process_argo_vars
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler.yaml_utils import dump_yaml
-from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPUT_KEYWORD, LOOP_PIPELINE_NAME_LENGTH, LOOP_GROUP_NAME_LENGTH
+from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPUT_KEYWORD, \
+  LOOP_PIPELINE_NAME_LENGTH, LOOP_GROUP_NAME_LENGTH, AddOnGroup
 
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
@@ -129,6 +130,7 @@ class TektonCompiler(Compiler):
     self.output_artifacts = {}
     self.artifact_items = {}
     self.loops_pipeline = {}
+    self.addon_groups = {}
     self.recursive_tasks = []
     self.custom_task_crs = []
     self.uuid = self._get_unique_id_code()
@@ -323,6 +325,82 @@ class TektonCompiler(Compiler):
                   'name': param[0], 'value': '$(params.%s)' % param[0]
                 })
 
+    def dep_helper(custom_task, sub_group):
+      """get the dependencies tasks rely on the custom_task."""
+      for depend in dependencies.keys():
+        if depend == sub_group.name:
+          custom_task['spec']['runAfter'] = [task for task in dependencies[depend]]
+          custom_task['spec']['runAfter'].sort()
+        if sub_group.name in dependencies[depend]:
+          custom_task['depends'].append({'org': depend, 'runAfter': group_name})
+      for op in sub_group.groups + sub_group.ops:
+        custom_task['task_list'].append(sanitize_k8s_name(op.name))
+        # Add all the condition nested ops into the pipeline loop sub-dag
+        nested_groups = []
+        if hasattr(op, 'type') and op.type == 'condition':
+          nested_groups.append(op.name)
+          if op.ops:
+            for condition_op in op.ops:
+              custom_task['task_list'].append(sanitize_k8s_name(condition_op.name))
+          # If the nested op is a condition, find all the ops groups that are under the condition block
+          # until it reaches the end of the graph.
+          while nested_groups:
+            nested_group = nested_groups.pop(0)
+            opsgroup = opsgroups.get(nested_group, None)
+            if opsgroup and isinstance(opsgroup, dsl.OpsGroup) and opsgroup.type == 'condition':
+              condi_sub_groups = opsgroup.groups + opsgroup.ops
+              for condi_sub_group in condi_sub_groups:
+                  custom_task['task_list'].append(sanitize_k8s_name(condi_sub_group.name))
+                  nested_groups.append(condi_sub_group.name)
+
+    def input_helper(custom_task, sub_group, param_list):
+      """add param from inputs if input is not in param_list"""
+      for input in inputs.keys():
+        if input == sub_group.name:
+          for param in inputs[input]:
+            if param[1] and param[0] not in param_list:
+              replace_str = param[1] + '-'
+              custom_task['spec']['params'].append({
+                'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
+                  param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
+                )
+              })
+            if not param[1] and param[0] not in param_list:
+              custom_task['spec']['params'].append({
+                'name': param[0], 'value': '$(params.%s)' % param[0]
+              })
+
+    if isinstance(sub_group, AddOnGroup):
+      params = []
+      for param in sub_group.params:
+          if param.op_name:
+            params.append({
+              'name': param.full_name,
+              'value': '$(tasks.%s.results.%s)' % (param.op_name, param.name)
+            })
+          else:
+            params.append({
+              'name': param.full_name, 'value': '$(params.%s)' % param.name
+            })
+
+      self.addon_groups[group_name] = {
+        'kind': 'addon',
+        'task_list': [],
+        'spec': {
+          'name': group_name,
+          'taskRef': {
+            'apiVersion': sub_group.api_version,
+            'kind': sub_group.kind,
+            'name': group_name,
+          },
+          'params': params,
+        },
+        'depends': [],
+        '_data': sub_group
+      }
+      dep_helper(self.addon_groups[group_name], sub_group)
+      input_helper(self.addon_groups[group_name], sub_group, params)
+
     if isinstance(sub_group, dsl.ParallelFor):
       self.loops_pipeline[group_name] = {
         'kind': 'loops',
@@ -348,31 +426,7 @@ class TektonCompiler(Compiler):
         for key in sub_group.loop_args.items_or_pipeline_param[0]:
           self.loops_pipeline[group_name]['loop_sub_args'].append(sub_group.loop_args.full_name + '-subvar-' + key)
       # get the dependencies tasks rely on the loop task.
-      for depend in dependencies.keys():
-        if depend == sub_group.name:
-          self.loops_pipeline[group_name]['spec']['runAfter'] = [task for task in dependencies[depend]]
-          self.loops_pipeline[group_name]['spec']['runAfter'].sort()
-        if sub_group.name in dependencies[depend]:
-          self.loops_pipeline[group_name]['depends'].append({'org': depend, 'runAfter': group_name})
-      for op in sub_group.groups + sub_group.ops:
-        self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(op.name))
-        # Add all the condition nested ops into the pipeline loop sub-dag
-        nested_groups = []
-        if hasattr(op, 'type') and op.type == 'condition':
-          nested_groups.append(op.name)
-          if op.ops:
-            for condition_op in op.ops:
-              self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
-          # If the nested op is a condition, find all the ops groups that are under the condition block
-          # until it reaches the end of the graph.
-          while nested_groups:
-            nested_group = nested_groups.pop(0)
-            opsgroup = opsgroups.get(nested_group, None)
-            if opsgroup and isinstance(opsgroup, dsl.OpsGroup) and opsgroup.type == 'condition':
-              condi_sub_groups = opsgroup.groups + opsgroup.ops
-              for condi_sub_group in condi_sub_groups:
-                  self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condi_sub_group.name))
-                  nested_groups.append(condi_sub_group.name)
+      dep_helper(self.loops_pipeline[group_name], sub_group)
       self.loops_pipeline[group_name]['spec']['name'] = group_name
       self.loops_pipeline[group_name]['spec']['taskRef'] = {
         "apiVersion": "custom.tekton.dev/v1alpha1",
@@ -486,22 +540,8 @@ class TektonCompiler(Compiler):
           self.loops_pipeline[group_name]['spec']['params'].append(step_param)
 
       # get other input params
-      for input in inputs.keys():
-        if input == sub_group.name:
-          for param in inputs[input]:
-            if param[0] != sub_group.loop_args.full_name and param[1] and param[0] not in self.loops_pipeline[group_name][
-              'loop_sub_args']:
-              replace_str = param[1] + '-'
-              self.loops_pipeline[group_name]['spec']['params'].append({
-                'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
-                  param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
-                )
-              })
-            if param[0] != sub_group.loop_args.full_name and not param[1] and param[0] not in self.loops_pipeline[group_name][
-              'loop_sub_args']:
-              self.loops_pipeline[group_name]['spec']['params'].append({
-                'name': param[0], 'value': '$(params.%s)' % param[0]
-              })
+      input_helper(self.loops_pipeline[group_name], sub_group,
+          self.loops_pipeline[group_name]['loop_sub_args'] + [sub_group.loop_args.full_name])
       if sub_group.parallelism is not None:
         self.loops_pipeline[group_name]['spec']['parallelism'] = sub_group.parallelism
 
@@ -565,6 +605,8 @@ class TektonCompiler(Compiler):
       if opsgroups[opsgroup].type == 'condition':
         template = self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "condition", opsgroups)
         templates.append(template)
+      if opsgroups[opsgroup].type == 'addon_group':
+        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "addon", opsgroups)
       if opsgroups[opsgroup].type == 'for_loop':
         self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "loop", opsgroups)
       if opsgroups[opsgroup].type == 'graph':
@@ -841,7 +883,6 @@ class TektonCompiler(Compiler):
     condition_refs = {}
 
     task_refs = []
-    templates = []
     cel_conditions = {}
     condition_when_refs = {}
     condition_task_refs = {}
@@ -909,7 +950,6 @@ class TektonCompiler(Compiler):
           condition_task_refs[template['metadata']['name']] = condition_task_ref
           condition_when_refs[template['metadata']['name']] = condition_refs[template['metadata']['name']]
       else:
-        templates.append(template)
         task_ref = {
             'name': template['metadata']['name'],
             'params': [{
@@ -1198,7 +1238,7 @@ class TektonCompiler(Compiler):
     # add timeout params to task_refs, instead of task.
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
-      if op.timeout > 0:
+      if hasattr(op, 'timeout') and op.timeout > 0:
         task['timeout'] = '%ds' % op.timeout
       else:
         task['timeout'] = DEFAULT_TIMEOUT_MINUTES
@@ -1552,39 +1592,55 @@ class TektonCompiler(Compiler):
       pipeline_conf)
 
     # Separate loop workflow from the main workflow
-    pipeline_loop_crs = []
-    if self.loops_pipeline:
-      pipeline_loop_crs, workflow = _handle_tekton_custom_task(self.loops_pipeline, workflow, self.recursive_tasks, self._group_names)
+    custom_opsgroup_crs = []
+    if self.loops_pipeline or self.addon_groups:
+      # get custom tasks from self.loops_pipeline and self.addon_groups
+      custom_tasks = {**self.loops_pipeline, **self.addon_groups}
+      custom_opsgroup_crs, workflow = _handle_tekton_custom_task(custom_tasks, workflow, self.recursive_tasks, self._group_names)
       if workflow['spec'].get('workspaces', []):
-        for pipeline_loop_cr in pipeline_loop_crs:
-          pipeline_loop_cr['spec']['workspaces'] = workflow['spec'].get('workspaces', [])
-          pipeline_loop_cr['spec']['pipelineSpec']['workspaces'] = [
+        for custom_opsgroup_cr in custom_opsgroup_crs:
+          custom_opsgroup_cr['spec']['workspaces'] = workflow['spec'].get('workspaces', [])
+          custom_opsgroup_cr['spec']['pipelineSpec']['workspaces'] = [
             {'name': workspace['name']} for workspace in workflow['spec'].get('workspaces', [])]
       inlined_as_taskSpec: List[Text] = []
       recursive_tasks_names: List[Text] = [x['taskRef'].get('name', "") for x in self.recursive_tasks]
       if self.tekton_inline_spec:
-        # Step 1. inline all the pipeline_loop_crs as they may refer to each other.
-        for i in range(len(pipeline_loop_crs)):
-          if 'pipelineSpec' in pipeline_loop_crs[i]['spec']:
-            if 'params' in pipeline_loop_crs[i]['spec']['pipelineSpec']:
+        # Step 1. inline all the custom_opsgroup_crs as they may refer to each other.
+        for i in range(len(custom_opsgroup_crs)):
+          if 'pipelineSpec' in custom_opsgroup_crs[i]['spec']:
+            if 'params' in custom_opsgroup_crs[i]['spec']['pipelineSpec']:
               # Preserve order of params, required by tests.
-              pipeline_loop_crs[i]['spec']['pipelineSpec']['params'] =\
-                sorted(pipeline_loop_crs[i]['spec']['pipelineSpec']['params'], key=lambda kv: (kv['name']))
-            t, e = self._inline_tasks(pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'],
-                                                pipeline_loop_crs, recursive_tasks_names)
+              custom_opsgroup_crs[i]['spec']['pipelineSpec']['params'] =\
+                sorted(custom_opsgroup_crs[i]['spec']['pipelineSpec']['params'], key=lambda kv: (kv['name']))
+            t, e = self._inline_tasks(custom_opsgroup_crs[i]['spec']['pipelineSpec']['tasks'],
+                                                custom_opsgroup_crs, recursive_tasks_names)
             if e:
-              pipeline_loop_crs[i]['spec']['pipelineSpec']['tasks'] = t
+              custom_opsgroup_crs[i]['spec']['pipelineSpec']['tasks'] = t
               inlined_as_taskSpec.extend(e)
-        # Step 2. inline pipeline_loop_crs in the workflow
+        # Step 2. inline custom_opsgroup_crs in the workflow
         workflow_tasks, e = self._inline_tasks(workflow['spec']['pipelineSpec']['tasks'],
-                                                         pipeline_loop_crs, recursive_tasks_names)
+                                                         custom_opsgroup_crs, recursive_tasks_names)
         inlined_as_taskSpec.extend(e)
-        workflow['spec']['pipelineSpec']['tasks'] = workflow_tasks
+
+        # Step 3. check if there is any custom_opsgroup has finally attribute
+        updated_workflow_tasks = []
+        for task in workflow_tasks:
+          add_on = self.addon_groups.get(task['name'])
+          if add_on and add_on.get('_data') and isinstance(add_on.get('_data'), AddOnGroup) \
+                and hasattr(add_on.get('_data'), 'is_finally') and add_on.get('_data').is_finally:
+              workflow['spec']['finally'] = workflow['spec'].get('finally', [])
+              # TODO: need to remove some properties that can't be used in 'finally'?
+              task.pop('runAfter', None)
+              workflow['spec']['finally'].append(task)
+          else:
+            updated_workflow_tasks.append(task)
+
+        workflow['spec']['pipelineSpec']['tasks'] = updated_workflow_tasks
         # Preserve order of params, required by tests.
         if 'params' in workflow['spec']:
           workflow['spec']['params'] = sorted(workflow['spec']['params'], key=lambda kv: (kv['name']))
-        pipeline_loop_crs = [cr for cr in pipeline_loop_crs if cr['metadata'].get("name", "") not in inlined_as_taskSpec]
-    return pipeline_loop_crs, workflow
+        custom_opsgroup_crs = [cr for cr in custom_opsgroup_crs if cr['metadata'].get("name", "") not in inlined_as_taskSpec]
+    return custom_opsgroup_crs, workflow
 
   def _create_and_write_workflow(self,
                                  pipeline_func: Callable,

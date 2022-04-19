@@ -9,6 +9,7 @@ This page is an advanced KFP-Tekton guide on how to use Tekton specific features
     - [Defining Your Own Tekton Custom Task on KFP-Tekton](#defining-your-own-tekton-custom-task-on-kfp-tekton)
     - [Custom task with Conditions](#custom-task-with-conditions)
     - [Custom Task Limitations](#custom-task-limitations)
+    - [Custom Task for OpsGroup](#custom-task-for-opsgroup)
 
 ## Using Tekton Custom Task on KFP-Tekton
 
@@ -115,3 +116,64 @@ In this case, the Argo workflow task C will always execute after the condition A
 
 ### Custom Task Limitations
 Currently, custom tasks don't support timeout, retries, or any Kubernetes pod spec because these fields are not supported by the [Tekton community](https://github.com/tektoncd/pipeline/blob/main/docs/pipelines.md#limitations) and custom tasks may not need any pod to run their workloads. Therefore, there will not be any logs, pod references, or events for custom tasks in the KFP-Tekton API.
+
+
+### Custom Task for OpsGroup
+You can also use Custom Task for an OpsGroup. An OpsGroup is used to represent a logical group of ops
+and group of OpsGroups. We provide a base class `AddOnGroup` under `kfp_tekton.tekton` for you to
+implement your OpsGroup. You can define a custom OpsGroup like this:
+```python
+from kfp_tekton.tekton import AddOnGroup
+class MyOpsGroup(AddOnGroup):
+  """A custom OpsGroup which maps to a custom task"""
+
+  def __init__(self, params: list[dsl.PipelineParam] = []):
+    super().__init__(kind='CustomGroup',
+        api_version='custom.tekton.dev/v1alpha1',
+        params=params)
+```
+
+Then you can use the custom OpsGroup to contain arbitrary ops and even other OpsGroup as well. For example:
+```python
+@dsl.pipeline(
+    name='addon-sample',
+    description='Addon sample'
+)
+def addon_example(url: str = 'gs://ml-pipeline-playground/shakespeare1.txt'):
+    """A sample pipeline showing AddOnGroups"""
+
+    echo_op('echo task!')
+
+    with MyOpsGroup():
+        download_task = gcs_download_op(url)    # op 1
+        echo_op(download_task.outputs['data'])  # op 2
+```
+The way to use the custom OpsGroup depends on how you compose your custom OpsGroup which extends
+the base class AddOnGroup. You can use the `with` syntax like the example above. Or you can implement your
+custom OpsGroup as a function decorator and covert a function into custom OpsGroup. The generated Task YAML
+is based on the following information: `kind`, `apiVersion`, `is_finally`, ops, OpsGroup, etc.
+For ops and OpsGroup belong to the custom OpsGroup, they become individual task in the `tasks` list.
+Below is an example of the generated Task YAML for the custom OpsGroup: `MyOpsGroup` from the example above.
+```yaml
+  - name: addon-group-1
+    params:
+    - name: url
+      value: $(params.url)
+    taskSpec:
+      apiVersion: custom.tekton.dev/v1alpha1
+      kind: CustomGroup
+      spec:
+        pipelineSpec:
+          params:
+          - name: url
+            type: string
+          tasks:
+          - name: gcs-download
+            ......
+          - name: echo-2
+            ......
+```
+You can override the `post_update` function to manipulate the Task YAML if needed. The custom OpsGroup
+could be assigned to [`finally` section of Tekton Pipeline](https://tekton.dev/docs/pipelines/pipelines/#adding-finally-to-the-pipeline)
+by assigning `is_finally=Ture` when constructing AddOnGroup. In this case, the custom OpsGroup can only be
+used as a root OpsGroup in a pipeline. It can't be under other OpsGroup.

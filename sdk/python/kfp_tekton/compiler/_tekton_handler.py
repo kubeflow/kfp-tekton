@@ -15,7 +15,7 @@
 import json, copy, re
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
-from kfp_tekton.tekton import LOOP_GROUP_NAME_LENGTH
+from kfp_tekton.tekton import LOOP_GROUP_NAME_LENGTH, AddOnGroup
 
 
 def _process_argo_vars(workflow):
@@ -435,7 +435,16 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     new_params_spec.append(workflow_param)
                     searched_params.append(workflow_param['name'])
             workflow['spec']['pipelineSpec']['tasks'][i]['params'] = new_params_spec
-    return custom_task_crs, workflow
+    # call post-hook api if there is
+    updated_custom_task_crs = []
+    for cr in custom_task_crs:
+        cr_task = custom_task.get(cr['metadata']['name'])
+        updated_custom_task_crs.append(
+            cr_task.get('_data').post_update(cr)
+            if cr_task and cr_task.get('_data') and
+                isinstance(cr_task.get('_data'), AddOnGroup)
+            else cr)
+    return updated_custom_task_crs, workflow
 
 
 def find_ancestors(nested_custom_tasks: list, father_ct_name, ancestors: list, root_ct):
