@@ -1628,10 +1628,10 @@ class TektonCompiler(Compiler):
           add_on = self.addon_groups.get(task['name'])
           if add_on and add_on.get('_data') and isinstance(add_on.get('_data'), AddOnGroup) \
                 and hasattr(add_on.get('_data'), 'is_finally') and add_on.get('_data').is_finally:
-              workflow['spec']['finally'] = workflow['spec'].get('finally', [])
+              workflow['spec']['pipelineSpec']['finally'] = workflow['spec']['pipelineSpec'].get('finally', [])
               # TODO: need to remove some properties that can't be used in 'finally'?
               task.pop('runAfter', None)
-              workflow['spec']['finally'].append(task)
+              workflow['spec']['pipelineSpec']['finally'].append(task)
           else:
             updated_workflow_tasks.append(task)
 
