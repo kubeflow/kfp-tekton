@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict, Union
 from kfp import dsl, components
-from kfp_tekton.tekton import AddOnGroup, List
+from kfp_tekton.tekton import AddOnGroup
 
 GCS_DOWNLOAD_STR = """
 name: gcs-download
@@ -56,7 +57,7 @@ echo_op = components.load_component_from_text(ECHO_STR)
 class Exception(AddOnGroup):
   """Exception Handler"""
 
-  def __init__(self, params: List[dsl.PipelineParam] = []):
+  def __init__(self, params: Dict[str, Union[dsl.PipelineParam, str, int]] = {}):
     super().__init__(kind='Exception',
         api_version='custom.tekton.dev/v1alpha1',
         params=params,

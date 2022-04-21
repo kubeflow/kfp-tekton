@@ -123,11 +123,13 @@ You can also use Custom Task for an OpsGroup. An OpsGroup is used to represent a
 and group of OpsGroups. We provide a base class `AddOnGroup` under `kfp_tekton.tekton` for you to
 implement your OpsGroup. You can define a custom OpsGroup like this:
 ```python
+from typing import Dict
+from kfp import dsl
 from kfp_tekton.tekton import AddOnGroup
 class MyOpsGroup(AddOnGroup):
   """A custom OpsGroup which maps to a custom task"""
 
-  def __init__(self, params: list[dsl.PipelineParam] = []):
+  def __init__(self, params: Dict[str, dsl.PipelineParam] = {}):
     super().__init__(kind='CustomGroup',
         api_version='custom.tekton.dev/v1alpha1',
         params=params)

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Iterable, Union, Optional, TypeVar, Text, Tuple
+from typing import List, Iterable, Union, Optional, TypeVar, Text, Tuple, Dict
 
 from kfp.dsl import _pipeline_param, _for_loop, _pipeline
 from kfp import dsl
@@ -331,11 +331,11 @@ class AddOnGroup(dsl.OpsGroup):
                 api_version: str = DEFAULT_APIVERSION,
                 is_finally: bool = False,
                 parallelism: int = None,
-                params: List[Union[dsl.PipelineParam, int, str]] = []):
+                params: Dict[str, Union[dsl.PipelineParam, str, int]] = {}):
         self.task_type = task_type  # not been used yet
         self.kind = kind
         self.api_version = api_version
-        self.params = params  # list of PipelineParams, or value
+        self.params = params  # param dict
         if is_finally:
             pl = dsl._pipeline.Pipeline.get_default_pipeline()
             if pl.groups[-1].type != 'pipeline':

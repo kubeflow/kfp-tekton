@@ -370,18 +370,36 @@ class TektonCompiler(Compiler):
                 'name': param[0], 'value': '$(params.%s)' % param[0]
               })
 
+    def process_pipelineparam(s):
+      if "{{pipelineparam" in s:
+        pipe_params = re.findall(r"{{pipelineparam:op=([^ \t\n,]*);name=([^ \t\n,]*)}}", s)
+        for pipe_param in pipe_params:
+          if pipe_param[0] == '':
+            s = s.replace("{{pipelineparam:op=%s;name=%s}}" % pipe_param, '$(params.%s)' % pipe_param[1])
+          else:
+            param_name = sanitize_k8s_name(pipe_param[1])
+            s = s.replace("{{pipelineparam:op=%s;name=%s}}" % pipe_param, '$(tasks.%s.results.%s)' % (
+              sanitize_k8s_name(pipe_param[0]),
+              param_name))
+      return s
+
     if isinstance(sub_group, AddOnGroup):
       params = []
-      for param in sub_group.params:
-          if param.op_name:
-            params.append({
-              'name': param.full_name,
-              'value': '$(tasks.%s.results.%s)' % (param.op_name, param.name)
-            })
+      for k, v in sub_group.params.items():
+        if isinstance(v, dsl.PipelineParam):
+          if v.op_name is None:
+            v = '$(params.%s)' % v.name
           else:
-            params.append({
-              'name': param.full_name, 'value': '$(params.%s)' % param.name
-            })
+            param_name = sanitize_k8s_name(v.name)
+            v = '$(tasks.%s.results.%s)' % (
+              sanitize_k8s_name(v.op_name),
+              param_name)
+        else:
+          if isinstance(v, str):
+            v = process_pipelineparam(v)
+          else:
+            v = str(v)
+        params.append({'name': sanitize_k8s_name(k, True), 'value': v})
 
       self.addon_groups[group_name] = {
         'kind': 'addon',
@@ -458,18 +476,6 @@ class TektonCompiler(Compiler):
         }]
       else:
         # Need to sanitize the dict keys for consistency.
-        def process_pipelineparam(s):
-          if "{{pipelineparam" in s:
-            pipe_params = re.findall(r"{{pipelineparam:op=([^ \t\n,]*);name=([^ \t\n,]*)}}", s)
-            for pipe_param in pipe_params:
-              if pipe_param[0] == '':
-                s = s.replace("{{pipelineparam:op=%s;name=%s}}" % pipe_param, '$(params.%s)' % pipe_param[1])
-              else:
-                param_name = sanitize_k8s_name(pipe_param[1])
-                s = s.replace("{{pipelineparam:op=%s;name=%s}}" % pipe_param, '$(tasks.%s.results.%s)' % (
-                  sanitize_k8s_name(pipe_param[0]),
-                  param_name))
-          return s
         loop_arg_value = sub_group.loop_args.to_list_for_task_yaml()
         loop_args_str_value = ''
         sanitized_tasks = []
