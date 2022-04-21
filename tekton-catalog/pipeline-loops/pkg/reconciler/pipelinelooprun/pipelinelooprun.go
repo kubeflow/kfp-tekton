@@ -85,6 +85,8 @@ const (
 	DefaultNestedStackDepth = 30
 
 	MaxNestedStackDepthKey = "maxNestedStackDepth"
+
+	defaultIterationParamStrSeparator = ","
 )
 
 // Reconciler implements controller.Reconciler for Configuration resources.
@@ -827,20 +829,29 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 				iterationElements = append(iterationElements, v)
 			}
 		} else {
-			var strings []string
+			var stringArr []string
 			var ints []int
 			var dictsString []map[string]string
 			var dictsInt []map[string]int
-			errString := json.Unmarshal([]byte(iterationParamStr), &strings)
+			errString := json.Unmarshal([]byte(iterationParamStr), &stringArr)
 			errInt := json.Unmarshal([]byte(iterationParamStr), &ints)
 			errDictString := json.Unmarshal([]byte(iterationParamStr), &dictsString)
 			errDictInt := json.Unmarshal([]byte(iterationParamStr), &dictsInt)
 			if errString != nil && errInt != nil && errDictString != nil && errDictInt != nil {
-				return 0, iterationElements, fmt.Errorf("The value of the iterate parameter %q can not transfer to array", tls.IterateParam)
+				//try the default separator comma (,) in last
+				if strings.Contains(iterationParamStr, defaultIterationParamStrSeparator) {
+					stringArr := strings.Split(iterationParamStr, defaultIterationParamStrSeparator)
+					numberOfIterations = len(stringArr)
+					for _, v := range stringArr {
+						iterationElements = append(iterationElements, v)
+					}
+				} else {
+					return 0, iterationElements, fmt.Errorf("the value of the iterate parameter %q can not transfer to array", tls.IterateParam)
+				}
 			}
 			if errString == nil {
-				numberOfIterations = len(strings)
-				for _, v := range strings {
+				numberOfIterations = len(stringArr)
+				for _, v := range stringArr {
 					iterationElements = append(iterationElements, v)
 				}
 			} else if errInt == nil {
@@ -910,7 +921,7 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 			}
 		}
 		if iterationParam != nil {
-			if iterationParamStrSeparator != nil {
+			if iterationParamStrSeparator != nil && iterationParamStrSeparator.Value.StringVal != "" {
 				iterationParamStr := strings.Trim(iterationParam.Value.StringVal, " ")
 				stringArr := strings.Split(iterationParamStr, iterationParamStrSeparator.Value.StringVal)
 				out = append(out, v1beta1.Param{
@@ -919,18 +930,19 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 				})
 
 			} else {
-				var strings []string
+				var stringArr []string
 				var ints []int
 				var dictsString []map[string]string
 				var dictsInt []map[string]int
-				errString := json.Unmarshal([]byte(iterationParam.Value.StringVal), &strings)
-				errInt := json.Unmarshal([]byte(iterationParam.Value.StringVal), &ints)
-				errDictString := json.Unmarshal([]byte(iterationParam.Value.StringVal), &dictsString)
-				errDictInt := json.Unmarshal([]byte(iterationParam.Value.StringVal), &dictsInt)
+				iterationParamStr := iterationParam.Value.StringVal
+				errString := json.Unmarshal([]byte(iterationParamStr), &stringArr)
+				errInt := json.Unmarshal([]byte(iterationParamStr), &ints)
+				errDictString := json.Unmarshal([]byte(iterationParamStr), &dictsString)
+				errDictInt := json.Unmarshal([]byte(iterationParamStr), &dictsInt)
 				if errString == nil {
 					out = append(out, v1beta1.Param{
 						Name:  iterationParam.Name,
-						Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strings[iteration-1]},
+						Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: stringArr[iteration-1]},
 					})
 				} else if errInt == nil {
 					out = append(out, v1beta1.Param{
@@ -949,6 +961,15 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 						out = append(out, v1beta1.Param{
 							Name:  iterationParam.Name + "-subvar-" + dictParam,
 							Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(dictsInt[iteration-1][dictParam])},
+						})
+					}
+				} else {
+					//try the default separator ","
+					if strings.Contains(iterationParamStr, defaultIterationParamStrSeparator) {
+						stringArr := strings.Split(iterationParamStr, defaultIterationParamStrSeparator)
+						out = append(out, v1beta1.Param{
+							Name:  iterationParam.Name,
+							Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: stringArr[iteration-1]},
 						})
 					}
 				}
