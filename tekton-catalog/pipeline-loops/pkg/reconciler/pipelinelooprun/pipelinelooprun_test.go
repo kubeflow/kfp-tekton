@@ -855,6 +855,37 @@ var runPipelineLoopWithSpaceSeparatorParams = &v1alpha1.Run{
 	},
 }
 
+var runPipelineLoopWithDefaultSeparatorParams = &v1alpha1.Run{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "run-pipelineloop",
+		Namespace: "foo",
+		Labels: map[string]string{
+			"myTestLabel":                    "myTestLabelValue",
+			"custom.tekton.dev/pipelineLoop": "a-pipelineloop",
+			"tekton.dev/pipeline":            "pr-loop-example",
+			"tekton.dev/pipelineRun":         "pr-loop-example",
+			"tekton.dev/pipelineTask":        "loop-task",
+		},
+		Annotations: map[string]string{
+			"myTestAnnotation": "myTestAnnotationValue",
+		},
+	},
+	Spec: v1alpha1.RunSpec{
+		Params: []v1beta1.Param{{
+			Name:  "current-item",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1,item2"},
+		}, {
+			Name:  "additional-parameter",
+			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+		}},
+		Ref: &v1alpha1.TaskRef{
+			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
+			Kind:       pipelineloop.PipelineLoopControllerName,
+			Name:       "a-pipelineloop",
+		},
+	},
+}
+
 func specifyLoopRange(from, to, step string, r *v1alpha1.Run) *v1alpha1.Run {
 	t := r.DeepCopy()
 	for n, i := range r.Spec.Params {
@@ -1874,6 +1905,16 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
 		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithPodTemplateAndSA},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Reconcile a new run with a pipelineloop and a string params without separator",
+		pipeline:             aPipeline,
+		pipelineloop:         aPipelineLoop,
+		run:                  runPipelineLoopWithDefaultSeparatorParams,
+		pipelineruns:         []*v1beta1.PipelineRun{},
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIteration1},
+		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
 	},
 	}
 
@@ -2036,9 +2077,10 @@ func TestReconcilePipelineLoopRunFailures(t *testing.T) {
 		reason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
 		wantEvents: []string{
 			"Normal Started ",
-			`Warning Failed Cannot determine number of iterations: The value of the iterate parameter "current-item" can not transfer to array`,
+			`Warning Failed Cannot determine number of iterations: the value of the iterate parameter "current-item" can not transfer to array`,
 		},
 	}}
+	testcases = testcases[len(testcases)-1:]
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
