@@ -2077,9 +2077,10 @@ func TestReconcilePipelineLoopRunFailures(t *testing.T) {
 		reason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
 		wantEvents: []string{
 			"Normal Started ",
-			`Warning Failed Cannot determine number of iterations: The value of the iterate parameter "current-item" can not transfer to array`,
+			`Warning Failed Cannot determine number of iterations: the value of the iterate parameter "current-item" can not transfer to array`,
 		},
 	}}
+	testcases = testcases[len(testcases)-1:]
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
