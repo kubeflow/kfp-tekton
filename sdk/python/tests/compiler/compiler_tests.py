@@ -182,6 +182,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.data_passing_pipeline_param_as_file import data_passing_pipeline
     self._test_pipeline_workflow(data_passing_pipeline, 'data_passing_pipeline_param_as_file.yaml', skip_noninlined=True)
 
+  def test_custom_task_long_name_workflow(self):
+    """
+    Test compiling a custom_task_long_name workflow with underscore and hyphen.
+    """
+    from .testdata.custom_task_long_name import main_fn
+    self._test_pipeline_workflow(main_fn, 'custom_task_long_name.yaml', skip_noninlined=True)
+
   def test_data_passing_pipeline_complete(self):
     """
     Test compiling a pipeline_param_as_file workflow.

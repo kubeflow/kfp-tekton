@@ -246,16 +246,16 @@ class TektonCompiler(Compiler):
 
         # get other input params, for recursion need rename the param name to the refrenced one
         for i in range(len(sub_group.inputs)):
-            input = sub_group.inputs[i]
+            g_input = sub_group.inputs[i]
             inputRef = sub_group.recursive_ref.inputs[i]
-            if input.op_name:
+            if g_input.op_name:
               params.append({
                 'name': inputRef.full_name,
-                'value': '$(tasks.%s.results.%s)' % (input.op_name, input.name)
+                'value': '$(tasks.%s.results.%s)' % (g_input.op_name, g_input.name)
               })
             else:
               params.append({
-                'name': inputRef.full_name, 'value': '$(params.%s)' % input.name
+                'name': inputRef.full_name, 'value': '$(params.%s)' % g_input.name
               })
 
         self.recursive_tasks.append({
@@ -1378,9 +1378,9 @@ class TektonCompiler(Compiler):
     args_list = []
     for arg_name in argspec.args:
       arg_type = None
-      for input in pipeline_meta.inputs or []:
-        if arg_name == input.name:
-          arg_type = input.type
+      for p_input in pipeline_meta.inputs or []:
+        if arg_name == p_input.name:
+          arg_type = p_input.type
           break
       args_list.append(dsl.PipelineParam(sanitize_k8s_name(arg_name, True), param_type=arg_type))
 

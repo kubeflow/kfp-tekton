@@ -364,10 +364,12 @@ def _process_base_ops(op: BaseOp):
     """
 
     # map param's (unsanitized pattern or serialized str pattern) -> input param var str
-    map_to_tmpl_var = {
-        (param.pattern or str(param)): '$(inputs.params.%s)' % param.full_name  # Tekton change
-        for param in op.inputs
-    }
+    # Pick the shortest param full name if there's two identical params in the DSL
+    map_to_tmpl_var = {}
+    for param in op.inputs:
+        key = (param.pattern or str(param))
+        if not map_to_tmpl_var.get(key) or len('$(inputs.params.%s)' % param.full_name) < len(map_to_tmpl_var.get(key)):
+            map_to_tmpl_var[key] = '$(inputs.params.%s)' % param.full_name
 
     # process all attr with pipelineParams except inputs and outputs parameters
     for key in op.attrs_with_pipelineparams:
