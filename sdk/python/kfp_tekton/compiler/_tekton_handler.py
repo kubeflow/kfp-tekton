@@ -440,7 +440,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
     for cr in custom_task_crs:
         cr_task = custom_task.get(cr['metadata']['name'])
         updated_custom_task_crs.append(
-            cr_task.get('_data').post_update(cr)
+            cr_task.get('_data').post_task_spec(cr)
             if cr_task and cr_task.get('_data') and
                 isinstance(cr_task.get('_data'), AddOnGroup)
             else cr)

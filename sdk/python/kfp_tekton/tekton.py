@@ -344,6 +344,10 @@ class AddOnGroup(dsl.OpsGroup):
         self.is_finally = is_finally  # a regular task or finally task
         super().__init__(self.TYPE_NAME, parallelism=parallelism)
 
-    def post_update(self, task_yaml: dict) -> dict:
+    def post_task_spec(self, task_yaml: dict) -> dict:
         """provide a post-hook api to update the task YAML"""
         return task_yaml
+
+    def post_param(self, params: List):
+        """provide a post-hook api to update params"""
+        return params

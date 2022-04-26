@@ -310,9 +310,9 @@ class TektonCompiler(Compiler):
         }]
 
         # get other input params
-        for input in inputs.keys():
-          if input == sub_group.name:
-            for param in inputs[input]:
+        for input_ in inputs.keys():
+          if input_ == sub_group.name:
+            for param in inputs[input_]:
               if param[1]:
                 replace_str = param[1] + '-'
                 self.loops_pipeline[group_name]['spec']['params'].append({
@@ -355,9 +355,9 @@ class TektonCompiler(Compiler):
 
     def input_helper(custom_task, sub_group, param_list):
       """add param from inputs if input is not in param_list"""
-      for input in inputs.keys():
-        if input == sub_group.name:
-          for param in inputs[input]:
+      for input_ in inputs.keys():
+        if input_ == sub_group.name:
+          for param in inputs[input_]:
             if param[1] and param[0] not in param_list:
               replace_str = param[1] + '-'
               custom_task['spec']['params'].append({
@@ -1633,13 +1633,20 @@ class TektonCompiler(Compiler):
         for task in workflow_tasks:
           add_on = self.addon_groups.get(task['name'])
           if add_on and add_on.get('_data') and isinstance(add_on.get('_data'), AddOnGroup) \
-                and hasattr(add_on.get('_data'), 'is_finally') and add_on.get('_data').is_finally:
-              workflow['spec']['pipelineSpec']['finally'] = workflow['spec']['pipelineSpec'].get('finally', [])
-              # TODO: need to remove some properties that can't be used in 'finally'?
-              task.pop('runAfter', None)
-              workflow['spec']['pipelineSpec']['finally'].append(task)
-          else:
-            updated_workflow_tasks.append(task)
+                and hasattr(add_on.get('_data'), 'is_finally'):
+
+              task['params'] = add_on.get('_data').post_param(task.get('params', []))
+              if not len(task['params']):
+                task.pop('params')
+
+              if add_on.get('_data').is_finally:
+                workflow['spec']['pipelineSpec']['finally'] = workflow['spec']['pipelineSpec'].get('finally', [])
+                # TODO: need to remove some properties that can't be used in 'finally'?
+                task.pop('runAfter', None)
+                workflow['spec']['pipelineSpec']['finally'].append(task)
+                continue
+
+          updated_workflow_tasks.append(task)
 
         workflow['spec']['pipelineSpec']['tasks'] = updated_workflow_tasks
         # Preserve order of params, required by tests.
