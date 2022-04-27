@@ -292,9 +292,14 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     param_results = re.findall('\$\(tasks.([^ \t\n.:,;\{\}]+).results.([^ \t\n.:,;\{\}]+)\)', task_param['value'])
                     for param_result in param_results:
                         if param_result[0] not in custom_task_cr_task_names:
-                            task['params'] = json.loads(
-                                json.dumps(task['params']).replace(task_param['value'],
-                                '$(params.%s-%s)' % param_result))
+                            if param_result[0] == 'None':
+                                task['params'] = json.loads(
+                                    json.dumps(task['params']).replace(task_param['value'],
+                                    '$(params.%s)' % param_result[1]))
+                            else:
+                                task['params'] = json.loads(
+                                    json.dumps(task['params']).replace(task_param['value'],
+                                    '$(params.%s-%s)' % param_result))
         custom_task_crs.append(custom_task_cr)
         custom_task[custom_task_key]['spec']['params'] = sorted(custom_task[custom_task_key]['spec']['params'],
                                                                           key=lambda k: k['name'])
