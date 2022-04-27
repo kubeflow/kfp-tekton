@@ -326,6 +326,16 @@ class AddOnGroup(dsl.OpsGroup):
     DEFAULT_KIND = 'AddOnGroup'
     DEFAULT_APIVERSION = 'custom.tekton.dev/v1alpha1'
 
+    @classmethod
+    def create_internal_param(cls, name: str, value: Optional[str] = None, param_type: Optional[str] = None) -> dsl.PipelineParam:
+        """
+        If a PipelineParam is used for underlying custom task and should not show up in spec.params, use this
+        function to create a PipelineParam and add it into the AddOnGroup.params.
+        """
+        rev = dsl.PipelineParam(name=name, value=value, param_type=param_type)
+        rev.addon_param = True
+        return rev
+
     def __init__(self, task_type: str = RUN_TYPE,
                 kind: str = DEFAULT_KIND,
                 api_version: str = DEFAULT_APIVERSION,
@@ -335,7 +345,7 @@ class AddOnGroup(dsl.OpsGroup):
         self.task_type = task_type  # not been used yet
         self.kind = kind
         self.api_version = api_version
-        self.params = params  # param dict
+        self.params = params  # for spec.params
         if is_finally:
             pl = dsl._pipeline.Pipeline.get_default_pipeline()
             if pl.groups[-1].type != 'pipeline':
@@ -348,6 +358,6 @@ class AddOnGroup(dsl.OpsGroup):
         """provide a post-hook api to update the task YAML"""
         return task_yaml
 
-    def post_param(self, params: List):
+    def post_params(self, params: List):
         """provide a post-hook api to update params"""
         return params

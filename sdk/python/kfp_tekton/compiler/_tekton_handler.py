@@ -277,6 +277,12 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     if param['name'] != separator_param
                 ]
 
+        if custom_task[custom_task_key]['kind'] == 'addon':
+            # remove params that are created for internal use. those params have `addon_param` attribute
+            custom_task[custom_task_key]['spec']['params'] = [custom_task_param for custom_task_param
+                in custom_task[custom_task_key]['spec']['params']
+                if not hasattr(custom_task[custom_task_key]['_data'].params.get(custom_task_param['name'], {}), 'addon_param')]
+
         # need to process task parameters to replace out of scope results
         # because nested graph cannot refer to task results outside of the sub-pipeline.
         custom_task_cr_task_names = [custom_task_cr_task['name'] for custom_task_cr_task in custom_task_cr['spec']['pipelineSpec']['tasks']]

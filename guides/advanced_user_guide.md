@@ -135,6 +135,10 @@ class MyOpsGroup(AddOnGroup):
         params=params)
 ```
 
+For `params` argument, it's used to generate the spec.params for the Custom Task. For intermediate params
+which are only used by downstream Ops/OpsGroup but no need to show up in spec.params, you need to use
+`AddOnGroup.create_internal_param` function to create a PipelineParam and store it to params Dict.
+
 Then you can use the custom OpsGroup to contain arbitrary ops and even other OpsGroup as well. For example:
 ```python
 @dsl.pipeline(
@@ -175,7 +179,7 @@ Below is an example of the generated Task YAML for the custom OpsGroup: `MyOpsGr
           - name: echo-2
             ......
 ```
-You can override the `post_update` function to manipulate the Task YAML if needed. The custom OpsGroup
+You can override the `post_task_spec` or `post_params` functions to manipulate the Task YAML or `spec.params` if needed. The custom OpsGroup
 could be assigned to [`finally` section of Tekton Pipeline](https://tekton.dev/docs/pipelines/pipelines/#adding-finally-to-the-pipeline)
 by assigning `is_finally=Ture` when constructing AddOnGroup. In this case, the custom OpsGroup can only be
 used as a root OpsGroup in a pipeline. It can't be under other OpsGroup.

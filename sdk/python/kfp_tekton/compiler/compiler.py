@@ -355,20 +355,19 @@ class TektonCompiler(Compiler):
 
     def input_helper(custom_task, sub_group, param_list):
       """add param from inputs if input is not in param_list"""
-      for input_ in inputs.keys():
-        if input_ == sub_group.name:
-          for param in inputs[input_]:
-            if param[1] and param[0] not in param_list:
-              replace_str = param[1] + '-'
-              custom_task['spec']['params'].append({
-                'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
-                  param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
-                )
-              })
-            if not param[1] and param[0] not in param_list:
-              custom_task['spec']['params'].append({
-                'name': param[0], 'value': '$(params.%s)' % param[0]
-              })
+      if sub_group.name in inputs:
+        for param in inputs[sub_group.name]:
+          if param[1] and param[0] not in param_list:
+            replace_str = param[1] + '-'
+            custom_task['spec']['params'].append({
+              'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
+                param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
+              )
+            })
+          if not param[1] and param[0] not in param_list:
+            custom_task['spec']['params'].append({
+              'name': param[0], 'value': '$(params.%s)' % param[0]
+            })
 
     def process_pipelineparam(s):
       if "{{pipelineparam" in s:
@@ -417,7 +416,7 @@ class TektonCompiler(Compiler):
         '_data': sub_group
       }
       dep_helper(self.addon_groups[group_name], sub_group)
-      input_helper(self.addon_groups[group_name], sub_group, params)
+      input_helper(self.addon_groups[group_name], sub_group, sub_group.params)
 
     if isinstance(sub_group, dsl.ParallelFor):
       self.loops_pipeline[group_name] = {
@@ -595,7 +594,8 @@ class TektonCompiler(Compiler):
       op_name_to_parent_groups,
       opgroup_name_to_parent_groups,
       condition_params,
-      op_name_to_for_loop_op
+      op_name_to_for_loop_op,
+      opsgroups
     )
     dependencies = self._get_dependencies(
       pipeline,
@@ -699,6 +699,7 @@ class TektonCompiler(Compiler):
           opsgroup_groups,
           condition_params,
           op_name_to_for_loop_op: Dict[Text, dsl.ParallelFor],
+          opsgroups: Dict[str, dsl.OpsGroup]
   ):
     """Get inputs and outputs of each group and op.
     Returns:
@@ -765,6 +766,12 @@ class TektonCompiler(Compiler):
                 if hasattr(loop_group, 'iteration_number') and loop_group.iteration_number and \
                     loop_group.iteration_number.full_name == param.name:
                   break
+              elif group_name in opsgroups and isinstance(opsgroups[group_name], AddOnGroup) and \
+                  param.name in opsgroups[group_name].params:
+                # if group is AddOnGroup and the param is in its params list, then the param
+                # is created by that AddOnGroup and it shouldn't be an input to
+                # any of its parent groups.
+                break
 
     # Generate the input/output for recursive opsgroups
     # It propagates the recursive opsgroups IO to their ancester opsgroups
@@ -1635,7 +1642,7 @@ class TektonCompiler(Compiler):
           if add_on and add_on.get('_data') and isinstance(add_on.get('_data'), AddOnGroup) \
                 and hasattr(add_on.get('_data'), 'is_finally'):
 
-              task['params'] = add_on.get('_data').post_param(task.get('params', []))
+              task['params'] = add_on.get('_data').post_params(task.get('params', []))
               if not len(task['params']):
                 task.pop('params')
 
