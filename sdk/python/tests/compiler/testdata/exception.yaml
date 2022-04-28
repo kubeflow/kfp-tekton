@@ -61,7 +61,7 @@ spec:
             tekton.dev/template: ''
       timeout: 525600m
     finally:
-    - name: addon-group-1
+    - name: addon-sample-addon-group-1
       params:
       - name: url
         value: $(params.url)

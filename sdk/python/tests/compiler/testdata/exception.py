@@ -15,6 +15,15 @@
 from typing import Dict, Union
 from kfp import dsl, components
 from kfp_tekton.tekton import AddOnGroup
+from kfp_tekton.compiler import TektonCompiler
+
+
+class Coder:
+    def empty(self):
+        return ""
+
+
+TektonCompiler._get_unique_id_code = Coder.empty
 
 GCS_DOWNLOAD_STR = """
 name: gcs-download

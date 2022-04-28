@@ -310,8 +310,6 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
     nested_custom_tasks = []
     custom_task_crs_namelist = []
     for custom_task_key in custom_task.keys():
-        if len(group_names[-1]) <= LOOP_GROUP_NAME_LENGTH:
-            sanitize_k8s_name(custom_task_key, max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True)
         custom_task_crs_namelist.append(custom_task_key)
     for custom_task_key in custom_task.keys():
         for inner_task_name in custom_task[custom_task_key]['task_list']:

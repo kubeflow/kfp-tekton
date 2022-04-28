@@ -199,7 +199,8 @@ class TektonCompiler(Compiler):
     if self.uuid:
       self._group_names.insert(1, self.uuid)
     # pipeline name (max 40) + loop id (max 5) + group name (max 16) + two connecting dashes (2) = 63 (Max size for CRD names)
-    group_name = '-'.join(self._group_names) if group_type == "loop" or group_type == "graph" else sub_group.name
+    group_name = '-'.join(self._group_names) if group_type == "loop" or \
+        group_type == "graph" or group_type == 'addon' else sub_group.name
     template = {
       'metadata': {
         'name': group_name,
