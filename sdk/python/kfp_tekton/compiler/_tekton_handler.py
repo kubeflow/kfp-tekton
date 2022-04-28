@@ -282,6 +282,16 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
             custom_task[custom_task_key]['spec']['params'] = [custom_task_param for custom_task_param
                 in custom_task[custom_task_key]['spec']['params']
                 if not hasattr(custom_task[custom_task_key]['_data'].params.get(custom_task_param['name'], {}), 'addon_param')]
+            # clean up params in spec.taskSpec.spec.pipelineSpec.params, remove those
+            # are not used by downstream Ops/OpsGroups. one-level down only
+            child_task_params = []
+            for task in custom_task_cr['spec']['pipelineSpec']['tasks']:
+                for task_param in task.get('params', []):
+                    if task_param['value'].startswith('$(') and task_param['value'].endswith(')'):
+                        child_task_params.append(task_param['name'])
+            custom_task_cr['spec']['pipelineSpec']['params'] = [value for value
+                                                    in custom_task_cr['spec']['pipelineSpec']['params']
+                                                    if value['name'] in child_task_params]
 
         # need to process task parameters to replace out of scope results
         # because nested graph cannot refer to task results outside of the sub-pipeline.
