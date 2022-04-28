@@ -50,8 +50,6 @@ spec:
             valueFrom: '{.metadata.name}'
           - name: size
             valueFrom: '{.status.capacity.storage}'
-      - name: set-ownerreference
-        value: "false"
       - name: size
         value: $(params.size)
       taskSpec:

@@ -41,7 +41,7 @@ spec:
           - name: name
             valueFrom: '{.metadata.name}'
       - name: set-ownerreference
-        value: "false"
+        value: "true"
       taskSpec:
         params:
         - description: Action on the resource

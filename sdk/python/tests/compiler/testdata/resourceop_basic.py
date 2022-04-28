@@ -57,7 +57,8 @@ def resourceop_basic():
     op = dsl.ResourceOp(
         name='test-step',
         k8s_resource=json.loads(_CONTAINER_MANIFEST),
-        action='create'
+        action='create',
+        set_owner_reference='true'
         # success_condition='status.succeeded > 0',
         # failure_condition='status.failed > 0'
     )
