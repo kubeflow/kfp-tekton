@@ -775,6 +775,7 @@ class TektonCompiler(Compiler):
         merge_strategy = op.resource.get('merge_strategy')
         success_condition = op.resource.get('successCondition')
         failure_condition = op.resource.get('failureCondition')
+        set_owner_reference = op.resource.get('setOwnerReference')
         task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "image"]
         if not merge_strategy:
           task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'merge-strategy']
@@ -782,6 +783,8 @@ class TektonCompiler(Compiler):
           task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != 'success-condition']
         if not failure_condition:
           task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "failure-condition"]
+        if not set_owner_reference:
+          task['params'] = [tp for tp in task.get('params', []) if tp.get('name') != "set-ownerreference"]
         for tp in task.get('params', []):
           if tp.get('name') == "action" and action:
             tp['value'] = action
@@ -791,6 +794,8 @@ class TektonCompiler(Compiler):
             tp['value'] = success_condition
           if tp.get('name') == "failure-condition" and failure_condition:
             tp['value'] = failure_condition
+          if tp.get('name') == "set-ownerreference" and set_owner_reference:
+            tp['value'] = set_owner_reference
           if tp.get('name') == "output":
             output_values = ''
             for value in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
