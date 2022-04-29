@@ -1636,18 +1636,32 @@ class TektonCompiler(Compiler):
                                                          custom_opsgroup_crs, recursive_tasks_names)
         inlined_as_taskSpec.extend(e)
 
-        # Step 3. check if there is any custom_opsgroup has finally attribute
+        # Step 3. handle AddOnGroup
         updated_workflow_tasks = []
         for task in workflow_tasks:
           add_on = self.addon_groups.get(task['name'])
           if add_on and add_on.get('_data') and isinstance(add_on.get('_data'), AddOnGroup) \
                 and hasattr(add_on.get('_data'), 'is_finally'):
 
-              task['params'] = add_on.get('_data').post_params(task.get('params', []))
+              addon_group_: AddOnGroup = add_on.get('_data')
+              task['params'] = addon_group_.post_params(task.get('params', []))
               if not len(task['params']):
                 task.pop('params')
 
-              if add_on.get('_data').is_finally:
+              # inject labels and annotations
+              metadata = task['taskSpec'].get('metadata', {})
+              if len(addon_group_.annotation):
+                metadata['annotations'] = metadata.get('annotations', {})
+                metadata['annotations'].update(addon_group_.annotation)
+                task['taskSpec']['metadata'] = metadata
+
+              if len(addon_group_.labels):
+                metadata['labels'] = metadata.get('labels', {})
+                metadata['labels'].update(addon_group_.labels)
+                task['taskSpec']['metadata'] = metadata
+
+              # check if there is any custom_opsgroup has finally attribute
+              if addon_group_.is_finally:
                 workflow['spec']['pipelineSpec']['finally'] = workflow['spec']['pipelineSpec'].get('finally', [])
                 # TODO: need to remove some properties that can't be used in 'finally'?
                 task.pop('runAfter', None)
