@@ -89,6 +89,7 @@ def _get_resourceOp_template(op: BaseOp,
                              name: str,
                              tekton_api_version: str,
                              resource_manifest: str,
+                             owner_reference: str,
                              argo_var: bool = False):
     """Tekton task template for running resourceOp
 
@@ -184,6 +185,15 @@ def _get_resourceOp_template(op: BaseOp,
         template['spec']['results'] = []
         for output_item in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
             template['spec']['results'].append({'name': output_item[0], 'description': output_item[1]})
+
+    if owner_reference == 'true':
+        owner_reference_env = [
+            {'name': 'POD_NAME', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.name"}}},
+            {'name': 'POD_NAMESPACE', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.namespace"}}},
+            {'name': 'POD_UID', 'valueFrom': {'fieldRef': {'fieldPath': "metadata.uid"}}}
+        ]
+        template['spec']['steps'][0]['env'] = template['spec']['steps'][0].get('env', [])
+        template['spec']['steps'][0]['env'].extend(owner_reference_env)
 
     return template
 
@@ -459,7 +469,12 @@ def _op_to_template(op: BaseOp,
             argo_var = True
 
         # task template
-        template = _get_resourceOp_template(op, processed_op.name, tekton_api_version, manifest, argo_var=argo_var)
+        template = _get_resourceOp_template(op=op,
+                                            name=processed_op.name,
+                                            tekton_api_version=tekton_api_version,
+                                            resource_manifest=manifest,
+                                            owner_reference=op.resource.get('setOwnerReference'),
+                                            argo_var=argo_var)
 
     # initContainers
     if processed_op.init_containers:
