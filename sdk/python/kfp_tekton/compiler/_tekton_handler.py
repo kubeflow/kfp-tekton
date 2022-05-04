@@ -78,7 +78,12 @@ def _handle_tekton_pipeline_variables(pipeline_run):
         if task.get('taskRef', {}):
             continue
         if 'taskSpec' in task and 'apiVersion' in task['taskSpec']:
+            # recur for embedded pipeline resources
+            if 'spec' in task['taskSpec'] and 'pipelineSpec' in task['taskSpec']['spec']:
+                resource_spec = task['taskSpec']
+                _handle_tekton_pipeline_variables(resource_spec)
             continue
+
         for key, val in pipeline_variables.items():
             task_str = json.dumps(task['taskSpec']['steps'])
             task_str = _process_argo_vars(task_str)
