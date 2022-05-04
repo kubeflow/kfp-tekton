@@ -95,11 +95,15 @@ def _handle_tekton_pipeline_variables(pipeline_run):
                         task['params'].append({'name': key, 'value': val})
                 else:
                     task['params'] = [{'name': key, 'value': val}]
-                if task['taskSpec'].get('params', ''):
-                    if {'name': key} not in task['taskSpec']['params']:
-                        task['taskSpec']['params'].append({'name': key})
-                else:
-                    task['taskSpec']['params'] = [{'name': key}]
+
+                found = False
+                for param in task['taskSpec'].get('params', []):
+                    if param['name'] == key:
+                        found = True
+                        break
+                if not found:
+                    param = { 'name': key }
+                    task['taskSpec'].setdefault('params', []).append(param)
 
     return pipeline_run
 
