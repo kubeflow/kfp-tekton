@@ -15,7 +15,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: loop-cond2
+  name: any-sequencer-looped
   annotations:
     tekton.dev/output_artifacts: '{"any-seq-0": [{"key": "artifacts/$PIPELINERUN/any-seq-0/status.tgz",
       "name": "any-seq-0-status", "path": "/tmp/outputs/status/data"}], "any-seq-1":
@@ -39,14 +39,15 @@ metadata:
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
-      \"c\"]", "name": "param", "optional": true, "type": "JsonArray"}], "name": "loop-cond2"}'
+      \"c\"]", "name": "param", "optional": true, "type": "JsonArray"}], "name": "any-sequencer-looped"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "loop-cond2-for-loop-1"}, "spec":
-      {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name": "param-loop-item",
-      "type": "string"}], "tasks": [{"name": "print-10", "taskSpec": {"metadata":
-      {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
-      \"print-10\", \"outputs\": [{\"description\": \"Represents an output paramter.\",
-      \"name\": \"output_value\", \"type\": \"String\"}], \"version\": \"print-10@sha256=ea7fa8edfd92cf64a15f8464292143a4e0d5f34898368bfd63618884decf3be1\"}",
+      "kind": "PipelineLoop", "metadata": {"name": "any-sequencer-looped-for-loop-1"},
+      "spec": {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name":
+      "param-loop-item", "type": "string"}], "tasks": [{"name": "print-10", "taskSpec":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print-10\", \"outputs\": [{\"description\": \"Represents an output
+      paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
+      \"print-10@sha256=ea7fa8edfd92cf64a15f8464292143a4e0d5f34898368bfd63618884decf3be1\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
@@ -176,11 +177,11 @@ spec:
         value: $(context.pipelineRun.name)
       - name: pipelineRun-namespace
         value: $(context.pipelineRun.namespace)
-    - name: loop-cond2-for-loop-1
+    - name: any-sequencer-looped-for-loop-1
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: loop-cond2-for-loop-1
+        name: any-sequencer-looped-for-loop-1
       params:
       - name: param-loop-item
         value: $(params.param)

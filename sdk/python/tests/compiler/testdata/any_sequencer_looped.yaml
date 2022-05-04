@@ -15,7 +15,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: loop-cond2
+  name: any-sequencer-looped
   annotations:
     tekton.dev/output_artifacts: '{"any-seq-0": [{"key": "artifacts/$PIPELINERUN/any-seq-0/status.tgz",
       "name": "any-seq-0-status", "path": "/tmp/outputs/status/data"}], "any-seq-1":
@@ -39,7 +39,7 @@ metadata:
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
-      \"c\"]", "name": "param", "optional": true, "type": "JsonArray"}], "name": "loop-cond2"}'
+      \"c\"]", "name": "param", "optional": true, "type": "JsonArray"}], "name": "any-sequencer-looped"}'
 spec:
   params:
   - name: param
@@ -141,7 +141,7 @@ spec:
         value: $(context.pipelineRun.name)
       - name: pipelineRun-namespace
         value: $(context.pipelineRun.namespace)
-    - name: loop-cond2-for-loop-1
+    - name: any-sequencer-looped-for-loop-1
       params:
       - name: param-loop-item
         value: $(params.param)

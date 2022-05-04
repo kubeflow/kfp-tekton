@@ -52,7 +52,7 @@ def PrintOp(name: str, msg: str = None):
   return print_op(msg)
 
 
-@dsl.pipeline("loop-cond2")
+@dsl.pipeline("any-sequencer-looped")
 def any_sequencer_pipeline(param: list = ["a", "b", "c"]):
   op00 = PrintOp("print-00")
   op01 = PrintOp("print-01")
