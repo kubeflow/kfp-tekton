@@ -73,12 +73,18 @@ def _handle_tekton_pipeline_variables(pipeline_run):
         'pipelineRun-uid': '$(context.pipelineRun.uid)'
     }
 
+    add_type = pipeline_run.get('kind') != 'PipelineRun'
     task_list = pipeline_run['spec']['pipelineSpec']['tasks']
     for task in task_list:
         if task.get('taskRef', {}):
             continue
         if 'taskSpec' in task and 'apiVersion' in task['taskSpec']:
+            # recur for embedded pipeline resources
+            if 'spec' in task['taskSpec'] and 'pipelineSpec' in task['taskSpec']['spec']:
+                resource_spec = task['taskSpec']
+                _handle_tekton_pipeline_variables(resource_spec)
             continue
+
         for key, val in pipeline_variables.items():
             task_str = json.dumps(task['taskSpec']['steps'])
             task_str = _process_argo_vars(task_str)
@@ -90,11 +96,17 @@ def _handle_tekton_pipeline_variables(pipeline_run):
                         task['params'].append({'name': key, 'value': val})
                 else:
                     task['params'] = [{'name': key, 'value': val}]
-                if task['taskSpec'].get('params', ''):
-                    if {'name': key} not in task['taskSpec']['params']:
-                        task['taskSpec']['params'].append({'name': key})
-                else:
-                    task['taskSpec']['params'] = [{'name': key}]
+
+                found = False
+                for param in task['taskSpec'].get('params', []):
+                    if param['name'] == key:
+                        found = True
+                        break
+                if not found:
+                    param = {'name': key}
+                    if add_type:
+                        param['type'] = 'string'
+                    task['taskSpec'].setdefault('params', []).append(param)
 
     return pipeline_run
 

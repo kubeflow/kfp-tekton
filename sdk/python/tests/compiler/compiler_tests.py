@@ -713,6 +713,13 @@ class TestTektonCompiler(unittest.TestCase):
 
     self._test_pipeline_workflow(any_sequence_pipeline, 'any_sequencer.yaml', skip_noninlined=True)
 
+  def test_any_sequencer_in_loop(self):
+    """
+    Test any sequencer inside of a loop.
+    """
+    from .testdata.any_sequencer_looped import any_sequencer_pipeline
+    self._test_pipeline_workflow(any_sequencer_pipeline, 'any_sequencer_looped.yaml')
+
   def _test_pipeline_workflow_inlined_spec(self,
                               pipeline_function,
                               pipeline_yaml,
