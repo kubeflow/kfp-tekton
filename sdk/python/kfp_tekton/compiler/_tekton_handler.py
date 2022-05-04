@@ -103,7 +103,7 @@ def _handle_tekton_pipeline_variables(pipeline_run):
                         found = True
                         break
                 if not found:
-                    param = { 'name': key }
+                    param = {'name': key}
                     if add_type:
                         param['type'] = 'string'
                     task['taskSpec'].setdefault('params', []).append(param)
