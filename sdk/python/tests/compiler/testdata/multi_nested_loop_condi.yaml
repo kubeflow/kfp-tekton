@@ -101,7 +101,7 @@ spec:
             - name: condition-cel
               params:
               - name: outcome
-                value: $(params.print-0-output_value) == "print-0"
+                value: '"$(params.print-0-output_value)" == "print-0"'
               taskRef:
                 name: cel_condition
                 apiVersion: cel.tekton.dev/v1alpha1
@@ -110,7 +110,7 @@ spec:
             - name: condition-cel-2
               params:
               - name: outcome
-                value: $(params.flag) == "true"
+                value: '"$(params.flag)" == "true"'
               taskRef:
                 name: cel_condition
                 apiVersion: cel.tekton.dev/v1alpha1
@@ -124,7 +124,7 @@ spec:
             - name: condition-cel-3
               params:
               - name: outcome
-                value: $(params.flag) == "true"
+                value: '"$(params.flag)" == "true"'
               taskRef:
                 name: cel_condition
                 apiVersion: cel.tekton.dev/v1alpha1

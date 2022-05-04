@@ -57,9 +57,9 @@ def loop_cond2(param: list = ["a", "b", "c"], flag: bool = True):
   op0 = PrintOp("print-0")
 
   with Loop(param):
-    with dsl.Condition(CEL_ConditionOp(f'{op0.output} == "print-0"').output == 'true'):
-      with dsl.Condition(CEL_ConditionOp(f'{flag} == "true"').output == 'true'):
-        with dsl.Condition(CEL_ConditionOp(f'{flag} == "true"').output == 'true'):
+    with dsl.Condition(CEL_ConditionOp(f'"{op0.output}" == "print-0"').output == 'true'):
+      with dsl.Condition(CEL_ConditionOp(f'"{flag}" == "true"').output == 'true'):
+        with dsl.Condition(CEL_ConditionOp(f'"{flag}" == "true"').output == 'true'):
             op1 = PrintOp("print-1")
     op2 = PrintOp("print-2")
     op2.after(op1)
