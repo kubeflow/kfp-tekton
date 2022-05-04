@@ -73,6 +73,7 @@ def _handle_tekton_pipeline_variables(pipeline_run):
         'pipelineRun-uid': '$(context.pipelineRun.uid)'
     }
 
+    add_type = pipeline_run.get('kind') != 'PipelineRun'
     task_list = pipeline_run['spec']['pipelineSpec']['tasks']
     for task in task_list:
         if task.get('taskRef', {}):
@@ -103,6 +104,8 @@ def _handle_tekton_pipeline_variables(pipeline_run):
                         break
                 if not found:
                     param = { 'name': key }
+                    if add_type:
+                        param['type'] = 'string'
                     task['taskSpec'].setdefault('params', []).append(param)
 
     return pipeline_run

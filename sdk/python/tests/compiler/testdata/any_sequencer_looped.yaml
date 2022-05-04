@@ -239,7 +239,9 @@ spec:
                     tekton.dev/template: ''
                 params:
                 - name: pipelineRun-name
+                  type: string
                 - name: pipelineRun-namespace
+                  type: string
               timeout: 525600m
               params:
               - name: pipelineRun-name

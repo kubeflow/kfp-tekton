@@ -70,12 +70,12 @@ metadata:
       \"status\"}], \"version\": \"any-seq-1@sha256=75c65b3423dd61b79c35122746a1f16d67a98ab7b570daa36de2d310e1e57c22\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "pipelineRun-name"}, {"name": "pipelineRun-namespace"}],
-      "results": [{"description": "/tmp/outputs/status/data", "name": "status"}],
-      "steps": [{"args": ["--namespace", "$(params.pipelineRun-namespace)", "--prName",
-      "$(params.pipelineRun-name)", "--taskList", "print-10,print-11", "--statusPath",
-      "$(results.status.path)"], "command": ["any-task"], "image": "dspipelines/any-sequencer:latest",
-      "name": "main"}]}, "timeout": "525600m"}]}}}]'
+      ""}}, "params": [{"name": "pipelineRun-name", "type": "string"}, {"name": "pipelineRun-namespace",
+      "type": "string"}], "results": [{"description": "/tmp/outputs/status/data",
+      "name": "status"}], "steps": [{"args": ["--namespace", "$(params.pipelineRun-namespace)",
+      "--prName", "$(params.pipelineRun-name)", "--taskList", "print-10,print-11",
+      "--statusPath", "$(results.status.path)"], "command": ["any-task"], "image":
+      "dspipelines/any-sequencer:latest", "name": "main"}]}, "timeout": "525600m"}]}}}]'
 spec:
   params:
   - name: param
