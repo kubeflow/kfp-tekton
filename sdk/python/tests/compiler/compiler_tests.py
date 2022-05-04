@@ -189,6 +189,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.custom_task_long_name import main_fn
     self._test_pipeline_workflow(main_fn, 'custom_task_long_name.yaml', skip_noninlined=True)
 
+  def test_multi_nested_loop_condi_workflow(self):
+    """
+    Test compiling a multi_nested_loop_condi workflow with multiple nested conditions inside loops.
+    """
+    from .testdata.multi_nested_loop_condi import loop_cond2
+    self._test_pipeline_workflow(loop_cond2, 'multi_nested_loop_condi.yaml', skip_noninlined=True)
+
   def test_data_passing_pipeline_complete(self):
     """
     Test compiling a pipeline_param_as_file workflow.

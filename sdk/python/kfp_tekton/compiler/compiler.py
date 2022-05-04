@@ -183,7 +183,7 @@ class TektonCompiler(Compiler):
   def _get_unique_id_code():
     return uuid.uuid4().hex[:5]
 
-  def _group_to_dag_template(self, group, inputs, outputs, dependencies, pipeline_name, group_type):
+  def _group_to_dag_template(self, group, inputs, outputs, dependencies, pipeline_name, group_type, opsgroups):
     """Generate template given an OpsGroup.
     inputs, outputs, dependencies are all helper dicts.
     """
@@ -356,9 +356,23 @@ class TektonCompiler(Compiler):
           self.loops_pipeline[group_name]['depends'].append({'org': depend, 'runAfter': group_name})
       for op in sub_group.groups + sub_group.ops:
         self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(op.name))
-        if hasattr(op, 'type') and op.type == 'condition' and op.ops:
-          for condition_op in op.ops:
-            self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
+        # Add all the condition nested ops into the pipeline loop sub-dag
+        nested_groups = []
+        if hasattr(op, 'type') and op.type == 'condition':
+          nested_groups.append(op.name)
+          if op.ops:
+            for condition_op in op.ops:
+              self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condition_op.name))
+          # If the nested op is a condition, find all the ops groups that are under the condition block
+          # until it reaches the end of the graph.
+          while nested_groups:
+            nested_group = nested_groups.pop(0)
+            opsgroup = opsgroups.get(nested_group, None)
+            if opsgroup and isinstance(opsgroup, dsl.OpsGroup) and opsgroup.type == 'condition':
+              condi_sub_groups = opsgroup.groups + opsgroup.ops
+              for condi_sub_group in condi_sub_groups:
+                  self.loops_pipeline[group_name]['task_list'].append(sanitize_k8s_name(condi_sub_group.name))
+                  nested_groups.append(condi_sub_group.name)
       self.loops_pipeline[group_name]['spec']['name'] = group_name
       self.loops_pipeline[group_name]['spec']['taskRef'] = {
         "apiVersion": "custom.tekton.dev/v1alpha1",
@@ -549,12 +563,12 @@ class TektonCompiler(Compiler):
     for opsgroup in opsgroups.keys():
       # Conditions and loops will get templates in Tekton
       if opsgroups[opsgroup].type == 'condition':
-        template = self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "condition")
+        template = self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "condition", opsgroups)
         templates.append(template)
       if opsgroups[opsgroup].type == 'for_loop':
-        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "loop")
+        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "loop", opsgroups)
       if opsgroups[opsgroup].type == 'graph':
-        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "graph")
+        self._group_to_dag_template(opsgroups[opsgroup], inputs, outputs, dependencies, pipeline.name, "graph", opsgroups)
 
     for op in pipeline.ops.values():
       templates.extend(op_to_steps_handler(op))
