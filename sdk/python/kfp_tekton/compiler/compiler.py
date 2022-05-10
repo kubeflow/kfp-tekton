@@ -1650,9 +1650,9 @@ class TektonCompiler(Compiler):
 
               # inject labels and annotations
               metadata = task['taskSpec'].get('metadata', {})
-              if len(addon_group_.annotation):
+              if len(addon_group_.annotations):
                 metadata['annotations'] = metadata.get('annotations', {})
-                metadata['annotations'].update(addon_group_.annotation)
+                metadata['annotations'].update(addon_group_.annotations)
                 task['taskSpec']['metadata'] = metadata
 
               if len(addon_group_.labels):

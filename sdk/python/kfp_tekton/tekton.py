@@ -342,13 +342,13 @@ class AddOnGroup(dsl.OpsGroup):
                 is_finally: bool = False,
                 parallelism: int = None,
                 params: Dict[str, Union[dsl.PipelineParam, str, int]] = {},
-                annotation: Dict[str, str] = {},
+                annotations: Dict[str, str] = {},
                 labels: Dict[str, str] = {}):
         self.task_type = task_type  # not been used yet
         self.kind = kind
         self.api_version = api_version
         self.params = params  # for spec.params
-        self.annotation = annotation  # for metadata.annotation
+        self.annotations = annotations  # for metadata.annotation
         self.labels = labels  # for metadata.labels
         if is_finally:
             pl = dsl._pipeline.Pipeline.get_default_pipeline()
