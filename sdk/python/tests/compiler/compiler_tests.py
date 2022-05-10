@@ -727,6 +727,14 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.any_sequencer_looped import any_sequencer_pipeline
     self._test_pipeline_workflow(any_sequencer_pipeline, 'any_sequencer_looped.yaml')
 
+  def test_addon_class(self):
+    """
+    Test AddOnGroup.
+    """
+    from .testdata.exception import addon_example
+
+    self._test_pipeline_workflow(addon_example, 'exception.yaml', skip_noninlined=True)
+
   def _test_pipeline_workflow_inlined_spec(self,
                               pipeline_function,
                               pipeline_yaml,

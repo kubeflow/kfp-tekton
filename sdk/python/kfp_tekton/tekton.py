@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Iterable, Union, Optional, TypeVar, Text, Tuple
+from typing import List, Iterable, Union, Optional, TypeVar, Text, Tuple, Dict
 
 from kfp.dsl import _pipeline_param, _for_loop, _pipeline
 from kfp import dsl
@@ -311,3 +311,57 @@ class Loop(dsl.ParallelFor):
   def enumerate(self) -> dsl.ParallelFor:
     self.call_enumerate = True
     return self
+
+
+class AddOnGroup(dsl.OpsGroup):
+    """
+    Represents an AddOn group containing ops and group of OpsGroups.
+    This class is the base class for a customized OpsGroup. Users can
+    develop their own OpsGroup. The customized OpsGroup maps to a
+    custom task in Tekton.
+    """
+    TYPE_NAME = 'addon_group'
+    TASK_TYPE = 'task'
+    RUN_TYPE = 'run'  # means custom task
+    DEFAULT_KIND = 'AddOnGroup'
+    DEFAULT_APIVERSION = 'custom.tekton.dev/v1alpha1'
+
+    @classmethod
+    def create_internal_param(cls, name: str, value: Optional[str] = None, param_type: Optional[str] = None) -> dsl.PipelineParam:
+        """
+        If a PipelineParam is used for underlying custom task and should not show up in spec.params, use this
+        function to create a PipelineParam and add it into the AddOnGroup.params.
+        """
+        rev = dsl.PipelineParam(name=name, value=value, param_type=param_type)
+        rev.addon_param = True
+        return rev
+
+    def __init__(self, task_type: str = RUN_TYPE,
+                kind: str = DEFAULT_KIND,
+                api_version: str = DEFAULT_APIVERSION,
+                is_finally: bool = False,
+                parallelism: int = None,
+                params: Dict[str, Union[dsl.PipelineParam, str, int]] = {},
+                annotations: Dict[str, str] = {},
+                labels: Dict[str, str] = {}):
+        self.task_type = task_type  # not been used yet
+        self.kind = kind
+        self.api_version = api_version
+        self.params = params  # for spec.params
+        self.annotations = annotations  # for metadata.annotation
+        self.labels = labels  # for metadata.labels
+        if is_finally:
+            pl = dsl._pipeline.Pipeline.get_default_pipeline()
+            if pl.groups[-1].type != 'pipeline':
+                raise ValueError(
+                    'You can only create a finally OpsGroup under the root OpsGroup of a Pipeline')
+        self.is_finally = is_finally  # a regular task or finally task
+        super().__init__(self.TYPE_NAME, parallelism=parallelism)
+
+    def post_task_spec(self, task_yaml: dict) -> dict:
+        """provide a post-hook api to update the task YAML"""
+        return task_yaml
+
+    def post_params(self, params: List):
+        """provide a post-hook api to update params"""
+        return params

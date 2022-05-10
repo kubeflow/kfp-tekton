@@ -15,7 +15,7 @@
 import json, copy, re
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
-from kfp_tekton.tekton import LOOP_GROUP_NAME_LENGTH
+from kfp_tekton.tekton import LOOP_GROUP_NAME_LENGTH, AddOnGroup
 
 
 def _process_argo_vars(workflow):
@@ -277,6 +277,22 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     if param['name'] != separator_param
                 ]
 
+        if custom_task[custom_task_key]['kind'] == 'addon':
+            # remove params that are created for internal use. those params have `addon_param` attribute
+            custom_task[custom_task_key]['spec']['params'] = [custom_task_param for custom_task_param
+                in custom_task[custom_task_key]['spec']['params']
+                if not hasattr(custom_task[custom_task_key]['_data'].params.get(custom_task_param['name'], {}), 'addon_param')]
+            # clean up params in spec.taskSpec.spec.pipelineSpec.params, remove those
+            # are not used by downstream Ops/OpsGroups. one-level down only
+            child_task_params = []
+            for task in custom_task_cr['spec']['pipelineSpec']['tasks']:
+                for task_param in task.get('params', []):
+                    if task_param['value'].startswith('$(') and task_param['value'].endswith(')'):
+                        child_task_params.append(task_param['name'])
+            custom_task_cr['spec']['pipelineSpec']['params'] = [value for value
+                                                    in custom_task_cr['spec']['pipelineSpec']['params']
+                                                    if value['name'] in child_task_params]
+
         # need to process task parameters to replace out of scope results
         # because nested graph cannot refer to task results outside of the sub-pipeline.
         custom_task_cr_task_names = [custom_task_cr_task['name'] for custom_task_cr_task in custom_task_cr['spec']['pipelineSpec']['tasks']]
@@ -286,9 +302,14 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     param_results = re.findall('\$\(tasks.([^ \t\n.:,;\{\}]+).results.([^ \t\n.:,;\{\}]+)\)', task_param['value'])
                     for param_result in param_results:
                         if param_result[0] not in custom_task_cr_task_names:
-                            task['params'] = json.loads(
-                                json.dumps(task['params']).replace(task_param['value'],
-                                '$(params.%s-%s)' % param_result))
+                            if param_result[0] == 'None':
+                                task['params'] = json.loads(
+                                    json.dumps(task['params']).replace(task_param['value'],
+                                    '$(params.%s)' % param_result[1]))
+                            else:
+                                task['params'] = json.loads(
+                                    json.dumps(task['params']).replace(task_param['value'],
+                                    '$(params.%s-%s)' % param_result))
         custom_task_crs.append(custom_task_cr)
         custom_task[custom_task_key]['spec']['params'] = sorted(custom_task[custom_task_key]['spec']['params'],
                                                                           key=lambda k: k['name'])
@@ -299,8 +320,6 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
     nested_custom_tasks = []
     custom_task_crs_namelist = []
     for custom_task_key in custom_task.keys():
-        if len(group_names[-1]) <= LOOP_GROUP_NAME_LENGTH:
-            sanitize_k8s_name(custom_task_key, max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True)
         custom_task_crs_namelist.append(custom_task_key)
     for custom_task_key in custom_task.keys():
         for inner_task_name in custom_task[custom_task_key]['task_list']:
@@ -435,7 +454,16 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     new_params_spec.append(workflow_param)
                     searched_params.append(workflow_param['name'])
             workflow['spec']['pipelineSpec']['tasks'][i]['params'] = new_params_spec
-    return custom_task_crs, workflow
+    # call post-hook api if there is
+    updated_custom_task_crs = []
+    for cr in custom_task_crs:
+        cr_task = custom_task.get(cr['metadata']['name'])
+        updated_custom_task_crs.append(
+            cr_task.get('_data').post_task_spec(cr)
+            if cr_task and cr_task.get('_data') and
+                isinstance(cr_task.get('_data'), AddOnGroup)
+            else cr)
+    return updated_custom_task_crs, workflow
 
 
 def find_ancestors(nested_custom_tasks: list, father_ct_name, ancestors: list, root_ct):
