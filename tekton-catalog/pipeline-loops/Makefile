@@ -21,7 +21,7 @@ ko: PACKAGE=github.com/google/ko/cmd/ko
 apply: $(info apply: Apply PipelineLoop controller to the k8s cluster )
 	$(KO) apply -f config
 
-test-all:  $(info test-all: run unit tests )
+test-all: update init $(info test-all: run unit tests )
 	go test -v -cover -timeout=${TIMEOUT_TESTS} ./...
 
 .PHONY: init
@@ -40,12 +40,12 @@ validate-testdata-python-sdk: cli $(info validate-testdata-python-sdk: validate 
 		\( -type f -name "*yaml" -not -path "*\test_data\*" -not -name "*component.yaml" \) \
 		-print0 | xargs -0 -n1 ${BIN_DIR}/pipelineloop-cli -f
 
-local: init
+local: update init
 	go build -o=${BIN_DIR}/pipelineloop-controller ./cmd/controller
 	go build -o=${BIN_DIR}/pipelineloop-webhook ./cmd/webhook
 	go build -o=${BIN_DIR}/pipelineloop-cli ./cmd/cli
 
-build-linux: init
+build-linux: update init
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/pipelineloop-controller ./cmd/controller
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/pipelineloop-webhook ./cmd/webhook
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/pipelineloop-cli ./cmd/cli
