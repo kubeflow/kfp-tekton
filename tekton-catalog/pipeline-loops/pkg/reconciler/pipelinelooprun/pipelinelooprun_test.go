@@ -1853,7 +1853,7 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		pipelineruns:         []*v1beta1.PipelineRun{},
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedParaPipelineRun, expectedParaPipelineRun1},
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedParaPipelineRun},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Reconcile a new run with a nested pipelineloop",

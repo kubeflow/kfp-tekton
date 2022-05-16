@@ -891,8 +891,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 				iterationElements = append(iterationElements, i)
 			}
 		}
-	}
-	if from == to && to == 0 && step != 0 {
+	} else if from == to && step != 0 {
 		// This is a special case, to emulate "python's enumerate" behaviour see issue #935
 		numberOfIterations = 1
 		iterationElements = append(iterationElements, from)
