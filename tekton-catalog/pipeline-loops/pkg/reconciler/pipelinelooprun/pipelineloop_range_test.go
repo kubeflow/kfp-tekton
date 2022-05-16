@@ -162,6 +162,15 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		expectedPipelineruns: []*v1beta1.PipelineRun{},
 		expectedEvents:       []string{"Normal Started ", "Normal Succeeded All PipelineRuns completed successfully"},
 	}, {
+		name:                 "Case from 0 to 0 and non zero step increment",
+		from:                 "0",
+		step:                 "1",
+		to:                   "0",
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange3},
+		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
+	}, {
 		name:                 "Case from < to and +ve step increment",
 		from:                 "-1",
 		step:                 "1",
