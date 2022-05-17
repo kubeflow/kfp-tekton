@@ -876,6 +876,12 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 		if step == 0 {
 			return 0, iterationElements, fmt.Errorf("invalid values step: %d found in runs", step)
 		}
+		if (to-from < step && step > 0) || (to-from > step && step < 0) {
+			// This is a special case, to emulate "python's enumerate" behaviour see issue #935
+			numberOfIterations = 1
+			iterationElements = append(iterationElements, from)
+			return numberOfIterations, iterationElements, nil
+		}
 		if (from > to && step > 0) || (from < to && step < 0) {
 			return 0, iterationElements, fmt.Errorf("invalid values for from:%d, to:%d & step: %d found in runs", from, to, step)
 		}
@@ -891,7 +897,8 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 				iterationElements = append(iterationElements, i)
 			}
 		}
-	} else if from == to && step != 0 {
+	}
+	if from == to && step != 0 {
 		// This is a special case, to emulate "python's enumerate" behaviour see issue #935
 		numberOfIterations = 1
 		iterationElements = append(iterationElements, from)
