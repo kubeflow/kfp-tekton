@@ -790,18 +790,22 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 	from := 0
 	step := 1
 	to := 0
+	fromProvided := false
+	toProvided := false
 	iterationElements := []interface{}{}
 	iterationParamStr := ""
 	iterationParamStrSeparator := ""
 	for _, p := range run.Spec.Params {
 		if p.Name == "from" {
 			from, _ = strconv.Atoi(p.Value.StringVal)
+			fromProvided = true
 		}
 		if p.Name == "step" {
 			step, _ = strconv.Atoi(p.Value.StringVal)
 		}
 		if p.Name == "to" {
 			to, _ = strconv.Atoi(p.Value.StringVal)
+			toProvided = true
 		}
 		if p.Name == tls.IterateParam {
 			if p.Value.Type == v1beta1.ParamTypeString {
@@ -872,7 +876,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 			}
 		}
 	}
-	if from != to {
+	if from != to && fromProvided && toProvided {
 		if step == 0 {
 			return 0, iterationElements, fmt.Errorf("invalid values step: %d found in runs", step)
 		}
@@ -898,7 +902,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 			}
 		}
 	}
-	if from == to && step != 0 {
+	if from == to && step != 0 && fromProvided && toProvided {
 		// This is a special case, to emulate "python's enumerate" behaviour see issue #935
 		numberOfIterations = 1
 		iterationElements = append(iterationElements, from)
