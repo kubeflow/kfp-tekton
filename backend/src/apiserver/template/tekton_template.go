@@ -322,8 +322,24 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 					t.getEnvVar("TRACK_ARTIFACTS", strconv.FormatBool(trackArtifacts)),
 					t.getEnvVar("STRIP_EOF", strconv.FormatBool(stripEOF)),
 				)
+				container.Command = []string{"sh", "-c"}
+				container.Args = []string{artifactScript}
 
-				step := workflowapi.Step{Container: container, Script: artifactScript}
+				step := workflowapi.Step{Container: container}
+
+				if task.TaskSpec.Results != nil && len(task.TaskSpec.Results) > 0 {
+					// move all results to /tekton/home/tep-results to avoid result duplication in copy-artifacts step
+					// TODO: this causes eof strip fails, since no results under /tekton/results after this step
+					moveResults := workflowapi.Step{Container: corev1.Container{
+						Image:   "busybox",
+						Name:    "move-all-results-to-tekton-home",
+						Command: []string{"sh", "-c"},
+						Args: []string{fmt.Sprintf("if [ -d /tekton/results ]; then mkdir -p %s; mv /tekton/results/* %s/ || true; fi\n",
+							common.GetPath4InternalResults(), common.GetPath4InternalResults())},
+					}}
+					task.TaskSpec.Steps = append(task.TaskSpec.Steps, moveResults)
+				}
+
 				task.TaskSpec.Steps = append(task.TaskSpec.Steps, step)
 			}
 		}
@@ -342,7 +358,8 @@ func (t *Tekton) injectDefaultScript(workflow util.Workflow, artifactScript stri
 	if hasArtifacts && len(artifacts) > 0 && trackArtifacts {
 		for _, artifact := range artifacts {
 			if len(artifact) == 2 {
-				artifactScript += fmt.Sprintf("push_artifact %s %s\n", artifact[0], artifact[1])
+				artifactScript += fmt.Sprintf("push_artifact \"%s\" \"%s/\"$(basename \"%s\")\n",
+					artifact[0], common.GetPath4InternalResults(), artifact[1])
 			} else {
 				glog.Warningf("Artifact annotations are missing for run %v.", workflow.Name)
 			}

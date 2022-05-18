@@ -45,6 +45,7 @@ const (
 	InjectDefaultScript                     string = "INJECT_DEFAULT_SCRIPT"
 	ApplyTektonCustomResource               string = "APPLY_TEKTON_CUSTOM_RESOURCE"
 	TerminateStatus                         string = "TERMINATE_STATUS"
+	Path4InternalResults                    string = "PATH_FOR_INTERNAL_RESULTS"
 )
 
 func IsPipelineVersionUpdatedByDefault() bool {
@@ -191,4 +192,8 @@ func GetArtifactScript() string {
 
 func GetTerminateStatus() string {
 	return GetStringConfigWithDefault(TerminateStatus, DefaultTerminateStatus)
+}
+
+func GetPath4InternalResults() string {
+	return GetStringConfigWithDefault(Path4InternalResults, DefaultPath4InternalResults)
 }
