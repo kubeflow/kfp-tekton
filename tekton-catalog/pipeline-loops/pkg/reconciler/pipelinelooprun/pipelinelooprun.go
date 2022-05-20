@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -83,8 +84,10 @@ const (
 	LabelKeyWorkflowRunId = "pipeline/runid"
 
 	DefaultNestedStackDepth = 30
+	DefaultIterationLimit   = 10000
 
 	MaxNestedStackDepthKey = "maxNestedStackDepth"
+	IterationLimitEnvKey   = "IterationLimit"
 
 	defaultIterationParamStrSeparator = ","
 )
@@ -104,6 +107,7 @@ var (
 	// Check that our Reconciler implements runreconciler.Interface
 	_                runreconciler.Interface = (*Reconciler)(nil)
 	cancelPatchBytes []byte
+	iterationLimit   int = DefaultIterationLimit
 )
 
 func init() {
@@ -116,6 +120,13 @@ func init() {
 	cancelPatchBytes, err = json.Marshal(patches)
 	if err != nil {
 		log.Fatalf("failed to marshal patch bytes in order to cancel: %v", err)
+	}
+	iterationLimitEnv, ok := os.LookupEnv(IterationLimitEnvKey)
+	if ok {
+		iterationLimitNum, err := strconv.Atoi(iterationLimitEnv)
+		if err == nil {
+			iterationLimit = iterationLimitNum
+		}
 	}
 }
 
@@ -365,6 +376,11 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if err != nil {
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
 			"Cannot determine number of iterations: %s", err)
+		return nil
+	}
+	if totalIterations > iterationLimit {
+		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
+			"Total number of iterations exceeds the limit: %d", iterationLimit)
 		return nil
 	}
 
