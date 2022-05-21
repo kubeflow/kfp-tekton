@@ -109,15 +109,13 @@ jobs:
         uses: actions/checkout@v2
       - name: "run go pipelineLoop unit tests"
         run: cd tekton-catalog/pipeline-loops && make test-all
-  create-cluster:
+  backend-integration:
     runs-on: ubuntu-latest
     steps:
       - name: Create k8s Kind Cluster
         uses: container-tools/kind-action@v1
         with:
           cluster_name: kfp-tekton
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
       - name: Checkout code
         uses: actions/checkout@v2
       - name: apiserver image
