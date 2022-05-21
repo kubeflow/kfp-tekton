@@ -109,3 +109,23 @@ jobs:
         uses: actions/checkout@v2
       - name: "run go pipelineLoop unit tests"
         run: cd tekton-catalog/pipeline-loops && make test-all
+  create-cluster:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.2.0
+        with:
+          cluster_name: kfp-tekton
+          kubectl_version: "v1.21.10"
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: "deploy kfp-tekton"
+        run: ./scripts/deploy/github/deploy-kfp.sh
+      - name: Install sdk
+        run: python -m pip install -e sdk/python
+      - name: "flip coin test"
+        run: ./scripts/deploy/github/e2e-test.sh
