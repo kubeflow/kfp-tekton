@@ -47,6 +47,13 @@ then
   exit $EXIT_CODE
 fi
 
+pushd "$KUSTOMIZE_DIR" > /dev/null
+kustomize edit set image "docker.io/aipipeline/api-server=kind-registry:5000/kfp-tekton/apiserver:latest"
+kustomize edit set image "docker.io/aipipeline/persistenceagent=kind-registry:5000/kfp-tekton/persistenceagent:latest"
+kustomize edit set image "docker.io/aipipeline/metadata-writer=kind-registry:5000/kfp-tekton/metadata-writer:latest"
+kustomize edit set image "docker.io/aipipeline/scheduledworkflow=kind-registry:5000/kfp-tekton/scheduledworkflow:latest"
+kustomize edit set image "docker.io/aipipeline/cache-server=kind-registry:5000/kfp-tekton/cache-server:latest"
+popd > /dev/null
 
 # Build manifest
 ./kustomize build "$KUSTOMIZE_DIR" -o "${MANIFEST}"

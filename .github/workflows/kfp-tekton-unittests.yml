@@ -113,12 +113,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1.2.0
+        uses: container-tools/kind-action@v1
         with:
           cluster_name: kfp-tekton
-          kubectl_version: "v1.21.10"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: apiserver image
+        run: docker build -t kind-registry:5000/kfp-tekton/apiserver:latest -f backend/Dockerfile . && docker push kind-registry:5000/kfp-tekton/apiserver:latest
+      - name: persistentagent image
+        run: docker build -t kind-registry:5000/kfp-tekton/persistenceagent:latest -f backend/Dockerfile.persistenceagent . && docker push kind-registry:5000/kfp-tekton/persistenceagent:latest
+      - name: metadata-writer image
+        run: docker build -t kind-registry:5000/kfp-tekton/metadata-writer:latest -f backend/metadata_writer/Dockerfile . && docker push kind-registry:5000/kfp-tekton/metadata-writer:latest
+      - name: scheduledworkflow image
+        run: docker build -t kind-registry:5000/kfp-tekton/scheduledworkflow:latest -f backend/Dockerfile.scheduledworkflow . && docker push kind-registry:5000/kfp-tekton/scheduledworkflow:latest
+      - name: cache-server image
+        run: docker build -t kind-registry:5000/kfp-tekton/cache-server:latest -f backend/Dockerfile.cacheserver . && docker push kind-registry:5000/kfp-tekton/cache-server:latest
       - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
