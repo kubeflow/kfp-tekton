@@ -233,6 +233,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.nested_recur_custom_task import double_recursion_test
     self._test_pipeline_workflow(double_recursion_test, 'nested_recur_custom_task.yaml')
 
+  def test_param_same_prefix_workflow(self):
+    """
+    Test compiling a param that has same task prefix workflow.
+    """
+    from .testdata.param_same_prefix import prefixes
+    self._test_pipeline_workflow(prefixes, 'param_same_prefix.yaml')
+
   def test_nested_recur_params_workflow(self):
     """
     Test compiling a nested recursive workflow.
