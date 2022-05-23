@@ -879,7 +879,7 @@ export default class Buttons {
   ): void {
     this._dialogActionHandler(
       selectedIds,
-      `Experiment${s(selectedIds)} will be moved to the Archive section, where you can still view${
+      `Experiment${s(selectedIds)} will be moved to the Archive section, where you can still view ${
         selectedIds.length === 1 ? 'its' : 'their'
       } details. All runs in this archived experiment will be archived. All jobs in this archived experiment will be disabled. Use the Restore action on the experiment details page to restore the experiment${s(
         selectedIds,
