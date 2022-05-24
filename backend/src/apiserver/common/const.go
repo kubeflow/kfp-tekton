@@ -83,8 +83,7 @@ const (
 )
 
 // For backward compatibility. Remove after 0.3 release
-const DefaultArtifactScript string = "#!/usr/bin/env sh\n" +
-	"push_artifact() {\n" +
+const DefaultArtifactScript string = "push_artifact() {\n" +
 	"    tar -cvzf $1.tgz $2\n" +
 	"    mc cp $1.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/$1.tgz\n" +
 	"}\n" +
@@ -99,6 +98,8 @@ const DefaultArtifactScript string = "#!/usr/bin/env sh\n" +
 
 // Default Tekton 0.25.0+ Terminate Status.
 const DefaultTerminateStatus string = "Cancelled"
+
+const DefaultPath4InternalResults string = "/tekton/home/tep-results"
 
 func ToModelResourceType(apiType api.ResourceType) (model.ResourceType, error) {
 	switch apiType {
