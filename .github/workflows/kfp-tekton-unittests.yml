@@ -118,16 +118,8 @@ jobs:
           cluster_name: kfp-tekton
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: apiserver image
-        run: docker build -t kind-registry:5000/kfp-tekton/apiserver:latest -f backend/Dockerfile . && docker push kind-registry:5000/kfp-tekton/apiserver:latest
-      - name: persistentagent image
-        run: docker build -t kind-registry:5000/kfp-tekton/persistenceagent:latest -f backend/Dockerfile.persistenceagent . && docker push kind-registry:5000/kfp-tekton/persistenceagent:latest
-      - name: metadata-writer image
-        run: docker build -t kind-registry:5000/kfp-tekton/metadata-writer:latest -f backend/metadata_writer/Dockerfile . && docker push kind-registry:5000/kfp-tekton/metadata-writer:latest
-      - name: scheduledworkflow image
-        run: docker build -t kind-registry:5000/kfp-tekton/scheduledworkflow:latest -f backend/Dockerfile.scheduledworkflow . && docker push kind-registry:5000/kfp-tekton/scheduledworkflow:latest
-      - name: cache-server image
-        run: docker build -t kind-registry:5000/kfp-tekton/cache-server:latest -f backend/Dockerfile.cacheserver . && docker push kind-registry:5000/kfp-tekton/cache-server:latest
+      - name: build images
+        run: ./scripts/deploy/github/build-images.sh
       - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
