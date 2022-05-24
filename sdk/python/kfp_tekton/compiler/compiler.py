@@ -318,7 +318,7 @@ class TektonCompiler(Compiler):
                 replace_str = param[1] + '-'
                 self.loops_pipeline[group_name]['spec']['params'].append({
                   'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
-                    param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
+                    param[1], sanitize_k8s_name(param[0].replace(replace_str, '', 1))
                   )
                 })
               if not param[1]:
@@ -362,7 +362,7 @@ class TektonCompiler(Compiler):
             replace_str = param[1] + '-'
             custom_task['spec']['params'].append({
               'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
-                param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
+                param[1], sanitize_k8s_name(param[0].replace(replace_str, '', 1))
               )
             })
           if not param[1] and param[0] not in param_list:
@@ -1167,7 +1167,7 @@ class TektonCompiler(Compiler):
     opgroup_name_to_parent_groups = self._get_groups_for_opsgroups(pipeline.groups[0])
     for loop_task_key in self.loops_pipeline.keys():
       task_name_prefix = '-'.join(self._group_names[:-1] + [""])
-      raw_task_key = loop_task_key.replace(task_name_prefix, "")
+      raw_task_key = loop_task_key.replace(task_name_prefix, "", 1)
       for key in opgroup_name_to_parent_groups.keys():
         if raw_task_key in key:
           raw_task_key = key
