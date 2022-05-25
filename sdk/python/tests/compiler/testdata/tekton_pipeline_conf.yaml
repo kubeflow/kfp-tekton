@@ -58,5 +58,5 @@ spec:
   podTemplate:
     securityContext:
       run_as_user: 0
-    automountServiceAccountToken: "false"
+    automountServiceAccountToken: 0
   timeout: 525600m

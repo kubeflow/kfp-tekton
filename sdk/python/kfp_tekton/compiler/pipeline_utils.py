@@ -37,7 +37,9 @@ class TektonPipelineConf(dsl.PipelineConf):
             .add_pipeline_label(self.pipeline_labels)\
             .add_pipeline_annotation(self.pipeline_annotations)\
             .set_tekton_inline_spec(self.tekton_inline_spec)\
-            .set_resource_in_separate_yaml(self.resource_in_separate_yaml)
+            .set_resource_in_separate_yaml(self.resource_in_separate_yaml)\
+            .set_security_context(self.security_context)\
+            .set_automount_service_account_token(self.automount_service_account_token)
 
     def add_pipeline_label(self, label_name: str, value: str):
         self.pipeline_labels[label_name] = value
