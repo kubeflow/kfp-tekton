@@ -64,6 +64,6 @@ class TektonPipelineConf(dsl.PipelineConf):
         self.security_context = value
         return self
 
-    def set_automount_service_account_token(self, value: str):
+    def set_automount_service_account_token(self, value: bool):
         self.automount_service_account_token = value
         return self

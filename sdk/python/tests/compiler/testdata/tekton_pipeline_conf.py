@@ -46,7 +46,7 @@ pipeline_conf.add_pipeline_label('test', 'label')
 pipeline_conf.add_pipeline_label('test2', 'label2')
 pipeline_conf.add_pipeline_annotation('test', 'annotation')
 pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0))
-pipeline_conf.set_automount_service_account_token('false')
+pipeline_conf.set_automount_service_account_token(False)
 
 
 if __name__ == "__main__":

@@ -1329,10 +1329,9 @@ class TektonCompiler(Compiler):
           pipeline_run['spec']['podTemplate']['securityContext'] = \
             pipeline_run['spec']['podTemplate'].setdefault('securityContext', {})
           pipeline_run['spec']['podTemplate']['securityContext'][key] = value
-    if self.automount_service_account_token:
+    if self.automount_service_account_token is not None:
       pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
-      pipeline_run['spec']['podTemplate']['automountServiceAccountToken'] = \
-        True if strtobool(self.automount_service_account_token) else False
+      pipeline_run['spec']['podTemplate']['automountServiceAccountToken'] = self.automount_service_account_token
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []
