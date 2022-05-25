@@ -140,6 +140,8 @@ class TektonCompiler(Compiler):
     self.tekton_inline_spec = True
     self.resource_in_separate_yaml = False
     self.produce_taskspec = True
+    self.security_context = None
+    self.automount_service_account_token = None
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -147,6 +149,8 @@ class TektonCompiler(Compiler):
     self.pipeline_annotations = tekton_pipeline_conf.pipeline_annotations
     self.tekton_inline_spec = tekton_pipeline_conf.tekton_inline_spec
     self.resource_in_separate_yaml = tekton_pipeline_conf.resource_in_separate_yaml
+    self.security_context = tekton_pipeline_conf.security_context
+    self.automount_service_account_token = tekton_pipeline_conf.automount_service_account_token
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -1317,6 +1321,17 @@ class TektonCompiler(Compiler):
     if self.pipeline_annotations:
       pipeline_run['metadata']['annotations'] = pipeline_run['metadata'].setdefault('annotations', {})
       pipeline_run['metadata']['annotations'].update(self.pipeline_annotations)
+
+    if self.security_context:
+      pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
+      for key, value in self.security_context.to_dict().items():
+        if value is not None:
+          pipeline_run['spec']['podTemplate']['securityContext'] = \
+            pipeline_run['spec']['podTemplate'].setdefault('securityContext', {})
+          pipeline_run['spec']['podTemplate']['securityContext'][key] = value
+    if self.automount_service_account_token:
+      pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
+      pipeline_run['spec']['podTemplate']['automountServiceAccountToken'] = self.automount_service_account_token
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []

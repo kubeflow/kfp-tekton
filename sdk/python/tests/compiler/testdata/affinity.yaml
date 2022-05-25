@@ -40,6 +40,8 @@ spec:
           - sh
           - -c
           image: busybox
+          securityContext:
+            runAsUser: 0
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''

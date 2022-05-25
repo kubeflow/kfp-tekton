@@ -14,6 +14,7 @@
 
 from kfp import dsl, components
 import kfp_tekton
+from kubernetes.client import V1SecurityContext
 
 
 def echo_op():
@@ -44,6 +45,8 @@ pipeline_conf = kfp_tekton.compiler.pipeline_utils.TektonPipelineConf()
 pipeline_conf.add_pipeline_label('test', 'label')
 pipeline_conf.add_pipeline_label('test2', 'label2')
 pipeline_conf.add_pipeline_annotation('test', 'annotation')
+pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0))
+pipeline_conf.set_automount_service_account_token('false')
 
 
 if __name__ == "__main__":
