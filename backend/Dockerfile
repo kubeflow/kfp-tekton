@@ -54,7 +54,7 @@ RUN set -e; \
         mode=`< /samples/sample_config.json jq ".[] | select(.file == \"${pipeline_yaml}\") | (if .mode == null then \"V1\" else .mode end)" --raw-output`; \
         mv "$pipeline_py" "${pipeline_py}.tmp"; \
         echo 'import kfp; kfp.components.default_base_image_or_builder="gcr.io/google-appengine/python:2020-03-31-141326"' | cat - "${pipeline_py}.tmp" > "$pipeline_py"; \
-        dsl-compile-tekton --py "$pipeline_py" --output "$pipeline_yaml" --mode "$mode" || python3 "$pipeline_py"; \
+        dsl-compile-tekton --py "$pipeline_py" --output "$pipeline_yaml" || python3 "$pipeline_py"; \
     done
 
 
