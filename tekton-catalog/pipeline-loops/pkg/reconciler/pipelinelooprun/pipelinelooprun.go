@@ -829,7 +829,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 		}
 		if p.Name == tls.IterateParam {
 			if p.Value.Type == v1beta1.ParamTypeString {
-				iterationParamStr = strings.Trim(p.Value.StringVal, " ")
+				iterationParamStr = p.Value.StringVal
 			}
 			if p.Value.Type == v1beta1.ParamTypeArray {
 				numberOfIterations = len(p.Value.ArrayVal)
@@ -957,7 +957,7 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 		}
 		if iterationParam != nil {
 			if iterationParamStrSeparator != nil && iterationParamStrSeparator.Value.StringVal != "" {
-				iterationParamStr := strings.Trim(iterationParam.Value.StringVal, " ")
+				iterationParamStr := iterationParam.Value.StringVal
 				stringArr := strings.Split(iterationParamStr, iterationParamStrSeparator.Value.StringVal)
 				out = append(out, v1beta1.Param{
 					Name:  iterationParam.Name,
