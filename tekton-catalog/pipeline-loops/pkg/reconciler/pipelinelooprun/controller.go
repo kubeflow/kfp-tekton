@@ -40,6 +40,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -191,6 +192,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
 			pipelineRunLister:     pipelineRunInformer.Lister(),
 			cacheStore:            cacheStore,
+			clock:                 clock.RealClock{},
 		}
 
 		impl := runreconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {

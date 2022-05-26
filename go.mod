@@ -6,7 +6,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/denisenkom/go-mssqldb v0.9.0 // indirect
 	github.com/eapache/go-resiliency v1.2.0
-	github.com/fsnotify/fsnotify v1.4.9
+	github.com/fsnotify/fsnotify v1.5.1
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-ini/ini v1.62.0 // indirect
 	github.com/go-openapi/errors v0.19.9
@@ -15,10 +15,10 @@ require (
 	github.com/go-openapi/swag v0.19.15
 	github.com/go-openapi/validate v0.20.1
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/golang/glog v1.0.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/addlicense v0.0.0-20200906110928-a0294312aa76
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.7
 	github.com/google/uuid v1.3.0
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.8.0
@@ -26,44 +26,35 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/kubeflow/pipelines/api v0.0.0-20211026071850-2e3fb5efff56
 	github.com/lestrrat-go/strftime v1.0.4
-	github.com/lib/pq v1.9.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/peterhellberg/duration v0.0.0-20191119133758-ec6baeebcd10
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.11.1
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
-	github.com/spf13/viper v1.8.1
+	github.com/spf13/viper v1.10.0
 	github.com/stretchr/testify v1.7.0
-	github.com/tektoncd/pipeline v0.31.4
+	github.com/tektoncd/pipeline v0.35.1
 	github.com/tidwall/pretty v1.1.0 // indirect
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
-	google.golang.org/genproto v0.0.0-20211016002631-37fc39342514
-	google.golang.org/grpc v1.41.0
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+	google.golang.org/genproto v0.0.0-20220303160752-862486edd9cc
+	google.golang.org/grpc v1.44.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.27.1
-	k8s.io/api v0.21.5
-	k8s.io/apimachinery v0.21.5
-	k8s.io/client-go v0.21.5
-	k8s.io/code-generator v0.21.5
-	sigs.k8s.io/controller-runtime v0.9.7
+	k8s.io/api v0.23.5
+	k8s.io/apimachinery v0.23.5
+	k8s.io/client-go v0.23.5
+	k8s.io/code-generator v0.23.5
+	sigs.k8s.io/controller-runtime v0.11.2
 )
 
 replace (
-	cloud.google.com/go => cloud.google.com/go v0.81.0
-	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.9.0
 	github.com/prometheus/common => github.com/prometheus/common v0.26.0
 	go.opencensus.io => go.opencensus.io v0.22.5
-	k8s.io/api => k8s.io/api v0.21.5
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.21.5
-	k8s.io/apimachinery => k8s.io/apimachinery v0.21.5
-	k8s.io/apiserver => k8s.io/apiserver v0.21.5
-	k8s.io/client-go => k8s.io/client-go v0.21.5
-	k8s.io/code-generator => k8s.io/code-generator v0.21.5
 )
 
 go 1.13

@@ -28,11 +28,11 @@ If you would like to do it in development mode, or if you already have a Kubeflo
 ## Prerequisites
 
 1. [Install Tekton](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes).
-    - Minimum version: `0.30.0`
+    - Minimum version: `0.35.1`
 2. Patch the Tekton configs for KFP
     ```shell
     kubectl patch cm feature-flags -n tekton-pipelines \
-        -p '{"data":{"enable-custom-tasks": "true", "enable-api-fields": "alpha"}}'
+        -p '{"data":{"enable-custom-tasks": "true"}}'
     ```
 3. Clone this repository
     ```
