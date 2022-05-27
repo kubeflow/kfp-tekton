@@ -804,6 +804,16 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 	return highestIteration, currentRunningPrs, failedPrs, nil
 }
 
+func getIntegerParamValue(parm v1beta1.Param) (int, error) {
+	fromStr := strings.TrimSuffix(parm.Value.StringVal, "\n")
+	fromStr = strings.Trim(fromStr, " ")
+	retVal, err := strconv.Atoi(fromStr)
+	if err != nil {
+		err = fmt.Errorf("input \"%s\" is not a number", parm.Name)
+	}
+	return retVal, err
+}
+
 func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec) (int, []interface{}, error) {
 	// Find the iterate parameter.
 	numberOfIterations := -1
@@ -815,21 +825,26 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 	iterationElements := []interface{}{}
 	iterationParamStr := ""
 	iterationParamStrSeparator := ""
+	var err error
 	for _, p := range run.Spec.Params {
 		if p.Name == "from" {
-			from, _ = strconv.Atoi(p.Value.StringVal)
-			fromProvided = true
+			from, err = getIntegerParamValue(p)
+			if err == nil {
+				fromProvided = true
+			}
 		}
 		if p.Name == "step" {
 			step, _ = strconv.Atoi(p.Value.StringVal)
 		}
 		if p.Name == "to" {
-			to, _ = strconv.Atoi(p.Value.StringVal)
-			toProvided = true
+			to, err = getIntegerParamValue(p)
+			if err == nil {
+				toProvided = true
+			}
 		}
 		if p.Name == tls.IterateParam {
 			if p.Value.Type == v1beta1.ParamTypeString {
-				iterationParamStr = strings.Trim(p.Value.StringVal, " ")
+				iterationParamStr = p.Value.StringVal
 			}
 			if p.Value.Type == v1beta1.ParamTypeArray {
 				numberOfIterations = len(p.Value.ArrayVal)
@@ -846,6 +861,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 	}
 	if iterationParamStr != "" {
 		// Transfer p.Value to Array.
+		err = nil //reset the err
 		if iterationParamStrSeparator != "" {
 			stringArr := strings.Split(iterationParamStr, iterationParamStrSeparator)
 			numberOfIterations = len(stringArr)
@@ -927,7 +943,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 		numberOfIterations = 1
 		iterationElements = append(iterationElements, from)
 	}
-	return numberOfIterations, iterationElements, nil
+	return numberOfIterations, iterationElements, err
 }
 
 func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int, currentIterationItem string) []v1beta1.Param {
@@ -957,7 +973,7 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 		}
 		if iterationParam != nil {
 			if iterationParamStrSeparator != nil && iterationParamStrSeparator.Value.StringVal != "" {
-				iterationParamStr := strings.Trim(iterationParam.Value.StringVal, " ")
+				iterationParamStr := iterationParam.Value.StringVal
 				stringArr := strings.Split(iterationParamStr, iterationParamStrSeparator.Value.StringVal)
 				out = append(out, v1beta1.Param{
 					Name:  iterationParam.Name,
