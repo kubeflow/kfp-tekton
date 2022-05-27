@@ -1225,7 +1225,7 @@ var expectedPipelineRunIteration1 = &v1beta1.PipelineRun{
 	},
 }
 
-var expectedPipelineRunIteration1WithWhiteSpace = &v1beta1.PipelineRun{
+var expectedPipelineRunIterationWithWhiteSpace = &v1beta1.PipelineRun{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "run-pipelineloop-00001-9l9zj",
 		Namespace: "foo",
@@ -1993,7 +1993,7 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		pipelineruns:         []*v1beta1.PipelineRun{},
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIteration1WithWhiteSpace},
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIterationWithWhiteSpace},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
 	},
 	}
