@@ -251,6 +251,24 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
 		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange3},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Case from == 0\n",
+		from:                 "0\n",
+		step:                 "-1",
+		to:                   "-1\n",
+		expectedStatus:       corev1.ConditionUnknown,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
+		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange3},
+		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
+	}, {
+		name:                 "Case from == abc\n",
+		from:                 "abc",
+		step:                 "-1",
+		to:                   "edf",
+		expectedStatus:       corev1.ConditionFalse,
+		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
+		expectedPipelineruns: []*v1beta1.PipelineRun{},
+		expectedEvents:       []string{"Normal Started ", "Warning Failed Cannot determine number of iterations: input \"to\" is not a number"},
 	}}
 
 	for _, tc := range testcases {
