@@ -467,7 +467,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 				Iteration:     highestIteration,
 				IterationItem: iterationElements[highestIteration-1],
-				Status:        &pr.Status,
+				Status:        getPipelineRunStatusWithoutPipelineSpec(&pr.Status),
 			}
 			logger.Infof("Retried failed pipelineRun: %s with new pipelineRun: %s", failedPr.Name, pr.Name)
 		}
@@ -511,10 +511,10 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 	actualParallelism := 1
 	// if Parallelism is bigger then totalIterations means there's no limit
-	if status.PipelineLoopSpec.Parallelism > totalIterations {
+	if pipelineLoopSpec.Parallelism > totalIterations {
 		actualParallelism = totalIterations
-	} else if status.PipelineLoopSpec.Parallelism > 0 {
-		actualParallelism = status.PipelineLoopSpec.Parallelism
+	} else if pipelineLoopSpec.Parallelism > 0 {
+		actualParallelism = pipelineLoopSpec.Parallelism
 	}
 	if len(currentRunningPrs) >= actualParallelism {
 		logger.Infof("Currently %d pipelinerun started, meet parallelism %d, waiting...", len(currentRunningPrs), actualParallelism)
@@ -545,7 +545,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 			Iteration:     nextIteration,
 			IterationItem: iterationElements[nextIteration-1],
-			Status:        &pr.Status,
+			Status:        getPipelineRunStatusWithoutPipelineSpec(&pr.Status),
 		}
 		nextIteration++
 		if nextIteration > totalIterations {
@@ -757,7 +757,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 			Iteration:     iteration,
 			IterationItem: iterationElements[iteration-1],
-			Status:        &pr.Status,
+			Status:        getPipelineRunStatusWithoutPipelineSpec(&pr.Status),
 		}
 		if iteration > highestIteration {
 			highestIteration = iteration
@@ -1125,4 +1125,19 @@ func storePipelineLoopSpec(status *pipelineloopv1alpha1.PipelineLoopRunStatus, t
 	if status.PipelineLoopSpec == nil {
 		status.PipelineLoopSpec = tls
 	}
+}
+
+// Storing PipelineSpec and TaskSpec in PipelineRunStatus is a source of significant memory consumption and OOM failures.
+// Additionally, performance of status update in Run reconciler is impacted.
+// PipelineSpec and TaskSpec seems to be redundant in this place.
+// See issue: https://github.com/kubeflow/kfp-tekton/issues/962
+func getPipelineRunStatusWithoutPipelineSpec(status *v1beta1.PipelineRunStatus) *v1beta1.PipelineRunStatus {
+	s := status.DeepCopy()
+	s.PipelineSpec = nil
+	if s.TaskRuns != nil {
+		for _, taskRun := range s.TaskRuns {
+			taskRun.Status.TaskSpec = nil
+		}
+	}
+	return s
 }
