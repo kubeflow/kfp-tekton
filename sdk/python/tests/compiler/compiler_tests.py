@@ -28,6 +28,7 @@ import yaml
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton import compiler
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
+from kubernetes.client import V1SecurityContext
 
 # temporarily set this flag to True in order to (re)generate new "golden" YAML
 # files after making code changes that modify the expected YAML output.
@@ -708,6 +709,8 @@ class TestTektonCompiler(unittest.TestCase):
     pipeline_conf.add_pipeline_label('test', 'label')
     pipeline_conf.add_pipeline_label('test2', 'label2')
     pipeline_conf.add_pipeline_annotation('test', 'annotation')
+    pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0))
+    pipeline_conf.set_automount_service_account_token(False)
     self._test_pipeline_workflow(echo_pipeline, 'tekton_pipeline_conf.yaml',
                                  tekton_pipeline_conf=pipeline_conf,
                                  skip_noninlined=True)
