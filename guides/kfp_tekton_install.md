@@ -13,7 +13,7 @@
 
 ## Installation Targets and Prerequisites
 
-A Kubernetes cluster `v1.20` that has least 8 vCPU and 16 GB memory.
+A Kubernetes cluster `v1.21` that has least 8 vCPU and 16 GB memory.
 
 ### IBM Cloud Kubernetes Service (IKS)
 
@@ -31,6 +31,10 @@ A Kubernetes cluster `v1.20` that has least 8 vCPU and 16 GB memory.
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
 
    Visit [Kubeflow Installation](https://www.kubeflow.org/docs/started/) for setting up the preferred environment to deploy Kubeflow.
+
+### Alternative
+
+   If you want to deploy locally, you can [deploy MLX on KIND](https://github.com/machine-learning-exchange/mlx/blob/main/docs/install-mlx-on-kind.md). MLX in build on top of kfp-tekton, so you will have Kubeflow Pipeline with Tekton installed after finish deploy MLX on KIND.
 
 ## Standalone Kubeflow Pipelines with Tekton Backend Deployment
 
