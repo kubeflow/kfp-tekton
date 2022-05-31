@@ -6,6 +6,7 @@
   * [IBM Cloud Kubernetes Service (IKS)](#ibm-cloud-kubernetes-service-iks)
   * [OpenShift](#openshift)
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
+  * [Alternative KIND deployment](#alternative-kind-deployment)
 - [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
 - [Upgrade to Multi-User KFP-Tekton on Kubeflow](#upgrade-to-multi-user-kfp-tekton-on-kubeflow)
@@ -32,7 +33,7 @@ A Kubernetes cluster `v1.21` that has least 8 vCPU and 16 GB memory.
 
    Visit [Kubeflow Installation](https://www.kubeflow.org/docs/started/) for setting up the preferred environment to deploy Kubeflow.
 
-### Alternative
+### Alternative KIND deployment
 
    If you want to deploy locally, you can [deploy MLX on KIND](https://github.com/machine-learning-exchange/mlx/blob/main/docs/install-mlx-on-kind.md). MLX in build on top of kfp-tekton, so you will have Kubeflow Pipeline with Tekton installed after finish deploy MLX on KIND.
 
