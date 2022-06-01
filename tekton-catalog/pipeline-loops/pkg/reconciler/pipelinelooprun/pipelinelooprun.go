@@ -834,7 +834,10 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 			}
 		}
 		if p.Name == "step" {
-			step, _ = strconv.Atoi(p.Value.StringVal)
+			step, err = getIntegerParamValue(p)
+			if err != nil {
+				return 0, iterationElements, err
+			}
 		}
 		if p.Name == "to" {
 			to, err = getIntegerParamValue(p)
