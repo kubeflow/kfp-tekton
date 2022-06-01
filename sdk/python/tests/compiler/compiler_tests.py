@@ -132,7 +132,7 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling an artifact output workflow.
     """
     from .testdata.artifact_outputs import artifact_outputs
-    self._test_pipeline_workflow(artifact_outputs, 'artifact_outputs.yaml')
+    self._test_pipeline_workflow(artifact_outputs, 'artifact_outputs.yaml', skip_noninlined=True)
 
   def test_recur_cond_workflow(self):
     """
