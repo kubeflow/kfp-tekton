@@ -127,6 +127,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.recur_cond import recur_and_condition
     self._test_pipeline_workflow(recur_and_condition, 'recur_cond.yaml')
 
+  def test_artifact_outputs_workflow(self):
+    """
+    Test compiling an artifact output workflow.
+    """
+    from .testdata.artifact_outputs import artifact_outputs
+    self._test_pipeline_workflow(artifact_outputs, 'artifact_outputs.yaml')
+
   def test_recur_cond_workflow(self):
     """
     Test compiling a loop workflow using tekton loop dsl extension.

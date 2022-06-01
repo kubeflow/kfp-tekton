@@ -25,6 +25,8 @@ from os import environ as env
 
 BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
 BIG_DATA_PATH_FORMAT = "/".join(["$(workspaces.$TASK_NAME.path)", BIG_DATA_MIDPATH, "$TASKRUN_NAME", "$TASK_PARAM_NAME"])
+ARTIFACT_OUTPUT_LABEL_KEY = 'output_type'
+ARTIFACT_OUTPUT_LABEL_VALUE = 'artifact'
 
 
 def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix: str) -> dict:
@@ -489,7 +491,8 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
     # Data passing for the task outputs
     appended_taskrun_name = False
     for task_output in task.get('taskSpec', {}).get('results', []):
-        if (task_name, task_output.get('name')) in outputs_tasks:
+        if (task_name, task_output.get('name')) in outputs_tasks or \
+            task_spec.get('metadata', {}).get('labels', {}).get(ARTIFACT_OUTPUT_LABEL_KEY, '') == ARTIFACT_OUTPUT_LABEL_VALUE:
             if not task.get('taskSpec', {}).setdefault('workspaces', []):
                 task.get('taskSpec', {})['workspaces'].append({"name": task_name})
             # Replace the args for the outputs in the task_spec
