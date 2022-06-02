@@ -36,7 +36,7 @@ require (
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
 	github.com/spf13/viper v1.10.0
 	github.com/stretchr/testify v1.7.0
-	github.com/tektoncd/pipeline v0.35.1
+	github.com/tektoncd/pipeline v0.36.0
 	github.com/tidwall/pretty v1.1.0 // indirect
 	go.uber.org/zap v1.19.1
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
