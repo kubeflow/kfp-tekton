@@ -47,6 +47,7 @@ spec:
           image: busybox
         results:
         - name: download
+          type: string
           description: /tmp/outputs/download/data
         metadata:
           labels:

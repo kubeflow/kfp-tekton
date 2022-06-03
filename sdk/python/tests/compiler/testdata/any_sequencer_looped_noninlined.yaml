@@ -51,18 +51,18 @@ metadata:
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
-      "output-value"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n",
-      "print-10", "$(results.output-value.path)"], "image": "alpine:3.6", "name":
-      "main"}]}, "timeout": "525600m"}, {"name": "print-11", "taskSpec": {"metadata":
+      "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
+      -e\necho $0 > $1\n", "print-10", "$(results.output-value.path)"], "image": "alpine:3.6",
+      "name": "main"}]}, "timeout": "525600m"}, {"name": "print-11", "taskSpec": {"metadata":
       {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
       \"print-11\", \"outputs\": [{\"description\": \"Represents an output paramter.\",
       \"name\": \"output_value\", \"type\": \"String\"}], \"version\": \"print-11@sha256=3b423bb0ced0bc21fb9157ce814a38c94d3e72718a33cfa8b4ef4f75abe725bd\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
-      "output-value"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n",
-      "print-11", "$(results.output-value.path)"], "image": "alpine:3.6", "name":
-      "main"}]}, "timeout": "525600m"}, {"name": "any-seq-1", "params": [{"name":
+      "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
+      -e\necho $0 > $1\n", "print-11", "$(results.output-value.path)"], "image": "alpine:3.6",
+      "name": "main"}]}, "timeout": "525600m"}, {"name": "any-seq-1", "params": [{"name":
       "pipelineRun-name", "value": "$(context.pipelineRun.name)"}, {"name": "pipelineRun-namespace",
       "value": "$(context.pipelineRun.namespace)"}], "taskSpec": {"metadata": {"annotations":
       {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"any-seq-1\",
@@ -72,7 +72,7 @@ metadata:
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "pipelineRun-name", "type": "string"}, {"name": "pipelineRun-namespace",
       "type": "string"}], "results": [{"description": "/tmp/outputs/status/data",
-      "name": "status"}], "steps": [{"args": ["--namespace", "$(params.pipelineRun-namespace)",
+      "name": "status", "type": "string"}], "steps": [{"args": ["--namespace", "$(params.pipelineRun-namespace)",
       "--prName", "$(params.pipelineRun-name)", "--taskList", "print-10,print-11",
       "--statusPath", "$(results.status.path)"], "command": ["any-task"], "image":
       "dspipelines/any-sequencer:latest", "name": "main"}]}, "timeout": "525600m"}]}}}]'
@@ -100,6 +100,7 @@ spec:
           image: alpine:3.6
         results:
         - name: output-value
+          type: string
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
@@ -127,6 +128,7 @@ spec:
           image: alpine:3.6
         results:
         - name: output-value
+          type: string
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
@@ -157,6 +159,7 @@ spec:
           image: dspipelines/any-sequencer:latest
         results:
         - name: status
+          type: string
           description: /tmp/outputs/status/data
         metadata:
           labels:

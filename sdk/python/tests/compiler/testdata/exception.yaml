@@ -93,6 +93,7 @@ spec:
                   type: string
                 results:
                 - name: data
+                  type: string
                   description: /tmp/outputs/data/data
                 metadata:
                   labels:

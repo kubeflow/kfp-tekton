@@ -146,6 +146,7 @@ spec:
           image: python:alpine3.6
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:
@@ -200,6 +201,7 @@ spec:
           image: dspipelines/any-sequencer:latest
         results:
         - name: status
+          type: string
           description: /tmp/outputs/status/data
         metadata:
           labels:

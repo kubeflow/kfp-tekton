@@ -121,8 +121,10 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: output-text
+          type: string
           description: /tmp/outputs/output_text/data
         - name: taskrun-name
+          type: string
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -240,10 +242,13 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: odd-lines
+          type: string
           description: /tmp/outputs/odd_lines/data
         - name: even-lines
+          type: string
           description: /tmp/outputs/even_lines/data
         - name: taskrun-name
+          type: string
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -451,8 +456,10 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: numbers
+          type: string
           description: /tmp/outputs/numbers/data
         - name: taskrun-name
+          type: string
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -619,8 +626,10 @@ spec:
         - name: write-numbers-trname
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         - name: taskrun-name
+          type: string
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -750,6 +759,7 @@ spec:
           image: python:3.7
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:

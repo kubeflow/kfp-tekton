@@ -58,6 +58,7 @@ spec:
           image: busybox
         results:
         - name: data-list
+          type: string
           description: /tmp/outputs/data_list/data
         metadata:
           labels:

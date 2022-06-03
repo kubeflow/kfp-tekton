@@ -80,6 +80,7 @@ spec:
         - name: c
         results:
         - name: stdout
+          type: string
           description: /tmp/outputs/stdout/data
         stepTemplate:
           volumeMounts:
