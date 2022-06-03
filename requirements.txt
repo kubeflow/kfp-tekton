@@ -157,7 +157,7 @@ tensorflow-metadata==1.2.0  # via tensorflow-data-validation, tensorflow-model-a
 tensorflow-model-analysis==0.33.0  # via tfx
 tensorflow-serving-api==2.5.1  # via tfx, tfx-bsl
 tensorflow-transform==1.2.0  # via tfx
-tensorflow==2.5.1         # via tensorflow-data-validation, tensorflow-model-analysis, tensorflow-serving-api, tensorflow-transform, tfx, tfx-bsl
+tensorflow==2.7.2         # via tensorflow-data-validation, tensorflow-model-analysis, tensorflow-serving-api, tensorflow-transform, tfx, tfx-bsl
 termcolor==1.1.0          # via fire, tensorflow
 terminado==0.11.0         # via notebook
 terminaltables==3.1.0     # via keras-tuner
