@@ -113,10 +113,13 @@ spec:
                 fieldPath: metadata.labels['tekton.dev/pipelineRun']
         results:
         - name: manifest
+          type: string
           description: '{}'
         - name: name
+          type: string
           description: '{.metadata.name}'
         - name: size
+          type: string
           description: '{.status.capacity.storage}'
         metadata:
           labels:

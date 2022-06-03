@@ -503,7 +503,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             if not appended_taskrun_name:
                 copy_taskrun_name_step = _get_base_step('output-taskrun-name')
                 copy_taskrun_name_step['script'] += 'echo -n "%s" > $(results.taskrun-name.path)\n' % ("$(context.taskRun.name)")
-                task['taskSpec']['results'].append({"name": "taskrun-name"})
+                task['taskSpec']['results'].append({"name": "taskrun-name", "type": "string"})
                 task['taskSpec']['steps'].append(copy_taskrun_name_step)
                 _append_original_pr_name_env(task)
                 appended_taskrun_name = True

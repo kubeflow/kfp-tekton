@@ -19,9 +19,9 @@ metadata:
 spec:
   pipelineSpec:
     params:
-    - name: just_one_iteration
-      type: string
     - name: iter_num
+      type: string
+    - name: just_one_iteration
       type: string
     tasks:
     - name: condition-cel
@@ -32,6 +32,7 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+      timeout: 525600m
     - name: print-iter
       params:
       - name: condition-cel-outcome
@@ -39,37 +40,43 @@ spec:
       taskSpec:
         steps:
         - name: main
-          command:
-          - echo
+          args:
+          - |
+            echo $0 > $1
           - 'Iter: $(inputs.params.condition-cel-outcome)'
-          - '>'
           - $(results.stdout.path)
+          command:
+          - sh
+          - -c
           image: alpine:3.6
         params:
         - name: condition-cel-outcome
           type: string
         results:
         - name: stdout
-          description: /tmp/stdout
+          type: string
+          description: /tmp/outputs/stdout/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print-iter",
+              "outputs": [{"name": "stdout", "type": "String"}], "version": "print-iter@sha256=844cd18acdaf6be3957c770dc0c2cb0536a2dc27c965c3ca8205965879436b37"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: recur
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         name: recur-and-condition-graph-recur-1
       params:
+      - name: iter_num
+        value: $(tasks.condition-cel.results.outcome)
       - name: just_one_iteration
         value:
         - '1'
-      - name: iter_num
-        value: $(tasks.condition-cel.results.outcome)
       when:
       - input: $(tasks.condition-cel.results.outcome)
         operator: notin

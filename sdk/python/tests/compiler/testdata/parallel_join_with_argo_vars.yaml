@@ -68,6 +68,7 @@ spec:
         - name: url1
         results:
         - name: data
+          type: string
           description: /tmp/outputs/data/data
         metadata:
           labels:
@@ -99,6 +100,7 @@ spec:
         - name: url2
         results:
         - name: data
+          type: string
           description: /tmp/outputs/data/data
         metadata:
           labels:

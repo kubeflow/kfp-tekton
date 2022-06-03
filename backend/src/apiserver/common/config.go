@@ -20,7 +20,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
-	corev1 "k8s.io/api/core/v1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 const (
@@ -142,8 +142,8 @@ func GetArtifactImage() string {
 	return GetStringConfigWithDefault(ArtifactImage, DefaultArtifactImage)
 }
 
-func GetCopyStepTemplate() *corev1.Container {
-	var tpl corev1.Container
+func GetCopyStepTemplate() *workflowapi.Step {
+	var tpl workflowapi.Step
 	if err := viper.UnmarshalKey(ArtifactCopyStepTemplate, &tpl); err != nil {
 		glog.Fatalf("Invalid '%s', %v", ArtifactCopyStepTemplate, err)
 	}

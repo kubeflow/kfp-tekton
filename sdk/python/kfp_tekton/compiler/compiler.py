@@ -78,6 +78,7 @@ def _get_super_condition_template():
   template = {
     'results': [
       {'name': DEFAULT_CONDITION_OUTPUT_KEYWORD,
+       'type': 'string',
        'description': 'Conditional task %s' % DEFAULT_CONDITION_OUTPUT_KEYWORD
        }
     ],

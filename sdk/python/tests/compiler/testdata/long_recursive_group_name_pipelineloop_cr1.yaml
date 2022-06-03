@@ -32,6 +32,7 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+      timeout: 525600m
     - name: print-iter
       params:
       - name: condition-cel-outcome
@@ -53,6 +54,7 @@ spec:
           type: string
         results:
         - name: output-value
+          type: string
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
@@ -60,14 +62,11 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"command": ["sh", "-c", "set -e\necho $0 > $1\n", {"inputValue": "input_text"},
-              {"outputPath": "output_value"}], "image": "alpine:3.6"}}, "inputs":
-              [{"description": "Represents an input parameter.", "name": "input_text",
-              "type": "String"}], "name": "print-iter", "outputs": [{"description":
-              "Represents an output paramter.", "name": "output_value", "type": "String"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print-iter",
+              "outputs": [{"description": "Represents an output paramter.", "name":
+              "output_value", "type": "String"}], "version": "print-iter@sha256=1390d83fb5d8aa6c6a41af858140c4c362850b13718dedacfc3fb0a633596313"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: function-the-name-of-which-is-exactly-51-chars-long
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1

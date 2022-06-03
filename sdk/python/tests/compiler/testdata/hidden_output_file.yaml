@@ -51,10 +51,13 @@ spec:
           image: aipipeline/echo-text:latest
         results:
         - name: data
+          type: string
           description: /tmp/outputs/data/data
         - name: underscore-test
+          type: string
           description: /tmp/outputs/underscore_test/data
         - name: multiple-underscore-test
+          type: string
           description: /tmp/outputs/multiple_underscore_test/data
         metadata:
           labels:

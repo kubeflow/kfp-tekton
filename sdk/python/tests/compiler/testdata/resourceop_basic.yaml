@@ -116,8 +116,10 @@ spec:
                 fieldPath: metadata.uid
         results:
         - name: manifest
+          type: string
           description: '{}'
         - name: name
+          type: string
           description: '{.metadata.name}'
         metadata:
           labels:
