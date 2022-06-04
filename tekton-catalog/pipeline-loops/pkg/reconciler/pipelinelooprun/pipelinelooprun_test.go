@@ -1898,7 +1898,7 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunIteration1},
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
 	}, {
-		name:                 "Reconcile a new run with a pipelineloop and a string params with separator",
+		name:                 "Reconcile a new run with a pipelineloop and an empty space string params with separator",
 		pipeline:             aPipeline,
 		pipelineloop:         aPipelineLoop,
 		run:                  runPipelineLoopWithInStringSeparatorEmptySpaceParams,
