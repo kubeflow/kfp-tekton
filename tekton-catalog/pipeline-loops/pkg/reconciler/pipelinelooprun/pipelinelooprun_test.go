@@ -284,7 +284,7 @@ var aPipeline = &v1beta1.Pipeline{
 			TaskSpec: &v1beta1.EmbeddedTask{
 				TaskSpec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{
-						Container: corev1.Container{Name: "foo", Image: "bar"},
+						Name: "foo", Image: "bar",
 					}},
 				},
 			},
@@ -368,7 +368,7 @@ var nPipeline = &v1beta1.Pipeline{
 			TaskSpec: &v1beta1.EmbeddedTask{
 				TaskSpec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{
-						Container: corev1.Container{Name: "foo", Image: "bar"},
+						Name: "foo", Image: "bar",
 					}},
 				},
 			},
@@ -391,7 +391,7 @@ var paraPipeline = &v1beta1.Pipeline{
 			TaskSpec: &v1beta1.EmbeddedTask{
 				TaskSpec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{
-						Container: corev1.Container{Name: "foo", Image: "bar"},
+						Name: "foo", Image: "bar",
 					}},
 				},
 			},
@@ -494,7 +494,7 @@ var aPipelineLoopWithInlineTask = &pipelineloopv1alpha1.PipelineLoop{
 							Type: v1beta1.ParamTypeString,
 						}},
 						Steps: []v1beta1.Step{{
-							Container: corev1.Container{Name: "foo", Image: "bar"},
+							Name: "foo", Image: "bar",
 						}},
 					},
 				},
@@ -1694,7 +1694,7 @@ var expectedPipelineRunWithInlineTaskIteration1 = &v1beta1.PipelineRun{
 							Type: v1beta1.ParamTypeString,
 						}},
 						Steps: []v1beta1.Step{{
-							Container: corev1.Container{Name: "foo", Image: "bar"},
+							Name: "foo", Image: "bar",
 						}},
 					},
 				},

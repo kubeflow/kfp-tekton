@@ -48,21 +48,22 @@ metadata:
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
-      "output-value"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n",
-      "print-3", "$(results.output-value.path)"], "image": "alpine:3.6", "name": "main"}]},
-      "timeout": "525600m"}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1", "kind":
-      "PipelineLoop", "metadata": {"name": "empty-loop-for-loop-3"}, "spec": {"iterateParam":
-      "param-loop-item", "pipelineSpec": {"params": [{"name": "param-loop-item", "type":
-      "string"}], "tasks": [{"name": "print-4", "runAfter": [], "taskSpec": {"metadata":
-      {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
-      \"print-4\", \"outputs\": [{\"description\": \"Represents an output paramter.\",
-      \"name\": \"output_value\", \"type\": \"String\"}], \"version\": \"print-4@sha256=612578686b564fc00e7052b345cd44d6a9cad721cdd6ceb3ecfc68c392a932f7\"}",
+      "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
+      -e\necho $0 > $1\n", "print-3", "$(results.output-value.path)"], "image": "alpine:3.6",
+      "name": "main"}]}, "timeout": "525600m"}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "empty-loop-for-loop-3"}, "spec":
+      {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name": "param-loop-item",
+      "type": "string"}], "tasks": [{"name": "print-4", "runAfter": [], "taskSpec":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print-4\", \"outputs\": [{\"description\": \"Represents an output
+      paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
+      \"print-4@sha256=612578686b564fc00e7052b345cd44d6a9cad721cdd6ceb3ecfc68c392a932f7\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
-      "output-value"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n",
-      "print-4", "$(results.output-value.path)"], "image": "alpine:3.6", "name": "main"}]},
-      "timeout": "525600m"}]}}}]'
+      "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
+      -e\necho $0 > $1\n", "print-4", "$(results.output-value.path)"], "image": "alpine:3.6",
+      "name": "main"}]}, "timeout": "525600m"}]}}}]'
 spec:
   params:
   - name: param
@@ -87,6 +88,7 @@ spec:
           image: alpine:3.6
         results:
         - name: output-value
+          type: string
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
@@ -123,6 +125,7 @@ spec:
           image: alpine:3.6
         results:
         - name: output-value
+          type: string
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
@@ -155,6 +158,7 @@ spec:
           image: alpine:3.6
         results:
         - name: output-value
+          type: string
           description: /tmp/outputs/output_value/data
         metadata:
           labels:

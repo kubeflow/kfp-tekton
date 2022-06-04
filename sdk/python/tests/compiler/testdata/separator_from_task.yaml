@@ -50,6 +50,7 @@ spec:
           image: alpine:3.6
         results:
         - name: output-value
+          type: string
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
@@ -77,6 +78,7 @@ spec:
           image: alpine:3.6
         results:
         - name: output-value
+          type: string
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
@@ -119,6 +121,7 @@ spec:
                   image: alpine:3.6
                 results:
                 - name: output-value
+                  type: string
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:

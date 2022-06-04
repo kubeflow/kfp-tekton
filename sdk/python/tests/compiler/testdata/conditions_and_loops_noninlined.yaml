@@ -47,8 +47,8 @@ metadata:
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "produce-numbers-Output-loop-item", "type": "string"}],
-      "results": [{"description": "/tmp/outputs/Output/data", "name": "output"}],
-      "steps": [{"args": ["--a", "$(inputs.params.produce-numbers-Output-loop-item)",
+      "results": [{"description": "/tmp/outputs/Output/data", "name": "output", "type":
+      "string"}], "steps": [{"args": ["--a", "$(inputs.params.produce-numbers-Output-loop-item)",
       "--b", "10", "----output-paths", "$(results.output.path)"], "command": ["sh",
       "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
       -u \"$program_path\" \"$@\"\n", "def add_numbers(a, b):\n    print(a + b)\n    return
@@ -72,16 +72,17 @@ metadata:
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "add-numbers-Output", "type": "string"}], "results":
-      [{"description": "/tmp/outputs/Output/data", "name": "output"}], "steps": [{"args":
-      ["--a", "$(inputs.params.add-numbers-Output)", "----output-paths", "$(results.output.path)"],
-      "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
-      -u \"$program_path\" \"$@\"\n", "def print_number(a):\n    print(a)\n    return
-      a\n\ndef _serialize_int(int_value: int) -> str:\n    if isinstance(int_value,
-      str):\n        return int_value\n    if not isinstance(int_value, int):\n        raise
-      TypeError(''Value \"{}\" has type \"{}\" instead of int.''.format(\n            str(int_value),
-      str(type(int_value))))\n    return str(int_value)\n\nimport argparse\n_parser
-      = argparse.ArgumentParser(prog=''Print number'', description='''')\n_parser.add_argument(\"--a\",
-      dest=\"a\", type=int, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"----output-paths\",
+      [{"description": "/tmp/outputs/Output/data", "name": "output", "type": "string"}],
+      "steps": [{"args": ["--a", "$(inputs.params.add-numbers-Output)", "----output-paths",
+      "$(results.output.path)"], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+      \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def
+      print_number(a):\n    print(a)\n    return a\n\ndef _serialize_int(int_value:
+      int) -> str:\n    if isinstance(int_value, str):\n        return int_value\n    if
+      not isinstance(int_value, int):\n        raise TypeError(''Value \"{}\" has
+      type \"{}\" instead of int.''.format(\n            str(int_value), str(type(int_value))))\n    return
+      str(int_value)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Print
+      number'', description='''')\n_parser.add_argument(\"--a\", dest=\"a\", type=int,
+      required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"----output-paths\",
       dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args = vars(_parser.parse_args())\n_output_files
       = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = print_number(**_parsed_args)\n\n_outputs
       = [_outputs]\n\n_output_serializers = [\n    _serialize_int,\n\n]\n\nimport
@@ -112,16 +113,16 @@ metadata:
       {"name": "operand2", "value": "$(params.threshold)"}, {"name": "operator", "value":
       ">"}], "taskSpec": {"params": [{"name": "operand1", "type": "string"}, {"name":
       "operand2", "type": "string"}, {"name": "operator", "type": "string"}], "results":
-      [{"description": "Conditional task outcome", "name": "outcome"}], "steps": [{"image":
-      "python:alpine3.6", "script": "python -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
+      [{"description": "Conditional task outcome", "name": "outcome", "type": "string"}],
+      "steps": [{"image": "python:alpine3.6", "script": "python -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
       \"w\")\nf.write(outcome)\nf.close()'' ''$(inputs.params.operand1)'' ''$(inputs.params.operand2)''"}]}},
       {"name": "condition-3", "params": [{"name": "operand1", "value": "$(tasks.print-number.results.output)"},
       {"name": "operand2", "value": "$(params.threshold)"}, {"name": "operator", "value":
       "<="}], "taskSpec": {"params": [{"name": "operand1", "type": "string"}, {"name":
       "operand2", "type": "string"}, {"name": "operator", "type": "string"}], "results":
-      [{"description": "Conditional task outcome", "name": "outcome"}], "steps": [{"image":
-      "python:alpine3.6", "script": "python -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
+      [{"description": "Conditional task outcome", "name": "outcome", "type": "string"}],
+      "steps": [{"image": "python:alpine3.6", "script": "python -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
       \"w\")\nf.write(outcome)\nf.close()'' ''$(inputs.params.operand1)'' ''$(inputs.params.operand2)''"}]}}]}}}]'
 spec:
@@ -207,6 +208,7 @@ spec:
         - name: "n"
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:

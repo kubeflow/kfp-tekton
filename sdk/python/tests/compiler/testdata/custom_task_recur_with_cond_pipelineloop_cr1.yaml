@@ -19,13 +19,13 @@ metadata:
 spec:
   pipelineSpec:
     params:
-    - name: just_one_iteration
-      type: string
-    - name: until
-      type: string
     - name: condition-cel-2-outcome
       type: string
     - name: condition-cel-outcome
+      type: string
+    - name: just_one_iteration
+      type: string
+    - name: until
       type: string
     tasks:
     - name: print
@@ -46,6 +46,7 @@ spec:
           type: string
         results:
         - name: stdout
+          type: string
           description: /tmp/stdout
         metadata:
           labels:
@@ -53,13 +54,10 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
-            pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-              {"args": [{"concat": ["echo ", {"inputValue": "msg"}, " > /tmp/stdout"]}],
-              "command": ["sh", "-c"], "fileOutputs": {"stdout": "/tmp/stdout"}, "image":
-              "alpine:3.6"}}, "inputs": [{"name": "msg"}], "name": "print", "outputs":
-              [{"name": "stdout"}]}'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [{"name": "stdout", "type": "String"}], "version": "print@sha256=823faa68fcc8685fb1248a51eedd18a6880137a4415c369714ed3f0060a7196d"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: condition-cel-3
       params:
       - name: outcome
@@ -68,6 +66,7 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+      timeout: 525600m
     - name: condition-cel-4
       params:
       - name: outcome
@@ -76,21 +75,22 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+      timeout: 525600m
     - name: recur
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         name: recursion-test-graph-recur-2
       params:
+      - name: condition-cel-2-outcome
+        value: $(params.condition-cel-2-outcome)
+      - name: condition-cel-outcome
+        value: $(tasks.condition-cel-3.results.outcome)
       - name: just_one_iteration
         value:
         - '1'
-      - name: condition-cel-outcome
-        value: $(tasks.condition-cel-3.results.outcome)
       - name: until
         value: $(params.until)
-      - name: condition-cel-2-outcome
-        value: $(params.condition-cel-2-outcome)
       when:
       - input: $(tasks.condition-cel-4.results.outcome)
         operator: in

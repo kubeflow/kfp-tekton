@@ -63,6 +63,7 @@ spec:
         - name: url
         results:
         - name: data
+          type: string
           description: /tmp/outputs/data/data
         metadata:
           labels:

@@ -19,11 +19,11 @@ metadata:
 spec:
   pipelineSpec:
     params:
-    - name: just_one_iteration
+    - name: condition-cel-outcome
       type: string
     - name: iter_num
       type: string
-    - name: condition-cel-outcome
+    - name: just_one_iteration
       type: string
     tasks:
     - name: condition-cel-2
@@ -34,6 +34,7 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
+      timeout: 525600m
     - name: print-iter
       params:
       - name: condition-cel-2-outcome
@@ -52,26 +53,29 @@ spec:
           type: string
         results:
         - name: stdout
-          description: /tmp/stdout
+          type: string
+          description: /tmp/outputs/stdout/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print-iter",
+              "outputs": [{"name": "stdout", "type": "String"}], "version": "print-iter@sha256=3cf57010e9ac86e617167ddc4190e3656853a26ee3aace62fea023f62c0e60be"}'
             tekton.dev/template: ''
-      timeout: 0s
+      timeout: 525600m
     - name: recur
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         name: condition-and-recur-graph-recur-2
       params:
+      - name: condition-cel-outcome
+        value: $(params.condition-cel-outcome)
+      - name: iter_num
+        value: $(tasks.condition-cel-2.results.outcome)
       - name: just_one_iteration
         value:
         - '1'
-      - name: iter_num
-        value: $(tasks.condition-cel-2.results.outcome)
-      - name: condition-cel-outcome
-        value: $(params.condition-cel-outcome)
   iterateParam: just_one_iteration

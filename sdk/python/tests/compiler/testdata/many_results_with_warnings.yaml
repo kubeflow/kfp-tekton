@@ -141,12 +141,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: param1
+          type: string
           description: /tmp/outputs/param1/data
         - name: param2
+          type: string
           description: /tmp/outputs/param2/data
         - name: param3
+          type: string
           description: /tmp/outputs/param3/data
         - name: superlongnamesuperlongnamesuperlongnamesuperlongnamesuper
+          type: string
           description: /tmp/outputs/superlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongname/data
         metadata:
           labels:

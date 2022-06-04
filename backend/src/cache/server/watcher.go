@@ -134,13 +134,10 @@ func parseResult(pod *corev1.Pod, logger *zap.SugaredLogger) (string, error) {
 				if r.ResultType == v1beta1.TaskRunResultType {
 					itemRes := v1beta1.TaskRunResult{}
 					itemRes.Name = r.Key
-					itemRes.Value = r.Value
+					itemRes.Value = *v1beta1.NewArrayOrString(r.Value)
 					output = append(output, &itemRes)
 				}
 			}
-
-			// assumption only on step in a task
-			break
 		}
 	}
 

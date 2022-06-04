@@ -73,6 +73,7 @@ spec:
         - name: forced_result1
         results:
         - name: output
+          type: string
           description: /tmp/outputs/output/data
         metadata:
           labels:
@@ -103,6 +104,7 @@ spec:
         - name: forced_result3
         results:
         - name: output
+          type: string
           description: /tmp/outputs/output/data
         metadata:
           labels:
@@ -133,6 +135,7 @@ spec:
         - name: forced_result2
         results:
         - name: output
+          type: string
           description: /tmp/outputs/output/data
         metadata:
           labels:
@@ -216,6 +219,7 @@ spec:
       taskSpec:
         results:
         - name: outcome
+          type: string
           description: Conditional task outcome
         params:
         - name: operand1
@@ -247,6 +251,7 @@ spec:
       taskSpec:
         results:
         - name: outcome
+          type: string
           description: Conditional task outcome
         params:
         - name: operand1
@@ -283,6 +288,7 @@ spec:
       taskSpec:
         results:
         - name: outcome
+          type: string
           description: Conditional task outcome
         params:
         - name: operand1
@@ -319,6 +325,7 @@ spec:
       taskSpec:
         results:
         - name: outcome
+          type: string
           description: Conditional task outcome
         params:
         - name: operand1

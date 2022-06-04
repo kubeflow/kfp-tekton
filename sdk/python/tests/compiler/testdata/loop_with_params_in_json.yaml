@@ -102,6 +102,7 @@ spec:
         - name: fname1
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:
@@ -172,6 +173,7 @@ spec:
         - name: fname2
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:

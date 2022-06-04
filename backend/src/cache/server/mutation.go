@@ -27,11 +27,11 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/cache/client"
 	"github.com/kubeflow/pipelines/backend/src/cache/model"
 	"github.com/kubeflow/pipelines/backend/src/cache/storage"
-	"k8s.io/apimachinery/pkg/api/resource"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"go.uber.org/zap"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -64,7 +64,7 @@ const (
 
 	TektonGroup        string = "tekton.dev/v1beta1"
 	TektonTaskKind     string = "TaskRun"
-	ToolInitContainner string = "place-tools"
+	ToolInitContainner string = "prepare"
 )
 
 var (
@@ -281,7 +281,7 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 	args := []string{}
 	args = append(args, "printf 'This step output is taken from cache.\n\n'")
 	for _, result := range results {
-		arg := fmt.Sprintf("printf '%s' | tee /tekton/results/%s", result.Value, result.Name)
+		arg := fmt.Sprintf("printf '%s' | tee /tekton/results/%s", result.Value.StringVal, result.Name)
 		args = append(args, arg)
 	}
 
@@ -308,11 +308,11 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 	firstOriginalContainer.Args = append(firstOriginalContainer.Args, replacedArg)
 	firstOriginalContainer.Image = image
 	firstOriginalContainer.Resources = corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("0.01"),
-							corev1.ResourceMemory: resource.MustParse("16Mi"),
-						},
-					}
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("0.01"),
+			corev1.ResourceMemory: resource.MustParse("16Mi"),
+		},
+	}
 
 	dummyContainers = append(dummyContainers, firstOriginalContainer)
 
@@ -332,6 +332,7 @@ func unmarshalResult(taskResult string) ([]tektonv1beta1.TaskRunResult, error) {
 func generateCacheKeyFromTemplate(taskRun *tektonv1beta1.TaskRun, pod *corev1.Pod) (string, string, error) {
 	template := Template{}
 	template.Spec = taskRun.Spec
+	template.Spec.Timeout = nil //clear timeout
 	template.TaskName = pod.ObjectMeta.Labels[TaskName]
 	template.PipelineName = pod.ObjectMeta.Labels[PipelineName]
 	template.Generation = pod.ObjectMeta.Labels[Generation]
