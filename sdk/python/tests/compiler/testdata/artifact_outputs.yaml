@@ -18,12 +18,14 @@ metadata:
   name: artifact-out-pipeline
   annotations:
     tekton.dev/output_artifacts: '{"gcs-download": [{"key": "artifacts/$PIPELINERUN/gcs-download/data.tgz",
-      "name": "gcs-download-data", "path": "/tmp/outputs/data/data"}]}'
+      "name": "gcs-download-data", "path": "/tmp/outputs/data/data"}, {"key": "artifacts/$PIPELINERUN/gcs-download/data2.tgz",
+      "name": "gcs-download-data2", "path": "/tmp/outputs/data2/data"}]}'
     tekton.dev/input_artifacts: '{}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"gcs-download": [["data", "$(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data"]]}'
+    tekton.dev/artifact_items: '{"gcs-download": [["data", "$(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data"],
+      ["data2", "$(results.data2.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Add labels to identify
@@ -47,9 +49,10 @@ spec:
         - name: main
           args:
           - |
-            gsutil cat $0 | tee $1
+            gsutil cat $0 | tee $1 | tee $2
           - $(inputs.params.url1)
           - $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data
+          - $(results.data2.path)
           command:
           - sh
           - -c
@@ -64,7 +67,7 @@ spec:
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/taskrun-name
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -88,16 +91,19 @@ spec:
         results:
         - name: data
           description: /tmp/outputs/data/data
+        - name: data2
+          description: /tmp/outputs/data2/data
         - name: taskrun-name
         metadata:
           labels:
-            output_type: artifact
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            artifact_outputs: '["data"]'
             pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
-              "outputs": [{"name": "data", "type": "String"}], "version": "gcs-download@sha256=511cfab40b31f87d8013514f1aee58997608048664cd54fa424e5167bcfcf97c"}'
+              "outputs": [{"name": "data", "type": "String"}, {"name": "data2", "type":
+              "String"}], "version": "gcs-download@sha256=e61aa54d889d66b15db1bd0a8959fda75d5aa799e468d8985610af4958612dfe"}'
             tekton.dev/template: ''
         workspaces:
         - name: gcs-download

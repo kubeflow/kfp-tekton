@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from kfp import dsl, components
+import json
 
 
 def gcs_download_op(url: str):
@@ -23,6 +24,7 @@ def gcs_download_op(url: str):
       - {name: url, type: String}
     outputs:
       - {name: data, type: String}
+      - {name: data2, type: String}
     implementation:
       container:
         image: google/cloud-sdk:279.0.0
@@ -31,9 +33,10 @@ def gcs_download_op(url: str):
         - -c
         args:
         - |
-          gsutil cat $0 | tee $1
+          gsutil cat $0 | tee $1 | tee $2
         - {inputValue: url}
         - {outputPath: data}
+        - {outputPath: data2}
     """)(url=url)
 
 
@@ -46,7 +49,7 @@ def artifact_outputs(
 ):
     """Add labels to identify outputs as artifacts."""
 
-    download1_task = gcs_download_op(url1).add_pod_label(name='output_type', value='artifact')
+    download1_task = gcs_download_op(url1).add_pod_annotation(name='artifact_outputs', value=json.dumps(['data']))
 
 
 if __name__ == '__main__':
