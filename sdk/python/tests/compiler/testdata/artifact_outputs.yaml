@@ -90,10 +90,13 @@ spec:
         - name: url1
         results:
         - name: data
+          type: string
           description: /tmp/outputs/data/data
         - name: data2
+          type: string
           description: /tmp/outputs/data2/data
         - name: taskrun-name
+          type: string
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
