@@ -52,10 +52,10 @@ spec:
         results:
         - name: data
           description: /tmp/outputs/data/data
-        - name: underscore-test
-          description: /tmp/outputs/underscore_test/data
         - name: multiple-underscore-test
           description: /tmp/outputs/multiple_underscore_test/data
+        - name: underscore-test
+          description: /tmp/outputs/underscore_test/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''

@@ -332,6 +332,7 @@ def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix:
         spec['results'] = [
             output_parameter for output_parameter in spec.get('results', [])
         ]
+        spec['results'] = sorted(spec['results'], key=lambda k: k['name'])
         # tekton results doesn't support underscore
         renamed_results_in_pipeline_task = set()
         for task_result in spec['results']:
