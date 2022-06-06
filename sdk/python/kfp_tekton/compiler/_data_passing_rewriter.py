@@ -25,8 +25,6 @@ from os import environ as env
 
 BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
 BIG_DATA_PATH_FORMAT = "/".join(["$(workspaces.$TASK_NAME.path)", BIG_DATA_MIDPATH, "$TASKRUN_NAME", "$TASK_PARAM_NAME"])
-ARTIFACT_OUTPUT_LABEL_KEY = 'output_type'
-ARTIFACT_OUTPUT_LABEL_VALUE = 'artifact'
 ARTIFACT_OUTPUTLIST_ANNOTATION_KEY = 'artifact_outputs'
 
 
@@ -499,7 +497,6 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             artifact_output_list.append(sanitize_k8s_name(output))
     for task_output in task.get('taskSpec', {}).get('results', []):
         if (task_name, task_output.get('name')) in outputs_tasks or \
-            task_spec.get('metadata', {}).get('labels', {}).get(ARTIFACT_OUTPUT_LABEL_KEY, '') == ARTIFACT_OUTPUT_LABEL_VALUE or \
             (artifact_output_list and task_output.get('name') in artifact_output_list):
             if not task.get('taskSpec', {}).setdefault('workspaces', []):
                 task.get('taskSpec', {})['workspaces'].append({"name": task_name})
