@@ -79,8 +79,8 @@ metadata:
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "condition-cel-3-outcome", "type": "string"}, {"name":
       "condition-cel-outcome", "type": "string"}], "results": [{"description": "/tmp/outputs/output/data",
-      "name": "output"}], "steps": [{"command": ["sh", "-c", "echo $0 | tee $1\n",
-      "Iter A: $(inputs.params.condition-cel-outcome), B: $(inputs.params.condition-cel-3-outcome)",
+      "name": "output", "type": "string"}], "steps": [{"command": ["sh", "-c", "echo
+      $0 | tee $1\n", "Iter A: $(inputs.params.condition-cel-outcome), B: $(inputs.params.condition-cel-3-outcome)",
       "$(results.output.path)"], "image": "alpine:3.6", "name": "main"}]}, "timeout":
       "525600m"}, {"name": "condition-cel-6", "params": [{"name": "outcome", "value":
       "$(params.condition-cel-3-outcome) + 1"}], "runAfter": ["print"], "taskRef":

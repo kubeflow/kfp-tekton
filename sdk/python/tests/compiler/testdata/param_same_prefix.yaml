@@ -110,6 +110,7 @@ spec:
         - name: foo
         results:
         - name: bar-10-val
+          type: string
           description: /tmp/outputs/bar-10-val/data
         metadata:
           labels:
@@ -139,6 +140,7 @@ spec:
         - name: foo
         results:
         - name: foo-11-val
+          type: string
           description: /tmp/outputs/foo-11-val/data
         metadata:
           labels:
@@ -168,6 +170,7 @@ spec:
         - name: foo
         results:
         - name: foo-12
+          type: string
           description: /tmp/outputs/foo-12/data
         metadata:
           labels:
@@ -244,6 +247,7 @@ spec:
                   type: string
                 results:
                 - name: output-value
+                  type: string
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
@@ -277,6 +281,7 @@ spec:
                   type: string
                 results:
                 - name: output-value
+                  type: string
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
@@ -310,6 +315,7 @@ spec:
                   type: string
                 results:
                 - name: output-value
+                  type: string
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
@@ -343,6 +349,7 @@ spec:
                   type: string
                 results:
                 - name: output-value
+                  type: string
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
@@ -376,6 +383,7 @@ spec:
                   type: string
                 results:
                 - name: output-value
+                  type: string
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
@@ -409,6 +417,7 @@ spec:
                   type: string
                 results:
                 - name: output-value
+                  type: string
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:

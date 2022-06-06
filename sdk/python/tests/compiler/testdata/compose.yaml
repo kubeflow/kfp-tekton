@@ -68,6 +68,7 @@ spec:
         - name: url
         results:
         - name: downloaded
+          type: string
           description: /tmp/outputs/downloaded/data
         metadata:
           labels:
@@ -99,6 +100,7 @@ spec:
         - name: download-downloaded
         results:
         - name: word
+          type: string
           description: /tmp/outputs/word/data
         metadata:
           labels:

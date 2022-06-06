@@ -44,10 +44,10 @@ metadata:
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
-      [{"description": "/tmp/outputs/output_value/data", "name": "output-value"}],
-      "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n", "Iter: $(inputs.params.condition-cel-outcome)",
-      "$(results.output-value.path)"], "image": "alpine:3.6", "name": "main"}]}, "timeout":
-      "525600m"}, {"name": "function-the-name-of-which-is-exactly-51-chars-long",
+      [{"description": "/tmp/outputs/output_value/data", "name": "output-value", "type":
+      "string"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n", "Iter:
+      $(inputs.params.condition-cel-outcome)", "$(results.output-value.path)"], "image":
+      "alpine:3.6", "name": "main"}]}, "timeout": "525600m"}, {"name": "function-the-name-of-which-is-exactly-51-chars-long",
       "params": [{"name": "just_one_iteration", "value": ["1"]}, {"name": "iter_num",
       "value": "$(tasks.condition-cel.results.outcome)"}], "taskRef": {"apiVersion":
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "pipeline-the-name-of-which-is-exactly-51-51-chars-long-1"},

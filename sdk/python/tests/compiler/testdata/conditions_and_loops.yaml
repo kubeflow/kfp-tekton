@@ -118,6 +118,7 @@ spec:
         - name: "n"
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:
@@ -214,6 +215,7 @@ spec:
                   type: string
                 results:
                 - name: output
+                  type: string
                   description: /tmp/outputs/Output/data
                 metadata:
                   labels:
@@ -288,6 +290,7 @@ spec:
                   type: string
                 results:
                 - name: output
+                  type: string
                   description: /tmp/outputs/Output/data
                 metadata:
                   labels:
@@ -383,6 +386,7 @@ spec:
               taskSpec:
                 results:
                 - name: outcome
+                  type: string
                   description: Conditional task outcome
                 params:
                 - name: operand1
@@ -422,6 +426,7 @@ spec:
               taskSpec:
                 results:
                 - name: outcome
+                  type: string
                   description: Conditional task outcome
                 params:
                 - name: operand1

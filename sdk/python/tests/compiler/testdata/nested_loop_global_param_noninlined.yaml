@@ -49,14 +49,14 @@ metadata:
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "params": [{"name": "param", "type": "string"}], "results": [{"description":
-      "/tmp/outputs/output_value/data", "name": "output-value"}], "steps": [{"command":
-      ["sh", "-c", "set -e\necho $0 > $1\n", "print $(inputs.params.param)", "$(results.output-value.path)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m"}]}}}, {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "empty-loop-for-loop-3"},
-      "spec": {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name":
-      "param", "type": "string"}, {"name": "param-loop-item", "type": "string"}],
-      "tasks": [{"name": "empty-loop-for-loop-4", "params": [{"name": "param-loop-item",
-      "value": "$(params.param)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "/tmp/outputs/output_value/data", "name": "output-value", "type": "string"}],
+      "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n", "print $(inputs.params.param)",
+      "$(results.output-value.path)"], "image": "alpine:3.6", "name": "main"}]}, "timeout":
+      "525600m"}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
+      "metadata": {"name": "empty-loop-for-loop-3"}, "spec": {"iterateParam": "param-loop-item",
+      "pipelineSpec": {"params": [{"name": "param", "type": "string"}, {"name": "param-loop-item",
+      "type": "string"}], "tasks": [{"name": "empty-loop-for-loop-4", "params": [{"name":
+      "param-loop-item", "value": "$(params.param)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "name": "empty-loop-for-loop-4"}}]}}}, {"apiVersion":
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "empty-loop-for-loop-4"},
       "spec": {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name":
@@ -68,9 +68,9 @@ metadata:
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
       "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
       ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
-      "output-value"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n",
-      "print", "$(results.output-value.path)"], "image": "alpine:3.6", "name": "main"}]},
-      "timeout": "525600m"}]}}}]'
+      "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
+      -e\necho $0 > $1\n", "print", "$(results.output-value.path)"], "image": "alpine:3.6",
+      "name": "main"}]}, "timeout": "525600m"}]}}}]'
 spec:
   params:
   - name: param

@@ -94,6 +94,7 @@ spec:
           image: python:3.7
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:
@@ -165,6 +166,7 @@ spec:
           image: python:3.7
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:
@@ -236,6 +238,7 @@ spec:
           image: python:3.7
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:
@@ -307,6 +310,7 @@ spec:
           image: python:3.7
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         metadata:
           labels:

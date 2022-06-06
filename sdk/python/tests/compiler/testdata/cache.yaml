@@ -46,6 +46,7 @@ spec:
           image: registry.access.redhat.com/ubi8/ubi-minimal
         results:
         - name: out
+          type: string
           description: /tmp/outputs/out/data
         metadata:
           labels:
@@ -69,6 +70,7 @@ spec:
           image: registry.access.redhat.com/ubi8/ubi-minimal
         results:
         - name: out
+          type: string
           description: /tmp/outputs/out/data
         metadata:
           labels:

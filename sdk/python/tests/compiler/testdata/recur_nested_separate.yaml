@@ -59,6 +59,7 @@ spec:
           image: python:alpine3.6
         results:
         - name: output
+          type: string
           description: /tmp/outputs/output/data
         metadata:
           labels:

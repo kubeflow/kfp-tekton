@@ -45,6 +45,7 @@ spec:
           image: alpine:latest
         results:
         - name: dummy-output-path
+          type: string
           description: /tmp/outputs/dummy_output_path/data
         metadata:
           labels:

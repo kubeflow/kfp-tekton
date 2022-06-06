@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/clock"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"github.com/hashicorp/go-multierror"
@@ -101,6 +102,7 @@ type Reconciler struct {
 	pipelineLoopLister    listerspipelineloop.PipelineLoopLister
 	pipelineRunLister     listers.PipelineRunLister
 	cacheStore            *cache.TaskCacheStore
+	clock                 clock.RealClock
 }
 
 var (
@@ -250,7 +252,6 @@ func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
 	defaults, _ := config.NewDefaultsFromMap(map[string]string{})
 	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{
 		"enable-custom-tasks": "true",
-		"enable-api-fields":   "alpha",
 	})
 	artifactBucket, _ := config.NewArtifactBucketFromMap(map[string]string{})
 	artifactPVC, _ := config.NewArtifactPVCFromMap(map[string]string{})
@@ -398,7 +399,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 				run.Namespace, run.Name)
 		} else {
 			reason := pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String()
-			if run.HasTimedOut() { // This check is only possible if we are on tekton 0.27.0 +
+			if run.HasTimedOut(c.clock) { // This check is only possible if we are on tekton 0.27.0 +
 				reason = v1alpha1.RunReasonTimedOut
 			}
 			run.Status.MarkRunFailed(reason,

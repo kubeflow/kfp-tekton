@@ -25,7 +25,6 @@ import (
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/test/diff"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis"
 )
@@ -54,7 +53,7 @@ func TestPipelineLoop_Validate_Success(t *testing.T) {
 						TaskSpec: &v1beta1.EmbeddedTask{
 							TaskSpec: v1beta1.TaskSpec{
 								Steps: []v1beta1.Step{{
-									Container: corev1.Container{Name: "foo", Image: "bar"},
+									Name: "foo", Image: "bar",
 								}},
 							},
 						},
@@ -95,7 +94,7 @@ func TestPipelineLoop_Validate_Success(t *testing.T) {
 									Type: v1beta1.ParamTypeString,
 								}},
 								Steps: []v1beta1.Step{{
-									Container: corev1.Container{Name: "foo", Image: "bar"},
+									Name: "foo", Image: "bar",
 								}},
 							},
 						},
@@ -143,7 +142,7 @@ func TestPipelineLoop_Validate_Error(t *testing.T) {
 						TaskSpec: &v1beta1.EmbeddedTask{
 							TaskSpec: v1beta1.TaskSpec{
 								Steps: []v1beta1.Step{{
-									Container: corev1.Container{Name: "foo", Image: "bar"},
+									Name: "foo", Image: "bar",
 								}},
 							},
 						},
@@ -180,7 +179,7 @@ func TestPipelineLoop_Validate_Error(t *testing.T) {
 						TaskSpec: &v1beta1.EmbeddedTask{
 							TaskSpec: v1beta1.TaskSpec{
 								Steps: []v1beta1.Step{{
-									Container: corev1.Container{Name: "bad@name!", Image: "bar"},
+									Name: "bad@name!", Image: "bar",
 								}},
 							},
 						},
