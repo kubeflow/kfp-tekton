@@ -38,7 +38,7 @@ var (
 		ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{
 				ArgoWorkflowNodeName:  "test_node",
-				TektonTaskrunTemplate: `{"name": "Does not matter","container":{"name":"step-main","command":["echo", "Hello"],"image":"python:3.7"}}`,
+				TektonTaskrunTemplate: `{"name": "Does not matter","container":{"command":["echo", "Hello"],"image":"python:3.7"}}`,
 			},
 			Labels: map[string]string{
 				ArgoCompleteLabelKey:    "true",
