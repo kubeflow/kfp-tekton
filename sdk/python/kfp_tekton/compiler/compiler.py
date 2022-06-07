@@ -61,7 +61,7 @@ DEFAULT_TIMEOUT_MINUTES = "525600m"
 def _get_super_condition_template():
 
   python_script = textwrap.dedent('''\
-    'import sys
+    import sys
     input1=str.rstrip(sys.argv[1])
     input2=str.rstrip(sys.argv[2])
     try:
@@ -72,7 +72,8 @@ def _get_super_condition_template():
     %(s)s="true" if (input1 $(inputs.params.operator) input2) else "false"
     f = open("/tekton/results/%(s)s", "w")
     f.write(%(s)s)
-    f.close()' '''
+    f.close()
+    '''
     % {'s': DEFAULT_CONDITION_OUTPUT_KEYWORD})
 
   template = {
@@ -88,7 +89,9 @@ def _get_super_condition_template():
       {'name': 'operator'}
     ],
     'steps': [{
-      'script': 'python -c ' + python_script + "'$(inputs.params.operand1)' '$(inputs.params.operand2)'",
+      'name': 'main',
+      'command': ['sh', '-ec', 'program_path=$(mktemp); printf "%s" "$0" > "$program_path";  python3 -u "$program_path" "$1" "$2"'],
+      'args': [python_script, '$(inputs.params.operand1)', '$(inputs.params.operand2)'],
       'image': 'python:alpine3.6',
     }]
   }
