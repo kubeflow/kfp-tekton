@@ -174,7 +174,7 @@ func TestMutatePodIfCached(t *testing.T) {
 func TestMutatePodIfCachedWithCacheEntryExist(t *testing.T) {
 	executionCache := &model.ExecutionCache{
 		ExecutionCacheKey: "8c623f608410644024522153da8c8bffd5a801ceecacb12cd582b4cb0e1b3e76",
-		ExecutionOutput:   `{"pipelines.kubeflow.org/metadata_execution_id": "8c623f608410644024522153da8c8bffd5a801ceecacb12cd582b4cb0e1b3e76", "tekton.dev/outputs": "[{\"name\":\"test\",\"value\":\"test\"}]"}`,
+		ExecutionOutput:   `{"pipelines.kubeflow.org/metadata_execution_id": "8c623f608410644024522153da8c8bffd5a801ceecacb12cd582b4cb0e1b3e76", "tekton.dev/outputs": "{\"main\":[{\"name\":\"test\",\"value\":\"test\"}]}"}`,
 		ExecutionTemplate: `{"Spec":{"serviceAccountName":"","status":"TaskRunCancelled"},"TaskName":"","PipelineName":"test-pipelinerun","Generation":"0"}`,
 		MaxCacheStaleness: -1,
 	}
@@ -192,9 +192,9 @@ func TestMutatePodIfCachedWithCacheEntryExist(t *testing.T) {
 
 func TestDefaultImage(t *testing.T) {
 	executionCache := &model.ExecutionCache{
-		ExecutionCacheKey: "f5fe913be7a4516ebfe1b5de29bcb35edd12ecc776b2f33f10ca19709ea3b2f0",
-		ExecutionOutput:   "testOutput",
-		ExecutionTemplate: `{"container":{"command":["echo", "Hello"],"image":"python:3.7"}}`,
+		ExecutionCacheKey: "8c623f608410644024522153da8c8bffd5a801ceecacb12cd582b4cb0e1b3e76",
+		ExecutionOutput:   `{"tekton.dev/outputs":"{\"main\":[{\"name\":\"test\",\"value\":\"test\"}]}"}`,
+		ExecutionTemplate: `{"container":{"name":"main","command":["echo", "Hello"],"image":"python:3.7"}}`,
 		MaxCacheStaleness: -1,
 	}
 	fakeClientManager.CacheStore().CreateExecutionCache(executionCache)

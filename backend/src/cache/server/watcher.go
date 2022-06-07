@@ -114,7 +114,7 @@ func WatchPods(ctx context.Context, namespaceToWatch string, clientManager Clien
 func parseResult(pod *corev1.Pod, logger *zap.SugaredLogger) (string, error) {
 	logger.Info("Start parse result from pod.")
 
-	output := []*v1beta1.TaskRunResult{}
+	outputs := make(map[string][]*v1beta1.TaskRunResult)
 
 	containersState := pod.Status.ContainerStatuses
 	if containersState == nil || len(containersState) == 0 {
@@ -129,7 +129,7 @@ func parseResult(pod *corev1.Pod, logger *zap.SugaredLogger) (string, error) {
 				logger.Errorf("termination message could not be parsed as JSON: %v", err)
 				return "", fmt.Errorf("termination message could not be parsed as JSON: %v", err)
 			}
-
+			output := []*v1beta1.TaskRunResult{}
 			for _, r := range results {
 				if r.ResultType == v1beta1.TaskRunResultType {
 					itemRes := v1beta1.TaskRunResult{}
@@ -138,15 +138,16 @@ func parseResult(pod *corev1.Pod, logger *zap.SugaredLogger) (string, error) {
 					output = append(output, &itemRes)
 				}
 			}
+			outputs[state.Name] = output
 		}
 	}
 
-	if len(output) == 0 {
+	if len(outputs) == 0 {
 		logger.Errorf("No validate result found in pod.Status.ContainerStatuses[].State.Terminated.Message")
 		return "", fmt.Errorf("No result found in the pod")
 	}
 
-	b, err := json.Marshal(output)
+	b, err := json.Marshal(outputs)
 	if err != nil {
 		logger.Errorf("Result marshl failed")
 		return "", err
