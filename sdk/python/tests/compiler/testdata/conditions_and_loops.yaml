@@ -396,8 +396,15 @@ spec:
                 - name: operator
                   type: string
                 steps:
-                - script: |-
-                    python -c 'import sys
+                - name: main
+                  command:
+                  - sh
+                  - -ec
+                  - program_path=$(mktemp); printf "%s" "$0" > "$program_path";  python3
+                    -u "$program_path" "$1" "$2"
+                  args:
+                  - |
+                    import sys
                     input1=str.rstrip(sys.argv[1])
                     input2=str.rstrip(sys.argv[2])
                     try:
@@ -408,7 +415,9 @@ spec:
                     outcome="true" if (input1 $(inputs.params.operator) input2) else "false"
                     f = open("/tekton/results/outcome", "w")
                     f.write(outcome)
-                    f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
+                    f.close()
+                  - $(inputs.params.operand1)
+                  - $(inputs.params.operand2)
                   image: python:alpine3.6
                 metadata:
                   labels:
@@ -436,8 +445,15 @@ spec:
                 - name: operator
                   type: string
                 steps:
-                - script: |-
-                    python -c 'import sys
+                - name: main
+                  command:
+                  - sh
+                  - -ec
+                  - program_path=$(mktemp); printf "%s" "$0" > "$program_path";  python3
+                    -u "$program_path" "$1" "$2"
+                  args:
+                  - |
+                    import sys
                     input1=str.rstrip(sys.argv[1])
                     input2=str.rstrip(sys.argv[2])
                     try:
@@ -448,7 +464,9 @@ spec:
                     outcome="true" if (input1 $(inputs.params.operator) input2) else "false"
                     f = open("/tekton/results/outcome", "w")
                     f.write(outcome)
-                    f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
+                    f.close()
+                  - $(inputs.params.operand1)
+                  - $(inputs.params.operand2)
                   image: python:alpine3.6
                 metadata:
                   labels:

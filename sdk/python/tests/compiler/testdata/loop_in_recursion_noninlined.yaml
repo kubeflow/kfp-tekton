@@ -65,10 +65,12 @@ metadata:
       "heads"}, {"name": "operator", "value": "=="}], "taskSpec": {"params": [{"name":
       "operand1", "type": "string"}, {"name": "operand2", "type": "string"}, {"name":
       "operator", "type": "string"}], "results": [{"description": "Conditional task
-      outcome", "name": "outcome", "type": "string"}], "steps": [{"image": "python:alpine3.6",
-      "script": "python -c ''import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
+      outcome", "name": "outcome", "type": "string"}], "steps": [{"args": ["import
+      sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
-      \"w\")\nf.write(outcome)\nf.close()'' ''$(inputs.params.operand1)'' ''$(inputs.params.operand2)''"}]}},
+      \"w\")\nf.write(outcome)\nf.close()\n", "$(inputs.params.operand1)", "$(inputs.params.operand2)"],
+      "command": ["sh", "-ec", "program_path=$(mktemp); printf \"%s\" \"$0\" > \"$program_path\";  python3
+      -u \"$program_path\" \"$1\" \"$2\""], "image": "python:alpine3.6", "name": "main"}]}},
       {"name": "flip-component", "params": [{"name": "just_one_iteration", "value":
       ["1"]}, {"name": "flip-coin-output", "value": "$(tasks.flip-coin-2.results.output)"},
       {"name": "maxVal", "value": "$(params.maxVal)"}, {"name": "my_pipe_param", "value":
