@@ -266,7 +266,8 @@ export default class WorkflowParser {
       // Find the output that matches this input and pull the value
       if (
         statusMap.get(component['name']) &&
-        statusMap.get(component['name'])['status']['taskSpec']
+        statusMap.get(component['name'])['status']['taskSpec'] &&
+        statusMap.get(component['name'])['status']['taskSpec']['params']
       ) {
         for (const statusParam of statusMap.get(component['name'])!['status']['taskSpec']['params'])
           if (statusParam['name'] === param['name']) statusParam['value'] = paramValue;
