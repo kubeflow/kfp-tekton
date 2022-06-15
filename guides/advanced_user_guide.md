@@ -11,6 +11,7 @@ This page is an advanced KFP-Tekton guide on how to use Tekton specific features
     - [Custom Task Limitations](#custom-task-limitations)
     - [Custom Task for OpsGroup](#custom-task-for-opsgroup)
   - [Tekton Pipeline Config for PodTemplate](#tekton-pipeline-config-for-podtemplate)
+  - [Tekton Feature Flags](#tekton-feature-flags)
 
 ## Using Tekton Custom Task on KFP-Tekton
 
@@ -202,3 +203,17 @@ self._test_pipeline_workflow(test_pipeline, 'test.yaml', tekton_pipeline_conf=pi
 ```
 
 For more details on how this can be used in a real pipeline, visit the [Tekton Pipeline Conf example](/sdk/python/tests/compiler/testdata/tekton_pipeline_conf.py).
+
+## Tekton Feature Flags
+Tekton provides some features that you can configure via `feature-flgas` configmap under `tekton-pipelines`
+namespace. Use these tekton features may impact kfp-tekton backend. Here is the list of features that
+impact kfp-tekton backend:
+- enable-custom-tasks: You can turn on/off custom task support by setting its value to true/false.
+  The default value for kfp-tekton deployment is `true`. If you are using custom tasks and set the flag value
+  to `false`, the pipeline will be in the running state until timeout. Because custom tasks inside the pipeline
+  are not able to be handled properly.
+- embedded-status: You can find details for this feature flag [here](https://github.com/tektoncd/community/blob/main/teps/0100-embedded-taskruns-and-runs-status-in-pipelineruns.md).
+  The default value for kfp-tekton deployment is `full`, which stores all TaskRuns/Runs statuses under PipelineRun's status.
+  kfp-tekton backend also supports the `minimal` setting, which only records the list of TaskRuns/Runs under PipelineRun's status.
+  In this case, statuses of TaskRuns/Runs only exist in their own CRs. kfp-tekton backend retrieves statuses of TaskRuns/Runs
+  from individual CR, aggregates, and stores them into the backend storage.
