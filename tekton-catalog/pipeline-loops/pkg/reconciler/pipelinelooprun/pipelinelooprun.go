@@ -50,6 +50,7 @@ import (
 	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/pkg/names"
 	"github.com/tektoncd/pipeline/pkg/reconciler/events"
+	tkstatus "github.com/tektoncd/pipeline/pkg/status"
 	"go.uber.org/zap"
 	"gomodules.xyz/jsonpatch/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -762,6 +763,48 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 		}
 		if iteration > highestIteration {
 			highestIteration = iteration
+		}
+		if pr.Status.ChildReferences != nil {
+			//fetch taskruns/runs status specifically for pipelineloop-break-operation first
+			for _, child := range pr.Status.ChildReferences {
+				if strings.HasPrefix(child.PipelineTaskName, "pipelineloop-break-operation") {
+					switch child.Kind {
+					case "TaskRun":
+						tr, err := tkstatus.GetTaskRunStatusForPipelineTask(ctx, c.pipelineClientSet, run.Namespace, child)
+						if err != nil {
+							logger.Errorf("can not get status for TaskRun, %v", err)
+							return 0, nil, nil, fmt.Errorf("could not get TaskRun %s."+
+								" %#v", child.Name, err)
+						}
+						if pr.Status.TaskRuns == nil {
+							pr.Status.TaskRuns = make(map[string]*v1beta1.PipelineRunTaskRunStatus)
+						}
+						pr.Status.TaskRuns[child.Name] = &v1beta1.PipelineRunTaskRunStatus{
+							PipelineTaskName: child.PipelineTaskName,
+							WhenExpressions:  child.WhenExpressions,
+							Status:           tr.DeepCopy(),
+						}
+					case "Run":
+						run, err := tkstatus.GetRunStatusForPipelineTask(ctx, c.pipelineClientSet, run.Namespace, child)
+						if err != nil {
+							logger.Errorf("can not get status for Run, %v", err)
+							return 0, nil, nil, fmt.Errorf("could not get Run %s."+
+								" %#v", child.Name, err)
+						}
+						if pr.Status.Runs == nil {
+							pr.Status.Runs = make(map[string]*v1beta1.PipelineRunRunStatus)
+						}
+
+						pr.Status.Runs[child.Name] = &v1beta1.PipelineRunRunStatus{
+							PipelineTaskName: child.PipelineTaskName,
+							WhenExpressions:  child.WhenExpressions,
+							Status:           run.DeepCopy(),
+						}
+					default:
+						//ignore
+					}
+				}
+			}
 		}
 		for _, runStatus := range pr.Status.Runs {
 			if strings.HasPrefix(runStatus.PipelineTaskName, "pipelineloop-break-operation") {

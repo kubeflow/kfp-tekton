@@ -8,3 +8,4 @@ metadata:
     app.kubernetes.io/part-of: tekton-pipelines
 data:
   enable-custom-tasks: "true"
+  embedded-status: "full"
