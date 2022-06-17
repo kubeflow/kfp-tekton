@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 from ._client import TektonClient  # noqa F401
 from .k8s_client_helper import env_from_secret  # noqa F401
