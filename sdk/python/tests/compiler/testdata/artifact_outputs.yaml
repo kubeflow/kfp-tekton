@@ -1,0 +1,114 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: artifact-out-pipeline
+  annotations:
+    tekton.dev/output_artifacts: '{"gcs-download": [{"key": "artifacts/$PIPELINERUN/gcs-download/data.tgz",
+      "name": "gcs-download-data", "path": "/tmp/outputs/data/data"}, {"key": "artifacts/$PIPELINERUN/gcs-download/data2.tgz",
+      "name": "gcs-download-data2", "path": "/tmp/outputs/data2/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"gcs-download": [["data", "$(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data"],
+      ["data2", "$(results.data2.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Add labels to identify
+      outputs as artifacts.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
+      "name": "url1", "optional": true, "type": "String"}], "name": "artifact-out-pipeline"}'
+spec:
+  params:
+  - name: url1
+    value: gs://ml-pipeline-playground/shakespeare1.txt
+  pipelineSpec:
+    params:
+    - name: url1
+      default: gs://ml-pipeline-playground/shakespeare1.txt
+    tasks:
+    - name: gcs-download
+      params:
+      - name: url1
+        value: $(params.url1)
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - |
+            gsutil cat $0 | tee $1 | tee $2
+          - $(inputs.params.url1)
+          - $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data
+          - $(results.data2.path)
+          command:
+          - sh
+          - -c
+          image: google/cloud-sdk:279.0.0
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+        - image: busybox
+          name: copy-results-artifacts
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            TOTAL_SIZE=0
+            ARTIFACT_SIZE=`wc -c $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.data.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              cp $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
+            fi
+          onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        params:
+        - name: url1
+        results:
+        - name: data
+          type: string
+          description: /tmp/outputs/data/data
+        - name: data2
+          type: string
+          description: /tmp/outputs/data2/data
+        - name: taskrun-name
+          type: string
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            artifact_outputs: '["data"]'
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
+              "outputs": [{"name": "data", "type": "String"}, {"name": "data2", "type":
+              "String"}], "version": "gcs-download@sha256=e61aa54d889d66b15db1bd0a8959fda75d5aa799e468d8985610af4958612dfe"}'
+            tekton.dev/template: ''
+        workspaces:
+        - name: gcs-download
+      timeout: 525600m
+  timeout: 525600m

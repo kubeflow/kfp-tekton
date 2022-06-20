@@ -241,12 +241,12 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
-        - name: odd-lines
-          type: string
-          description: /tmp/outputs/odd_lines/data
         - name: even-lines
           type: string
           description: /tmp/outputs/even_lines/data
+        - name: odd-lines
+          type: string
+          description: /tmp/outputs/odd_lines/data
         - name: taskrun-name
           type: string
         metadata:
