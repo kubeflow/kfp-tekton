@@ -808,7 +808,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 		}
 		for _, runStatus := range pr.Status.Runs {
 			if strings.HasPrefix(runStatus.PipelineTaskName, "pipelineloop-break-operation") {
-				if !runStatus.Status.GetCondition(apis.ConditionSucceeded).IsUnknown() {
+				if runStatus.Status != nil && !runStatus.Status.GetCondition(apis.ConditionSucceeded).IsUnknown() {
 					err = c.cancelAllPipelineRuns(ctx, run)
 					if err != nil {
 						return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to Run %s."+
