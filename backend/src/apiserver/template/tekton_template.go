@@ -280,7 +280,7 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 
 					// Logging volumeMounts
 					if task.TaskSpec.StepTemplate == nil {
-						task.TaskSpec.StepTemplate = &corev1.Container{}
+						task.TaskSpec.StepTemplate = &workflowapi.StepTemplate{}
 					}
 					if task.TaskSpec.StepTemplate.VolumeMounts == nil {
 						task.TaskSpec.StepTemplate.VolumeMounts = []corev1.VolumeMount{}
@@ -294,20 +294,35 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 					task.TaskSpec.StepTemplate.VolumeMounts = append(task.TaskSpec.StepTemplate.VolumeMounts, loggingVolumeMounts...)
 				}
 
+				moveStep := false
+				if task.TaskSpec.Results != nil && len(task.TaskSpec.Results) > 0 {
+					// move all results to /tekton/home/tep-results to avoid result duplication in copy-artifacts step
+					// TODO: disable eof strip, since no results under /tekton/results after this step
+					moveResults := workflowapi.Step{
+						Image:   "busybox",
+						Name:    "move-all-results-to-tekton-home",
+						Command: []string{"sh", "-c"},
+						Args: []string{fmt.Sprintf("if [ -d /tekton/results ]; then mkdir -p %s; mv /tekton/results/* %s/ || true; fi\n",
+							common.GetPath4InternalResults(), common.GetPath4InternalResults())},
+					}
+					moveStep = true
+					task.TaskSpec.Steps = append(task.TaskSpec.Steps, moveResults)
+				}
+
 				// Process the artifacts into minimum sh commands if running with minimum linux kernel
 				if injectDefaultScript {
-					artifactScript = t.injectDefaultScript(workflow, artifactScript, artifacts, hasArtifacts, archiveLogs, trackArtifacts, stripEOF)
+					artifactScript = t.injectDefaultScript(workflow, artifactScript, artifacts, hasArtifacts, archiveLogs, trackArtifacts, stripEOF, moveStep)
 				}
 
 				// Define post-processing step
-				container := *copyStepTemplate
-				if container.Name == "" {
-					container.Name = "copy-artifacts"
+				step := *copyStepTemplate
+				if step.Name == "" {
+					step.Name = "copy-artifacts"
 				}
-				if container.Image == "" {
-					container.Image = common.GetArtifactImage()
+				if step.Image == "" {
+					step.Image = common.GetArtifactImage()
 				}
-				container.Env = append(container.Env,
+				step.Env = append(step.Env,
 					t.getObjectFieldSelector("ARTIFACT_BUCKET", "metadata.annotations['tekton.dev/artifact_bucket']"),
 					t.getObjectFieldSelector("ARTIFACT_ENDPOINT", "metadata.annotations['tekton.dev/artifact_endpoint']"),
 					t.getObjectFieldSelector("ARTIFACT_ENDPOINT_SCHEME", "metadata.annotations['tekton.dev/artifact_endpoint_scheme']"),
@@ -322,8 +337,9 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 					t.getEnvVar("TRACK_ARTIFACTS", strconv.FormatBool(trackArtifacts)),
 					t.getEnvVar("STRIP_EOF", strconv.FormatBool(stripEOF)),
 				)
+				step.Command = []string{"sh", "-c"}
+				step.Args = []string{artifactScript}
 
-				step := workflowapi.Step{Container: container, Script: artifactScript}
 				task.TaskSpec.Steps = append(task.TaskSpec.Steps, step)
 			}
 		}
@@ -331,7 +347,7 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 }
 
 func (t *Tekton) injectDefaultScript(workflow util.Workflow, artifactScript string,
-	artifacts [][]interface{}, hasArtifacts bool, archiveLogs bool, trackArtifacts bool, stripEOF bool) string {
+	artifacts [][]interface{}, hasArtifacts, archiveLogs, trackArtifacts, stripEOF, hasMoveStep bool) string {
 	// Need to represent as Raw String Literals
 	artifactScript += "\n"
 	if archiveLogs {
@@ -342,7 +358,8 @@ func (t *Tekton) injectDefaultScript(workflow util.Workflow, artifactScript stri
 	if hasArtifacts && len(artifacts) > 0 && trackArtifacts {
 		for _, artifact := range artifacts {
 			if len(artifact) == 2 {
-				artifactScript += fmt.Sprintf("push_artifact %s %s\n", artifact[0], artifact[1])
+				artifactScript += fmt.Sprintf("push_artifact \"%s\" \"%s/\"$(basename \"%s\")\n",
+					artifact[0], common.GetPath4InternalResults(), artifact[1])
 			} else {
 				glog.Warningf("Artifact annotations are missing for run %v.", workflow.Name)
 			}
@@ -350,7 +367,7 @@ func (t *Tekton) injectDefaultScript(workflow util.Workflow, artifactScript stri
 	}
 
 	// Strip EOF if enabled, do it after artifact upload since it only applies to parameter outputs
-	if hasArtifacts && len(artifacts) > 0 && stripEOF {
+	if !hasMoveStep && hasArtifacts && len(artifacts) > 0 && stripEOF {
 		for _, artifact := range artifacts {
 			if len(artifact) == 2 {
 				// The below solution is in experimental stage and didn't cover all edge cases.

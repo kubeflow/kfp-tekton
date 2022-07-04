@@ -27,11 +27,11 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/cache/client"
 	"github.com/kubeflow/pipelines/backend/src/cache/model"
 	"github.com/kubeflow/pipelines/backend/src/cache/storage"
-	"k8s.io/apimachinery/pkg/api/resource"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"go.uber.org/zap"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -64,7 +64,7 @@ const (
 
 	TektonGroup        string = "tekton.dev/v1beta1"
 	TektonTaskKind     string = "TaskRun"
-	ToolInitContainner string = "place-tools"
+	ToolInitContainner string = "prepare"
 )
 
 var (
@@ -182,8 +182,8 @@ func MutatePodIfCached(req *v1beta1.AdmissionRequest, clientMgr ClientManagerInt
 	if cachedExecution != nil {
 		logger.Infof("Cached output: " + cachedExecution.ExecutionOutput)
 
-		result := getValueFromSerializedMap(cachedExecution.ExecutionOutput, TektonTaskrunOutputs)
-		annotations[TektonTaskrunOutputs] = result
+		results := getValueFromSerializedMap(cachedExecution.ExecutionOutput, TektonTaskrunOutputs)
+		annotations[TektonTaskrunOutputs] = results
 		cachedPipelineRun := getValueFromSerializedMap(cachedExecution.ExecutionOutput, CachedPipeline)
 		annotations[CachedPipeline] = cachedPipelineRun
 		labels[CacheIDLabelKey] = strconv.FormatInt(cachedExecution.ID, 10)
@@ -193,7 +193,7 @@ func MutatePodIfCached(req *v1beta1.AdmissionRequest, clientMgr ClientManagerInt
 		labels[MetadataExecutionIDKey] = getValueFromSerializedMap(cachedExecution.ExecutionOutput, MetadataExecutionIDKey)
 		labels[MetadataWrittenKey] = "true"
 
-		dummyContainers, err := prepareMainContainer(&pod, result, logger)
+		dummyContainers, err := prepareMainContainer(&pod, results, logger)
 		if err != nil || len(dummyContainers) == 0 {
 			logger.Errorf("Unable prepare dummy container %s : %v", pod.ObjectMeta.Name, err)
 			return patches, nil
@@ -278,20 +278,33 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 		return dummyContainers, err
 	}
 
+	for _, originalContainer := range pod.Spec.Containers {
+		mutateContainer, err := mutateContainer(results, originalContainer)
+		if err != nil {
+			logger.Errorf("Failed to get container result from cache: ", err)
+			return dummyContainers, err
+		}
+		dummyContainers = append(dummyContainers, mutateContainer)
+	}
+	return dummyContainers, nil
+}
+
+func mutateContainer(results map[string][]*tektonv1beta1.TaskRunResult, originalContainer corev1.Container) (corev1.Container, error) {
+	outputs, found := results[originalContainer.Name]
+	if !found {
+		return originalContainer, fmt.Errorf("could not find cached output for container %s", originalContainer.Name)
+	}
 	args := []string{}
 	args = append(args, "printf 'This step output is taken from cache.\n\n'")
-	for _, result := range results {
-		arg := fmt.Sprintf("printf '%s' | tee /tekton/results/%s", result.Value, result.Name)
+	for _, result := range outputs {
+		arg := fmt.Sprintf("printf '%s: %s\n'; printf '%s' > /tekton/results/%s", result.Name, result.Value, result.Value, result.Name)
 		args = append(args, arg)
 	}
 
 	replacedArg := strings.Join(args, ";")
-
 	argStartFlag := -1
-	// assumptive there is only one container in section container
-	firstOriginalContainer := pod.Spec.Containers[0]
 
-	for index, arg := range firstOriginalContainer.Args {
+	for index, arg := range originalContainer.Args {
 		if arg == "--" {
 			argStartFlag = index
 		}
@@ -302,25 +315,22 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 		image = v
 	}
 
-	firstOriginalContainer.Args = append(firstOriginalContainer.Args[:argStartFlag-1], "/bin/bash")
-	firstOriginalContainer.Args = append(firstOriginalContainer.Args, "--")
-	firstOriginalContainer.Args = append(firstOriginalContainer.Args, "-c")
-	firstOriginalContainer.Args = append(firstOriginalContainer.Args, replacedArg)
-	firstOriginalContainer.Image = image
-	firstOriginalContainer.Resources = corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("0.01"),
-							corev1.ResourceMemory: resource.MustParse("16Mi"),
-						},
-					}
-
-	dummyContainers = append(dummyContainers, firstOriginalContainer)
-
-	return dummyContainers, nil
+	originalContainer.Args = append(originalContainer.Args[:argStartFlag-1], "/bin/bash")
+	originalContainer.Args = append(originalContainer.Args, "--")
+	originalContainer.Args = append(originalContainer.Args, "-c")
+	originalContainer.Args = append(originalContainer.Args, replacedArg)
+	originalContainer.Image = image
+	originalContainer.Resources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("0.01"),
+			corev1.ResourceMemory: resource.MustParse("16Mi"),
+		},
+	}
+	return originalContainer, nil
 }
 
-func unmarshalResult(taskResult string) ([]tektonv1beta1.TaskRunResult, error) {
-	var results []tektonv1beta1.TaskRunResult
+func unmarshalResult(taskResult string) (map[string][]*tektonv1beta1.TaskRunResult, error) {
+	var results map[string][]*tektonv1beta1.TaskRunResult
 	err := json.Unmarshal([]byte(taskResult), &results)
 	if err != nil {
 		return nil, err
@@ -332,6 +342,7 @@ func unmarshalResult(taskResult string) ([]tektonv1beta1.TaskRunResult, error) {
 func generateCacheKeyFromTemplate(taskRun *tektonv1beta1.TaskRun, pod *corev1.Pod) (string, string, error) {
 	template := Template{}
 	template.Spec = taskRun.Spec
+	template.Spec.Timeout = nil //clear timeout
 	template.TaskName = pod.ObjectMeta.Labels[TaskName]
 	template.PipelineName = pod.ObjectMeta.Labels[PipelineName]
 	template.Generation = pod.ObjectMeta.Labels[Generation]

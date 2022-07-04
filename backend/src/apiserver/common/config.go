@@ -20,7 +20,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
-	corev1 "k8s.io/api/core/v1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 const (
@@ -45,6 +45,7 @@ const (
 	InjectDefaultScript                     string = "INJECT_DEFAULT_SCRIPT"
 	ApplyTektonCustomResource               string = "APPLY_TEKTON_CUSTOM_RESOURCE"
 	TerminateStatus                         string = "TERMINATE_STATUS"
+	Path4InternalResults                    string = "PATH_FOR_INTERNAL_RESULTS"
 )
 
 func IsPipelineVersionUpdatedByDefault() bool {
@@ -141,8 +142,8 @@ func GetArtifactImage() string {
 	return GetStringConfigWithDefault(ArtifactImage, DefaultArtifactImage)
 }
 
-func GetCopyStepTemplate() *corev1.Container {
-	var tpl corev1.Container
+func GetCopyStepTemplate() *workflowapi.Step {
+	var tpl workflowapi.Step
 	if err := viper.UnmarshalKey(ArtifactCopyStepTemplate, &tpl); err != nil {
 		glog.Fatalf("Invalid '%s', %v", ArtifactCopyStepTemplate, err)
 	}
@@ -191,4 +192,8 @@ func GetArtifactScript() string {
 
 func GetTerminateStatus() string {
 	return GetStringConfigWithDefault(TerminateStatus, DefaultTerminateStatus)
+}
+
+func GetPath4InternalResults() string {
+	return GetStringConfigWithDefault(Path4InternalResults, DefaultPath4InternalResults)
 }

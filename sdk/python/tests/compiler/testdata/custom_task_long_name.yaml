@@ -65,6 +65,7 @@ spec:
         - name: url1
         results:
         - name: data-123data-123data-123data-123data-123data-123dat
+          type: string
           description: /tmp/outputs/Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123/data
         metadata:
           labels:

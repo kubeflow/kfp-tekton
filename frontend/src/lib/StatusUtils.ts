@@ -44,6 +44,7 @@ export enum NodePhase {
   CONDITIONCHECKFAILED = 'ConditionCheckFailed',
   PIPELINERUNCANCELLED = 'PipelineRunCancelled',
   PIPELINERUNCOULDNTCANCEL = 'PipelineRunCouldntCancel',
+  INVALIDTASKRESULTREFERENCE = 'InvalidTaskResultReference',
   CANCELLED = 'Cancelled',
   STOPPEDRUNFINALLY = 'StoppedRunFinally',
   CANCELLEDRUNFINALLY = 'CancelledRunFinally',

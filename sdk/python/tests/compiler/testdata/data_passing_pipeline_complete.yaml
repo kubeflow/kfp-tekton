@@ -141,8 +141,10 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: data
+          type: string
           description: /tmp/outputs/data/data
         - name: taskrun-name
+          type: string
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -220,8 +222,10 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: data
+          type: string
           description: /tmp/outputs/data/data
         - name: taskrun-name
+          type: string
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -317,8 +321,10 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
         - name: output
+          type: string
           description: /tmp/outputs/Output/data
         - name: taskrun-name
+          type: string
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''

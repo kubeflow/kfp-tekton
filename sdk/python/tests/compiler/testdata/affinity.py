@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kubernetes.client import V1Affinity, V1NodeSelector, V1NodeSelectorRequirement, V1NodeSelectorTerm, V1NodeAffinity
+from kubernetes.client import V1Affinity, V1NodeSelector, V1NodeSelectorRequirement, V1NodeSelectorTerm, V1NodeAffinity, V1SecurityContext
 from kfp import dsl, components
 
 ECHO_OP_STR = """
@@ -46,7 +46,8 @@ def affinity_pipeline(
                         key='kubernetes.io/os',
                         operator='In',
                         values=['linux'])])])))
-    echo_op().add_affinity(affinity)
+    security_context = V1SecurityContext(run_as_user=0)
+    echo_op().add_affinity(affinity).set_security_context(security_context)
 
 
 if __name__ == '__main__':

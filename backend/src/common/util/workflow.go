@@ -301,15 +301,16 @@ func (w *Workflow) IsInFinalState() bool {
 
 	if len(w.Status.Status.Conditions) > 0 {
 		finalConditions := map[string]int{
-			"Succeeded":                1,
-			"Failed":                   1,
-			"Completed":                1,
-			"PipelineRunCancelled":     1, // remove this when Tekton move to v1 API
-			"PipelineRunCouldntCancel": 1,
-			"PipelineRunTimeout":       1,
-			"Cancelled":                1,
-			"StoppedRunFinally":        1,
-			"CancelledRunFinally":      1,
+			"Succeeded":                  1,
+			"Failed":                     1,
+			"Completed":                  1,
+			"PipelineRunCancelled":       1, // remove this when Tekton move to v1 API
+			"PipelineRunCouldntCancel":   1,
+			"PipelineRunTimeout":         1,
+			"Cancelled":                  1,
+			"StoppedRunFinally":          1,
+			"CancelledRunFinally":        1,
+			"InvalidTaskResultReference": 1,
 		}
 		phase := w.Status.Status.Conditions[0].Reason
 		if _, ok := finalConditions[phase]; ok {

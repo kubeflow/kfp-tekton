@@ -117,6 +117,11 @@ export function statusToIcon(
       iconColor = color.terminated;
       title = 'PipelineRun cancelled';
       break;
+    case NodePhase.INVALIDTASKRESULTREFERENCE:
+        IconComponent = ErrorIcon;
+        iconColor = color.errorText;
+        title = 'Could not find a specific task result';
+        break;
     case NodePhase.CANCELLED:
       IconComponent = TerminatedIcon;
       iconColor = color.terminated;

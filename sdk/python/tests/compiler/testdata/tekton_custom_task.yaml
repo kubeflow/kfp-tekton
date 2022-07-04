@@ -50,6 +50,7 @@ spec:
           image: python:alpine3.6
         results:
         - name: output-result
+          type: string
           description: /tmp/outputs/output_result/data
         metadata:
           labels:
@@ -75,6 +76,7 @@ spec:
           image: python:alpine3.6
         results:
         - name: output-result
+          type: string
           description: /tmp/outputs/output_result/data
         metadata:
           labels:

@@ -184,7 +184,7 @@ def _get_resourceOp_template(op: BaseOp,
     if op.attribute_outputs.items():
         template['spec']['results'] = []
         for output_item in sorted(list(op.attribute_outputs.items()), key=lambda x: x[0]):
-            template['spec']['results'].append({'name': output_item[0], 'description': output_item[1]})
+            template['spec']['results'].append({'name': output_item[0], 'type': 'string', 'description': output_item[1]})
 
     if owner_reference == 'true':
         owner_reference_env = [
@@ -275,6 +275,7 @@ def _process_parameters(processed_op: BaseOp,
         for name, path in processed_op.file_outputs.items():
             template['spec']['results'].append({
                 'name': name,
+                'type': 'string',
                 'description': path
             })
             # replace all occurrences of the output file path with the Tekton output parameter expression

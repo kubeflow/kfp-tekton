@@ -28,6 +28,7 @@ import yaml
 from kfp_tekton.compiler.yaml_utils import dump_yaml
 from kfp_tekton import compiler
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
+from kubernetes.client import V1SecurityContext
 
 # temporarily set this flag to True in order to (re)generate new "golden" YAML
 # files after making code changes that modify the expected YAML output.
@@ -125,6 +126,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.recur_cond import recur_and_condition
     self._test_pipeline_workflow(recur_and_condition, 'recur_cond.yaml')
+
+  def test_artifact_outputs_workflow(self):
+    """
+    Test compiling an artifact output workflow.
+    """
+    from .testdata.artifact_outputs import artifact_outputs
+    self._test_pipeline_workflow(artifact_outputs, 'artifact_outputs.yaml', skip_noninlined=True)
 
   def test_recur_cond_workflow(self):
     """
@@ -232,6 +240,13 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.nested_recur_custom_task import double_recursion_test
     self._test_pipeline_workflow(double_recursion_test, 'nested_recur_custom_task.yaml')
+
+  def test_param_same_prefix_workflow(self):
+    """
+    Test compiling a param that has same task prefix workflow.
+    """
+    from .testdata.param_same_prefix import prefixes
+    self._test_pipeline_workflow(prefixes, 'param_same_prefix.yaml')
 
   def test_nested_recur_params_workflow(self):
     """
@@ -701,6 +716,8 @@ class TestTektonCompiler(unittest.TestCase):
     pipeline_conf.add_pipeline_label('test', 'label')
     pipeline_conf.add_pipeline_label('test2', 'label2')
     pipeline_conf.add_pipeline_annotation('test', 'annotation')
+    pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0))
+    pipeline_conf.set_automount_service_account_token(False)
     self._test_pipeline_workflow(echo_pipeline, 'tekton_pipeline_conf.yaml',
                                  tekton_pipeline_conf=pipeline_conf,
                                  skip_noninlined=True)

@@ -110,6 +110,7 @@ func main() {
 	controller := NewPersistenceAgent(
 		swfInformerFactory,
 		workflowInformerFactory,
+		workflowClient,
 		pipelineClient,
 		util.NewRealTime())
 

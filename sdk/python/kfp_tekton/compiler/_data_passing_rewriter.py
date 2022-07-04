@@ -25,6 +25,7 @@ from os import environ as env
 
 BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
 BIG_DATA_PATH_FORMAT = "/".join(["$(workspaces.$TASK_NAME.path)", BIG_DATA_MIDPATH, "$TASKRUN_NAME", "$TASK_PARAM_NAME"])
+ARTIFACT_OUTPUTLIST_ANNOTATION_KEY = 'artifact_outputs'
 
 
 def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix: str) -> dict:
@@ -331,6 +332,7 @@ def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix:
         spec['results'] = [
             output_parameter for output_parameter in spec.get('results', [])
         ]
+        spec['results'] = sorted(spec['results'], key=lambda k: k['name'])
         # tekton results doesn't support underscore
         renamed_results_in_pipeline_task = set()
         for task_result in spec['results']:
@@ -488,8 +490,15 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
     task_spec = task.get('taskSpec', {})
     # Data passing for the task outputs
     appended_taskrun_name = False
+    artifact_output_list = task_spec.get('metadata', {}).get('annotations', {}).get(ARTIFACT_OUTPUTLIST_ANNOTATION_KEY, '')
+    if artifact_output_list:
+        temp_list = json.loads(artifact_output_list)
+        artifact_output_list = []
+        for output in temp_list:
+            artifact_output_list.append(sanitize_k8s_name(output))
     for task_output in task.get('taskSpec', {}).get('results', []):
-        if (task_name, task_output.get('name')) in outputs_tasks:
+        if (task_name, task_output.get('name')) in outputs_tasks or \
+            (artifact_output_list and task_output.get('name') in artifact_output_list):
             if not task.get('taskSpec', {}).setdefault('workspaces', []):
                 task.get('taskSpec', {})['workspaces'].append({"name": task_name})
             # Replace the args for the outputs in the task_spec
@@ -503,7 +512,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             if not appended_taskrun_name:
                 copy_taskrun_name_step = _get_base_step('output-taskrun-name')
                 copy_taskrun_name_step['script'] += 'echo -n "%s" > $(results.taskrun-name.path)\n' % ("$(context.taskRun.name)")
-                task['taskSpec']['results'].append({"name": "taskrun-name"})
+                task['taskSpec']['results'].append({"name": "taskrun-name", "type": "string"})
                 task['taskSpec']['steps'].append(copy_taskrun_name_step)
                 _append_original_pr_name_env(task)
                 appended_taskrun_name = True

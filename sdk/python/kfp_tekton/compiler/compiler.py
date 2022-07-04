@@ -61,7 +61,7 @@ DEFAULT_TIMEOUT_MINUTES = "525600m"
 def _get_super_condition_template():
 
   python_script = textwrap.dedent('''\
-    'import sys
+    import sys
     input1=str.rstrip(sys.argv[1])
     input2=str.rstrip(sys.argv[2])
     try:
@@ -72,12 +72,14 @@ def _get_super_condition_template():
     %(s)s="true" if (input1 $(inputs.params.operator) input2) else "false"
     f = open("/tekton/results/%(s)s", "w")
     f.write(%(s)s)
-    f.close()' '''
+    f.close()
+    '''
     % {'s': DEFAULT_CONDITION_OUTPUT_KEYWORD})
 
   template = {
     'results': [
       {'name': DEFAULT_CONDITION_OUTPUT_KEYWORD,
+       'type': 'string',
        'description': 'Conditional task %s' % DEFAULT_CONDITION_OUTPUT_KEYWORD
        }
     ],
@@ -87,7 +89,9 @@ def _get_super_condition_template():
       {'name': 'operator'}
     ],
     'steps': [{
-      'script': 'python -c ' + python_script + "'$(inputs.params.operand1)' '$(inputs.params.operand2)'",
+      'name': 'main',
+      'command': ['sh', '-ec', 'program_path=$(mktemp); printf "%s" "$0" > "$program_path";  python3 -u "$program_path" "$1" "$2"'],
+      'args': [python_script, '$(inputs.params.operand1)', '$(inputs.params.operand2)'],
       'image': 'python:alpine3.6',
     }]
   }
@@ -140,6 +144,8 @@ class TektonCompiler(Compiler):
     self.tekton_inline_spec = True
     self.resource_in_separate_yaml = False
     self.produce_taskspec = True
+    self.security_context = None
+    self.automount_service_account_token = None
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -147,6 +153,8 @@ class TektonCompiler(Compiler):
     self.pipeline_annotations = tekton_pipeline_conf.pipeline_annotations
     self.tekton_inline_spec = tekton_pipeline_conf.tekton_inline_spec
     self.resource_in_separate_yaml = tekton_pipeline_conf.resource_in_separate_yaml
+    self.security_context = tekton_pipeline_conf.security_context
+    self.automount_service_account_token = tekton_pipeline_conf.automount_service_account_token
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -318,7 +326,7 @@ class TektonCompiler(Compiler):
                 replace_str = param[1] + '-'
                 self.loops_pipeline[group_name]['spec']['params'].append({
                   'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
-                    param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
+                    param[1], sanitize_k8s_name(param[0].replace(replace_str, '', 1))
                   )
                 })
               if not param[1]:
@@ -362,7 +370,7 @@ class TektonCompiler(Compiler):
             replace_str = param[1] + '-'
             custom_task['spec']['params'].append({
               'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
-                param[1], sanitize_k8s_name(param[0].replace(replace_str, ''))
+                param[1], sanitize_k8s_name(param[0].replace(replace_str, '', 1))
               )
             })
           if not param[1] and param[0] not in param_list:
@@ -1167,7 +1175,7 @@ class TektonCompiler(Compiler):
     opgroup_name_to_parent_groups = self._get_groups_for_opsgroups(pipeline.groups[0])
     for loop_task_key in self.loops_pipeline.keys():
       task_name_prefix = '-'.join(self._group_names[:-1] + [""])
-      raw_task_key = loop_task_key.replace(task_name_prefix, "")
+      raw_task_key = loop_task_key.replace(task_name_prefix, "", 1)
       for key in opgroup_name_to_parent_groups.keys():
         if raw_task_key in key:
           raw_task_key = key
@@ -1317,6 +1325,17 @@ class TektonCompiler(Compiler):
     if self.pipeline_annotations:
       pipeline_run['metadata']['annotations'] = pipeline_run['metadata'].setdefault('annotations', {})
       pipeline_run['metadata']['annotations'].update(self.pipeline_annotations)
+
+    if self.security_context:
+      pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
+      for key, value in self.security_context.to_dict().items():
+        if value is not None:
+          pipeline_run['spec']['podTemplate']['securityContext'] = \
+            pipeline_run['spec']['podTemplate'].setdefault('securityContext', {})
+          pipeline_run['spec']['podTemplate']['securityContext'][key] = value
+    if self.automount_service_account_token is not None:
+      pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
+      pipeline_run['spec']['podTemplate']['automountServiceAccountToken'] = self.automount_service_account_token
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []

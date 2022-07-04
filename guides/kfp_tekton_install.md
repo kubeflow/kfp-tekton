@@ -6,6 +6,7 @@
   * [IBM Cloud Kubernetes Service (IKS)](#ibm-cloud-kubernetes-service-iks)
   * [OpenShift](#openshift)
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
+  * [Alternative KIND deployment](#alternative-kind-deployment)
 - [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
 - [Upgrade to Multi-User KFP-Tekton on Kubeflow](#upgrade-to-multi-user-kfp-tekton-on-kubeflow)
@@ -13,7 +14,7 @@
 
 ## Installation Targets and Prerequisites
 
-A Kubernetes cluster `v1.20` that has least 8 vCPU and 16 GB memory.
+A Kubernetes cluster `v1.21` that has least 8 vCPU and 16 GB memory.
 
 ### IBM Cloud Kubernetes Service (IKS)
 
@@ -32,27 +33,35 @@ A Kubernetes cluster `v1.20` that has least 8 vCPU and 16 GB memory.
 
    Visit [Kubeflow Installation](https://www.kubeflow.org/docs/started/) for setting up the preferred environment to deploy Kubeflow.
 
+### Alternative KIND deployment
+
+   If you want to deploy locally, you can [deploy MLX on KIND](https://github.com/machine-learning-exchange/mlx/blob/main/docs/install-mlx-on-kind.md). MLX in build on top of kfp-tekton, so you will have Kubeflow Pipeline with Tekton installed after finish deploy MLX on KIND.
+
 ## Standalone Kubeflow Pipelines with Tekton Backend Deployment
 
 To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
 
-1. Install [Tekton v0.31.4](https://github.com/tektoncd/pipeline/blob/v0.31.4/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines or OpenShift Pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton/Openshift pipelines version is not v0.28.0+.
+1. Install [Tekton v0.36.0](https://github.com/tektoncd/pipeline/blob/v0.36.0/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines or OpenShift Pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton/Openshift pipelines version is not v0.28.0+.
+
+   ```shell
+   kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.36.0/release.yaml
+   ```
 
 2. Enable custom task controller and other feature flags for kfp-tekton
    ```shell
    kubectl patch cm feature-flags -n tekton-pipelines \
-         -p '{"data":{"enable-custom-tasks": "true", "enable-api-fields": "alpha"}}'
+         -p '{"data":{"enable-custom-tasks": "true"}}'
    ```
 
-3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.2.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
+3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.2.1` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
    > Note: You can ignore the error `no matches for kind "Application" in version "app.k8s.io/v1beta1"` since it's a warning saying `application` CRD is not yet ready.
     ```shell
-    kubectl apply --selector kubeflow/crd-install=true -f install/v1.2.0/kfp-tekton.yaml
+    kubectl apply --selector kubeflow/crd-install=true -f install/v1.2.1/kfp-tekton.yaml
     ```
 
-4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.2.0` deployment
+4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.2.1` deployment
     ```shell
-    kubectl apply -f install/v1.2.0/kfp-tekton.yaml
+    kubectl apply -f install/v1.2.1/kfp-tekton.yaml
     ```
 
 5. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:

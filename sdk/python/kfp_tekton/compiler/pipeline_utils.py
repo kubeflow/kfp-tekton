@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from kfp import dsl
+from kubernetes.client.models import V1SecurityContext
 
 TEKTON_PIPELINE_ANNOTATIONS = ['sidecar.istio.io/inject', 'tekton.dev/artifact_bucket',
                                'tekton.dev/artifact_endpoint', 'tekton.dev/artifact_endpoint_scheme',
@@ -27,6 +28,8 @@ class TektonPipelineConf(dsl.PipelineConf):
         self.pipeline_annotations = {}
         self.tekton_inline_spec = True
         self.resource_in_separate_yaml = False
+        self.security_context = None
+        self.automount_service_account_token = None
         super().__init__(**kwargs)
 
     def copy(self):
@@ -34,7 +37,9 @@ class TektonPipelineConf(dsl.PipelineConf):
             .add_pipeline_label(self.pipeline_labels)\
             .add_pipeline_annotation(self.pipeline_annotations)\
             .set_tekton_inline_spec(self.tekton_inline_spec)\
-            .set_resource_in_separate_yaml(self.resource_in_separate_yaml)
+            .set_resource_in_separate_yaml(self.resource_in_separate_yaml)\
+            .set_security_context(self.security_context)\
+            .set_automount_service_account_token(self.automount_service_account_token)
 
     def add_pipeline_label(self, label_name: str, value: str):
         self.pipeline_labels[label_name] = value
@@ -53,4 +58,12 @@ class TektonPipelineConf(dsl.PipelineConf):
 
     def set_resource_in_separate_yaml(self, value: bool):
         self.resource_in_separate_yaml = value
+        return self
+
+    def set_security_context(self, value: V1SecurityContext):
+        self.security_context = value
+        return self
+
+    def set_automount_service_account_token(self, value: bool):
+        self.automount_service_account_token = value
         return self

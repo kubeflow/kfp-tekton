@@ -15,15 +15,15 @@
 apiVersion: custom.tekton.dev/v1alpha1
 kind: PipelineLoop
 metadata:
-  name: recursion-pipeline-graph-flip-component-1
+  name: recursion-pipeline-flip-component-1
 spec:
   pipelineSpec:
     params:
+    - name: flip-coin-output
+      type: string
     - name: just_one_iteration
       type: string
     - name: maxVal
-      type: string
-    - name: flip-coin-output
       type: string
     tasks:
     - name: print
@@ -46,33 +46,39 @@ spec:
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [], "version": "print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c"}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-2.results.outcome)
         operator: in
         values:
         - "true"
-      timeout: 0s
+      timeout: 525600m
     - name: flip-coin-2
       taskSpec:
         steps:
         - name: main
           args:
-          - python -c "import random; result = 'heads' if random.randint(0,1) == 0
-            else 'tails'; print(result)" | tee $(results.output.path)
+          - |
+            python -c "import random; result = 'heads' if random.randint(0,1) == 0           else 'tails'; print(result)" | tee $0
+          - $(results.output.path)
           command:
           - sh
           - -c
           image: python:alpine3.6
         results:
         - name: output
-          description: /tmp/output
+          type: string
+          description: /tmp/outputs/output/data
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
+              [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d"}'
             tekton.dev/template: ''
       when:
       - input: $(tasks.condition-2.results.outcome)
@@ -81,7 +87,7 @@ spec:
         - "true"
       runAfter:
       - print
-      timeout: 0s
+      timeout: 525600m
     - name: condition-2
       params:
       - name: operand1
@@ -93,6 +99,7 @@ spec:
       taskSpec:
         results:
         - name: outcome
+          type: string
           description: Conditional task outcome
         params:
         - name: operand1
@@ -116,17 +123,22 @@ spec:
             f.write(outcome)
             f.close()' '$(inputs.params.operand1)' '$(inputs.params.operand2)'
           image: python:alpine3.6
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
     - name: flip-component
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: recursion-pipeline-graph-flip-component-1
+        name: recursion-pipeline-flip-component-1
       params:
+      - name: flip-coin-output
+        value: $(tasks.flip-coin-2.results.output)
       - name: just_one_iteration
         value:
         - '1'
-      - name: flip-coin-output
-        value: $(tasks.flip-coin-2.results.output)
       - name: maxVal
         value: $(params.maxVal)
       when:

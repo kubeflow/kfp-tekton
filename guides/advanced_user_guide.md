@@ -10,6 +10,8 @@ This page is an advanced KFP-Tekton guide on how to use Tekton specific features
     - [Custom task with Conditions](#custom-task-with-conditions)
     - [Custom Task Limitations](#custom-task-limitations)
     - [Custom Task for OpsGroup](#custom-task-for-opsgroup)
+  - [Tekton Pipeline Config for PodTemplate](#tekton-pipeline-config-for-podtemplate)
+  - [Tekton Feature Flags](#tekton-feature-flags)
 
 ## Using Tekton Custom Task on KFP-Tekton
 
@@ -183,3 +185,35 @@ You can override the `post_task_spec` or `post_params` functions to manipulate t
 could be assigned to [`finally` section of Tekton Pipeline](https://tekton.dev/docs/pipelines/pipelines/#adding-finally-to-the-pipeline)
 by assigning `is_finally=Ture` when constructing AddOnGroup. In this case, the custom OpsGroup can only be
 used as a root OpsGroup in a pipeline. It can't be under other OpsGroup.
+
+
+## Tekton Pipeline Config for PodTemplate
+Currently users can explicitly setup Security Context and Auto Mount Service Account Token at the pipeline level using Tekton Pipleine Config.
+Below are the usages and input types:
+- set_security_context() - InputType: `V1SecurityContext`
+- set_automount_service_account_token () - InputType: `Bool`
+
+```python
+from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
+from kubernetes.client import V1SecurityContext
+pipeline_conf = TektonPipelineConf()
+pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0)) # InputType: V1SecurityContext
+pipeline_conf.set_automount_service_account_token(False) # InputType: Bool
+self._test_pipeline_workflow(test_pipeline, 'test.yaml', tekton_pipeline_conf=pipeline_conf)
+```
+
+For more details on how this can be used in a real pipeline, visit the [Tekton Pipeline Conf example](/sdk/python/tests/compiler/testdata/tekton_pipeline_conf.py).
+
+## Tekton Feature Flags
+Tekton provides some features that you can configure via `feature-flgas` configmap under `tekton-pipelines`
+namespace. Use these tekton features may impact kfp-tekton backend. Here is the list of features that
+impact kfp-tekton backend:
+- enable-custom-tasks: You can turn on/off custom task support by setting its value to true/false.
+  The default value for kfp-tekton deployment is `true`. If you are using custom tasks and set the flag value
+  to `false`, the pipeline will be in the running state until timeout. Because custom tasks inside the pipeline
+  are not able to be handled properly.
+- embedded-status: You can find details for this feature flag [here](https://github.com/tektoncd/community/blob/main/teps/0100-embedded-taskruns-and-runs-status-in-pipelineruns.md).
+  The default value for kfp-tekton deployment is `full`, which stores all TaskRuns/Runs statuses under PipelineRun's status.
+  kfp-tekton backend also supports the `minimal` setting, which only records the list of TaskRuns/Runs under PipelineRun's status.
+  In this case, statuses of TaskRuns/Runs only exist in their own CRs. kfp-tekton backend retrieves statuses of TaskRuns/Runs
+  from individual CR, aggregates, and stores them into the backend storage.

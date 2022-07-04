@@ -22,12 +22,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/clock"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"github.com/hashicorp/go-multierror"
@@ -48,6 +50,7 @@ import (
 	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/pkg/names"
 	"github.com/tektoncd/pipeline/pkg/reconciler/events"
+	tkstatus "github.com/tektoncd/pipeline/pkg/status"
 	"go.uber.org/zap"
 	"gomodules.xyz/jsonpatch/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,8 +86,10 @@ const (
 	LabelKeyWorkflowRunId = "pipeline/runid"
 
 	DefaultNestedStackDepth = 30
+	DefaultIterationLimit   = 10000
 
 	MaxNestedStackDepthKey = "maxNestedStackDepth"
+	IterationLimitEnvKey   = "IterationLimit"
 
 	defaultIterationParamStrSeparator = ","
 )
@@ -98,12 +103,14 @@ type Reconciler struct {
 	pipelineLoopLister    listerspipelineloop.PipelineLoopLister
 	pipelineRunLister     listers.PipelineRunLister
 	cacheStore            *cache.TaskCacheStore
+	clock                 clock.RealClock
 }
 
 var (
 	// Check that our Reconciler implements runreconciler.Interface
 	_                runreconciler.Interface = (*Reconciler)(nil)
 	cancelPatchBytes []byte
+	iterationLimit   int = DefaultIterationLimit
 )
 
 func init() {
@@ -116,6 +123,13 @@ func init() {
 	cancelPatchBytes, err = json.Marshal(patches)
 	if err != nil {
 		log.Fatalf("failed to marshal patch bytes in order to cancel: %v", err)
+	}
+	iterationLimitEnv, ok := os.LookupEnv(IterationLimitEnvKey)
+	if ok {
+		iterationLimitNum, err := strconv.Atoi(iterationLimitEnv)
+		if err == nil {
+			iterationLimit = iterationLimitNum
+		}
 	}
 }
 
@@ -239,7 +253,6 @@ func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
 	defaults, _ := config.NewDefaultsFromMap(map[string]string{})
 	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{
 		"enable-custom-tasks": "true",
-		"enable-api-fields":   "alpha",
 	})
 	artifactBucket, _ := config.NewArtifactBucketFromMap(map[string]string{})
 	artifactPVC, _ := config.NewArtifactPVCFromMap(map[string]string{})
@@ -367,6 +380,11 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			"Cannot determine number of iterations: %s", err)
 		return nil
 	}
+	if totalIterations > iterationLimit {
+		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
+			"Total number of iterations exceeds the limit: %d", iterationLimit)
+		return nil
+	}
 
 	// Update status of PipelineRuns.  Return the PipelineRun representing the highest loop iteration.
 	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(ctx, iterationElements, run, status)
@@ -382,7 +400,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 				run.Namespace, run.Name)
 		} else {
 			reason := pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String()
-			if run.HasTimedOut() { // This check is only possible if we are on tekton 0.27.0 +
+			if run.HasTimedOut(c.clock) { // This check is only possible if we are on tekton 0.27.0 +
 				reason = v1alpha1.RunReasonTimedOut
 			}
 			run.Status.MarkRunFailed(reason,
@@ -451,7 +469,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 				Iteration:     highestIteration,
 				IterationItem: iterationElements[highestIteration-1],
-				Status:        &pr.Status,
+				Status:        getPipelineRunStatusWithoutPipelineSpec(&pr.Status),
 			}
 			logger.Infof("Retried failed pipelineRun: %s with new pipelineRun: %s", failedPr.Name, pr.Name)
 		}
@@ -495,10 +513,10 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 	actualParallelism := 1
 	// if Parallelism is bigger then totalIterations means there's no limit
-	if status.PipelineLoopSpec.Parallelism > totalIterations {
+	if pipelineLoopSpec.Parallelism > totalIterations {
 		actualParallelism = totalIterations
-	} else if status.PipelineLoopSpec.Parallelism > 0 {
-		actualParallelism = status.PipelineLoopSpec.Parallelism
+	} else if pipelineLoopSpec.Parallelism > 0 {
+		actualParallelism = pipelineLoopSpec.Parallelism
 	}
 	if len(currentRunningPrs) >= actualParallelism {
 		logger.Infof("Currently %d pipelinerun started, meet parallelism %d, waiting...", len(currentRunningPrs), actualParallelism)
@@ -529,7 +547,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 			Iteration:     nextIteration,
 			IterationItem: iterationElements[nextIteration-1],
-			Status:        &pr.Status,
+			Status:        getPipelineRunStatusWithoutPipelineSpec(&pr.Status),
 		}
 		nextIteration++
 		if nextIteration > totalIterations {
@@ -741,14 +759,56 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 			Iteration:     iteration,
 			IterationItem: iterationElements[iteration-1],
-			Status:        &pr.Status,
+			Status:        getPipelineRunStatusWithoutPipelineSpec(&pr.Status),
 		}
 		if iteration > highestIteration {
 			highestIteration = iteration
 		}
+		if pr.Status.ChildReferences != nil {
+			//fetch taskruns/runs status specifically for pipelineloop-break-operation first
+			for _, child := range pr.Status.ChildReferences {
+				if strings.HasPrefix(child.PipelineTaskName, "pipelineloop-break-operation") {
+					switch child.Kind {
+					case "TaskRun":
+						tr, err := tkstatus.GetTaskRunStatusForPipelineTask(ctx, c.pipelineClientSet, run.Namespace, child)
+						if err != nil {
+							logger.Errorf("can not get status for TaskRun, %v", err)
+							return 0, nil, nil, fmt.Errorf("could not get TaskRun %s."+
+								" %#v", child.Name, err)
+						}
+						if pr.Status.TaskRuns == nil {
+							pr.Status.TaskRuns = make(map[string]*v1beta1.PipelineRunTaskRunStatus)
+						}
+						pr.Status.TaskRuns[child.Name] = &v1beta1.PipelineRunTaskRunStatus{
+							PipelineTaskName: child.PipelineTaskName,
+							WhenExpressions:  child.WhenExpressions,
+							Status:           tr.DeepCopy(),
+						}
+					case "Run":
+						run, err := tkstatus.GetRunStatusForPipelineTask(ctx, c.pipelineClientSet, run.Namespace, child)
+						if err != nil {
+							logger.Errorf("can not get status for Run, %v", err)
+							return 0, nil, nil, fmt.Errorf("could not get Run %s."+
+								" %#v", child.Name, err)
+						}
+						if pr.Status.Runs == nil {
+							pr.Status.Runs = make(map[string]*v1beta1.PipelineRunRunStatus)
+						}
+
+						pr.Status.Runs[child.Name] = &v1beta1.PipelineRunRunStatus{
+							PipelineTaskName: child.PipelineTaskName,
+							WhenExpressions:  child.WhenExpressions,
+							Status:           run.DeepCopy(),
+						}
+					default:
+						//ignore
+					}
+				}
+			}
+		}
 		for _, runStatus := range pr.Status.Runs {
 			if strings.HasPrefix(runStatus.PipelineTaskName, "pipelineloop-break-operation") {
-				if !runStatus.Status.GetCondition(apis.ConditionSucceeded).IsUnknown() {
+				if runStatus.Status != nil && !runStatus.Status.GetCondition(apis.ConditionSucceeded).IsUnknown() {
 					err = c.cancelAllPipelineRuns(ctx, run)
 					if err != nil {
 						return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to Run %s."+
@@ -788,28 +848,50 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 	return highestIteration, currentRunningPrs, failedPrs, nil
 }
 
+func getIntegerParamValue(parm v1beta1.Param) (int, error) {
+	fromStr := strings.TrimSuffix(parm.Value.StringVal, "\n")
+	fromStr = strings.Trim(fromStr, " ")
+	retVal, err := strconv.Atoi(fromStr)
+	if err != nil {
+		err = fmt.Errorf("input \"%s\" is not a number", parm.Name)
+	}
+	return retVal, err
+}
+
 func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec) (int, []interface{}, error) {
 	// Find the iterate parameter.
 	numberOfIterations := -1
 	from := 0
 	step := 1
 	to := 0
+	fromProvided := false
+	toProvided := false
 	iterationElements := []interface{}{}
 	iterationParamStr := ""
 	iterationParamStrSeparator := ""
+	var err error
 	for _, p := range run.Spec.Params {
 		if p.Name == "from" {
-			from, _ = strconv.Atoi(p.Value.StringVal)
+			from, err = getIntegerParamValue(p)
+			if err == nil {
+				fromProvided = true
+			}
 		}
 		if p.Name == "step" {
-			step, _ = strconv.Atoi(p.Value.StringVal)
+			step, err = getIntegerParamValue(p)
+			if err != nil {
+				return 0, iterationElements, err
+			}
 		}
 		if p.Name == "to" {
-			to, _ = strconv.Atoi(p.Value.StringVal)
+			to, err = getIntegerParamValue(p)
+			if err == nil {
+				toProvided = true
+			}
 		}
 		if p.Name == tls.IterateParam {
 			if p.Value.Type == v1beta1.ParamTypeString {
-				iterationParamStr = strings.Trim(p.Value.StringVal, " ")
+				iterationParamStr = p.Value.StringVal
 			}
 			if p.Value.Type == v1beta1.ParamTypeArray {
 				numberOfIterations = len(p.Value.ArrayVal)
@@ -826,6 +908,7 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 	}
 	if iterationParamStr != "" {
 		// Transfer p.Value to Array.
+		err = nil //reset the err
 		if iterationParamStrSeparator != "" {
 			stringArr := strings.Split(iterationParamStr, iterationParamStrSeparator)
 			numberOfIterations = len(stringArr)
@@ -876,9 +959,15 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 			}
 		}
 	}
-	if from != to {
+	if from != to && fromProvided && toProvided {
 		if step == 0 {
 			return 0, iterationElements, fmt.Errorf("invalid values step: %d found in runs", step)
+		}
+		if (to-from < step && step > 0) || (to-from > step && step < 0) {
+			// This is a special case, to emulate "python's enumerate" behaviour see issue #935
+			numberOfIterations = 1
+			iterationElements = append(iterationElements, from)
+			return numberOfIterations, iterationElements, nil
 		}
 		if (from > to && step > 0) || (from < to && step < 0) {
 			return 0, iterationElements, fmt.Errorf("invalid values for from:%d, to:%d & step: %d found in runs", from, to, step)
@@ -896,7 +985,12 @@ func computeIterations(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoop
 			}
 		}
 	}
-	return numberOfIterations, iterationElements, nil
+	if from == to && step != 0 && fromProvided && toProvided {
+		// This is a special case, to emulate "python's enumerate" behaviour see issue #935
+		numberOfIterations = 1
+		iterationElements = append(iterationElements, from)
+	}
+	return numberOfIterations, iterationElements, err
 }
 
 func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int, currentIterationItem string) []v1beta1.Param {
@@ -926,7 +1020,7 @@ func getParameters(run *v1alpha1.Run, tls *pipelineloopv1alpha1.PipelineLoopSpec
 		}
 		if iterationParam != nil {
 			if iterationParamStrSeparator != nil && iterationParamStrSeparator.Value.StringVal != "" {
-				iterationParamStr := strings.Trim(iterationParam.Value.StringVal, " ")
+				iterationParamStr := iterationParam.Value.StringVal
 				stringArr := strings.Split(iterationParamStr, iterationParamStrSeparator.Value.StringVal)
 				out = append(out, v1beta1.Param{
 					Name:  iterationParam.Name,
@@ -1078,4 +1172,19 @@ func storePipelineLoopSpec(status *pipelineloopv1alpha1.PipelineLoopRunStatus, t
 	if status.PipelineLoopSpec == nil {
 		status.PipelineLoopSpec = tls
 	}
+}
+
+// Storing PipelineSpec and TaskSpec in PipelineRunStatus is a source of significant memory consumption and OOM failures.
+// Additionally, performance of status update in Run reconciler is impacted.
+// PipelineSpec and TaskSpec seems to be redundant in this place.
+// See issue: https://github.com/kubeflow/kfp-tekton/issues/962
+func getPipelineRunStatusWithoutPipelineSpec(status *v1beta1.PipelineRunStatus) *v1beta1.PipelineRunStatus {
+	s := status.DeepCopy()
+	s.PipelineSpec = nil
+	if s.TaskRuns != nil {
+		for _, taskRun := range s.TaskRuns {
+			taskRun.Status.TaskSpec = nil
+		}
+	}
+	return s
 }

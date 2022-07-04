@@ -16,17 +16,18 @@
 # limitations under the License.
 
 # 1. Build api server application
-# Use golang:1.13.1-stretch to keep GLIBC at 2.24 https://github.com/gotify/server/issues/225
-FROM golang:1.13.1-stretch as builder
+FROM golang:1.17.6-stretch as builder
 RUN apt-get update && apt-get install -y cmake clang musl-dev openssl
 WORKDIR /go/src/github.com/kubeflow/pipelines
 COPY . .
 RUN GO111MODULE=on go build -o /bin/apiserver backend/src/apiserver/*.go
 # Check licenses and comply with license terms.
 RUN ./hack/install-go-licenses.sh
-RUN go-licenses csv /bin/apiserver > /tmp/licenses.csv && \
+# First, make sure there's no forbidden license.
+RUN go-licenses check ./backend/src/apiserver
+RUN go-licenses csv ./backend/src/apiserver > /tmp/licenses.csv && \
     diff /tmp/licenses.csv backend/third_party_licenses/apiserver.csv && \
-    go-licenses save /tmp/licenses.csv --save_path /tmp/NOTICES
+    go-licenses save ./backend/src/apiserver --save_path /tmp/NOTICES
 
 # 2. Compile preloaded pipeline samples
 FROM python:3.7 as compiler
@@ -53,7 +54,7 @@ RUN set -e; \
         mode=`< /samples/sample_config.json jq ".[] | select(.file == \"${pipeline_yaml}\") | (if .mode == null then \"V1\" else .mode end)" --raw-output`; \
         mv "$pipeline_py" "${pipeline_py}.tmp"; \
         echo 'import kfp; kfp.components.default_base_image_or_builder="gcr.io/google-appengine/python:2020-03-31-141326"' | cat - "${pipeline_py}.tmp" > "$pipeline_py"; \
-        dsl-compile-tekton --py "$pipeline_py" --output "$pipeline_yaml" --mode "$mode" || python3 "$pipeline_py"; \
+        dsl-compile-tekton --py "$pipeline_py" --output "$pipeline_yaml" || python3 "$pipeline_py"; \
     done
 
 
