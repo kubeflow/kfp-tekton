@@ -119,19 +119,25 @@ spec:
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.param2.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp /tekton/home/tep-results/param2 $(results.param2.path)
+              if ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param2; then
+                cp /tekton/home/tep-results/param2 $(results.param2.path)
+              fi
             fi
             ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/param3 | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.param3.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp /tekton/home/tep-results/param3 $(results.param3.path)
+              if ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param3; then
+                cp /tekton/home/tep-results/param3 $(results.param3.path)
+              fi
             fi
             ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
+              if ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper; then
+                cp /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
+              fi
             fi
           onError: continue
           env:
