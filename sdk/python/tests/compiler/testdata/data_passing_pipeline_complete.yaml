@@ -131,7 +131,9 @@ spec:
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.data.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
+              if ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data; then
+                cp $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
+              fi
             fi
           onError: continue
           env:
@@ -212,7 +214,9 @@ spec:
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.data.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
+              if ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data; then
+                cp $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
+              fi
             fi
           onError: continue
           env:
@@ -311,7 +315,9 @@ spec:
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.output.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.output.path)
+              if ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output; then
+                cp $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.output.path)
+              fi
             fi
           onError: continue
           env:
