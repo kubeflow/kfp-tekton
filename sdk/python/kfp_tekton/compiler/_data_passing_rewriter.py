@@ -521,7 +521,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                 task['taskSpec']['results'].append({"name": "%s-path" % (task_output.get('name')), "type": "string"})
                 task['taskSpec']['steps'].append(appended_taskrun_path_step)
             else:
-            # For child nodes to know the taskrun name, it has to pass to results via /tekton/results emptydir
+                # For child nodes to know the taskrun name, it has to pass to results via /tekton/results emptydir
                 if not appended_taskrun_name:
                     copy_taskrun_name_step = _get_base_step('output-taskrun-name')
                     copy_taskrun_name_step['script'] += 'echo -n "%s" > $(results.taskrun-name.path)\n' % ("$(context.taskRun.name)")
