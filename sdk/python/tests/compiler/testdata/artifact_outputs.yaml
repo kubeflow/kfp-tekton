@@ -63,11 +63,11 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-path
+          name: output-taskrun-name
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data" > $(results.data-path.path)
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -92,11 +92,11 @@ spec:
         - name: data
           type: string
           description: /tmp/outputs/data/data
-        - name: data-path
-          type: string
         - name: data2
           type: string
           description: /tmp/outputs/data2/data
+        - name: taskrun-name
+          type: string
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''

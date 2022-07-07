@@ -86,11 +86,11 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-path
+          name: output-taskrun-name
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir" > $(results.output-dir-path.path)
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -113,7 +113,7 @@ spec:
         - name: output-dir
           type: string
           description: /tmp/outputs/output_dir/data
-        - name: output-dir-path
+        - name: taskrun-name
           type: string
         metadata:
           labels:
@@ -133,8 +133,8 @@ spec:
         workspace: create-component-from-function
     - name: get-subdirectory
       params:
-      - name: produce-dir-with-files-python-op-output-dir-path
-        value: $(tasks.produce-dir-with-files-python-op.results.output-dir-path)
+      - name: produce-dir-with-files-python-op-trname
+        value: $(tasks.produce-dir-with-files-python-op.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
@@ -145,7 +145,7 @@ spec:
           - |
             mkdir -p "$(dirname "$2")"
             cp -r "$0/$1" "$2"
-          - $(workspaces.get-subdirectory.path)/$(params.produce-dir-with-files-python-op-output-dir-path)
+          - $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(params.produce-dir-with-files-python-op-trname)/output_dir
           - subdir
           - $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir
           image: alpine
@@ -155,11 +155,11 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-path
+          name: output-taskrun-name
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir" > $(results.subdir-path.path)
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -179,12 +179,12 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: produce-dir-with-files-python-op-output-dir-path
+        - name: produce-dir-with-files-python-op-trname
         results:
         - name: subdir
           type: string
           description: /tmp/outputs/Subdir/data
-        - name: subdir-path
+        - name: taskrun-name
           type: string
         metadata:
           labels:
@@ -206,8 +206,8 @@ spec:
       - produce-dir-with-files-python-op
     - name: list-items
       params:
-      - name: get-subdirectory-subdir-path
-        value: $(tasks.get-subdirectory.results.subdir-path)
+      - name: get-subdirectory-trname
+        value: $(tasks.get-subdirectory.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
@@ -219,7 +219,7 @@ spec:
             mkdir -p "$(dirname "$1")"
             #ls --almost-all --recursive "$0" > "$1"
             ls -A -R "$0" > "$1"
-          - $(workspaces.list-items.path)/$(params.get-subdirectory-subdir-path)
+          - $(workspaces.list-items.path)/artifacts/$ORIG_PR_NAME/$(params.get-subdirectory-trname)/Subdir
           - $(results.items.path)
           image: alpine
           env:
@@ -228,7 +228,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: get-subdirectory-subdir-path
+        - name: get-subdirectory-trname
         results:
         - name: items
           type: string
@@ -252,10 +252,10 @@ spec:
       - get-subdirectory
     - name: list-items-2
       params:
-      - name: get-subdirectory-subdir-path
-        value: $(tasks.get-subdirectory.results.subdir-path)
-      - name: produce-dir-with-files-python-op-output-dir-path
-        value: $(tasks.produce-dir-with-files-python-op.results.output-dir-path)
+      - name: get-subdirectory-trname
+        value: $(tasks.get-subdirectory.results.taskrun-name)
+      - name: produce-dir-with-files-python-op-trname
+        value: $(tasks.produce-dir-with-files-python-op.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
@@ -267,8 +267,8 @@ spec:
             mkdir -p "$(dirname "$2")"
             ls -A -R "$0" > "$2"
             ls -A -R "$1" >> "$2"
-          - $(workspaces.list-items-2.path)/$(params.get-subdirectory-subdir-path)
-          - $(workspaces.list-items-2.path)/$(params.produce-dir-with-files-python-op-output-dir-path)
+          - $(workspaces.list-items-2.path)/artifacts/$ORIG_PR_NAME/$(params.get-subdirectory-trname)/Subdir
+          - $(workspaces.list-items-2.path)/artifacts/$ORIG_PR_NAME/$(params.produce-dir-with-files-python-op-trname)/output_dir
           - $(results.items.path)
           image: alpine
           env:
@@ -277,8 +277,8 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: get-subdirectory-subdir-path
-        - name: produce-dir-with-files-python-op-output-dir-path
+        - name: get-subdirectory-trname
+        - name: produce-dir-with-files-python-op-trname
         results:
         - name: items
           type: string

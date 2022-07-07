@@ -116,11 +116,11 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-path
+          name: output-taskrun-name
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data" > $(results.data-path.path)
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -143,7 +143,7 @@ spec:
         - name: data
           type: string
           description: /tmp/outputs/data/data
-        - name: data-path
+        - name: taskrun-name
           type: string
         metadata:
           labels:
@@ -197,11 +197,11 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-path
+          name: output-taskrun-name
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data" > $(results.data-path.path)
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -224,7 +224,7 @@ spec:
         - name: data
           type: string
           description: /tmp/outputs/data/data
-        - name: data-path
+        - name: taskrun-name
           type: string
         metadata:
           labels:
@@ -296,11 +296,11 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-path
+          name: output-taskrun-name
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output" > $(results.output-path.path)
+            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -323,7 +323,7 @@ spec:
         - name: output
           type: string
           description: /tmp/outputs/Output/data
-        - name: output-path
+        - name: taskrun-name
           type: string
         metadata:
           labels:
@@ -1526,14 +1526,14 @@ spec:
       timeout: 525600m
     - name: consume-anything-as-file-5
       params:
-      - name: produce-anything-data-path
-        value: $(tasks.produce-anything.results.data-path)
+      - name: produce-anything-trname
+        value: $(tasks.produce-anything.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-5.path)/$(params.produce-anything-data-path)
+          - $(workspaces.consume-anything-as-file-5.path)/artifacts/$ORIG_PR_NAME/$(params.produce-anything-trname)/data
           command:
           - sh
           - -ec
@@ -1559,7 +1559,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: produce-anything-data-path
+        - name: produce-anything-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1579,14 +1579,14 @@ spec:
       - produce-anything
     - name: consume-anything-as-file-6
       params:
-      - name: produce-something-data-path
-        value: $(tasks.produce-something.results.data-path)
+      - name: produce-something-trname
+        value: $(tasks.produce-something.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-6.path)/$(params.produce-something-data-path)
+          - $(workspaces.consume-anything-as-file-6.path)/artifacts/$ORIG_PR_NAME/$(params.produce-something-trname)/data
           command:
           - sh
           - -ec
@@ -1612,7 +1612,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: produce-something-data-path
+        - name: produce-something-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1632,14 +1632,14 @@ spec:
       - produce-something
     - name: consume-anything-as-file-7
       params:
-      - name: produce-string-output-path
-        value: $(tasks.produce-string.results.output-path)
+      - name: produce-string-trname
+        value: $(tasks.produce-string.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-anything-as-file-7.path)/$(params.produce-string-output-path)
+          - $(workspaces.consume-anything-as-file-7.path)/artifacts/$ORIG_PR_NAME/$(params.produce-string-trname)/Output
           command:
           - sh
           - -ec
@@ -1665,7 +1665,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: produce-string-output-path
+        - name: produce-string-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1685,14 +1685,14 @@ spec:
       - produce-string
     - name: consume-something-as-file-4
       params:
-      - name: produce-anything-data-path
-        value: $(tasks.produce-anything.results.data-path)
+      - name: produce-anything-trname
+        value: $(tasks.produce-anything.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file-4.path)/$(params.produce-anything-data-path)
+          - $(workspaces.consume-something-as-file-4.path)/artifacts/$ORIG_PR_NAME/$(params.produce-anything-trname)/data
           command:
           - sh
           - -ec
@@ -1718,7 +1718,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: produce-anything-data-path
+        - name: produce-anything-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1738,14 +1738,14 @@ spec:
       - produce-anything
     - name: consume-something-as-file-5
       params:
-      - name: produce-something-data-path
-        value: $(tasks.produce-something.results.data-path)
+      - name: produce-something-trname
+        value: $(tasks.produce-something.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-something-as-file-5.path)/$(params.produce-something-data-path)
+          - $(workspaces.consume-something-as-file-5.path)/artifacts/$ORIG_PR_NAME/$(params.produce-something-trname)/data
           command:
           - sh
           - -ec
@@ -1771,7 +1771,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: produce-something-data-path
+        - name: produce-something-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1791,14 +1791,14 @@ spec:
       - produce-something
     - name: consume-string-as-file-4
       params:
-      - name: produce-anything-data-path
-        value: $(tasks.produce-anything.results.data-path)
+      - name: produce-anything-trname
+        value: $(tasks.produce-anything.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file-4.path)/$(params.produce-anything-data-path)
+          - $(workspaces.consume-string-as-file-4.path)/artifacts/$ORIG_PR_NAME/$(params.produce-anything-trname)/data
           command:
           - sh
           - -ec
@@ -1824,7 +1824,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: produce-anything-data-path
+        - name: produce-anything-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -1844,14 +1844,14 @@ spec:
       - produce-anything
     - name: consume-string-as-file-5
       params:
-      - name: produce-string-output-path
-        value: $(tasks.produce-string.results.output-path)
+      - name: produce-string-trname
+        value: $(tasks.produce-string.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
           args:
           - --data
-          - $(workspaces.consume-string-as-file-5.path)/$(params.produce-string-output-path)
+          - $(workspaces.consume-string-as-file-5.path)/artifacts/$ORIG_PR_NAME/$(params.produce-string-trname)/Output
           command:
           - sh
           - -ec
@@ -1877,7 +1877,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: produce-string-output-path
+        - name: produce-string-trname
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
