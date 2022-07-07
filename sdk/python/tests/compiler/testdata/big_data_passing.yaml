@@ -96,11 +96,11 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-name
+          name: output-taskrun-path
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text" > $(results.output-text-path.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -123,7 +123,7 @@ spec:
         - name: output-text
           type: string
           description: /tmp/outputs/output_text/data
-        - name: taskrun-name
+        - name: output-text-path
           type: string
         metadata:
           labels:
@@ -211,11 +211,18 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-name
+          name: output-taskrun-path
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines" > $(results.odd_lines-path.path)
+        - image: busybox
+          name: output-taskrun-path
+          script: |
+            #!/bin/sh
+            set -exo pipefail
+            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines" > $(results.odd_lines-path.path)
+            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines" > $(results.even-lines-path.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -244,10 +251,12 @@ spec:
         - name: even-lines
           type: string
           description: /tmp/outputs/even_lines/data
+        - name: even-lines-path
+          type: string
         - name: odd-lines
           type: string
           description: /tmp/outputs/odd_lines/data
-        - name: taskrun-name
+        - name: odd-lines-path
           type: string
         metadata:
           labels:
@@ -274,14 +283,14 @@ spec:
         workspace: big-data-passing
     - name: print-text-2
       params:
-      - name: split-text-lines-trname
-        value: $(tasks.split-text-lines.results.taskrun-name)
+      - name: split-text-lines-odd-lines-path
+        value: $(tasks.split-text-lines.results.odd-lines-path)
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-2.path)/artifacts/$ORIG_PR_NAME/$(params.split-text-lines-trname)/odd_lines
+          - $(workspaces.print-text-2.path)/$(params.split-text-lines-odd-lines-path)
           command:
           - sh
           - -ec
@@ -311,7 +320,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: split-text-lines-trname
+        - name: split-text-lines-odd-lines-path
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -331,14 +340,14 @@ spec:
       - split-text-lines
     - name: print-text-3
       params:
-      - name: split-text-lines-trname
-        value: $(tasks.split-text-lines.results.taskrun-name)
+      - name: split-text-lines-even-lines-path
+        value: $(tasks.split-text-lines.results.even-lines-path)
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-3.path)/artifacts/$ORIG_PR_NAME/$(params.split-text-lines-trname)/even_lines
+          - $(workspaces.print-text-3.path)/$(params.split-text-lines-even-lines-path)
           command:
           - sh
           - -ec
@@ -368,7 +377,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: split-text-lines-trname
+        - name: split-text-lines-even-lines-path
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -431,11 +440,11 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-name
+          name: output-taskrun-path
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers" > $(results.numbers-path.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -458,7 +467,7 @@ spec:
         - name: numbers
           type: string
           description: /tmp/outputs/numbers/data
-        - name: taskrun-name
+        - name: numbers-path
           type: string
         metadata:
           labels:
@@ -478,14 +487,14 @@ spec:
         workspace: big-data-passing
     - name: print-text-4
       params:
-      - name: write-numbers-trname
-        value: $(tasks.write-numbers.results.taskrun-name)
+      - name: write-numbers-numbers-path
+        value: $(tasks.write-numbers.results.numbers-path)
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-4.path)/artifacts/$ORIG_PR_NAME/$(params.write-numbers-trname)/numbers
+          - $(workspaces.print-text-4.path)/$(params.write-numbers-numbers-path)
           command:
           - sh
           - -ec
@@ -515,7 +524,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: write-numbers-trname
+        - name: write-numbers-numbers-path
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -535,14 +544,14 @@ spec:
       - write-numbers
     - name: sum-numbers
       params:
-      - name: write-numbers-trname
-        value: $(tasks.write-numbers.results.taskrun-name)
+      - name: write-numbers-numbers-path
+        value: $(tasks.write-numbers.results.numbers-path)
       taskSpec:
         steps:
         - name: main
           args:
           - --numbers
-          - $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(params.write-numbers-trname)/numbers
+          - $(workspaces.sum-numbers.path)/$(params.write-numbers-numbers-path)
           - '----output-paths'
           - $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output
           command:
@@ -599,11 +608,11 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
-          name: output-taskrun-name
+          name: output-taskrun-path
           script: |
             #!/bin/sh
             set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+            echo -n "artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output" > $(results.output-path.path)
         - image: busybox
           name: copy-results-artifacts
           script: |
@@ -623,12 +632,12 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: write-numbers-trname
+        - name: write-numbers-numbers-path
         results:
         - name: output
           type: string
           description: /tmp/outputs/Output/data
-        - name: taskrun-name
+        - name: output-path
           type: string
         metadata:
           labels:
@@ -650,14 +659,14 @@ spec:
       - write-numbers
     - name: print-text-5
       params:
-      - name: sum-numbers-trname
-        value: $(tasks.sum-numbers.results.taskrun-name)
+      - name: sum-numbers-output-path
+        value: $(tasks.sum-numbers.results.output-path)
       taskSpec:
         steps:
         - name: main
           args:
           - --text
-          - $(workspaces.print-text-5.path)/artifacts/$ORIG_PR_NAME/$(params.sum-numbers-trname)/Output
+          - $(workspaces.print-text-5.path)/$(params.sum-numbers-output-path)
           command:
           - sh
           - -ec
@@ -687,7 +696,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - name: sum-numbers-trname
+        - name: sum-numbers-output-path
         metadata:
           labels:
             pipelines.kubeflow.org/pipelinename: ''
@@ -818,10 +827,10 @@ spec:
       params:
       - name: loop-item-param-1
         value: '[1, 2]'
+      - name: repeat-line-output-text-path
+        value: $(tasks.repeat-line.results.output-text-path)
       - name: repeat-line-output_text
         value: $(tasks.repeat-line.results.output-text)
-      - name: repeat-line-taskrun-name
-        value: $(tasks.repeat-line.results.taskrun-name)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
@@ -830,19 +839,19 @@ spec:
             params:
             - name: loop-item-param-1
               type: string
-            - name: repeat-line-output_text
+            - name: repeat-line-output-text-path
               type: string
-            - name: repeat-line-taskrun-name
+            - name: repeat-line-output_text
               type: string
             tasks:
             - name: big-data-passing-for-loop-4
               params:
               - name: loop-item-param-3
                 value: '[1, 2]'
+              - name: repeat-line-output-text-path
+                value: $(params.repeat-line-output-text-path)
               - name: repeat-line-output_text
                 value: $(params.repeat-line-output_text)
-              - name: repeat-line-taskrun-name
-                value: $(params.repeat-line-taskrun-name)
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: PipelineLoop
@@ -851,21 +860,21 @@ spec:
                     params:
                     - name: loop-item-param-3
                       type: string
-                    - name: repeat-line-output_text
+                    - name: repeat-line-output-text-path
                       type: string
-                    - name: repeat-line-taskrun-name
+                    - name: repeat-line-output_text
                       type: string
                     tasks:
                     - name: print-text
                       params:
-                      - name: repeat-line-trname
-                        value: $(params.repeat-line-taskrun-name)
+                      - name: repeat-line-output-text-path
+                        value: $(params.repeat-line-output-text-path)
                       taskSpec:
                         steps:
                         - name: main
                           args:
                           - --text
-                          - $(workspaces.print-text.path)/artifacts/$ORIG_PR_NAME/$(params.repeat-line-trname)/output_text
+                          - $(workspaces.print-text.path)/$(params.repeat-line-output-text-path)
                           command:
                           - sh
                           - -ec
@@ -895,7 +904,7 @@ spec:
                               fieldRef:
                                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
                         params:
-                        - name: repeat-line-trname
+                        - name: repeat-line-output-text-path
                           type: string
                         metadata:
                           labels:
