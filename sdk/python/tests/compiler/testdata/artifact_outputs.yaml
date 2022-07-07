@@ -78,7 +78,9 @@ spec:
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.data.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
+              if ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data; then
+                cp $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
+              fi
             fi
           onError: continue
           env:

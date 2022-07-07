@@ -652,7 +652,9 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                     'TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)\n' +
                                     'touch ' + dst + '\n' +  # create an empty file by default.
                                     'if [[ $TOTAL_SIZE -lt 3072 ]]; then\n' +
-                                    '  cp ' + src + ' ' + dst + '\n' +
+                                    '  if ! awk "/[^[:print:]]/{f=1} END{exit !f}" %s; then\n' % src +
+                                    '    cp ' + src + ' ' + dst + '\n' +
+                                    '  fi\n'
                                     'fi\n'
                             )
             _append_original_pr_name_env_to_step(copy_results_artifact_step)

@@ -119,13 +119,17 @@ spec:
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.param1.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp /tekton/home/tep-results/param1 $(results.param1.path)
+              if ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param1; then
+                cp /tekton/home/tep-results/param1 $(results.param1.path)
+              fi
             fi
             ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/param3-b | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
             touch $(results.param3-b.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              cp /tekton/home/tep-results/param3-b $(results.param3-b.path)
+              if ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param3-b; then
+                cp /tekton/home/tep-results/param3-b $(results.param3-b.path)
+              fi
             fi
           onError: continue
           env:
