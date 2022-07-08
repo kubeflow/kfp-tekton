@@ -117,14 +117,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
-          script: |
-            #!/bin/sh
-            set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             ARTIFACT_SIZE=`wc -c $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data | awk '{print $1}'`
@@ -200,14 +202,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
-          script: |
-            #!/bin/sh
-            set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             ARTIFACT_SIZE=`wc -c $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data | awk '{print $1}'`
@@ -301,14 +305,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
-          script: |
-            #!/bin/sh
-            set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             ARTIFACT_SIZE=`wc -c $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output | awk '{print $1}'`
@@ -457,8 +463,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             echo -n "constant" > /tmp/inputs/data/data
         - name: main
@@ -506,8 +514,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             echo -n "constant" > /tmp/inputs/data/data
         - name: main
@@ -555,8 +565,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             echo -n "constant" > /tmp/inputs/data/data
         - name: main
@@ -884,8 +896,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             mkdir -p $(workspaces.consume-anything-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
             echo -n "anything_param" > $(workspaces.consume-anything-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/anything_param
@@ -937,8 +951,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             mkdir -p $(workspaces.consume-anything-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
             echo -n "something_param" > $(workspaces.consume-anything-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/something_param
@@ -990,8 +1006,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             mkdir -p $(workspaces.consume-anything-as-file-4.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
             echo -n "string_param" > $(workspaces.consume-anything-as-file-4.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/string_param
@@ -1043,8 +1061,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             mkdir -p $(workspaces.consume-something-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
             echo -n "anything_param" > $(workspaces.consume-something-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/anything_param
@@ -1096,8 +1116,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             mkdir -p $(workspaces.consume-something-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
             echo -n "something_param" > $(workspaces.consume-something-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/something_param
@@ -1149,8 +1171,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             mkdir -p $(workspaces.consume-string-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
             echo -n "anything_param" > $(workspaces.consume-string-as-file-2.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/anything_param
@@ -1202,8 +1226,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             mkdir -p $(workspaces.consume-string-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)
             echo -n "string_param" > $(workspaces.consume-string-as-file-3.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/string_param

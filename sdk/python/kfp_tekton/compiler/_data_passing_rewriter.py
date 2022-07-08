@@ -450,6 +450,22 @@ def big_data_passing_pipeline(name: str, template: dict, inputs_tasks: set(),
                     "name": task.get('name'),
                     "workspace": pipeline_name
                 })
+        artifact_output_list = task.get('taskSpec', {}).get('metadata', {}).get('annotations', {}).get(
+            ARTIFACT_OUTPUTLIST_ANNOTATION_KEY, '')
+        if artifact_output_list:
+            tmp_list = set()
+            for output in json.loads(artifact_output_list):
+                tmp_list.add(sanitize_k8s_name(output))
+            for task_output in task.get('taskSpec', {}).get('results', []):
+                if task_output.get('name') in tmp_list:
+                    if not task.setdefault('workspaces', []):
+                        task['workspaces'].append({
+                          "name": task.get('name'),
+                            "workspace": pipeline_name
+                        })
+                        pipeline_workspaces.add(pipeline_name)
+                        break
+
     if pipeline_name in pipeline_workspaces:
         # Add workspaces to pipeline
         if not pipeline_spec.setdefault('workspaces', []):
@@ -515,7 +531,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             # For child nodes to know the taskrun output path, it has to pass to results via /tekton/results emptydir
                 if not appended_taskrun_path_step:
                     appended_taskrun_path_step = _get_base_step('output-taskrun-path')
-                appended_taskrun_path_step['script'] += 'echo -n "%s/%s/%s" > $(results.%s-path.path)\n' % \
+                appended_taskrun_path_step['command'] += 'echo -n "%s/%s/%s" > $(results.%s-path.path)\n' % \
                                                     (BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_output.get('name'),
                                                     task_output.get('name'))
                 task['taskSpec']['results'].append({"name": "%s-path" % (task_output.get('name')), "type": "string"})
@@ -524,7 +540,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                 # For child nodes to know the taskrun name, it has to pass to results via /tekton/results emptydir
                 if not appended_taskrun_name:
                     copy_taskrun_name_step = _get_base_step('output-taskrun-name')
-                    copy_taskrun_name_step['script'] += 'echo -n "%s" > $(results.taskrun-name.path)\n' % ("$(context.taskRun.name)")
+                    copy_taskrun_name_step['command'] += 'echo -n "%s" > $(results.taskrun-name.path)\n' % ("$(context.taskRun.name)")
                     task['taskSpec']['results'].append({"name": "taskrun-name", "type": "string"})
                     task['taskSpec']['steps'].append(copy_taskrun_name_step)
                     _append_original_pr_name_env(task)
@@ -637,7 +653,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
         if task_spec.get('results', []):
             copy_results_artifact_step = _get_base_step('copy-results-artifacts')
             copy_results_artifact_step['onError'] = 'continue'  # supported by v0.27+ of tekton.
-            copy_results_artifact_step['script'] += 'TOTAL_SIZE=0\n'
+            script = "set -exo pipefail\nTOTAL_SIZE=0\n"
             for result in task_spec['results']:
                 if task['name'] in artifact_items:
                     artifact_i = artifact_items[task['name']]
@@ -647,7 +663,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                         dst = '$(results.%s.path)' % sanitize_k8s_name(result['name'])
                         if artifact_name == result['name'] and src != dst:
                             add_copy_results_artifacts_step = True
-                            copy_results_artifact_step['script'] += (
+                            script += (
                                     'ARTIFACT_SIZE=`wc -c %s | awk \'{print $1}\'`\n' % src +
                                     'TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)\n' +
                                     'touch ' + dst + '\n' +  # create an empty file by default.
@@ -657,6 +673,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                     '  fi\n'
                                     'fi\n'
                             )
+            copy_results_artifact_step['command'].append(script)
             _append_original_pr_name_env_to_step(copy_results_artifact_step)
             if add_copy_results_artifacts_step:
                 task['taskSpec']['steps'].append(copy_results_artifact_step)
@@ -681,17 +698,19 @@ def input_artifacts_tasks_pr_params(template: dict, artifact: dict) -> dict:
     task_name = template.get('name')
     task_spec = template.get('taskSpec', {})
     task_params = task_spec.get('params', [])
+    script = "set -exo pipefail\n"
     for task_param in task_params:
         # For pipeline parameter input artifacts, it will never come from another task because pipeline
         # params are global parameters. Thus, task_name will always be the executing task name.
         workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
             task_name, BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_param.get('name'))
         if 'raw' in artifact:
-            copy_inputs_step['script'] += 'mkdir -p %s\n' % pathlib.Path(workspaces_parameter).parent
-            copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (
+            script += 'mkdir -p %s\n' % pathlib.Path(workspaces_parameter).parent
+            script += 'echo -n "%s" > %s\n' % (
                 artifact['raw']['data'], workspaces_parameter)
         _append_original_pr_name_env(template)
 
+    copy_inputs_step['command'].append(script)
     template['taskSpec']['steps'] = _prepend_steps(
         [copy_inputs_step], template['taskSpec']['steps'])
 
@@ -706,8 +725,8 @@ def input_artifacts_tasks(template: dict, artifact: dict) -> dict:
     mounted_param_paths = []
     copy_inputs_step = _get_base_step('copy-inputs')
     if 'raw' in artifact:
-        copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (
-            artifact['raw']['data'], artifact['path'])
+        copy_inputs_step['command'].append('set -exo pipefail\necho -n "%s" > %s\n' % (
+            artifact['raw']['data'], artifact['path']))
     mount_path = artifact['path'].rsplit("/", 1)[0]
     if mount_path not in mounted_param_paths:
         _add_mount_path(artifact['name'], artifact['path'], mount_path,
