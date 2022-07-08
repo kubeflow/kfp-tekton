@@ -531,7 +531,9 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             # For child nodes to know the taskrun output path, it has to pass to results via /tekton/results emptydir
                 if not appended_taskrun_path_step:
                     appended_taskrun_path_step = _get_base_step('output-taskrun-path')
-                appended_taskrun_path_step['command'] += 'echo -n "%s/%s/%s" > $(results.%s-path.path)\n' % \
+                if len(appended_taskrun_path_step['command']) <= 2:
+                    appended_taskrun_path_step['command'].append('')
+                appended_taskrun_path_step['command'][-1] += 'echo -n "%s/%s/%s" > $(results.%s-path.path)\n' % \
                                                     (BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_output.get('name'),
                                                     task_output.get('name'))
                 task['taskSpec']['results'].append({"name": "%s-path" % (task_output.get('name')), "type": "string"})
@@ -540,7 +542,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                 # For child nodes to know the taskrun name, it has to pass to results via /tekton/results emptydir
                 if not appended_taskrun_name:
                     copy_taskrun_name_step = _get_base_step('output-taskrun-name')
-                    copy_taskrun_name_step['command'] += 'echo -n "%s" > $(results.taskrun-name.path)\n' % ("$(context.taskRun.name)")
+                    copy_taskrun_name_step['command'].append('echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"')
                     task['taskSpec']['results'].append({"name": "taskrun-name", "type": "string"})
                     task['taskSpec']['steps'].append(copy_taskrun_name_step)
                     _append_original_pr_name_env(task)
