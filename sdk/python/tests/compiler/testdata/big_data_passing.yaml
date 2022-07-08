@@ -97,14 +97,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
-          script: |
-            #!/bin/sh
-            set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             ARTIFACT_SIZE=`wc -c $(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text | awk '{print $1}'`
@@ -148,8 +150,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             echo -n "one
             two
@@ -214,14 +218,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
-          script: |
-            #!/bin/sh
-            set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             ARTIFACT_SIZE=`wc -c $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines | awk '{print $1}'`
@@ -438,14 +444,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
-          script: |
-            #!/bin/sh
-            set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             ARTIFACT_SIZE=`wc -c $(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers | awk '{print $1}'`
@@ -608,14 +616,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
-          script: |
-            #!/bin/sh
-            set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             ARTIFACT_SIZE=`wc -c $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output | awk '{print $1}'`

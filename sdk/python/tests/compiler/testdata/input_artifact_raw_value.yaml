@@ -37,8 +37,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             echo -n "Constant artifact value" > /tmp/inputs/text/data
         - name: main
@@ -72,8 +74,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             echo -n "Constant artifact value" > /tmp/inputs/text/data
         - name: main
@@ -107,8 +111,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             echo -n "hard-coded artifact value" > /tmp/inputs/text/data
         - name: main
@@ -142,8 +148,10 @@ spec:
         steps:
         - image: busybox
           name: copy-inputs
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             echo -n "Text from a file with hard-coded artifact value
             " > /tmp/inputs/text/data

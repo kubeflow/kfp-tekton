@@ -70,8 +70,10 @@ spec:
           image: alpine:3.6
         - image: busybox
           name: copy-results
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             cp /tmp/outputs/stdout/data $(results.stdout.path);
         params:
