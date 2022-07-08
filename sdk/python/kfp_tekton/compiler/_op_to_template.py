@@ -53,7 +53,7 @@ def _get_base_step(name: str):
     return {
         'image': TEKTON_BASH_STEP_IMAGE,
         'name': name,
-        'script': '#!/bin/sh\nset -exo pipefail\n'
+        'command': ['sh', '-ec']
     }
 
 
@@ -272,6 +272,7 @@ def _process_parameters(processed_op: BaseOp,
     if outputs_dict.get('parameters'):
         template['spec']['results'] = []
         copy_results_step = _get_base_step('copy-results')
+        script = "set -exo pipefail\n"
         for name, path in processed_op.file_outputs.items():
             template['spec']['results'].append({
                 'name': name,
@@ -301,8 +302,7 @@ def _process_parameters(processed_op: BaseOp,
                     need_copy_step = False
             # If file output path cannot be found/replaced, use emptyDir to copy it to the tekton/results path
             if need_copy_step:
-                copy_results_step['script'] = copy_results_step['script'] + 'cp ' + path + ' $(results.%s.path);' \
-                                                % sanitize_k8s_name(name) + '\n'
+                script = script + 'cp ' + path + ' $(results.%s.path);\n' % sanitize_k8s_name(name)
                 mount_path = path.rsplit("/", 1)[0]
                 if mount_path not in mounted_param_paths:
                     _add_mount_path(name, path, mount_path, volume_mount_step_template, volume_template, mounted_param_paths)
@@ -310,6 +310,7 @@ def _process_parameters(processed_op: BaseOp,
             parameter_name = sanitize_k8s_name(processed_op.name + '-' + name, allow_capital_underscore=True, max_length=float('Inf'))
             replaced_param_list.append(parameter_name)
             artifact_to_result_mapping[parameter_name] = name
+        copy_results_step['command'].append(script)
         return copy_results_step
     else:
         return {}

@@ -448,6 +448,22 @@ def big_data_passing_pipeline(name: str, template: dict, inputs_tasks: set(),
                     "name": task.get('name'),
                     "workspace": pipeline_name
                 })
+        artifact_output_list = task.get('taskSpec', {}).get('metadata', {}).get('annotations', {}).get(
+            ARTIFACT_OUTPUTLIST_ANNOTATION_KEY, '')
+        if artifact_output_list:
+            tmp_list = set()
+            for output in json.loads(artifact_output_list):
+                tmp_list.add(sanitize_k8s_name(output))
+            for task_output in task.get('taskSpec', {}).get('results', []):
+                if task_output.get('name') in tmp_list:
+                    if not task.setdefault('workspaces', []):
+                        task['workspaces'].append({
+                          "name": task.get('name'),
+                            "workspace": pipeline_name
+                        })
+                        pipeline_workspaces.add(pipeline_name)
+                        break
+
     if pipeline_name in pipeline_workspaces:
         # Add workspaces to pipeline
         if not pipeline_spec.setdefault('workspaces', []):
@@ -511,7 +527,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             # For child nodes to know the taskrun name, it has to pass to results via /tekton/results emptydir
             if not appended_taskrun_name:
                 copy_taskrun_name_step = _get_base_step('output-taskrun-name')
-                copy_taskrun_name_step['script'] += 'echo -n "%s" > $(results.taskrun-name.path)\n' % ("$(context.taskRun.name)")
+                copy_taskrun_name_step['command'].append('echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"')
                 task['taskSpec']['results'].append({"name": "taskrun-name", "type": "string"})
                 task['taskSpec']['steps'].append(copy_taskrun_name_step)
                 _append_original_pr_name_env(task)
@@ -608,7 +624,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
         if task_spec.get('results', []):
             copy_results_artifact_step = _get_base_step('copy-results-artifacts')
             copy_results_artifact_step['onError'] = 'continue'  # supported by v0.27+ of tekton.
-            copy_results_artifact_step['script'] += 'TOTAL_SIZE=0\n'
+            script = "set -exo pipefail\nTOTAL_SIZE=0\n"
             for result in task_spec['results']:
                 if task['name'] in artifact_items:
                     artifact_i = artifact_items[task['name']]
@@ -625,7 +641,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                 total_size_command = 'TOTAL_SIZE=$( expr $TOTAL_SIZE + %s)\n' % preview_size
                                 copy_command = '    dd if=' + src + ' of=' + \
                                                dst + ' bs=' + preview_size + ' count=1\n'
-                            copy_results_artifact_step['script'] += (
+                            script += (
                                     'ARTIFACT_SIZE=`wc -c %s | awk \'{print $1}\'`\n' % src +
                                     total_size_command +
                                     'touch ' + dst + '\n' +  # create an empty file by default.
@@ -635,6 +651,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                     '  fi\n'
                                     'fi\n'
                             )
+            copy_results_artifact_step['command'].append(script)
             _append_original_pr_name_env_to_step(copy_results_artifact_step)
             if add_copy_results_artifacts_step:
                 task['taskSpec']['steps'].append(copy_results_artifact_step)
@@ -658,17 +675,19 @@ def input_artifacts_tasks_pr_params(template: dict, artifact: dict) -> dict:
     task_name = template.get('name')
     task_spec = template.get('taskSpec', {})
     task_params = task_spec.get('params', [])
+    script = "set -exo pipefail\n"
     for task_param in task_params:
         # For pipeline parameter input artifacts, it will never come from another task because pipeline
         # params are global parameters. Thus, task_name will always be the executing task name.
         workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
             task_name, BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_param.get('name'))
         if 'raw' in artifact:
-            copy_inputs_step['script'] += 'mkdir -p %s\n' % pathlib.Path(workspaces_parameter).parent
-            copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (
+            script += 'mkdir -p %s\n' % pathlib.Path(workspaces_parameter).parent
+            script += 'echo -n "%s" > %s\n' % (
                 artifact['raw']['data'], workspaces_parameter)
         _append_original_pr_name_env(template)
 
+    copy_inputs_step['command'].append(script)
     template['taskSpec']['steps'] = _prepend_steps(
         [copy_inputs_step], template['taskSpec']['steps'])
 
@@ -683,8 +702,8 @@ def input_artifacts_tasks(template: dict, artifact: dict) -> dict:
     mounted_param_paths = []
     copy_inputs_step = _get_base_step('copy-inputs')
     if 'raw' in artifact:
-        copy_inputs_step['script'] += 'echo -n "%s" > %s\n' % (
-            artifact['raw']['data'], artifact['path'])
+        copy_inputs_step['command'].append('set -exo pipefail\necho -n "%s" > %s\n' % (
+            artifact['raw']['data'], artifact['path']))
     mount_path = artifact['path'].rsplit("/", 1)[0]
     if mount_path not in mounted_param_paths:
         _add_mount_path(artifact['name'], artifact['path'], mount_path,
