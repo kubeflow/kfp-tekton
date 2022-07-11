@@ -764,3 +764,25 @@ def _append_original_pr_name_env(task_template):
     for step in task_template['taskSpec']['steps']:
         if step['name'] == 'main':
             _append_original_pr_name_env_to_step(step)
+
+
+def fix_big_data_passing_using_volume(workflow, pipeline_conf):
+    if workflow['spec'].get('workspaces'):
+        if pipeline_conf.data_passing_method._volume != None:
+            volume_dict = pipeline_conf.data_passing_method._volume.to_dict()
+            if volume_dict.get('persistent_volume_claim'):
+                for workspace in workflow['spec']['workspaces']:
+                    if workspace['name'] == workflow['metadata']['name']:
+                        workspace.pop('volumeClaimTemplate')
+                        temp_vc = {}
+                        for key, value in volume_dict.get('persistent_volume_claim').items():
+                            if value != None:
+                                if key == 'claim_name':
+                                    temp_vc['claimName'] = value
+                                if key == 'read_only':
+                                    temp_vc['readOnly'] = value
+                            workspace['persistentVolumeClaim'] = temp_vc
+                            if pipeline_conf.data_passing_method._path_prefix != None:
+                                workspace['subPath'] = pipeline_conf.data_passing_method._path_prefix
+                            break
+    return workflow
