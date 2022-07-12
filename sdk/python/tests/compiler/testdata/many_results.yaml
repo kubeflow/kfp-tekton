@@ -111,8 +111,10 @@ spec:
           image: library/bash
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             if [ -d /tekton/home/tep-results/param1 ]; then

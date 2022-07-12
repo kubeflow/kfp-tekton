@@ -87,14 +87,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
-          script: |
-            #!/bin/sh
-            set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             if [ -d $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir ]; then
@@ -168,14 +170,16 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         - image: busybox
           name: output-taskrun-name
-          script: |
-            #!/bin/sh
-            set -exo pipefail
-            echo -n "$(context.taskRun.name)" > $(results.taskrun-name.path)
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
         - image: busybox
           name: copy-results-artifacts
-          script: |
-            #!/bin/sh
+          command:
+          - sh
+          - -ec
+          - |
             set -exo pipefail
             TOTAL_SIZE=0
             if [ -d $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir ]; then
