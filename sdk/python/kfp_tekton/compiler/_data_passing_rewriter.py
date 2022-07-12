@@ -767,22 +767,22 @@ def _append_original_pr_name_env(task_template):
 
 
 def fix_big_data_passing_using_volume(workflow, pipeline_conf):
-    if workflow['spec'].get('workspaces'):
-        if pipeline_conf.data_passing_method._volume != None:
-            volume_dict = pipeline_conf.data_passing_method._volume.to_dict()
-            if volume_dict.get('persistent_volume_claim'):
-                for workspace in workflow['spec']['workspaces']:
-                    if workspace['name'] == workflow['metadata']['name']:
-                        workspace.pop('volumeClaimTemplate')
-                        temp_vc = {}
-                        for key, value in volume_dict.get('persistent_volume_claim').items():
-                            if value != None:
-                                if key == 'claim_name':
-                                    temp_vc['claimName'] = value
-                                if key == 'read_only':
-                                    temp_vc['readOnly'] = value
-                            workspace['persistentVolumeClaim'] = temp_vc
-                            if pipeline_conf.data_passing_method._path_prefix != None:
-                                workspace['subPath'] = pipeline_conf.data_passing_method._path_prefix
-                            break
+    if workflow['spec'].get('workspaces') and pipeline_conf.data_passing_method._volume is not None:
+        volume_dict = pipeline_conf.data_passing_method._volume.to_dict()
+        volume_dict_pvc = volume_dict.get('persistent_volume_claim')
+        if volume_dict_pvc:
+            for workspace in workflow['spec']['workspaces']:
+                if workspace['name'] == workflow['metadata']['name']:
+                    workspace.pop('volumeClaimTemplate')
+                    temp_vc = {}
+                    for key, value in volume_dict_pvc.items():
+                        if value != None:
+                            if key == 'claim_name':
+                                temp_vc['claimName'] = value
+                            if key == 'read_only':
+                                temp_vc['readOnly'] = value
+                    workspace['persistentVolumeClaim'] = temp_vc
+                    if pipeline_conf.data_passing_method._path_prefix != None:
+                        workspace['subPath'] = pipeline_conf.data_passing_method._path_prefix
+                    break
     return workflow
