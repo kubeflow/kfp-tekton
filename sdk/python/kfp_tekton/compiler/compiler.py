@@ -1519,7 +1519,7 @@ class TektonCompiler(Compiler):
 
     workflow = fix_big_data_passing(workflow, self.loops_pipeline, '-'.join(self._group_names[:-1] + [""]))
 
-    if pipeline_conf and pipeline_conf.data_passing_method != None:
+    if pipeline_conf and pipeline_conf.data_passing_method is not None:
       workflow = fix_big_data_passing_using_volume(workflow, pipeline_conf)
 
     workflow.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = \
