@@ -46,6 +46,8 @@ const (
 	ApplyTektonCustomResource               string = "APPLY_TEKTON_CUSTOM_RESOURCE"
 	TerminateStatus                         string = "TERMINATE_STATUS"
 	Path4InternalResults                    string = "PATH_FOR_INTERNAL_RESULTS"
+	ObjectStoreAccessKey                    string = "OBJECTSTORECONFIG_ACCESSKEY"
+	ObjectStoreSecretKey                    string = "OBJECTSTORECONFIG_SECRETKEY"
 )
 
 func IsPipelineVersionUpdatedByDefault() bool {

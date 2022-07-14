@@ -57,7 +57,7 @@ func CreateMinioClient(minioServiceHost string, minioServicePort string,
 	return minioClient, nil
 }
 
-func CreateMinioClientOrFatal(minioServiceHost string, minioServicePort string,
+func CreateObjectStoreClientOrFatal(minioServiceHost string, minioServicePort string,
 	accessKey string, secretKey string, secure bool, region string, initConnectionTimeout time.Duration) *minio.Client {
 	var minioClient *minio.Client
 	var err error

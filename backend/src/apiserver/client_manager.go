@@ -35,22 +35,22 @@ import (
 )
 
 const (
-	minioServiceHost       = "MINIO_SERVICE_SERVICE_HOST"
-	minioServicePort       = "MINIO_SERVICE_SERVICE_PORT"
-	minioServiceRegion     = "MINIO_SERVICE_REGION"
-	minioServiceSecure     = "MINIO_SERVICE_SECURE"
-	pipelineBucketName     = "MINIO_PIPELINE_BUCKET_NAME"
-	pipelinePath           = "MINIO_PIPELINE_PATH"
-	mysqlServiceHost       = "DBConfig.Host"
-	mysqlServicePort       = "DBConfig.Port"
-	mysqlUser              = "DBConfig.User"
-	mysqlPassword          = "DBConfig.Password"
-	mysqlDBName            = "DBConfig.DBName"
-	mysqlGroupConcatMaxLen = "DBConfig.GroupConcatMaxLen"
-	mysqlExtraParams       = "DBConfig.ExtraParams"
-	archiveLogFileName     = "ARCHIVE_LOG_FILE_NAME"
-	archiveLogPathPrefix   = "ARCHIVE_LOG_PATH_PREFIX"
-	dbConMaxLifeTime       = "DBConfig.ConMaxLifeTime"
+	objectStoreServiceHost   = "MINIO_SERVICE_SERVICE_HOST"
+	objectStoreServicePort   = "MINIO_SERVICE_SERVICE_PORT"
+	objectStoreServiceRegion = "MINIO_SERVICE_REGION"
+	objectStoreServiceSecure = "MINIO_SERVICE_SECURE"
+	pipelineBucketName       = "MINIO_PIPELINE_BUCKET_NAME"
+	pipelinePath             = "MINIO_PIPELINE_PATH"
+	mysqlServiceHost         = "DBConfig.Host"
+	mysqlServicePort         = "DBConfig.Port"
+	mysqlUser                = "DBConfig.User"
+	mysqlPassword            = "DBConfig.Password"
+	mysqlDBName              = "DBConfig.DBName"
+	mysqlGroupConcatMaxLen   = "DBConfig.GroupConcatMaxLen"
+	mysqlExtraParams         = "DBConfig.ExtraParams"
+	archiveLogFileName       = "ARCHIVE_LOG_FILE_NAME"
+	archiveLogPathPrefix     = "ARCHIVE_LOG_PATH_PREFIX"
+	dbConMaxLifeTime         = "DBConfig.ConMaxLifeTime"
 
 	visualizationServiceHost = "ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_HOST"
 	visualizationServicePort = "ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_PORT"
@@ -175,7 +175,7 @@ func (c *ClientManager) init() {
 	c.resourceReferenceStore = storage.NewResourceReferenceStore(db)
 	c.dBStatusStore = storage.NewDBStatusStore(db)
 	c.defaultExperimentStore = storage.NewDefaultExperimentStore(db)
-	c.objectStore = initMinioClient(common.GetDurationConfig(initConnectionTimeout))
+	c.objectStore = initObjectStoreClient(common.GetDurationConfig(initConnectionTimeout))
 
 	// Use default value of client QPS (5) & burst (10) defined in
 	// k8s.io/client-go/rest/config.go#RESTClientFor
@@ -381,32 +381,32 @@ func initMysql(driverName string, initConnectionTimeout time.Duration) string {
 	return mysqlConfig.FormatDSN()
 }
 
-func initMinioClient(initConnectionTimeout time.Duration) storage.ObjectStoreInterface {
-	// Create minio client.
-	minioServiceHost := common.GetStringConfigWithDefault(
-		"ObjectStoreConfig.Host", os.Getenv(minioServiceHost))
-	minioServicePort := common.GetStringConfigWithDefault(
-		"ObjectStoreConfig.Port", os.Getenv(minioServicePort))
-	minioServiceRegion := common.GetStringConfigWithDefault(
-		"ObjectStoreConfig.Region", os.Getenv(minioServiceRegion))
-	minioServiceSecure := common.GetBoolConfigWithDefault(
-		"ObjectStoreConfig.Secure", common.GetBoolFromStringWithDefault(os.Getenv(minioServiceSecure), false))
+func initObjectStoreClient(initConnectionTimeout time.Duration) storage.ObjectStoreInterface {
+	// Create client.
+	objectStoreServiceHost := common.GetStringConfigWithDefault(
+		"ObjectStoreConfig.Host", os.Getenv(objectStoreServiceHost))
+	objectStoreServicePort := common.GetStringConfigWithDefault(
+		"ObjectStoreConfig.Port", os.Getenv(objectStoreServicePort))
+	objectStoreServiceRegion := common.GetStringConfigWithDefault(
+		"ObjectStoreConfig.Region", os.Getenv(objectStoreServiceRegion))
+	objectStoreServiceSecure := common.GetBoolConfigWithDefault(
+		"ObjectStoreConfig.Secure", common.GetBoolFromStringWithDefault(os.Getenv(objectStoreServiceSecure), false))
 	accessKey := common.GetStringConfigWithDefault("ObjectStoreConfig.AccessKey", "")
 	secretKey := common.GetStringConfigWithDefault("ObjectStoreConfig.SecretAccessKey", "")
 	bucketName := common.GetStringConfigWithDefault("ObjectStoreConfig.BucketName", os.Getenv(pipelineBucketName))
 	pipelinePath := common.GetStringConfigWithDefault("ObjectStoreConfig.PipelinePath", os.Getenv(pipelinePath))
 	disableMultipart := common.GetBoolConfigWithDefault("ObjectStoreConfig.Multipart.Disable", true)
 
-	minioClient := client.CreateMinioClientOrFatal(minioServiceHost, minioServicePort, accessKey,
-		secretKey, minioServiceSecure, minioServiceRegion, initConnectionTimeout)
-	createMinioBucket(minioClient, bucketName, minioServiceRegion)
+	client := client.CreateObjectStoreClientOrFatal(objectStoreServiceHost, objectStoreServicePort, accessKey,
+		secretKey, objectStoreServiceSecure, objectStoreServiceRegion, initConnectionTimeout)
+	createBucket(client, bucketName, objectStoreServiceRegion)
 
-	return storage.NewMinioObjectStore(&storage.MinioClient{Client: minioClient}, bucketName, pipelinePath, disableMultipart)
+	return storage.NewMinioObjectStore(&storage.MinioClient{Client: client}, bucketName, pipelinePath, disableMultipart)
 }
 
-func createMinioBucket(minioClient *minio.Client, bucketName, region string) {
+func createBucket(client *minio.Client, bucketName, region string) {
 	// Check to see if we already own this bucket.
-	exists, err := minioClient.BucketExists(bucketName)
+	exists, err := client.BucketExists(bucketName)
 	if err != nil {
 		glog.Fatalf("Failed to check if Minio bucket exists. Error: %v", err)
 	}
@@ -415,7 +415,7 @@ func createMinioBucket(minioClient *minio.Client, bucketName, region string) {
 		return
 	}
 	// Create bucket if it does not exist
-	err = minioClient.MakeBucket(bucketName, region)
+	err = client.MakeBucket(bucketName, region)
 	if err != nil {
 		glog.Fatalf("Failed to create Minio bucket. Error: %v", err)
 	}
