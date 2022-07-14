@@ -181,8 +181,8 @@ func Test_bucketConfig_KeyFromURI(t *testing.T) {
 
 func Test_GetMinioDefaultEndpoint(t *testing.T) {
 	defer func() {
-		os.Unsetenv("MINIO_SERVICE_SERVICE_HOST")
-		os.Unsetenv("MINIO_SERVICE_SERVICE_PORT")
+		os.Unsetenv("OBJECT_STORE_SERVICE_HOST")
+		os.Unsetenv("OBJECT_STORE_SERVICE_PORT")
 	}()
 	tests := []struct {
 		name                string
@@ -206,19 +206,19 @@ func Test_GetMinioDefaultEndpoint(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.minioServiceHostEnv != "" {
-				os.Setenv("MINIO_SERVICE_SERVICE_HOST", tt.minioServiceHostEnv)
+				os.Setenv("OBJECT_STORE_SERVICE_HOST", tt.minioServiceHostEnv)
 			} else {
-				os.Unsetenv("MINIO_SERVICE_SERVICE_HOST")
+				os.Unsetenv("OBJECT_STORE_SERVICE_HOST")
 			}
 			if tt.minioServicePortEnv != "" {
-				os.Setenv("MINIO_SERVICE_SERVICE_PORT", tt.minioServicePortEnv)
+				os.Setenv("OBJECT_STORE_SERVICE_PORT", tt.minioServicePortEnv)
 			} else {
-				os.Unsetenv("MINIO_SERVICE_SERVICE_PORT")
+				os.Unsetenv("OBJECT_STORE_SERVICE_PORT")
 			}
 			got := objectstore.MinioDefaultEndpoint()
 			if got != tt.want {
 				t.Errorf(
-					"MinioDefaultEndpoint() = %q, want %q\nwhen MINIO_SERVICE_SERVICE_HOST=%q MINIO_SERVICE_SERVICE_PORT=%q",
+					"MinioDefaultEndpoint() = %q, want %q\nwhen OBJECT_STORE_SERVICE_HOST=%q OBJECT_STORE_SERVICE_PORT=%q",
 					got, tt.want, tt.minioServiceHostEnv, tt.minioServicePortEnv,
 				)
 			}

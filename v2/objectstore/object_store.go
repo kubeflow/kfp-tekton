@@ -58,7 +58,7 @@ func OpenBucket(ctx context.Context, k8sClient kubernetes.Interface, namespace s
 		sess, err := session.NewSession(&aws.Config{
 			Credentials:      credentials.NewStaticCredentials(cred.AccessKey, cred.SecretKey, ""),
 			Region:           aws.String("minio"),
-			Endpoint:         aws.String(MinioDefaultEndpoint()),
+			Endpoint:         aws.String(ObjectStoreDefaultEndpoint()),
 			DisableSSL:       aws.Bool(true),
 			S3ForcePathStyle: aws.Bool(true),
 		})
@@ -288,23 +288,23 @@ func downloadFile(ctx context.Context, bucket *blob.Bucket, blobFilePath, localF
 
 // The endpoint uses Kubernetes service DNS name with namespace:
 // https://kubernetes.io/docs/concepts/services-networking/service/#dns
-const defaultMinioEndpointInMultiUserMode = "minio-service.kubeflow:9000"
-const minioArtifactSecretName = "mlpipeline-minio-artifact"
+const defaultObjectStoreEndpointInMultiUserMode = "minio-service.kubeflow:9000"
+const objectStoreArtifactSecretName = "mlpipeline-minio-artifact"
 
-func MinioDefaultEndpoint() string {
+func ObjectStoreDefaultEndpoint() string {
 	// Discover minio-service in the same namespace by env var.
 	// https://kubernetes.io/docs/concepts/services-networking/service/#environment-variables
-	minioHost := os.Getenv("MINIO_SERVICE_SERVICE_HOST")
-	minioPort := os.Getenv("MINIO_SERVICE_SERVICE_PORT")
+	minioHost := os.Getenv("OBJECT_STORE_SERVICE_HOST")
+	minioPort := os.Getenv("OBJECT_STORE_SERVICE_PORT")
 	if minioHost != "" && minioPort != "" {
 		// If there is a minio-service Kubernetes service in the same namespace,
-		// MINIO_SERVICE_SERVICE_HOST and MINIO_SERVICE_SERVICE_PORT env vars should
+		// OBJECT_STORE_SERVICE_HOST and OBJECT_STORE_SERVICE_PORT env vars should
 		// exist by default, so we use it as default.
 		return minioHost + ":" + minioPort
 	}
 	// If the env vars do not exist, we guess that we are running in KFP multi user mode, so default minio service should be `minio-service.kubeflow:9000`.
-	glog.Infof("Cannot detect minio-service in the same namespace, default to %s as MinIO endpoint.", defaultMinioEndpointInMultiUserMode)
-	return defaultMinioEndpointInMultiUserMode
+	glog.Infof("Cannot detect minio-service in the same namespace, default to %s as MinIO endpoint.", defaultObjectStoreEndpointInMultiUserMode)
+	return defaultObjectStoreEndpointInMultiUserMode
 }
 
 type minioCredential struct {
@@ -316,12 +316,12 @@ func getMinioCredential(ctx context.Context, clientSet kubernetes.Interface, nam
 	defer func() {
 		if err != nil {
 			// wrap error before returning
-			err = fmt.Errorf("Failed to get MinIO credential from secret name=%q namespace=%q: %w", minioArtifactSecretName, namespace, err)
+			err = fmt.Errorf("Failed to get MinIO credential from secret name=%q namespace=%q: %w", objectStoreArtifactSecretName, namespace, err)
 		}
 	}()
 	secret, err := clientSet.CoreV1().Secrets(namespace).Get(
 		ctx,
-		minioArtifactSecretName,
+		objectStoreArtifactSecretName,
 		metav1.GetOptions{})
 	if err != nil {
 		return cred, err
