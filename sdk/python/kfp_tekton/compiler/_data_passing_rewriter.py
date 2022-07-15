@@ -537,7 +537,6 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                                     (BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_output.get('name'),
                                                     task_output.get('name'))
                 task['taskSpec']['results'].append({"name": "%s-path" % (task_output.get('name')), "type": "string"})
-                task['taskSpec']['steps'].append(appended_taskrun_path_step)
             else:
                 # For child nodes to know the taskrun name, it has to pass to results via /tekton/results emptydir
                 if not appended_taskrun_name:
@@ -555,6 +554,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items'] = \
                 artifact_items
     if appended_taskrun_path_step:
+        task['taskSpec']['steps'].append(appended_taskrun_path_step)
         _append_original_pr_name_env(task)
 
     task_spec = task.get('taskSpec', {})
