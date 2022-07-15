@@ -634,7 +634,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                         dst = '$(results.%s.path)' % sanitize_k8s_name(result['name'])
                         if artifact_name == result['name'] and src != dst:
                             add_copy_results_artifacts_step = True
-                            copy_results_artifact_step['script'] += (
+                            script += (
                                     'if [ -d ' + src + ' ]; then\n' + 
                                     '  tar -czvf ' + src + '.tar.gz ' + src + '\n' +
                                     '  ARTIFACT_SIZE=`wc -c %s.tar.gz | awk \'{print $1}\'`\n' % src +
