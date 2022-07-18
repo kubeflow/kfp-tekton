@@ -26,6 +26,7 @@ from os import environ as env
 BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
 BIG_DATA_PATH_FORMAT = "/".join(["$(workspaces.$TASK_NAME.path)", BIG_DATA_MIDPATH, "$TASKRUN_NAME", "$TASK_PARAM_NAME"])
 ARTIFACT_OUTPUTLIST_ANNOTATION_KEY = 'artifact_outputs'
+OUTPUT_RESULT_PATH_SUFFIX = '-datap'
 
 
 def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix: str) -> dict:
@@ -324,7 +325,7 @@ def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix:
                 ),  # TODO: pipeline has no name, use pipelineRun name?
                 input_parameter['name']) in inputs_consumed_as_parameters
                 or input_parameter['name'].endswith("-trname")
-                or input_parameter['name'].endswith("-path")
+                or input_parameter['name'].endswith(OUTPUT_RESULT_PATH_SUFFIX)
         ]
 
     # Remove output parameters unless they're used downstream
@@ -364,7 +365,7 @@ def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix:
                 parameter_argument['name']) not in inputs_consumed_as_artifacts
                 or task['name'] in resource_template_names
                 or parameter_argument['name'].endswith("-trname")
-                or parameter_argument['name'].endswith("-path")
+                or parameter_argument['name'].endswith(OUTPUT_RESULT_PATH_SUFFIX)
             ]
 
         # tekton results doesn't support underscore
@@ -533,10 +534,11 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                     appended_taskrun_path_step = _get_base_step('output-taskrun-path')
                 if len(appended_taskrun_path_step['command']) <= 2:
                     appended_taskrun_path_step['command'].append('')
-                appended_taskrun_path_step['command'][-1] += 'echo -n "%s/%s/%s" > $(results.%s-path.path)\n' % \
+                appended_taskrun_path_step['command'][-1] += 'echo -n "%s/%s/%s" > $(results.%s%s.path)\n' % \
                                                     (BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_output.get('name'),
-                                                    task_output.get('name'))
-                task['taskSpec']['results'].append({"name": "%s-path" % (task_output.get('name')), "type": "string"})
+                                                    task_output.get('name'), OUTPUT_RESULT_PATH_SUFFIX)
+                task['taskSpec']['results'].append({"name": "%s%s" % (task_output.get('name'), OUTPUT_RESULT_PATH_SUFFIX),
+                                                    "type": "string"})
             else:
                 # For child nodes to know the taskrun name, it has to pass to results via /tekton/results emptydir
                 if not appended_taskrun_name:
@@ -620,7 +622,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             if task_param_task_name:
                 workspaces_parameter = '$(workspaces.%s.path)/%s/$(params.%s-trname)/%s' % (
                     task_name, BIG_DATA_MIDPATH, task_param_task_name, task_param_param_name)
-                task_path = sanitize_k8s_name(task_param_param_name) + '-path'
+                task_path = sanitize_k8s_name(task_param_param_name) + OUTPUT_RESULT_PATH_SUFFIX
                 if env.get('OUTPUT_BIG_DATA_PATH', 'false').lower() == 'true':
                     workspaces_parameter = '$(workspaces.%s.path)/$(params.%s)' % (task_name, '-'.join([task_param_task_name, task_path]))
                 if task_param_task_name != task_name:
@@ -685,7 +687,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
         param for param in task_spec.get('params', [])
         if (task_name, param.get('name')) not in inputs_tasks or
             param.get('name').endswith("-trname") or
-            param.get('name').endswith("-path")
+            param.get('name').endswith(OUTPUT_RESULT_PATH_SUFFIX)
     ]
 
     # Remove artifacts from task_spec
