@@ -713,9 +713,11 @@ def input_artifacts_tasks(template: dict, artifact: dict) -> dict:
         [copy_inputs_step], template['taskSpec']['steps'])
     # _update_volumes(template, volume_mount_step_template, volume_template)
     if volume_mount_step_template:
-        template['taskSpec']['stepTemplate'] = {}
-        template['taskSpec']['stepTemplate']['volumeMounts'] = volume_mount_step_template
-        template['taskSpec']['volumes'] = volume_template
+        template['taskSpec']['stepTemplate'] = template['taskSpec'].get('stepTemplate', {})
+        template['taskSpec']['stepTemplate']['volumeMounts'] = template['taskSpec']['stepTemplate'].get('volumeMounts', [])
+        template['taskSpec']['stepTemplate']['volumeMounts'].extend(volume_mount_step_template)
+        template['taskSpec']['volumes'] = template['taskSpec'].get('volumes', [])
+        template['taskSpec']['volumes'].extend(volume_template)
     return template
 
 

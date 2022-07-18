@@ -219,9 +219,11 @@ def _update_volumes(template: Dict[Text, Any],
     Update the list of volumes and volumeMounts on a given template
     """
     if volume_mount_step_template:
-        template['spec']['stepTemplate'] = {}
-        template['spec']['stepTemplate']['volumeMounts'] = volume_mount_step_template
-        template['spec']['volumes'] = volume_template
+        template['spec']['stepTemplate'] = template['spec'].get('stepTemplate', {})
+        template['spec']['stepTemplate']['volumeMounts'] = template['spec']['stepTemplate'].get('volumeMounts', [])
+        template['spec']['stepTemplate']['volumeMounts'].extend(volume_mount_step_template)
+        template['spec']['volumes'] = template['spec'].get('volumes', [])
+        template['spec']['volumes'].extend(volume_template)
 
 
 def _prepend_steps(prep_steps: List[Dict[Text, Any]], original_steps: List[Dict[Text, Any]]):

@@ -1,0 +1,136 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: big-data
+  annotations:
+    tekton.dev/output_artifacts: '{"print-big": [{"key": "artifacts/$PIPELINERUN/print-big/output_value.tgz",
+      "name": "print-big-output_value", "path": "/tmp/outputs/output_value/data"}],
+      "print-sm": [{"key": "artifacts/$PIPELINERUN/print-sm/output_value.tgz", "name":
+      "print-sm-output_value", "path": "/tmp/outputs/output_value/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print-big": [["output_value", "$(results.output-value.path)"]],
+      "print-sm": [["output_value", "$(results.output-value.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "big-data"}'
+spec:
+  pipelineSpec:
+    tasks:
+    - name: print-sm
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0 >> $2
+            echo $1 >> $2
+          - literal0
+          - literal1
+          - $(results.output-value.path)
+          image: alpine:3.6
+          volumeMounts:
+          - mountPath: /volume-sm
+            name: volume-sm
+        results:
+        - name: output-value
+          type: string
+          description: /tmp/outputs/output_value/data
+        volumes:
+        - name: volume-sm
+          secret:
+            secretName: secret-sm
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print-sm", "outputs":
+              [{"description": "Represents an output parameter.", "name": "output_value",
+              "type": "String"}], "version": "print-sm@sha256=3f8e3cc70ce2aedbe0a234aed1b795280713fce31359c50006ba81bc2b219d95"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+    - name: print-big
+      taskSpec:
+        steps:
+        - image: busybox
+          name: copy-inputs
+          command:
+          - sh
+          - -ec
+          - |
+            set -exo pipefail
+            echo -n "literal1" > /tmp/inputs/input_text_1/data
+        - image: busybox
+          name: copy-inputs
+          command:
+          - sh
+          - -ec
+          - |
+            set -exo pipefail
+            echo -n "literal0" > /tmp/inputs/input_text_0/data
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            cat $0 >> $2
+            cat $1 >> $2
+          - /tmp/inputs/input_text_0/data
+          - /tmp/inputs/input_text_1/data
+          - $(results.output-value.path)
+          image: alpine:3.6
+          volumeMounts:
+          - mountPath: /volume-big
+            name: volume-big
+        results:
+        - name: output-value
+          type: string
+          description: /tmp/outputs/output_value/data
+        volumes:
+        - name: volume-big
+          secret:
+            secretName: secret-big
+        - name: input-text-0
+          emptyDir: {}
+        - name: input-text-1
+          emptyDir: {}
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print-big", "outputs":
+              [{"description": "Represents an output parameter.", "name": "output_value",
+              "type": "String"}], "version": "print-big@sha256=80fdc22613e828fbc1a7c971ac3df6bbeac54aa59f0ebc28fc4b76f376e3c386"}'
+            tekton.dev/template: ''
+        stepTemplate:
+          volumeMounts:
+          - name: input-text-0
+            mountPath: /tmp/inputs/input_text_0
+          - name: input-text-1
+            mountPath: /tmp/inputs/input_text_1
+      timeout: 525600m
+  timeout: 525600m
