@@ -131,20 +131,16 @@ spec:
             TOTAL_SIZE=0
             if [ -d $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data ]; then
               tar -czvf $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data.tar.gz $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data
-              ARTIFACT_SIZE=`wc -c $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data.tar.gz | awk '{print $1}'`
-              TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-              touch $(results.data.path)
-              if [[ $TOTAL_SIZE -lt 3072 ]]; then
-                tar -tzf $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data.tar.gz > $(results.data.path)
-              fi
-            else
-              ARTIFACT_SIZE=`wc -c $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data | awk '{print $1}'`
-              TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-              touch $(results.data.path)
-              if [[ $TOTAL_SIZE -lt 3072 ]]; then
-                if ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data; then
-                  cp $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
-                fi
+              SUFFIX=".tar.gz"
+            fi
+            ARTIFACT_SIZE=`wc -c $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data${SUFFIX} | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.data.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              if [ -d $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data ]; then
+                tar -tzf $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data > $(results.data.path)
+              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data; then
+                cp $(workspaces.produce-anything.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
               fi
             fi
           onError: continue
@@ -226,20 +222,16 @@ spec:
             TOTAL_SIZE=0
             if [ -d $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data ]; then
               tar -czvf $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data.tar.gz $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data
-              ARTIFACT_SIZE=`wc -c $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data.tar.gz | awk '{print $1}'`
-              TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-              touch $(results.data.path)
-              if [[ $TOTAL_SIZE -lt 3072 ]]; then
-                tar -tzf $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data.tar.gz > $(results.data.path)
-              fi
-            else
-              ARTIFACT_SIZE=`wc -c $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data | awk '{print $1}'`
-              TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-              touch $(results.data.path)
-              if [[ $TOTAL_SIZE -lt 3072 ]]; then
-                if ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data; then
-                  cp $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
-                fi
+              SUFFIX=".tar.gz"
+            fi
+            ARTIFACT_SIZE=`wc -c $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data${SUFFIX} | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.data.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              if [ -d $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data ]; then
+                tar -tzf $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data > $(results.data.path)
+              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data; then
+                cp $(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
               fi
             fi
           onError: continue
@@ -339,20 +331,16 @@ spec:
             TOTAL_SIZE=0
             if [ -d $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output ]; then
               tar -czvf $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output.tar.gz $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output
-              ARTIFACT_SIZE=`wc -c $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output.tar.gz | awk '{print $1}'`
-              TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-              touch $(results.output.path)
-              if [[ $TOTAL_SIZE -lt 3072 ]]; then
-                tar -tzf $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output.tar.gz > $(results.output.path)
-              fi
-            else
-              ARTIFACT_SIZE=`wc -c $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output | awk '{print $1}'`
-              TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-              touch $(results.output.path)
-              if [[ $TOTAL_SIZE -lt 3072 ]]; then
-                if ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output; then
-                  cp $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.output.path)
-                fi
+              SUFFIX=".tar.gz"
+            fi
+            ARTIFACT_SIZE=`wc -c $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output${SUFFIX} | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.output.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              if [ -d $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output ]; then
+                tar -tzf $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output > $(results.output.path)
+              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output; then
+                cp $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.output.path)
               fi
             fi
           onError: continue
