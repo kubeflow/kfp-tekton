@@ -80,15 +80,8 @@ spec:
           - -ec
           - |
             set -exo pipefail
-            echo -n "literal1" > /tmp/inputs/input_text_1/data
-        - image: busybox
-          name: copy-inputs
-          command:
-          - sh
-          - -ec
-          - |
-            set -exo pipefail
             echo -n "literal0" > /tmp/inputs/input_text_0/data
+            echo -n "literal1" > /tmp/inputs/input_text_1/data
         - name: main
           command:
           - sh
