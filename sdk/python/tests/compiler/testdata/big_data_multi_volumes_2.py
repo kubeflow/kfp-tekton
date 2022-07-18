@@ -1,3 +1,18 @@
+# Copyright 2022 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from kfp import dsl
 from kfp.components import load_component_from_text
 from kfp_tekton.compiler import TektonCompiler
@@ -34,6 +49,7 @@ def PrintOp(name: str, msg0: str = None, msg1: str = None):
   )
   return print_op(msg0, msg1)
 
+
 def PrintRefOp(name: str, msg0: str = None, msg1: str = None):
   if msg0 is None:
     msg0 = name
@@ -64,6 +80,7 @@ def PrintRefOp(name: str, msg0: str = None, msg1: str = None):
   )
   return print_op(msg0, msg1)
 
+
 def add_volume_and_mount(op: dsl.ContainerOp) -> dsl.ContainerOp:
     suffix = op.name[op.name.index('-'):]
     return op.add_volume(
@@ -77,6 +94,7 @@ def add_volume_and_mount(op: dsl.ContainerOp) -> dsl.ContainerOp:
             mount_path='/volume' + suffix,
         )
     )
+
 
 @dsl.pipeline(name='big-data')
 def big_data():
