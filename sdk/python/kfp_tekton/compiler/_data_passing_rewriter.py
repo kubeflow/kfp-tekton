@@ -644,7 +644,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                     'touch ' + dst + '\n' +  # create an empty file by default.
                                     'if [[ $TOTAL_SIZE -lt 3072 ]]; then\n' +
                                     '  if [ -d ' + src + ' ]; then\n' +
-                                    '    tar -tzf ' + src + ' > ' + dst + '\n' +
+                                    '    tar -tzf ' + src + '.tar.gz > ' + dst + '\n' +
                                     '  elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" %s; then\n' % src +
                                     '    cp ' + src + ' ' + dst + '\n' +
                                     '  fi\n' +
