@@ -20,7 +20,7 @@ import pathlib
 from typing import List, Optional, Set
 
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
-from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path, _prepend_steps
+from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path, _prepend_steps, _update_volumes
 from os import environ as env
 
 BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
@@ -707,21 +707,29 @@ def input_artifacts_tasks(template: dict, artifact: dict) -> dict:
     volume_template = []
     mounted_param_paths = []
     copy_inputs_step = _get_base_step('copy-inputs')
+    has_copy_input = False
+    copy_input_index = 0
     if 'raw' in artifact:
-        copy_inputs_step['command'].append('set -exo pipefail\necho -n "%s" > %s\n' % (
-            artifact['raw']['data'], artifact['path']))
+        for step_index in range(len(template['taskSpec']['steps'])):
+            if template['taskSpec']['steps'][step_index].get('name') == 'copy-inputs':
+                copy_input_index = step_index
+                has_copy_input = True
+        if has_copy_input:
+            template['taskSpec']['steps'][copy_input_index]['command'][-1] = \
+            template['taskSpec']['steps'][copy_input_index]['command'][-1] + \
+            'echo -n "%s" > %s\n' % (artifact['raw']['data'], artifact['path'])
+        else:
+            copy_inputs_step['command'].append('set -exo pipefail\necho -n "%s" > %s\n' % (
+                artifact['raw']['data'], artifact['path']))
     mount_path = artifact['path'].rsplit("/", 1)[0]
     if mount_path not in mounted_param_paths:
         _add_mount_path(artifact['name'], artifact['path'], mount_path,
                         volume_mount_step_template, volume_template,
                         mounted_param_paths)
-    template['taskSpec']['steps'] = _prepend_steps(
-        [copy_inputs_step], template['taskSpec']['steps'])
-    # _update_volumes(template, volume_mount_step_template, volume_template)
-    if volume_mount_step_template:
-        template['taskSpec']['stepTemplate'] = {}
-        template['taskSpec']['stepTemplate']['volumeMounts'] = volume_mount_step_template
-        template['taskSpec']['volumes'] = volume_template
+    if not has_copy_input:
+        template['taskSpec']['steps'] = _prepend_steps(
+            [copy_inputs_step], template['taskSpec']['steps'])
+    _update_volumes(template['taskSpec'], volume_mount_step_template, volume_template)
     return template
 
 

@@ -120,6 +120,20 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml', skip_noninlined=True)
 
+  def test_big_data_multi_volumes_1_workflow(self):
+    """
+    Test compiling a big data pipeline with multiple types of volumes workflow.
+    """
+    from .testdata.big_data_multi_volumes_1 import big_data
+    self._test_pipeline_workflow(big_data, 'big_data_multi_volumes_1.yaml', skip_noninlined=True)
+
+  def test_big_data_multi_volumes_2_workflow(self):
+    """
+    Test compiling a big data pipeline with multiple types of volumes workflow.
+    """
+    from .testdata.big_data_multi_volumes_2 import big_data
+    self._test_pipeline_workflow(big_data, 'big_data_multi_volumes_2.yaml', skip_noninlined=True)
+
   def test_recur_cond_workflow(self):
     """
     Test compiling a recurive condition workflow.
