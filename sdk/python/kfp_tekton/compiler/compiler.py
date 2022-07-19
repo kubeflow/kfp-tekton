@@ -39,7 +39,7 @@ from kfp.dsl._for_loop import LoopArguments
 from kfp.dsl._metadata import _extract_pipeline_metadata
 # KFP-Tekton imports
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
-from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing, BIG_DATA_PATH_FORMAT
+from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing, fix_big_data_passing_using_volume, BIG_DATA_PATH_FORMAT
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
 from kfp_tekton.compiler._op_to_template import _op_to_template
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task, _process_argo_vars
@@ -1518,6 +1518,9 @@ class TektonCompiler(Compiler):
     )
 
     workflow = fix_big_data_passing(workflow, self.loops_pipeline, '-'.join(self._group_names[:-1] + [""]))
+
+    if pipeline_conf and pipeline_conf.data_passing_method is not None:
+      workflow = fix_big_data_passing_using_volume(workflow, pipeline_conf)
 
     workflow.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = \
       json.dumps(pipeline_meta.to_dict(), sort_keys=True)

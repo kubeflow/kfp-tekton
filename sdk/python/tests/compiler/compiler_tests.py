@@ -639,6 +639,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.big_data_passing import file_passing_pipelines
     self._test_pipeline_workflow(file_passing_pipelines, 'big_data_passing.yaml', skip_noninlined=True)
 
+  def test_big_data_using_volume_workflow(self):
+    """
+    Test compiling a big data passing workflow.
+    """
+    from .testdata.artifact_passing_using_volume import artifact_passing_pipeline
+    self._test_pipeline_workflow(artifact_passing_pipeline, 'artifact_passing_using_volume.yaml', skip_noninlined=True)
+
   def test_create_component_from_func_workflow(self):
     """
     Test compiling a creating component from func workflow.

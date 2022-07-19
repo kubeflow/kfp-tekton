@@ -634,19 +634,26 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                         dst = '$(results.%s.path)' % sanitize_k8s_name(result['name'])
                         if artifact_name == result['name'] and src != dst:
                             add_copy_results_artifacts_step = True
+                            total_size_command = 'ARTIFACT_SIZE=`wc -c %s${SUFFIX} | awk \'{print $1}\'`\n' % src + \
+                                                 'TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)\n'
+                            copy_command = '    cp ' + src + ' ' + dst + '\n'
+                            if env.get('OUTPUT_PREVIEW', 'false').lower() == 'true':
+                                preview_size = env.get('OUTPUT_PREVIEW_SIZE', '100')
+                                total_size_command = 'TOTAL_SIZE=$( expr $TOTAL_SIZE + %s)\n' % preview_size
+                                copy_command = '    dd if=' + src + ' of=' + \
+                                               dst + ' bs=' + preview_size + ' count=1\n'
                             script += (
                                     'if [ -d ' + src + ' ]; then\n' +
                                     '  tar -czvf ' + src + '.tar.gz ' + src + '\n' +
                                     '  SUFFIX=".tar.gz"\n' +
                                     'fi\n' +
-                                    'ARTIFACT_SIZE=`wc -c %s${SUFFIX} | awk \'{print $1}\'`\n' % src +
-                                    'TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)\n' +
+                                    total_size_command +
                                     'touch ' + dst + '\n' +  # create an empty file by default.
                                     'if [[ $TOTAL_SIZE -lt 3072 ]]; then\n' +
                                     '  if [ -d ' + src + ' ]; then\n' +
                                     '    tar -tzf ' + src + '.tar.gz > ' + dst + '\n' +
                                     '  elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" %s; then\n' % src +
-                                    '    cp ' + src + ' ' + dst + '\n' +
+                                    copy_command +
                                     '  fi\n' +
                                     'fi\n'
                             )
@@ -770,3 +777,25 @@ def _append_original_pr_name_env(task_template):
     for step in task_template['taskSpec']['steps']:
         if step['name'] == 'main':
             _append_original_pr_name_env_to_step(step)
+
+
+def fix_big_data_passing_using_volume(workflow, pipeline_conf):
+    if workflow['spec'].get('workspaces') and pipeline_conf.data_passing_method._volume is not None:
+        volume_dict = pipeline_conf.data_passing_method._volume.to_dict()
+        volume_dict_pvc = volume_dict.get('persistent_volume_claim')
+        if volume_dict_pvc:
+            for workspace in workflow['spec']['workspaces']:
+                if workspace['name'] == workflow['metadata']['name']:
+                    workspace.pop('volumeClaimTemplate')
+                    temp_vc = {}
+                    for key, value in volume_dict_pvc.items():
+                        if value != None:
+                            if key == 'claim_name':
+                                temp_vc['claimName'] = value
+                            if key == 'read_only':
+                                temp_vc['readOnly'] = value
+                    workspace['persistentVolumeClaim'] = temp_vc
+                    if pipeline_conf.data_passing_method._path_prefix != None:
+                        workspace['subPath'] = pipeline_conf.data_passing_method._path_prefix
+                    break
+    return workflow

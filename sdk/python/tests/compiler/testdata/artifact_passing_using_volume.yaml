@@ -17,13 +17,16 @@ kind: PipelineRun
 metadata:
   name: artifact-passing-pipeline
   annotations:
-    tekton.dev/output_artifacts: '{"processor": [{"key": "artifacts/$PIPELINERUN/processor/Output-1.tgz",
-      "name": "processor-Output-1", "path": "/tmp/outputs/Output_1/data"}, {"key":
-      "artifacts/$PIPELINERUN/processor/Output-2.tgz", "name": "processor-Output-2",
-      "path": "/tmp/outputs/Output_2/data"}], "producer": [{"key": "artifacts/$PIPELINERUN/producer/Output-1.tgz",
-      "name": "producer-Output-1", "path": "/tmp/outputs/Output_1/data"}, {"key":
-      "artifacts/$PIPELINERUN/producer/Output-2.tgz", "name": "producer-Output-2",
-      "path": "/tmp/outputs/Output_2/data"}]}'
+    tekton.dev/output_artifacts: '{"metadata-and-metrics": [{"key": "artifacts/$PIPELINERUN/metadata-and-metrics/mlpipeline-ui-metadata.tgz",
+      "name": "mlpipeline-ui-metadata", "path": "/tmp/outputs/mlpipeline_ui_metadata/data"},
+      {"key": "artifacts/$PIPELINERUN/metadata-and-metrics/mlpipeline-metrics.tgz",
+      "name": "mlpipeline-metrics", "path": "/tmp/outputs/mlpipeline_metrics/data"}],
+      "processor": [{"key": "artifacts/$PIPELINERUN/processor/Output-1.tgz", "name":
+      "processor-Output-1", "path": "/tmp/outputs/Output_1/data"}, {"key": "artifacts/$PIPELINERUN/processor/Output-2.tgz",
+      "name": "processor-Output-2", "path": "/tmp/outputs/Output_2/data"}], "producer":
+      [{"key": "artifacts/$PIPELINERUN/producer/Output-1.tgz", "name": "producer-Output-1",
+      "path": "/tmp/outputs/Output_1/data"}, {"key": "artifacts/$PIPELINERUN/producer/Output-2.tgz",
+      "name": "producer-Output-2", "path": "/tmp/outputs/Output_2/data"}]}'
     tekton.dev/input_artifacts: '{"consumer": [{"name": "processor-Output-1", "parent_task":
       "processor"}, {"name": "processor-Output-2", "parent_task": "processor"}], "processor":
       [{"name": "producer-Output-1", "parent_task": "producer"}, {"name": "producer-Output-2",
@@ -31,10 +34,12 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"consumer": [], "processor": [["Output-1", "$(results.output-1.path)"],
-      ["Output-2", "$(workspaces.producer.path)/producer-Output-2"]], "producer":
-      [["Output-1", "$(results.output-1.path)"], ["Output-2", "$(workspaces.producer.path)/producer-Output-2"]]}'
+    tekton.dev/artifact_items: '{"consumer": [], "metadata-and-metrics": [["mlpipeline-ui-metadata",
+      "/tmp/outputs/mlpipeline_ui_metadata/data"], ["mlpipeline-metrics", "/tmp/outputs/mlpipeline_metrics/data"]],
+      "processor": [["Output-1", "$(results.output-1.path)"], ["Output-2", "$(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2"]],
+      "producer": [["Output-1", "$(results.output-1.path)"], ["Output-2", "$(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2"]]}'
     sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Artifact passing pipeline"}'
 spec:
   pipelineSpec:
@@ -43,7 +48,9 @@ spec:
       taskSpec:
         steps:
         - name: main
-          args: [$(results.output-1.path), $(workspaces.producer.path)/producer-Output-2]
+          args:
+          - $(results.output-1.path)
+          - $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2
           command:
           - sh
           - -c
@@ -53,28 +60,83 @@ spec:
             echo "Data 1" > $0
             echo "Data 2" > $1
           image: alpine
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
+        - image: busybox
+          name: copy-results-artifacts
+          command:
+          - sh
+          - -ec
+          - |
+            set -exo pipefail
+            TOTAL_SIZE=0
+            if [ -d $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 ]; then
+              tar -czvf $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2.tar.gz $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2
+              SUFFIX=".tar.gz"
+            fi
+            ARTIFACT_SIZE=`wc -c $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2${SUFFIX} | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.output-2.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              if [ -d $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 ]; then
+                tar -tzf $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2.tar.gz > $(results.output-2.path)
+              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2; then
+                cp $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 $(results.output-2.path)
+              fi
+            fi
+          onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
-        - {name: output-1, description: /tmp/outputs/Output_1/data}
+        - name: output-1
+          type: string
+          description: /tmp/outputs/Output_1/data
+        - name: output-2
+          type: string
+          description: /tmp/outputs/Output_2/data
+        - name: taskrun-name
+          type: string
         metadata:
-          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"args": [{"outputPath": "Output 1"}, {"outputPath": "Output
-              2"}], "command": ["sh", "-c", "mkdir -p \"$(dirname \"$0\")\"\nmkdir
-              -p \"$(dirname \"$1\")\"\necho \"Data 1\" > $0\necho \"Data 2\" > $1\n"],
-              "image": "alpine"}}, "name": "Producer", "outputs": [{"name": "Output
-              1"}, {"name": "Output 2"}]}'}
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Producer", "outputs":
+              [{"name": "Output 1"}, {"name": "Output 2"}], "version": "Producer@sha256=f8c0448df5bf22241b635044bce2463869c10f9b450e979b7da029a931486367"}'
+            tekton.dev/template: ''
         workspaces:
-        - {name: producer}
-      timeout: 0s
+        - name: producer
+      timeout: 525600m
       workspaces:
-      - {name: producer, workspace: artifact-passing-pipeline}
+      - name: producer
+        workspace: artifact-passing-pipeline
     - name: processor
       params:
-      - {name: producer-Output-1, value: $(tasks.producer.results.output-1)}
+      - name: producer-Output-1
+        value: $(tasks.producer.results.output-1)
+      - name: producer-trname
+        value: $(tasks.producer.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
-          args: [$(inputs.params.producer-Output-1), $(workspaces.processor.path)/producer-Output-2,
-            $(results.output-1.path), $(workspaces.processor.path)/processor-Output-2]
+          args:
+          - $(inputs.params.producer-Output-1)
+          - $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(params.producer-trname)/Output-2
+          - $(results.output-1.path)
+          - $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2
           command:
           - sh
           - -c
@@ -84,32 +146,86 @@ spec:
             echo "$0" > "$2"
             cp "$1" "$3"
           image: alpine
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
+        - image: busybox
+          name: output-taskrun-name
+          command:
+          - sh
+          - -ec
+          - echo -n "$(context.taskRun.name)" > "$(results.taskrun-name.path)"
+        - image: busybox
+          name: copy-results-artifacts
+          command:
+          - sh
+          - -ec
+          - |
+            set -exo pipefail
+            TOTAL_SIZE=0
+            if [ -d $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 ]; then
+              tar -czvf $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2.tar.gz $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2
+              SUFFIX=".tar.gz"
+            fi
+            ARTIFACT_SIZE=`wc -c $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2${SUFFIX} | awk '{print $1}'`
+            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
+            touch $(results.output-2.path)
+            if [[ $TOTAL_SIZE -lt 3072 ]]; then
+              if [ -d $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 ]; then
+                tar -tzf $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2.tar.gz > $(results.output-2.path)
+              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2; then
+                cp $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 $(results.output-2.path)
+              fi
+            fi
+          onError: continue
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - {name: producer-Output-1}
+        - name: producer-Output-1
+        - name: producer-trname
         results:
-        - {name: output-1, description: /tmp/outputs/Output_1/data}
+        - name: output-1
+          type: string
+          description: /tmp/outputs/Output_1/data
+        - name: output-2
+          type: string
+          description: /tmp/outputs/Output_2/data
+        - name: taskrun-name
+          type: string
         metadata:
-          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"args": [{"inputValue": "Input parameter"}, {"inputPath":
-              "Input artifact"}, {"outputPath": "Output 1"}, {"outputPath": "Output
-              2"}], "command": ["sh", "-c", "mkdir -p \"$(dirname \"$2\")\"\nmkdir
-              -p \"$(dirname \"$3\")\"\necho \"$0\" > \"$2\"\ncp \"$1\" \"$3\"\n"],
-              "image": "alpine"}}, "inputs": [{"name": "Input parameter"}, {"name":
-              "Input artifact"}], "name": "Processor", "outputs": [{"name": "Output
-              1"}, {"name": "Output 2"}]}'}
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Processor", "outputs":
+              [{"name": "Output 1"}, {"name": "Output 2"}], "version": "Processor@sha256=dc713ae50cd79f58567512103e2e889ad7505f87770c6681731f94319615f373"}'
+            tekton.dev/template: ''
         workspaces:
-        - {name: processor}
-      timeout: 0s
+        - name: processor
+      timeout: 525600m
       workspaces:
-      - {name: processor, workspace: artifact-passing-pipeline}
-      runAfter: [producer]
+      - name: processor
+        workspace: artifact-passing-pipeline
+      runAfter:
+      - producer
     - name: consumer
       params:
-      - {name: processor-Output-1, value: $(tasks.processor.results.output-1)}
+      - name: processor-Output-1
+        value: $(tasks.processor.results.output-1)
+      - name: processor-trname
+        value: $(tasks.processor.results.taskrun-name)
       taskSpec:
         steps:
         - name: main
-          args: [$(inputs.params.processor-Output-1), $(workspaces.consumer.path)/processor-Output-2]
+          args:
+          - $(inputs.params.processor-Output-1)
+          - $(workspaces.consumer.path)/artifacts/$ORIG_PR_NAME/$(params.processor-trname)/Output-2
           command:
           - sh
           - -c
@@ -117,28 +233,125 @@ spec:
             echo "Input parameter = $0"
             echo "Input artifact = " && cat "$1"
           image: alpine
+          env:
+          - name: ORIG_PR_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         params:
-        - {name: processor-Output-1}
+        - name: processor-Output-1
+        - name: processor-trname
         metadata:
-          annotations: {pipelines.kubeflow.org/component_spec: '{"implementation":
-              {"container": {"args": [{"inputValue": "Input parameter"}, {"inputPath":
-              "Input artifact"}], "command": ["sh", "-c", "echo \"Input parameter
-              = $0\"\necho \"Input artifact = \" && cat \"$1\"\n"], "image": "alpine"}},
-              "inputs": [{"name": "Input parameter"}, {"name": "Input artifact"}],
-              "name": "Consumer"}'}
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Consumer", "outputs":
+              [], "version": "Consumer@sha256=ae9cf1975753ed1382e04db32bd2440d61a9cbfb893ec327ff15199589311701"}'
+            tekton.dev/template: ''
         workspaces:
-        - {name: consumer}
-      timeout: 0s
+        - name: consumer
+      timeout: 525600m
       workspaces:
-      - {name: consumer, workspace: artifact-passing-pipeline}
-      runAfter: [processor]
+      - name: consumer
+        workspace: artifact-passing-pipeline
+      runAfter:
+      - processor
+    - name: metadata-and-metrics
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - '----output-paths'
+          - /tmp/outputs/mlpipeline_ui_metadata/data
+          - /tmp/outputs/mlpipeline_metrics/data
+          command:
+          - sh
+          - -ec
+          - |
+            program_path=$(mktemp)
+            printf "%s" "$0" > "$program_path"
+            python3 -u "$program_path" "$@"
+          - |
+            def metadata_and_metrics():
+                metadata = {
+                    "outputs": [{
+                        "storage": "inline",
+                        "source": "*this should be bold*",
+                        "type": "markdown"
+                    }]
+                }
+                metrics = {
+                    "metrics": [
+                        {
+                            "name": "train-accuracy",
+                            "numberValue": 0.9,
+                        },
+                        {
+                            "name": "test-accuracy",
+                            "numberValue": 0.7,
+                        },
+                    ]
+                }
+                from collections import namedtuple
+                import json
+
+                return namedtuple("output",
+                                  ["mlpipeline_ui_metadata", "mlpipeline_metrics"])(
+                                      json.dumps(metadata), json.dumps(metrics))
+
+            import argparse
+            _parser = argparse.ArgumentParser(prog='Metadata and metrics', description='')
+            _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=2)
+            _parsed_args = vars(_parser.parse_args())
+            _output_files = _parsed_args.pop("_output_paths", [])
+
+            _outputs = metadata_and_metrics(**_parsed_args)
+
+            _output_serializers = [
+                str,
+                str,
+
+            ]
+
+            import os
+            for idx, output_file in enumerate(_output_files):
+                try:
+                    os.makedirs(os.path.dirname(output_file))
+                except OSError:
+                    pass
+                with open(output_file, 'w') as f:
+                    f.write(_output_serializers[idx](_outputs[idx]))
+          image: python:3.7
+        stepTemplate:
+          volumeMounts:
+          - name: mlpipeline-ui-metadata
+            mountPath: /tmp/outputs/mlpipeline_ui_metadata
+          - name: mlpipeline-metrics
+            mountPath: /tmp/outputs/mlpipeline_metrics
+        volumes:
+        - name: mlpipeline-ui-metadata
+          emptyDir: {}
+        - name: mlpipeline-metrics
+          emptyDir: {}
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "Metadata and
+              metrics", "outputs": [{"name": "mlpipeline_ui_metadata", "type": "UI_metadata"},
+              {"name": "mlpipeline_metrics", "type": "Metrics"}], "version": "Metadata
+              and metrics@sha256=457911fc37b191922b25d050fefef6a3d87e0351f35d0838a053245bd4095e8c"}'
+            tekton.dev/template: ''
+      timeout: 525600m
     workspaces:
-    - {name: artifact-passing-pipeline}
-  timeout: 0s
+    - name: artifact-passing-pipeline
+  timeout: 525600m
   workspaces:
   - name: artifact-passing-pipeline
-    volumeClaimTemplate:
-      spec:
-        accessModes: [ReadWriteMany]
-        resources:
-          requests: {storage: 2Gi}
+    persistentVolumeClaim:
+      claimName: data-volume
+    subPath: artifact_data/
