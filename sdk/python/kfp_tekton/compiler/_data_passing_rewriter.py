@@ -20,7 +20,7 @@ import pathlib
 from typing import List, Optional, Set
 
 from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
-from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path, _prepend_steps
+from kfp_tekton.compiler._op_to_template import _get_base_step, _add_mount_path, _prepend_steps, _update_volumes
 from os import environ as env
 
 BIG_DATA_MIDPATH = "artifacts/$ORIG_PR_NAME"
@@ -723,13 +723,7 @@ def input_artifacts_tasks(template: dict, artifact: dict) -> dict:
     if not has_copy_input:
         template['taskSpec']['steps'] = _prepend_steps(
             [copy_inputs_step], template['taskSpec']['steps'])
-    # _update_volumes(template, volume_mount_step_template, volume_template)
-    if volume_mount_step_template:
-        template['taskSpec']['stepTemplate'] = template['taskSpec'].get('stepTemplate', {})
-        template['taskSpec']['stepTemplate']['volumeMounts'] = template['taskSpec']['stepTemplate'].get('volumeMounts', [])
-        template['taskSpec']['stepTemplate']['volumeMounts'].extend(volume_mount_step_template)
-        template['taskSpec']['volumes'] = template['taskSpec'].get('volumes', [])
-        template['taskSpec']['volumes'].extend(volume_template)
+    _update_volumes(template['taskSpec'], volume_mount_step_template, volume_template)
     return template
 
 

@@ -212,18 +212,18 @@ def _add_mount_path(name: str,
     mounted_param_paths.append(mount_path)
 
 
-def _update_volumes(template: Dict[Text, Any],
+def _update_volumes(template_spec: Dict[Text, Any],
                     volume_mount_step_template: List[Dict[Text, Any]],
                     volume_template: List[Dict[Text, Any]]):
     """
     Update the list of volumes and volumeMounts on a given template
     """
     if volume_mount_step_template:
-        template['spec']['stepTemplate'] = template['spec'].get('stepTemplate', {})
-        template['spec']['stepTemplate']['volumeMounts'] = template['spec']['stepTemplate'].get('volumeMounts', [])
-        template['spec']['stepTemplate']['volumeMounts'].extend(volume_mount_step_template)
-        template['spec']['volumes'] = template['spec'].get('volumes', [])
-        template['spec']['volumes'].extend(volume_template)
+        template_spec.setdefault('stepTemplate', {})
+        template_spec['stepTemplate'].setdefault('volumeMounts', [])
+        template_spec['stepTemplate']['volumeMounts'].extend(volume_mount_step_template)
+        template_spec.setdefault('volumes', [])
+        template_spec['volumes'].extend(volume_template)
 
 
 def _prepend_steps(prep_steps: List[Dict[Text, Any]], original_steps: List[Dict[Text, Any]]):
@@ -523,7 +523,7 @@ def _op_to_template(op: BaseOp,
                                   artifact_items[op.name])
         if mounted_param_paths:
             template['spec']['steps'].append(copy_results_step)
-        _update_volumes(template, volume_mount_step_template, volume_template)
+        _update_volumes(template['spec'], volume_mount_step_template, volume_template)
 
     # metadata
     if processed_op.pod_annotations or processed_op.pod_labels:
