@@ -635,7 +635,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                         if artifact_name == result['name'] and src != dst:
                             add_copy_results_artifacts_step = True
                             script += (
-                                    'if [ -d ' + src + ' ]; then\n' + 
+                                    'if [ -d ' + src + ' ]; then\n' +
                                     '  tar -czvf ' + src + '.tar.gz ' + src + '\n' +
                                     '  SUFFIX=".tar.gz"\n' +
                                     'fi\n' +
@@ -643,7 +643,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                     'TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)\n' +
                                     'touch ' + dst + '\n' +  # create an empty file by default.
                                     'if [[ $TOTAL_SIZE -lt 3072 ]]; then\n' +
-                                    '  if [ -d ' + src + ' ]; then\n' + 
+                                    '  if [ -d ' + src + ' ]; then\n' +
                                     '    tar -tzf ' + src + ' > ' + dst + '\n' +
                                     '  elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" %s; then\n' % src +
                                     '    cp ' + src + ' ' + dst + '\n' +
