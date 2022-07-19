@@ -85,7 +85,7 @@ spec:
             touch $(results.data.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data ]; then
-                tar -tzf $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data > $(results.data.path)
+                tar -tzf $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data.tar.gz > $(results.data.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data; then
                 cp $(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data $(results.data.path)
               fi

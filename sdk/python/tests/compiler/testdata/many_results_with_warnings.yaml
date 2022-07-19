@@ -126,7 +126,7 @@ spec:
             touch $(results.param2.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d /tekton/home/tep-results/param2 ]; then
-                tar -tzf /tekton/home/tep-results/param2 > $(results.param2.path)
+                tar -tzf /tekton/home/tep-results/param2.tar.gz > $(results.param2.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param2; then
                 cp /tekton/home/tep-results/param2 $(results.param2.path)
               fi
@@ -140,7 +140,7 @@ spec:
             touch $(results.param3.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d /tekton/home/tep-results/param3 ]; then
-                tar -tzf /tekton/home/tep-results/param3 > $(results.param3.path)
+                tar -tzf /tekton/home/tep-results/param3.tar.gz > $(results.param3.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param3; then
                 cp /tekton/home/tep-results/param3 $(results.param3.path)
               fi
@@ -154,7 +154,7 @@ spec:
             touch $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper ]; then
-                tar -tzf /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper > $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
+                tar -tzf /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.tar.gz > $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper; then
                 cp /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
               fi

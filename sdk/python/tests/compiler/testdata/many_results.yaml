@@ -126,7 +126,7 @@ spec:
             touch $(results.param1.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d /tekton/home/tep-results/param1 ]; then
-                tar -tzf /tekton/home/tep-results/param1 > $(results.param1.path)
+                tar -tzf /tekton/home/tep-results/param1.tar.gz > $(results.param1.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param1; then
                 cp /tekton/home/tep-results/param1 $(results.param1.path)
               fi
@@ -140,7 +140,7 @@ spec:
             touch $(results.param3-b.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d /tekton/home/tep-results/param3-b ]; then
-                tar -tzf /tekton/home/tep-results/param3-b > $(results.param3-b.path)
+                tar -tzf /tekton/home/tep-results/param3-b.tar.gz > $(results.param3-b.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param3-b; then
                 cp /tekton/home/tep-results/param3-b $(results.param3-b.path)
               fi

@@ -118,7 +118,7 @@ spec:
             touch $(results.output-text.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text ]; then
-                tar -tzf $(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text > $(results.output-text.path)
+                tar -tzf $(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text.tar.gz > $(results.output-text.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text; then
                 cp $(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text $(results.output-text.path)
               fi
@@ -245,7 +245,7 @@ spec:
             touch $(results.odd-lines.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines ]; then
-                tar -tzf $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines > $(results.odd-lines.path)
+                tar -tzf $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines.tar.gz > $(results.odd-lines.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines; then
                 cp $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/odd_lines $(results.odd-lines.path)
               fi
@@ -259,7 +259,7 @@ spec:
             touch $(results.even-lines.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines ]; then
-                tar -tzf $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines > $(results.even-lines.path)
+                tar -tzf $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines.tar.gz > $(results.even-lines.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines; then
                 cp $(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines $(results.even-lines.path)
               fi
@@ -483,7 +483,7 @@ spec:
             touch $(results.numbers.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers ]; then
-                tar -tzf $(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers > $(results.numbers.path)
+                tar -tzf $(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers.tar.gz > $(results.numbers.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers; then
                 cp $(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers $(results.numbers.path)
               fi
@@ -661,7 +661,7 @@ spec:
             touch $(results.output.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output ]; then
-                tar -tzf $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output > $(results.output.path)
+                tar -tzf $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output.tar.gz > $(results.output.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output; then
                 cp $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.output.path)
               fi
