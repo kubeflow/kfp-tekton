@@ -634,7 +634,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                         dst = '$(results.%s.path)' % sanitize_k8s_name(result['name'])
                         if artifact_name == result['name'] and src != dst:
                             add_copy_results_artifacts_step = True
-                            total_size_command = 'ARTIFACT_SIZE=`wc -c %s | awk \'{print $1}\'`\n' % src + \
+                            total_size_command = 'ARTIFACT_SIZE=`wc -c %s${SUFFIX} | awk \'{print $1}\'`\n' % src + \
                                                  'TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)\n'
                             copy_command = '    cp ' + src + ' ' + dst + '\n'
                             if env.get('OUTPUT_PREVIEW', 'false').lower() == 'true':
@@ -643,12 +643,18 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                                 copy_command = '    dd if=' + src + ' of=' + \
                                                dst + ' bs=' + preview_size + ' count=1\n'
                             script += (
+                                    'if [ -d ' + src + ' ]; then\n' +
+                                    '  tar -czvf ' + src + '.tar.gz ' + src + '\n' +
+                                    '  SUFFIX=".tar.gz"\n' +
+                                    'fi\n' +
                                     total_size_command +
                                     'touch ' + dst + '\n' +  # create an empty file by default.
                                     'if [[ $TOTAL_SIZE -lt 3072 ]]; then\n' +
-                                    '  if ! awk "/[^[:print:]]/{f=1} END{exit !f}" %s; then\n' % src +
+                                    '  if [ -d ' + src + ' ]; then\n' +
+                                    '    tar -tzf ' + src + '.tar.gz > ' + dst + '\n' +
+                                    '  elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" %s; then\n' % src +
                                     copy_command +
-                                    '  fi\n'
+                                    '  fi\n' +
                                     'fi\n'
                             )
             copy_results_artifact_step['command'].append(script)

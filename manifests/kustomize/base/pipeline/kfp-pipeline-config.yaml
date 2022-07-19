@@ -15,7 +15,7 @@ data:
   terminate_status: "Cancelled"
   artifact_script: |-
     push_artifact() {
-        if [ -f "$2" ]; then
+        if [ -f "$2" ] || [ -d "$2" ]; then
             tar -cvzf $1.tgz -C $(dirname $2) $(basename $2)
             mc cp $1.tgz storage/$ARTIFACT_BUCKET/artifacts/$PIPELINERUN/$PIPELINETASK/$1.tgz
         else
