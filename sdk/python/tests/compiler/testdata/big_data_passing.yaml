@@ -38,7 +38,7 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"gen-params": [["Output", "$(results.output.path)"]],
+    tekton.dev/artifact_items: '{"gen-params": [["Output", "$(results.Output.path)"]],
       "print-params": [], "print-text": [], "print-text-2": [], "print-text-3": [],
       "print-text-4": [], "print-text-5": [], "repeat-line": [["output_text", "$(workspaces.repeat-line.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_text"]],
       "split-text-lines": [["even_lines", "$(workspaces.split-text-lines.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/even_lines"],
@@ -658,12 +658,12 @@ spec:
             fi
             ARTIFACT_SIZE=`wc -c $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output${SUFFIX} | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.output.path)
+            touch $(results.Output.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output ]; then
-                tar -tzf $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output.tar.gz > $(results.output.path)
+                tar -tzf $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output.tar.gz > $(results.Output.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output; then
-                cp $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.output.path)
+                cp $(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.Output.path)
               fi
             fi
           onError: continue
@@ -675,7 +675,7 @@ spec:
         params:
         - name: write-numbers-trname
         results:
-        - name: output
+        - name: Output
           type: string
           description: /tmp/outputs/Output/data
         - name: taskrun-name
@@ -761,7 +761,7 @@ spec:
         - name: main
           args:
           - '----output-paths'
-          - $(results.output.path)
+          - $(results.Output.path)
           command:
           - sh
           - -ec
@@ -808,7 +808,7 @@ spec:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
         results:
-        - name: output
+        - name: Output
           type: string
           description: /tmp/outputs/Output/data
         metadata:
@@ -825,7 +825,7 @@ spec:
     - name: print-params
       params:
       - name: gen-params-Output
-        value: $(tasks.gen-params.results.output)
+        value: $(tasks.gen-params.results.Output)
       taskSpec:
         steps:
         - name: main

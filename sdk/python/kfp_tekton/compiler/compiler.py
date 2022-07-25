@@ -326,7 +326,7 @@ class TektonCompiler(Compiler):
                 replace_str = param[1] + '-'
                 self.loops_pipeline[group_name]['spec']['params'].append({
                   'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
-                    param[1], sanitize_k8s_name(param[0].replace(replace_str, '', 1))
+                    param[1], sanitize_k8s_name(param[0].replace(replace_str, '', 1), allow_capital=True)
                   )
                 })
               if not param[1]:
@@ -370,7 +370,7 @@ class TektonCompiler(Compiler):
             replace_str = param[1] + '-'
             custom_task['spec']['params'].append({
               'name': param[0], 'value': '$(tasks.%s.results.%s)' % (
-                param[1], sanitize_k8s_name(param[0].replace(replace_str, '', 1))
+                param[1], sanitize_k8s_name(param[0].replace(replace_str, '', 1), allow_capital=True)
               )
             })
           if not param[1] and param[0] not in param_list:
@@ -385,7 +385,7 @@ class TektonCompiler(Compiler):
           if pipe_param[0] == '':
             s = s.replace("{{pipelineparam:op=%s;name=%s}}" % pipe_param, '$(params.%s)' % pipe_param[1])
           else:
-            param_name = sanitize_k8s_name(pipe_param[1])
+            param_name = sanitize_k8s_name(pipe_param[1], allow_capital=True)
             s = s.replace("{{pipelineparam:op=%s;name=%s}}" % pipe_param, '$(tasks.%s.results.%s)' % (
               sanitize_k8s_name(pipe_param[0]),
               param_name))
@@ -398,7 +398,7 @@ class TektonCompiler(Compiler):
           if v.op_name is None:
             v = '$(params.%s)' % v.name
           else:
-            param_name = sanitize_k8s_name(v.name)
+            param_name = sanitize_k8s_name(v.name, allow_capital=True)
             v = '$(tasks.%s.results.%s)' % (
               sanitize_k8s_name(v.op_name),
               param_name)
@@ -467,7 +467,7 @@ class TektonCompiler(Compiler):
         if pipeline_param.op_name is None:
           withparam_value = '$(params.%s)' % pipeline_param.name
         else:
-          param_name = sanitize_k8s_name(pipeline_param.name)
+          param_name = sanitize_k8s_name(pipeline_param.name, allow_capital=True)
           withparam_value = '$(tasks.%s.results.%s)' % (
             sanitize_k8s_name(pipeline_param.op_name),
             param_name)
@@ -495,7 +495,7 @@ class TektonCompiler(Compiler):
                 if v.op_name is None:
                   v = '$(params.%s)' % v.name
                 else:
-                  param_name = sanitize_k8s_name(v.name)
+                  param_name = sanitize_k8s_name(v.name, allow_capital=True)
                   v = '$(tasks.%s.results.%s)' % (
                     sanitize_k8s_name(v.op_name),
                     param_name)
@@ -522,7 +522,8 @@ class TektonCompiler(Compiler):
         parameter_value = str(parameter)
         if isinstance(parameter, dsl.PipelineParam):
           if parameter.op_name:
-            parameter_value = '$(tasks.' + parameter.op_name + '.results.' + sanitize_k8s_name(parameter.name) + ')'
+            parameter_value = '$(tasks.' + parameter.op_name + '.results.' + \
+                               sanitize_k8s_name(parameter.name, allow_capital=True) + ')'
           else:
             parameter_value = '$(params.' + parameter.name + ')'
         return parameter_value
@@ -956,7 +957,7 @@ class TektonCompiler(Compiler):
               def map_cel_vars(a):
                 if a.get('type', '') == dsl.PipelineParam:
                   op_name = sanitize_k8s_name(a['op_name'])
-                  output_name = sanitize_k8s_name(a['output_name'])
+                  output_name = sanitize_k8s_name(a['output_name'], allow_capital=True)
                   return '$(tasks.%s.results.%s)' % (op_name, output_name)
                 else:
                   return a.get('value', '')
@@ -1083,13 +1084,15 @@ class TektonCompiler(Compiler):
           # Process input parameters if needed
           if isinstance(condition.operand1, dsl.PipelineParam):
             if condition.operand1.op_name:
-              operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + sanitize_k8s_name(condition.operand1.name) + ')'
+              operand_value = '$(tasks.' + condition.operand1.op_name + '.results.' + \
+                               sanitize_k8s_name(condition.operand1.name, allow_capital=True) + ')'
             else:
               operand_value = '$(params.' + condition.operand1.name + ')'
             input_params.append(operand_value)
           if isinstance(condition.operand2, dsl.PipelineParam):
             if condition.operand2.op_name:
-              operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + sanitize_k8s_name(condition.operand2.name) + ')'
+              operand_value = '$(tasks.' + condition.operand2.op_name + '.results.' + \
+                               sanitize_k8s_name(condition.operand2.name, allow_capital=True) + ')'
             else:
               operand_value = '$(params.' + condition.operand2.name + ')'
             input_params.append(operand_value)
@@ -1226,7 +1229,8 @@ class TektonCompiler(Compiler):
                 for pp in op.inputs:
                   if pipeline_param == pp.full_name:
                     # Parameters from Tekton results need to be sanitized
-                    substitute_param = '$(tasks.%s.results.%s)' % (sanitize_k8s_name(pp.op_name), sanitize_k8s_name(pp.name))
+                    substitute_param = '$(tasks.%s.results.%s)' % (sanitize_k8s_name(pp.op_name),
+                                                                   sanitize_k8s_name(pp.name, allow_capital=True))
                     tp['value'] = re.sub('\$\(inputs.params.%s\)' % pipeline_param, substitute_param, tp.get('value', ''))
                     break
         # Not necessary for Tekton execution
@@ -1406,15 +1410,15 @@ class TektonCompiler(Compiler):
           if len(param.op_name) > 128:
             raise ValueError('Input parameter cannot be longer than 128 characters. \
              \nInput name: %s. \nOp name: %s' % (param.op_name, op.name))
-          param.op_name = sanitize_k8s_name(param.op_name, max_length=float('inf'))
+          param.op_name = sanitize_k8s_name(param.op_name, max_length=float('inf'), allow_capital=True)
       # sanitized output params
       for param in op.outputs.values():
         param.name = sanitize_k8s_name(param.name, True)
         if param.op_name:
-          param.op_name = sanitize_k8s_name(param.op_name)
+          param.op_name = sanitize_k8s_name(param.op_name, allow_capital=True)
       if op.output is not None and not isinstance(op.output, dsl._container_op._MultipleOutputsError):
         op.output.name = sanitize_k8s_name(op.output.name, True)
-        op.output.op_name = sanitize_k8s_name(op.output.op_name)
+        op.output.op_name = sanitize_k8s_name(op.output.op_name, allow_capital=True)
       if op.dependent_names:
         op.dependent_names = [sanitize_k8s_name(name) for name in op.dependent_names]
       if isinstance(op, dsl.ContainerOp) and op.file_outputs is not None:

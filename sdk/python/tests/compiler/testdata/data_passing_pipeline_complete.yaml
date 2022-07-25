@@ -335,12 +335,12 @@ spec:
             fi
             ARTIFACT_SIZE=`wc -c $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output${SUFFIX} | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.output.path)
+            touch $(results.Output.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output ]; then
-                tar -tzf $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output.tar.gz > $(results.output.path)
+                tar -tzf $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output.tar.gz > $(results.Output.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output; then
-                cp $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.output.path)
+                cp $(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output $(results.Output.path)
               fi
             fi
           onError: continue
@@ -350,7 +350,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
-        - name: output
+        - name: Output
           type: string
           description: /tmp/outputs/Output/data
         - name: taskrun-name
@@ -1377,7 +1377,7 @@ spec:
     - name: consume-anything-as-value-7
       params:
       - name: produce-string-Output
-        value: $(tasks.produce-string.results.output)
+        value: $(tasks.produce-string.results.Output)
       taskSpec:
         steps:
         - name: main
@@ -1537,7 +1537,7 @@ spec:
     - name: consume-string-as-value-5
       params:
       - name: produce-string-Output
-        value: $(tasks.produce-string.results.output)
+        value: $(tasks.produce-string.results.Output)
       taskSpec:
         steps:
         - name: main

@@ -30,7 +30,7 @@ metadata:
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"gcs-downloadgcs-downloadgcs-downloadgcs-download":
-      [["Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Dat", "$(results.data-123data-123data-123data-123data-123data-123dat.path)"]],
+      [["Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Dat", "$(results.Data-123Data-123Data-123Data-123Data-123Data-123Dat.path)"]],
       "printprintprintprintprintprintprintprintprintprint": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
@@ -56,7 +56,7 @@ spec:
           - |
             gsutil cat $0 | tee $1
           - $(inputs.params.url1)
-          - $(results.data-123data-123data-123data-123data-123data-123dat.path)
+          - $(results.Data-123Data-123Data-123Data-123Data-123Data-123Dat.path)
           command:
           - sh
           - -c
@@ -64,7 +64,7 @@ spec:
         params:
         - name: url1
         results:
-        - name: data-123data-123data-123data-123data-123data-123dat
+        - name: Data-123Data-123Data-123Data-123Data-123Data-123Dat
           type: string
           description: /tmp/outputs/Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123/data
         metadata:
@@ -82,7 +82,7 @@ spec:
     - name: printprintprintprintprintprintprintprintprintprint
       params:
       - name: gcs-downloadgcs-downloadgcs-downloadgcs-download-Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Dat
-        value: $(tasks.gcs-downloadgcs-downloadgcs-downloadgcs-download.results.data-123data-123data-123data-123data-123data-123dat)
+        value: $(tasks.gcs-downloadgcs-downloadgcs-downloadgcs-download.results.Data-123Data-123Data-123Data-123Data-123Data-123Dat)
       taskSpec:
         steps:
         - name: main
@@ -105,7 +105,7 @@ spec:
     - name: condition-cel
       params:
       - name: outcome
-        value: '''$(tasks.gcs-downloadgcs-downloadgcs-downloadgcs-download.results.data-123data-123data-123data-123data-123data-123dat)''
+        value: '''$(tasks.gcs-downloadgcs-downloadgcs-downloadgcs-download.results.Data-123Data-123Data-123Data-123Data-123Data-123Dat)''
           == ''heads'''
       taskRef:
         name: cel_condition
