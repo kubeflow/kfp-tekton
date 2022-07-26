@@ -106,7 +106,8 @@ def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
 
 def processOperand(operand) -> (str, str):
     if isinstance(operand, dsl.PipelineParam):
-        return "results_" + sanitize_k8s_name(operand.op_name) + "_" + sanitize_k8s_name(operand.name), operand.op_name
+        return "results_" + sanitize_k8s_name(operand.op_name) + "_" + \
+                sanitize_k8s_name(operand.name, allow_capital=True), operand.op_name
     else:
         # Do the same as in _get_super_condition_template to check whehter it's int
         try:

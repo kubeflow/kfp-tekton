@@ -71,11 +71,11 @@ def _get_copy_result_step_template(step_number: int, result_maps: list):
     """
     args = [""]
     for key in result_maps[step_number].keys():
-        sanitize_key = sanitize_k8s_name(key)
+        sanitize_key = sanitize_k8s_name(key, allow_capital=True)
         args[0] += "mv %s%s $(results.%s.path);\n" % (TEKTON_HOME_RESULT_PATH, sanitize_key, sanitize_key)
     if step_number > 0:
         for key in result_maps[step_number - 1].keys():
-            sanitize_key = sanitize_k8s_name(key)
+            sanitize_key = sanitize_k8s_name(key, allow_capital=True)
             args[0] += "mv $(results.%s.path) %s%s;\n" % (sanitize_key, TEKTON_HOME_RESULT_PATH, sanitize_key)
     return {
         "name": "copy-results-%s" % str(step_number),
@@ -288,7 +288,7 @@ def _process_parameters(processed_op: BaseOp,
                     commands = []
                     for c in s['command']:
                         if path in c:
-                            c = c.replace(path, '$(results.%s.path)' % sanitize_k8s_name(name))
+                            c = c.replace(path, '$(results.%s.path)' % sanitize_k8s_name(name, allow_capital=True))
                             need_copy_step = False
                         commands.append(c)
                     s['command'] = commands
@@ -296,15 +296,15 @@ def _process_parameters(processed_op: BaseOp,
                     args = []
                     for a in s['args']:
                         if path in a:
-                            a = a.replace(path, '$(results.%s.path)' % sanitize_k8s_name(name))
+                            a = a.replace(path, '$(results.%s.path)' % sanitize_k8s_name(name, allow_capital=True))
                             need_copy_step = False
                         args.append(a)
                     s['args'] = args
-                if path == '/tekton/results/' + sanitize_k8s_name(name):
+                if path == '/tekton/results/' + sanitize_k8s_name(name, allow_capital=True):
                     need_copy_step = False
             # If file output path cannot be found/replaced, use emptyDir to copy it to the tekton/results path
             if need_copy_step:
-                script = script + 'cp ' + path + ' $(results.%s.path);\n' % sanitize_k8s_name(name)
+                script = script + 'cp ' + path + ' $(results.%s.path);\n' % sanitize_k8s_name(name, allow_capital=True)
                 mount_path = path.rsplit("/", 1)[0]
                 if mount_path not in mounted_param_paths:
                     _add_mount_path(name, path, mount_path, volume_mount_step_template, volume_template, mounted_param_paths)
@@ -346,7 +346,7 @@ def _process_output_artifacts(outputs_dict: Dict[Text, Any],
             parameter_name = sanitize_k8s_name(artifact['name'], allow_capital_underscore=True, max_length=float('Inf'))
             artifact_name = artifact_to_result_mapping.get(parameter_name, parameter_name)
             if parameter_name in replaced_param_list:
-                artifact_items.append([artifact_name, "$(results.%s.path)" % sanitize_k8s_name(artifact_name)])
+                artifact_items.append([artifact_name, "$(results.%s.path)" % sanitize_k8s_name(artifact_name, allow_capital=True)])
             else:
                 artifact_items.append([artifact_name, artifact['path']])
                 mount_path = artifact['path'].rsplit("/", 1)[0]
@@ -633,7 +633,7 @@ def _op_to_template(op: BaseOp,
                     for key in result_size_map.keys():
                         # Replace main step results that are not in the first bin to the Tekton home path
                         if key not in verified_result_size_map[0].keys():
-                            sanitize_key = sanitize_k8s_name(key)
+                            sanitize_key = sanitize_k8s_name(key, allow_capital=True)
                             for i, a in enumerate(step['args']):
                                 a = a.replace('$(results.%s.path)' % sanitize_key, '%s%s' % (TEKTON_HOME_RESULT_PATH, sanitize_key))
                                 step['args'][i] = a
@@ -648,6 +648,6 @@ def _op_to_template(op: BaseOp,
         # Update actifact item location to the latest stage in order to properly track and store all the artifacts.
         for i, artifact in enumerate(artifact_items[op.name]):
             if artifact[0] not in verified_result_size_map[step_counter].keys():
-                artifact[1] = '%s%s' % (TEKTON_HOME_RESULT_PATH, sanitize_k8s_name(artifact[0]))
+                artifact[1] = '%s%s' % (TEKTON_HOME_RESULT_PATH, sanitize_k8s_name(artifact[0], allow_capital=True))
                 artifact_items[op.name][i] = artifact
     return template

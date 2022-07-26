@@ -339,7 +339,7 @@ def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix:
         renamed_results_in_pipeline_task = set()
         for task_result in spec['results']:
             task_result_old_name = task_result.get('name')
-            task_result_new_name = sanitize_k8s_name(task_result_old_name)
+            task_result_new_name = sanitize_k8s_name(task_result_old_name, allow_capital=True)
             if task_result_new_name != task_result_old_name:
                 task_result['name'] = task_result_new_name
                 renamed_results_in_pipeline_task.add(
@@ -378,7 +378,7 @@ def fix_big_data_passing(workflow: dict, loops_pipeline: dict, loop_name_prefix:
                 argument['value'] = '$(tasks.%s.%s.%s)' % (
                     argument_placeholder_parts[1],
                     argument_placeholder_parts[2],
-                    sanitize_k8s_name(argument_placeholder_parts[3]))
+                    sanitize_k8s_name(argument_placeholder_parts[3], allow_capital=True))
 
     workflow = jsonify_annotations(workflow)
     # Need to confirm:
@@ -456,7 +456,7 @@ def big_data_passing_pipeline(name: str, template: dict, inputs_tasks: set(),
         if artifact_output_list:
             tmp_list = set()
             for output in json.loads(artifact_output_list):
-                tmp_list.add(sanitize_k8s_name(output))
+                tmp_list.add(sanitize_k8s_name(output, allow_capital=True))
             for task_output in task.get('taskSpec', {}).get('results', []):
                 if task_output.get('name') in tmp_list:
                     if not task.setdefault('workspaces', []):
@@ -515,7 +515,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
         temp_list = json.loads(artifact_output_list)
         artifact_output_list = []
         for output in temp_list:
-            artifact_output_list.append(sanitize_k8s_name(output))
+            artifact_output_list.append(sanitize_k8s_name(output, allow_capital=True))
     for task_output in task.get('taskSpec', {}).get('results', []):
         if (task_name, task_output.get('name')) in outputs_tasks or \
             (artifact_output_list and task_output.get('name') in artifact_output_list):
@@ -525,7 +525,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             # $(results.task_output.get('name').path)  -->
             # $(workspaces.task_name.path)/task_name-task_output.get('name')
             placeholder = '$(results.%s.path)' % (sanitize_k8s_name(
-                task_output.get('name')))
+                task_output.get('name'), allow_capital=True))
             workspaces_parameter = '$(workspaces.%s.path)/%s/%s/%s' % (
                 task_name, BIG_DATA_MIDPATH, "$(context.taskRun.name)", task_output.get('name'))
             if env.get('OUTPUT_BIG_DATA_PATH', 'false').lower() == 'true':
@@ -622,7 +622,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             if task_param_task_name:
                 workspaces_parameter = '$(workspaces.%s.path)/%s/$(params.%s-trname)/%s' % (
                     task_name, BIG_DATA_MIDPATH, task_param_task_name, task_param_param_name)
-                task_path = sanitize_k8s_name(task_param_param_name) + OUTPUT_RESULT_PATH_SUFFIX
+                task_path = sanitize_k8s_name(task_param_param_name, allow_capital=True) + OUTPUT_RESULT_PATH_SUFFIX
                 if env.get('OUTPUT_BIG_DATA_PATH', 'false').lower() == 'true':
                     workspaces_parameter = '$(workspaces.%s.path)/$(params.%s)' % (task_name, '-'.join([task_param_task_name, task_path]))
                 if task_param_task_name != task_name:
@@ -664,7 +664,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                     for index, artifact_tuple in enumerate(artifact_i):
                         artifact_name, artifact = artifact_tuple
                         src = artifact
-                        dst = '$(results.%s.path)' % sanitize_k8s_name(result['name'])
+                        dst = '$(results.%s.path)' % sanitize_k8s_name(result['name'], allow_capital=True)
                         if artifact_name == result['name'] and src != dst:
                             add_copy_results_artifacts_step = True
                             total_size_command = 'ARTIFACT_SIZE=`wc -c %s${SUFFIX} | awk \'{print $1}\'`\n' % src + \

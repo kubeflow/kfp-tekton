@@ -23,7 +23,8 @@ def sanitize_k8s_name(name,
                       allow_slash=False,
                       max_length=57,
                       suffix_space=0,
-                      rev_truncate=False):
+                      rev_truncate=False,
+                      allow_capital=False):
     """From _make_kubernetes_name
       sanitize_k8s_name cleans and converts the names in the workflow.
 
@@ -46,7 +47,9 @@ def sanitize_k8s_name(name,
     k8s_name = re.sub('[^-_./0-9A-Za-z]+', '-', name)
 
     if not allow_capital_underscore:
-      k8s_name = re.sub('_', '-', k8s_name.lower())
+      k8s_name = re.sub('_', '-', k8s_name)
+      if not allow_capital:
+        k8s_name = k8s_name.lower()
 
     if not allow_dot:
       k8s_name = re.sub('[.]', '-', k8s_name)

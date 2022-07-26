@@ -27,9 +27,9 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"add-numbers": [["Output", "$(results.output.path)"]],
-      "notify-failure": [], "notify-success": [], "print-number": [["Output", "$(results.output.path)"]],
-      "produce-numbers": [["Output", "$(results.output.path)"]]}'
+    tekton.dev/artifact_items: '{"add-numbers": [["Output", "$(results.Output.path)"]],
+      "notify-failure": [], "notify-success": [], "print-number": [["Output", "$(results.Output.path)"]],
+      "produce-numbers": [["Output", "$(results.Output.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "3", "name": "n",
@@ -59,7 +59,7 @@ spec:
           - --n
           - $(inputs.params.n)
           - '----output-paths'
-          - $(results.output.path)
+          - $(results.Output.path)
           command:
           - sh
           - -ec
@@ -117,7 +117,7 @@ spec:
         params:
         - name: "n"
         results:
-        - name: output
+        - name: Output
           type: string
           description: /tmp/outputs/Output/data
         metadata:
@@ -136,7 +136,7 @@ spec:
       name: conditions-and-loops-for-loop-1
       params:
       - name: produce-numbers-Output-loop-item
-        value: $(tasks.produce-numbers.results.output)
+        value: $(tasks.produce-numbers.results.Output)
       - name: threshold
         value: $(params.threshold)
       taskSpec:
@@ -163,7 +163,7 @@ spec:
                   - --b
                   - '10'
                   - '----output-paths'
-                  - $(results.output.path)
+                  - $(results.Output.path)
                   command:
                   - sh
                   - -ec
@@ -214,7 +214,7 @@ spec:
                 - name: produce-numbers-Output-loop-item
                   type: string
                 results:
-                - name: output
+                - name: Output
                   type: string
                   description: /tmp/outputs/Output/data
                 metadata:
@@ -231,7 +231,7 @@ spec:
             - name: print-number
               params:
               - name: add-numbers-Output
-                value: $(tasks.add-numbers.results.output)
+                value: $(tasks.add-numbers.results.Output)
               taskSpec:
                 steps:
                 - name: main
@@ -239,7 +239,7 @@ spec:
                   - --a
                   - $(inputs.params.add-numbers-Output)
                   - '----output-paths'
-                  - $(results.output.path)
+                  - $(results.Output.path)
                   command:
                   - sh
                   - -ec
@@ -289,7 +289,7 @@ spec:
                 - name: add-numbers-Output
                   type: string
                 results:
-                - name: output
+                - name: Output
                   type: string
                   description: /tmp/outputs/Output/data
                 metadata:
@@ -378,7 +378,7 @@ spec:
             - name: condition-2
               params:
               - name: operand1
-                value: $(tasks.print-number.results.output)
+                value: $(tasks.print-number.results.Output)
               - name: operand2
                 value: $(params.threshold)
               - name: operator
@@ -427,7 +427,7 @@ spec:
             - name: condition-3
               params:
               - name: operand1
-                value: $(tasks.print-number.results.output)
+                value: $(tasks.print-number.results.Output)
               - name: operand2
                 value: $(params.threshold)
               - name: operator
