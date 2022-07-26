@@ -120,6 +120,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.parallel_join import download_and_join
     self._test_pipeline_workflow(download_and_join, 'parallel_join.yaml', skip_noninlined=True)
 
+  def test_custom_task_exit_workflow(self):
+    """
+    Test compiling a custom task exit workflow.
+    """
+    from .testdata.custom_task_exit import test_pipeline
+    self._test_pipeline_workflow(test_pipeline, 'custom_task_exit.yaml', skip_noninlined=True)
+
   def test_big_data_multi_volumes_1_workflow(self):
     """
     Test compiling a big data pipeline with multiple types of volumes workflow.
