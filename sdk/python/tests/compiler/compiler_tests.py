@@ -134,6 +134,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.big_data_multi_volumes_2 import big_data
     self._test_pipeline_workflow(big_data, 'big_data_multi_volumes_2.yaml', skip_noninlined=True)
 
+  def test_condition_depend_workflow(self):
+    """
+    Test compiling a condition depend workflow.
+    """
+    from .testdata.condition_depend import pipeline
+    self._test_pipeline_workflow(pipeline, 'condition_depend.yaml', skip_noninlined=True)
+
   def test_recur_cond_workflow(self):
     """
     Test compiling a recurive condition workflow.

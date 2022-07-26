@@ -198,6 +198,11 @@ spec:
                     tekton.dev/template: ''
               runAfter:
               - print-1
+              when:
+              - input: $(tasks.condition-cel-3.results.outcome)
+                operator: in
+                values:
+                - "true"
               timeout: 525600m
           iterateParam: param-loop-item
         metadata:

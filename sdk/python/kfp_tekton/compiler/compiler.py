@@ -1163,6 +1163,37 @@ class TektonCompiler(Compiler):
       if op != None and op.dependent_names:
         task['runAfter'] = op.dependent_names
 
+    # populate dependend condition for all the runafter tasks
+    def populate_runafter_condition(task):
+      task_runafter = task.get('runAfter')
+      if task_runafter:
+        for t in task_refs:
+          if t['name'] in task_runafter:
+            if t.get('when'):
+              task.setdefault('when', [])
+              for when_item in t['when']:
+                if when_item not in task['when']:
+                  task['when'].append(when_item)
+
+    # search runafter tree logic before populating the condition
+    visited_tasks = {}
+    task_queue = []
+    for task in task_refs:
+      task_runafter = task.get('runAfter')
+      if task_runafter:
+        task_queue.append(task)
+    while task_queue:
+      popped_task = task_queue.pop(0)
+      populate_condition = True
+      for queued_task in task_queue:
+        if queued_task['name'] in popped_task['runAfter'] and len(task_queue) != visited_tasks.get(popped_task['name']):
+          visited_tasks[popped_task['name']] = len(task_queue)
+          task_queue.append(popped_task)
+          populate_condition = False
+          break
+      if populate_condition:
+        populate_runafter_condition(popped_task)
+
     # add condition refs to the recursive refs that depends on the condition
     for recursive_task in self.recursive_tasks:
       parent_group = op_name_to_parent_groups.get(recursive_task['name'], [])
