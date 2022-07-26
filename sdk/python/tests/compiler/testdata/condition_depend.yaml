@@ -164,12 +164,12 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - my-in-coop1-3
+      timeout: 525600m
       when:
       - input: $(tasks.condition-1.results.outcome)
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: my-in-coop1-3
       params:
       - name: param
@@ -200,12 +200,12 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - my-in-coop1
+      timeout: 525600m
       when:
       - input: $(tasks.condition-1.results.outcome)
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: condition-1
       params:
       - name: operand1

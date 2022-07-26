@@ -146,12 +146,12 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - print-1
+      timeout: 525600m
       when:
       - input: $(tasks.condition-cel.results.outcome)
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - runAfter:
       - print-1
       name: empty-loop-for-loop-2
@@ -244,11 +244,6 @@ spec:
                       "name": "output_value", "type": "String"}], "version": "print-4@sha256=612578686b564fc00e7052b345cd44d6a9cad721cdd6ceb3ecfc68c392a932f7"}'
                     tekton.dev/template: ''
               runAfter: []
-              when:
-              - input: $(tasks.condition-cel.results.outcome)
-                operator: in
-                values:
-                - "true"
               timeout: 525600m
           iterateParam: param-loop-item
         metadata:

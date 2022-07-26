@@ -63,8 +63,7 @@ metadata:
       ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
       "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
       -e\necho $0 > $1\n", "print-4", "$(results.output-value.path)"], "image": "alpine:3.6",
-      "name": "main"}]}, "timeout": "525600m", "when": [{"input": "$(tasks.condition-cel.results.outcome)",
-      "operator": "in", "values": ["true"]}]}]}}}]'
+      "name": "main"}]}, "timeout": "525600m"}]}}}]'
 spec:
   params:
   - name: param
@@ -173,12 +172,12 @@ spec:
             tekton.dev/template: ''
       runAfter:
       - print-1
+      timeout: 525600m
       when:
       - input: $(tasks.condition-cel.results.outcome)
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - runAfter:
       - print-1
       name: empty-loop-for-loop-2
