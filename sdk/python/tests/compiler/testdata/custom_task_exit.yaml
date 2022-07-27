@@ -1,0 +1,107 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: test-pipeline
+  annotations:
+    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/output_value.tgz",
+      "name": "print-output_value", "path": "/tmp/outputs/output_value/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print": [["output_value", "$(results.output-value.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "test pipeline"}'
+spec:
+  pipelineSpec:
+    tasks:
+    - name: print
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0 > $1
+          - some-message
+          - $(results.output-value.path)
+          image: alpine:3.6
+        results:
+        - name: output-value
+          type: string
+          description: /tmp/outputs/output_value/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [{"description": "Represents an output paramter.", "name": "output_value",
+              "type": "String"}], "version": "print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+    finally:
+    - name: test-pipeline-addon-group-1
+      params:
+      - name: pipelinerun_name
+        value: $(context.pipelineRun.name)
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: Exception
+        spec:
+          pipelineSpec:
+            params:
+            - name: status
+              type: string
+            - name: status_message
+              type: string
+            tasks:
+            - name: cel
+              params:
+              - name: status
+                value: $(params.status)
+              taskSpec:
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: Cel
+                spec: {}
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/pipelinename: ''
+                    pipelines.kubeflow.org/generation: ''
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    valid_container: "false"
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "cel",
+                      "outputs": [{"name": "cel-output"}], "version": "cel@sha256=0178923386cf89d2b7f7bae1037d14efe9e2f5898d55c27420c97a81795e5a59"}'
+                    tekton.dev/template: ''
+              timeout: 525600m
+          podTemplate:
+            imagePullSecrets:
+            - name: ai-lifecycle
+            automountServiceAccountToken: "false"
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "false"
+          annotations:
+            ws-pipelines.ibm.com/pipeline-cache-enabled: "false"
+  timeout: 525600m
