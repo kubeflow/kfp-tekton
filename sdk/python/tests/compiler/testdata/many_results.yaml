@@ -30,7 +30,7 @@ metadata:
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": [], "print4results": [["param1", "/tekton/home/tep-results/param1"],
-      ["param2A", "$(results.param2a.path)"], ["param3_b", "/tekton/home/tep-results/param3-b"],
+      ["param2A", "$(results.param2A.path)"], ["param3_b", "/tekton/home/tep-results/param3-b"],
       ["param4c", "$(results.param4c.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
@@ -46,7 +46,7 @@ spec:
           args:
           - '----output-paths'
           - $(results.param1.path)
-          - /tekton/home/tep-results/param2a
+          - /tekton/home/tep-results/param2A
           - $(results.param3-b.path)
           - /tekton/home/tep-results/param4c
           command:
@@ -102,7 +102,7 @@ spec:
           args:
           - |
             mv /tekton/home/tep-results/param4c $(results.param4c.path);
-            mv /tekton/home/tep-results/param2a $(results.param2a.path);
+            mv /tekton/home/tep-results/param2A $(results.param2A.path);
             mv $(results.param1.path) /tekton/home/tep-results/param1;
             mv $(results.param3-b.path) /tekton/home/tep-results/param3-b;
           command:
@@ -155,7 +155,7 @@ spec:
         - name: param1
           type: string
           description: /tmp/outputs/param1/data
-        - name: param2a
+        - name: param2A
           type: string
           description: /tmp/outputs/param2A/data
         - name: param3-b

@@ -24,7 +24,7 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"mnist-hpo": [["bestHyperParameter", "$(results.besthyperparameter.path)"]],
+    tekton.dev/artifact_items: '{"mnist-hpo": [["bestHyperParameter", "$(results.bestHyperParameter.path)"]],
       "my-out-cop": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
@@ -122,7 +122,7 @@ spec:
             ''5''}}, {''name'': ''--optimizer'', ''parameterType'': ''categorical'',
             ''feasibleSpace'': {''list'': [''sgd'', ''adam'', ''ftrl'']}}]'
           - --outputFile
-          - $(results.besthyperparameter.path)
+          - $(results.bestHyperParameter.path)
           - --deleteAfterDone
           - $(inputs.params.deleteAfterDone)
           - --experimentTimeoutMinutes
@@ -137,7 +137,7 @@ spec:
         - name: namespace
         - name: parallelTrialCount
         results:
-        - name: besthyperparameter
+        - name: bestHyperParameter
           type: string
           description: /tmp/outputs/bestHyperParameter/data
         metadata:
@@ -153,7 +153,7 @@ spec:
     - name: my-out-cop
       params:
       - name: mnist-hpo-bestHyperParameter
-        value: $(tasks.mnist-hpo.results.besthyperparameter)
+        value: $(tasks.mnist-hpo.results.bestHyperParameter)
       taskSpec:
         steps:
         - name: main

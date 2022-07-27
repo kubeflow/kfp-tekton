@@ -36,8 +36,8 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"consumer": [], "metadata-and-metrics": [["mlpipeline-ui-metadata",
       "/tmp/outputs/mlpipeline_ui_metadata/data"], ["mlpipeline-metrics", "/tmp/outputs/mlpipeline_metrics/data"]],
-      "processor": [["Output-1", "$(results.output-1.path)"], ["Output-2", "$(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2"]],
-      "producer": [["Output-1", "$(results.output-1.path)"], ["Output-2", "$(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2"]]}'
+      "processor": [["Output-1", "$(results.Output-1.path)"], ["Output-2", "$(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2"]],
+      "producer": [["Output-1", "$(results.Output-1.path)"], ["Output-2", "$(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Artifact passing pipeline"}'
@@ -49,7 +49,7 @@ spec:
         steps:
         - name: main
           args:
-          - $(results.output-1.path)
+          - $(results.Output-1.path)
           - $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2
           command:
           - sh
@@ -85,12 +85,12 @@ spec:
             fi
             ARTIFACT_SIZE=`wc -c $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2${SUFFIX} | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.output-2.path)
+            touch $(results.Output-2.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 ]; then
-                tar -tzf $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2.tar.gz > $(results.output-2.path)
+                tar -tzf $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2.tar.gz > $(results.Output-2.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2; then
-                cp $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 $(results.output-2.path)
+                cp $(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 $(results.Output-2.path)
               fi
             fi
           onError: continue
@@ -100,10 +100,10 @@ spec:
               fieldRef:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         results:
-        - name: output-1
+        - name: Output-1
           type: string
           description: /tmp/outputs/Output_1/data
-        - name: output-2
+        - name: Output-2
           type: string
           description: /tmp/outputs/Output_2/data
         - name: taskrun-name
@@ -126,7 +126,7 @@ spec:
     - name: processor
       params:
       - name: producer-Output-1
-        value: $(tasks.producer.results.output-1)
+        value: $(tasks.producer.results.Output-1)
       - name: producer-trname
         value: $(tasks.producer.results.taskrun-name)
       taskSpec:
@@ -135,7 +135,7 @@ spec:
           args:
           - $(inputs.params.producer-Output-1)
           - $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(params.producer-trname)/Output-2
-          - $(results.output-1.path)
+          - $(results.Output-1.path)
           - $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2
           command:
           - sh
@@ -171,12 +171,12 @@ spec:
             fi
             ARTIFACT_SIZE=`wc -c $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2${SUFFIX} | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.output-2.path)
+            touch $(results.Output-2.path)
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
               if [ -d $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 ]; then
-                tar -tzf $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2.tar.gz > $(results.output-2.path)
+                tar -tzf $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2.tar.gz > $(results.Output-2.path)
               elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2; then
-                cp $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 $(results.output-2.path)
+                cp $(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2 $(results.Output-2.path)
               fi
             fi
           onError: continue
@@ -189,10 +189,10 @@ spec:
         - name: producer-Output-1
         - name: producer-trname
         results:
-        - name: output-1
+        - name: Output-1
           type: string
           description: /tmp/outputs/Output_1/data
-        - name: output-2
+        - name: Output-2
           type: string
           description: /tmp/outputs/Output_2/data
         - name: taskrun-name
@@ -217,7 +217,7 @@ spec:
     - name: consumer
       params:
       - name: processor-Output-1
-        value: $(tasks.processor.results.output-1)
+        value: $(tasks.processor.results.Output-1)
       - name: processor-trname
         value: $(tasks.processor.results.taskrun-name)
       taskSpec:

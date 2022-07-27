@@ -1,0 +1,114 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: uppercase-vs-lowercase
+  annotations:
+    tekton.dev/output_artifacts: '{"artifact-printer-0": [{"key": "artifacts/$PIPELINERUN/artifact-printer-0/stdout.tgz",
+      "name": "artifact-printer-0-stdout", "path": "/tmp/outputs/stdout/data"}], "artifact-printer-1":
+      [{"key": "artifacts/$PIPELINERUN/artifact-printer-1/stdout.tgz", "name": "artifact-printer-1-stdout",
+      "path": "/tmp/outputs/stdout/data"}]}'
+    tekton.dev/input_artifacts: '{"artifact-printer-0": [{"name": "artifact-fetcher-0-FOO",
+      "parent_task": "artifact-fetcher-0"}], "artifact-printer-1": [{"name": "artifact-fetcher-1-foo",
+      "parent_task": "artifact-fetcher-1"}]}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"artifact-printer-0": [["stdout", "$(results.stdout.path)"]],
+      "artifact-printer-1": [["stdout", "$(results.stdout.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "uppercase vs lowercase"}'
+spec:
+  pipelineSpec:
+    tasks:
+    - name: artifact-fetcher-0
+      params:
+      - name: FOO
+        value: FOO
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-fetcher-1
+      params:
+      - name: foo
+        value: foo
+      taskRef:
+        name: artifact_fetcher
+        apiVersion: fetcher.tekton.dev/v1alpha1
+        kind: FETCHER
+      timeout: 525600m
+    - name: artifact-printer-0
+      params:
+      - name: artifact-fetcher-0-FOO
+        value: $(tasks.artifact-fetcher-0.results.FOO)
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - echo
+          - $(inputs.params.artifact-fetcher-0-FOO)
+          - '>'
+          - $(results.stdout.path)
+          image: alpine:3.6
+        params:
+        - name: artifact-fetcher-0-FOO
+        results:
+        - name: stdout
+          type: string
+          description: /tmp/outputs/stdout/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "artifact-printer-0",
+              "outputs": [{"name": "stdout", "type": "String"}], "version": "artifact-printer-0@sha256=87fc76c64fcc79f4f4b95ee3428ade79e2a4bcdcbc03b4b9b17cef8db6c86dff"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+    - name: artifact-printer-1
+      params:
+      - name: artifact-fetcher-1-foo
+        value: $(tasks.artifact-fetcher-1.results.foo)
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - echo
+          - $(inputs.params.artifact-fetcher-1-foo)
+          - '>'
+          - $(results.stdout.path)
+          image: alpine:3.6
+        params:
+        - name: artifact-fetcher-1-foo
+        results:
+        - name: stdout
+          type: string
+          description: /tmp/outputs/stdout/data
+        metadata:
+          labels:
+            pipelines.kubeflow.org/pipelinename: ''
+            pipelines.kubeflow.org/generation: ''
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "artifact-printer-1",
+              "outputs": [{"name": "stdout", "type": "String"}], "version": "artifact-printer-1@sha256=37dc967f8576ece2bc91e571dbaccd7f77043711a66b411d02aa952bd47191bf"}'
+            tekton.dev/template: ''
+      timeout: 525600m
+  timeout: 525600m

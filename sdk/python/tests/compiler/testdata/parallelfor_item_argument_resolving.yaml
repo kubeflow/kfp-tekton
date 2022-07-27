@@ -35,9 +35,9 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"consume": [], "consume-2": [], "consume-3": [],
       "consume-4": [], "consume-5": [], "consume-6": [], "consume-7": [], "produce-list-of-dicts":
-      [["Output", "$(results.output.path)"]], "produce-list-of-ints": [["Output",
-      "$(results.output.path)"]], "produce-list-of-strings": [["Output", "$(results.output.path)"]],
-      "produce-str": [["Output", "$(results.output.path)"]]}'
+      [["Output", "$(results.Output.path)"]], "produce-list-of-ints": [["Output",
+      "$(results.Output.path)"]], "produce-list-of-strings": [["Output", "$(results.Output.path)"]],
+      "produce-str": [["Output", "$(results.Output.path)"]]}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "parallelfor-item-argument-resolving"}'
@@ -50,7 +50,7 @@ spec:
         - name: main
           args:
           - '----output-paths'
-          - $(results.output.path)
+          - $(results.Output.path)
           command:
           - sh
           - -ec
@@ -93,7 +93,7 @@ spec:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
         results:
-        - name: output
+        - name: Output
           type: string
           description: /tmp/outputs/Output/data
         metadata:
@@ -113,7 +113,7 @@ spec:
         - name: main
           args:
           - '----output-paths'
-          - $(results.output.path)
+          - $(results.Output.path)
           command:
           - sh
           - -ec
@@ -165,7 +165,7 @@ spec:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
         results:
-        - name: output
+        - name: Output
           type: string
           description: /tmp/outputs/Output/data
         metadata:
@@ -185,7 +185,7 @@ spec:
         - name: main
           args:
           - '----output-paths'
-          - $(results.output.path)
+          - $(results.Output.path)
           command:
           - sh
           - -ec
@@ -237,7 +237,7 @@ spec:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
         results:
-        - name: output
+        - name: Output
           type: string
           description: /tmp/outputs/Output/data
         metadata:
@@ -257,7 +257,7 @@ spec:
         - name: main
           args:
           - '----output-paths'
-          - $(results.output.path)
+          - $(results.Output.path)
           command:
           - sh
           - -ec
@@ -309,7 +309,7 @@ spec:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:3.7
         results:
-        - name: output
+        - name: Output
           type: string
           description: /tmp/outputs/Output/data
         metadata:
@@ -329,11 +329,11 @@ spec:
       name: parallelfor-item-argument-resolving-for-loop-1
       params:
       - name: produce-list-of-strings-Output
-        value: $(tasks.produce-list-of-strings.results.output)
+        value: $(tasks.produce-list-of-strings.results.Output)
       - name: produce-list-of-strings-Output-loop-item
-        value: $(tasks.produce-list-of-strings.results.output)
+        value: $(tasks.produce-list-of-strings.results.Output)
       - name: produce-str-Output
-        value: $(tasks.produce-str.results.output)
+        value: $(tasks.produce-str.results.Output)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
@@ -481,9 +481,9 @@ spec:
       name: parallelfor-item-argument-resolving-for-loop-2
       params:
       - name: produce-list-of-ints-Output
-        value: $(tasks.produce-list-of-ints.results.output)
+        value: $(tasks.produce-list-of-ints.results.Output)
       - name: produce-list-of-ints-Output-loop-item
-        value: $(tasks.produce-list-of-ints.results.output)
+        value: $(tasks.produce-list-of-ints.results.Output)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
@@ -588,9 +588,9 @@ spec:
       name: parallelfor-item-argument-resolving-for-loop-3
       params:
       - name: produce-list-of-dicts-Output
-        value: $(tasks.produce-list-of-dicts.results.output)
+        value: $(tasks.produce-list-of-dicts.results.Output)
       - name: produce-list-of-dicts-Output-loop-item
-        value: $(tasks.produce-list-of-dicts.results.output)
+        value: $(tasks.produce-list-of-dicts.results.Output)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
