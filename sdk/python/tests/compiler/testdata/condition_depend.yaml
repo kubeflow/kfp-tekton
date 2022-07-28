@@ -23,7 +23,7 @@ metadata:
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"false": [["Output", "$(results.output.path)"]],
+    tekton.dev/artifact_items: '{"false": [["Output", "$(results.Output.path)"]],
       "my-in-coop1": [], "my-in-coop1-2": [], "my-in-coop1-3": []}'
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
@@ -44,7 +44,7 @@ spec:
         - name: main
           args:
           - '----output-paths'
-          - $(results.output.path)
+          - $(results.Output.path)
           command:
           - sh
           - -ec
@@ -87,7 +87,7 @@ spec:
                     f.write(_output_serializers[idx](_outputs[idx]))
           image: python:alpine3.6
         results:
-        - name: output
+        - name: Output
           type: string
           description: /tmp/outputs/Output/data
         metadata:
@@ -209,7 +209,7 @@ spec:
     - name: condition-1
       params:
       - name: operand1
-        value: $(tasks.false.results.output)
+        value: $(tasks.false.results.Output)
       - name: operand2
         value: "true"
       - name: operator
