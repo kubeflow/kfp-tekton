@@ -173,6 +173,11 @@ spec:
       runAfter:
       - print-1
       timeout: 525600m
+      when:
+      - input: $(tasks.condition-cel.results.outcome)
+        operator: in
+        values:
+        - "true"
     - runAfter:
       - print-1
       name: empty-loop-for-loop-2

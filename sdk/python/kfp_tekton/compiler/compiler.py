@@ -1394,6 +1394,45 @@ class TektonCompiler(Compiler):
       pipeline_run['spec']['podTemplate']['nodeSelector'] = copy.deepcopy(pipeline_conf.default_pod_node_selector)
     workflow = pipeline_run
 
+    # populate dependend condition for all the runafter tasks
+    def populate_runafter_condition(task):
+      task_runafter = task.get('runAfter')
+      if task_runafter:
+        for t in workflow['spec']['pipelineSpec']['tasks']:
+          if t['name'] in task_runafter:
+            if t.get('when'):
+              task.setdefault('when', [])
+              for when_item in t['when']:
+                if when_item not in task['when']:
+                  add_conditions = True
+                  # Do not add condition if the condition is not in the same graph/pipelineloop
+                  for pipeline_loop in self.loops_pipeline.values():
+                    if task['name'] in pipeline_loop['task_list']:
+                      task_input = re.findall('\$\(tasks.([^ \t\n.:,;{}]+).results.([^ \t\n.:,;{}]+)\)', when_item['input'])
+                      if task_input and task_input[0][0] not in pipeline_loop['task_list']:
+                        add_conditions = False
+                  if add_conditions:
+                    task['when'].append(when_item)
+
+    # search runafter tree logic before populating the condition
+    visited_tasks = {}
+    task_queue = []
+    for task in workflow['spec']['pipelineSpec']['tasks']:
+      task_runafter = task.get('runAfter')
+      if task_runafter:
+        task_queue.append(task)
+    while task_queue:
+      popped_task = task_queue.pop(0)
+      populate_condition = True
+      for queued_task in task_queue:
+        if queued_task['name'] in popped_task['runAfter'] and len(task_queue) != visited_tasks.get(popped_task['name']):
+          visited_tasks[popped_task['name']] = len(task_queue)
+          task_queue.append(popped_task)
+          populate_condition = False
+          break
+      if populate_condition:
+        populate_runafter_condition(popped_task)
+
     return workflow
 
   def _sanitize_and_inject_artifact(self, pipeline: dsl.Pipeline, pipeline_conf=None):
