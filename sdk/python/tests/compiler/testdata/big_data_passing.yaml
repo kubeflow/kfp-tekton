@@ -141,8 +141,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Repeat line",
               "outputs": [{"name": "output_text", "type": "String"}], "version": "Repeat
@@ -285,8 +283,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Split text lines",
               "outputs": [{"name": "odd_lines", "type": "String"}, {"name": "even_lines",
@@ -348,8 +344,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
@@ -405,8 +399,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
@@ -506,8 +498,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Write numbers",
               "outputs": [{"name": "numbers", "type": "String"}], "version": "Write
@@ -562,8 +552,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
@@ -686,8 +674,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Sum numbers",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Sum
@@ -744,8 +730,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
@@ -817,8 +801,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Gen params",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Gen
@@ -858,8 +840,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print params",
               "outputs": [], "version": "Print params@sha256=3fb942e817debe20ad7b6a10ff15f184d01b788e9908d665b20ecc89e7bb48da"}'
@@ -953,8 +933,6 @@ spec:
                         metadata:
                           labels:
                             pipelines.kubeflow.org/cache_enabled: "true"
-                            pipelines.kubeflow.org/pipelinename: ''
-                            pipelines.kubeflow.org/generation: ''
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "Print text", "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
@@ -981,8 +959,6 @@ spec:
                             storage: 2Gi
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
             workspaces:
             - name: big-data-passing
@@ -999,8 +975,6 @@ spec:
                     storage: 2Gi
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
     workspaces:
     - name: big-data-passing

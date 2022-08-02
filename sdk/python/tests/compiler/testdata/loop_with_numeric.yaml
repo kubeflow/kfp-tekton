@@ -95,8 +95,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
                       "outputs": [], "version": "my-in-coop1@sha256=42f0c6a60c7e435441b8afaeb382a771a9741fe3aabb203748fdbd72b25f1628"}'
@@ -148,8 +146,6 @@ spec:
                         metadata:
                           labels:
                             pipelines.kubeflow.org/cache_enabled: "true"
-                            pipelines.kubeflow.org/pipelinename: ''
-                            pipelines.kubeflow.org/generation: ''
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "my-in-coop1", "outputs": [], "version": "my-in-coop1@sha256=42f0c6a60c7e435441b8afaeb382a771a9741fe3aabb203748fdbd72b25f1628"}'
@@ -158,13 +154,9 @@ spec:
                   iterateNumeric: loop-item-param-3
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
           iterateNumeric: loop-item-param-1
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

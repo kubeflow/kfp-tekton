@@ -83,8 +83,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
                       "outputs": [], "version": "my-in-coop1@sha256=8ccab3a28a39a406554d964865f2ccb0aed854a43b6de827f613eff2bccd6f8f"}'
@@ -114,7 +112,5 @@ spec:
           iterateParam: loop-item-param-1
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

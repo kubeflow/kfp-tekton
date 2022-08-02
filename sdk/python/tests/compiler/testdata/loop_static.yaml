@@ -60,8 +60,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-out-op",
               "outputs": [], "version": "static-loop-out-op@sha256=84e07ab9a7585349f4f6c1c53200dfae7cacee9fa6aa5bdeb26d7487dd58c203"}'
@@ -110,8 +108,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-inner-op1",
                       "outputs": [], "version": "static-loop-inner-op1@sha256=37bfbf9bbcc6525f9915ee1c07e8a8b482c487696eb3c10fd82c27049b1b55e9"}'
@@ -138,8 +134,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-inner-op2",
                       "outputs": [], "version": "static-loop-inner-op2@sha256=56d5b639d49c40d3d5eb06be4a8d277614742470a048197eb6f141c9c257324c"}'
@@ -148,7 +142,5 @@ spec:
           iterateParam: with-item-name
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

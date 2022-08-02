@@ -53,8 +53,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
@@ -88,8 +86,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     valid_container: "false"
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "cel",
@@ -102,8 +98,6 @@ spec:
             automountServiceAccountToken: "false"
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "false"
           annotations:
             ws-pipelines.ibm.com/pipeline-cache-enabled: "false"

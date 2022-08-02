@@ -70,8 +70,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
                       "outputs": [], "version": "print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d"}'
@@ -80,7 +78,5 @@ spec:
           iterateParam: arr-loop-item
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

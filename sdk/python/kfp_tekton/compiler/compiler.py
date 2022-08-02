@@ -1855,8 +1855,6 @@ class TektonCompiler(Compiler):
       if 'taskSpec' in workflow_tasks[j]:
         workflow_tasks[j]['taskSpec']['metadata'] = workflow_tasks[j]['taskSpec'].get('metadata', {})
         task_labels = workflow_tasks[j]['taskSpec']['metadata'].get('labels', {})
-        task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
-        task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
         cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
         task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
         workflow_tasks[j]['taskSpec']['metadata']['labels'] = task_labels

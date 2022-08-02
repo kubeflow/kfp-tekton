@@ -110,8 +110,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce message",
               "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
@@ -181,8 +179,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce message",
               "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
@@ -236,8 +232,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
@@ -246,8 +240,6 @@ spec:
           iterateParam: loop-item-param-1
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
     - name: parallelfor-pipeline-param-in-items-reso-for-loop-4
       params:
@@ -299,8 +291,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
@@ -340,8 +330,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
@@ -350,8 +338,6 @@ spec:
           iterateParam: loop-item-param-3
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
     - name: parallelfor-pipeline-param-in-items-reso-for-loop-6
       params:
@@ -403,8 +389,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
@@ -444,8 +428,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
@@ -454,7 +436,5 @@ spec:
           iterateParam: loop-item-param-5
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

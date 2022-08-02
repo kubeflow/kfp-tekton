@@ -67,8 +67,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d"}'
@@ -90,8 +88,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c"}'

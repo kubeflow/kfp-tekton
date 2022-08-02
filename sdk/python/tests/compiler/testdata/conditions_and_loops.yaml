@@ -126,8 +126,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce numbers",
               "outputs": [{"name": "Output", "type": "JsonArray"}], "version": "Produce
@@ -223,8 +221,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Add numbers",
                       "outputs": [{"name": "Output", "type": "Integer"}], "version":
@@ -298,8 +294,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Print
                       number", "outputs": [{"name": "Output", "type": "Integer"}],
@@ -330,8 +324,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Notify
                       success", "outputs": [], "version": "Notify success@sha256=b32dbdd3dc06d69ac8358045345f65fc0610ccdf6e9927c447deb4634016028a"}'
@@ -366,8 +358,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Notify
                       failure", "outputs": [], "version": "Notify failure@sha256=fa2f0190a19f2fa88c34a3805a4517a3f5d697e30491bec02fb3cf9504d909d7"}'
@@ -424,8 +414,6 @@ spec:
                   image: python:alpine3.6
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
             - name: condition-3
               params:
@@ -473,13 +461,9 @@ spec:
                   image: python:alpine3.6
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
           iterateParam: produce-numbers-Output-loop-item
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

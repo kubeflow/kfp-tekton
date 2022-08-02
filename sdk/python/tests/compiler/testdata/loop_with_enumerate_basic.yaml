@@ -53,8 +53,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list",
               "outputs": [{"name": "data_list", "type": "List"}], "version": "Produce
@@ -100,8 +98,6 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume
                       data", "outputs": [], "version": "Consume data@sha256=748cfc9398fb5667535b2ae5940d7947826385c62858c6b1b637b527d9b57e6e"}'
@@ -111,7 +107,5 @@ spec:
           iterateParam: produce-list-data_list-loop-item
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m
