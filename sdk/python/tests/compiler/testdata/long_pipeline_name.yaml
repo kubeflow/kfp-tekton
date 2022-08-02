@@ -28,6 +28,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
       \"c\"]", "name": "arr", "optional": true, "type": "typing.List[str]"}], "name":
       "some-very-long-name-with-lots-of-words-in-it-it-should-be-over-63-chars-long-in-order-to-observe-the-problem"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: arr
@@ -66,9 +69,9 @@ spec:
                   type: string
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
                       "outputs": [], "version": "print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d"}'

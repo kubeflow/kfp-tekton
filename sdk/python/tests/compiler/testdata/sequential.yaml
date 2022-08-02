@@ -30,6 +30,9 @@ metadata:
       steps.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
       "name": "url", "optional": true, "type": "String"}, {"default": "/tmp/results.txt",
       "name": "path", "optional": true, "type": "String"}], "name": "sequential-pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: path
@@ -67,8 +70,6 @@ spec:
           description: /tmp/outputs/data/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
@@ -93,8 +94,6 @@ spec:
         - name: path
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":

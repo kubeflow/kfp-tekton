@@ -150,6 +150,8 @@ class TektonCompiler(Compiler):
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
     self.pipeline_labels = tekton_pipeline_conf.pipeline_labels
+    self.pipeline_labels['pipelines.kubeflow.org/pipelinename'] = ''
+    self.pipeline_labels['pipelines.kubeflow.org/generation'] = ''
     self.pipeline_annotations = tekton_pipeline_conf.pipeline_annotations
     self.tekton_inline_spec = tekton_pipeline_conf.tekton_inline_spec
     self.resource_in_separate_yaml = tekton_pipeline_conf.resource_in_separate_yaml
@@ -1055,8 +1057,6 @@ class TektonCompiler(Compiler):
         if task_ref.get('taskSpec', ''):
           task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
           task_labels = template['metadata'].get('labels', {})
-          task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
-          task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
           cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
           task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
 

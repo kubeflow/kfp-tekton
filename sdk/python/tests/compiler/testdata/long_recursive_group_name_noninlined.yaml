@@ -42,8 +42,7 @@ metadata:
       output paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
       \"print-iter@sha256=1390d83fb5d8aa6c6a41af858140c4c362850b13718dedacfc3fb0a633596313\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
+      "true"}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
       [{"description": "/tmp/outputs/output_value/data", "name": "output-value", "type":
       "string"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n", "Iter:
       $(inputs.params.condition-cel-outcome)", "$(results.output-value.path)"], "image":
@@ -53,6 +52,9 @@ metadata:
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "pipeline-the-name-of-which-is-exactly-51-51-chars-long-1"},
       "when": [{"input": "$(tasks.condition-cel.results.outcome)", "operator": "notin",
       "values": ["0"]}]}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: iter_num

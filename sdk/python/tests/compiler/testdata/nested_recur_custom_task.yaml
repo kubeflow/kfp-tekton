@@ -99,6 +99,9 @@ metadata:
       "kind": "PipelineLoop", "name": "double-recursion-test-graph-recur-b-4"}, "when":
       [{"input": "$(tasks.condition-cel-7.results.outcome)", "operator": "in", "values":
       ["true"]}]}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: array

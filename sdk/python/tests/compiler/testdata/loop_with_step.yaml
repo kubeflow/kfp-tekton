@@ -30,6 +30,9 @@ metadata:
       true, "type": "Integer"}, {"default": "5", "name": "end", "optional": true,
       "type": "Integer"}, {"default": "3", "name": "step", "optional": true, "type":
       "Integer"}], "name": "my-pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: end
@@ -98,9 +101,9 @@ spec:
                   type: string
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
                       "outputs": [], "version": "my-in-coop1@sha256=42f0c6a60c7e435441b8afaeb382a771a9741fe3aabb203748fdbd72b25f1628"}'
@@ -151,9 +154,9 @@ spec:
                           type: string
                         metadata:
                           labels:
+                            pipelines.kubeflow.org/cache_enabled: "true"
                             pipelines.kubeflow.org/pipelinename: ''
                             pipelines.kubeflow.org/generation: ''
-                            pipelines.kubeflow.org/cache_enabled: "true"
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "my-in-coop1", "outputs": [], "version": "my-in-coop1@sha256=42f0c6a60c7e435441b8afaeb382a771a9741fe3aabb203748fdbd72b25f1628"}'

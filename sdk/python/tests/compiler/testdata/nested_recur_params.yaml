@@ -97,6 +97,9 @@ metadata:
       {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name":
       "double-recursion-test-graph-recur-b-4"}, "when": [{"input": "$(tasks.condition-cel-6.results.outcome)",
       "operator": "in", "values": ["true"]}]}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: until_a

@@ -45,8 +45,7 @@ metadata:
       "{\"name\": \"Add numbers\", \"outputs\": [{\"name\": \"Output\", \"type\":
       \"Integer\"}], \"version\": \"Add numbers@sha256=4a4bea3d4b7966f0ce3cdef5ad4d997a283ef6a895959791e037cf391732bb04\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "produce-numbers-Output-loop-item", "type": "string"}],
+      "true"}}, "params": [{"name": "produce-numbers-Output-loop-item", "type": "string"}],
       "results": [{"description": "/tmp/outputs/Output/data", "name": "Output", "type":
       "string"}], "steps": [{"args": ["--a", "$(inputs.params.produce-numbers-Output-loop-item)",
       "--b", "10", "----output-paths", "$(results.Output.path)"], "command": ["sh",
@@ -70,8 +69,7 @@ metadata:
       "{\"name\": \"Print number\", \"outputs\": [{\"name\": \"Output\", \"type\":
       \"Integer\"}], \"version\": \"Print number@sha256=7ad81f52d1b478fd168c0234b16a496672bdfc43da71a71fcdc5d688791f04cf\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "add-numbers-Output", "type": "string"}], "results":
+      "true"}}, "params": [{"name": "add-numbers-Output", "type": "string"}], "results":
       [{"description": "/tmp/outputs/Output/data", "name": "Output", "type": "string"}],
       "steps": [{"args": ["--a", "$(inputs.params.add-numbers-Output)", "----output-paths",
       "$(results.Output.path)"], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
@@ -92,29 +90,29 @@ metadata:
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"Notify success\", \"outputs\": [], \"version\": \"Notify success@sha256=b32dbdd3dc06d69ac8358045345f65fc0610ccdf6e9927c447deb4634016028a\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "steps": [{"command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\"
-      \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def notify_success():\n    print(''SUCCESS!'')\n\nimport
-      argparse\n_parser = argparse.ArgumentParser(prog=''Notify success'', description='''')\n_parsed_args
-      = vars(_parser.parse_args())\n\n_outputs = notify_success(**_parsed_args)\n"],
-      "image": "python:3.7", "name": "main"}]}, "timeout": "525600m", "when": [{"input":
-      "$(tasks.condition-2.results.outcome)", "operator": "in", "values": ["true"]}]},
-      {"name": "notify-failure", "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "true"}}, "steps": [{"command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+      \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def
+      notify_success():\n    print(''SUCCESS!'')\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Notify
+      success'', description='''')\n_parsed_args = vars(_parser.parse_args())\n\n_outputs
+      = notify_success(**_parsed_args)\n"], "image": "python:3.7", "name": "main"}]},
+      "timeout": "525600m", "when": [{"input": "$(tasks.condition-2.results.outcome)",
+      "operator": "in", "values": ["true"]}]}, {"name": "notify-failure", "taskSpec":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"Notify failure\", \"outputs\": [], \"version\": \"Notify failure@sha256=fa2f0190a19f2fa88c34a3805a4517a3f5d697e30491bec02fb3cf9504d909d7\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "steps": [{"command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\"
-      \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def notify_failure():\n    print(''FAILED!'')\n\nimport
-      argparse\n_parser = argparse.ArgumentParser(prog=''Notify failure'', description='''')\n_parsed_args
-      = vars(_parser.parse_args())\n\n_outputs = notify_failure(**_parsed_args)\n"],
-      "image": "python:3.7", "name": "main"}]}, "timeout": "525600m", "when": [{"input":
-      "$(tasks.condition-3.results.outcome)", "operator": "in", "values": ["true"]}]},
-      {"name": "condition-2", "params": [{"name": "operand1", "value": "$(tasks.print-number.results.Output)"},
-      {"name": "operand2", "value": "$(params.threshold)"}, {"name": "operator", "value":
-      ">"}], "taskSpec": {"params": [{"name": "operand1", "type": "string"}, {"name":
-      "operand2", "type": "string"}, {"name": "operator", "type": "string"}], "results":
-      [{"description": "Conditional task outcome", "name": "outcome", "type": "string"}],
-      "steps": [{"args": ["import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
+      "true"}}, "steps": [{"command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+      \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def
+      notify_failure():\n    print(''FAILED!'')\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Notify
+      failure'', description='''')\n_parsed_args = vars(_parser.parse_args())\n\n_outputs
+      = notify_failure(**_parsed_args)\n"], "image": "python:3.7", "name": "main"}]},
+      "timeout": "525600m", "when": [{"input": "$(tasks.condition-3.results.outcome)",
+      "operator": "in", "values": ["true"]}]}, {"name": "condition-2", "params": [{"name":
+      "operand1", "value": "$(tasks.print-number.results.Output)"}, {"name": "operand2",
+      "value": "$(params.threshold)"}, {"name": "operator", "value": ">"}], "taskSpec":
+      {"params": [{"name": "operand1", "type": "string"}, {"name": "operand2", "type":
+      "string"}, {"name": "operator", "type": "string"}], "results": [{"description":
+      "Conditional task outcome", "name": "outcome", "type": "string"}], "steps":
+      [{"args": ["import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
       \"w\")\nf.write(outcome)\nf.close()\n", "$(inputs.params.operand1)", "$(inputs.params.operand2)"],
       "command": ["sh", "-ec", "program_path=$(mktemp); printf \"%s\" \"$0\" > \"$program_path\";  python3
@@ -129,6 +127,9 @@ metadata:
       \"w\")\nf.write(outcome)\nf.close()\n", "$(inputs.params.operand1)", "$(inputs.params.operand2)"],
       "command": ["sh", "-ec", "program_path=$(mktemp); printf \"%s\" \"$0\" > \"$program_path\";  python3
       -u \"$program_path\" \"$1\" \"$2\""], "image": "python:alpine3.6", "name": "main"}]}}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: "n"
@@ -216,8 +217,6 @@ spec:
           description: /tmp/outputs/Output/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce numbers",

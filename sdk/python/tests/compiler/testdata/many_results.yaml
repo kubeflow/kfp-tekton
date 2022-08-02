@@ -36,6 +36,9 @@ metadata:
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline that produce
       many results.", "name": "many-results-pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   pipelineSpec:
     tasks:
@@ -166,8 +169,6 @@ spec:
           description: /tmp/outputs/param4c/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             tekton-result-sizes: '{"param1": 1500, "param2A": 700, "param3_b": 500,
@@ -196,8 +197,6 @@ spec:
         - name: print4results-param3_b
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":

@@ -48,6 +48,9 @@ metadata:
     sidecar.istio.io/inject: "false"
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Big data passing"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   pipelineSpec:
     tasks:
@@ -137,9 +140,9 @@ spec:
           type: string
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Repeat line",
               "outputs": [{"name": "output_text", "type": "String"}], "version": "Repeat
@@ -281,9 +284,9 @@ spec:
           type: string
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Split text lines",
               "outputs": [{"name": "odd_lines", "type": "String"}, {"name": "even_lines",
@@ -344,9 +347,9 @@ spec:
         - name: split-text-lines-trname
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
@@ -401,9 +404,9 @@ spec:
         - name: split-text-lines-trname
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
@@ -502,9 +505,9 @@ spec:
           type: string
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Write numbers",
               "outputs": [{"name": "numbers", "type": "String"}], "version": "Write
@@ -558,9 +561,9 @@ spec:
         - name: write-numbers-trname
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
@@ -682,9 +685,9 @@ spec:
           type: string
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Sum numbers",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Sum
@@ -740,9 +743,9 @@ spec:
         - name: sum-numbers-trname
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
@@ -813,9 +816,9 @@ spec:
           description: /tmp/outputs/Output/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Gen params",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Gen
@@ -854,9 +857,9 @@ spec:
         - name: gen-params-Output
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print params",
               "outputs": [], "version": "Print params@sha256=3fb942e817debe20ad7b6a10ff15f184d01b788e9908d665b20ecc89e7bb48da"}'
@@ -949,9 +952,9 @@ spec:
                           type: string
                         metadata:
                           labels:
+                            pipelines.kubeflow.org/cache_enabled: "true"
                             pipelines.kubeflow.org/pipelinename: ''
                             pipelines.kubeflow.org/generation: ''
-                            pipelines.kubeflow.org/cache_enabled: "true"
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "Print text", "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'

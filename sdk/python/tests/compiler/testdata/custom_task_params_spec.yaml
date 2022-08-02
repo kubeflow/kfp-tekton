@@ -29,6 +29,9 @@ metadata:
       "foo", "optional": true, "type": "String"}, {"default": "buzz", "name": "bar",
       "optional": true}, {"name": "pi", "optional": true, "type": "Integer"}], "name":
       "Main task spec"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: bar
@@ -67,8 +70,6 @@ spec:
             default: 3
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             valid_container: "false"

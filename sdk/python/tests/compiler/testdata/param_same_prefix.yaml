@@ -53,6 +53,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"name": "foo", "type": "String"},
       {"default": "[1, 2, 3]", "name": "li", "optional": true, "type": "JsonArray"}],
       "name": "prefixes"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: foo
@@ -114,9 +117,9 @@ spec:
           description: /tmp/outputs/bar-10-val/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "foo-10", "outputs":
               [{"name": "bar-10-val", "type": "String"}], "version": "foo-10@sha256=d6d62cb6c6b77d1f0d609f5f5f2e0827d16f80de51fdfa5bde09e631fb759995"}'
@@ -144,9 +147,9 @@ spec:
           description: /tmp/outputs/foo-11-val/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "foo-11", "outputs":
               [{"name": "foo-11-val", "type": "String"}], "version": "foo-11@sha256=377008435f70950b0bc568837051eb5d49375b55d1105eb7bc9c4f7863c336a3"}'
@@ -174,9 +177,9 @@ spec:
           description: /tmp/outputs/foo-12/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "foo-12", "outputs":
               [{"name": "foo-12", "type": "String"}], "version": "foo-12@sha256=ce03e07a304a0a53f19878261cbde059912689fd90a0a68b61aa0821e6201480"}'
@@ -251,9 +254,9 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "fetch-00",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
@@ -285,9 +288,9 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "fetch-01",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
@@ -319,9 +322,9 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "fetch-02",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
@@ -353,9 +356,9 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-10",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
@@ -387,9 +390,9 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-11",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
@@ -421,9 +424,9 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-12",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":

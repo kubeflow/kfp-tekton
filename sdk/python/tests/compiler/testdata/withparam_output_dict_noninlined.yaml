@@ -38,11 +38,14 @@ metadata:
       {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
       \"my-in-cop1\", \"outputs\": [], \"version\": \"my-in-cop1@sha256=baa1db1377a71388e9f7b0054485105678c0911a3e478a5a2873bca4a7e13ab5\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "my-out-cop0-out-loop-item-subvar-a", "type": "string"}],
-      "steps": [{"args": ["set -e\necho no output global op1, item.a: \"$0\"\n", "$(inputs.params.my-out-cop0-out-loop-item-subvar-a)"],
-      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "525600m"}]}}}]'
+      "true"}}, "params": [{"name": "my-out-cop0-out-loop-item-subvar-a", "type":
+      "string"}], "steps": [{"args": ["set -e\necho no output global op1, item.a:
+      \"$0\"\n", "$(inputs.params.my-out-cop0-out-loop-item-subvar-a)"], "command":
+      ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]}, "timeout":
+      "525600m"}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   pipelineSpec:
     tasks:
@@ -65,8 +68,6 @@ spec:
           description: /tmp/outputs/out/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop0",
@@ -93,8 +94,6 @@ spec:
         - name: my-out-cop0-out
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop2",

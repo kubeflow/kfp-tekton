@@ -38,10 +38,12 @@ metadata:
       {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
       \"Consume data\", \"outputs\": [], \"version\": \"Consume data@sha256=53c639462e2cf5f30518ba8b2d41564c1071e3473c7cffc13dc8b589dfc219bc\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "produce-list-data_list-loop-item", "type": "string"}],
+      "true"}}, "params": [{"name": "produce-list-data_list-loop-item", "type": "string"}],
       "steps": [{"command": ["echo", "$(inputs.params.produce-list-data_list-loop-item)"],
       "image": "busybox", "name": "main"}]}, "timeout": "525600m"}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   pipelineSpec:
     tasks:
@@ -62,8 +64,6 @@ spec:
           description: /tmp/outputs/data_list/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list",

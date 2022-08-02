@@ -31,6 +31,9 @@ metadata:
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Example of caching", "name":
       "cache"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   pipelineSpec:
     tasks:
@@ -50,8 +53,6 @@ spec:
           description: /tmp/outputs/out/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "cache-enabled",
@@ -75,8 +76,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "false"
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "cache-disabled",
               "outputs": [{"name": "out", "type": "String"}], "version": "cache-disabled@sha256=c6b73e13a48ba7dfacb66ebd9987eda874087ace7615130da8180b2b46dd53c9"}'

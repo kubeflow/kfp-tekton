@@ -35,6 +35,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "3", "name": "n",
       "optional": true, "type": "Integer"}, {"default": "20", "name": "threshold",
       "optional": true, "type": "Integer"}], "name": "conditions-and-loops"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: "n"
@@ -122,9 +125,9 @@ spec:
           description: /tmp/outputs/Output/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce numbers",
               "outputs": [{"name": "Output", "type": "JsonArray"}], "version": "Produce
@@ -219,9 +222,9 @@ spec:
                   description: /tmp/outputs/Output/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Add numbers",
                       "outputs": [{"name": "Output", "type": "Integer"}], "version":
@@ -294,9 +297,9 @@ spec:
                   description: /tmp/outputs/Output/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Print
                       number", "outputs": [{"name": "Output", "type": "Integer"}],
@@ -326,9 +329,9 @@ spec:
                   image: python:3.7
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Notify
                       success", "outputs": [], "version": "Notify success@sha256=b32dbdd3dc06d69ac8358045345f65fc0610ccdf6e9927c447deb4634016028a"}'
@@ -362,9 +365,9 @@ spec:
                   image: python:3.7
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Notify
                       failure", "outputs": [], "version": "Notify failure@sha256=fa2f0190a19f2fa88c34a3805a4517a3f5d697e30491bec02fb3cf9504d909d7"}'

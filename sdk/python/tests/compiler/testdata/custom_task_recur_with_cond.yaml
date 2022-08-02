@@ -57,6 +57,9 @@ metadata:
       "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
       "name": "recursion-test-graph-recur-2"}, "when": [{"input": "$(tasks.condition-cel-4.results.outcome)",
       "operator": "in", "values": ["true"]}]}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: until

@@ -53,6 +53,9 @@ metadata:
       "kind": "PipelineLoop", "name": "pipeline-the-name-of-which-is-exactly-51-51-chars-long-1"},
       "when": [{"input": "$(tasks.condition-cel.results.outcome)", "operator": "notin",
       "values": ["0"]}]}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: iter_num

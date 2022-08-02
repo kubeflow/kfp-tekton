@@ -29,6 +29,9 @@ metadata:
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Test pipeline to verify
       functions of par loop.", "name": "loop-over-lightweight-output"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   pipelineSpec:
     tasks:
@@ -49,9 +52,9 @@ spec:
           description: /tmp/outputs/data_list/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list",
               "outputs": [{"name": "data_list", "type": "List"}], "version": "Produce
@@ -89,9 +92,9 @@ spec:
                   type: string
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume
                       data", "outputs": [], "version": "Consume data@sha256=53c639462e2cf5f30518ba8b2d41564c1071e3473c7cffc13dc8b589dfc219bc"}'

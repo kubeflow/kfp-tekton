@@ -27,6 +27,9 @@ metadata:
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "param",
       "optional": true, "type": "Integer"}], "name": "pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: param
@@ -79,9 +82,9 @@ spec:
                   type: string
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
                       "outputs": [], "version": "my-in-coop1@sha256=8ccab3a28a39a406554d964865f2ccb0aed854a43b6de827f613eff2bccd6f8f"}'

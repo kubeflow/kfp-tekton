@@ -37,12 +37,14 @@ metadata:
       {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"my-in-coop1\", \"outputs\": [], \"version\": \"my-in-coop1@sha256=42f0c6a60c7e435441b8afaeb382a771a9741fe3aabb203748fdbd72b25f1628\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "loop-item-param-2", "type": "string"}, {"name": "my_pipe_param",
-      "type": "string"}], "steps": [{"args": ["set -e\necho op1 \"$0\" \"$1\"\n",
-      "$(inputs.params.loop-item-param-2)", "$(inputs.params.my_pipe_param)"], "command":
-      ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]}, "timeout":
-      "525600m"}]}}}]'
+      "true"}}, "params": [{"name": "loop-item-param-2", "type": "string"}, {"name":
+      "my_pipe_param", "type": "string"}], "steps": [{"args": ["set -e\necho op1 \"$0\"
+      \"$1\"\n", "$(inputs.params.loop-item-param-2)", "$(inputs.params.my_pipe_param)"],
+      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
+      "timeout": "525600m"}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: my_pipe_param

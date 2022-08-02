@@ -36,6 +36,9 @@ metadata:
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline that produce
       many results.", "name": "many-results-pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   pipelineSpec:
     tasks:
@@ -180,8 +183,6 @@ spec:
           description: /tmp/outputs/superlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongname/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             tekton-result-sizes: '{"param1": 2500, "param23": 700, "param3": 500,

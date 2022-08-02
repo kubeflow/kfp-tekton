@@ -123,6 +123,9 @@ metadata:
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "nested-recursion-pipeline-ip-component-b-2"},
       "when": [{"input": "$(tasks.condition-3.results.outcome)", "operator": "in",
       "values": ["true"]}]}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: maxVal
@@ -150,9 +153,9 @@ spec:
           description: /tmp/outputs/output/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d"}'
@@ -173,9 +176,9 @@ spec:
         - name: flip-coin-output
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d"}'

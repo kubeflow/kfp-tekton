@@ -28,6 +28,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "0", "name": "start",
       "optional": true, "type": "Integer"}, {"default": "5", "name": "end", "optional":
       true, "type": "Integer"}], "name": "empty-loop"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: end

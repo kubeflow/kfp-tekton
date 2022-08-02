@@ -37,6 +37,9 @@ metadata:
       "type": "String"}, {"default": "tails", "name": "forced_result2", "optional":
       true, "type": "String"}, {"default": "heads", "name": "forced_result3", "optional":
       true, "type": "String"}], "name": "flip-coin-example-pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: forced_result1
@@ -77,8 +80,6 @@ spec:
           description: /tmp/outputs/output/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip", "outputs":
@@ -108,8 +109,6 @@ spec:
           description: /tmp/outputs/output/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip", "outputs":
@@ -139,8 +138,6 @@ spec:
           description: /tmp/outputs/output/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip", "outputs":
@@ -167,8 +164,6 @@ spec:
         - name: flip-3-output
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
@@ -195,8 +190,6 @@ spec:
         - name: flip-output
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":

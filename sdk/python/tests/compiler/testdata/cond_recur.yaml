@@ -51,6 +51,9 @@ metadata:
       "$(params.condition-cel-outcome)"}, {"name": "iter_num", "value": "$(tasks.condition-cel-2.results.outcome)"},
       {"name": "just_one_iteration", "value": ["1"]}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "name": "condition-and-recur-graph-recur-2"}}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: iter_num

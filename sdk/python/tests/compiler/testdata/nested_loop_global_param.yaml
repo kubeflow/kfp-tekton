@@ -31,6 +31,9 @@ metadata:
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
       \"c\"]", "name": "param", "optional": true, "type": "JsonArray"}], "name": "empty-loop"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: param
@@ -99,9 +102,9 @@ spec:
                           description: /tmp/outputs/output_value/data
                         metadata:
                           labels:
+                            pipelines.kubeflow.org/cache_enabled: "true"
                             pipelines.kubeflow.org/pipelinename: ''
                             pipelines.kubeflow.org/generation: ''
-                            pipelines.kubeflow.org/cache_enabled: "true"
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "print-0", "outputs": [{"description": "Represents an
@@ -170,9 +173,9 @@ spec:
                           description: /tmp/outputs/output_value/data
                         metadata:
                           labels:
+                            pipelines.kubeflow.org/cache_enabled: "true"
                             pipelines.kubeflow.org/pipelinename: ''
                             pipelines.kubeflow.org/generation: ''
-                            pipelines.kubeflow.org/cache_enabled: "true"
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "print-1", "outputs": [{"description": "Represents an

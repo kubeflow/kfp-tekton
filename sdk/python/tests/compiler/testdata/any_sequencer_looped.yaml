@@ -40,6 +40,9 @@ metadata:
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
       \"c\"]", "name": "param", "optional": true, "type": "JsonArray"}], "name": "any-sequencer-looped"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: param
@@ -68,9 +71,9 @@ spec:
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-00", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
@@ -96,9 +99,9 @@ spec:
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-01", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
@@ -127,9 +130,9 @@ spec:
           description: /tmp/outputs/status/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "any-seq-0", "outputs":
               [{"description": "The output file to create the status", "name": "status"}],
@@ -176,9 +179,9 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-10",
                       "outputs": [{"description": "Represents an output paramter.",
@@ -204,9 +207,9 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-11",
                       "outputs": [{"description": "Represents an output paramter.",
@@ -235,9 +238,9 @@ spec:
                   description: /tmp/outputs/status/data
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "any-seq-1",
                       "outputs": [{"description": "The output file to create the status",

@@ -30,6 +30,9 @@ metadata:
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[3, 5, 7, 9]",
       "name": "loopidy_doop", "optional": true, "type": "JsonArray"}], "name": "withparam-global"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: loopidy_doop
@@ -58,9 +61,9 @@ spec:
           description: /tmp/outputs/out/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop0",
               "outputs": [{"name": "out", "type": "String"}], "version": "my-out-cop0@sha256=a450661d6f7ba02ab00054fcb4afae65774d94dfcf4611aff04ec134a0fcf9a3"}'
@@ -86,9 +89,9 @@ spec:
         - name: my-out-cop0-out
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop2",
               "outputs": [], "version": "my-out-cop2@sha256=12b6747bf40c6d422bf91475437e40331e1809caa920e7012bc09c5fb81be91d"}'
@@ -132,9 +135,9 @@ spec:
                   type: string
                 metadata:
                   labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
                     pipelines.kubeflow.org/pipelinename: ''
                     pipelines.kubeflow.org/generation: ''
-                    pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-cop1",
                       "outputs": [], "version": "my-in-cop1@sha256=636096cc65b3fe23f6fd1d965dd294fae75e328c1fb46f036f9ccad27dc692eb"}'

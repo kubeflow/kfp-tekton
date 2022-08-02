@@ -41,11 +41,13 @@ metadata:
       [{\"description\": \"Represents an output paramter.\", \"name\": \"output_value\",
       \"type\": \"String\"}], \"version\": \"print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
+      "true"}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
       "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
       -e\necho $0 > $1\n", "print", "$(results.output-value.path)"], "image": "alpine:3.6",
       "name": "main"}]}, "timeout": "525600m"}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   pipelineSpec:
     tasks:
@@ -68,8 +70,6 @@ spec:
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "text", "outputs":
@@ -96,8 +96,6 @@ spec:
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "separator", "outputs":

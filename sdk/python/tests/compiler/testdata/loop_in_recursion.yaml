@@ -132,6 +132,9 @@ metadata:
       ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]}, "timeout":
       "525600m"}]}}}}]}}}, "when": [{"input": "$(tasks.condition-2.results.outcome)",
       "operator": "in", "values": ["true"]}]}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: maxVal
@@ -163,9 +166,9 @@ spec:
           description: /tmp/outputs/output/data
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=8959c33ad80737db72737e65edcb11545dd9e408bc2ce5b50ca58248c2251ae5"}'
@@ -186,9 +189,9 @@ spec:
         - name: flip-coin-output
         metadata:
           labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
             pipelines.kubeflow.org/pipelinename: ''
             pipelines.kubeflow.org/generation: ''
-            pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c"}'
