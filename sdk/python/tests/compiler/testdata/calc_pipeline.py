@@ -62,10 +62,10 @@ def my_divmod(dividend: float, divisor: float) -> NamedTuple('MyDivmodOutput', [
     metrics = {
       'metrics': [{
           'name': 'quotient',
-          'numberValue':  float(quotient),
+          'numberValue': float(quotient),
         }, {
           'name': 'remainder',
-          'numberValue':  float(remainder),
+          'numberValue': float(remainder),
         }]}
 
     from collections import namedtuple

@@ -1014,7 +1014,7 @@ class TektonCompiler(Compiler):
 
             # Only one of --taskRef and --taskSpec allowed.
             if custom_task_args.get('taskRef', '') and custom_task_args.get('taskSpec', ''):
-              raise("Custom task invalid configuration %s, Only one of --taskRef and --taskSpec allowed." % custom_task_args)
+              raise ("Custom task invalid configuration %s, Only one of --taskRef and --taskSpec allowed." % custom_task_args)
             if custom_task_args.get('taskRef', ''):
               try:
                 custom_task_cr = {
@@ -1033,7 +1033,7 @@ class TektonCompiler(Compiler):
                 if custom_task_cr:
                   self.custom_task_crs.append(custom_task_cr)
               except ValueError:
-                raise("Custom task ref %s is not a valid Python Dictionary" % custom_task_args['taskRef'])
+                raise ("Custom task ref %s is not a valid Python Dictionary" % custom_task_args['taskRef'])
             # Setting --taskRef flag indicates, that spec be inlined.
             if custom_task_args.get('taskSpec', ''):
               try:
@@ -1048,7 +1048,7 @@ class TektonCompiler(Compiler):
                   }
                 }
               except ValueError:
-                raise("Custom task spec %s is not a valid Python Dictionary" % custom_task_args['taskSpec'])
+                raise ("Custom task spec %s is not a valid Python Dictionary" % custom_task_args['taskSpec'])
             # Pop custom task artifacts since we have no control of how
             # custom task controller is handling the container/task execution.
             self.artifact_items.pop(template['metadata']['name'], None)
