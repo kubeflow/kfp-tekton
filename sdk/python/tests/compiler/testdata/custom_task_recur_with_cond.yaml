@@ -40,8 +40,7 @@ metadata:
       "{\"name\": \"print\", \"outputs\": [{\"name\": \"stdout\", \"type\": \"String\"}],
       \"version\": \"print@sha256=823faa68fcc8685fb1248a51eedd18a6880137a4415c369714ed3f0060a7196d\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
+      "true"}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
       [{"description": "/tmp/stdout", "name": "stdout", "type": "string"}], "steps":
       [{"args": ["echo Iter: $(inputs.params.condition-cel-outcome) > $(results.stdout.path)"],
       "command": ["sh", "-c"], "image": "alpine:3.6", "name": "main"}]}, "timeout":
@@ -57,6 +56,9 @@ metadata:
       "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
       "name": "recursion-test-graph-recur-2"}, "when": [{"input": "$(tasks.condition-cel-4.results.outcome)",
       "operator": "in", "values": ["true"]}]}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: until

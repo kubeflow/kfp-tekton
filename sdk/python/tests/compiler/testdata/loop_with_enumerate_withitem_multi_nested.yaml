@@ -29,6 +29,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[100, 200]", "name":
       "my_pipe_param", "optional": true, "type": "JsonArray"}, {"default": "[1, 2]",
       "name": "my_pipe_param3", "optional": true, "type": "JsonArray"}], "name": "withitem-multiple-nesting-pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: my_pipe_param
@@ -101,8 +104,6 @@ spec:
                   type: string
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
@@ -130,8 +131,6 @@ spec:
                   type: string
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop2",
@@ -197,8 +196,6 @@ spec:
                           type: string
                         metadata:
                           labels:
-                            pipelines.kubeflow.org/pipelinename: ''
-                            pipelines.kubeflow.org/generation: ''
                             pipelines.kubeflow.org/cache_enabled: "true"
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
@@ -272,8 +269,6 @@ spec:
                                   type: string
                                 metadata:
                                   labels:
-                                    pipelines.kubeflow.org/pipelinename: ''
-                                    pipelines.kubeflow.org/generation: ''
                                     pipelines.kubeflow.org/cache_enabled: "true"
                                   annotations:
                                     pipelines.kubeflow.org/component_spec_digest: '{"name":
@@ -324,8 +319,6 @@ spec:
                                           type: string
                                         metadata:
                                           labels:
-                                            pipelines.kubeflow.org/pipelinename: ''
-                                            pipelines.kubeflow.org/generation: ''
                                             pipelines.kubeflow.org/cache_enabled: "true"
                                           annotations:
                                             pipelines.kubeflow.org/component_spec_digest: '{"name":
@@ -336,27 +329,19 @@ spec:
                                   iterateParam: my_pipe_param3-loop-item
                                 metadata:
                                   labels:
-                                    pipelines.kubeflow.org/pipelinename: ''
-                                    pipelines.kubeflow.org/generation: ''
                                     pipelines.kubeflow.org/cache_enabled: "true"
                           iterationNumberParam: iteration-number-7
                           iterateParam: loop-item-param-5
                         metadata:
                           labels:
-                            pipelines.kubeflow.org/pipelinename: ''
-                            pipelines.kubeflow.org/generation: ''
                             pipelines.kubeflow.org/cache_enabled: "true"
                   iterateParam: my_pipe_param-loop-item
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
           iterationNumberParam: iteration-number-3
           iterateParam: loop-item-param-1
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

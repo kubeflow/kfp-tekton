@@ -53,6 +53,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"name": "foo", "type": "String"},
       {"default": "[1, 2, 3]", "name": "li", "optional": true, "type": "JsonArray"}],
       "name": "prefixes"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: foo
@@ -114,8 +117,6 @@ spec:
           description: /tmp/outputs/bar-10-val/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "foo-10", "outputs":
@@ -144,8 +145,6 @@ spec:
           description: /tmp/outputs/foo-11-val/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "foo-11", "outputs":
@@ -174,8 +173,6 @@ spec:
           description: /tmp/outputs/foo-12/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "foo-12", "outputs":
@@ -251,8 +248,6 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "fetch-00",
@@ -285,8 +280,6 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "fetch-01",
@@ -319,8 +312,6 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "fetch-02",
@@ -353,8 +344,6 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-10",
@@ -387,8 +376,6 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-11",
@@ -421,8 +408,6 @@ spec:
                   description: /tmp/outputs/output_value/data
                 metadata:
                   labels:
-                    pipelines.kubeflow.org/pipelinename: ''
-                    pipelines.kubeflow.org/generation: ''
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-12",
@@ -433,7 +418,5 @@ spec:
           iterateParam: li-loop-item
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
   timeout: 525600m

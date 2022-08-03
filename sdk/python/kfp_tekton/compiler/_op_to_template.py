@@ -579,7 +579,7 @@ def _op_to_template(op: BaseOp,
         try:
             result_size_map = json.loads(result_size_map)
         except ValueError:
-            raise("tekton-result-sizes annotation is not a valid JSON")
+            raise ("tekton-result-sizes annotation is not a valid JSON")
         # Normalize estimated result size keys.
         result_size_map = {sanitize_k8s_name(key, allow_capital_underscore=True): value
                            for key, value in result_size_map.items()}
@@ -596,7 +596,7 @@ def _op_to_template(op: BaseOp,
             try:
                 value = int(value)
             except ValueError:
-                raise("Estimated value for result %s is %s, but it needs to be an integer." % (key, value))
+                raise ("Estimated value for result %s is %s, but it needs to be an integer." % (key, value))
             if key in op_result_names:
                 packed_index = -1
                 # Look for bin that can fit the result value

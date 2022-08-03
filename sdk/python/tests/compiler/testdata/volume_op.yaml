@@ -29,6 +29,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on VolumeOp
       Usage.", "inputs": [{"default": "10M", "name": "size", "optional": true, "type":
       "String"}], "name": "volumeop-basic"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: size
@@ -123,8 +126,6 @@ spec:
           description: '{.status.capacity.storage}'
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             tekton.dev/template: ''
@@ -153,8 +154,6 @@ spec:
             claimName: $(inputs.params.create-pvc-name)
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "cop", "outputs":

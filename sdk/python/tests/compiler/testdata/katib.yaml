@@ -37,6 +37,9 @@ metadata:
       true, "type": "Integer"}, {"default": "60", "name": "experimentTimeoutMinutes",
       "optional": true, "type": "Integer"}, {"default": "True", "name": "deleteAfterDone",
       "optional": true, "type": "Boolean"}], "name": "launch-katib-experiment"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: deleteAfterDone
@@ -142,8 +145,6 @@ spec:
           description: /tmp/outputs/bestHyperParameter/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "mnist-hpo", "outputs":
@@ -168,8 +169,6 @@ spec:
         - name: mnist-hpo-bestHyperParameter
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop",

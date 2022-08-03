@@ -42,8 +42,7 @@ metadata:
       {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
       \"my-in-coop1\", \"outputs\": [], \"version\": \"my-in-coop1@sha256=a3500c74823f34974bad0f19c6ebb9c48b9457d687021e9d6c874f840a7cd9b0\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "iteration-number-3", "type": "string"}, {"name":
+      "true"}}, "params": [{"name": "iteration-number-3", "type": "string"}, {"name":
       "loop-item-param-1-subvar-a", "type": "string"}], "steps": [{"args": ["set -e\necho
       op1 \"$0) $1\"\n", "$(inputs.params.iteration-number-3)", "$(inputs.params.loop-item-param-1-subvar-a)"],
       "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
@@ -52,8 +51,7 @@ metadata:
       {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
       \"my-in-coop2\", \"outputs\": [], \"version\": \"my-in-coop2@sha256=6984788637aec7d6eb2453d5f2bfb249047e634e5959b7ec9813371238742dfe\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "loop-item-param-1-subvar-b", "type": "string"}],
+      "true"}}, "params": [{"name": "loop-item-param-1-subvar-b", "type": "string"}],
       "steps": [{"args": ["set -e\necho op2 \"$0\"\n", "$(inputs.params.loop-item-param-1-subvar-b)"],
       "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
       "timeout": "525600m"}, {"name": "withitem-multiple-nesting-pipeline-for-loop-4",
@@ -76,12 +74,11 @@ metadata:
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"my-1st-inner-coop\", \"outputs\": [], \"version\": \"my-1st-inner-coop@sha256=feaa8a218c3caaa76fa1154bcca9fc485286e72814986c35d08edcd28d2a50b9\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "loop-item-param-1-subvar-a", "type": "string"}, {"name":
-      "my_pipe_param-loop-item", "type": "string"}], "steps": [{"args": ["set -e\necho
-      \"op1-1\" \"$0\" \"$1\"\n", "$(inputs.params.loop-item-param-1-subvar-a)", "$(inputs.params.my_pipe_param-loop-item)"],
-      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "525600m"}, {"name": "withitem-multiple-nesting-pipeline-for-loop-6",
+      "true"}}, "params": [{"name": "loop-item-param-1-subvar-a", "type": "string"},
+      {"name": "my_pipe_param-loop-item", "type": "string"}], "steps": [{"args": ["set
+      -e\necho \"op1-1\" \"$0\" \"$1\"\n", "$(inputs.params.loop-item-param-1-subvar-a)",
+      "$(inputs.params.my_pipe_param-loop-item)"], "command": ["sh", "-c"], "image":
+      "library/bash:4.4.23", "name": "main"}]}, "timeout": "525600m"}, {"name": "withitem-multiple-nesting-pipeline-for-loop-6",
       "params": [{"name": "iteration-number-3", "value": "$(params.iteration-number-3)"},
       {"name": "loop-item-param-1-subvar-b", "value": "$(params.loop-item-param-1-subvar-b)"},
       {"name": "loop-item-param-5", "value": "[4, 5]"}, {"name": "my_pipe_param3-loop-item",
@@ -102,8 +99,7 @@ metadata:
       "$(params.loop-item-param-5)"}], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"my-2nd-inner-coop\", \"outputs\": [], \"version\": \"my-2nd-inner-coop@sha256=446981377175c0bb9fd796c392d60faeb066a8ed375deb664fe6caae385220a4\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "iteration-number-3", "type": "string"}, {"name":
+      "true"}}, "params": [{"name": "iteration-number-3", "type": "string"}, {"name":
       "iteration-number-7", "type": "string"}, {"name": "loop-item-param-1-subvar-b",
       "type": "string"}, {"name": "loop-item-param-5", "type": "string"}], "steps":
       [{"args": ["set -e\necho \"op1-2\" \"$0)\" $1 \"$2) $3\"\n", "$(inputs.params.iteration-number-3)",
@@ -123,12 +119,14 @@ metadata:
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"my-3rd-inner-coop\", \"outputs\": [], \"version\": \"my-3rd-inner-coop@sha256=998ba59ac4c7f67532187f1efa987503199250edc7d4147ac0d90f3c6b595d17\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "loop-item-param-1-subvar-b", "type": "string"}, {"name":
-      "my_pipe_param3-loop-item", "type": "string"}], "steps": [{"args": ["set -e\necho
-      \"op1-3\" \"$0\" \"$1\"\n", "$(inputs.params.loop-item-param-1-subvar-b)", "$(inputs.params.my_pipe_param3-loop-item)"],
-      "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
-      "timeout": "525600m"}]}}}]'
+      "true"}}, "params": [{"name": "loop-item-param-1-subvar-b", "type": "string"},
+      {"name": "my_pipe_param3-loop-item", "type": "string"}], "steps": [{"args":
+      ["set -e\necho \"op1-3\" \"$0\" \"$1\"\n", "$(inputs.params.loop-item-param-1-subvar-b)",
+      "$(inputs.params.my_pipe_param3-loop-item)"], "command": ["sh", "-c"], "image":
+      "library/bash:4.4.23", "name": "main"}]}, "timeout": "525600m"}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: my_pipe_param

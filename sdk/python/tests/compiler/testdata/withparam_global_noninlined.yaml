@@ -38,11 +38,13 @@ metadata:
       "runAfter": [], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"my-in-cop1\", \"outputs\": [], \"version\": \"my-in-cop1@sha256=636096cc65b3fe23f6fd1d965dd294fae75e328c1fb46f036f9ccad27dc692eb\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "loopidy_doop-loop-item", "type": "string"}], "steps":
-      [{"args": ["set -e\necho no output global op1, item: \"$0\"\n", "$(inputs.params.loopidy_doop-loop-item)"],
+      "true"}}, "params": [{"name": "loopidy_doop-loop-item", "type": "string"}],
+      "steps": [{"args": ["set -e\necho no output global op1, item: \"$0\"\n", "$(inputs.params.loopidy_doop-loop-item)"],
       "command": ["sh", "-c"], "image": "library/bash:4.4.23", "name": "main"}]},
       "timeout": "525600m"}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: loopidy_doop
@@ -71,8 +73,6 @@ spec:
           description: /tmp/outputs/out/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop0",
@@ -99,8 +99,6 @@ spec:
         - name: my-out-cop0-out
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop2",

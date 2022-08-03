@@ -29,6 +29,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"name": "a", "type": "Integer"},
       {"name": "b", "type": "Integer"}, {"name": "c", "type": "Integer"}], "name":
       "nested-condition-test"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: a
@@ -93,8 +96,6 @@ spec:
           emptyDir: {}
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":

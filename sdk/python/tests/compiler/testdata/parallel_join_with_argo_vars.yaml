@@ -35,6 +35,9 @@ metadata:
       [{"default": "gs://ml-pipeline-playground/shakespeare1.txt", "name": "url1",
       "optional": true, "type": "String"}, {"default": "gs://ml-pipeline-playground/shakespeare2.txt",
       "name": "url2", "optional": true, "type": "String"}], "name": "parallel-pipeline-with-argo-vars"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: url1
@@ -72,8 +75,6 @@ spec:
           description: /tmp/outputs/data/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
@@ -104,8 +105,6 @@ spec:
           description: /tmp/outputs/data/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
@@ -144,8 +143,6 @@ spec:
         - name: pipelineRun-uid
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":

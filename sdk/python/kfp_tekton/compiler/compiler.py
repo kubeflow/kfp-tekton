@@ -150,6 +150,8 @@ class TektonCompiler(Compiler):
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
     self.pipeline_labels = tekton_pipeline_conf.pipeline_labels
+    self.pipeline_labels['pipelines.kubeflow.org/pipelinename'] = ''
+    self.pipeline_labels['pipelines.kubeflow.org/generation'] = ''
     self.pipeline_annotations = tekton_pipeline_conf.pipeline_annotations
     self.tekton_inline_spec = tekton_pipeline_conf.tekton_inline_spec
     self.resource_in_separate_yaml = tekton_pipeline_conf.resource_in_separate_yaml
@@ -1012,7 +1014,7 @@ class TektonCompiler(Compiler):
 
             # Only one of --taskRef and --taskSpec allowed.
             if custom_task_args.get('taskRef', '') and custom_task_args.get('taskSpec', ''):
-              raise("Custom task invalid configuration %s, Only one of --taskRef and --taskSpec allowed." % custom_task_args)
+              raise ("Custom task invalid configuration %s, Only one of --taskRef and --taskSpec allowed." % custom_task_args)
             if custom_task_args.get('taskRef', ''):
               try:
                 custom_task_cr = {
@@ -1031,7 +1033,7 @@ class TektonCompiler(Compiler):
                 if custom_task_cr:
                   self.custom_task_crs.append(custom_task_cr)
               except ValueError:
-                raise("Custom task ref %s is not a valid Python Dictionary" % custom_task_args['taskRef'])
+                raise ("Custom task ref %s is not a valid Python Dictionary" % custom_task_args['taskRef'])
             # Setting --taskRef flag indicates, that spec be inlined.
             if custom_task_args.get('taskSpec', ''):
               try:
@@ -1046,7 +1048,7 @@ class TektonCompiler(Compiler):
                   }
                 }
               except ValueError:
-                raise("Custom task spec %s is not a valid Python Dictionary" % custom_task_args['taskSpec'])
+                raise ("Custom task spec %s is not a valid Python Dictionary" % custom_task_args['taskSpec'])
             # Pop custom task artifacts since we have no control of how
             # custom task controller is handling the container/task execution.
             self.artifact_items.pop(template['metadata']['name'], None)
@@ -1055,8 +1057,6 @@ class TektonCompiler(Compiler):
         if task_ref.get('taskSpec', ''):
           task_ref['taskSpec']['metadata'] = task_ref['taskSpec'].get('metadata', {})
           task_labels = template['metadata'].get('labels', {})
-          task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
-          task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
           cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
           task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
 
@@ -1855,8 +1855,6 @@ class TektonCompiler(Compiler):
       if 'taskSpec' in workflow_tasks[j]:
         workflow_tasks[j]['taskSpec']['metadata'] = workflow_tasks[j]['taskSpec'].get('metadata', {})
         task_labels = workflow_tasks[j]['taskSpec']['metadata'].get('labels', {})
-        task_labels['pipelines.kubeflow.org/pipelinename'] = task_labels.get('pipelines.kubeflow.org/pipelinename', '')
-        task_labels['pipelines.kubeflow.org/generation'] = task_labels.get('pipelines.kubeflow.org/generation', '')
         cache_default = self.pipeline_labels.get('pipelines.kubeflow.org/cache_enabled', 'true')
         task_labels['pipelines.kubeflow.org/cache_enabled'] = task_labels.get('pipelines.kubeflow.org/cache_enabled', cache_default)
         workflow_tasks[j]['taskSpec']['metadata']['labels'] = task_labels

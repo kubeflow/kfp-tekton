@@ -32,6 +32,9 @@ metadata:
       "name": "something_param", "optional": true, "type": "Something"}, {"default":
       "string_param", "name": "string_param", "optional": true, "type": "String"}],
       "name": "data_passing_pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: anything_param
@@ -91,8 +94,6 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
@@ -146,8 +147,6 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
@@ -201,8 +200,6 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
@@ -256,8 +253,6 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
@@ -311,8 +306,6 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
@@ -366,8 +359,6 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
@@ -421,8 +412,6 @@ spec:
                 fieldPath: metadata.labels['custom.tekton.dev/originalPipelineRun']
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string

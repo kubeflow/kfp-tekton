@@ -46,8 +46,7 @@ metadata:
       [{\"description\": \"Represents an output paramter.\", \"name\": \"output_value\",
       \"type\": \"String\"}], \"version\": \"print-3@sha256=5eed691c7d42c19cf0e5ca60612456bac19f7d8902ae2cf92ff0f37663cf4763\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
+      "true"}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
       "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
       -e\necho $0 > $1\n", "print-3", "$(results.output-value.path)"], "image": "alpine:3.6",
       "name": "main"}]}, "timeout": "525600m"}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
@@ -59,11 +58,13 @@ metadata:
       paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
       \"print-4@sha256=612578686b564fc00e7052b345cd44d6a9cad721cdd6ceb3ecfc68c392a932f7\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
+      "true"}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
       "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
       -e\necho $0 > $1\n", "print-4", "$(results.output-value.path)"], "image": "alpine:3.6",
       "name": "main"}]}, "timeout": "525600m"}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: param
@@ -92,8 +93,6 @@ spec:
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-0", "outputs":
@@ -129,8 +128,6 @@ spec:
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-1", "outputs":
@@ -162,8 +159,6 @@ spec:
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-2", "outputs":

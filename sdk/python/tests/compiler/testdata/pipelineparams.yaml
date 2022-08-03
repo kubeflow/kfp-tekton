@@ -32,6 +32,9 @@ metadata:
       pipeline params.", "inputs": [{"default": "latest", "name": "tag", "optional":
       true, "type": "String"}, {"default": "10", "name": "sleep_ms", "optional": true,
       "type": "Integer"}], "name": "pipeline-params"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: sleep_ms
@@ -72,8 +75,6 @@ spec:
           description: /tmp/outputs/data/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "download", "outputs":
@@ -102,8 +103,6 @@ spec:
         - name: download-data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":

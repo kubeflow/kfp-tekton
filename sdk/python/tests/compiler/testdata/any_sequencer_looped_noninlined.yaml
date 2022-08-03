@@ -49,8 +49,7 @@ metadata:
       paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
       \"print-10@sha256=ea7fa8edfd92cf64a15f8464292143a4e0d5f34898368bfd63618884decf3be1\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
+      "true"}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
       "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
       -e\necho $0 > $1\n", "print-10", "$(results.output-value.path)"], "image": "alpine:3.6",
       "name": "main"}]}, "timeout": "525600m"}, {"name": "print-11", "taskSpec": {"metadata":
@@ -58,8 +57,7 @@ metadata:
       \"print-11\", \"outputs\": [{\"description\": \"Represents an output paramter.\",
       \"name\": \"output_value\", \"type\": \"String\"}], \"version\": \"print-11@sha256=3b423bb0ced0bc21fb9157ce814a38c94d3e72718a33cfa8b4ef4f75abe725bd\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
+      "true"}}, "results": [{"description": "/tmp/outputs/output_value/data", "name":
       "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c", "set
       -e\necho $0 > $1\n", "print-11", "$(results.output-value.path)"], "image": "alpine:3.6",
       "name": "main"}]}, "timeout": "525600m"}, {"name": "any-seq-1", "params": [{"name":
@@ -69,13 +67,15 @@ metadata:
       \"outputs\": [{\"description\": \"The output file to create the status\", \"name\":
       \"status\"}], \"version\": \"any-seq-1@sha256=75c65b3423dd61b79c35122746a1f16d67a98ab7b570daa36de2d310e1e57c22\"}",
       "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true", "pipelines.kubeflow.org/generation": "", "pipelines.kubeflow.org/pipelinename":
-      ""}}, "params": [{"name": "pipelineRun-name", "type": "string"}, {"name": "pipelineRun-namespace",
-      "type": "string"}], "results": [{"description": "/tmp/outputs/status/data",
+      "true"}}, "params": [{"name": "pipelineRun-name", "type": "string"}, {"name":
+      "pipelineRun-namespace", "type": "string"}], "results": [{"description": "/tmp/outputs/status/data",
       "name": "status", "type": "string"}], "steps": [{"args": ["--namespace", "$(params.pipelineRun-namespace)",
       "--prName", "$(params.pipelineRun-name)", "--taskList", "print-10,print-11",
       "--statusPath", "$(results.status.path)"], "command": ["any-task"], "image":
       "dspipelines/any-sequencer:latest", "name": "main"}]}, "timeout": "525600m"}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: param
@@ -104,8 +104,6 @@ spec:
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-00", "outputs":
@@ -132,8 +130,6 @@ spec:
           description: /tmp/outputs/output_value/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-01", "outputs":
@@ -163,8 +159,6 @@ spec:
           description: /tmp/outputs/status/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "any-seq-0", "outputs":

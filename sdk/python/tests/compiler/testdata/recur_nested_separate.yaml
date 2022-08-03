@@ -36,6 +36,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use graph_component
       and nested recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
       true, "type": "Integer"}], "name": "nested-recursion-pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: maxVal
@@ -63,8 +66,6 @@ spec:
           description: /tmp/outputs/output/data
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
@@ -86,8 +87,6 @@ spec:
         - name: flip-coin-output
         metadata:
           labels:
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":

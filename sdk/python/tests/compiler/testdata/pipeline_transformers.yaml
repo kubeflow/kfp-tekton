@@ -28,6 +28,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline shows how
       to apply functions to all ops in the pipeline by pipeline transformers", "name":
       "pipeline-transformer"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   pipelineSpec:
     tasks:
@@ -42,8 +45,6 @@ spec:
         metadata:
           labels:
             hobby: football
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             hobby: football
@@ -62,8 +63,6 @@ spec:
         metadata:
           labels:
             hobby: football
-            pipelines.kubeflow.org/pipelinename: ''
-            pipelines.kubeflow.org/generation: ''
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             hobby: football
