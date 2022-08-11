@@ -460,7 +460,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			if err != nil {
 				return err
 			}
-			_, err = c.pipelineClientSet.TektonV1alpha1().PipelineRuns(failedPr.Namespace).
+			_, err = c.pipelineClientSet.TektonV1beta1().PipelineRuns(failedPr.Namespace).
 				Patch(ctx, failedPr.Name, types.MergePatchType, patch, metav1.PatchOptions{})
 			pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, highestIteration, iterationElements)
 			if err != nil {
