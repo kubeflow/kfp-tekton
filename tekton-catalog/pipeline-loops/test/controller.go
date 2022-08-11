@@ -37,7 +37,6 @@ import (
 	faketaskruninformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/taskrun/fake"
 	fakeresourceclientset "github.com/tektoncd/pipeline/pkg/client/resource/clientset/versioned/fake"
 	fakeresourceclient "github.com/tektoncd/pipeline/pkg/client/resource/injection/client/fake"
-	fakeresourceinformer "github.com/tektoncd/pipeline/pkg/client/resource/injection/informers/resource/v1alpha1/pipelineresource/fake"
 	cloudeventclient "github.com/tektoncd/pipeline/pkg/reconciler/events/cloudevent"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -160,16 +159,15 @@ func SeedTestData(t *testing.T, ctx context.Context, d Data) (Clients, Informers
 	PrependResourceVersionReactor(&c.Pipeline.Fake)
 
 	i := Informers{
-		PipelineRun:      fakepipelineruninformer.Get(ctx),
-		Pipeline:         fakepipelineinformer.Get(ctx),
-		TaskRun:          faketaskruninformer.Get(ctx),
-		Run:              fakeruninformer.Get(ctx),
-		Task:             faketaskinformer.Get(ctx),
-		ClusterTask:      fakeclustertaskinformer.Get(ctx),
-		PipelineResource: fakeresourceinformer.Get(ctx),
-		Pod:              fakepodinformer.Get(ctx),
-		ConfigMap:        fakeconfigmapinformer.Get(ctx),
-		ServiceAccount:   fakeserviceaccountinformer.Get(ctx),
+		PipelineRun:    fakepipelineruninformer.Get(ctx),
+		Pipeline:       fakepipelineinformer.Get(ctx),
+		TaskRun:        faketaskruninformer.Get(ctx),
+		Run:            fakeruninformer.Get(ctx),
+		Task:           faketaskinformer.Get(ctx),
+		ClusterTask:    fakeclustertaskinformer.Get(ctx),
+		Pod:            fakepodinformer.Get(ctx),
+		ConfigMap:      fakeconfigmapinformer.Get(ctx),
+		ServiceAccount: fakeserviceaccountinformer.Get(ctx),
 	}
 
 	// Attach reactors that add resource mutations to the appropriate
