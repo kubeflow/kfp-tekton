@@ -528,7 +528,7 @@ var runWsPipelineLoop = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "ws-pipelineloop",
@@ -556,7 +556,7 @@ var runNewPipelineLoop = &v1alpha1.Run{
 			Name:  "current-item",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeArray, ArrayVal: []string{"item1", "item2"}},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "new-pipelineloop",
@@ -592,7 +592,7 @@ var runNewPipelineLoopWithPodTemplateAndSA = &v1alpha1.Run{
 			}},
 			HostNetwork: true,
 		},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -623,7 +623,7 @@ var runPipelineLoop = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -651,7 +651,7 @@ var runPipelineLoop2 = &v1alpha1.Run{
 			Name:  "current-item",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeArray, ArrayVal: []string{"item1", "item2"}},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop2",
@@ -715,7 +715,7 @@ var paraRunPipelineLoop = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "para-pipelineloop",
@@ -748,7 +748,7 @@ var runPipelineLoopWithInDictParams = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -779,7 +779,7 @@ var runPipelineLoopWithInStringParams = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -813,7 +813,7 @@ var runPipelineLoopWithInStringSeparatorParams = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -847,7 +847,7 @@ var runPipelineLoopWithSpaceSeparatorParams = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -881,7 +881,7 @@ var runPipelineLoopWithSpaceParam = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -912,7 +912,7 @@ var runPipelineLoopWithDefaultSeparatorParams = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -965,7 +965,7 @@ var runPipelineLoopWithIterateNumeric = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "n-pipelineloop",
@@ -992,7 +992,7 @@ var runPipelineLoopWithInlineTask = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop-with-inline-task",
@@ -1006,7 +1006,7 @@ var runWithMissingPipelineLoopName = &v1alpha1.Run{
 		Namespace: "foo",
 	},
 	Spec: v1alpha1.RunSpec{
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			// missing Name
@@ -1020,7 +1020,7 @@ var runWithNonexistentPipelineLoop = &v1alpha1.Run{
 		Namespace: "foo",
 	},
 	Spec: v1alpha1.RunSpec{
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "no-such-pipelineloop",
@@ -1048,7 +1048,7 @@ var runWithInvalidRange = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -1070,7 +1070,7 @@ var runWithIterateParamNotAnArray = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -1766,7 +1766,7 @@ var conditionRunPipelineLoop = &v1alpha1.Run{
 			Name:  "current-item",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeArray, ArrayVal: []string{"item1", "item2"}},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
@@ -1837,7 +1837,7 @@ var runPipelineLoopWithInStringSeparatorEmptySpaceParams = &v1alpha1.Run{
 			Name:  "additional-parameter",
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
 		}},
-		Ref: &v1alpha1.TaskRef{
+		Ref: &v1beta1.TaskRef{
 			APIVersion: pipelineloopv1alpha1.SchemeGroupVersion.String(),
 			Kind:       pipelineloop.PipelineLoopControllerName,
 			Name:       "a-pipelineloop",
