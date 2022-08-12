@@ -1,0 +1,6 @@
+{
+    "taskRuns": {
+        "cache-enabled": { "elapsed": 10, "cached": true },
+        "cache-disabled": { "elapsed": 38 }
+    }
+}

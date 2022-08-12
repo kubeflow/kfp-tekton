@@ -1,0 +1,7 @@
+{
+    "sequence": ["false", "condition-1"],
+    "taskRuns": {
+        "false": { "elapsed": 10},
+        "condition-1": {"elapsed": 15}
+    }
+}
