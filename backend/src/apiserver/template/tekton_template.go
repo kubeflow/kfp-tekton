@@ -262,7 +262,7 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 		injectDefaultScript := common.IsInjectDefaultScript()
 		copyStepTemplate := common.GetCopyStepTemplate()
 
-		if task.TaskSpec != nil {
+		if task.TaskSpec != nil && task.TaskSpec.Steps != nil {
 			if (hasArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
 				artifactScript := common.GetArtifactScript()
 				if archiveLogs {
