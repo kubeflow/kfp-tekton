@@ -89,6 +89,11 @@ spec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         name: my-pipeline-for-loop-2
+        metadata:
+          annotations:
+            test_anno: test
+          labels:
+            test_label: test
       params:
       - name: from
         value: $(params.start)

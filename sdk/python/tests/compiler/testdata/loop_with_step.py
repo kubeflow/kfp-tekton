@@ -47,7 +47,9 @@ implementation:
 def pipeline(my_pipe_param: int = 10, start: int = 1, end: int = 5, step: int = 3):
     start_2 = 1
     end_2 = 2
-    with Loop.range(start=start, end=end, step=step) as item:
+    range_object = Loop.range(start=start, end=end, step=step)\
+                    .add_pod_annotation('test_anno', 'test').add_pod_label('test_label', 'test')
+    with range_object as item:
         op1_template = components.load_component_from_text(op1_yaml)
         op1_template(item, my_pipe_param)
         with Loop.range(start=start_2, end=end_2) as item2:
