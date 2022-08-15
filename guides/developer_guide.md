@@ -154,7 +154,7 @@ pip install ./dsl-compiler/ --upgrade && python ./dsl-compiler/tests/main.py
 
 ## Integration test & E2E test
 
-Check [this](/test/README.md) page for more details.
+E2E test are done with on IBM Cloud Tekton Toolchain using [this](/.tekton) Tekton pipeline.
 
 ## Troubleshooting
 
