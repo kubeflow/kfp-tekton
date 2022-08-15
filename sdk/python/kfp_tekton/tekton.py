@@ -257,6 +257,26 @@ class Loop(dsl.ParallelFor):
             parallelism: Optional[int] = None):
     return cls(start=start, step=step, end=end, parallelism=parallelism)
 
+  def add_pod_annotation(self, name: str, value: str):
+    """Adds a pod's metadata annotation.
+    Args:
+        name: The name of the annotation.
+        value: The value of the annotation.
+    """
+
+    self.pod_annotations[name] = value
+    return self
+
+  def add_pod_label(self, name: str, value: str):
+    """Adds a pod's metadata label.
+    Args:
+        name: The name of the label.
+        value: The value of the label.
+    """
+
+    self.pod_labels[name] = value
+    return self
+
   def _next_id(self):
     return str(_pipeline.Pipeline.get_default_pipeline().get_next_group_id())
 
@@ -274,6 +294,8 @@ class Loop(dsl.ParallelFor):
     self.step = None
     self.call_enumerate = False
     self.iteration_number = None
+    self.pod_annotations = {}
+    self.pod_labels = {}
     if start and end:
         super().__init__(loop_args=["iteration"], parallelism=parallelism)
         self.start = start

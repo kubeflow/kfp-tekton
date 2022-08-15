@@ -461,6 +461,15 @@ class TektonCompiler(Compiler):
         "kind": "PipelineLoop",
         "name": group_name
       }
+      # Handle sub-pipeline metadata
+      if hasattr(sub_group, 'pod_annotations') and sub_group.pod_annotations:
+        self.loops_pipeline[group_name]['spec']['taskRef']['metadata'] = \
+          self.loops_pipeline[group_name]['spec']['taskRef'].setdefault('metadata', {'annotations': {}})
+        self.loops_pipeline[group_name]['spec']['taskRef']['metadata']['annotations'] = sub_group.pod_annotations
+      if hasattr(sub_group, 'pod_labels') and sub_group.pod_annotations:
+        self.loops_pipeline[group_name]['spec']['taskRef']['metadata'] = \
+          self.loops_pipeline[group_name]['spec']['taskRef'].setdefault('metadata', {'labels': {}})
+        self.loops_pipeline[group_name]['spec']['taskRef']['metadata']['labels'] = sub_group.pod_labels
       if sub_group.items_is_pipeline_param:
         # these loop args are a 'dynamic param' rather than 'static param'.
         # i.e., rather than a static list, they are either the output of another task or were input
