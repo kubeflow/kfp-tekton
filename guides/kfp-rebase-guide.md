@@ -115,6 +115,10 @@ git apply --reject --whitespace=fix \
     --exclude=sdk/* \
     --exclude=samples/* \
     --exclude=components/* \
+    --exclude=contrib/* \
+    --exclude=proxy/* \
+    --exclude=test/* \
+    --exclude=third_party/* \
     --exclude=OWNERS \
     --exclude=VERSION \
     temp/git_diff_${KFP_VERSION_OLD}_to_${KFP_VERSION_NEW}.patch
