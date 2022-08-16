@@ -102,20 +102,23 @@ spec:
           - |
             set -exo pipefail
             TOTAL_SIZE=0
-            if [ -d $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir ]; then
-              tar -czvf $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir.tar.gz $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir
+            copy_artifact() {
+            if [ -d "$1" ]; then
+              tar -czvf "$1".tar.gz "$1"
               SUFFIX=".tar.gz"
             fi
-            ARTIFACT_SIZE=`wc -c $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir${SUFFIX} | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c "$1"${SUFFIX} | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.output-dir.path)
+            touch "$2"
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              if [ -d $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir ]; then
-                tar -tzf $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir.tar.gz > $(results.output-dir.path)
-              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir; then
-                cp $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir $(results.output-dir.path)
+              if [ -d "$1" ]; then
+                tar -tzf "$1".tar.gz > "$2"
+              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" "$1"; then
+                cp "$1" "$2"
               fi
             fi
+            }
+            copy_artifact $(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir $(results.output-dir.path)
           onError: continue
           env:
           - name: ORIG_PR_NAME
@@ -179,20 +182,23 @@ spec:
           - |
             set -exo pipefail
             TOTAL_SIZE=0
-            if [ -d $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir ]; then
-              tar -czvf $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir.tar.gz $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir
+            copy_artifact() {
+            if [ -d "$1" ]; then
+              tar -czvf "$1".tar.gz "$1"
               SUFFIX=".tar.gz"
             fi
-            ARTIFACT_SIZE=`wc -c $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir${SUFFIX} | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c "$1"${SUFFIX} | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.Subdir.path)
+            touch "$2"
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              if [ -d $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir ]; then
-                tar -tzf $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir.tar.gz > $(results.Subdir.path)
-              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir; then
-                cp $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir $(results.Subdir.path)
+              if [ -d "$1" ]; then
+                tar -tzf "$1".tar.gz > "$2"
+              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" "$1"; then
+                cp "$1" "$2"
               fi
             fi
+            }
+            copy_artifact $(workspaces.get-subdirectory.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Subdir $(results.Subdir.path)
           onError: continue
           env:
           - name: ORIG_PR_NAME
