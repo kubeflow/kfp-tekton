@@ -120,48 +120,25 @@ spec:
           - |
             set -exo pipefail
             TOTAL_SIZE=0
-            if [ -d /tekton/home/tep-results/param2 ]; then
-              tar -czvf /tekton/home/tep-results/param2.tar.gz /tekton/home/tep-results/param2
+            copy_artifact() {
+            if [ -d "$1" ]; then
+              tar -czvf "$1".tar.gz "$1"
               SUFFIX=".tar.gz"
             fi
-            ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/param2${SUFFIX} | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c "$1"${SUFFIX} | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.param2.path)
+            touch "$2"
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              if [ -d /tekton/home/tep-results/param2 ]; then
-                tar -tzf /tekton/home/tep-results/param2.tar.gz > $(results.param2.path)
-              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param2; then
-                cp /tekton/home/tep-results/param2 $(results.param2.path)
+              if [ -d "$1" ]; then
+                tar -tzf "$1".tar.gz > "$2"
+              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" "$1"; then
+                cp "$1" "$2"
               fi
             fi
-            if [ -d /tekton/home/tep-results/param3 ]; then
-              tar -czvf /tekton/home/tep-results/param3.tar.gz /tekton/home/tep-results/param3
-              SUFFIX=".tar.gz"
-            fi
-            ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/param3${SUFFIX} | awk '{print $1}'`
-            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.param3.path)
-            if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              if [ -d /tekton/home/tep-results/param3 ]; then
-                tar -tzf /tekton/home/tep-results/param3.tar.gz > $(results.param3.path)
-              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param3; then
-                cp /tekton/home/tep-results/param3 $(results.param3.path)
-              fi
-            fi
-            if [ -d /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper ]; then
-              tar -czvf /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.tar.gz /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper
-              SUFFIX=".tar.gz"
-            fi
-            ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper${SUFFIX} | awk '{print $1}'`
-            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
-            if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              if [ -d /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper ]; then
-                tar -tzf /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.tar.gz > $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
-              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper; then
-                cp /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
-              fi
-            fi
+            }
+            copy_artifact /tekton/home/tep-results/param2 $(results.param2.path)
+            copy_artifact /tekton/home/tep-results/param3 $(results.param3.path)
+            copy_artifact /tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper $(results.superlongnamesuperlongnamesuperlongnamesuperlongnamesuper.path)
           onError: continue
           env:
           - name: ORIG_PR_NAME

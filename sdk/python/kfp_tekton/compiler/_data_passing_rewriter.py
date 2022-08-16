@@ -658,6 +658,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
             copy_results_artifact_step = _get_base_step('copy-results-artifacts')
             copy_results_artifact_step['onError'] = 'continue'  # supported by v0.27+ of tekton.
             script = "set -exo pipefail\nTOTAL_SIZE=0\n"
+            injected_script = False
             for result in task_spec['results']:
                 if task['name'] in artifact_items:
                     artifact_i = artifact_items[task['name']]
@@ -666,30 +667,37 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                         src = artifact
                         dst = '$(results.%s.path)' % sanitize_k8s_name(result['name'], allow_capital=True)
                         if artifact_name == result['name'] and src != dst:
-                            add_copy_results_artifacts_step = True
-                            total_size_command = 'ARTIFACT_SIZE=`wc -c %s${SUFFIX} | awk \'{print $1}\'`\n' % src + \
-                                                 'TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)\n'
-                            copy_command = '    cp ' + src + ' ' + dst + '\n'
-                            if env.get('OUTPUT_PREVIEW', 'false').lower() == 'true':
-                                preview_size = env.get('OUTPUT_PREVIEW_SIZE', '100')
-                                total_size_command = 'TOTAL_SIZE=$( expr $TOTAL_SIZE + %s)\n' % preview_size
-                                copy_command = '    dd if=' + src + ' of=' + \
-                                               dst + ' bs=' + preview_size + ' count=1\n'
-                            script += (
-                                    'if [ -d ' + src + ' ]; then\n' +
-                                    '  tar -czvf ' + src + '.tar.gz ' + src + '\n' +
-                                    '  SUFFIX=".tar.gz"\n' +
-                                    'fi\n' +
-                                    total_size_command +
-                                    'touch ' + dst + '\n' +  # create an empty file by default.
-                                    'if [[ $TOTAL_SIZE -lt 3072 ]]; then\n' +
-                                    '  if [ -d ' + src + ' ]; then\n' +
-                                    '    tar -tzf ' + src + '.tar.gz > ' + dst + '\n' +
-                                    '  elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" %s; then\n' % src +
-                                    copy_command +
-                                    '  fi\n' +
-                                    'fi\n'
-                            )
+                            if not injected_script:
+                                add_copy_results_artifacts_step = True
+                                src_arg = '"$1"'
+                                dst_arg = '"$2"'
+                                total_size_command = 'ARTIFACT_SIZE=`wc -c %s${SUFFIX} | awk \'{print $1}\'`\n' % src_arg + \
+                                                    'TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)\n'
+                                copy_command = '    cp ' + src_arg + ' ' + dst_arg + '\n'
+                                if env.get('OUTPUT_PREVIEW', 'false').lower() == 'true':
+                                    preview_size = env.get('OUTPUT_PREVIEW_SIZE', '100')
+                                    total_size_command = 'TOTAL_SIZE=$( expr $TOTAL_SIZE + %s)\n' % preview_size
+                                    copy_command = '    dd if=' + src_arg + ' of=' + \
+                                                dst_arg + ' bs=' + preview_size + ' count=1\n'
+                                script += (
+                                        'copy_artifact() {\n'
+                                        'if [ -d ' + src_arg + ' ]; then\n' +
+                                        '  tar -czvf ' + src_arg + '.tar.gz ' + src_arg + '\n' +
+                                        '  SUFFIX=".tar.gz"\n' +
+                                        'fi\n' +
+                                        total_size_command +
+                                        'touch ' + dst_arg + '\n' +  # create an empty file by default.
+                                        'if [[ $TOTAL_SIZE -lt 3072 ]]; then\n' +
+                                        '  if [ -d ' + src_arg + ' ]; then\n' +
+                                        '    tar -tzf ' + src_arg + '.tar.gz > ' + dst_arg + '\n' +
+                                        '  elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" %s; then\n' % src_arg +
+                                        copy_command +
+                                        '  fi\n' +
+                                        'fi\n' +
+                                        '}\n'
+                                )
+                                injected_script = True
+                            script += 'copy_artifact %s %s\n' % (src, dst)
             copy_results_artifact_step['command'].append(script)
             _append_original_pr_name_env_to_step(copy_results_artifact_step)
             if add_copy_results_artifacts_step:

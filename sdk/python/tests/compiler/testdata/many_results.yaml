@@ -120,34 +120,24 @@ spec:
           - |
             set -exo pipefail
             TOTAL_SIZE=0
-            if [ -d /tekton/home/tep-results/param1 ]; then
-              tar -czvf /tekton/home/tep-results/param1.tar.gz /tekton/home/tep-results/param1
+            copy_artifact() {
+            if [ -d "$1" ]; then
+              tar -czvf "$1".tar.gz "$1"
               SUFFIX=".tar.gz"
             fi
-            ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/param1${SUFFIX} | awk '{print $1}'`
+            ARTIFACT_SIZE=`wc -c "$1"${SUFFIX} | awk '{print $1}'`
             TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.param1.path)
+            touch "$2"
             if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              if [ -d /tekton/home/tep-results/param1 ]; then
-                tar -tzf /tekton/home/tep-results/param1.tar.gz > $(results.param1.path)
-              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param1; then
-                cp /tekton/home/tep-results/param1 $(results.param1.path)
+              if [ -d "$1" ]; then
+                tar -tzf "$1".tar.gz > "$2"
+              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" "$1"; then
+                cp "$1" "$2"
               fi
             fi
-            if [ -d /tekton/home/tep-results/param3-b ]; then
-              tar -czvf /tekton/home/tep-results/param3-b.tar.gz /tekton/home/tep-results/param3-b
-              SUFFIX=".tar.gz"
-            fi
-            ARTIFACT_SIZE=`wc -c /tekton/home/tep-results/param3-b${SUFFIX} | awk '{print $1}'`
-            TOTAL_SIZE=$( expr $TOTAL_SIZE + $ARTIFACT_SIZE)
-            touch $(results.param3-b.path)
-            if [[ $TOTAL_SIZE -lt 3072 ]]; then
-              if [ -d /tekton/home/tep-results/param3-b ]; then
-                tar -tzf /tekton/home/tep-results/param3-b.tar.gz > $(results.param3-b.path)
-              elif ! awk "/[^[:print:]]/{f=1} END{exit !f}" /tekton/home/tep-results/param3-b; then
-                cp /tekton/home/tep-results/param3-b $(results.param3-b.path)
-              fi
-            fi
+            }
+            copy_artifact /tekton/home/tep-results/param1 $(results.param1.path)
+            copy_artifact /tekton/home/tep-results/param3-b $(results.param3-b.path)
           onError: continue
           env:
           - name: ORIG_PR_NAME
