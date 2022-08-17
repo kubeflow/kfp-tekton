@@ -68,4 +68,6 @@ spec:
         value: '[1, 2]'
       - name: param
         value: $(params.param)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

@@ -81,4 +81,6 @@ spec:
               "outputs": [{"name": "out", "type": "String"}], "version": "cache-disabled@sha256=c6b73e13a48ba7dfacb66ebd9987eda874087ace7615130da8180b2b46dd53c9"}'
             tekton.dev/template: ''
       timeout: 525600m
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

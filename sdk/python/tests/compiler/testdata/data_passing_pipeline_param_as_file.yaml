@@ -425,7 +425,9 @@ spec:
         workspace: data-passing-pipeline
     workspaces:
     - name: data-passing-pipeline
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m
   workspaces:
   - name: data-passing-pipeline
     volumeClaimTemplate:

@@ -108,4 +108,6 @@ spec:
       params:
       - name: my-out-cop0-out-loop-item
         value: $(tasks.my-out-cop0.results.out)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

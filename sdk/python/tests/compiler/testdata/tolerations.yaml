@@ -66,4 +66,6 @@ spec:
         key: gpu
         operator: Equal
         value: run
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

@@ -81,4 +81,6 @@ spec:
       params:
       - name: produce-list-data_list-loop-item
         value: $(tasks.produce-list.results.data-list)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

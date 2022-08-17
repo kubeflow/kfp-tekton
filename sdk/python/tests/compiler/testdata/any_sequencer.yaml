@@ -213,4 +213,6 @@ spec:
         value: $(context.pipelineRun.name)
       - name: pipelineRun-namespace
         value: $(context.pipelineRun.namespace)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

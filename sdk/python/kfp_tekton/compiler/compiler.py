@@ -54,8 +54,12 @@ DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', '
 TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
 # DISABLE_CEL_CONDITION should be True until CEL is officially merged into Tekton main API.
 DISABLE_CEL_CONDITION = True
-# Default timeout is one year
+# Default tasks timeout is one year
 DEFAULT_TIMEOUT_MINUTES = "525600m"
+# Default whole pipeline timeout is two year
+DEFAULT_TIMEOUT_WITH_FINALLY_MINUTES = "1051200m"
+# Default finally extension is 5 minutes
+DEFAULT_FINALLY_SECONDS = 300
 
 
 def _get_super_condition_template():
@@ -1386,11 +1390,13 @@ class TektonCompiler(Compiler):
 
     # add workflow level timeout to pipeline run
     if not TEKTON_GLOBAL_DEFAULT_TIMEOUT or pipeline.conf.timeout:
+      pipeline_run['spec']['timeouts'] = {'pipeline': '0s', 'tasks': '0s'}
       if pipeline.conf.timeout > 0:
-        pipeline_run['spec']['timeout'] = '%ds' % pipeline.conf.timeout
+        pipeline_run['spec']['timeouts']['tasks'] = '%ds' % pipeline.conf.timeout
+        pipeline_run['spec']['timeouts']['pipeline'] = '%ds' % (pipeline.conf.timeout + DEFAULT_FINALLY_SECONDS)
       else:
-        pipeline_run['spec']['timeout'] = DEFAULT_TIMEOUT_MINUTES
-
+        pipeline_run['spec']['timeouts']['tasks'] = DEFAULT_TIMEOUT_MINUTES
+        pipeline_run['spec']['timeouts']['pipeline'] = DEFAULT_TIMEOUT_WITH_FINALLY_MINUTES
     # generate the Tekton podTemplate for image pull secret
     if len(pipeline.conf.image_pull_secrets) > 0:
       pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})

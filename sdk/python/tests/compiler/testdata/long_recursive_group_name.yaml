@@ -75,4 +75,6 @@ spec:
       - name: just_one_iteration
         value:
         - '1'
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

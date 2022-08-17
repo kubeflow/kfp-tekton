@@ -236,4 +236,6 @@ spec:
         value: $(tasks.produce-numbers.results.Output)
       - name: threshold
         value: $(params.threshold)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

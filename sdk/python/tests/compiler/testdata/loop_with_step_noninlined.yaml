@@ -103,4 +103,6 @@ spec:
         value: $(params.step)
       - name: to
         value: $(params.end)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m
