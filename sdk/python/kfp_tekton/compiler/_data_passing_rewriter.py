@@ -550,11 +550,12 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                     appended_taskrun_name = True
             task['taskSpec'] = replace_big_data_placeholder(
                 task.get("taskSpec", {}), placeholder, workspaces_parameter)
-            artifact_items = pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items']
-            artifact_items[task['name']] = replace_big_data_placeholder(
-                artifact_items[task['name']], placeholder, workspaces_parameter)
-            pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items'] = \
-                artifact_items
+            artifact_items = pipelinerun_template['metadata']['annotations'].get('tekton.dev/artifact_items', '{}')
+            if artifact_items != '{}':
+                artifact_items[task['name']] = replace_big_data_placeholder(
+                    artifact_items[task['name']], placeholder, workspaces_parameter)
+                pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items'] = \
+                    artifact_items
     if appended_taskrun_path_step:
         task['taskSpec']['steps'].append(appended_taskrun_path_step)
         _append_original_pr_name_env(task)
@@ -651,7 +652,7 @@ def big_data_passing_tasks(prname: str, task: dict, pipelinerun_template: dict,
                         task = input_artifacts_tasks_pr_params(task, task_artifact)
 
     # If a task produces a result and artifact, add a step to copy artifact to results.
-    artifact_items = pipelinerun_template['metadata']['annotations']['tekton.dev/artifact_items']
+    artifact_items = pipelinerun_template['metadata']['annotations'].get('tekton.dev/artifact_items', '{}')
     add_copy_results_artifacts_step = False
     if task.get("taskSpec", {}):
         if task_spec.get('results', []):
@@ -797,16 +798,18 @@ def clean_up_empty_workflow_structures(workflow: list):
 
 
 def load_annotations(template: dict):
-    artifact_items = json.loads(
-        str(template['metadata']['annotations']['tekton.dev/artifact_items']))
-    template['metadata']['annotations']['tekton.dev/artifact_items'] = \
-        artifact_items
+    if env.get('DISABLE_ARTIFACT_TRACKING', 'false').lower() != 'true':
+        artifact_items = json.loads(
+            str(template['metadata']['annotations'].get('tekton.dev/artifact_items', '{}')))
+        template['metadata']['annotations']['tekton.dev/artifact_items'] = \
+            artifact_items
     return template
 
 
 def jsonify_annotations(template: dict):
-    template['metadata']['annotations']['tekton.dev/artifact_items'] = \
-        json.dumps(template['metadata']['annotations']['tekton.dev/artifact_items'])
+    if env.get('DISABLE_ARTIFACT_TRACKING', 'false').lower() != 'true':
+        template['metadata']['annotations']['tekton.dev/artifact_items'] = \
+            json.dumps(template['metadata']['annotations'].get('tekton.dev/artifact_items', '{}'))
     return template
 
 
