@@ -1330,6 +1330,11 @@ class TektonCompiler(Compiler):
       }
     }
 
+    if env.get('DISABLE_ARTIFACT_TRACKING', 'false').lower() == 'true':
+      pipeline_run['metadata']['annotations']['tekton.dev/output_artifacts'] = {}
+      pipeline_run['metadata']['annotations']['tekton.dev/input_artifacts'] = {}
+      pipeline_run['metadata']['annotations']['tekton.dev/artifact_items'] = {}
+
     if self.pipeline_labels:
       pipeline_run['metadata']['labels'] = pipeline_run['metadata'].setdefault('labels', {})
       pipeline_run['metadata']['labels'].update(self.pipeline_labels)
