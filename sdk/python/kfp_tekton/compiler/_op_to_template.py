@@ -20,6 +20,7 @@ import hashlib
 
 from collections import OrderedDict
 from typing import List, Text, Dict, Any
+from os import environ as env
 
 from kfp import dsl
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name
@@ -564,6 +565,8 @@ def _op_to_template(op: BaseOp,
         }
         template.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/component_spec_digest'] = \
             json.dumps(digested_component_spec_dict, sort_keys=True)
+        if env.get('DISABLE_ARTIFACT_TRACKING', 'false').lower() == 'true':
+            template['metadata']['annotations'].pop('pipelines.kubeflow.org/component_spec_digest', None)
 
     if isinstance(op, dsl.ContainerOp) and op.execution_options:
         if op.execution_options.caching_strategy.max_cache_staleness:
