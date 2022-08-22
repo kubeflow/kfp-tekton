@@ -204,4 +204,6 @@ spec:
         - '1'
       - name: maxVal
         value: $(params.maxVal)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

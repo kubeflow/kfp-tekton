@@ -130,7 +130,9 @@ spec:
         workspace: artifact-out-pipeline
     workspaces:
     - name: artifact-out-pipeline
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m
   workspaces:
   - name: artifact-out-pipeline
     volumeClaimTemplate:

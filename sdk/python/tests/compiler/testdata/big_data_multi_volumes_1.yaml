@@ -116,4 +116,6 @@ spec:
           - name: input-text
             mountPath: /tmp/inputs/input_text
       timeout: 525600m
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

@@ -119,4 +119,6 @@ spec:
       params:
       - name: loopidy_doop-loop-item
         value: $(params.loopidy_doop)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

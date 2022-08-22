@@ -149,4 +149,6 @@ spec:
               [], "version": "echo@sha256=8f8d23eb8a5175f0212ebf18b3f24dcd26effafb1ed421d18d897ccfdb14dcc0"}'
             tekton.dev/template: ''
       timeout: 525600m
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

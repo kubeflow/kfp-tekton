@@ -97,4 +97,6 @@ spec:
         value: $(params.my_pipe_param)
       - name: to
         value: $(params.end)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

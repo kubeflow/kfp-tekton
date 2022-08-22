@@ -138,4 +138,6 @@ spec:
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
       timeout: 525600m
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

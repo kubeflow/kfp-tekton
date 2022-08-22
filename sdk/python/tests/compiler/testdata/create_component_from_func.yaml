@@ -324,7 +324,9 @@ spec:
       - produce-dir-with-files-python-op
     workspaces:
     - name: create-component-from-function
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m
   workspaces:
   - name: create-component-from-function
     volumeClaimTemplate:

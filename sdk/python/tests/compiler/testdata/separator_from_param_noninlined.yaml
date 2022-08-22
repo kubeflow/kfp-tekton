@@ -68,4 +68,6 @@ spec:
         value: $(params.separator)
       - name: text-loop-item
         value: $(params.text)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

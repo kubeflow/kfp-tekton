@@ -156,4 +156,6 @@ spec:
         value: $(params.my_pipe_param3)
       - name: my_pipe_param3-loop-item
         value: $(params.my_pipe_param3)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

@@ -350,7 +350,9 @@ spec:
       timeout: 525600m
     workspaces:
     - name: artifact-passing-pipeline
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m
   workspaces:
   - name: artifact-passing-pipeline
     persistentVolumeClaim:

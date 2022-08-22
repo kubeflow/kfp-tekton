@@ -110,4 +110,6 @@ spec:
               "outputs": [{"name": "stdout", "type": "String"}], "version": "artifact-printer-1@sha256=37dc967f8576ece2bc91e571dbaccd7f77043711a66b411d02aa952bd47191bf"}'
             tekton.dev/template: ''
       timeout: 525600m
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

@@ -113,4 +113,6 @@ spec:
         value: $(tasks.separator.results.output-value)
       - name: text-output_value-loop-item
         value: $(tasks.text.results.output-value)
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m

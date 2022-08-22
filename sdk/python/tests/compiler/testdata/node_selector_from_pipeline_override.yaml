@@ -57,7 +57,9 @@ spec:
     taskPodTemplate:
       nodeSelector:
         kubernetes.io/os: windows
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m
   podTemplate:
     nodeSelector:
       kubernetes.io/os: linux

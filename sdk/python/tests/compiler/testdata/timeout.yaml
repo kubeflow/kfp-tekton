@@ -73,4 +73,6 @@ spec:
               "outputs": [], "version": "random-failure@sha256=7a3950e9d0afce355b325b09e2cd5710feb99e6233a330af889d80515c4aaac2"}'
             tekton.dev/template: ''
       timeout: 525600m
-  timeout: 40s
+  timeouts:
+    pipeline: 301s
+    tasks: 1s

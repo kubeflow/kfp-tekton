@@ -101,4 +101,6 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "false"
           annotations:
             ws-pipelines.ibm.com/pipeline-cache-enabled: "false"
-  timeout: 525600m
+  timeouts:
+    pipeline: 1051200m
+    tasks: 525600m
