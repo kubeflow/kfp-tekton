@@ -53,15 +53,15 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
          -p '{"data":{"enable-custom-tasks": "true"}}'
    ```
 
-3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.3.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
+3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.3.1` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
    > Note: You can ignore the error `no matches for kind "Application" in version "app.k8s.io/v1beta1"` since it's a warning saying `application` CRD is not yet ready.
     ```shell
-    kubectl apply --selector kubeflow/crd-install=true -f install/v1.3.0/kfp-tekton.yaml
+    kubectl apply --selector kubeflow/crd-install=true -f install/v1.3.1/kfp-tekton.yaml
     ```
 
-4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.3.0` deployment
+4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.3.1` deployment
     ```shell
-    kubectl apply -f install/v1.3.0/kfp-tekton.yaml
+    kubectl apply -f install/v1.3.1/kfp-tekton.yaml
     ```
 
 5. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
