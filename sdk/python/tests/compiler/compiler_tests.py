@@ -78,6 +78,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.condition import flipcoin
     self._test_pipeline_workflow(flipcoin, 'condition.yaml', skip_noninlined=True)
 
+  def test_finally_context_var_workflow(self):
+    """
+    Test compiling a exit handler workflow with Tekton context variable
+    """
+    from .testdata.finally_context_var import any_sequencer_in_finally
+    self._test_pipeline_workflow(any_sequencer_in_finally, 'finally_context_var.yaml', skip_noninlined=True)
+
   def test_condition_custom_task_workflow(self):
     """
     Test compiling a conditional workflow with custom task
