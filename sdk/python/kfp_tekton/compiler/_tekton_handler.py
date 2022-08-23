@@ -74,16 +74,16 @@ def _handle_tekton_pipeline_variables(pipeline_run):
     }
 
     add_type = pipeline_run.get('kind') != 'PipelineRun'
-    task_list = pipeline_run['spec']['pipelineSpec']['tasks']
-    for task in task_list:
+
+    def handle_task(task):
         if task.get('taskRef', {}):
-            continue
+            return
         if 'taskSpec' in task and 'apiVersion' in task['taskSpec']:
             # recur for embedded pipeline resources
             if 'spec' in task['taskSpec'] and 'pipelineSpec' in task['taskSpec']['spec']:
                 resource_spec = task['taskSpec']
                 _handle_tekton_pipeline_variables(resource_spec)
-            continue
+            return
 
         for key, val in pipeline_variables.items():
             task_str = json.dumps(task['taskSpec']['steps'])
@@ -107,6 +107,13 @@ def _handle_tekton_pipeline_variables(pipeline_run):
                     if add_type:
                         param['type'] = 'string'
                     task['taskSpec'].setdefault('params', []).append(param)
+
+    task_list = pipeline_run.get('spec', {}).get('pipelineSpec', {}).get('tasks', [])
+    finally_task_list = pipeline_run.get('spec', {}).get('pipelineSpec', {}).get('finally', [])
+    for task in task_list:
+        handle_task(task)
+    for task in finally_task_list:
+        handle_task(task)
 
     return pipeline_run
 
