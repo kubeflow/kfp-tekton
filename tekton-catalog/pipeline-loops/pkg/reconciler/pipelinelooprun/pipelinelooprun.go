@@ -477,11 +477,19 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 
 	// Check the status of the PipelineRun for the highest iteration.
-	for _, failedPr := range failedPrs {
-		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
-			"PipelineRun %s has failed", failedPr.Name)
+	if len(failedPrs) > 0 {
+		for _, failedPr := range failedPrs {
+			if status.CurrentRunning == 0 {
+				run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
+					"PipelineRun %s has failed", failedPr.Name)
+			} else {
+				run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
+					"PipelineRun %s has failed", failedPr.Name)
+			}
+		}
 		return nil
 	}
+
 	// Mark run status Running
 	run.Status.MarkRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
 		"Iterations completed: %d", highestIteration-len(currentRunningPrs))
