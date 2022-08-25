@@ -24,6 +24,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
       custom task with custom spec on KFP", "name": "tekton-custom-task-on-kubeflow-pipeline"}'

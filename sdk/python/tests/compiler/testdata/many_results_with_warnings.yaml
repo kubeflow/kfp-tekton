@@ -33,6 +33,7 @@ metadata:
       ["param2", "/tekton/home/tep-results/param2"], ["param3", "/tekton/home/tep-results/param3"],
       ["superlongnamesuperlongnamesuperlongnamesuperlongnamesuper", "/tekton/home/tep-results/superlongnamesuperlongnamesuperlongnamesuperlongnamesuper"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline that produce
       many results.", "name": "many-results-pipeline"}'
@@ -169,7 +170,6 @@ spec:
               "outputs": [{"name": "param1", "type": "String"}, {"name": "param2",
               "type": "String"}, {"name": "param3", "type": "String"}, {"name": "superlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongname",
               "type": "String"}], "version": "Print4results@sha256=2abb522200107ab144eafa6107bb8fde6c10e446a9bdc2a7f4d3a50df6e8a0d2"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

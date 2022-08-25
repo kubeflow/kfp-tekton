@@ -25,6 +25,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": [["stdout", "$(results.stdout.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"name": "a", "type": "Integer"},
       {"name": "b", "type": "Integer"}, {"name": "c", "type": "Integer"}], "name":
@@ -100,7 +101,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [{"name": "stdout"}], "version": "print@sha256=c71a843b7628df22a3d8a9c62a43127f451029e18218c53b06964df8d2bec3ed"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.cel-exprs.results.bc)
         operator: in

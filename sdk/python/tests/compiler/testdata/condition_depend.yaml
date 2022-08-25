@@ -26,6 +26,7 @@ metadata:
     tekton.dev/artifact_items: '{"false": [["Output", "$(results.Output.path)"]],
       "my-in-coop1": [], "my-in-coop1-2": [], "my-in-coop1-3": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "param",
       "optional": true, "type": "Integer"}], "name": "pipeline"}'
@@ -99,7 +100,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "False", "outputs":
               [{"name": "Output", "type": "String"}], "version": "False@sha256=ab6d70d69626be9a388e3d6d92c4eae87095dc005400a41e6613f4b855c694f6"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: my-in-coop1
       params:
@@ -126,7 +126,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
               "outputs": [], "version": "my-in-coop1@sha256=8ccab3a28a39a406554d964865f2ccb0aed854a43b6de827f613eff2bccd6f8f"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-1.results.outcome)
         operator: in
@@ -158,7 +157,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
               "outputs": [], "version": "my-in-coop1@sha256=8ccab3a28a39a406554d964865f2ccb0aed854a43b6de827f613eff2bccd6f8f"}'
-            tekton.dev/template: ''
       runAfter:
       - my-in-coop1-3
       timeout: 525600m
@@ -192,7 +190,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
               "outputs": [], "version": "my-in-coop1@sha256=8ccab3a28a39a406554d964865f2ccb0aed854a43b6de827f613eff2bccd6f8f"}'
-            tekton.dev/template: ''
       runAfter:
       - my-in-coop1
       timeout: 525600m

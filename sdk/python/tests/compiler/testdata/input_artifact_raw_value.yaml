@@ -26,6 +26,7 @@ metadata:
       [], "component-with-input-artifact-2": [], "component-with-input-artifact-3":
       []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Pipeline shows how to
       define artifact inputs and pass raw artifacts to them.", "name": "pipeline-with-artifact-input-raw-argument-value"}'
@@ -61,7 +62,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "component_with_inline_input_artifact",
               "outputs": [], "version": "component_with_inline_input_artifact@sha256=84b965a6ea326f3d6c596b41fab802062af61e288300b297f5a0ad2fb053754a"}'
-            tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
           - name: text
@@ -96,7 +96,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "component_with_input_artifact",
               "outputs": [], "version": "component_with_input_artifact@sha256=343079629334502155d6cb5d24c9216b42a96b7c75c9b07490c9d91efe8c37ae"}'
-            tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
           - name: text
@@ -131,7 +130,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "component_with_input_artifact",
               "outputs": [], "version": "component_with_input_artifact@sha256=343079629334502155d6cb5d24c9216b42a96b7c75c9b07490c9d91efe8c37ae"}'
-            tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
           - name: text
@@ -167,7 +165,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "component_with_input_artifact",
               "outputs": [], "version": "component_with_input_artifact@sha256=343079629334502155d6cb5d24c9216b42a96b7c75c9b07490c9d91efe8c37ae"}'
-            tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
           - name: text

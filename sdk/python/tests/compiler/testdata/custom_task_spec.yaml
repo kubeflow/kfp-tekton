@@ -24,6 +24,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use Tekton
       custom task with custom spec on KFP", "name": "tekton-custom-task-on-kubeflow-pipeline"}'
@@ -49,7 +50,6 @@ spec:
             valid_container: "false"
             pipelines.kubeflow.org/component_spec_digest: '{"name": "any-name", "outputs":
               [], "version": "any-name@sha256=5f659b809e547385d0853d3b524b66178af7ce8006ddc7da8c4692d2d73bb1c3"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: any-name-2
       params:
@@ -67,7 +67,6 @@ spec:
             valid_container: "false"
             pipelines.kubeflow.org/component_spec_digest: '{"name": "any-name", "outputs":
               [], "version": "any-name@sha256=5f659b809e547385d0853d3b524b66178af7ce8006ddc7da8c4692d2d73bb1c3"}'
-            tekton.dev/template: ''
       runAfter:
       - any-name
       timeout: 525600m

@@ -31,6 +31,7 @@ metadata:
       [["output", "$(results.output.path)"]], "flip-3": [["output", "$(results.output.path)"]],
       "print": [], "print-2": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition.",
       "inputs": [{"default": "heads", "name": "forced_result1", "optional": true,
@@ -84,7 +85,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip@sha256=f8759c2bcdd89af3d7bae4547f835d76f3c79fa5e4061dcb4b4a7c1f1d68c99e"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: flip-2
       params:
@@ -113,7 +113,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip@sha256=f8759c2bcdd89af3d7bae4547f835d76f3c79fa5e4061dcb4b4a7c1f1d68c99e"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: flip-3
       params:
@@ -142,7 +141,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip@sha256=f8759c2bcdd89af3d7bae4547f835d76f3c79fa5e4061dcb4b4a7c1f1d68c99e"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-1.results.outcome)
         operator: in
@@ -168,7 +166,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=7340d64f47e64e089970390671baff36b7be44da16bdef6c2a89e85ce69634f4"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-3.results.outcome)
         operator: in
@@ -194,7 +191,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=7340d64f47e64e089970390671baff36b7be44da16bdef6c2a89e85ce69634f4"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-4.results.outcome)
         operator: in

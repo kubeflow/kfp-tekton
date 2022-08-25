@@ -29,6 +29,7 @@ metadata:
       "flip-coin": [["Output", "$(results.Output.path)"]], "sleepcomponent": [], "sleepcomponent-2":
       [], "sleepcomponent-3": [], "sleepcomponent-4": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Any Sequencer Component
       Demo", "name": "any-sequencer"}'
@@ -53,7 +54,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
               "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: sleepcomponent-2
       taskSpec:
@@ -70,7 +70,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
               "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: sleepcomponent-3
       taskSpec:
@@ -87,7 +86,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
               "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: flip-coin
       taskSpec:
@@ -151,7 +149,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Flip coin", "outputs":
               [{"name": "Output", "type": "String"}], "version": "Flip coin@sha256=83ef617eda2e04a688908716a02461237baee3cd04754ea99894e441b1f0679a"}'
-            tekton.dev/template: ''
       runAfter:
       - sleepcomponent
       timeout: 525600m
@@ -170,7 +167,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
               "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
-            tekton.dev/template: ''
       runAfter:
       - any-test
       timeout: 525600m
@@ -203,7 +199,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "any_test", "outputs":
               [{"description": "The output file to create the status", "name": "status"}],
               "version": "any_test@sha256=c4aaac826d09733534b96ec4a17c6646fa9d71e55d1e4bece1a5c0d20873e563"}'
-            tekton.dev/template: ''
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace

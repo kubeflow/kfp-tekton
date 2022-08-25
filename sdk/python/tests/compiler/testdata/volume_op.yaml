@@ -25,6 +25,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"cop": [], "create-pvc": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A Basic Example on VolumeOp
       Usage.", "inputs": [{"default": "10M", "name": "size", "optional": true, "type":
@@ -127,8 +128,7 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-          annotations:
-            tekton.dev/template: ''
+          annotations: {}
       timeout: 525600m
     - name: cop
       params:
@@ -158,7 +158,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "cop", "outputs":
               [], "version": "cop@sha256=f639de5a5b68415d6b01ffa4b02ecda5641449bc5b10053298959202a7d27c5c"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

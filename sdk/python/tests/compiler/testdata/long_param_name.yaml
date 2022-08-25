@@ -31,6 +31,7 @@ metadata:
       [["datadatadatadatadatadatadatadatadatadata", "$(results.datadatadatadatadatadatadatadatadatadata.path)"]],
       "printprintprintprintprintprintprintprintprintprint": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
       "name": "url1", "optional": true, "type": "String"}], "name": "some-very-long-name-with-lots-of-words-in-it-it-should-be-over-63-chars-long-in-order-to-observe-the-problem"}'
@@ -76,7 +77,6 @@ spec:
               - DownloadGCS - DownloadGCS - Download", "outputs": [{"name": "datadatadatadatadatadatadatadatadatadata",
               "type": "String"}], "version": "GCS - DownloadGCS - DownloadGCS - DownloadGCS
               - Download@sha256=d1e379f5379382e80ee2313b4c45d68ac45a256aef920dea02d3813ac2e1809c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: printprintprintprintprintprintprintprintprintprint
       params:
@@ -97,7 +97,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "printprintprintprintprintprintprintprintprintprint",
               "outputs": [], "version": "printprintprintprintprintprintprintprintprintprint@sha256=0c820da4b0f6e1a730ec47930324fc44ffbc0be62e903fdbcc91dc36ab9580ef"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

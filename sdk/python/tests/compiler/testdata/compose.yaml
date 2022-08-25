@@ -77,7 +77,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "download", "outputs":
               [{"description": "file content.", "name": "downloaded", "type": "String"}],
               "version": "download@sha256=adbe5cc450dea8374d89decdd8103ebb99994acd1ed6f667e068e76f0cc4860f"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: get-frequent
       params:
@@ -106,7 +105,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "get-frequent",
               "outputs": [{"name": "word", "type": "String"}], "version": "get-frequent@sha256=115de43852cde3c697855a408823f66c2ffbdc7b2ff70b1a583fe1601a0182e4"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: save
       params:
@@ -135,7 +133,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "save", "outputs":
               [], "version": "save@sha256=6cf2594d27161c1ef289acc82ec53fc038580a22405354932ed32ce46df91687"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

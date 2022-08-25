@@ -24,6 +24,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"random-failure": [], "random-failure-2": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline includes
       two steps which fail randomly. It shows how to use ContainerOp(...).set_retry(...).",
@@ -52,7 +53,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
               "outputs": [], "version": "random-failure@sha256=04a3a3f35c930802350039b1cbf47873166a6b3c8ab9af8bfc64092c56eddf7f"}'
-            tekton.dev/template: ''
       retries: 10
       timeout: 525600m
     - name: random-failure-2
@@ -73,7 +73,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
               "outputs": [], "version": "random-failure@sha256=04a3a3f35c930802350039b1cbf47873166a6b3c8ab9af8bfc64092c56eddf7f"}'
-            tekton.dev/template: ''
       retries: 5
       timeout: 525600m
   timeouts:

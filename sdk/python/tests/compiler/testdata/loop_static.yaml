@@ -25,6 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{"static-loop-inner-op1": [], "static-loop-inner-op2":
       [], "static-loop-out-op": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "my_pipe_param",
       "optional": true, "type": "String"}], "name": "static-loop-pipeline"}'
@@ -63,7 +64,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-out-op",
               "outputs": [], "version": "static-loop-out-op@sha256=84e07ab9a7585349f4f6c1c53200dfae7cacee9fa6aa5bdeb26d7487dd58c203"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: static-loop-pipeline-for-loop-2
       params:
@@ -111,7 +111,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-inner-op1",
                       "outputs": [], "version": "static-loop-inner-op1@sha256=37bfbf9bbcc6525f9915ee1c07e8a8b482c487696eb3c10fd82c27049b1b55e9"}'
-                    tekton.dev/template: ''
               timeout: 525600m
             - name: static-loop-inner-op2
               params:
@@ -137,7 +136,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-inner-op2",
                       "outputs": [], "version": "static-loop-inner-op2@sha256=56d5b639d49c40d3d5eb06be4a8d277614742470a048197eb6f141c9c257324c"}'
-                    tekton.dev/template: ''
               timeout: 525600m
           iterateParam: with-item-name
         metadata:

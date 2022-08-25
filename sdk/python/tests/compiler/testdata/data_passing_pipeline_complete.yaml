@@ -56,6 +56,7 @@ metadata:
       "produce-something": [["data", "$(workspaces.produce-something.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data"]],
       "produce-string": [["Output", "$(workspaces.produce-string.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "anything_param",
       "name": "anything_param", "optional": true}, {"default": "something_param",
@@ -167,7 +168,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce anything",
               "outputs": [{"name": "data"}], "version": "Produce anything@sha256=e0d1d2b2c37de20e127eb5e52f5cfa8f4cdfe4657e6d46521ae87272b92bca86"}'
-            tekton.dev/template: ''
         workspaces:
         - name: produce-anything
       timeout: 525600m
@@ -260,7 +260,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce something",
               "outputs": [{"name": "data", "type": "Something"}], "version": "Produce
               something@sha256=63c523da412a90ddab960b20ffe9b7f0e3e13b6b66369811479d68e8b9b5c84b"}'
-            tekton.dev/template: ''
         workspaces:
         - name: produce-something
       timeout: 525600m
@@ -370,7 +369,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce string",
               "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
               string@sha256=8eb027589d021d1968d4db71db08287540ac24f305da4d91f3bac15c41562281"}'
-            tekton.dev/template: ''
         workspaces:
         - name: produce-string
       timeout: 525600m
@@ -408,7 +406,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-something-as-value
       taskSpec:
@@ -441,7 +438,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-string-as-value
       taskSpec:
@@ -474,7 +470,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-anything-as-file
       taskSpec:
@@ -516,7 +511,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
-            tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
           - name: data
@@ -565,7 +559,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
-            tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
           - name: data
@@ -614,7 +607,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
-            tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
           - name: data
@@ -659,7 +651,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-anything-as-value-3
       params:
@@ -697,7 +688,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-anything-as-value-4
       params:
@@ -735,7 +725,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-something-as-value-2
       params:
@@ -773,7 +762,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-something-as-value-3
       params:
@@ -811,7 +799,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-string-as-value-2
       params:
@@ -849,7 +836,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-string-as-value-3
       params:
@@ -887,7 +873,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-anything-as-file-2
       taskSpec:
@@ -935,7 +920,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-2
       timeout: 525600m
@@ -988,7 +972,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-3
       timeout: 525600m
@@ -1041,7 +1024,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-4
       timeout: 525600m
@@ -1094,7 +1076,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-2
       timeout: 525600m
@@ -1147,7 +1128,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-3
       timeout: 525600m
@@ -1200,7 +1180,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-2
       timeout: 525600m
@@ -1253,7 +1232,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-3
       timeout: 525600m
@@ -1296,7 +1274,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-anything-as-value-6
       params:
@@ -1334,7 +1311,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-anything-as-value-7
       params:
@@ -1372,7 +1348,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-something-as-value-4
       params:
@@ -1410,7 +1385,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-something-as-value-5
       params:
@@ -1448,7 +1422,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-string-as-value-4
       params:
@@ -1486,7 +1459,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-string-as-value-5
       params:
@@ -1524,7 +1496,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: consume-anything-as-file-5
       params:
@@ -1568,7 +1539,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-5
       timeout: 525600m
@@ -1619,7 +1589,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-6
       timeout: 525600m
@@ -1670,7 +1639,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-anything-as-file-7
       timeout: 525600m
@@ -1721,7 +1689,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-4
       timeout: 525600m
@@ -1772,7 +1739,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-something-as-file-5
       timeout: 525600m
@@ -1823,7 +1789,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-4
       timeout: 525600m
@@ -1874,7 +1839,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consume-string-as-file-5
       timeout: 525600m

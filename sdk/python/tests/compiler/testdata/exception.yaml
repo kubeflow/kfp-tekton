@@ -27,6 +27,7 @@ metadata:
     tekton.dev/artifact_items: '{"echo": [], "echo-2": [], "gcs-download": [["data",
       "$(results.data.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Addon sample for exception
       handing", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
@@ -59,7 +60,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
               [], "version": "echo@sha256=4307d04e3d8d097b882bcd9cba02f5ae7d2433c3a6e5968af9f6bf1e17582984"}'
-            tekton.dev/template: ''
       timeout: 525600m
     finally:
     - name: addon-sample-addon-group-1
@@ -103,7 +103,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
                       "outputs": [{"name": "data", "type": "String"}], "version":
                       "gcs-download@sha256=220e1c1380f30155e73039cd46f9eaadcfb351b3da52e4ac6a7958b69e7a2881"}'
-                    tekton.dev/template: ''
               timeout: 525600m
             - name: echo-2
               params:
@@ -127,7 +126,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "echo",
                       "outputs": [], "version": "echo@sha256=4307d04e3d8d097b882bcd9cba02f5ae7d2433c3a6e5968af9f6bf1e17582984"}'
-                    tekton.dev/template: ''
               timeout: 525600m
         metadata:
           labels:

@@ -46,6 +46,7 @@ metadata:
       "sum-numbers": [["Output", "$(workspaces.sum-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output"]],
       "write-numbers": [["numbers", "$(workspaces.write-numbers.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/numbers"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Big data passing"}'
   labels:
@@ -148,7 +149,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Repeat line",
               "outputs": [{"name": "output_text", "type": "String"}], "version": "Repeat
               line@sha256=6ba4c40102b73739c02839c46d8897f9b07511608ff42f91916c29fc33ffde37"}'
-            tekton.dev/template: ''
         workspaces:
         - name: repeat-line
       timeout: 525600m
@@ -280,7 +280,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Split text lines",
               "outputs": [{"name": "odd_lines", "type": "String"}, {"name": "even_lines",
               "type": "String"}], "version": "Split text lines@sha256=2922d5cb527a21526cd87d19a93f6d38b9a7607603b85b5b50b700cb013568cb"}'
-            tekton.dev/template: ''
         workspaces:
         - name: split-text-lines
         stepTemplate:
@@ -340,7 +339,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
-            tekton.dev/template: ''
         workspaces:
         - name: print-text-2
       timeout: 525600m
@@ -395,7 +393,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
-            tekton.dev/template: ''
         workspaces:
         - name: print-text-3
       timeout: 525600m
@@ -498,7 +495,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Write numbers",
               "outputs": [{"name": "numbers", "type": "String"}], "version": "Write
               numbers@sha256=6a144669e9261686cc1f2365c56bc2ff9a575dd7d02049ea5580b1d40d2a2808"}'
-            tekton.dev/template: ''
         workspaces:
         - name: write-numbers
       timeout: 525600m
@@ -551,7 +547,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
-            tekton.dev/template: ''
         workspaces:
         - name: print-text-4
       timeout: 525600m
@@ -677,7 +672,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Sum numbers",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Sum
               numbers@sha256=c3f155c05c526db1acfedc8894328f5abb2c00f9378e1c5f89d035682aa2e9d7"}'
-            tekton.dev/template: ''
         workspaces:
         - name: sum-numbers
       timeout: 525600m
@@ -732,7 +726,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print text",
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
-            tekton.dev/template: ''
         workspaces:
         - name: print-text-5
       timeout: 525600m
@@ -804,7 +797,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Gen params",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Gen
               params@sha256=3453ee878d06fc3c3d7987bab4a5a1633c65c6b860fc9b41e745d8400a483a26"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: print-params
       params:
@@ -842,7 +834,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print params",
               "outputs": [], "version": "Print params@sha256=3fb942e817debe20ad7b6a10ff15f184d01b788e9908d665b20ecc89e7bb48da"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - runAfter:
       - repeat-line
@@ -935,7 +926,6 @@ spec:
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "Print text", "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
-                            tekton.dev/template: ''
                         workspaces:
                         - name: print-text
                       timeout: 525600m

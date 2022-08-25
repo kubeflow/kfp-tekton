@@ -28,6 +28,7 @@ metadata:
     tekton.dev/artifact_items: '{"cache-disabled": [["out", "$(results.out.path)"]],
       "cache-enabled": [["out", "$(results.out.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Example of caching", "name":
       "cache"}'
@@ -57,7 +58,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "cache-enabled",
               "outputs": [{"name": "out", "type": "String"}], "version": "cache-enabled@sha256=1922553b6419ee8f9e21a5cb174b86520f912014370528495bc1955d5db2bcaa"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: cache-disabled
       taskSpec:
@@ -79,7 +79,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "cache-disabled",
               "outputs": [{"name": "out", "type": "String"}], "version": "cache-disabled@sha256=c6b73e13a48ba7dfacb66ebd9987eda874087ace7615130da8180b2b46dd53c9"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

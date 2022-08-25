@@ -26,6 +26,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print-iter": [["output_value", "$(results.output-value.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "42", "name": "iter_num",
       "optional": true, "type": "Integer"}], "name": "pipeline-the-name-of-which-is-exactly-51-chars-long"}'
@@ -40,13 +41,12 @@ metadata:
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"print-iter\", \"outputs\": [{\"description\": \"Represents an
       output paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
-      \"print-iter@sha256=1390d83fb5d8aa6c6a41af858140c4c362850b13718dedacfc3fb0a633596313\"}",
-      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true"}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
-      [{"description": "/tmp/outputs/output_value/data", "name": "output-value", "type":
-      "string"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n", "Iter:
-      $(inputs.params.condition-cel-outcome)", "$(results.output-value.path)"], "image":
-      "alpine:3.6", "name": "main"}]}, "timeout": "525600m"}, {"name": "function-the-name-of-which-is-exactly-51-chars-long",
+      \"print-iter@sha256=1390d83fb5d8aa6c6a41af858140c4c362850b13718dedacfc3fb0a633596313\"}"},
+      "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
+      "condition-cel-outcome", "type": "string"}], "results": [{"description": "/tmp/outputs/output_value/data",
+      "name": "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c",
+      "set -e\necho $0 > $1\n", "Iter: $(inputs.params.condition-cel-outcome)", "$(results.output-value.path)"],
+      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m"}, {"name": "function-the-name-of-which-is-exactly-51-chars-long",
       "params": [{"name": "just_one_iteration", "value": ["1"]}, {"name": "iter_num",
       "value": "$(tasks.condition-cel.results.outcome)"}], "taskRef": {"apiVersion":
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "pipeline-the-name-of-which-is-exactly-51-51-chars-long-1"},

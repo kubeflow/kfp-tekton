@@ -25,6 +25,7 @@ metadata:
     tekton.dev/artifact_items: '{"my-in-coop1": [], "my-in-coop2": [], "my-inner-inner-coop":
       [], "my-inner-inner-coop-2": [], "my-inner-inner-coop-3": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[100, 200]", "name":
       "my_pipe_param", "optional": true, "type": "JsonArray"}, {"default": "[1, 2]",
@@ -101,7 +102,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
                       "outputs": [], "version": "my-in-coop1@sha256=7da1ee1a43a4ddb0a66d5603e5a1f097b9d88d4602cdbd92637408a6278ce663"}'
-                    tekton.dev/template: ''
               timeout: 525600m
             - name: my-in-coop2
               params:
@@ -128,7 +128,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop2",
                       "outputs": [], "version": "my-in-coop2@sha256=6984788637aec7d6eb2453d5f2bfb249047e634e5959b7ec9813371238742dfe"}'
-                    tekton.dev/template: ''
               timeout: 525600m
             - name: withitem-multiple-nesting-pipeline-for-loop-3
               params:
@@ -189,7 +188,6 @@ spec:
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "my-inner-inner-coop", "outputs": [], "version": "my-inner-inner-coop@sha256=e09082c663a9e1fc40f3b14bfbdd8d0174e6bc6391e6ab334383e3edca20d8dd"}'
-                            tekton.dev/template: ''
                       timeout: 525600m
                     - name: withitem-multiple-nesting-pipeline-for-loop-5
                       params:
@@ -247,7 +245,6 @@ spec:
                                     pipelines.kubeflow.org/component_spec_digest: '{"name":
                                       "my-inner-inner-coop", "outputs": [], "version":
                                       "my-inner-inner-coop@sha256=e09082c663a9e1fc40f3b14bfbdd8d0174e6bc6391e6ab334383e3edca20d8dd"}'
-                                    tekton.dev/template: ''
                               timeout: 525600m
                             - name: withitem-multiple-nesting-pipeline-for-loop-6
                               params:
@@ -297,7 +294,6 @@ spec:
                                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                                               "my-inner-inner-coop", "outputs": [],
                                               "version": "my-inner-inner-coop@sha256=e09082c663a9e1fc40f3b14bfbdd8d0174e6bc6391e6ab334383e3edca20d8dd"}'
-                                            tekton.dev/template: ''
                                       timeout: 525600m
                                   iterateParam: my_pipe_param3-loop-item
                                 metadata:

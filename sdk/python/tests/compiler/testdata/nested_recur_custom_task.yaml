@@ -26,6 +26,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": [["output", "$(results.output.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[3, 1, 4, 9, 2]",
       "name": "array", "optional": true, "type": "typing.List[int]"}], "name": "double-recursion-test"}'
@@ -75,22 +76,22 @@ metadata:
       {"name": "condition-cel-outcome", "value": "$(params.condition-cel-outcome)"}],
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"print\", \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}],
-      \"version\": \"print@sha256=8bcd5db23262c19ef5c49e890dfd60507d8da6c514d628749e64239c78a27a92\"}",
-      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true"}}, "params": [{"name": "condition-cel-3-outcome", "type": "string"},
-      {"name": "condition-cel-outcome", "type": "string"}], "results": [{"description":
-      "/tmp/outputs/output/data", "name": "output", "type": "string"}], "steps": [{"command":
-      ["sh", "-c", "echo $0 | tee $1\n", "Iter A: $(inputs.params.condition-cel-outcome),
-      B: $(inputs.params.condition-cel-3-outcome)", "$(results.output.path)"], "image":
-      "alpine:3.6", "name": "main"}]}, "timeout": "525600m"}, {"name": "condition-cel-6",
-      "params": [{"name": "outcome", "value": "$(params.condition-cel-3-outcome) +
-      1"}], "runAfter": ["print"], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
-      "kind": "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "condition-cel-7",
-      "params": [{"name": "outcome", "value": "$(tasks.condition-cel-6.results.outcome)
-      < $(params.condition-cel-4-outcome)"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
-      "kind": "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "recur-b",
-      "params": [{"name": "condition-cel-2-outcome", "value": "$(params.condition-cel-2-outcome)"},
-      {"name": "condition-cel-3-outcome", "value": "$(tasks.condition-cel-6.results.outcome)"},
+      \"version\": \"print@sha256=8bcd5db23262c19ef5c49e890dfd60507d8da6c514d628749e64239c78a27a92\"}"},
+      "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
+      "condition-cel-3-outcome", "type": "string"}, {"name": "condition-cel-outcome",
+      "type": "string"}], "results": [{"description": "/tmp/outputs/output/data",
+      "name": "output", "type": "string"}], "steps": [{"command": ["sh", "-c", "echo
+      $0 | tee $1\n", "Iter A: $(inputs.params.condition-cel-outcome), B: $(inputs.params.condition-cel-3-outcome)",
+      "$(results.output.path)"], "image": "alpine:3.6", "name": "main"}]}, "timeout":
+      "525600m"}, {"name": "condition-cel-6", "params": [{"name": "outcome", "value":
+      "$(params.condition-cel-3-outcome) + 1"}], "runAfter": ["print"], "taskRef":
+      {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name": "cel_condition"},
+      "timeout": "525600m"}, {"name": "condition-cel-7", "params": [{"name": "outcome",
+      "value": "$(tasks.condition-cel-6.results.outcome) < $(params.condition-cel-4-outcome)"}],
+      "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name":
+      "cel_condition"}, "timeout": "525600m"}, {"name": "recur-b", "params": [{"name":
+      "condition-cel-2-outcome", "value": "$(params.condition-cel-2-outcome)"}, {"name":
+      "condition-cel-3-outcome", "value": "$(tasks.condition-cel-6.results.outcome)"},
       {"name": "condition-cel-4-outcome", "value": "$(params.condition-cel-4-outcome)"},
       {"name": "condition-cel-5-outcome", "value": "$(params.condition-cel-5-outcome)"},
       {"name": "condition-cel-outcome", "value": "$(params.condition-cel-outcome)"},

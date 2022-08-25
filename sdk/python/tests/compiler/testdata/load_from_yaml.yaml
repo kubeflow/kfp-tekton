@@ -25,6 +25,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"busybox": [["dummy_output_path", "$(results.dummy-output-path.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with components
       loaded from yaml", "name": "component-yaml-pipeline"}'
@@ -57,7 +58,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "busybox", "outputs":
               [{"description": "Test unused output path", "name": "dummy_output_path"}],
               "version": "busybox@sha256=5bed7406f74106b6e31b3b155d13cb203e1f30e41fd93b53f9cd71331513e355"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m
