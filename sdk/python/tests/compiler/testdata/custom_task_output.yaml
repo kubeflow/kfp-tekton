@@ -30,6 +30,7 @@ metadata:
     tekton.dev/artifact_items: '{"artifact-printer-0": [["stdout", "$(results.stdout.path)"]],
       "artifact-printer-1": [["stdout", "$(results.stdout.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "uppercase vs lowercase"}'
   labels:
@@ -81,7 +82,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "artifact-printer-0",
               "outputs": [{"name": "stdout", "type": "String"}], "version": "artifact-printer-0@sha256=87fc76c64fcc79f4f4b95ee3428ade79e2a4bcdcbc03b4b9b17cef8db6c86dff"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: artifact-printer-1
       params:
@@ -108,7 +108,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "artifact-printer-1",
               "outputs": [{"name": "stdout", "type": "String"}], "version": "artifact-printer-1@sha256=37dc967f8576ece2bc91e571dbaccd7f77043711a66b411d02aa952bd47191bf"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

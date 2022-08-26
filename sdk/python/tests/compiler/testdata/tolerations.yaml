@@ -25,6 +25,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"download": [["downloaded", "$(results.downloaded.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with tolerations",
       "name": "tolerations"}'
@@ -56,7 +57,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "download", "outputs":
               [{"name": "downloaded", "type": "String"}], "version": "download@sha256=efb8f7672208579e11f74f184af68742c8d27421ef95f4db23a3b5f55641d850"}'
-            tekton.dev/template: ''
       timeout: 525600m
   taskRunSpecs:
   - pipelineTaskName: download

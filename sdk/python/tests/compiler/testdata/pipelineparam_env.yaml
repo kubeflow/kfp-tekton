@@ -24,6 +24,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"echo": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "echo pipeline", "inputs":
       [{"default": "80", "name": "port_number", "optional": true}], "name": "echo"}'
@@ -60,8 +61,7 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-          annotations:
-            tekton.dev/template: ''
+          annotations: {}
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

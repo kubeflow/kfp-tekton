@@ -24,6 +24,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": [], "print-2": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "The pipeline shows how
       to apply functions to all ops in the pipeline by pipeline transformers", "name":
@@ -50,7 +51,6 @@ spec:
             hobby: football
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=5311fb175a78bc1a90005ec5e77b6c0c5c574afe5fc779b99e9847e08615d618"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: print-2
       taskSpec:
@@ -68,7 +68,6 @@ spec:
             hobby: football
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=5311fb175a78bc1a90005ec5e77b6c0c5c574afe5fc779b99e9847e08615d618"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

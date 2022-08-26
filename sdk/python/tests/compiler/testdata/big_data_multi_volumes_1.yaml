@@ -28,6 +28,7 @@ metadata:
     tekton.dev/artifact_items: '{"print-big": [["output_value", "$(results.output-value.path)"]],
       "print-sm": [["output_value", "$(results.output-value.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "big-data"}'
   labels:
@@ -67,7 +68,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-sm", "outputs":
               [{"description": "Represents an output parameter.", "name": "output_value",
               "type": "String"}], "version": "print-sm@sha256=e88f5ee1607e92e4cf859907b2f81bdc766fc69cff62010f2f93d4c850a4d429"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: print-big
       taskSpec:
@@ -110,7 +110,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-big", "outputs":
               [{"description": "Represents an output parameter.", "name": "output_value",
               "type": "String"}], "version": "print-big@sha256=e85f43e32a0210be43f84f43434e61113ce4770f37f5346acc41523a270e72d4"}'
-            tekton.dev/template: ''
         stepTemplate:
           volumeMounts:
           - name: input-text

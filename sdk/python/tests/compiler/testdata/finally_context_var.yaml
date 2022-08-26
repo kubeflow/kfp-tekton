@@ -37,6 +37,7 @@ metadata:
       [["output_value", "$(results.output-value.path)"]], "print-11": [["output_value",
       "$(results.output-value.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "any-sequencer in finally"}'
   labels:
@@ -69,7 +70,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-00", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "print-00@sha256=7c633686b0b637cfba6cba8c9b4e871cf172395432360d6aaa2d89623fb336b3"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: print-01
       taskSpec:
@@ -95,7 +95,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-01", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "print-01@sha256=d511ac628d43cc5b393fbebd10be93662b30117f1413b84afd4e7b2e5ff5ed33"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: none
       taskSpec:
@@ -137,7 +136,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "None", "outputs":
               [{"description": "The output file to create the status", "name": "None"}],
               "version": "None@sha256=d85996d2400bd94ea45204590fcba9374edf952e060744ff0c5a5102f1318d7f"}'
-            tekton.dev/template: ''
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace
@@ -180,7 +178,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-10",
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print-10@sha256=ea7fa8edfd92cf64a15f8464292143a4e0d5f34898368bfd63618884decf3be1"}'
-                    tekton.dev/template: ''
               timeout: 525600m
             - name: print-11
               taskSpec:
@@ -206,7 +203,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-11",
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print-11@sha256=3b423bb0ced0bc21fb9157ce814a38c94d3e72718a33cfa8b4ef4f75abe725bd"}'
-                    tekton.dev/template: ''
               timeout: 525600m
             - name: none-2
               taskSpec:
@@ -248,7 +244,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "None",
                       "outputs": [{"description": "The output file to create the status",
                       "name": "None"}], "version": "None@sha256=aa59b9bee1939a20a127f07c0be2c186967560086207bc68a8d0401e03b63dcd"}'
-                    tekton.dev/template: ''
                 params:
                 - name: pipelineRun-name
                   type: string

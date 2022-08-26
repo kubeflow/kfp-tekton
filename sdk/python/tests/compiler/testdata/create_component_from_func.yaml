@@ -37,6 +37,7 @@ metadata:
       "$(results.Items.path)"]], "produce-dir-with-files-python-op": [["output_dir",
       "$(workspaces.produce-dir-with-files-python-op.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/output_dir"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "create-component-from-function"}'
   labels:
@@ -138,7 +139,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce dir with
               files python op", "outputs": [{"name": "output_dir"}], "version": "Produce
               dir with files python op@sha256=402b8d5bfcc589729850713deab06f2a3bb111baf371a138147b7516c8a2f41c"}'
-            tekton.dev/template: ''
         workspaces:
         - name: produce-dir-with-files-python-op
       timeout: 525600m
@@ -220,7 +220,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Get subdirectory",
               "outputs": [{"name": "Subdir", "type": "Directory"}], "version": "Get
               subdirectory@sha256=47f3ed80f84f97d86349edfe62e0aeae9c64b336250101ba3da09648c373b4c7"}'
-            tekton.dev/template: ''
         workspaces:
         - name: get-subdirectory
       timeout: 525600m
@@ -264,7 +263,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "List items",
               "outputs": [{"name": "Items"}], "version": "List items@sha256=2c0fc3f181a67696494ed58c0b42e3e37ecbd7a8bce591eb0c7d6b7b38af8952"}'
-            tekton.dev/template: ''
         workspaces:
         - name: list-items
       timeout: 525600m
@@ -312,7 +310,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "List items 2",
               "outputs": [{"name": "Items"}], "version": "List items 2@sha256=dc610eb161d4dc2d26801bab4f5ab95b32077d840f2c8e130cd29ec0e94241f1"}'
-            tekton.dev/template: ''
         workspaces:
         - name: list-items-2
       timeout: 525600m

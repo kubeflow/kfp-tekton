@@ -26,6 +26,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": [["stdout", "$(results.stdout.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "5", "name": "until",
       "optional": true, "type": "Integer"}], "name": "recursion-test"}'
@@ -38,24 +39,23 @@ metadata:
       "condition-cel-outcome", "value": "$(params.condition-cel-outcome)"}], "taskSpec":
       {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"print\", \"outputs\": [{\"name\": \"stdout\", \"type\": \"String\"}],
-      \"version\": \"print@sha256=823faa68fcc8685fb1248a51eedd18a6880137a4415c369714ed3f0060a7196d\"}",
-      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true"}}, "params": [{"name": "condition-cel-outcome", "type": "string"}], "results":
-      [{"description": "/tmp/stdout", "name": "stdout", "type": "string"}], "steps":
-      [{"args": ["echo Iter: $(inputs.params.condition-cel-outcome) > $(results.stdout.path)"],
-      "command": ["sh", "-c"], "image": "alpine:3.6", "name": "main"}]}, "timeout":
-      "525600m"}, {"name": "condition-cel-3", "params": [{"name": "outcome", "value":
-      "$(params.condition-cel-outcome) + 1"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
-      "kind": "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "condition-cel-4",
-      "params": [{"name": "outcome", "value": "$(tasks.condition-cel-3.results.outcome)
-      < $(params.until)"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind":
-      "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "recur", "params":
-      [{"name": "just_one_iteration", "value": ["1"]}, {"name": "condition-cel-outcome",
-      "value": "$(tasks.condition-cel-3.results.outcome)"}, {"name": "until", "value":
-      "$(params.until)"}, {"name": "condition-cel-2-outcome", "value": "$(params.condition-cel-2-outcome)"}],
-      "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
-      "name": "recursion-test-graph-recur-2"}, "when": [{"input": "$(tasks.condition-cel-4.results.outcome)",
-      "operator": "in", "values": ["true"]}]}]}}}]'
+      \"version\": \"print@sha256=823faa68fcc8685fb1248a51eedd18a6880137a4415c369714ed3f0060a7196d\"}"},
+      "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
+      "condition-cel-outcome", "type": "string"}], "results": [{"description": "/tmp/stdout",
+      "name": "stdout", "type": "string"}], "steps": [{"args": ["echo Iter: $(inputs.params.condition-cel-outcome)
+      > $(results.stdout.path)"], "command": ["sh", "-c"], "image": "alpine:3.6",
+      "name": "main"}]}, "timeout": "525600m"}, {"name": "condition-cel-3", "params":
+      [{"name": "outcome", "value": "$(params.condition-cel-outcome) + 1"}], "taskRef":
+      {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name": "cel_condition"},
+      "timeout": "525600m"}, {"name": "condition-cel-4", "params": [{"name": "outcome",
+      "value": "$(tasks.condition-cel-3.results.outcome) < $(params.until)"}], "taskRef":
+      {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name": "cel_condition"},
+      "timeout": "525600m"}, {"name": "recur", "params": [{"name": "just_one_iteration",
+      "value": ["1"]}, {"name": "condition-cel-outcome", "value": "$(tasks.condition-cel-3.results.outcome)"},
+      {"name": "until", "value": "$(params.until)"}, {"name": "condition-cel-2-outcome",
+      "value": "$(params.condition-cel-2-outcome)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "name": "recursion-test-graph-recur-2"}, "when": [{"input":
+      "$(tasks.condition-cel-4.results.outcome)", "operator": "in", "values": ["true"]}]}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
     pipelines.kubeflow.org/generation: ''

@@ -36,6 +36,7 @@ metadata:
       [["output", "$(results.output.path)"]], "print": [], "print-2": [], "print-3":
       [], "print-4": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Shows how to use dsl.Condition().",
       "name": "conditional-execution-pipeline"}'
@@ -66,7 +67,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "Integer"}], "version": "flip-coin@sha256=c50cf8172daa1f1f66c846c995973e58fba370e296d153decb448cfbc75da068"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: condition-cel
       params:
@@ -100,7 +100,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "generate-random-number",
               "outputs": [{"name": "output", "type": "Integer"}], "version": "generate-random-number@sha256=b9f03c5ff25b3ca718ee2291172858a9dedb124a0d003a69f96c8fc9e0fc50cf"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel.results.outcome)
         operator: in
@@ -140,7 +139,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=7340d64f47e64e089970390671baff36b7be44da16bdef6c2a89e85ce69634f4"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel-2.results.outcome)
         operator: in
@@ -166,7 +164,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=7340d64f47e64e089970390671baff36b7be44da16bdef6c2a89e85ce69634f4"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel-2.results.outcome)
         operator: notin
@@ -196,7 +193,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "generate-random-number",
               "outputs": [{"name": "output", "type": "Integer"}], "version": "generate-random-number@sha256=b9f03c5ff25b3ca718ee2291172858a9dedb124a0d003a69f96c8fc9e0fc50cf"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel.results.outcome)
         operator: notin
@@ -236,7 +232,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=7340d64f47e64e089970390671baff36b7be44da16bdef6c2a89e85ce69634f4"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel-3.results.outcome)
         operator: in
@@ -262,7 +257,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=7340d64f47e64e089970390671baff36b7be44da16bdef6c2a89e85ce69634f4"}'
-            tekton.dev/template: ''
       when:
       - input: $(tasks.condition-cel-3.results.outcome)
         operator: notin

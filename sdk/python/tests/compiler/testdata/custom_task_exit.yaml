@@ -25,6 +25,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"print": [["output_value", "$(results.output-value.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "test pipeline"}'
   labels:
@@ -57,7 +58,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766"}'
-            tekton.dev/template: ''
       timeout: 525600m
     finally:
     - name: test-pipeline-addon-group-1
@@ -90,7 +90,6 @@ spec:
                     valid_container: "false"
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "cel",
                       "outputs": [{"name": "cel-output"}], "version": "cel@sha256=0178923386cf89d2b7f7bae1037d14efe9e2f5898d55c27420c97a81795e5a59"}'
-                    tekton.dev/template: ''
               timeout: 525600m
           podTemplate:
             imagePullSecrets:

@@ -27,6 +27,7 @@ metadata:
     tekton.dev/artifact_items: '{"gcs-download": [["data", "$(workspaces.gcs-download.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/data"],
       ["data2", "$(results.data2.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Add labels to identify
       outputs as artifacts.", "inputs": [{"default": "gs://ml-pipeline-playground/shakespeare1.txt",
@@ -121,7 +122,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
               "outputs": [{"name": "data", "type": "String"}, {"name": "data2", "type":
               "String"}], "version": "gcs-download@sha256=e61aa54d889d66b15db1bd0a8959fda75d5aa799e468d8985610af4958612dfe"}'
-            tekton.dev/template: ''
         workspaces:
         - name: gcs-download
       timeout: 525600m

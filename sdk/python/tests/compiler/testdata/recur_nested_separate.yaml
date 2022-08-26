@@ -32,6 +32,7 @@ metadata:
       "flip-coin-2": [["output", "$(results.output.path)"]], "flip-coin-3": [["output",
       "$(results.output.path)"]], "print": [], "print-2": [], "print-3": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use graph_component
       and nested recursion.", "inputs": [{"default": "12", "name": "maxVal", "optional":
@@ -70,7 +71,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: print-3
       params:
@@ -91,7 +91,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c"}'
-            tekton.dev/template: ''
       runAfter:
       - nested-recursion-pipeline-flip-component-1
       timeout: 525600m

@@ -26,6 +26,7 @@ metadata:
     tekton.dev/artifact_items: '{"consume-data": [], "produce-list": [["data_list",
       "$(results.data-list.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Test pipeline to verify
       functions of par loop.", "name": "loop-over-lightweight-output"}'
@@ -36,11 +37,11 @@ metadata:
       "tasks": [{"name": "consume-data", "params": [{"name": "produce-list-data_list-loop-item",
       "value": "$(params.produce-list-data_list-loop-item)"}], "taskSpec": {"metadata":
       {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
-      \"Consume data\", \"outputs\": [], \"version\": \"Consume data@sha256=53c639462e2cf5f30518ba8b2d41564c1071e3473c7cffc13dc8b589dfc219bc\"}",
-      "tekton.dev/template": ""}, "labels": {"pipelines.kubeflow.org/cache_enabled":
-      "true"}}, "params": [{"name": "produce-list-data_list-loop-item", "type": "string"}],
-      "steps": [{"command": ["echo", "$(inputs.params.produce-list-data_list-loop-item)"],
-      "image": "busybox", "name": "main"}]}, "timeout": "525600m"}]}}}]'
+      \"Consume data\", \"outputs\": [], \"version\": \"Consume data@sha256=53c639462e2cf5f30518ba8b2d41564c1071e3473c7cffc13dc8b589dfc219bc\"}"},
+      "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
+      "produce-list-data_list-loop-item", "type": "string"}], "steps": [{"command":
+      ["echo", "$(inputs.params.produce-list-data_list-loop-item)"], "image": "busybox",
+      "name": "main"}]}, "timeout": "525600m"}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
     pipelines.kubeflow.org/generation: ''
@@ -69,7 +70,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list",
               "outputs": [{"name": "data_list", "type": "List"}], "version": "Produce
               list@sha256=3d80b314916a06826def6fa78eab66cd69199497d7d92a8d199bd5d906706abe"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - runAfter:
       - produce-list

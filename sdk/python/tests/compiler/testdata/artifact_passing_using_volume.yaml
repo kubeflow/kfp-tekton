@@ -39,6 +39,7 @@ metadata:
       "processor": [["Output-1", "$(results.Output-1.path)"], ["Output-2", "$(workspaces.processor.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2"]],
       "producer": [["Output-1", "$(results.Output-1.path)"], ["Output-2", "$(workspaces.producer.path)/artifacts/$ORIG_PR_NAME/$(context.taskRun.name)/Output-2"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Artifact passing pipeline"}'
   labels:
@@ -120,7 +121,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Producer", "outputs":
               [{"name": "Output 1"}, {"name": "Output 2"}], "version": "Producer@sha256=f8c0448df5bf22241b635044bce2463869c10f9b450e979b7da029a931486367"}'
-            tekton.dev/template: ''
         workspaces:
         - name: producer
       timeout: 525600m
@@ -210,7 +210,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Processor", "outputs":
               [{"name": "Output 1"}, {"name": "Output 2"}], "version": "Processor@sha256=dc713ae50cd79f58567512103e2e889ad7505f87770c6681731f94319615f373"}'
-            tekton.dev/template: ''
         workspaces:
         - name: processor
       timeout: 525600m
@@ -252,7 +251,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consumer", "outputs":
               [], "version": "Consumer@sha256=ae9cf1975753ed1382e04db32bd2440d61a9cbfb893ec327ff15199589311701"}'
-            tekton.dev/template: ''
         workspaces:
         - name: consumer
       timeout: 525600m
@@ -346,7 +344,6 @@ spec:
               metrics", "outputs": [{"name": "mlpipeline_ui_metadata", "type": "UI_metadata"},
               {"name": "mlpipeline_metrics", "type": "Metrics"}], "version": "Metadata
               and metrics@sha256=457911fc37b191922b25d050fefef6a3d87e0351f35d0838a053245bd4095e8c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     workspaces:
     - name: artifact-passing-pipeline

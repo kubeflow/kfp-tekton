@@ -27,6 +27,7 @@ metadata:
     tekton.dev/artifact_items: '{"my-in-cop1": [], "my-out-cop0": [["out", "$(results.out.path)"]],
       "my-out-cop2": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[{\"a\": \"1\",
       \"b\": \"2\"}, {\"a\": \"10\", \"b\": \"20\"}]", "name": "loopidy_doop", "optional":
@@ -66,7 +67,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop0",
               "outputs": [{"name": "out", "type": "String"}], "version": "my-out-cop0@sha256=a450661d6f7ba02ab00054fcb4afae65774d94dfcf4611aff04ec134a0fcf9a3"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: my-out-cop2
       params:
@@ -92,7 +92,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop2",
               "outputs": [], "version": "my-out-cop2@sha256=12b6747bf40c6d422bf91475437e40331e1809caa920e7012bc09c5fb81be91d"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - runAfter:
       - my-out-cop0
@@ -141,7 +140,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-cop1",
                       "outputs": [], "version": "my-in-cop1@sha256=a5d6b8deed0ed377333b9790a4db5be7b5e48196c768bf502fd1da020ab55cac"}'
-                    tekton.dev/template: ''
               runAfter: []
               timeout: 525600m
           iterateParam: loopidy_doop-loop-item

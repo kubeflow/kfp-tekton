@@ -27,6 +27,7 @@ metadata:
     tekton.dev/artifact_items: '{"mnist-hpo": [["bestHyperParameter", "$(results.bestHyperParameter.path)"]],
       "my-out-cop": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "An example to launch katib
       experiment.", "inputs": [{"default": "mnist", "name": "name", "optional": true,
@@ -149,7 +150,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "mnist-hpo", "outputs":
               [{"name": "bestHyperParameter", "type": "String"}], "version": "mnist-hpo@sha256=cc6b00fe46afdfcbe02820d928e4e1bffaa6bb93c7532886db04f63f8354087d"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: my-out-cop
       params:
@@ -173,7 +173,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop",
               "outputs": [], "version": "my-out-cop@sha256=1ba657e86cfa3fa4fd6256830c58aad6b9e7a75b92c522c818526530223a1533"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

@@ -31,6 +31,7 @@ metadata:
       ["multiple_underscore_test", "$(results.multiple-underscore-test.path)"], ["underscore_test",
       "$(results.underscore-test.path)"]], "echo": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Run a script that passes
       file to a non configurable path", "name": "hidden-output-file-pipeline"}'
@@ -71,7 +72,6 @@ spec:
               "String"}, {"description": "/tmp/results.txt", "name": "underscore_test",
               "type": "String"}, {"description": "/tmp/results.txt", "name": "multiple_underscore_test",
               "type": "String"}], "version": "download-file@sha256=758a0892de30eabcd52f0022105ff8d9cec7d8c456b3f05668f25c19b399b9c4"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: echo
       params:
@@ -96,7 +96,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
               [], "version": "echo@sha256=441c647e86107abf53108718d190a2c25c8285e42c62289e3b049dbc2a0425af"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

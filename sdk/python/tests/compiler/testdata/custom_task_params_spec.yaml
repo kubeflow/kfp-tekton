@@ -24,6 +24,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "Foo", "name":
       "foo", "optional": true, "type": "String"}, {"default": "buzz", "name": "bar",
@@ -73,7 +74,6 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             valid_container: "false"
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

@@ -29,6 +29,7 @@ metadata:
     tekton.dev/artifact_items: '{"echo": [], "gcs-download": [["data", "$(results.data.path)"]],
       "gcs-download-2": [["data", "$(results.data.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Download two messages
       in parallel and prints the concatenated result and use Argo variables.", "inputs":
@@ -79,7 +80,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
               "outputs": [{"name": "data", "type": "String"}], "version": "gcs-download@sha256=511cfab40b31f87d8013514f1aee58997608048664cd54fa424e5167bcfcf97c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: gcs-download-2
       params:
@@ -109,7 +109,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
               "outputs": [{"name": "data", "type": "String"}], "version": "gcs-download@sha256=511cfab40b31f87d8013514f1aee58997608048664cd54fa424e5167bcfcf97c"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - name: echo
       params:
@@ -147,7 +146,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
               [], "version": "echo@sha256=8f8d23eb8a5175f0212ebf18b3f24dcd26effafb1ed421d18d897ccfdb14dcc0"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 1051200m

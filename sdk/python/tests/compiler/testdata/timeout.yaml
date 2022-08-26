@@ -24,6 +24,7 @@ metadata:
     tekton.dev/artifact_endpoint_scheme: http://
     tekton.dev/artifact_items: '{"random-failure": [], "random-failure-2": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use ContainerOp
       set_timeout().", "name": "pipeline-includes-two-steps-which-fail-randomly"}'
@@ -51,7 +52,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
               "outputs": [], "version": "random-failure@sha256=7a3950e9d0afce355b325b09e2cd5710feb99e6233a330af889d80515c4aaac2"}'
-            tekton.dev/template: ''
       timeout: 20s
     - name: random-failure-2
       taskSpec:
@@ -71,7 +71,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
               "outputs": [], "version": "random-failure@sha256=7a3950e9d0afce355b325b09e2cd5710feb99e6233a330af889d80515c4aaac2"}'
-            tekton.dev/template: ''
       timeout: 525600m
   timeouts:
     pipeline: 301s

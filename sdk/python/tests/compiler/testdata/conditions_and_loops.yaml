@@ -31,6 +31,7 @@ metadata:
       "notify-failure": [], "notify-success": [], "print-number": [["Output", "$(results.Output.path)"]],
       "produce-numbers": [["Output", "$(results.Output.path)"]]}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "3", "name": "n",
       "optional": true, "type": "Integer"}, {"default": "20", "name": "threshold",
@@ -130,7 +131,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce numbers",
               "outputs": [{"name": "Output", "type": "JsonArray"}], "version": "Produce
               numbers@sha256=34359d28ebb62227d7f51440c862c7ed2929e91beeabe1e78c8687ccba38265e"}'
-            tekton.dev/template: ''
       timeout: 525600m
     - runAfter:
       - produce-numbers
@@ -225,7 +225,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Add numbers",
                       "outputs": [{"name": "Output", "type": "Integer"}], "version":
                       "Add numbers@sha256=4a4bea3d4b7966f0ce3cdef5ad4d997a283ef6a895959791e037cf391732bb04"}'
-                    tekton.dev/template: ''
               timeout: 525600m
             - name: print-number
               params:
@@ -298,7 +297,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Print
                       number", "outputs": [{"name": "Output", "type": "Integer"}],
                       "version": "Print number@sha256=7ad81f52d1b478fd168c0234b16a496672bdfc43da71a71fcdc5d688791f04cf"}'
-                    tekton.dev/template: ''
               timeout: 525600m
             - name: notify-success
               taskSpec:
@@ -327,7 +325,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Notify
                       success", "outputs": [], "version": "Notify success@sha256=b32dbdd3dc06d69ac8358045345f65fc0610ccdf6e9927c447deb4634016028a"}'
-                    tekton.dev/template: ''
               when:
               - input: $(tasks.condition-2.results.outcome)
                 operator: in
@@ -361,7 +358,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Notify
                       failure", "outputs": [], "version": "Notify failure@sha256=fa2f0190a19f2fa88c34a3805a4517a3f5d697e30491bec02fb3cf9504d909d7"}'
-                    tekton.dev/template: ''
               when:
               - input: $(tasks.condition-3.results.outcome)
                 operator: in
