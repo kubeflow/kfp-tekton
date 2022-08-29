@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"time"
@@ -47,12 +46,16 @@ func WatchPods(ctx context.Context, namespaceToWatch string, clientManager Clien
 		}
 
 		for event := range watcher.ResultChan() {
-			pod := reflect.ValueOf(event.Object).Interface().(*corev1.Pod)
+			pod, ok := reflect.ValueOf(event.Object).Interface().(*corev1.Pod)
+			if !ok {
+				logger.Warnf("Not processing WatchPods as event Object is not a Pod, event type: %s", event.Type)
+				continue
+			}
+
 			if event.Type == watch.Error {
 				logger.Errorf("Watcher error in loop: %v", event.Type)
 				continue
 			}
-			log.Printf((*pod).GetName())
 
 			if !isPodCompletedAndSucceeded(pod) {
 				logger.Warnf("Pod %s is not completed or not in successful status, skip the loop.", pod.ObjectMeta.Name)
