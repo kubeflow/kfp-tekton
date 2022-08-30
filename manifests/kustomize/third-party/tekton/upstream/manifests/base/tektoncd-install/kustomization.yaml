@@ -4,6 +4,7 @@ resources:
 - tekton-release.yaml
 patchesStrategicMerge:
 - tekton-config.yaml
+- tekton-default.yaml
 images:
 - name: $(registry)/$(controller)
   newName: $(registry)/$(controller)

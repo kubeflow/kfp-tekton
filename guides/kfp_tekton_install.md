@@ -51,6 +51,8 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
    ```shell
    kubectl patch cm feature-flags -n tekton-pipelines \
          -p '{"data":{"enable-custom-tasks": "true"}}'
+   kubectl patch cm config-defaults -n tekton-pipelines \
+         -p '{"data":{"default-timeout-minutes": "0"}}'
    ```
 
 3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.3.1` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
