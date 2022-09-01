@@ -16,9 +16,14 @@ package client
 
 import (
 	"context"
+	"encoding/json"
+	"flag"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/kubeflow/pipelines/backend/src/common/util"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	wfapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	wfclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	"github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
@@ -26,6 +31,39 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/cache"
 )
+
+type runKinds []string
+
+var (
+	// A list of Kinds that contains childReferences
+	// those childReferences would be scaned and retrieve their taskrun/run status
+	childReferencesKinds runKinds
+)
+
+const (
+	childReferencesKindFlagName = "childReferencesKinds"
+)
+
+func (rk *runKinds) String() string {
+	return fmt.Sprint(*rk)
+}
+
+func (rk *runKinds) Set(value string) error {
+	if len(*rk) > 0 {
+		return fmt.Errorf("%s has been set", childReferencesKindFlagName)
+	}
+
+	for _, k := range strings.Split(value, ",") {
+		*rk = append(*rk, k)
+	}
+	sort.Strings(*rk)
+
+	return nil
+}
+
+func init() {
+	flag.Var(&childReferencesKinds, childReferencesKindFlagName, "A list of kinds to search for the nested childReferences")
+}
 
 type WorkflowClientInterface interface {
 	Get(namespace string, name string) (wf *util.Workflow, err error)
@@ -71,9 +109,20 @@ func (c *WorkflowClient) Get(namespace string, name string) (
 		return nil, util.NewCustomError(err, code,
 			"Error retrieving workflow (%v) in namespace (%v): %v", name, namespace, err)
 	}
-	if workflow.Status.ChildReferences != nil {
+	if err := c.getStatusFromChildReferences(namespace,
+		fmt.Sprintf("%s=%s", util.LabelKeyWorkflowRunId, workflow.Labels[util.LabelKeyWorkflowRunId]),
+		&workflow.Status); err != nil {
+
+		return nil, err
+	}
+
+	return util.NewWorkflow(workflow), nil
+}
+
+func (c *WorkflowClient) getStatusFromChildReferences(namespace, selector string, status *wfapi.PipelineRunStatus) error {
+	if status.ChildReferences != nil {
 		hasTaskRun, hasRun := false, false
-		for _, child := range workflow.Status.ChildReferences {
+		for _, child := range status.ChildReferences {
 			switch child.Kind {
 			case "TaskRun":
 				hasTaskRun = true
@@ -87,10 +136,10 @@ func (c *WorkflowClient) Get(namespace string, name string) (
 		if hasTaskRun {
 			// fetch taskrun status and insert into Status.TaskRuns
 			taskruns, err := c.clientset.TektonV1beta1().TaskRuns(namespace).List(context.Background(), v1.ListOptions{
-				LabelSelector: fmt.Sprintf("%s=%s", util.LabelKeyWorkflowRunId, workflow.Labels[util.LabelKeyWorkflowRunId]),
+				LabelSelector: selector,
 			})
 			if err != nil {
-				return nil, util.NewInternalServerError(err, "can't fetch taskruns")
+				return util.NewInternalServerError(err, "can't fetch taskruns")
 			}
 
 			taskrunStatuses := make(map[string]*wfapi.PipelineRunTaskRunStatus, len(taskruns.Items))
@@ -100,25 +149,127 @@ func (c *WorkflowClient) Get(namespace string, name string) (
 					Status:           taskrun.Status.DeepCopy(),
 				}
 			}
-			workflow.Status.TaskRuns = taskrunStatuses
+			status.TaskRuns = taskrunStatuses
 		}
 		if hasRun {
 			runs, err := c.clientset.TektonV1alpha1().Runs(namespace).List(context.Background(), v1.ListOptions{
-				LabelSelector: fmt.Sprintf("%s=%s", util.LabelKeyWorkflowRunId, workflow.Labels[util.LabelKeyWorkflowRunId]),
+				LabelSelector: selector,
 			})
 			if err != nil {
-				return nil, util.NewInternalServerError(err, "can't fetch runs")
+				return util.NewInternalServerError(err, "can't fetch runs")
 			}
 			runStatuses := make(map[string]*wfapi.PipelineRunRunStatus, len(runs.Items))
 			for _, run := range runs.Items {
+				runStatus := run.Status.DeepCopy()
 				runStatuses[run.Name] = &wfapi.PipelineRunRunStatus{
 					PipelineTaskName: run.Labels["tekton.dev/pipelineTask"],
-					Status:           run.Status.DeepCopy(),
+					Status:           runStatus,
 				}
+				// handle nested status
+				c.handleNestedStatus(&run, runStatus, namespace)
 			}
-			workflow.Status.Runs = runStatuses
+			status.Runs = runStatuses
 		}
 	}
+	return nil
+}
 
-	return util.NewWorkflow(workflow), nil
+// handle nested status case for specific types of Run
+func (c *WorkflowClient) handleNestedStatus(run *v1alpha1.Run, runStatus *v1alpha1.RunStatus, namespace string) {
+	if sort.SearchStrings(childReferencesKinds, run.Spec.Spec.Kind) < len(childReferencesKinds) {
+		// need to lookup the nested status
+		obj := make(map[string]interface{})
+		if err := json.Unmarshal(runStatus.ExtraFields.Raw, &obj); err != nil {
+			return
+		}
+		if c.updateExtraFields(obj, namespace) {
+			if newStatus, err := json.Marshal(obj); err == nil {
+				runStatus.ExtraFields.Raw = newStatus
+			}
+		}
+	}
+}
+
+// check ExtraFields and update nested status if needed
+func (c *WorkflowClient) updateExtraFields(obj map[string]interface{}, namespace string) bool {
+	updated := false
+	val, ok := obj["pipelineRuns"]
+	if !ok {
+		return false
+	}
+	prs, ok := val.(map[string]interface{})
+	if !ok {
+		return false
+	}
+	// go through the list of pipelineRuns
+	for _, val := range prs {
+		probj, ok := val.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		val, ok := probj["status"]
+		if !ok {
+			continue
+		}
+		statusobj, ok := val.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		childRef, ok := statusobj["childReferences"]
+		if !ok {
+			continue
+		}
+		if children, ok := childRef.([]interface{}); ok {
+			for _, childObj := range children {
+				if child, ok := childObj.(map[string]interface{}); ok {
+					kindI, ok := child["kind"]
+					if !ok {
+						continue
+					}
+					nameI, ok := child["name"]
+					if !ok {
+						continue
+					}
+					kind := fmt.Sprintf("%v", kindI)
+					name := fmt.Sprintf("%v", nameI)
+					if kind == "TaskRun" {
+						if taskrunCR, err := c.clientset.TektonV1beta1().TaskRuns(namespace).Get(context.Background(), name, v1.GetOptions{}); err == nil {
+							taskruns, ok := statusobj["taskRuns"]
+							if !ok {
+								taskruns = make(map[string]*wfapi.PipelineRunTaskRunStatus)
+							}
+							if taskrunStatus, ok := taskruns.(map[string]*wfapi.PipelineRunTaskRunStatus); ok {
+								taskrunStatus[name] = &wfapi.PipelineRunTaskRunStatus{
+									PipelineTaskName: taskrunCR.Labels["tekton.dev/pipelineTask"],
+									Status:           taskrunCR.Status.DeepCopy(),
+								}
+								statusobj["taskRuns"] = taskrunStatus
+								updated = true
+							}
+						}
+					} else if kind == "Run" {
+						if runCR, err := c.clientset.TektonV1alpha1().Runs(namespace).Get(context.Background(), name, v1.GetOptions{}); err == nil {
+							runs, ok := statusobj["runs"]
+							if !ok {
+								runs = make(map[string]*wfapi.PipelineRunRunStatus)
+							}
+							if runStatus, ok := runs.(map[string]*wfapi.PipelineRunRunStatus); ok {
+								runStatusStatus := runCR.Status.DeepCopy()
+								runStatus[name] = &wfapi.PipelineRunRunStatus{
+									PipelineTaskName: runCR.Labels["tekton.dev/pipelineTask"],
+									Status:           runStatusStatus,
+								}
+								statusobj["runs"] = runStatus
+								// handle nested status recursively
+								c.handleNestedStatus(runCR, runStatusStatus, namespace)
+								updated = true
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+	return updated
 }

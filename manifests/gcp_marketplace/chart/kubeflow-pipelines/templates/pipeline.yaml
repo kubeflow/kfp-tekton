@@ -553,6 +553,8 @@ spec:
               value: {{ .Release.Namespace }}
             - name: TTL_SECONDS_AFTER_WORKFLOW_FINISH
               value: "86400"
+            - name: CHILDREFERENCES_KINDS
+              value: "PipelineLoop"
           image: {{ .Values.images.persistenceagent }}
           imagePullPolicy: IfNotPresent
           name: ml-pipeline-persistenceagent
