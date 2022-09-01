@@ -48,4 +48,7 @@ ENV TTL_SECONDS_AFTER_WORKFLOW_FINISH 86400
 # NUM_WORKERS indicates now many worker goroutines
 ENV NUM_WORKERS 2
 
-CMD persistence_agent --logtostderr=true --namespace=${NAMESPACE} --ttlSecondsAfterWorkflowFinish=${TTL_SECONDS_AFTER_WORKFLOW_FINISH} --numWorker ${NUM_WORKERS}
+#CHILDREFERENCESKIND kind of runs to search for the childReferences
+ENV CHILDREFERENCES_KINDS ""
+
+CMD persistence_agent --logtostderr=true --namespace=${NAMESPACE} --ttlSecondsAfterWorkflowFinish=${TTL_SECONDS_AFTER_WORKFLOW_FINISH} --numWorker ${NUM_WORKERS} --childReferencesKinds ${CHILDREFERENCES_KINDS}

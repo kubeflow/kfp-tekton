@@ -17,7 +17,10 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
@@ -28,6 +31,39 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/cache"
 )
+
+type runKinds []string
+
+var (
+	// A list of Kinds that contains childReferences
+	// those childReferences would be scaned and retrieve their taskrun/run status
+	childReferencesKinds runKinds
+)
+
+const (
+	childReferencesKindFlagName = "childReferencesKinds"
+)
+
+func (rk *runKinds) String() string {
+	return fmt.Sprint(*rk)
+}
+
+func (rk *runKinds) Set(value string) error {
+	if len(*rk) > 0 {
+		return fmt.Errorf("%s has been set", childReferencesKindFlagName)
+	}
+
+	for _, k := range strings.Split(value, ",") {
+		*rk = append(*rk, k)
+	}
+	sort.Strings(*rk)
+
+	return nil
+}
+
+func init() {
+	flag.Var(&childReferencesKinds, childReferencesKindFlagName, "A list of kinds to search for the nested childReferences")
+}
 
 type WorkflowClientInterface interface {
 	Get(namespace string, name string) (wf *util.Workflow, err error)
@@ -140,7 +176,7 @@ func (c *WorkflowClient) getStatusFromChildReferences(namespace, selector string
 
 // handle nested status case for specific types of Run
 func (c *WorkflowClient) handleNestedStatus(run *v1alpha1.Run, runStatus *v1alpha1.RunStatus, namespace string) {
-	if run.Spec.Spec.Kind == "PipelineLoop" {
+	if sort.SearchStrings(childReferencesKinds, run.Spec.Spec.Kind) < len(childReferencesKinds) {
 		// need to lookup the nested status
 		obj := make(map[string]interface{})
 		if err := json.Unmarshal(runStatus.ExtraFields.Raw, &obj); err != nil {
