@@ -59,7 +59,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop0",
               "outputs": [{"name": "out", "type": "String"}], "version": "my-out-cop0@sha256=5e11d51d337651bf7bfff083ab2d970f4797e3d281abb395ec3f8200841d8ad8"}'
-      timeout: 525600m
     - name: my-out-cop2
       params:
       - name: my-out-cop0-out
@@ -84,7 +83,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop2",
               "outputs": [], "version": "my-out-cop2@sha256=12b6747bf40c6d422bf91475437e40331e1809caa920e7012bc09c5fb81be91d"}'
-      timeout: 525600m
     - runAfter:
       - my-out-cop0
       name: withparam-output-dict-for-loop-1
@@ -125,11 +123,7 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-cop1",
                       "outputs": [], "version": "my-in-cop1@sha256=baa1db1377a71388e9f7b0054485105678c0911a3e478a5a2873bca4a7e13ab5"}'
-              timeout: 525600m
           iterateParam: my-out-cop0-out-loop-item
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

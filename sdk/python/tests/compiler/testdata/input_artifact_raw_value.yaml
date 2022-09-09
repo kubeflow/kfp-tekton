@@ -69,7 +69,6 @@ spec:
         volumes:
         - name: text
           emptyDir: {}
-      timeout: 525600m
     - name: component-with-input-artifact
       taskSpec:
         steps:
@@ -103,7 +102,6 @@ spec:
         volumes:
         - name: text
           emptyDir: {}
-      timeout: 525600m
     - name: component-with-input-artifact-2
       taskSpec:
         steps:
@@ -137,7 +135,6 @@ spec:
         volumes:
         - name: text
           emptyDir: {}
-      timeout: 525600m
     - name: component-with-input-artifact-3
       taskSpec:
         steps:
@@ -172,7 +169,3 @@ spec:
         volumes:
         - name: text
           emptyDir: {}
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

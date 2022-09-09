@@ -100,7 +100,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "False", "outputs":
               [{"name": "Output", "type": "String"}], "version": "False@sha256=ab6d70d69626be9a388e3d6d92c4eae87095dc005400a41e6613f4b855c694f6"}'
-      timeout: 525600m
     - name: my-in-coop1
       params:
       - name: param
@@ -131,7 +130,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: my-in-coop1-2
       params:
       - name: param
@@ -159,7 +157,6 @@ spec:
               "outputs": [], "version": "my-in-coop1@sha256=8ccab3a28a39a406554d964865f2ccb0aed854a43b6de827f613eff2bccd6f8f"}'
       runAfter:
       - my-in-coop1-3
-      timeout: 525600m
       when:
       - input: $(tasks.condition-1.results.outcome)
         operator: in
@@ -192,7 +189,6 @@ spec:
               "outputs": [], "version": "my-in-coop1@sha256=8ccab3a28a39a406554d964865f2ccb0aed854a43b6de827f613eff2bccd6f8f"}'
       runAfter:
       - my-in-coop1
-      timeout: 525600m
       when:
       - input: $(tasks.condition-1.results.outcome)
         operator: in
@@ -239,6 +235,3 @@ spec:
           - $(inputs.params.operand1)
           - $(inputs.params.operand2)
           image: python:alpine3.6
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

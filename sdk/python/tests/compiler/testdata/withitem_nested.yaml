@@ -65,7 +65,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop",
               "outputs": [], "version": "my-out-cop@sha256=942fd3ea38163121c38a9536c2d67d9762e5bdf825ffe6c62e963a15d44a6173"}'
-      timeout: 525600m
     - name: my-pipeline-for-loop-2
       params:
       - name: loop-item-param-1
@@ -113,7 +112,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
                       "outputs": [], "version": "my-in-coop1@sha256=42f0c6a60c7e435441b8afaeb382a771a9741fe3aabb203748fdbd72b25f1628"}'
-              timeout: 525600m
             - name: my-in-coop2
               params:
               - name: loop-item-param-1
@@ -139,7 +137,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop2",
                       "outputs": [], "version": "my-in-coop2@sha256=6984788637aec7d6eb2453d5f2bfb249047e634e5959b7ec9813371238742dfe"}'
-              timeout: 525600m
             - name: my-pipeline-for-loop-4
               params:
               - name: loop-item-param-1
@@ -196,7 +193,6 @@ spec:
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "my-inner-inner-coop", "outputs": [], "version": "my-inner-inner-coop@sha256=4764fa47e98613a0f6b2067c594991720452accccaf5924136b0cffdde2814aa"}'
-                      timeout: 525600m
                   iterateParam: loop-item-param-3
                 metadata:
                   labels:
@@ -205,6 +201,3 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

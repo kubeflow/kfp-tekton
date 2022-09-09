@@ -58,7 +58,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "cache-enabled",
               "outputs": [{"name": "out", "type": "String"}], "version": "cache-enabled@sha256=1922553b6419ee8f9e21a5cb174b86520f912014370528495bc1955d5db2bcaa"}'
-      timeout: 525600m
     - name: cache-disabled
       taskSpec:
         steps:
@@ -79,7 +78,3 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "cache-disabled",
               "outputs": [{"name": "out", "type": "String"}], "version": "cache-disabled@sha256=c6b73e13a48ba7dfacb66ebd9987eda874087ace7615130da8180b2b46dd53c9"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

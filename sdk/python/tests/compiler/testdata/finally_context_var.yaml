@@ -70,7 +70,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-00", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "print-00@sha256=7c633686b0b637cfba6cba8c9b4e871cf172395432360d6aaa2d89623fb336b3"}'
-      timeout: 525600m
     - name: print-01
       taskSpec:
         steps:
@@ -95,7 +94,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-01", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "print-01@sha256=d511ac628d43cc5b393fbebd10be93662b30117f1413b84afd4e7b2e5ff5ed33"}'
-      timeout: 525600m
     - name: none
       taskSpec:
         steps:
@@ -139,7 +137,6 @@ spec:
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace
-      timeout: 525600m
       params:
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)
@@ -178,7 +175,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-10",
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print-10@sha256=ea7fa8edfd92cf64a15f8464292143a4e0d5f34898368bfd63618884decf3be1"}'
-              timeout: 525600m
             - name: print-11
               taskSpec:
                 steps:
@@ -203,7 +199,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-11",
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print-11@sha256=3b423bb0ced0bc21fb9157ce814a38c94d3e72718a33cfa8b4ef4f75abe725bd"}'
-              timeout: 525600m
             - name: none-2
               taskSpec:
                 steps:
@@ -249,7 +244,6 @@ spec:
                   type: string
                 - name: pipelineRun-namespace
                   type: string
-              timeout: 525600m
               params:
               - name: pipelineRun-name
                 value: $(context.pipelineRun.name)
@@ -258,6 +252,3 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "false"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

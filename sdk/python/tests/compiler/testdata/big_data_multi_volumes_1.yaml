@@ -68,7 +68,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-sm", "outputs":
               [{"description": "Represents an output parameter.", "name": "output_value",
               "type": "String"}], "version": "print-sm@sha256=e88f5ee1607e92e4cf859907b2f81bdc766fc69cff62010f2f93d4c850a4d429"}'
-      timeout: 525600m
     - name: print-big
       taskSpec:
         steps:
@@ -114,7 +113,3 @@ spec:
           volumeMounts:
           - name: input-text
             mountPath: /tmp/inputs/input_text
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

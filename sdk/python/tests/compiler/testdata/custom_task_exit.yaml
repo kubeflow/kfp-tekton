@@ -58,7 +58,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766"}'
-      timeout: 525600m
     finally:
     - name: test-pipeline-addon-group-1
       params:
@@ -90,7 +89,6 @@ spec:
                     valid_container: "false"
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "cel",
                       "outputs": [{"name": "cel-output"}], "version": "cel@sha256=0178923386cf89d2b7f7bae1037d14efe9e2f5898d55c27420c97a81795e5a59"}'
-              timeout: 525600m
           podTemplate:
             imagePullSecrets:
             - name: ai-lifecycle
@@ -100,6 +98,3 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "false"
           annotations:
             ws-pipelines.ibm.com/pipeline-cache-enabled: "false"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

@@ -72,7 +72,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "download", "outputs":
               [{"name": "downloaded", "type": "String"}], "version": "download@sha256=501c920d740f16da6ee2e69cdf76de2665a19fd1ba4fe9c6645a56aba039aa86"}'
-      timeout: 525600m
     - name: echo
       params:
       - name: download-downloaded
@@ -97,7 +96,3 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
               [], "version": "echo@sha256=e4d2d039a6fa16abbbb38f76c7b1232f6bf154f7992cf8b4f80a793d743ca29f"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

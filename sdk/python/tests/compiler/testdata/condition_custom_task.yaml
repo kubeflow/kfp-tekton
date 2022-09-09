@@ -67,7 +67,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "Integer"}], "version": "flip-coin@sha256=c50cf8172daa1f1f66c846c995973e58fba370e296d153decb448cfbc75da068"}'
-      timeout: 525600m
     - name: condition-cel
       params:
       - name: outcome
@@ -76,7 +75,6 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-      timeout: 525600m
     - name: generate-random-number
       taskSpec:
         steps:
@@ -105,7 +103,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: condition-cel-2
       params:
       - name: outcome
@@ -119,7 +116,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: print
       params:
       - name: generate-random-number-output
@@ -144,7 +140,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: print-2
       params:
       - name: generate-random-number-output
@@ -169,7 +164,6 @@ spec:
         operator: notin
         values:
         - "true"
-      timeout: 525600m
     - name: generate-random-number-2
       taskSpec:
         steps:
@@ -198,7 +192,6 @@ spec:
         operator: notin
         values:
         - "true"
-      timeout: 525600m
     - name: condition-cel-3
       params:
       - name: outcome
@@ -212,7 +205,6 @@ spec:
         operator: notin
         values:
         - "true"
-      timeout: 525600m
     - name: print-3
       params:
       - name: generate-random-number-2-output
@@ -237,7 +229,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: print-4
       params:
       - name: generate-random-number-2-output
@@ -262,7 +253,3 @@ spec:
         operator: notin
         values:
         - "true"
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

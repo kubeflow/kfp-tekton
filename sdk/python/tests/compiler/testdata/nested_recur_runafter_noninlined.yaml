@@ -47,23 +47,22 @@ metadata:
       "{\"name\": \"print\", \"outputs\": [], \"version\": \"print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "flip-coin-output", "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.flip-coin-output)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m"}, {"name": "flip-coin-3",
-      "runAfter": ["print-2"], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "image": "alpine:3.6", "name": "main"}]}}, {"name": "flip-coin-3", "runAfter":
+      ["print-2"], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"flip-coin\", \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}],
       \"version\": \"flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "results": [{"description":
       "/tmp/outputs/output/data", "name": "output", "type": "string"}], "steps": [{"args":
       ["python -c \"import random; result = ''heads'' if random.randint(0,1) == 0           else
       ''tails''; print(result)\" | tee $0\n", "$(results.output.path)"], "command":
-      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout": "525600m",
-      "when": [{"input": "$(tasks.condition-4.results.outcome)", "operator": "in",
-      "values": ["true"]}]}, {"name": "condition-4", "params": [{"name": "operand1",
-      "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "tails"},
-      {"name": "operator", "value": "=="}], "runAfter": [], "taskSpec": {"params":
-      [{"name": "operand1", "type": "string"}, {"name": "operand2", "type": "string"},
-      {"name": "operator", "type": "string"}], "results": [{"description": "Conditional
-      task outcome", "name": "outcome", "type": "string"}], "steps": [{"args": ["import
-      sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
+      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "when": [{"input":
+      "$(tasks.condition-4.results.outcome)", "operator": "in", "values": ["true"]}]},
+      {"name": "condition-4", "params": [{"name": "operand1", "value": "$(params.flip-coin-output)"},
+      {"name": "operand2", "value": "tails"}, {"name": "operator", "value": "=="}],
+      "runAfter": [], "taskSpec": {"params": [{"name": "operand1", "type": "string"},
+      {"name": "operand2", "type": "string"}, {"name": "operator", "type": "string"}],
+      "results": [{"description": "Conditional task outcome", "name": "outcome", "type":
+      "string"}], "steps": [{"args": ["import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
       \"w\")\nf.write(outcome)\nf.close()\n", "$(inputs.params.operand1)", "$(inputs.params.operand2)"],
       "command": ["sh", "-ec", "program_path=$(mktemp); printf \"%s\" \"$0\" > \"$program_path\";  python3
@@ -88,23 +87,23 @@ metadata:
       \"print\", \"outputs\": [], \"version\": \"print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "flip-coin-output", "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.flip-coin-output)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m", "when": [{"input":
-      "$(tasks.condition-3.results.outcome)", "operator": "in", "values": ["true"]}]},
-      {"name": "flip-coin-2", "runAfter": ["print"], "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"flip-coin\",
-      \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}], \"version\": \"flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d\"}"},
+      "image": "alpine:3.6", "name": "main"}]}, "when": [{"input": "$(tasks.condition-3.results.outcome)",
+      "operator": "in", "values": ["true"]}]}, {"name": "flip-coin-2", "runAfter":
+      ["print"], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"flip-coin\", \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}],
+      \"version\": \"flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "results": [{"description":
       "/tmp/outputs/output/data", "name": "output", "type": "string"}], "steps": [{"args":
       ["python -c \"import random; result = ''heads'' if random.randint(0,1) == 0           else
       ''tails''; print(result)\" | tee $0\n", "$(results.output.path)"], "command":
-      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout": "525600m",
-      "when": [{"input": "$(tasks.condition-3.results.outcome)", "operator": "in",
-      "values": ["true"]}]}, {"name": "condition-3", "params": [{"name": "operand1",
-      "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "heads"},
-      {"name": "operator", "value": "=="}], "taskSpec": {"params": [{"name": "operand1",
-      "type": "string"}, {"name": "operand2", "type": "string"}, {"name": "operator",
-      "type": "string"}], "results": [{"description": "Conditional task outcome",
-      "name": "outcome", "type": "string"}], "steps": [{"args": ["import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
+      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "when": [{"input":
+      "$(tasks.condition-3.results.outcome)", "operator": "in", "values": ["true"]}]},
+      {"name": "condition-3", "params": [{"name": "operand1", "value": "$(params.flip-coin-output)"},
+      {"name": "operand2", "value": "heads"}, {"name": "operator", "value": "=="}],
+      "taskSpec": {"params": [{"name": "operand1", "type": "string"}, {"name": "operand2",
+      "type": "string"}, {"name": "operator", "type": "string"}], "results": [{"description":
+      "Conditional task outcome", "name": "outcome", "type": "string"}], "steps":
+      [{"args": ["import sys\ninput1=str.rstrip(sys.argv[1])\ninput2=str.rstrip(sys.argv[2])\ntry:\n  input1=int(input1)\n  input2=int(input2)\nexcept:\n  input1=str(input1)\noutcome=\"true\"
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
       \"w\")\nf.write(outcome)\nf.close()\n", "$(inputs.params.operand1)", "$(inputs.params.operand2)"],
       "command": ["sh", "-ec", "program_path=$(mktemp); printf \"%s\" \"$0\" > \"$program_path\";  python3
@@ -149,7 +148,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d"}'
-      timeout: 525600m
     - name: print-3
       params:
       - name: flip-coin-output
@@ -171,7 +169,6 @@ spec:
               [], "version": "print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d"}'
       runAfter:
       - nested-recursion-pipeline-flip-component-1
-      timeout: 525600m
     - runAfter:
       - flip-coin
       name: nested-recursion-pipeline-flip-component-1
@@ -187,6 +184,3 @@ spec:
         - '1'
       - name: maxVal
         value: $(params.maxVal)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

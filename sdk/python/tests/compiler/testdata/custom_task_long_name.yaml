@@ -79,7 +79,6 @@ spec:
               - DownloadGCS - DownloadGCS - Download", "outputs": [{"name": "Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123",
               "type": "String"}], "version": "GCS - DownloadGCS - DownloadGCS - DownloadGCS
               - Download@sha256=bfb91851dd0cee49ec01b7c3c9653f50cf79de46288a7d1faa8bd1dc6d723209"}'
-      timeout: 525600m
     - name: printprintprintprintprintprintprintprintprintprint
       params:
       - name: gcs-downloadgcs-downloadgcs-downloadgcs-download-Data-_123Data-_123Data-_123Data-_123Data-_123Data-_123Dat
@@ -99,7 +98,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "printprintprintprintprintprintprintprintprintprint",
               "outputs": [], "version": "printprintprintprintprintprintprintprintprintprint@sha256=0c820da4b0f6e1a730ec47930324fc44ffbc0be62e903fdbcc91dc36ab9580ef"}'
-      timeout: 525600m
     - name: condition-cel
       params:
       - name: outcome
@@ -109,7 +107,3 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

@@ -41,7 +41,7 @@ metadata:
       "loop-item-param-2", "type": "string"}, {"name": "my_pipe_param", "type": "string"}],
       "steps": [{"args": ["set -e\necho op1 \"$0\" \"$1\"\n", "$(inputs.params.loop-item-param-2)",
       "$(inputs.params.my_pipe_param)"], "command": ["sh", "-c"], "image": "library/bash:4.4.23",
-      "name": "main"}]}, "timeout": "525600m"}]}}}]'
+      "name": "main"}]}}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
     pipelines.kubeflow.org/generation: ''
@@ -66,6 +66,3 @@ spec:
         value: ','
       - name: my_pipe_param
         value: $(params.my_pipe_param)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

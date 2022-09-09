@@ -58,7 +58,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list",
               "outputs": [{"name": "data_list", "type": "List"}], "version": "Produce
               list@sha256=3d80b314916a06826def6fa78eab66cd69199497d7d92a8d199bd5d906706abe"}'
-      timeout: 525600m
     - runAfter:
       - produce-list
       name: loop-over-lightweight-output-for-loop-1
@@ -94,11 +93,7 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume
                       data", "outputs": [], "version": "Consume data@sha256=53c639462e2cf5f30518ba8b2d41564c1071e3473c7cffc13dc8b589dfc219bc"}'
-              timeout: 525600m
           iterateParam: produce-list-data_list-loop-item
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

@@ -47,7 +47,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-1
       params:
       - name: foo
@@ -56,7 +55,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-10
       params:
       - name: foo
@@ -67,7 +65,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-11
       params:
       - name: foo
@@ -78,7 +75,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-20
       params:
       - name: bar
@@ -87,7 +83,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-21
       params:
       - name: bar
@@ -98,7 +93,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-30
       params:
       - name: foo
@@ -107,7 +101,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-31
       params:
       - name: foo
@@ -116,7 +109,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-32
       params:
       - name: foo
@@ -127,7 +119,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-33
       params:
       - name: foo
@@ -138,7 +129,3 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

@@ -124,15 +124,11 @@ spec:
               "String"}], "version": "gcs-download@sha256=e61aa54d889d66b15db1bd0a8959fda75d5aa799e468d8985610af4958612dfe"}'
         workspaces:
         - name: gcs-download
-      timeout: 525600m
       workspaces:
       - name: gcs-download
         workspace: artifact-out-pipeline
     workspaces:
     - name: artifact-out-pipeline
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m
   workspaces:
   - name: artifact-out-pipeline
     volumeClaimTemplate:
