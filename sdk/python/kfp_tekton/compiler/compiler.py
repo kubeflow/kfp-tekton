@@ -51,7 +51,6 @@ from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPU
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
-TEKTON_GLOBAL_DEFAULT_TIMEOUT = strtobool(env.get('TEKTON_GLOBAL_DEFAULT_TIMEOUT', 'false'))
 # DISABLE_CEL_CONDITION should be True until CEL is officially merged into Tekton main API.
 DISABLE_CEL_CONDITION = True
 # Default finally extension is 5 minutes
@@ -1387,11 +1386,10 @@ class TektonCompiler(Compiler):
       pipeline_run['spec']['taskRunSpecs'] = task_run_spec
 
     # add workflow level timeout to pipeline run
-    if not TEKTON_GLOBAL_DEFAULT_TIMEOUT or pipeline.conf.timeout:
-      if pipeline.conf.timeout > 0:
-        pipeline_run['spec']['timeouts'] = {'pipeline': '0s', 'tasks': '0s'}
-        pipeline_run['spec']['timeouts']['tasks'] = '%ds' % pipeline.conf.timeout
-        pipeline_run['spec']['timeouts']['pipeline'] = '%ds' % (pipeline.conf.timeout + DEFAULT_FINALLY_SECONDS)
+    if pipeline.conf.timeout and pipeline.conf.timeout > 0:
+      pipeline_run['spec']['timeouts'] = {'pipeline': '0s', 'tasks': '0s'}
+      pipeline_run['spec']['timeouts']['tasks'] = '%ds' % pipeline.conf.timeout
+      pipeline_run['spec']['timeouts']['pipeline'] = '%ds' % (pipeline.conf.timeout + DEFAULT_FINALLY_SECONDS)
     # generate the Tekton podTemplate for image pull secret
     if len(pipeline.conf.image_pull_secrets) > 0:
       pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
