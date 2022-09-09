@@ -23,7 +23,6 @@ import uuid
 import zipfile
 import copy
 from collections import defaultdict
-from distutils.util import strtobool
 import collections
 from os import environ as env
 from typing import Callable, List, Text, Dict, Any
