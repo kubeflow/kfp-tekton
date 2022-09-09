@@ -62,7 +62,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output_result", "type": "String"}], "version": "flip-coin@sha256=742164cb310e6ee3f29ee5491bdded83811f56531a8d045bb6052aac51f035fc"}'
-      timeout: 525600m
     - name: flip-coin-2
       taskSpec:
         steps:
@@ -85,7 +84,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output_result", "type": "String"}], "version": "flip-coin@sha256=742164cb310e6ee3f29ee5491bdded83811f56531a8d045bb6052aac51f035fc"}'
-      timeout: 525600m
     - name: condition-cel
       params:
       - name: outcome
@@ -94,7 +92,6 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-      timeout: 525600m
     - name: print
       params:
       - name: condition-cel-outcome
@@ -114,7 +111,3 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [], "version": "print@sha256=e5d74bd54bd5aaa77f1c40ad6346cae3fefcc749bea2f6d1561c09ca1f0fe867"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

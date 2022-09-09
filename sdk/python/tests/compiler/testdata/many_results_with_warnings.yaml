@@ -170,7 +170,3 @@ spec:
               "outputs": [{"name": "param1", "type": "String"}, {"name": "param2",
               "type": "String"}, {"name": "param3", "type": "String"}, {"name": "superlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongnamesuperlongname",
               "type": "String"}], "version": "Print4results@sha256=2abb522200107ab144eafa6107bb8fde6c10e446a9bdc2a7f4d3a50df6e8a0d2"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

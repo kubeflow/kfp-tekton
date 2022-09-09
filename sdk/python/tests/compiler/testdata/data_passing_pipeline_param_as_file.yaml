@@ -101,7 +101,6 @@ spec:
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
         workspaces:
         - name: consume-anything-as-file
-      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file
         workspace: data-passing-pipeline
@@ -153,7 +152,6 @@ spec:
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
         workspaces:
         - name: consume-anything-as-file-2
-      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-2
         workspace: data-passing-pipeline
@@ -205,7 +203,6 @@ spec:
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
         workspaces:
         - name: consume-anything-as-file-3
-      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-3
         workspace: data-passing-pipeline
@@ -257,7 +254,6 @@ spec:
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
         workspaces:
         - name: consume-something-as-file
-      timeout: 525600m
       workspaces:
       - name: consume-something-as-file
         workspace: data-passing-pipeline
@@ -309,7 +305,6 @@ spec:
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
         workspaces:
         - name: consume-something-as-file-2
-      timeout: 525600m
       workspaces:
       - name: consume-something-as-file-2
         workspace: data-passing-pipeline
@@ -361,7 +356,6 @@ spec:
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
         workspaces:
         - name: consume-string-as-file
-      timeout: 525600m
       workspaces:
       - name: consume-string-as-file
         workspace: data-passing-pipeline
@@ -413,15 +407,11 @@ spec:
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
         workspaces:
         - name: consume-string-as-file-2
-      timeout: 525600m
       workspaces:
       - name: consume-string-as-file-2
         workspace: data-passing-pipeline
     workspaces:
     - name: data-passing-pipeline
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m
   workspaces:
   - name: data-passing-pipeline
     volumeClaimTemplate:

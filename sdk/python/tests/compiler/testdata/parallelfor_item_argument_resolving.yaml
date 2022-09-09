@@ -107,7 +107,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce str",
               "outputs": [{"name": "Output", "type": "String"}], "version": "Produce
               str@sha256=56c6c051642ecf0f894b85f3ab46a6d6ac43e3576fe63d086ad1695f70663d84"}'
-      timeout: 525600m
     - name: produce-list-of-strings
       taskSpec:
         steps:
@@ -176,7 +175,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list
               of strings", "outputs": [{"name": "Output", "type": "JsonArray"}], "version":
               "Produce list of strings@sha256=9400c06cbd8392297077b6f2c1fe3fc453e8a5676999bce8c307674c7e0bc9c6"}'
-      timeout: 525600m
     - name: produce-list-of-ints
       taskSpec:
         steps:
@@ -245,7 +243,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list
               of ints", "outputs": [{"name": "Output", "type": "JsonArray"}], "version":
               "Produce list of ints@sha256=35df856c301c60ddd768541bf53ee02243b70171db26d1c6bb36c3bf397c7c28"}'
-      timeout: 525600m
     - name: produce-list-of-dicts
       taskSpec:
         steps:
@@ -314,7 +311,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list
               of dicts", "outputs": [{"name": "Output", "type": "JsonArray"}], "version":
               "Produce list of dicts@sha256=e731938bd64c449aa58656e82a0ef231eb3e8d5bea0e15e6b022d554b44cff48"}'
-      timeout: 525600m
     - runAfter:
       - produce-list-of-strings
       - produce-str
@@ -376,7 +372,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=81237bf045292d631ce2f9d982637189181ba23abe552f8bf048b87322d6b5da"}'
-              timeout: 525600m
             - name: consume-2
               params:
               - name: produce-list-of-strings-Output-loop-item
@@ -414,7 +409,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=81237bf045292d631ce2f9d982637189181ba23abe552f8bf048b87322d6b5da"}'
-              timeout: 525600m
             - name: consume-3
               params:
               - name: produce-str-Output
@@ -452,7 +446,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=81237bf045292d631ce2f9d982637189181ba23abe552f8bf048b87322d6b5da"}'
-              timeout: 525600m
           iterateParam: produce-list-of-strings-Output-loop-item
         metadata:
           labels:
@@ -513,7 +506,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=81237bf045292d631ce2f9d982637189181ba23abe552f8bf048b87322d6b5da"}'
-              timeout: 525600m
             - name: consume-5
               params:
               - name: produce-list-of-ints-Output-loop-item
@@ -551,7 +543,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=81237bf045292d631ce2f9d982637189181ba23abe552f8bf048b87322d6b5da"}'
-              timeout: 525600m
           iterateParam: produce-list-of-ints-Output-loop-item
         metadata:
           labels:
@@ -612,7 +603,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=81237bf045292d631ce2f9d982637189181ba23abe552f8bf048b87322d6b5da"}'
-              timeout: 525600m
             - name: consume-7
               params:
               - name: produce-list-of-dicts-Output-loop-item-subvar-aaa
@@ -650,11 +640,7 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=81237bf045292d631ce2f9d982637189181ba23abe552f8bf048b87322d6b5da"}'
-              timeout: 525600m
           iterateParam: produce-list-of-dicts-Output-loop-item
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

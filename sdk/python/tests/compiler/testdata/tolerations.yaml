@@ -57,7 +57,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "download", "outputs":
               [{"name": "downloaded", "type": "String"}], "version": "download@sha256=efb8f7672208579e11f74f184af68742c8d27421ef95f4db23a3b5f55641d850"}'
-      timeout: 525600m
   taskRunSpecs:
   - pipelineTaskName: download
     taskPodTemplate:
@@ -66,6 +65,3 @@ spec:
         key: gpu
         operator: Equal
         value: run
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

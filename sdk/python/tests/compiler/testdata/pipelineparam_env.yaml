@@ -62,7 +62,3 @@ spec:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations: {}
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

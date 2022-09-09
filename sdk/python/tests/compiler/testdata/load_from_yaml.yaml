@@ -58,7 +58,3 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "busybox", "outputs":
               [{"description": "Test unused output path", "name": "dummy_output_path"}],
               "version": "busybox@sha256=5bed7406f74106b6e31b3b155d13cb203e1f30e41fd93b53f9cd71331513e355"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

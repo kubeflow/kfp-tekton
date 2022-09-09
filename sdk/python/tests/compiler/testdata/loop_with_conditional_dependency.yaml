@@ -75,7 +75,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-0", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "print-0@sha256=5dd3c506ec54281b82008ca8ec5d8142834eae18d74ce8a110a31dd6e371b40d"}'
-      timeout: 525600m
     - name: condition-cel
       params:
       - name: outcome
@@ -84,7 +83,6 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-      timeout: 525600m
     - name: print-1
       taskSpec:
         steps:
@@ -114,7 +112,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: print-2
       taskSpec:
         steps:
@@ -141,7 +138,6 @@ spec:
               "type": "String"}], "version": "print-2@sha256=1a47ca9c21f0c4c30565a5cd490ec648a8e6b33dfa08a62ff2bfee67d6800e00"}'
       runAfter:
       - print-1
-      timeout: 525600m
       when:
       - input: $(tasks.condition-cel.results.outcome)
         operator: in
@@ -186,7 +182,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-3",
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print-3@sha256=5eed691c7d42c19cf0e5ca60612456bac19f7d8902ae2cf92ff0f37663cf4763"}'
-              timeout: 525600m
           iterateParam: param-loop-item
         metadata:
           labels:
@@ -231,11 +226,7 @@ spec:
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print-4@sha256=612578686b564fc00e7052b345cd44d6a9cad721cdd6ceb3ecfc68c392a932f7"}'
               runAfter: []
-              timeout: 525600m
           iterateParam: param-loop-item
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

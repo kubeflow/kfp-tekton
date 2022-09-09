@@ -50,7 +50,6 @@ spec:
             valid_container: "false"
             pipelines.kubeflow.org/component_spec_digest: '{"name": "any-name", "outputs":
               [], "version": "any-name@sha256=5f659b809e547385d0853d3b524b66178af7ce8006ddc7da8c4692d2d73bb1c3"}'
-      timeout: 525600m
     - name: any-name-2
       params:
       - name: other_custom_task_argument_keys
@@ -69,7 +68,3 @@ spec:
               [], "version": "any-name@sha256=5f659b809e547385d0853d3b524b66178af7ce8006ddc7da8c4692d2d73bb1c3"}'
       runAfter:
       - any-name
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

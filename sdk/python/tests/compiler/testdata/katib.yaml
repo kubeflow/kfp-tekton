@@ -150,7 +150,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "mnist-hpo", "outputs":
               [{"name": "bestHyperParameter", "type": "String"}], "version": "mnist-hpo@sha256=cc6b00fe46afdfcbe02820d928e4e1bffaa6bb93c7532886db04f63f8354087d"}'
-      timeout: 525600m
     - name: my-out-cop
       params:
       - name: mnist-hpo-bestHyperParameter
@@ -173,7 +172,3 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "my-out-cop",
               "outputs": [], "version": "my-out-cop@sha256=1ba657e86cfa3fa4fd6256830c58aad6b9e7a75b92c522c818526530223a1533"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

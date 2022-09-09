@@ -76,7 +76,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-0", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "print-0@sha256=5dd3c506ec54281b82008ca8ec5d8142834eae18d74ce8a110a31dd6e371b40d"}'
-      timeout: 525600m
     - runAfter:
       - print-0
       name: loop-cond2-for-loop-1
@@ -108,7 +107,6 @@ spec:
                 name: cel_condition
                 apiVersion: cel.tekton.dev/v1alpha1
                 kind: CEL
-              timeout: 525600m
             - name: condition-cel-2
               params:
               - name: outcome
@@ -122,7 +120,6 @@ spec:
                 operator: in
                 values:
                 - "true"
-              timeout: 525600m
             - name: condition-cel-3
               params:
               - name: outcome
@@ -136,7 +133,6 @@ spec:
                 operator: in
                 values:
                 - "true"
-              timeout: 525600m
             - name: print-1
               taskSpec:
                 steps:
@@ -166,7 +162,6 @@ spec:
                 operator: in
                 values:
                 - "true"
-              timeout: 525600m
             - name: print-2
               taskSpec:
                 steps:
@@ -193,7 +188,6 @@ spec:
                       "name": "output_value", "type": "String"}], "version": "print-2@sha256=1a47ca9c21f0c4c30565a5cd490ec648a8e6b33dfa08a62ff2bfee67d6800e00"}'
               runAfter:
               - print-1
-              timeout: 525600m
               when:
               - input: $(tasks.condition-cel-3.results.outcome)
                 operator: in
@@ -203,6 +197,3 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

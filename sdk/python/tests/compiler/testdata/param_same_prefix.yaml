@@ -77,7 +77,6 @@ spec:
         name: fetcher_op
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: foo-01
       params:
       - name: foo-01-val
@@ -86,7 +85,6 @@ spec:
         name: fetcher_op
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: foo-02
       params:
       - name: foo-02
@@ -95,7 +93,6 @@ spec:
         name: fetcher_op
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: foo-10
       params:
       - name: foo
@@ -122,7 +119,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "foo-10", "outputs":
               [{"name": "bar-10-val", "type": "String"}], "version": "foo-10@sha256=d6d62cb6c6b77d1f0d609f5f5f2e0827d16f80de51fdfa5bde09e631fb759995"}'
-      timeout: 525600m
     - name: foo-11
       params:
       - name: foo
@@ -149,7 +145,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "foo-11", "outputs":
               [{"name": "foo-11-val", "type": "String"}], "version": "foo-11@sha256=377008435f70950b0bc568837051eb5d49375b55d1105eb7bc9c4f7863c336a3"}'
-      timeout: 525600m
     - name: foo-12
       params:
       - name: foo
@@ -176,7 +171,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "foo-12", "outputs":
               [{"name": "foo-12", "type": "String"}], "version": "foo-12@sha256=ce03e07a304a0a53f19878261cbde059912689fd90a0a68b61aa0821e6201480"}'
-      timeout: 525600m
     - runAfter:
       - foo-00
       - foo-01
@@ -251,7 +245,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "fetch-00",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
                       "fetch-00@sha256=7e9b72ed3ff0fe01739d5c1882d0398713f844d5b40d856da78cd272aa29224e"}'
-              timeout: 525600m
             - name: fetch-01
               params:
               - name: foo-01-foo-01-val
@@ -282,7 +275,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "fetch-01",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
                       "fetch-01@sha256=aabda0027c4968f5bd77ca09283a4d6893a7cc0f24aba3c8ed3e736a189664c2"}'
-              timeout: 525600m
             - name: fetch-02
               params:
               - name: foo-02-foo-02
@@ -313,7 +305,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "fetch-02",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
                       "fetch-02@sha256=50fd399aa3779cb4c5b268102fb26755c28079d262e8b96e13e1fc204d69b921"}'
-              timeout: 525600m
             - name: print-10
               params:
               - name: foo-10-bar-10-val
@@ -344,7 +335,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-10",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
                       "print-10@sha256=d9ea1c895144dfa19d7e457987bdf79548809f7b45af8ae4560998c99e193751"}'
-              timeout: 525600m
             - name: print-11
               params:
               - name: foo-11-foo-11-val
@@ -375,7 +365,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-11",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
                       "print-11@sha256=5a1013995ecd3285d03ae6b24d872d3d1ca1eaf7c78d099eca050a3ce9e3fd83"}'
-              timeout: 525600m
             - name: print-12
               params:
               - name: foo-12-foo-12
@@ -406,11 +395,7 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-12",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
                       "print-12@sha256=8c34161acc91f4c5e394f75aeffd0a793db16e196aa8a246c0c26bd2336c54e6"}'
-              timeout: 525600m
           iterateParam: li-loop-item
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

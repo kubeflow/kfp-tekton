@@ -74,11 +74,7 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
                       "outputs": [], "version": "print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d"}'
-              timeout: 525600m
           iterateParam: arr-loop-item
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

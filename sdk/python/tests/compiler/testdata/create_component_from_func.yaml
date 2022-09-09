@@ -141,7 +141,6 @@ spec:
               dir with files python op@sha256=402b8d5bfcc589729850713deab06f2a3bb111baf371a138147b7516c8a2f41c"}'
         workspaces:
         - name: produce-dir-with-files-python-op
-      timeout: 525600m
       workspaces:
       - name: produce-dir-with-files-python-op
         workspace: create-component-from-function
@@ -222,7 +221,6 @@ spec:
               subdirectory@sha256=47f3ed80f84f97d86349edfe62e0aeae9c64b336250101ba3da09648c373b4c7"}'
         workspaces:
         - name: get-subdirectory
-      timeout: 525600m
       workspaces:
       - name: get-subdirectory
         workspace: create-component-from-function
@@ -265,7 +263,6 @@ spec:
               "outputs": [{"name": "Items"}], "version": "List items@sha256=2c0fc3f181a67696494ed58c0b42e3e37ecbd7a8bce591eb0c7d6b7b38af8952"}'
         workspaces:
         - name: list-items
-      timeout: 525600m
       workspaces:
       - name: list-items
         workspace: create-component-from-function
@@ -312,7 +309,6 @@ spec:
               "outputs": [{"name": "Items"}], "version": "List items 2@sha256=dc610eb161d4dc2d26801bab4f5ab95b32077d840f2c8e130cd29ec0e94241f1"}'
         workspaces:
         - name: list-items-2
-      timeout: 525600m
       workspaces:
       - name: list-items-2
         workspace: create-component-from-function
@@ -321,9 +317,6 @@ spec:
       - produce-dir-with-files-python-op
     workspaces:
     - name: create-component-from-function
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m
   workspaces:
   - name: create-component-from-function
     volumeClaimTemplate:

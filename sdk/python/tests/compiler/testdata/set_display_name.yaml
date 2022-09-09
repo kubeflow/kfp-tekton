@@ -52,7 +52,3 @@ spec:
             pipelines.kubeflow.org/task_display_name: Hello World
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
               [], "version": "echo@sha256=14be762d0ac645b725d45e703104370b0816a8b2b9abf44ca01c405e3bbf45c3"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

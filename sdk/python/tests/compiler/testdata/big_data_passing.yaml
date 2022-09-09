@@ -151,7 +151,6 @@ spec:
               line@sha256=6ba4c40102b73739c02839c46d8897f9b07511608ff42f91916c29fc33ffde37"}'
         workspaces:
         - name: repeat-line
-      timeout: 525600m
       workspaces:
       - name: repeat-line
         workspace: big-data-passing
@@ -289,7 +288,6 @@ spec:
         volumes:
         - name: source
           emptyDir: {}
-      timeout: 525600m
       workspaces:
       - name: split-text-lines
         workspace: big-data-passing
@@ -341,7 +339,6 @@ spec:
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
         workspaces:
         - name: print-text-2
-      timeout: 525600m
       workspaces:
       - name: print-text-2
         workspace: big-data-passing
@@ -395,7 +392,6 @@ spec:
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
         workspaces:
         - name: print-text-3
-      timeout: 525600m
       workspaces:
       - name: print-text-3
         workspace: big-data-passing
@@ -497,7 +493,6 @@ spec:
               numbers@sha256=6a144669e9261686cc1f2365c56bc2ff9a575dd7d02049ea5580b1d40d2a2808"}'
         workspaces:
         - name: write-numbers
-      timeout: 525600m
       workspaces:
       - name: write-numbers
         workspace: big-data-passing
@@ -549,7 +544,6 @@ spec:
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
         workspaces:
         - name: print-text-4
-      timeout: 525600m
       workspaces:
       - name: print-text-4
         workspace: big-data-passing
@@ -674,7 +668,6 @@ spec:
               numbers@sha256=c3f155c05c526db1acfedc8894328f5abb2c00f9378e1c5f89d035682aa2e9d7"}'
         workspaces:
         - name: sum-numbers
-      timeout: 525600m
       workspaces:
       - name: sum-numbers
         workspace: big-data-passing
@@ -728,7 +721,6 @@ spec:
               "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
         workspaces:
         - name: print-text-5
-      timeout: 525600m
       workspaces:
       - name: print-text-5
         workspace: big-data-passing
@@ -797,7 +789,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Gen params",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Gen
               params@sha256=3453ee878d06fc3c3d7987bab4a5a1633c65c6b860fc9b41e745d8400a483a26"}'
-      timeout: 525600m
     - name: print-params
       params:
       - name: gen-params-Output
@@ -834,7 +825,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print params",
               "outputs": [], "version": "Print params@sha256=3fb942e817debe20ad7b6a10ff15f184d01b788e9908d665b20ecc89e7bb48da"}'
-      timeout: 525600m
     - runAfter:
       - repeat-line
       name: big-data-passing-for-loop-2
@@ -928,7 +918,6 @@ spec:
                               "Print text", "outputs": [], "version": "Print text@sha256=7840827b663006501280bd895395a3ff9cf8fe2d9b1c9ca8c15f57c17a187318"}'
                         workspaces:
                         - name: print-text
-                      timeout: 525600m
                       workspaces:
                       - name: print-text
                         workspace: big-data-passing
@@ -967,9 +956,6 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
     workspaces:
     - name: big-data-passing
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m
   workspaces:
   - name: big-data-passing
     volumeClaimTemplate:

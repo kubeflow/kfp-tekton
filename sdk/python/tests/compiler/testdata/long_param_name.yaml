@@ -77,7 +77,6 @@ spec:
               - DownloadGCS - DownloadGCS - Download", "outputs": [{"name": "datadatadatadatadatadatadatadatadatadata",
               "type": "String"}], "version": "GCS - DownloadGCS - DownloadGCS - DownloadGCS
               - Download@sha256=d1e379f5379382e80ee2313b4c45d68ac45a256aef920dea02d3813ac2e1809c"}'
-      timeout: 525600m
     - name: printprintprintprintprintprintprintprintprintprint
       params:
       - name: gcs-downloadgcs-downloadgcs-downloadgcs-download-datadatadatadatadatadatadatadatadatadata
@@ -97,7 +96,3 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "printprintprintprintprintprintprintprintprintprint",
               "outputs": [], "version": "printprintprintprintprintprintprintprintprintprint@sha256=0c820da4b0f6e1a730ec47930324fc44ffbc0be62e903fdbcc91dc36ab9580ef"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

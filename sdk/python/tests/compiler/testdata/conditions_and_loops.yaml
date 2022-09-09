@@ -131,7 +131,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce numbers",
               "outputs": [{"name": "Output", "type": "JsonArray"}], "version": "Produce
               numbers@sha256=34359d28ebb62227d7f51440c862c7ed2929e91beeabe1e78c8687ccba38265e"}'
-      timeout: 525600m
     - runAfter:
       - produce-numbers
       name: conditions-and-loops-for-loop-1
@@ -225,7 +224,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Add numbers",
                       "outputs": [{"name": "Output", "type": "Integer"}], "version":
                       "Add numbers@sha256=4a4bea3d4b7966f0ce3cdef5ad4d997a283ef6a895959791e037cf391732bb04"}'
-              timeout: 525600m
             - name: print-number
               params:
               - name: add-numbers-Output
@@ -297,7 +295,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Print
                       number", "outputs": [{"name": "Output", "type": "Integer"}],
                       "version": "Print number@sha256=7ad81f52d1b478fd168c0234b16a496672bdfc43da71a71fcdc5d688791f04cf"}'
-              timeout: 525600m
             - name: notify-success
               taskSpec:
                 steps:
@@ -330,7 +327,6 @@ spec:
                 operator: in
                 values:
                 - "true"
-              timeout: 525600m
             - name: notify-failure
               taskSpec:
                 steps:
@@ -363,7 +359,6 @@ spec:
                 operator: in
                 values:
                 - "true"
-              timeout: 525600m
             - name: condition-2
               params:
               - name: operand1
@@ -462,6 +457,3 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

@@ -47,20 +47,20 @@ metadata:
       [], \"version\": \"print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "flip-coin-output", "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.flip-coin-output)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m", "when": [{"input":
-      "$(tasks.condition-2.results.outcome)", "operator": "in", "values": ["true"]}]},
-      {"name": "flip-coin-2", "runAfter": ["print"], "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"flip-coin\",
-      \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}], \"version\": \"flip-coin@sha256=8959c33ad80737db72737e65edcb11545dd9e408bc2ce5b50ca58248c2251ae5\"}"},
+      "image": "alpine:3.6", "name": "main"}]}, "when": [{"input": "$(tasks.condition-2.results.outcome)",
+      "operator": "in", "values": ["true"]}]}, {"name": "flip-coin-2", "runAfter":
+      ["print"], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"flip-coin\", \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}],
+      \"version\": \"flip-coin@sha256=8959c33ad80737db72737e65edcb11545dd9e408bc2ce5b50ca58248c2251ae5\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "results": [{"description":
       "/tmp/outputs/output/data", "name": "output", "type": "string"}], "steps": [{"args":
       ["python -c \"import random; result = ''heads'' if random.randint(0,1) == 0             else
       ''tails''; print(result)\" | tee $0\n", "$(results.output.path)"], "command":
-      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout": "525600m",
-      "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator": "in",
-      "values": ["true"]}]}, {"name": "condition-2", "params": [{"name": "operand1",
-      "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "heads"},
-      {"name": "operator", "value": "=="}], "taskSpec": {"metadata": {"labels": {"pipelines.kubeflow.org/cache_enabled":
+      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "when": [{"input":
+      "$(tasks.condition-2.results.outcome)", "operator": "in", "values": ["true"]}]},
+      {"name": "condition-2", "params": [{"name": "operand1", "value": "$(params.flip-coin-output)"},
+      {"name": "operand2", "value": "heads"}, {"name": "operator", "value": "=="}],
+      "taskSpec": {"metadata": {"labels": {"pipelines.kubeflow.org/cache_enabled":
       "true"}}, "params": [{"name": "operand1", "type": "string"}, {"name": "operand2",
       "type": "string"}, {"name": "operator", "type": "string"}], "results": [{"description":
       "Conditional task outcome", "name": "outcome", "type": "string"}], "steps":
@@ -93,34 +93,34 @@ metadata:
       "loop-item-param-3-subvar-a", "type": "string"}, {"name": "my_pipe_param", "type":
       "string"}], "steps": [{"args": ["echo op1 $0 $1\n", "$(inputs.params.loop-item-param-3-subvar-a)",
       "$(inputs.params.my_pipe_param)"], "command": ["sh", "-c"], "image": "library/bash:4.4.23",
-      "name": "main"}]}, "timeout": "525600m"}, {"name": "my-in-coop2", "params":
-      [{"name": "loop-item-param-3-subvar-b", "value": "$(params.loop-item-param-3-subvar-b)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
-      "{\"name\": \"my-in-coop2\", \"outputs\": [], \"version\": \"my-in-coop2@sha256=59d25de2883dffe404f503d64ced9d8707a35aac0ec9cab6dde8e0b8ed8afcda\"}"},
+      "name": "main"}]}}, {"name": "my-in-coop2", "params": [{"name": "loop-item-param-3-subvar-b",
+      "value": "$(params.loop-item-param-3-subvar-b)"}], "taskSpec": {"metadata":
+      {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
+      \"my-in-coop2\", \"outputs\": [], \"version\": \"my-in-coop2@sha256=59d25de2883dffe404f503d64ced9d8707a35aac0ec9cab6dde8e0b8ed8afcda\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "loop-item-param-3-subvar-b", "type": "string"}], "steps": [{"args": ["echo
       op2 $0\n", "$(inputs.params.loop-item-param-3-subvar-b)"], "command": ["sh",
-      "-c"], "image": "library/bash:4.4.23", "name": "main"}]}, "timeout": "525600m"},
-      {"name": "loop-in-recursion-pipeline-for-loop-6", "params": [{"name": "flip-coin-output",
-      "value": "$(params.flip-coin-output)"}, {"name": "loop-item-param-3-subvar-a",
-      "value": "$(params.loop-item-param-3-subvar-a)"}, {"name": "loop-item-param-5",
-      "value": "[100, 200, 300]"}, {"name": "my_pipe_param", "value": "$(params.my_pipe_param)"}],
-      "taskSpec": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
-      "metadata": {"labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "spec":
-      {"iterateParam": "loop-item-param-5", "pipelineSpec": {"params": [{"name": "flip-coin-output",
-      "type": "string"}, {"name": "loop-item-param-3-subvar-a", "type": "string"},
-      {"name": "loop-item-param-5", "type": "string"}, {"name": "my_pipe_param", "type":
-      "string"}], "tasks": [{"name": "my-inner-inner-coop", "params": [{"name": "loop-item-param-3-subvar-a",
-      "value": "$(params.loop-item-param-3-subvar-a)"}, {"name": "loop-item-param-5",
-      "value": "$(params.loop-item-param-5)"}, {"name": "my_pipe_param", "value":
-      "$(params.my_pipe_param)"}], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
-      "{\"name\": \"my-inner-inner-coop\", \"outputs\": [], \"version\": \"my-inner-inner-coop@sha256=263800ac64830eaccf32a5995dd9a36f8c679882f0a116359a858b89e17a5749\"}"},
+      "-c"], "image": "library/bash:4.4.23", "name": "main"}]}}, {"name": "loop-in-recursion-pipeline-for-loop-6",
+      "params": [{"name": "flip-coin-output", "value": "$(params.flip-coin-output)"},
+      {"name": "loop-item-param-3-subvar-a", "value": "$(params.loop-item-param-3-subvar-a)"},
+      {"name": "loop-item-param-5", "value": "[100, 200, 300]"}, {"name": "my_pipe_param",
+      "value": "$(params.my_pipe_param)"}], "taskSpec": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"labels": {"pipelines.kubeflow.org/cache_enabled":
+      "true"}}, "spec": {"iterateParam": "loop-item-param-5", "pipelineSpec": {"params":
+      [{"name": "flip-coin-output", "type": "string"}, {"name": "loop-item-param-3-subvar-a",
+      "type": "string"}, {"name": "loop-item-param-5", "type": "string"}, {"name":
+      "my_pipe_param", "type": "string"}], "tasks": [{"name": "my-inner-inner-coop",
+      "params": [{"name": "loop-item-param-3-subvar-a", "value": "$(params.loop-item-param-3-subvar-a)"},
+      {"name": "loop-item-param-5", "value": "$(params.loop-item-param-5)"}, {"name":
+      "my_pipe_param", "value": "$(params.my_pipe_param)"}], "taskSpec": {"metadata":
+      {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
+      \"my-inner-inner-coop\", \"outputs\": [], \"version\": \"my-inner-inner-coop@sha256=263800ac64830eaccf32a5995dd9a36f8c679882f0a116359a858b89e17a5749\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "loop-item-param-3-subvar-a", "type": "string"}, {"name": "loop-item-param-5",
       "type": "string"}, {"name": "my_pipe_param", "type": "string"}], "steps": [{"args":
       ["echo op1 $0 $1 $2\n", "$(inputs.params.loop-item-param-3-subvar-a)", "$(inputs.params.loop-item-param-5)",
       "$(inputs.params.my_pipe_param)"], "command": ["sh", "-c"], "image": "library/bash:4.4.23",
-      "name": "main"}]}, "timeout": "525600m"}]}}}}]}}}, "when": [{"input": "$(tasks.condition-2.results.outcome)",
+      "name": "main"}]}}]}}}}]}}}, "when": [{"input": "$(tasks.condition-2.results.outcome)",
       "operator": "in", "values": ["true"]}]}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
@@ -160,7 +160,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=8959c33ad80737db72737e65edcb11545dd9e408bc2ce5b50ca58248c2251ae5"}'
-      timeout: 525600m
     - name: print-2
       params:
       - name: flip-coin-output
@@ -182,7 +181,6 @@ spec:
               [], "version": "print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c"}'
       runAfter:
       - loop-in-recursion-pipeline-flip-component-1
-      timeout: 525600m
     - runAfter:
       - flip-coin
       name: loop-in-recursion-pipeline-flip-component-1
@@ -200,6 +198,3 @@ spec:
         value: $(params.maxVal)
       - name: my_pipe_param
         value: $(params.my_pipe_param)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

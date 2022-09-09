@@ -45,20 +45,20 @@ metadata:
       "{\"name\": \"print\", \"outputs\": [], \"version\": \"print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "flip-coin-output", "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.flip-coin-output)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m", "when": [{"input":
-      "$(tasks.condition-2.results.outcome)", "operator": "in", "values": ["true"]}]},
-      {"name": "flip-coin-2", "runAfter": ["print"], "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"flip-coin\",
-      \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}], \"version\": \"flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d\"}"},
+      "image": "alpine:3.6", "name": "main"}]}, "when": [{"input": "$(tasks.condition-2.results.outcome)",
+      "operator": "in", "values": ["true"]}]}, {"name": "flip-coin-2", "runAfter":
+      ["print"], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"flip-coin\", \"outputs\": [{\"name\": \"output\", \"type\": \"String\"}],
+      \"version\": \"flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "results": [{"description":
       "/tmp/outputs/output/data", "name": "output", "type": "string"}], "steps": [{"args":
       ["python -c \"import random; result = ''heads'' if random.randint(0,1) == 0           else
       ''tails''; print(result)\" | tee $0\n", "$(results.output.path)"], "command":
-      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "timeout": "525600m",
-      "when": [{"input": "$(tasks.condition-2.results.outcome)", "operator": "in",
-      "values": ["true"]}]}, {"name": "condition-2", "params": [{"name": "operand1",
-      "value": "$(params.flip-coin-output)"}, {"name": "operand2", "value": "heads"},
-      {"name": "operator", "value": "=="}], "taskSpec": {"metadata": {"labels": {"pipelines.kubeflow.org/cache_enabled":
+      ["sh", "-c"], "image": "python:alpine3.6", "name": "main"}]}, "when": [{"input":
+      "$(tasks.condition-2.results.outcome)", "operator": "in", "values": ["true"]}]},
+      {"name": "condition-2", "params": [{"name": "operand1", "value": "$(params.flip-coin-output)"},
+      {"name": "operand2", "value": "heads"}, {"name": "operator", "value": "=="}],
+      "taskSpec": {"metadata": {"labels": {"pipelines.kubeflow.org/cache_enabled":
       "true"}}, "params": [{"name": "operand1", "type": "string"}, {"name": "operand2",
       "type": "string"}, {"name": "operator", "type": "string"}], "results": [{"description":
       "Conditional task outcome", "name": "outcome", "type": "string"}], "steps":
@@ -107,7 +107,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d"}'
-      timeout: 525600m
     - name: print-2
       params:
       - name: flip-coin-output
@@ -129,7 +128,6 @@ spec:
               [], "version": "print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c"}'
       runAfter:
       - recursion-pipeline-flip-component-1
-      timeout: 525600m
     - runAfter:
       - flip-coin
       name: recursion-pipeline-flip-component-1
@@ -145,6 +143,3 @@ spec:
         - '1'
       - name: maxVal
         value: $(params.maxVal)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

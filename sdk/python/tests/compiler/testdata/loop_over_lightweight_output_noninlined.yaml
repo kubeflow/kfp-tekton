@@ -41,7 +41,7 @@ metadata:
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "produce-list-data_list-loop-item", "type": "string"}], "steps": [{"command":
       ["echo", "$(inputs.params.produce-list-data_list-loop-item)"], "image": "busybox",
-      "name": "main"}]}, "timeout": "525600m"}]}}}]'
+      "name": "main"}]}}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
     pipelines.kubeflow.org/generation: ''
@@ -70,7 +70,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list",
               "outputs": [{"name": "data_list", "type": "List"}], "version": "Produce
               list@sha256=3d80b314916a06826def6fa78eab66cd69199497d7d92a8d199bd5d906706abe"}'
-      timeout: 525600m
     - runAfter:
       - produce-list
       name: loop-over-lightweight-output-for-loop-1
@@ -81,6 +80,3 @@ spec:
       params:
       - name: produce-list-data_list-loop-item
         value: $(tasks.produce-list.results.data-list)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m
