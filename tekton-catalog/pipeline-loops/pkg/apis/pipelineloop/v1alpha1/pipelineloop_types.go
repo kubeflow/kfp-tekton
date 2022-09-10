@@ -151,6 +151,12 @@ type PipelineLoopRunStatus struct {
 	// map of PipelineLoopPipelineRunStatus with the PipelineRun name as the key
 	// +optional
 	PipelineRuns map[string]*PipelineLoopPipelineRunStatus `json:"pipelineRuns,omitempty"`
+
+	// Last idx
+	LastIdx int `json:"last_idx,omitempty"`
+
+	// Last elem
+	LastElem string `json:"last_elem,omitempty"`
 }
 
 // PipelineLoopPipelineRunStatus contains the iteration number for a PipelineRun,

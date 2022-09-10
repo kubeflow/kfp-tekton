@@ -210,13 +210,15 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 			marshal, err := json.Marshal(status.PipelineLoopSpec)
 			if err == nil {
 				hashSum := fmt.Sprintf("%x", md5.Sum(marshal))
-				resultBytes, err := json.Marshal(run.Status.Results)
+				resultBytes, err1 := json.Marshal(run.Status.Results)
+				if err1 != nil {
+					return fmt.Errorf("error while marshalling result to cache for run: %s, %w", run.Name, err)
+				}
 				_, err = c.cacheStore.Put(&model.TaskCache{
 					TaskHashKey: hashSum,
 					TaskOutput:  string(resultBytes),
 				})
 				if err != nil {
-					logger.Errorf("Error while adding result to cache for run: %s, Error: %v", run.Name, err)
 					return fmt.Errorf("error while adding result to cache for run: %s, %w", run.Name, err)
 				}
 				logger.Infof("cached the results of successful run %s, with key: %s", run.Name, hashSum)
@@ -391,7 +393,9 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if err != nil {
 		return fmt.Errorf("error updating PipelineRun status for Run %s/%s: %w", run.Namespace, run.Name, err)
 	}
-
+	if highestIteration > 0 {
+		updateLastIdx(run, highestIteration, iterationElements[highestIteration-1])
+	}
 	// Run is cancelled, just cancel all the running instance and return
 	if run.IsCancelled() {
 		if len(failedPrs) > 0 {
@@ -460,7 +464,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			if err != nil {
 				return err
 			}
-			_, err = c.pipelineClientSet.TektonV1beta1().PipelineRuns(failedPr.Namespace).
+			_, _ = c.pipelineClientSet.TektonV1beta1().PipelineRuns(failedPr.Namespace).
 				Patch(ctx, failedPr.Name, types.MergePatchType, patch, metav1.PatchOptions{})
 			pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, highestIteration, iterationElements)
 			if err != nil {
@@ -581,7 +585,7 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
 				"Error retrieving PipelineLoop for Run %s/%s: %s",
 				run.Namespace, run.Name, err)
-			return nil, nil, fmt.Errorf("Error retrieving PipelineLoop for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
+			return nil, nil, fmt.Errorf("error retrieving PipelineLoop for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
 		}
 		pipelineLoopMeta = tl.ObjectMeta
 		pipelineLoopSpec = tl.Spec
@@ -591,7 +595,7 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 			run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
 				"Error unmarshal PipelineLoop spec for Run %s/%s: %s",
 				run.Namespace, run.Name, err)
-			return nil, nil, fmt.Errorf("Error unmarshal PipelineLoop spec for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
+			return nil, nil, fmt.Errorf("error unmarshal PipelineLoop spec for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
 		}
 		pipelineLoopMeta = metav1.ObjectMeta{Name: run.Name,
 			Namespace:       run.Namespace,
@@ -603,7 +607,7 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 		run.Status.MarkRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
 			"Missing spec.ref.name for Run %s/%s",
 			run.Namespace, run.Name)
-		return nil, nil, fmt.Errorf("Missing spec.ref.name for Run %s", fmt.Sprintf("%s/%s", run.Namespace, run.Name))
+		return nil, nil, fmt.Errorf("missing spec.ref.name for Run %s", fmt.Sprintf("%s/%s", run.Namespace, run.Name))
 	}
 	// pass down the run's serviceAccountName and podTemplate if they were not configured in the loop spec
 	if pipelineLoopSpec.PodTemplate == nil && run.Spec.PodTemplate != nil {
@@ -613,6 +617,37 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 		pipelineLoopSpec.ServiceAccountName = run.Spec.ServiceAccountName
 	}
 	return &pipelineLoopMeta, &pipelineLoopSpec, nil
+}
+
+func updateLastIdx(run *v1alpha1.Run, lastIdx int, lastElem interface{}) {
+	indexResultLastIdx, indexResultLastElem := -1, -1
+	// if Run already has last_idx and last elem, then update it.
+	for i, res := range run.Status.Results {
+		if res.Name == "last_idx" {
+			indexResultLastIdx = i
+		}
+		if res.Name == "last_elem" {
+			indexResultLastElem = i
+		}
+	}
+	if indexResultLastElem >= 0 && indexResultLastIdx >= 0 {
+		run.Status.Results[indexResultLastIdx] = v1alpha1.RunResult{
+			Name:  "last_idx",
+			Value: fmt.Sprintf("%d", lastIdx),
+		}
+		run.Status.Results[indexResultLastElem] = v1alpha1.RunResult{
+			Name:  "last_elem",
+			Value: fmt.Sprintf("%d", lastElem),
+		}
+	} else {
+		run.Status.Results = append(run.Status.Results, v1alpha1.RunResult{
+			Name:  "last_idx",
+			Value: fmt.Sprintf("%d", lastIdx),
+		}, v1alpha1.RunResult{
+			Name:  "last_elem",
+			Value: fmt.Sprintf("%s", lastElem),
+		})
+	}
 }
 
 func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, run *v1alpha1.Run, iteration int, iterationElements []interface{}) (*v1beta1.PipelineRun, error) {
@@ -714,7 +749,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 	if err != nil {
 		return 0, nil, nil, fmt.Errorf("could not list PipelineRuns %#v", err)
 	}
-	if pipelineRuns == nil || len(pipelineRuns) == 0 {
+	if len(pipelineRuns) == 0 {
 		return 0, nil, nil, nil
 	}
 	status.CurrentRunning = 0

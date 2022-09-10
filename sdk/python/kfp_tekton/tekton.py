@@ -296,6 +296,8 @@ class Loop(dsl.ParallelFor):
     self.iteration_number = None
     self.pod_annotations = {}
     self.pod_labels = {}
+    self.last_idx = None
+    self.last_elem = None
     if start and end:
         super().__init__(loop_args=["iteration"], parallelism=parallelism)
         self.start = start
