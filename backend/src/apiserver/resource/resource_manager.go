@@ -555,7 +555,7 @@ func (r *ResourceManager) RetryRun(ctx context.Context, runId string) error {
 	if runDetail.PipelineSpecManifest != "" {
 		return util.NewBadRequestError(errors.New("workflow cannot be retried"), "Workflow must be with v1 mode to retry")
 	}
-	execSpec, err := util.NewExecutionSpecJSON(util.ArgoWorkflow, []byte(runDetail.WorkflowRuntimeManifest))
+	execSpec, err := util.NewExecutionSpecJSON(util.CurrentExecutionType(), []byte(runDetail.WorkflowRuntimeManifest))
 	if err != nil {
 		return util.NewInternalServerError(err, "Failed to retrieve the runtime pipeline spec from the run")
 	}
@@ -641,7 +641,7 @@ func (r *ResourceManager) readRunLogFromArchive(run *model.RunDetail, nodeId str
 		return util.NewBadRequestError(errors.New("archived log cannot be read"), "Failed to retrieve the runtime workflow from the run")
 	}
 
-	execSpec, err := util.NewExecutionSpecJSON(util.ArgoWorkflow, []byte(run.WorkflowRuntimeManifest))
+	execSpec, err := util.NewExecutionSpecJSON(util.CurrentExecutionType(), []byte(run.WorkflowRuntimeManifest))
 	if err != nil {
 		return util.NewInternalServerError(err, "Failed to retrieve the runtime pipeline spec from the run")
 	}

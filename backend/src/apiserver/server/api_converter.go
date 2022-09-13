@@ -184,7 +184,7 @@ func toApiParameters(paramsString string) ([]*apiv1beta1.Parameter, error) {
 	if paramsString == "" {
 		return nil, nil
 	}
-	params, err := util.UnmarshalParameters(util.ArgoWorkflow, paramsString)
+	params, err := util.UnmarshalParameters(util.CurrentExecutionType(), paramsString)
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Parameter with wrong format is stored")
 	}

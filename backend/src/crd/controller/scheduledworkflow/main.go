@@ -32,12 +32,13 @@ import (
 )
 
 var (
-	masterURL   string
-	kubeconfig  string
-	namespace   string
-	location    *time.Location
-	clientQPS   float64
-	clientBurst int
+	masterURL     string
+	kubeconfig    string
+	namespace     string
+	location      *time.Location
+	clientQPS     float64
+	clientBurst   int
+	executionType string
 )
 
 func main() {
@@ -45,6 +46,9 @@ func main() {
 
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
+
+	// Use the commonutil to store the ExecutionType
+	commonutil.SetExecutionType(commonutil.ExecutionType(executionType))
 
 	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
 	if err != nil {
@@ -64,10 +68,10 @@ func main() {
 	}
 
 	clientParam := commonutil.ClientParameters{QPS: float64(cfg.QPS), Burst: cfg.Burst}
-	execClient := commonutil.NewExecutionClientOrFatal(commonutil.ArgoWorkflow, time.Second*30, clientParam)
+	execClient := commonutil.NewExecutionClientOrFatal(commonutil.CurrentExecutionType(), time.Second*30, clientParam)
 
 	var scheduleInformerFactory swfinformers.SharedInformerFactory
-	execInformer := commonutil.NewExecutionInformerOrFatal(commonutil.ArgoWorkflow, namespace, time.Second*30, clientParam)
+	execInformer := commonutil.NewExecutionInformerOrFatal(commonutil.CurrentExecutionType(), namespace, time.Second*30, clientParam)
 	if namespace == "" {
 		scheduleInformerFactory = swfinformers.NewSharedInformerFactory(scheduleClient, time.Second*30)
 	} else {
@@ -109,6 +113,7 @@ func init() {
 	// k8s.io/client-go/rest/config.go#RESTClientFor
 	flag.Float64Var(&clientQPS, "clientQPS", 5, "The maximum QPS to the master from this client.")
 	flag.IntVar(&clientBurst, "clientBurst", 10, "Maximum burst for throttle from this client.")
+	flag.StringVar(&executionType, "executionType", "Workflow", "Custom Resource's name of the backend Orchestration Engine")
 	var err error
 	location, err = util.GetLocation()
 	if err != nil {

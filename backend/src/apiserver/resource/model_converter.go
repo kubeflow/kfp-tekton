@@ -375,7 +375,7 @@ func (r *ResourceManager) updateModelJobWithNewScheduledWorkflow(modelJob *model
 
 	serviceAccount := ""
 	if swf.Spec.Workflow != nil {
-		execSpec, err := util.ScheduleSpecToExecutionSpec(util.ArgoWorkflow, swf.Spec.Workflow)
+		execSpec, err := util.ScheduleSpecToExecutionSpec(util.CurrentExecutionType(), swf.Spec.Workflow)
 		if err == nil {
 			serviceAccount = execSpec.ServiceAccount()
 		}
@@ -488,7 +488,7 @@ func apiParametersToModelParameters(apiParams []*apiv1beta1.Parameter) (string, 
 		}
 		params = append(params, param)
 	}
-	paramsBytes, err := util.MarshalParameters(util.ArgoWorkflow, params)
+	paramsBytes, err := util.MarshalParameters(util.CurrentExecutionType(), params)
 	if err != nil {
 		return "", util.NewInternalServerError(err, "Failed to stream API parameter as string.")
 	}

@@ -38,11 +38,16 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/server"
+	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+const (
+	executionTypeEnv = "ExecutionType"
 )
 
 var (
@@ -60,6 +65,11 @@ func main() {
 	flag.Parse()
 
 	initConfig()
+	// check ExecutionType Settings if presents
+	if viper.IsSet(executionTypeEnv) {
+		util.SetExecutionType(util.ExecutionType(common.GetStringConfig(executionTypeEnv)))
+	}
+
 	clientManager := newClientManager()
 	resourceManager := resource.NewResourceManager(&clientManager)
 	err := loadSamples(resourceManager)

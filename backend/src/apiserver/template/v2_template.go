@@ -62,7 +62,7 @@ func (t *V2Spec) ScheduledWorkflow(modelJob *model.Job) (*scheduledworkflow.Sche
 	// currently, there is only Argo implementation, so it's using `ArgoWorkflow` for now
 	// later on, if a new runtime support will be added, we need a way to switch/specify
 	// runtime. i.e using ENV var
-	executionSpec, err := util.NewExecutionSpecFromInterface(util.ArgoWorkflow, obj)
+	executionSpec, err := util.NewExecutionSpecFromInterface(util.CurrentExecutionType(), obj)
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "not Workflow struct")
 	}
@@ -191,7 +191,7 @@ func (t *V2Spec) RunWorkflow(modelRun *model.Run, options RunWorkflowOptions) (u
 	if err != nil {
 		return nil, util.Wrap(err, "Failed to compile job")
 	}
-	executionSpec, err := util.NewExecutionSpecFromInterface(util.ArgoWorkflow, obj)
+	executionSpec, err := util.NewExecutionSpecFromInterface(util.CurrentExecutionType(), obj)
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "not Workflow struct")
 	}

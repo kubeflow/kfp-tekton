@@ -56,7 +56,7 @@ func (s *ReportServer) ReportScheduledWorkflowV1(ctx context.Context,
 }
 
 func ValidateReportWorkflowRequest(request *api.ReportWorkflowRequest) (util.ExecutionSpec, error) {
-	execSpec, err := util.NewExecutionSpecJSON(util.ArgoWorkflow, []byte(request.Workflow))
+	execSpec, err := util.NewExecutionSpecJSON(util.CurrentExecutionType(), []byte(request.Workflow))
 	if err != nil {
 		return nil, util.NewInvalidInputError("Could not unmarshal workflow: %v: %v", err, request.Workflow)
 	}
