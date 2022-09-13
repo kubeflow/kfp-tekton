@@ -10,6 +10,7 @@ require (
 	github.com/elazarl/goproxy v0.0.0-20181111060418-2ce16c963a8a // indirect
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/fsnotify/fsnotify v1.5.1
+	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-openapi/errors v0.20.2
 	github.com/go-openapi/runtime v0.21.1
 	github.com/go-openapi/strfmt v0.21.1
@@ -20,7 +21,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/addlicense v0.0.0-20200906110928-a0294312aa76
 	github.com/google/cel-go v0.9.0
-	github.com/google/go-cmp v0.5.7
+	github.com/google/go-cmp v0.5.8
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -41,18 +42,19 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
+	github.com/tektoncd/pipeline v0.38.3
 	gocloud.dev v0.22.0
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 	google.golang.org/genproto v0.0.0-20220310185008-1973136f34c6
 	google.golang.org/grpc v1.44.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.23.3
-	k8s.io/apimachinery v0.23.3
-	k8s.io/client-go v0.23.3
-	k8s.io/code-generator v0.23.3
-	k8s.io/kubernetes v0.17.9
+	k8s.io/api v0.23.5
+	k8s.io/apimachinery v0.23.5
+	k8s.io/client-go v0.23.5
+	k8s.io/code-generator v0.23.5
+	k8s.io/kubernetes v1.13.0
 	sigs.k8s.io/controller-runtime v0.11.1
 	sigs.k8s.io/yaml v1.3.0
 )

@@ -837,7 +837,7 @@ func (r *ResourceManager) readRunLogFromArchive(workflowManifest string, nodeId 
 		return util.NewInternalServerError(util.NewInvalidInputError("Runtime workflow manifest cannot empty"), "Failed to read logs from archive %v due to empty runtime workflow manifest", nodeId)
 	}
 
-	execSpec, err := util.NewExecutionSpecJSON(util.ArgoWorkflow, []byte(workflowManifest))
+	execSpec, err := util.NewExecutionSpecJSON(util.CurrentExecutionType(), []byte(workflowManifest))
 	if err != nil {
 		return util.NewInternalServerError(err, "Failed to read logs from archive %v due error reading execution spec", nodeId)
 	}
