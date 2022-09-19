@@ -387,6 +387,13 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                             break
                     if not has_nested_task:
                         break
+                nested_loop_counter_params = []
+                # Fetch nested loop counter params so that it won't find the nested parameters from
+                # global param level.
+                for task in custom_task_crs:
+                    if task['metadata']['name'] in all_nested_loop:
+                        if task['spec'].get('iterateNumeric'):
+                            nested_loop_counter_params.append(task['spec'].get('iterateNumeric'))
                 for task in tasks:
                     if task['name'] == nested_custom_task['root_ct']:
                         task['params'].extend(copy.deepcopy(nested_custom_task_special_params))
@@ -397,7 +404,8 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                         task['params'] = sorted(task['params'], key=lambda k: k['name'])
                         if task['name'] in all_nested_loop:
                             for param in task['params']:
-                                if '$(params.' in param['value'] and 'subvar-' not in param['value']:
+                                if '$(params.' in param['value'] and 'subvar-' not in param['value'] and \
+                                  param['name'] not in nested_loop_counter_params:
                                     global_task_values.add(param['value'])
                 # Add any pipeline global params to the nested loop layers
                 all_params = []

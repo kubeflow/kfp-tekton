@@ -190,6 +190,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.loop_with_numeric import pipeline
     self._test_pipeline_workflow(pipeline, 'loop_with_numeric.yaml')
 
+  def test_nested_loop_counter_workflow(self):
+    """
+    Test compiling nested loop counter in workflow to verify parameters are generated correctly.
+    """
+    from .testdata.nested_loop_counter import loop_3_range
+    self._test_pipeline_workflow(loop_3_range, 'nested_loop_counter.yaml')
+
   def test_loop_with_step_workflow(self):
     """
     Test compiling a numeric loop with steps in workflow.
