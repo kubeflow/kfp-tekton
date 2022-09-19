@@ -37,36 +37,35 @@ metadata:
       {"name": "condition-cel-outcome", "type": "string"}, {"name": "just_one_iteration",
       "type": "string"}], "tasks": [{"name": "condition-cel-3", "params": [{"name":
       "outcome", "value": "0"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
-      "kind": "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "condition-cel-4",
-      "params": [{"name": "outcome", "value": "$(params.array)[$(params.condition-cel-outcome)]"}],
+      "kind": "CEL", "name": "cel_condition"}}, {"name": "condition-cel-4", "params":
+      [{"name": "outcome", "value": "$(params.array)[$(params.condition-cel-outcome)]"}],
       "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name":
-      "cel_condition"}, "timeout": "525600m"}, {"name": "condition-cel-5", "params":
-      [{"name": "outcome", "value": "$(tasks.condition-cel-3.results.outcome) < $(tasks.condition-cel-4.results.outcome)"}],
+      "cel_condition"}}, {"name": "condition-cel-5", "params": [{"name": "outcome",
+      "value": "$(tasks.condition-cel-3.results.outcome) < $(tasks.condition-cel-4.results.outcome)"}],
       "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name":
-      "cel_condition"}, "timeout": "525600m"}, {"name": "condition-cel-8", "params":
-      [{"name": "outcome", "value": "$(params.condition-cel-outcome) + 1"}], "runAfter":
-      ["double-recursion-test-graph-recur-b-4"], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
-      "kind": "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "condition-cel-9",
-      "params": [{"name": "outcome", "value": "$(tasks.condition-cel-8.results.outcome)
-      < size( $(params.array) )"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
-      "kind": "CEL", "name": "cel_condition"}, "timeout": "525600m"}, {"name": "recur-a",
-      "params": [{"name": "array", "value": "$(params.array)"}, {"name": "condition-cel-2-outcome",
-      "value": "$(params.condition-cel-2-outcome)"}, {"name": "condition-cel-outcome",
-      "value": "$(tasks.condition-cel-8.results.outcome)"}, {"name": "just_one_iteration",
-      "value": ["1"]}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind":
-      "PipelineLoop", "name": "double-recursion-test-graph-recur-a-2"}, "when": [{"input":
-      "$(tasks.condition-cel-9.results.outcome)", "operator": "in", "values": ["true"]}]},
-      {"name": "double-recursion-test-graph-recur-b-4", "params": [{"name": "condition-cel-2-outcome",
-      "value": "$(params.condition-cel-2-outcome)"}, {"name": "condition-cel-3-outcome",
-      "value": "$(tasks.condition-cel-3.results.outcome)"}, {"name": "condition-cel-4-outcome",
-      "value": "$(tasks.condition-cel-4.results.outcome)"}, {"name": "condition-cel-5-outcome",
-      "value": "$(tasks.condition-cel-5.results.outcome)"}, {"name": "condition-cel-outcome",
-      "value": "$(params.condition-cel-outcome)"}, {"name": "just_one_iteration",
-      "value": ["1"]}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind":
-      "PipelineLoop", "name": "double-recursion-test-graph-recur-b-4"}, "when": [{"input":
-      "$(tasks.condition-cel-5.results.outcome)", "operator": "in", "values": ["true"]}]}]}}},
-      {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata":
-      {"name": "double-recursion-test-graph-recur-b-4"}, "spec": {"iterateParam":
+      "cel_condition"}}, {"name": "condition-cel-8", "params": [{"name": "outcome",
+      "value": "$(params.condition-cel-outcome) + 1"}], "runAfter": ["double-recursion-test-graph-recur-b-4"],
+      "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name":
+      "cel_condition"}}, {"name": "condition-cel-9", "params": [{"name": "outcome",
+      "value": "$(tasks.condition-cel-8.results.outcome) < size( $(params.array) )"}],
+      "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name":
+      "cel_condition"}}, {"name": "recur-a", "params": [{"name": "array", "value":
+      "$(params.array)"}, {"name": "condition-cel-2-outcome", "value": "$(params.condition-cel-2-outcome)"},
+      {"name": "condition-cel-outcome", "value": "$(tasks.condition-cel-8.results.outcome)"},
+      {"name": "just_one_iteration", "value": ["1"]}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "name": "double-recursion-test-graph-recur-a-2"}, "when":
+      [{"input": "$(tasks.condition-cel-9.results.outcome)", "operator": "in", "values":
+      ["true"]}]}, {"name": "double-recursion-test-graph-recur-b-4", "params": [{"name":
+      "condition-cel-2-outcome", "value": "$(params.condition-cel-2-outcome)"}, {"name":
+      "condition-cel-3-outcome", "value": "$(tasks.condition-cel-3.results.outcome)"},
+      {"name": "condition-cel-4-outcome", "value": "$(tasks.condition-cel-4.results.outcome)"},
+      {"name": "condition-cel-5-outcome", "value": "$(tasks.condition-cel-5.results.outcome)"},
+      {"name": "condition-cel-outcome", "value": "$(params.condition-cel-outcome)"},
+      {"name": "just_one_iteration", "value": ["1"]}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "name": "double-recursion-test-graph-recur-b-4"}, "when":
+      [{"input": "$(tasks.condition-cel-5.results.outcome)", "operator": "in", "values":
+      ["true"]}]}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
+      "metadata": {"name": "double-recursion-test-graph-recur-b-4"}, "spec": {"iterateParam":
       "just_one_iteration", "pipelineSpec": {"params": [{"name": "condition-cel-2-outcome",
       "type": "string"}, {"name": "condition-cel-3-outcome", "type": "string"}, {"name":
       "condition-cel-4-outcome", "type": "string"}, {"name": "condition-cel-5-outcome",
@@ -82,23 +81,21 @@ metadata:
       "type": "string"}], "results": [{"description": "/tmp/outputs/output/data",
       "name": "output", "type": "string"}], "steps": [{"command": ["sh", "-c", "echo
       $0 | tee $1\n", "Iter A: $(inputs.params.condition-cel-outcome), B: $(inputs.params.condition-cel-3-outcome)",
-      "$(results.output.path)"], "image": "alpine:3.6", "name": "main"}]}, "timeout":
-      "525600m"}, {"name": "condition-cel-6", "params": [{"name": "outcome", "value":
-      "$(params.condition-cel-3-outcome) + 1"}], "runAfter": ["print"], "taskRef":
-      {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name": "cel_condition"},
-      "timeout": "525600m"}, {"name": "condition-cel-7", "params": [{"name": "outcome",
-      "value": "$(tasks.condition-cel-6.results.outcome) < $(params.condition-cel-4-outcome)"}],
+      "$(results.output.path)"], "image": "alpine:3.6", "name": "main"}]}}, {"name":
+      "condition-cel-6", "params": [{"name": "outcome", "value": "$(params.condition-cel-3-outcome)
+      + 1"}], "runAfter": ["print"], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
+      "kind": "CEL", "name": "cel_condition"}}, {"name": "condition-cel-7", "params":
+      [{"name": "outcome", "value": "$(tasks.condition-cel-6.results.outcome) < $(params.condition-cel-4-outcome)"}],
       "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name":
-      "cel_condition"}, "timeout": "525600m"}, {"name": "recur-b", "params": [{"name":
-      "condition-cel-2-outcome", "value": "$(params.condition-cel-2-outcome)"}, {"name":
-      "condition-cel-3-outcome", "value": "$(tasks.condition-cel-6.results.outcome)"},
-      {"name": "condition-cel-4-outcome", "value": "$(params.condition-cel-4-outcome)"},
-      {"name": "condition-cel-5-outcome", "value": "$(params.condition-cel-5-outcome)"},
-      {"name": "condition-cel-outcome", "value": "$(params.condition-cel-outcome)"},
-      {"name": "just_one_iteration", "value": ["1"]}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "name": "double-recursion-test-graph-recur-b-4"}, "when":
-      [{"input": "$(tasks.condition-cel-7.results.outcome)", "operator": "in", "values":
-      ["true"]}]}]}}}]'
+      "cel_condition"}}, {"name": "recur-b", "params": [{"name": "condition-cel-2-outcome",
+      "value": "$(params.condition-cel-2-outcome)"}, {"name": "condition-cel-3-outcome",
+      "value": "$(tasks.condition-cel-6.results.outcome)"}, {"name": "condition-cel-4-outcome",
+      "value": "$(params.condition-cel-4-outcome)"}, {"name": "condition-cel-5-outcome",
+      "value": "$(params.condition-cel-5-outcome)"}, {"name": "condition-cel-outcome",
+      "value": "$(params.condition-cel-outcome)"}, {"name": "just_one_iteration",
+      "value": ["1"]}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind":
+      "PipelineLoop", "name": "double-recursion-test-graph-recur-b-4"}, "when": [{"input":
+      "$(tasks.condition-cel-7.results.outcome)", "operator": "in", "values": ["true"]}]}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
     pipelines.kubeflow.org/generation: ''
@@ -119,7 +116,6 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-      timeout: 525600m
     - name: condition-cel-2
       params:
       - name: outcome
@@ -128,7 +124,6 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-      timeout: 525600m
     - name: double-recursion-test-graph-recur-a-2
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -149,6 +144,3 @@ spec:
         operator: in
         values:
         - "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

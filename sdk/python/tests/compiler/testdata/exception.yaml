@@ -60,7 +60,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
               [], "version": "echo@sha256=4307d04e3d8d097b882bcd9cba02f5ae7d2433c3a6e5968af9f6bf1e17582984"}'
-      timeout: 525600m
     finally:
     - name: addon-sample-addon-group-1
       params:
@@ -103,7 +102,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
                       "outputs": [{"name": "data", "type": "String"}], "version":
                       "gcs-download@sha256=220e1c1380f30155e73039cd46f9eaadcfb351b3da52e4ac6a7958b69e7a2881"}'
-              timeout: 525600m
             - name: echo-2
               params:
               - name: gcs-download-data
@@ -126,10 +124,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "echo",
                       "outputs": [], "version": "echo@sha256=4307d04e3d8d097b882bcd9cba02f5ae7d2433c3a6e5968af9f6bf1e17582984"}'
-              timeout: 525600m
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

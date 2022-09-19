@@ -62,7 +62,3 @@ spec:
         name: some-custom-resource
         apiVersion: custom.tekton.dev/v1alpha1
         kind: custom-task
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

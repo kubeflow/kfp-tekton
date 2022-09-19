@@ -54,7 +54,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
               "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
-      timeout: 525600m
     - name: sleepcomponent-2
       taskSpec:
         steps:
@@ -70,7 +69,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
               "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
-      timeout: 525600m
     - name: sleepcomponent-3
       taskSpec:
         steps:
@@ -86,7 +84,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "sleepComponent",
               "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
-      timeout: 525600m
     - name: flip-coin
       taskSpec:
         steps:
@@ -151,7 +148,6 @@ spec:
               [{"name": "Output", "type": "String"}], "version": "Flip coin@sha256=83ef617eda2e04a688908716a02461237baee3cd04754ea99894e441b1f0679a"}'
       runAfter:
       - sleepcomponent
-      timeout: 525600m
     - name: sleepcomponent-4
       taskSpec:
         steps:
@@ -169,7 +165,6 @@ spec:
               "outputs": [], "version": "sleepComponent@sha256=a885c0df4b9597faab0f119871ba6935f574cbd2b7232dcfa0d7602bffc9e223"}'
       runAfter:
       - any-test
-      timeout: 525600m
     - name: any-test
       taskSpec:
         steps:
@@ -202,12 +197,8 @@ spec:
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace
-      timeout: 525600m
       params:
       - name: pipelineRun-name
         value: $(context.pipelineRun.name)
       - name: pipelineRun-namespace
         value: $(context.pipelineRun.namespace)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

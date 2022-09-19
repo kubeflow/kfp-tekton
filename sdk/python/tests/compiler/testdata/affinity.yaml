@@ -52,7 +52,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
               [], "version": "echo@sha256=7a01fe307dc14789e461b2122f62bb8bc694f3f2eec35fa3239cf971034e2504"}'
-      timeout: 525600m
   taskRunSpecs:
   - pipelineTaskName: echo
     taskPodTemplate:
@@ -65,6 +64,3 @@ spec:
                 operator: In
                 values:
                 - linux
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

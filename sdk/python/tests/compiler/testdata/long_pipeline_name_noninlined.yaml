@@ -38,7 +38,7 @@ metadata:
       \"print\", \"outputs\": [], \"version\": \"print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "arr-loop-item", "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.arr-loop-item)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m"}]}}}]'
+      "image": "alpine:3.6", "name": "main"}]}}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
     pipelines.kubeflow.org/generation: ''
@@ -59,6 +59,3 @@ spec:
       params:
       - name: arr-loop-item
         value: $(params.arr)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

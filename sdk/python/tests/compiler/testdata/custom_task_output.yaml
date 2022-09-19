@@ -47,7 +47,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-fetcher-1
       params:
       - name: foo
@@ -56,7 +55,6 @@ spec:
         name: artifact_fetcher
         apiVersion: fetcher.tekton.dev/v1alpha1
         kind: FETCHER
-      timeout: 525600m
     - name: artifact-printer-0
       params:
       - name: artifact-fetcher-0-FOO
@@ -82,7 +80,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "artifact-printer-0",
               "outputs": [{"name": "stdout", "type": "String"}], "version": "artifact-printer-0@sha256=87fc76c64fcc79f4f4b95ee3428ade79e2a4bcdcbc03b4b9b17cef8db6c86dff"}'
-      timeout: 525600m
     - name: artifact-printer-1
       params:
       - name: artifact-fetcher-1-foo
@@ -108,7 +105,3 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "artifact-printer-1",
               "outputs": [{"name": "stdout", "type": "String"}], "version": "artifact-printer-1@sha256=37dc967f8576ece2bc91e571dbaccd7f77043711a66b411d02aa952bd47191bf"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

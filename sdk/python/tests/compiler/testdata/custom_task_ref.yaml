@@ -42,7 +42,6 @@ spec:
         name: custom_task_name
         apiVersion: custom_task_api_version
         kind: custom_task_kind
-      timeout: 525600m
     - name: any-name-2
       params:
       - name: other_custom_task_argument_keys
@@ -53,7 +52,3 @@ spec:
         kind: custom_task_kind
       runAfter:
       - any-name
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

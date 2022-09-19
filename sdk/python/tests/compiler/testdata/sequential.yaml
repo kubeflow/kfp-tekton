@@ -75,7 +75,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "gcs-download",
               "outputs": [{"name": "data", "type": "String"}], "version": "gcs-download@sha256=51495967c86754944b35d0d9b5ebcb6311b25860a44c55e4bbb162c2b9367590"}'
-      timeout: 525600m
     - name: echo
       params:
       - name: path
@@ -100,7 +99,3 @@ spec:
               [], "version": "echo@sha256=7ad0e09d9f72a1deb421520d82fb4a3a4b9cf1319d55538f0875f43ff5cdd2f8"}'
       runAfter:
       - gcs-download
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

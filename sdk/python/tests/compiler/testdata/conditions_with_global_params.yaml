@@ -131,7 +131,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Add numbers",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Add
               numbers@sha256=4a4bea3d4b7966f0ce3cdef5ad4d997a283ef6a895959791e037cf391732bb04"}'
-      timeout: 525600m
     - name: print-number
       params:
       - name: add-numbers-Output
@@ -202,7 +201,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Print number",
               "outputs": [{"name": "Output", "type": "Integer"}], "version": "Print
               number@sha256=7ad81f52d1b478fd168c0234b16a496672bdfc43da71a71fcdc5d688791f04cf"}'
-      timeout: 525600m
     - name: notify-success
       taskSpec:
         steps:
@@ -235,7 +233,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: notify-failure
       taskSpec:
         steps:
@@ -268,7 +265,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: condition-1
       params:
       - name: operand1
@@ -351,6 +347,3 @@ spec:
           - $(inputs.params.operand1)
           - $(inputs.params.operand2)
           image: python:alpine3.6
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

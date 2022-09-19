@@ -49,18 +49,18 @@ metadata:
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "results": [{"description":
       "/tmp/outputs/output_value/data", "name": "output-value", "type": "string"}],
       "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n", "print-3", "$(results.output-value.path)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m"}]}}}, {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "empty-loop-for-loop-3"},
-      "spec": {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name":
-      "param-loop-item", "type": "string"}], "tasks": [{"name": "print-4", "runAfter":
-      [], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "image": "alpine:3.6", "name": "main"}]}}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "empty-loop-for-loop-3"}, "spec":
+      {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name": "param-loop-item",
+      "type": "string"}], "tasks": [{"name": "print-4", "runAfter": [], "taskSpec":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"print-4\", \"outputs\": [{\"description\": \"Represents an output
       paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
       \"print-4@sha256=612578686b564fc00e7052b345cd44d6a9cad721cdd6ceb3ecfc68c392a932f7\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "results": [{"description":
       "/tmp/outputs/output_value/data", "name": "output-value", "type": "string"}],
       "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n", "print-4", "$(results.output-value.path)"],
-      "image": "alpine:3.6", "name": "main"}]}, "timeout": "525600m"}]}}}]'
+      "image": "alpine:3.6", "name": "main"}]}}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
     pipelines.kubeflow.org/generation: ''
@@ -97,7 +97,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print-0", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "print-0@sha256=5dd3c506ec54281b82008ca8ec5d8142834eae18d74ce8a110a31dd6e371b40d"}'
-      timeout: 525600m
     - name: condition-cel
       params:
       - name: outcome
@@ -106,7 +105,6 @@ spec:
         name: cel_condition
         apiVersion: cel.tekton.dev/v1alpha1
         kind: CEL
-      timeout: 525600m
     - name: print-1
       taskSpec:
         steps:
@@ -136,7 +134,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: print-2
       taskSpec:
         steps:
@@ -163,7 +160,6 @@ spec:
               "type": "String"}], "version": "print-2@sha256=1a47ca9c21f0c4c30565a5cd490ec648a8e6b33dfa08a62ff2bfee67d6800e00"}'
       runAfter:
       - print-1
-      timeout: 525600m
       when:
       - input: $(tasks.condition-cel.results.outcome)
         operator: in
@@ -189,6 +185,3 @@ spec:
       params:
       - name: param-loop-item
         value: $(params.param)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

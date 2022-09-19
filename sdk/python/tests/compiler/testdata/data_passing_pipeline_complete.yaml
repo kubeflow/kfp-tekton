@@ -170,7 +170,6 @@ spec:
               "outputs": [{"name": "data"}], "version": "Produce anything@sha256=e0d1d2b2c37de20e127eb5e52f5cfa8f4cdfe4657e6d46521ae87272b92bca86"}'
         workspaces:
         - name: produce-anything
-      timeout: 525600m
       workspaces:
       - name: produce-anything
         workspace: data-passing-pipeline
@@ -262,7 +261,6 @@ spec:
               something@sha256=63c523da412a90ddab960b20ffe9b7f0e3e13b6b66369811479d68e8b9b5c84b"}'
         workspaces:
         - name: produce-something
-      timeout: 525600m
       workspaces:
       - name: produce-something
         workspace: data-passing-pipeline
@@ -371,7 +369,6 @@ spec:
               string@sha256=8eb027589d021d1968d4db71db08287540ac24f305da4d91f3bac15c41562281"}'
         workspaces:
         - name: produce-string
-      timeout: 525600m
       workspaces:
       - name: produce-string
         workspace: data-passing-pipeline
@@ -406,7 +403,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-      timeout: 525600m
     - name: consume-something-as-value
       taskSpec:
         steps:
@@ -438,7 +434,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-      timeout: 525600m
     - name: consume-string-as-value
       taskSpec:
         steps:
@@ -470,7 +465,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-      timeout: 525600m
     - name: consume-anything-as-file
       taskSpec:
         steps:
@@ -518,7 +512,6 @@ spec:
         volumes:
         - name: data
           emptyDir: {}
-      timeout: 525600m
     - name: consume-something-as-file
       taskSpec:
         steps:
@@ -566,7 +559,6 @@ spec:
         volumes:
         - name: data
           emptyDir: {}
-      timeout: 525600m
     - name: consume-string-as-file
       taskSpec:
         steps:
@@ -614,7 +606,6 @@ spec:
         volumes:
         - name: data
           emptyDir: {}
-      timeout: 525600m
     - name: consume-anything-as-value-2
       params:
       - name: anything_param
@@ -651,7 +642,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-      timeout: 525600m
     - name: consume-anything-as-value-3
       params:
       - name: something_param
@@ -688,7 +678,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-      timeout: 525600m
     - name: consume-anything-as-value-4
       params:
       - name: string_param
@@ -725,7 +714,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-      timeout: 525600m
     - name: consume-something-as-value-2
       params:
       - name: anything_param
@@ -762,7 +750,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-      timeout: 525600m
     - name: consume-something-as-value-3
       params:
       - name: something_param
@@ -799,7 +786,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-      timeout: 525600m
     - name: consume-string-as-value-2
       params:
       - name: anything_param
@@ -836,7 +822,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-      timeout: 525600m
     - name: consume-string-as-value-3
       params:
       - name: string_param
@@ -873,7 +858,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-      timeout: 525600m
     - name: consume-anything-as-file-2
       taskSpec:
         steps:
@@ -922,7 +906,6 @@ spec:
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
         workspaces:
         - name: consume-anything-as-file-2
-      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-2
         workspace: data-passing-pipeline
@@ -974,7 +957,6 @@ spec:
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
         workspaces:
         - name: consume-anything-as-file-3
-      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-3
         workspace: data-passing-pipeline
@@ -1026,7 +1008,6 @@ spec:
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
         workspaces:
         - name: consume-anything-as-file-4
-      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-4
         workspace: data-passing-pipeline
@@ -1078,7 +1059,6 @@ spec:
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
         workspaces:
         - name: consume-something-as-file-2
-      timeout: 525600m
       workspaces:
       - name: consume-something-as-file-2
         workspace: data-passing-pipeline
@@ -1130,7 +1110,6 @@ spec:
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
         workspaces:
         - name: consume-something-as-file-3
-      timeout: 525600m
       workspaces:
       - name: consume-something-as-file-3
         workspace: data-passing-pipeline
@@ -1182,7 +1161,6 @@ spec:
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
         workspaces:
         - name: consume-string-as-file-2
-      timeout: 525600m
       workspaces:
       - name: consume-string-as-file-2
         workspace: data-passing-pipeline
@@ -1234,7 +1212,6 @@ spec:
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
         workspaces:
         - name: consume-string-as-file-3
-      timeout: 525600m
       workspaces:
       - name: consume-string-as-file-3
         workspace: data-passing-pipeline
@@ -1274,7 +1251,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-      timeout: 525600m
     - name: consume-anything-as-value-6
       params:
       - name: produce-something-data
@@ -1311,7 +1287,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-      timeout: 525600m
     - name: consume-anything-as-value-7
       params:
       - name: produce-string-Output
@@ -1348,7 +1323,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume anything
               as value", "outputs": [], "version": "Consume anything as value@sha256=b2e344143f1b38810b7679b387daeb1ffeb21753d3961f673cd06d16bbdca17c"}'
-      timeout: 525600m
     - name: consume-something-as-value-4
       params:
       - name: produce-anything-data
@@ -1385,7 +1359,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-      timeout: 525600m
     - name: consume-something-as-value-5
       params:
       - name: produce-something-data
@@ -1422,7 +1395,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume something
               as value", "outputs": [], "version": "Consume something as value@sha256=e73d802cc0fbe17f619e7cdc4e5a574e3924f7836af26da626356b912a0497eb"}'
-      timeout: 525600m
     - name: consume-string-as-value-4
       params:
       - name: produce-anything-data
@@ -1459,7 +1431,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-      timeout: 525600m
     - name: consume-string-as-value-5
       params:
       - name: produce-string-Output
@@ -1496,7 +1467,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume string
               as value", "outputs": [], "version": "Consume string as value@sha256=7ffbab8c19ae23102d7a2e6cfd96b8a7d55eed8667a6ea88a8c70d3ed871b2d2"}'
-      timeout: 525600m
     - name: consume-anything-as-file-5
       params:
       - name: produce-anything-trname
@@ -1541,7 +1511,6 @@ spec:
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
         workspaces:
         - name: consume-anything-as-file-5
-      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-5
         workspace: data-passing-pipeline
@@ -1591,7 +1560,6 @@ spec:
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
         workspaces:
         - name: consume-anything-as-file-6
-      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-6
         workspace: data-passing-pipeline
@@ -1641,7 +1609,6 @@ spec:
               as file", "outputs": [], "version": "Consume anything as file@sha256=c8060984df9dfe0b5f01970c18b087d7083d280222586b664662403b7afbc30a"}'
         workspaces:
         - name: consume-anything-as-file-7
-      timeout: 525600m
       workspaces:
       - name: consume-anything-as-file-7
         workspace: data-passing-pipeline
@@ -1691,7 +1658,6 @@ spec:
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
         workspaces:
         - name: consume-something-as-file-4
-      timeout: 525600m
       workspaces:
       - name: consume-something-as-file-4
         workspace: data-passing-pipeline
@@ -1741,7 +1707,6 @@ spec:
               as file", "outputs": [], "version": "Consume something as file@sha256=f4c0021ec28d8ff1d0e3fbfe6712ee25df4cd101bc1c15e99d1cbdf66976cc35"}'
         workspaces:
         - name: consume-something-as-file-5
-      timeout: 525600m
       workspaces:
       - name: consume-something-as-file-5
         workspace: data-passing-pipeline
@@ -1791,7 +1756,6 @@ spec:
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
         workspaces:
         - name: consume-string-as-file-4
-      timeout: 525600m
       workspaces:
       - name: consume-string-as-file-4
         workspace: data-passing-pipeline
@@ -1841,7 +1805,6 @@ spec:
               as file", "outputs": [], "version": "Consume string as file@sha256=f58c7cc40eac125991a0967cdf0c76832ae99042d1c681f5601348c09fc50510"}'
         workspaces:
         - name: consume-string-as-file-5
-      timeout: 525600m
       workspaces:
       - name: consume-string-as-file-5
         workspace: data-passing-pipeline
@@ -1849,9 +1812,6 @@ spec:
       - produce-string
     workspaces:
     - name: data-passing-pipeline
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m
   workspaces:
   - name: data-passing-pipeline
     volumeClaimTemplate:

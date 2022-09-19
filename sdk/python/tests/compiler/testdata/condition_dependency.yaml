@@ -79,7 +79,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip@sha256=f8759c2bcdd89af3d7bae4547f835d76f3c79fa5e4061dcb4b4a7c1f1d68c99e"}'
-      timeout: 525600m
     - name: flip-2
       params:
       - name: forced_result2
@@ -112,7 +111,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: print
       params:
       - name: flip-2-output
@@ -137,7 +135,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: print-2
       params:
       - name: flip-output
@@ -162,7 +159,6 @@ spec:
         operator: in
         values:
         - "true"
-      timeout: 525600m
     - name: print-3
       taskSpec:
         steps:
@@ -180,7 +176,6 @@ spec:
       runAfter:
       - condition-1
       - condition-3
-      timeout: 525600m
     - name: condition-1
       params:
       - name: operand1
@@ -309,6 +304,3 @@ spec:
           - $(inputs.params.operand1)
           - $(inputs.params.operand2)
           image: python:alpine3.6
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

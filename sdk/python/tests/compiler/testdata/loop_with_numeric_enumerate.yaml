@@ -106,7 +106,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-coop1",
                       "outputs": [], "version": "my-in-coop1@sha256=3e0e81a9e227f372f7677b8cf32c5653b7947d243bedf2762beaf556af346719"}'
-              timeout: 525600m
             - name: my-pipeline-for-loop-5
               params:
               - name: from
@@ -163,7 +162,6 @@ spec:
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "my-in-coop1", "outputs": [], "version": "my-in-coop1@sha256=3e0e81a9e227f372f7677b8cf32c5653b7947d243bedf2762beaf556af346719"}'
-                      timeout: 525600m
                   iterationNumberParam: iteration-number-6
                   iterateNumeric: loop-item-param-4
                 metadata:
@@ -174,6 +172,3 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

@@ -54,7 +54,6 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
               "outputs": [], "version": "random-failure@sha256=04a3a3f35c930802350039b1cbf47873166a6b3c8ab9af8bfc64092c56eddf7f"}'
       retries: 10
-      timeout: 525600m
     - name: random-failure-2
       taskSpec:
         steps:
@@ -74,7 +73,3 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
               "outputs": [], "version": "random-failure@sha256=04a3a3f35c930802350039b1cbf47873166a6b3c8ab9af8bfc64092c56eddf7f"}'
       retries: 5
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

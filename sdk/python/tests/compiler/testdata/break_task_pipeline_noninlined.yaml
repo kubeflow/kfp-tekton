@@ -40,12 +40,11 @@ metadata:
       "loop-item-param-1", "type": "string"}, {"name": "param", "type": "string"}],
       "steps": [{"args": ["set -e\necho op1 \"$0\" \"$1\"\n", "$(inputs.params.loop-item-param-1)",
       "$(inputs.params.param)"], "command": ["sh", "-c"], "image": "library/bash:4.4.23",
-      "name": "main"}]}, "timeout": "525600m"}, {"name": "condition-cel", "params":
-      [{"name": "outcome", "value": "$(params.loop-item-param-1) == 2"}], "taskRef":
-      {"apiVersion": "cel.tekton.dev/v1alpha1", "kind": "CEL", "name": "cel_condition"},
-      "timeout": "525600m"}, {"name": "pipelineloop-break-operation", "taskRef": {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "BreakTask", "name": "pipelineloop-break-operation"},
-      "timeout": "525600m", "when": [{"input": "$(tasks.condition-cel.results.outcome)",
+      "name": "main"}]}}, {"name": "condition-cel", "params": [{"name": "outcome",
+      "value": "$(params.loop-item-param-1) == 2"}], "taskRef": {"apiVersion": "cel.tekton.dev/v1alpha1",
+      "kind": "CEL", "name": "cel_condition"}}, {"name": "pipelineloop-break-operation",
+      "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "BreakTask",
+      "name": "pipelineloop-break-operation"}, "when": [{"input": "$(tasks.condition-cel.results.outcome)",
       "operator": "in", "values": ["true"]}]}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
@@ -69,6 +68,3 @@ spec:
         value: '[1, 2]'
       - name: param
         value: $(params.param)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

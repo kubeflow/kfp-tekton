@@ -51,10 +51,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "echo", "outputs":
               [], "version": "echo@sha256=e351a00f59eb0eb8d614bb41816020b768770ba7513a5b3c0c7ea5c2efa9c6d6"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m
   podTemplate:
     nodeSelector:
       kubernetes.io/os: linux

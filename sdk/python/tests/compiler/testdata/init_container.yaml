@@ -53,7 +53,3 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "hello", "outputs":
               [], "version": "hello@sha256=df9647340a6623fa5aa8ac28fc99358101f4ca72dab416287eb949b5dbd543ad"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

@@ -129,7 +129,6 @@ spec:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations: {}
-      timeout: 525600m
     - name: cop
       params:
       - name: create-pvc-name
@@ -158,7 +157,3 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "cop", "outputs":
               [], "version": "cop@sha256=f639de5a5b68415d6b01ffa4b02ecda5641449bc5b10053298959202a7d27c5c"}'
-      timeout: 525600m
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m

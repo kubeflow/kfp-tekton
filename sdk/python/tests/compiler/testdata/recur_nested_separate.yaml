@@ -71,7 +71,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "flip-coin", "outputs":
               [{"name": "output", "type": "String"}], "version": "flip-coin@sha256=1989ae83915edcd7253e495603317c1f99196f5ef2b0bacb31a0273d941e830d"}'
-      timeout: 525600m
     - name: print-3
       params:
       - name: flip-coin-output
@@ -93,7 +92,6 @@ spec:
               [], "version": "print@sha256=8232f0c48ead41f53f1c61e3c35a4d3440cdd0591ab17933736e5ed7c8390d5c"}'
       runAfter:
       - nested-recursion-pipeline-flip-component-1
-      timeout: 525600m
     - runAfter:
       - flip-coin
       name: nested-recursion-pipeline-flip-component-1
@@ -109,6 +107,3 @@ spec:
         - '1'
       - name: maxVal
         value: $(params.maxVal)
-  timeouts:
-    pipeline: 1051200m
-    tasks: 525600m
