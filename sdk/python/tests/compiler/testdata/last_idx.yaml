@@ -1,0 +1,154 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: pipeline
+  annotations:
+    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/stdout.tgz",
+      "name": "print-stdout", "path": "/tmp/outputs/stdout/data"}], "print-2": [{"key":
+      "artifacts/$PIPELINERUN/print-2/stdout.tgz", "name": "print-2-stdout", "path":
+      "/tmp/outputs/stdout/data"}]}'
+    tekton.dev/input_artifacts: '{"print-2": [{"name": "print-last-elem", "parent_task":
+      "print"}, {"name": "print-last-idx", "parent_task": "print"}]}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print": [["stdout", "$(results.stdout.path)"]],
+      "print-2": [["stdout", "$(results.stdout.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "param",
+      "optional": true, "type": "Integer"}], "name": "pipeline"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
+spec:
+  params:
+  - name: param
+    value: '10'
+  pipelineSpec:
+    params:
+    - name: param
+      default: '10'
+    tasks:
+    - name: print-2
+      params:
+      - name: print-last-elem
+        value: $(tasks.print.results.last-elem)
+      - name: print-last-idx
+        value: $(tasks.print.results.last-idx)
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - 'echo last it: no $(inputs.params.print-last-idx): $(inputs.params.print-last-elem)'
+          image: alpine:3.6
+        - image: busybox
+          name: copy-results
+          command:
+          - sh
+          - -ec
+          - |
+            set -exo pipefail
+            cp /tmp/outputs/stdout/data $(results.stdout.path);
+        params:
+        - name: print-last-elem
+        - name: print-last-idx
+        results:
+        - name: stdout
+          type: string
+          description: /tmp/outputs/stdout/data
+        stepTemplate:
+          volumeMounts:
+          - name: stdout
+            mountPath: /tmp/outputs/stdout
+        volumes:
+        - name: stdout
+          emptyDir: {}
+        metadata:
+          labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [{"name": "stdout"}], "version": "print@sha256=c71a843b7628df22a3d8a9c62a43127f451029e18218c53b06964df8d2bec3ed"}'
+      runAfter:
+      - pipeline-for-loop-4
+    - name: pipeline-for-loop-4
+      params:
+      - name: loop-item-param-2
+        value: 1,2
+      - name: loop-item-param-3
+        value: ','
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: iteration-number-5
+              type: string
+            - name: loop-item-param-2
+              type: string
+            tasks:
+            - name: print
+              params:
+              - name: iteration-number-5
+                value: $(params.iteration-number-5)
+              - name: loop-item-param-2
+                value: $(params.loop-item-param-2)
+              taskSpec:
+                steps:
+                - name: main
+                  command:
+                  - 'echo it no $(inputs.params.iteration-number-5): $(inputs.params.loop-item-param-2)'
+                  image: alpine:3.6
+                - image: busybox
+                  name: copy-results
+                  command:
+                  - sh
+                  - -ec
+                  - |
+                    set -exo pipefail
+                    cp /tmp/outputs/stdout/data $(results.stdout.path);
+                params:
+                - name: iteration-number-5
+                  type: string
+                - name: loop-item-param-2
+                  type: string
+                results:
+                - name: stdout
+                  type: string
+                  description: /tmp/outputs/stdout/data
+                stepTemplate:
+                  volumeMounts:
+                  - name: stdout
+                    mountPath: /tmp/outputs/stdout
+                volumes:
+                - name: stdout
+                  emptyDir: {}
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
+                  annotations:
+                    pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
+                      "outputs": [{"name": "stdout"}], "version": "print@sha256=c71a843b7628df22a3d8a9c62a43127f451029e18218c53b06964df8d2bec3ed"}'
+          iterationNumberParam: iteration-number-5
+          iterateParam: loop-item-param-2
+          iterateParamStringSeparator: loop-item-param-3
+        metadata:
+          labels:
+            pipelines.kubeflow.org/cache_enabled: "true"

@@ -393,8 +393,18 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if err != nil {
 		return fmt.Errorf("error updating PipelineRun status for Run %s/%s: %w", run.Namespace, run.Name, err)
 	}
+
 	if highestIteration > 0 {
-		updateLastIdx(run, highestIteration, iterationElements[highestIteration-1])
+		logger.Info("updating lastIdx", highestIteration, iterationElements[highestIteration-1])
+		if updateLastIdx(run, highestIteration, iterationElements[highestIteration-1]) {
+			logger.Infof("Actually updating... %#v", run)
+			_, err := c.pipelineClientSet.TektonV1alpha1().Runs(run.Namespace).UpdateStatus(ctx, run, metav1.UpdateOptions{})
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		logger.Info("Highest iteration:", highestIteration)
 	}
 	// Run is cancelled, just cancel all the running instance and return
 	if run.IsCancelled() {
@@ -441,7 +451,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			RunStatusFields: runv1alpha1.RunStatusFields{
 				StartTime:      run.Status.StartTime.DeepCopy(),
 				CompletionTime: run.Status.CompletionTime.DeepCopy(),
-				Results:        nil,
+				Results:        run.Status.Results,
 				RetriesStatus:  nil,
 				ExtraFields:    runtime.RawExtension{},
 			},
@@ -480,7 +490,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		return nil
 	}
 
-	// Check the status of the PipelineRun for the highest iteration.
+	// Check the status of the PipelineRun for th e highest iteration.
 	if len(failedPrs) > 0 {
 		for _, failedPr := range failedPrs {
 			if status.CurrentRunning == 0 {
@@ -619,35 +629,42 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 	return &pipelineLoopMeta, &pipelineLoopSpec, nil
 }
 
-func updateLastIdx(run *v1alpha1.Run, lastIdx int, lastElem interface{}) {
+func updateLastIdx(run *v1alpha1.Run, lastIdx int, lastElem interface{}) bool {
 	indexResultLastIdx, indexResultLastElem := -1, -1
-	// if Run already has last_idx and last elem, then update it.
-	for i, res := range run.Status.Results {
-		if res.Name == "last_idx" {
+	// if Run already has last-idx and last elem, then update it.
+	for i, res := range run.Status.RunStatusFields.Results {
+		if res.Name == "last-idx" {
 			indexResultLastIdx = i
 		}
-		if res.Name == "last_elem" {
+		if res.Name == "last-elem" {
 			indexResultLastElem = i
 		}
 	}
 	if indexResultLastElem >= 0 && indexResultLastIdx >= 0 {
-		run.Status.Results[indexResultLastIdx] = v1alpha1.RunResult{
-			Name:  "last_idx",
+		runRes := run.Status.RunStatusFields.Results[indexResultLastIdx]
+		prevLastIdx, err := strconv.Atoi(runRes.Value)
+		fmt.Println("Prev last idx: ", prevLastIdx, "err", err)
+		if prevLastIdx <= lastIdx {
+			return false
+		}
+		run.Status.RunStatusFields.Results[indexResultLastIdx] = v1alpha1.RunResult{
+			Name:  "last-idx",
 			Value: fmt.Sprintf("%d", lastIdx),
 		}
-		run.Status.Results[indexResultLastElem] = v1alpha1.RunResult{
-			Name:  "last_elem",
+		run.Status.RunStatusFields.Results[indexResultLastElem] = v1alpha1.RunResult{
+			Name:  "last-elem",
 			Value: fmt.Sprintf("%d", lastElem),
 		}
 	} else {
-		run.Status.Results = append(run.Status.Results, v1alpha1.RunResult{
-			Name:  "last_idx",
+		run.Status.RunStatusFields.Results = append(run.Status.RunStatusFields.Results, v1alpha1.RunResult{
+			Name:  "last-idx",
 			Value: fmt.Sprintf("%d", lastIdx),
 		}, v1alpha1.RunResult{
-			Name:  "last_elem",
+			Name:  "last-elem",
 			Value: fmt.Sprintf("%s", lastElem),
 		})
 	}
+	return true
 }
 
 func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, run *v1alpha1.Run, iteration int, iterationElements []interface{}) (*v1beta1.PipelineRun, error) {

@@ -64,6 +64,13 @@ LICENSE_HEADER = textwrap.dedent("""\
 
 class TestTektonCompiler(unittest.TestCase):
 
+  def test_last_idx(self):
+    """
+    Test compiling a initial container workflow.
+    """
+    from .testdata.last_idx import pipeline
+    self._test_pipeline_workflow(pipeline, 'last_idx.yaml', skip_noninlined=False)
+
   def test_init_container_workflow(self):
     """
     Test compiling a initial container workflow.
