@@ -21,8 +21,9 @@ metadata:
       "name": "print-stdout", "path": "/tmp/outputs/stdout/data"}], "print-2": [{"key":
       "artifacts/$PIPELINERUN/print-2/stdout.tgz", "name": "print-2-stdout", "path":
       "/tmp/outputs/stdout/data"}]}'
-    tekton.dev/input_artifacts: '{"print-2": [{"name": "print-last-elem", "parent_task":
-      "print"}, {"name": "print-last-idx", "parent_task": "print"}]}'
+    tekton.dev/input_artifacts: '{"print-2": [{"name": "pipeline-for-loop-4-last-elem",
+      "parent_task": "pipeline-for-loop-4"}, {"name": "pipeline-for-loop-4-last-idx",
+      "parent_task": "pipeline-for-loop-4"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
@@ -47,15 +48,15 @@ spec:
     tasks:
     - name: print-2
       params:
-      - name: print-last-elem
-        value: $(tasks.print.results.last-elem)
-      - name: print-last-idx
-        value: $(tasks.print.results.last-idx)
+      - name: pipeline-for-loop-4-last-elem
+        value: $(tasks.pipeline-for-loop-4.results.last-elem)
+      - name: pipeline-for-loop-4-last-idx
+        value: $(tasks.pipeline-for-loop-4.results.last-idx)
       taskSpec:
         steps:
         - name: main
           command:
-          - 'echo last it: no $(inputs.params.print-last-idx): $(inputs.params.print-last-elem)'
+          - 'echo last it: no $(inputs.params.pipeline-for-loop-4-last-idx): $(inputs.params.pipeline-for-loop-4-last-elem)'
           image: alpine:3.6
         - image: busybox
           name: copy-results
@@ -66,8 +67,8 @@ spec:
             set -exo pipefail
             cp /tmp/outputs/stdout/data $(results.stdout.path);
         params:
-        - name: print-last-elem
-        - name: print-last-idx
+        - name: pipeline-for-loop-4-last-elem
+        - name: pipeline-for-loop-4-last-idx
         results:
         - name: stdout
           type: string
@@ -85,8 +86,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
               [{"name": "stdout"}], "version": "print@sha256=c71a843b7628df22a3d8a9c62a43127f451029e18218c53b06964df8d2bec3ed"}'
-      runAfter:
-      - pipeline-for-loop-4
     - name: pipeline-for-loop-4
       params:
       - name: loop-item-param-2

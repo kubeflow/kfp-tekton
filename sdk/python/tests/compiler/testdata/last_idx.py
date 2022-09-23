@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from kfp_tekton.compiler import TektonCompiler
-import kfp_tekton.tekton
-from kfp import dsl, components
+from kfp import dsl
 from kfp.components import load_component_from_text
 from kfp_tekton import tekton
 
@@ -33,6 +33,7 @@ PrintOp = load_component_from_text("""
         - { inputValue: msg }
 """)
 
+
 @dsl.pipeline(name='pipeline')
 def pipeline(param: int = 10):
     loop_args = "1,2"
@@ -42,6 +43,7 @@ def pipeline(param: int = 10):
         PrintOp(f"it no {idx}: {el}")
     # using loop's fields, not enter-local variables
     PrintOp(f"last it: no {loop.last_idx}: {loop.last_elem}")
+
 
 if __name__ == "__main__":
     TektonCompiler().compile(pipeline, __file__.replace('.py', '.yaml'))
