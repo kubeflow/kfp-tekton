@@ -53,6 +53,7 @@ import (
 	tkstatus "github.com/tektoncd/pipeline/pkg/status"
 	"go.uber.org/zap"
 	"gomodules.xyz/jsonpatch/v2"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -246,9 +247,16 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 
 	afterCondition := run.Status.GetCondition(apis.ConditionSucceeded)
 	events.Emit(ctx, beforeCondition, afterCondition, run)
+	if merr != nil {
+		// Only transient errors that should retry the reconcile are returned.
+		return merr
+	}
+	return newReconciledNormal(run.Namespace, run.Name)
+}
 
-	// Only transient errors that should retry the reconcile are returned.
-	return merr
+// newReconciledNormal makes a new reconciler event with event type Normal, and reason RunReconciled.
+func newReconciledNormal(namespace, name string) pkgreconciler.Event {
+	return pkgreconciler.NewEvent(v1.EventTypeNormal, "RunReconciled", "Run reconciled: \"%s/%s\"", namespace, name)
 }
 
 func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
@@ -395,16 +403,8 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	}
 
 	if highestIteration > 0 {
-		logger.Info("updating lastIdx", highestIteration, iterationElements[highestIteration-1])
-		if updateLastIdx(run, highestIteration, iterationElements[highestIteration-1]) {
-			logger.Infof("Actually updating... %#v", run)
-			_, err := c.pipelineClientSet.TektonV1alpha1().Runs(run.Namespace).UpdateStatus(ctx, run, metav1.UpdateOptions{})
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		logger.Info("Highest iteration:", highestIteration)
+		updateRunStatus(run, "last-idx", fmt.Sprintf("%d", highestIteration))
+		updateRunStatus(run, "last-elem", fmt.Sprintf("%s", iterationElements[highestIteration-1]))
 	}
 	// Run is cancelled, just cancel all the running instance and return
 	if run.IsCancelled() {
@@ -490,7 +490,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		return nil
 	}
 
-	// Check the status of the PipelineRun for th e highest iteration.
+	// Check the status of the PipelineRun for the highest iteration.
 	if len(failedPrs) > 0 {
 		for _, failedPr := range failedPrs {
 			if status.CurrentRunning == 0 {
@@ -520,10 +520,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		// All task finished
 		run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 			"All PipelineRuns completed successfully")
-		run.Status.Results = []runv1alpha1.RunResult{{
-			Name:  "condition",
-			Value: "succeeded",
-		}}
+		updateRunStatus(run, "condition", "succeeded")
 		return nil
 	}
 	// Before starting up another PipelineRun, check if the run was cancelled.
@@ -629,39 +626,23 @@ func (c *Reconciler) getPipelineLoop(ctx context.Context, run *v1alpha1.Run) (*m
 	return &pipelineLoopMeta, &pipelineLoopSpec, nil
 }
 
-func updateLastIdx(run *v1alpha1.Run, lastIdx int, lastElem interface{}) bool {
-	indexResultLastIdx, indexResultLastElem := -1, -1
-	// if Run already has last-idx and last elem, then update it.
-	for i, res := range run.Status.RunStatusFields.Results {
-		if res.Name == "last-idx" {
+func updateRunStatus(run *v1alpha1.Run, resultName string, resultVal string) bool {
+	indexResultLastIdx := -1
+	// if Run already has resultName, then update it else append.
+	for i, res := range run.Status.Results {
+		if res.Name == resultName {
 			indexResultLastIdx = i
 		}
-		if res.Name == "last-elem" {
-			indexResultLastElem = i
-		}
 	}
-	if indexResultLastElem >= 0 && indexResultLastIdx >= 0 {
-		runRes := run.Status.RunStatusFields.Results[indexResultLastIdx]
-		prevLastIdx, err := strconv.Atoi(runRes.Value)
-		fmt.Println("Prev last idx: ", prevLastIdx, "err", err)
-		if prevLastIdx <= lastIdx {
-			return false
-		}
-		run.Status.RunStatusFields.Results[indexResultLastIdx] = v1alpha1.RunResult{
-			Name:  "last-idx",
-			Value: fmt.Sprintf("%d", lastIdx),
-		}
-		run.Status.RunStatusFields.Results[indexResultLastElem] = v1alpha1.RunResult{
-			Name:  "last-elem",
-			Value: fmt.Sprintf("%d", lastElem),
+	if indexResultLastIdx >= 0 {
+		run.Status.Results[indexResultLastIdx] = v1alpha1.RunResult{
+			Name:  resultName,
+			Value: resultVal,
 		}
 	} else {
-		run.Status.RunStatusFields.Results = append(run.Status.RunStatusFields.Results, v1alpha1.RunResult{
-			Name:  "last-idx",
-			Value: fmt.Sprintf("%d", lastIdx),
-		}, v1alpha1.RunResult{
-			Name:  "last-elem",
-			Value: fmt.Sprintf("%s", lastElem),
+		run.Status.Results = append(run.Status.Results, v1alpha1.RunResult{
+			Name:  resultName,
+			Value: resultVal,
 		})
 	}
 	return true
@@ -809,10 +790,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 					// Mark run successful and stop the loop pipelinerun
 					run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 						"PipelineRuns completed successfully with the conditions are met")
-					run.Status.Results = []runv1alpha1.RunResult{{
-						Name:  "condition",
-						Value: "pass",
-					}}
+					updateRunStatus(run, "condition", "pass")
 				}
 			}
 		}
@@ -877,10 +855,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 					// Mark run successful and stop the loop pipelinerun
 					run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 						"PipelineRuns completed successfully with the conditions are met")
-					run.Status.Results = []runv1alpha1.RunResult{{
-						Name:  "condition",
-						Value: "pass",
-					}}
+					updateRunStatus(run, "condition", "pass")
 					break
 				}
 			}
@@ -896,10 +871,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 					// Mark run successful and stop the loop pipelinerun
 					run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 						"PipelineRuns completed successfully with the conditions are met")
-					run.Status.Results = []runv1alpha1.RunResult{{
-						Name:  "condition",
-						Value: "pass",
-					}}
+					updateRunStatus(run, "condition", "pass")
 					break
 				}
 			}
