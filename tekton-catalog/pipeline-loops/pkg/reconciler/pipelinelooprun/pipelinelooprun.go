@@ -247,16 +247,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 
 	afterCondition := run.Status.GetCondition(apis.ConditionSucceeded)
 	events.Emit(ctx, beforeCondition, afterCondition, run)
-	if merr != nil {
-		// Only transient errors that should retry the reconcile are returned.
-		return merr
-	}
-	return newReconciledNormal(run.Namespace, run.Name)
-}
-
-// newReconciledNormal makes a new reconciler event with event type Normal, and reason RunReconciled.
-func newReconciledNormal(namespace, name string) pkgreconciler.Event {
-	return pkgreconciler.NewEvent(v1.EventTypeNormal, "RunReconciled", "Run reconciled: \"%s/%s\"", namespace, name)
+	return merr
 }
 
 func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
