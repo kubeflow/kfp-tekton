@@ -65,7 +65,7 @@ github.com/spf13/jwalterweatherman,https://github.com/spf13/jwalterweatherman/bl
 github.com/spf13/pflag,https://github.com/spf13/pflag/blob/v1.0.5/LICENSE,BSD-3-Clause
 github.com/spf13/viper,https://github.com/spf13/viper/blob/v1.10.0/LICENSE,MIT
 github.com/subosito/gotenv,https://github.com/subosito/gotenv/blob/v1.2.0/LICENSE,MIT
-github.com/tektoncd/pipeline/pkg,https://github.com/tektoncd/pipeline/blob/v0.38.3/LICENSE,Apache-2.0
+github.com/tektoncd/pipeline/pkg,https://github.com/tektoncd/pipeline/blob/v0.38.4/LICENSE,Apache-2.0
 go.mongodb.org/mongo-driver,https://github.com/mongodb/mongo-go-driver/blob/v1.4.4/LICENSE,Apache-2.0
 go.opencensus.io,https://github.com/census-instrumentation/opencensus-go/blob/v0.22.5/LICENSE,Apache-2.0
 go.uber.org/atomic,https://github.com/uber-go/atomic/blob/v1.9.0/LICENSE.txt,MIT
