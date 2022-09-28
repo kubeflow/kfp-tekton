@@ -1830,12 +1830,14 @@ class TektonCompiler(Compiler):
           workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(resource_templates,
                                                                                             sort_keys=True)
 
+    # Inject uuid to loop parameter task name if exist
     if self.uuid:
       for k, v in self.group_names.items():
         if workflow['spec'].get('pipelineSpec'):
           for task in workflow['spec']['pipelineSpec']['tasks']:
             for param in task.get('params', []):
-              param['value'] = param['value'].replace(k, v)
+              if isinstance(param['value'], str):
+                param['value'] = param['value'].replace(k, v)
     TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
 
     # Separate custom task CR from the main workflow

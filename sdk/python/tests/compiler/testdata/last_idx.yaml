@@ -17,18 +17,14 @@ kind: PipelineRun
 metadata:
   name: pipeline
   annotations:
-    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/stdout.tgz",
-      "name": "print-stdout", "path": "/tmp/outputs/stdout/data"}], "print-2": [{"key":
-      "artifacts/$PIPELINERUN/print-2/stdout.tgz", "name": "print-2-stdout", "path":
-      "/tmp/outputs/stdout/data"}]}'
+    tekton.dev/output_artifacts: '{}'
     tekton.dev/input_artifacts: '{"print-2": [{"name": "pipeline-for-loop-4-last-elem",
       "parent_task": "pipeline-for-loop-4"}, {"name": "pipeline-for-loop-4-last-idx",
       "parent_task": "pipeline-for-loop-4"}]}'
     tekton.dev/artifact_bucket: mlpipeline
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
-    tekton.dev/artifact_items: '{"print": [["stdout", "$(results.stdout.path)"]],
-      "print-2": [["stdout", "$(results.stdout.path)"]]}'
+    tekton.dev/artifact_items: '{"print": [], "print-2": []}'
     sidecar.istio.io/inject: "false"
     tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
@@ -58,34 +54,15 @@ spec:
           command:
           - 'echo last it: no $(inputs.params.pipeline-for-loop-4-last-idx): $(inputs.params.pipeline-for-loop-4-last-elem)'
           image: alpine:3.6
-        - image: busybox
-          name: copy-results
-          command:
-          - sh
-          - -ec
-          - |
-            set -exo pipefail
-            cp /tmp/outputs/stdout/data $(results.stdout.path);
         params:
         - name: pipeline-for-loop-4-last-elem
         - name: pipeline-for-loop-4-last-idx
-        results:
-        - name: stdout
-          type: string
-          description: /tmp/outputs/stdout/data
-        stepTemplate:
-          volumeMounts:
-          - name: stdout
-            mountPath: /tmp/outputs/stdout
-        volumes:
-        - name: stdout
-          emptyDir: {}
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
-              [{"name": "stdout"}], "version": "print@sha256=c71a843b7628df22a3d8a9c62a43127f451029e18218c53b06964df8d2bec3ed"}'
+              [], "version": "print@sha256=83c856284def54c9fb1d856f2884233e7724d17a97d213f6646d00df4be7b320"}'
     - name: pipeline-for-loop-4
       params:
       - name: loop-item-param-2
@@ -115,36 +92,17 @@ spec:
                   command:
                   - 'echo it no $(inputs.params.iteration-number-5): $(inputs.params.loop-item-param-2)'
                   image: alpine:3.6
-                - image: busybox
-                  name: copy-results
-                  command:
-                  - sh
-                  - -ec
-                  - |
-                    set -exo pipefail
-                    cp /tmp/outputs/stdout/data $(results.stdout.path);
                 params:
                 - name: iteration-number-5
                   type: string
                 - name: loop-item-param-2
                   type: string
-                results:
-                - name: stdout
-                  type: string
-                  description: /tmp/outputs/stdout/data
-                stepTemplate:
-                  volumeMounts:
-                  - name: stdout
-                    mountPath: /tmp/outputs/stdout
-                volumes:
-                - name: stdout
-                  emptyDir: {}
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
-                      "outputs": [{"name": "stdout"}], "version": "print@sha256=c71a843b7628df22a3d8a9c62a43127f451029e18218c53b06964df8d2bec3ed"}'
+                      "outputs": [], "version": "print@sha256=83c856284def54c9fb1d856f2884233e7724d17a97d213f6646d00df4be7b320"}'
           iterationNumberParam: iteration-number-5
           iterateParam: loop-item-param-2
           iterateParamStringSeparator: loop-item-param-3

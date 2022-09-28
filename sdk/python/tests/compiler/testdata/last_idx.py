@@ -22,8 +22,6 @@ PrintOp = load_component_from_text("""
   name: print
   inputs:
   - name: msg
-  outputs:
-  - name: stdout
   implementation:
     container:
       image: alpine:3.6
