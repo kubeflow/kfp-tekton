@@ -1453,8 +1453,8 @@ github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2/go.mod h1:hkRG
 github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
 github.com/tchap/go-patricia v2.2.6+incompatible/go.mod h1:bmLyhP68RS6kStMGxByiQ23RP/odRBOTVjwp2cDyi6I=
 github.com/tdakkota/asciicheck v0.0.0-20200416200610-e657995f937b/go.mod h1:yHp0ai0Z9gUljN3o0xMhYJnH/IcvkdTBOX2fmJ93JEM=
-github.com/tektoncd/pipeline v0.38.3 h1:yMmEW5HRlCDJhepfPzaKhjbhZfAEf9GR34bJMZE5wQY=
-github.com/tektoncd/pipeline v0.38.3/go.mod h1:9uQZ6PdOZXPtoceupLMyChXUR6elsTuHpVNlEGAIJXU=
+github.com/tektoncd/pipeline v0.38.4 h1:bu4s2Ge+v7Y3uHF8F3OOHPQ2mw1VGI9lmyK1W4C5fxs=
+github.com/tektoncd/pipeline v0.38.4/go.mod h1:9uQZ6PdOZXPtoceupLMyChXUR6elsTuHpVNlEGAIJXU=
 github.com/tektoncd/plumbing v0.0.0-20220304154415-13228ac1f4a4/go.mod h1:b9esRuV1absBvaPzKkjYdKXjC5Tgs8/vh1sz++RiTdc=
 github.com/tektoncd/plumbing v0.0.0-20220329085922-d765a5cba75f/go.mod h1:b9esRuV1absBvaPzKkjYdKXjC5Tgs8/vh1sz++RiTdc=
 github.com/tektoncd/resolution v0.0.0-20220331203013-e4203c70c5eb/go.mod h1:u7+LospaKMTW8f1mKHpul2XmGXYSG86kMrbJqUr2w0Q=
