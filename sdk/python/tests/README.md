@@ -27,12 +27,12 @@ You should see an output similar to the one below, outlining which test scripts 
 which are failing:
 
 ```YAML
-KFP clone version: 1.8.0
+KFP clone version: 1.8.4
 KFP Python SDK version(s):
-kfp                      1.8.11
-kfp-pipeline-spec        0.1.13
-kfp-server-api           1.8.1
-kfp-tekton               1.1.1
+kfp                      1.8.14
+kfp-pipeline-spec        0.1.16
+kfp-server-api           1.8.5
+kfp-tekton               1.3.1
 
 SUCCESS: add_pod_env.py
 SUCCESS: artifact_passing_using_volume.py
@@ -146,6 +146,6 @@ Occurences of other Errors:
 
 ## Disclaimer
 
-**Note:** The reports above were created for the pipeline scripts found in KFP SDK version `1.8.11` since
-the `kfp_tekton` `1.2.0` compiler code is based on the `kfp` SDK compiler version greater than or equals to
-`1.8.10` and less than `1.8.12`.
+**Note:** The reports above were created for the pipeline scripts found in KFP SDK version `1.8.14` since
+the `kfp_tekton` `1.3.1` compiler code is based on the `kfp` SDK compiler version greater than or equals to
+`1.8.10` and less than `1.8.15`.
