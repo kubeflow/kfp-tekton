@@ -38,7 +38,7 @@ def PrintOp(name: str, msg: str):
     inputs:
     - {name: input_text, type: String, description: 'Represents an input parameter.'}
     outputs:
-    - {name: output_value, type: String, description: 'Represents an output paramter.'}
+    - {name: output_value, type: String, description: 'Represents an output parameter.'}
     implementation:
         container:
             image: alpine:3.6

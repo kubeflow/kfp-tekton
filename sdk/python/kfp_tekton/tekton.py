@@ -280,6 +280,9 @@ class Loop(dsl.ParallelFor):
   def _next_id(self):
     return str(_pipeline.Pipeline.get_default_pipeline().get_next_group_id())
 
+  def _seek_id(self):
+    return str(_pipeline.Pipeline.get_default_pipeline().group_id)
+
   def __init__(self,
                loop_args: Union[str,
                                 _for_loop.ItemList,
@@ -323,6 +326,12 @@ class Loop(dsl.ParallelFor):
                 name=LoopArguments._make_name(self._next_id()),
                 value=separator
             )
+
+    # param_name is unique on the pipeline level but not cluster level. Therefore, we still need to replace it to a cluster
+    # unique uuid during our compiler step.
+    param_name = "-".join([_pipeline.Pipeline.get_default_pipeline().name, self.type, str(int(self._seek_id()) + 1)])
+    self.last_idx = dsl.PipelineParam(name="last-idx", op_name=param_name)
+    self.last_elem = dsl.PipelineParam(name="last-elem", op_name=param_name)
 
   def __enter__(self) -> Union[Tuple[TektonLoopIterationNumber, LoopArguments], _for_loop.LoopArguments]:
     rev = super().__enter__()

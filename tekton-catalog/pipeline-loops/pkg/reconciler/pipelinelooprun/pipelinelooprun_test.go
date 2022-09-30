@@ -2078,8 +2078,6 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 	},
 	}
 
-	//testcases = testcases[len(testcases)-1:]
-
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
@@ -2289,8 +2287,18 @@ func enableCacheForRun(run *v1alpha1.Run) *v1alpha1.Run {
 	return run
 }
 
+func disableCacheForRun(run *v1alpha1.Run) *v1alpha1.Run {
+	run.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] = "false"
+	return run
+}
+
 func enableCacheForPr(pr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
 	pr.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] = "true"
+	return pr
+}
+
+func disableCacheForPr(pr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
+	pr.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] = "false"
 	return pr
 }
 
@@ -2368,6 +2376,71 @@ func TestReconcilePipelineLoopRunCachedRun(t *testing.T) {
 			if err := checkEvents(testAssets.Recorder, tc.name, tc.expectedEvents); err != nil {
 				t.Errorf(err.Error())
 			}
+		})
+	}
+}
+func checkRunResult(t *testing.T, run *v1alpha1.Run, expectedResult []v1alpha1.RunResult) {
+	if len(run.Status.Results) != len(expectedResult) {
+		t.Errorf("Expected Run results to include %d results but found %d: %v", len(expectedResult), len(run.Status.Results), run.Status.Results)
+		//return
+	}
+
+	if d := cmp.Diff(expectedResult, run.Status.Results); d != "" {
+		t.Errorf("Run result for is incorrect. Diff %s", diff.PrintWantGot(d))
+	}
+}
+
+func TestReconcilePipelineLoopRunLastElemResult(t *testing.T) {
+	testcases := []struct {
+		name           string
+		pipeline       *v1beta1.Pipeline
+		pipelineloop   *pipelineloopv1alpha1.PipelineLoop
+		run            *v1alpha1.Run
+		pipelineruns   []*v1beta1.PipelineRun
+		expectedResult []v1alpha1.RunResult
+	}{{
+		name:           "Reconcile a new run with a pipelineloop that references a pipeline",
+		pipeline:       aPipeline,
+		pipelineloop:   aPipelineLoop,
+		run:            disableCacheForRun(runPipelineLoop),
+		pipelineruns:   []*v1beta1.PipelineRun{disableCacheForPr(successful(expectedPipelineRunIteration1)), disableCacheForPr(successful(expectedPipelineRunIteration2))},
+		expectedResult: []v1alpha1.RunResult{{Name: "last-idx", Value: "2"}, {Name: "last-elem", Value: "item2"}, {Name: "condition", Value: "succeeded"}},
+	}}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			names.TestingSeed()
+			optionalPipeline := []*v1beta1.Pipeline{tc.pipeline}
+			status := &pipelineloopv1alpha1.PipelineLoopRunStatus{}
+			tc.pipelineloop.Spec.SetDefaults(ctx)
+			status.PipelineLoopSpec = &tc.pipelineloop.Spec
+			err := tc.run.Status.EncodeExtraFields(status)
+			if err != nil {
+				t.Fatal("Failed to encode spec in the pipelineSpec:", err)
+			}
+			if tc.pipeline == nil {
+				optionalPipeline = nil
+			}
+
+			d := test.Data{
+				Runs:         []*v1alpha1.Run{tc.run},
+				Pipelines:    optionalPipeline,
+				PipelineRuns: tc.pipelineruns,
+			}
+
+			testAssets, _ := getPipelineLoopController(t, d, []*pipelineloopv1alpha1.PipelineLoop{tc.pipelineloop})
+			c := testAssets.Controller
+			clients := testAssets.Clients
+
+			if err := c.Reconciler.Reconcile(ctx, getRunName(tc.run)); err != nil {
+				t.Fatalf("Error reconciling: %s", err)
+			}
+			// Fetch the updated Run
+			reconciledRun, err := clients.Pipeline.TektonV1alpha1().Runs(tc.run.Namespace).Get(ctx, tc.run.Name, metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("Error getting reconciled run from fake client: %s", err)
+			}
+			checkRunResult(t, reconciledRun, tc.expectedResult)
 		})
 	}
 }

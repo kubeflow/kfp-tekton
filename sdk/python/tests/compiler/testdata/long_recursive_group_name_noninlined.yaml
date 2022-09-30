@@ -40,8 +40,8 @@ metadata:
       "condition-cel-outcome", "value": "$(tasks.condition-cel.results.outcome)"}],
       "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"print-iter\", \"outputs\": [{\"description\": \"Represents an
-      output paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
-      \"print-iter@sha256=1390d83fb5d8aa6c6a41af858140c4c362850b13718dedacfc3fb0a633596313\"}"},
+      output parameter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
+      \"print-iter@sha256=cefce1330b3d50a4e85b6ac51edd51f250a5cf18193353f27a2e13a9d7535555\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "condition-cel-outcome", "type": "string"}], "results": [{"description": "/tmp/outputs/output_value/data",
       "name": "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c",

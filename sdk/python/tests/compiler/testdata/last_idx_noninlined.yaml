@@ -1,0 +1,93 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: pipeline
+  annotations:
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{"print-2": [{"name": "pipeline-for-loop-4-last-elem",
+      "parent_task": "pipeline-for-loop-4"}, {"name": "pipeline-for-loop-4-last-idx",
+      "parent_task": "pipeline-for-loop-4"}]}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print": [], "print-2": []}'
+    sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "10", "name": "param",
+      "optional": true, "type": "Integer"}], "name": "pipeline"}'
+    tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "pipeline-for-loop-4"}, "spec":
+      {"iterateParam": "loop-item-param-2", "iterateParamStringSeparator": "loop-item-param-3",
+      "iterationNumberParam": "iteration-number-5", "pipelineSpec": {"params": [{"name":
+      "iteration-number-5", "type": "string"}, {"name": "loop-item-param-2", "type":
+      "string"}], "tasks": [{"name": "print", "params": [{"name": "iteration-number-5",
+      "value": "$(params.iteration-number-5)"}, {"name": "loop-item-param-2", "value":
+      "$(params.loop-item-param-2)"}], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print\", \"outputs\": [], \"version\": \"print@sha256=fab857e67527b293d70a6637e295a10c70b9b8b114e2b64cd5a17a33e3cab2a1\"}"},
+      "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
+      "iteration-number-5", "type": "string"}, {"name": "loop-item-param-2", "type":
+      "string"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0\n", "it no $(inputs.params.iteration-number-5):
+      $(inputs.params.loop-item-param-2)"], "image": "alpine:3.6", "name": "main"}]}}]}}}]'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
+spec:
+  params:
+  - name: param
+    value: '10'
+  pipelineSpec:
+    params:
+    - name: param
+      default: '10'
+    tasks:
+    - name: print-2
+      params:
+      - name: pipeline-for-loop-4-last-elem
+        value: $(tasks.pipeline-for-loop-4.results.last-elem)
+      - name: pipeline-for-loop-4-last-idx
+        value: $(tasks.pipeline-for-loop-4.results.last-idx)
+      taskSpec:
+        steps:
+        - name: main
+          command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0
+          - 'last it: no $(inputs.params.pipeline-for-loop-4-last-idx): $(inputs.params.pipeline-for-loop-4-last-elem)'
+          image: alpine:3.6
+        params:
+        - name: pipeline-for-loop-4-last-elem
+        - name: pipeline-for-loop-4-last-idx
+        metadata:
+          labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
+              [], "version": "print@sha256=fab857e67527b293d70a6637e295a10c70b9b8b114e2b64cd5a17a33e3cab2a1"}'
+    - name: pipeline-for-loop-4
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        name: pipeline-for-loop-4
+      params:
+      - name: loop-item-param-2
+        value: 1,2
+      - name: loop-item-param-3
+        value: ','

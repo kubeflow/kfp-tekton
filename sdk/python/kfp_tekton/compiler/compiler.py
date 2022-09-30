@@ -144,6 +144,7 @@ class TektonCompiler(Compiler):
     self.produce_taskspec = True
     self.security_context = None
     self.automount_service_account_token = None
+    self.group_names = {}
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -205,11 +206,13 @@ class TektonCompiler(Compiler):
     pipeline_name_copy = sanitize_k8s_name(pipeline_name, max_length=LOOP_PIPELINE_NAME_LENGTH)
     sub_group_name_copy = sanitize_k8s_name(sub_group.name, max_length=LOOP_GROUP_NAME_LENGTH, rev_truncate=True)
     self._group_names = [pipeline_name_copy, sub_group_name_copy]
+    raw_group_name = '-'.join(self._group_names)
     if self.uuid:
       self._group_names.insert(1, self.uuid)
     # pipeline name (max 40) + loop id (max 5) + group name (max 16) + two connecting dashes (2) = 63 (Max size for CRD names)
     group_name = '-'.join(self._group_names) if group_type == "loop" or \
         group_type == "graph" or group_type == 'addon' else sub_group.name
+    self.group_names[raw_group_name] = group_name
     template = {
       'metadata': {
         'name': group_name,
@@ -667,6 +670,8 @@ class TektonCompiler(Compiler):
                   upstream_op = pipeline.ops[upstream_op_name]
               elif upstream_op_name in opsgroups:
                   upstream_op = opsgroups[upstream_op_name]
+              elif "for-loop" in upstream_op_name:
+                continue
               else:
                   raise ValueError('compiler cannot find the ' +
                                     upstream_op_name)
@@ -740,7 +745,9 @@ class TektonCompiler(Compiler):
         if param.value:
           continue
         if param.op_name:
-          upstream_op = pipeline.ops[param.op_name]
+          upstream_op = pipeline.ops.get(param.op_name, None)
+          if not upstream_op:
+            continue
           upstream_groups, downstream_groups = \
             self._get_uncommon_ancestors(op_groups, opsgroup_groups, upstream_op, op)
           for i, group_name in enumerate(downstream_groups):
@@ -1823,6 +1830,14 @@ class TektonCompiler(Compiler):
           workflow['metadata']['annotations']['tekton.dev/resource_templates'] = json.dumps(resource_templates,
                                                                                             sort_keys=True)
 
+    # Inject uuid to loop parameter task name if exist
+    if self.uuid:
+      for k, v in self.group_names.items():
+        if workflow['spec'].get('pipelineSpec'):
+          for task in workflow['spec']['pipelineSpec']['tasks']:
+            for param in task.get('params', []):
+              if isinstance(param['value'], str):
+                param['value'] = param['value'].replace(k, v)
     TektonCompiler._write_workflow(workflow=workflow, package_path=package_path)   # Tekton change
 
     # Separate custom task CR from the main workflow
