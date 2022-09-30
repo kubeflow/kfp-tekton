@@ -1970,7 +1970,7 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		name:                 "Reconcile a run after all PipelineRuns have succeeded",
 		pipeline:             aPipeline,
 		pipelineloop:         aPipelineLoop,
-		run:                  loopRunning(runPipelineLoop), //1
+		run:                  loopRunning(runPipelineLoop),
 		pipelineruns:         []*v1beta1.PipelineRun{successful(expectedPipelineRunIteration1), successful(expectedPipelineRunIteration2)},
 		expectedStatus:       corev1.ConditionTrue,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded,
@@ -2077,8 +2077,6 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		expectedEvents:       []string{"Normal Started", "Normal Running Iterations completed: 0"},
 	},
 	}
-
-	//testcases = testcases[len(testcases)-1:]
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -2289,8 +2287,18 @@ func enableCacheForRun(run *v1alpha1.Run) *v1alpha1.Run {
 	return run
 }
 
+func disableCacheForRun(run *v1alpha1.Run) *v1alpha1.Run {
+	run.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] = "false"
+	return run
+}
+
 func enableCacheForPr(pr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
 	pr.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] = "true"
+	return pr
+}
+
+func disableCacheForPr(pr *v1beta1.PipelineRun) *v1beta1.PipelineRun {
+	pr.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] = "false"
 	return pr
 }
 
@@ -2394,8 +2402,8 @@ func TestReconcilePipelineLoopRunLastElemResult(t *testing.T) {
 		name:           "Reconcile a new run with a pipelineloop that references a pipeline",
 		pipeline:       aPipeline,
 		pipelineloop:   aPipelineLoop,
-		run:            loopRunning(runPipelineLoop),
-		pipelineruns:   []*v1beta1.PipelineRun{successful(expectedPipelineRunIteration1), successful(expectedPipelineRunIteration2)},
+		run:            disableCacheForRun(runPipelineLoop),
+		pipelineruns:   []*v1beta1.PipelineRun{disableCacheForPr(successful(expectedPipelineRunIteration1)), disableCacheForPr(successful(expectedPipelineRunIteration2))},
 		expectedResult: []v1alpha1.RunResult{{Name: "last-idx", Value: "2"}, {Name: "last-elem", Value: "item2"}, {Name: "condition", Value: "succeeded"}},
 	}}
 	for _, tc := range testcases {
