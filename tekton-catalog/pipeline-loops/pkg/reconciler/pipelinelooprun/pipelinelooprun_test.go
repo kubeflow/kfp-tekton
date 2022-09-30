@@ -1970,7 +1970,7 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 		name:                 "Reconcile a run after all PipelineRuns have succeeded",
 		pipeline:             aPipeline,
 		pipelineloop:         aPipelineLoop,
-		run:                  loopRunning(runPipelineLoop),
+		run:                  loopRunning(runPipelineLoop), //1
 		pipelineruns:         []*v1beta1.PipelineRun{successful(expectedPipelineRunIteration1), successful(expectedPipelineRunIteration2)},
 		expectedStatus:       corev1.ConditionTrue,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded,
@@ -2368,6 +2368,71 @@ func TestReconcilePipelineLoopRunCachedRun(t *testing.T) {
 			if err := checkEvents(testAssets.Recorder, tc.name, tc.expectedEvents); err != nil {
 				t.Errorf(err.Error())
 			}
+		})
+	}
+}
+func checkRunResult(t *testing.T, run *v1alpha1.Run, expectedResult []v1alpha1.RunResult) {
+	if len(run.Status.Results) != len(expectedResult) {
+		t.Errorf("Expected Run results to include %d results but found %d: %v", len(expectedResult), len(run.Status.Results), run.Status.Results)
+		//return
+	}
+
+	if d := cmp.Diff(expectedResult, run.Status.Results); d != "" {
+		t.Errorf("Run result for is incorrect. Diff %s", diff.PrintWantGot(d))
+	}
+}
+
+func TestReconcilePipelineLoopRunLastElemResult(t *testing.T) {
+	testcases := []struct {
+		name           string
+		pipeline       *v1beta1.Pipeline
+		pipelineloop   *pipelineloopv1alpha1.PipelineLoop
+		run            *v1alpha1.Run
+		pipelineruns   []*v1beta1.PipelineRun
+		expectedResult []v1alpha1.RunResult
+	}{{
+		name:           "Reconcile a new run with a pipelineloop that references a pipeline",
+		pipeline:       aPipeline,
+		pipelineloop:   aPipelineLoop,
+		run:            loopRunning(runPipelineLoop),
+		pipelineruns:   []*v1beta1.PipelineRun{successful(expectedPipelineRunIteration1), successful(expectedPipelineRunIteration2)},
+		expectedResult: []v1alpha1.RunResult{{Name: "last-idx", Value: "2"}, {Name: "last-elem", Value: "item2"}, {Name: "condition", Value: "succeeded"}},
+	}}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			names.TestingSeed()
+			optionalPipeline := []*v1beta1.Pipeline{tc.pipeline}
+			status := &pipelineloopv1alpha1.PipelineLoopRunStatus{}
+			tc.pipelineloop.Spec.SetDefaults(ctx)
+			status.PipelineLoopSpec = &tc.pipelineloop.Spec
+			err := tc.run.Status.EncodeExtraFields(status)
+			if err != nil {
+				t.Fatal("Failed to encode spec in the pipelineSpec:", err)
+			}
+			if tc.pipeline == nil {
+				optionalPipeline = nil
+			}
+
+			d := test.Data{
+				Runs:         []*v1alpha1.Run{tc.run},
+				Pipelines:    optionalPipeline,
+				PipelineRuns: tc.pipelineruns,
+			}
+
+			testAssets, _ := getPipelineLoopController(t, d, []*pipelineloopv1alpha1.PipelineLoop{tc.pipelineloop})
+			c := testAssets.Controller
+			clients := testAssets.Clients
+
+			if err := c.Reconciler.Reconcile(ctx, getRunName(tc.run)); err != nil {
+				t.Fatalf("Error reconciling: %s", err)
+			}
+			// Fetch the updated Run
+			reconciledRun, err := clients.Pipeline.TektonV1alpha1().Runs(tc.run.Namespace).Get(ctx, tc.run.Name, metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("Error getting reconciled run from fake client: %s", err)
+			}
+			checkRunResult(t, reconciledRun, tc.expectedResult)
 		})
 	}
 }
