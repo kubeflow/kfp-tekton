@@ -653,6 +653,29 @@ spec:
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
+    - name: e2e-test-many-edges
+      retries: 1
+      taskRef:
+        name: e2e-test
+      runAfter:
+        - deploy
+        - deploy-pipeline-loops-e2e
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: kubernetes-cluster
+          value: $(params.kubernetes-cluster)
+        - name: kubeflow-ns
+          value: $(params.kubeflow-ns)
+        - name: slack-webhook
+          value: $(params.slack-webhook)
+        - name: slack-channel
+          value: $(params.slack-channel)
+        - name: test-script
+          value: "scripts/deploy/iks/test-many-edges.sh"
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
     - name: e2e-test-trusted-ai
       retries: 1
       taskRef:
