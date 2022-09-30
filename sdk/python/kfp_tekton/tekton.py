@@ -342,7 +342,6 @@ class Loop(dsl.ParallelFor):
     if self.call_enumerate:
       self.iteration_number = TektonLoopIterationNumber(name=self.ITERATION_NUMBER + '-' + self._next_id())
       return (self.iteration_number, self.loop_args)
-    print(rev)
     return rev
 
   def enumerate(self) -> dsl.ParallelFor:
