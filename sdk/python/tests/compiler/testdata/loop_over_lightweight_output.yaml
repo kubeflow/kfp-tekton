@@ -93,7 +93,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume
                       data", "outputs": [], "version": "Consume data@sha256=53c639462e2cf5f30518ba8b2d41564c1071e3473c7cffc13dc8b589dfc219bc"}'
-          parallelism: 0
           iterateParam: produce-list-data_list-loop-item
         metadata:
           labels:

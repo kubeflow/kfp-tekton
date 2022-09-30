@@ -924,7 +924,6 @@ spec:
                       runAfter: []
                     workspaces:
                     - name: big-data-passing
-                  parallelism: 0
                   iterateParam: loop-item-param-3
                   workspaces:
                   - name: big-data-passing
@@ -941,7 +940,6 @@ spec:
                     pipelines.kubeflow.org/cache_enabled: "true"
             workspaces:
             - name: big-data-passing
-          parallelism: 0
           iterateParam: loop-item-param-1
           workspaces:
           - name: big-data-passing

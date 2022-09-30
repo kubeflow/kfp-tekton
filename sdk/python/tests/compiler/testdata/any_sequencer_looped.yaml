@@ -234,7 +234,6 @@ spec:
                 value: $(context.pipelineRun.name)
               - name: pipelineRun-namespace
                 value: $(context.pipelineRun.namespace)
-          parallelism: 0
           iterateParam: loop-item-param-1
         metadata:
           labels:

@@ -33,12 +33,11 @@ metadata:
       "name": "loopidy_doop", "optional": true, "type": "JsonArray"}], "name": "withparam-global"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "withparam-global-for-loop-1"},
-      "spec": {"iterateParam": "loopidy_doop-loop-item", "parallelism": 0, "pipelineSpec":
-      {"params": [{"name": "loopidy_doop-loop-item", "type": "string"}], "tasks":
-      [{"name": "my-in-cop1", "params": [{"name": "loopidy_doop-loop-item", "value":
-      "$(params.loopidy_doop-loop-item)"}], "runAfter": [], "taskSpec": {"metadata":
-      {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
-      \"my-in-cop1\", \"outputs\": [], \"version\": \"my-in-cop1@sha256=636096cc65b3fe23f6fd1d965dd294fae75e328c1fb46f036f9ccad27dc692eb\"}"},
+      "spec": {"iterateParam": "loopidy_doop-loop-item", "pipelineSpec": {"params":
+      [{"name": "loopidy_doop-loop-item", "type": "string"}], "tasks": [{"name": "my-in-cop1",
+      "params": [{"name": "loopidy_doop-loop-item", "value": "$(params.loopidy_doop-loop-item)"}],
+      "runAfter": [], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"my-in-cop1\", \"outputs\": [], \"version\": \"my-in-cop1@sha256=636096cc65b3fe23f6fd1d965dd294fae75e328c1fb46f036f9ccad27dc692eb\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "loopidy_doop-loop-item", "type": "string"}], "steps": [{"args": ["set -e\necho
       no output global op1, item: \"$0\"\n", "$(inputs.params.loopidy_doop-loop-item)"],

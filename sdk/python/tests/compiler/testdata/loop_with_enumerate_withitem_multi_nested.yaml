@@ -317,23 +317,19 @@ spec:
                                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                                               "my-3rd-inner-coop", "outputs": [],
                                               "version": "my-3rd-inner-coop@sha256=998ba59ac4c7f67532187f1efa987503199250edc7d4147ac0d90f3c6b595d17"}'
-                                  parallelism: 0
                                   iterateParam: my_pipe_param3-loop-item
                                 metadata:
                                   labels:
                                     pipelines.kubeflow.org/cache_enabled: "true"
-                          parallelism: 0
                           iterationNumberParam: iteration-number-9
                           iterateParam: loop-item-param-7
                         metadata:
                           labels:
                             pipelines.kubeflow.org/cache_enabled: "true"
-                  parallelism: 0
                   iterateParam: my_pipe_param-loop-item
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-          parallelism: 0
           iterationNumberParam: iteration-number-4
           iterateParam: loop-item-param-2
         metadata:

@@ -31,9 +31,9 @@ metadata:
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "my-pipeline-for-loop-4"}, "spec":
       {"iterateParam": "loop-item-param-2", "iterateParamStringSeparator": "loop-item-param-3",
-      "parallelism": 0, "pipelineSpec": {"params": [{"name": "loop-item-param-2",
-      "type": "string"}, {"name": "my_pipe_param", "type": "string"}], "tasks": [{"name":
-      "my-in-coop1", "params": [{"name": "loop-item-param-2", "value": "$(params.loop-item-param-2)"},
+      "pipelineSpec": {"params": [{"name": "loop-item-param-2", "type": "string"},
+      {"name": "my_pipe_param", "type": "string"}], "tasks": [{"name": "my-in-coop1",
+      "params": [{"name": "loop-item-param-2", "value": "$(params.loop-item-param-2)"},
       {"name": "my_pipe_param", "value": "$(params.my_pipe_param)"}], "taskSpec":
       {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"my-in-coop1\", \"outputs\": [], \"version\": \"my-in-coop1@sha256=42f0c6a60c7e435441b8afaeb382a771a9741fe3aabb203748fdbd72b25f1628\"}"},

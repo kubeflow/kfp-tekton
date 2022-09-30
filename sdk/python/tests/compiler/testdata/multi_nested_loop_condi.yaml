@@ -193,7 +193,6 @@ spec:
                 operator: in
                 values:
                 - "true"
-          parallelism: 0
           iterateParam: loop-item-param-1
         metadata:
           labels:

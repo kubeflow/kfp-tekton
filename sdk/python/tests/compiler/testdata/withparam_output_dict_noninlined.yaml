@@ -32,9 +32,9 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"name": "withparam-output-dict"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "withparam-output-dict-for-loop-1"},
-      "spec": {"iterateParam": "my-out-cop0-out-loop-item", "parallelism": 0, "pipelineSpec":
-      {"params": [{"name": "my-out-cop0-out-loop-item-subvar-a", "type": "string"}],
-      "tasks": [{"name": "my-in-cop1", "params": [{"name": "my-out-cop0-out-loop-item-subvar-a",
+      "spec": {"iterateParam": "my-out-cop0-out-loop-item", "pipelineSpec": {"params":
+      [{"name": "my-out-cop0-out-loop-item-subvar-a", "type": "string"}], "tasks":
+      [{"name": "my-in-cop1", "params": [{"name": "my-out-cop0-out-loop-item-subvar-a",
       "value": "$(params.my-out-cop0-out-loop-item-subvar-a)"}], "taskSpec": {"metadata":
       {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
       \"my-in-cop1\", \"outputs\": [], \"version\": \"my-in-cop1@sha256=baa1db1377a71388e9f7b0054485105678c0911a3e478a5a2873bca4a7e13ab5\"}"},

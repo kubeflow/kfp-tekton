@@ -32,9 +32,9 @@ metadata:
       functions of par loop.", "name": "loop-over-lightweight-output"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "loop-over-lightweight-output-for-loop-1"},
-      "spec": {"iterateParam": "produce-list-data_list-loop-item", "parallelism":
-      0, "pipelineSpec": {"params": [{"name": "produce-list-data_list-loop-item",
-      "type": "string"}], "tasks": [{"name": "consume-data", "params": [{"name": "produce-list-data_list-loop-item",
+      "spec": {"iterateParam": "produce-list-data_list-loop-item", "pipelineSpec":
+      {"params": [{"name": "produce-list-data_list-loop-item", "type": "string"}],
+      "tasks": [{"name": "consume-data", "params": [{"name": "produce-list-data_list-loop-item",
       "value": "$(params.produce-list-data_list-loop-item)"}], "taskSpec": {"metadata":
       {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
       \"Consume data\", \"outputs\": [], \"version\": \"Consume data@sha256=53c639462e2cf5f30518ba8b2d41564c1071e3473c7cffc13dc8b589dfc219bc\"}"},

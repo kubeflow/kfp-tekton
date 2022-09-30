@@ -232,7 +232,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
-          parallelism: 0
           iterateParam: loop-item-param-1
         metadata:
           labels:
@@ -327,7 +326,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
-          parallelism: 0
           iterateParam: loop-item-param-3
         metadata:
           labels:
@@ -422,7 +420,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume",
                       "outputs": [], "version": "Consume@sha256=224a4b259c5bbe75af83adc0dc10c1c39c56c4eb7be09a895e2ef19f70f10e1a"}'
-          parallelism: 0
           iterateParam: loop-item-param-5
         metadata:
           labels:

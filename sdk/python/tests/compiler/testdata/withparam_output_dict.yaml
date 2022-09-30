@@ -123,7 +123,6 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "my-in-cop1",
                       "outputs": [], "version": "my-in-cop1@sha256=baa1db1377a71388e9f7b0054485105678c0911a3e478a5a2873bca4a7e13ab5"}'
-          parallelism: 0
           iterateParam: my-out-cop0-out-loop-item
         metadata:
           labels:

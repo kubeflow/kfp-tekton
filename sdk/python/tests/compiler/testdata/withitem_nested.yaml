@@ -193,12 +193,10 @@ spec:
                           annotations:
                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                               "my-inner-inner-coop", "outputs": [], "version": "my-inner-inner-coop@sha256=4764fa47e98613a0f6b2067c594991720452accccaf5924136b0cffdde2814aa"}'
-                  parallelism: 0
                   iterateParam: loop-item-param-3
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-          parallelism: 0
           iterateParam: loop-item-param-1
         metadata:
           labels:

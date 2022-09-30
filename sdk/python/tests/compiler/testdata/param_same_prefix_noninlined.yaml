@@ -56,13 +56,13 @@ metadata:
       "name": "prefixes"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "prefixes-for-loop-2"}, "spec":
-      {"iterateParam": "loop-item-param-1", "parallelism": 0, "pipelineSpec": {"params":
-      [{"name": "foo-00-bar-00-val", "type": "string"}, {"name": "foo-01-foo-01-val",
-      "type": "string"}, {"name": "foo-02-foo-02", "type": "string"}, {"name": "foo-10-bar-10-val",
-      "type": "string"}, {"name": "foo-11-foo-11-val", "type": "string"}, {"name":
-      "foo-12-foo-12", "type": "string"}, {"name": "loop-item-param-1", "type": "string"}],
-      "tasks": [{"name": "fetch-00", "params": [{"name": "foo-00-bar-00-val", "value":
-      "$(params.foo-00-bar-00-val)"}], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      {"iterateParam": "loop-item-param-1", "pipelineSpec": {"params": [{"name": "foo-00-bar-00-val",
+      "type": "string"}, {"name": "foo-01-foo-01-val", "type": "string"}, {"name":
+      "foo-02-foo-02", "type": "string"}, {"name": "foo-10-bar-10-val", "type": "string"},
+      {"name": "foo-11-foo-11-val", "type": "string"}, {"name": "foo-12-foo-12", "type":
+      "string"}, {"name": "loop-item-param-1", "type": "string"}], "tasks": [{"name":
+      "fetch-00", "params": [{"name": "foo-00-bar-00-val", "value": "$(params.foo-00-bar-00-val)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"fetch-00\", \"outputs\": [{\"name\": \"output_value\", \"type\":
       \"String\"}], \"version\": \"fetch-00@sha256=7e9b72ed3ff0fe01739d5c1882d0398713f844d5b40d856da78cd272aa29224e\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":

@@ -34,12 +34,12 @@ metadata:
       true, "type": "JsonObject"}], "name": "withparam-global-dict"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "withparam-global-dict-for-loop-1"},
-      "spec": {"iterateParam": "loopidy_doop-loop-item", "parallelism": 0, "pipelineSpec":
-      {"params": [{"name": "loopidy_doop-loop-item-subvar-a", "type": "string"}, {"name":
-      "loopidy_doop-loop-item-subvar-b", "type": "string"}], "tasks": [{"name": "my-in-cop1",
-      "params": [{"name": "loopidy_doop-loop-item-subvar-a", "value": "$(params.loopidy_doop-loop-item-subvar-a)"},
-      {"name": "loopidy_doop-loop-item-subvar-b", "value": "$(params.loopidy_doop-loop-item-subvar-b)"}],
-      "runAfter": [], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "spec": {"iterateParam": "loopidy_doop-loop-item", "pipelineSpec": {"params":
+      [{"name": "loopidy_doop-loop-item-subvar-a", "type": "string"}, {"name": "loopidy_doop-loop-item-subvar-b",
+      "type": "string"}], "tasks": [{"name": "my-in-cop1", "params": [{"name": "loopidy_doop-loop-item-subvar-a",
+      "value": "$(params.loopidy_doop-loop-item-subvar-a)"}, {"name": "loopidy_doop-loop-item-subvar-b",
+      "value": "$(params.loopidy_doop-loop-item-subvar-b)"}], "runAfter": [], "taskSpec":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"my-in-cop1\", \"outputs\": [], \"version\": \"my-in-cop1@sha256=a5d6b8deed0ed377333b9790a4db5be7b5e48196c768bf502fd1da020ab55cac\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "loopidy_doop-loop-item-subvar-a", "type": "string"}, {"name": "loopidy_doop-loop-item-subvar-b",

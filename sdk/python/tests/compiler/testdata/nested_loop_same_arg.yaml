@@ -114,12 +114,10 @@ spec:
                               "print-01", "outputs": [{"description": "Represents
                               an output paramter.", "name": "output_value", "type":
                               "String"}], "version": "print-01@sha256=d511ac628d43cc5b393fbebd10be93662b30117f1413b84afd4e7b2e5ff5ed33"}'
-                  parallelism: 0
                   iterateParam: loop-item-param-3
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-          parallelism: 0
           iterateParam: loop-item-param-1
         metadata:
           labels:

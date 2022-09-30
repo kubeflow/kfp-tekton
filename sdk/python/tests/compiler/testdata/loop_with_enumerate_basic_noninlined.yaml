@@ -33,11 +33,11 @@ metadata:
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "loop-with-enumerate-basic-for-loop-2"},
       "spec": {"iterateParam": "loop-item-param-1", "iterationNumberParam": "iteration-number-3",
-      "parallelism": 0, "pipelineSpec": {"params": [{"name": "iteration-number-3",
-      "type": "string"}, {"name": "loop-item-param-1", "type": "string"}], "tasks":
-      [{"name": "consume-data", "params": [{"name": "iteration-number-3", "value":
-      "$(params.iteration-number-3)"}, {"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "pipelineSpec": {"params": [{"name": "iteration-number-3", "type": "string"},
+      {"name": "loop-item-param-1", "type": "string"}], "tasks": [{"name": "consume-data",
+      "params": [{"name": "iteration-number-3", "value": "$(params.iteration-number-3)"},
+      {"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"}], "taskSpec":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"Consume data\", \"outputs\": [], \"version\": \"Consume data@sha256=748cfc9398fb5667535b2ae5940d7947826385c62858c6b1b637b527d9b57e6e\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "iteration-number-3", "type": "string"}, {"name": "loop-item-param-1", "type":

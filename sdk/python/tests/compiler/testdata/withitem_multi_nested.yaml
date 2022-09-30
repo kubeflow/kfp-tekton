@@ -290,22 +290,18 @@ spec:
                                             pipelines.kubeflow.org/component_spec_digest: '{"name":
                                               "my-inner-inner-coop", "outputs": [],
                                               "version": "my-inner-inner-coop@sha256=e09082c663a9e1fc40f3b14bfbdd8d0174e6bc6391e6ab334383e3edca20d8dd"}'
-                                  parallelism: 0
                                   iterateParam: my_pipe_param3-loop-item
                                 metadata:
                                   labels:
                                     pipelines.kubeflow.org/cache_enabled: "true"
-                          parallelism: 0
                           iterateParam: loop-item-param-4
                         metadata:
                           labels:
                             pipelines.kubeflow.org/cache_enabled: "true"
-                  parallelism: 0
                   iterateParam: my_pipe_param-loop-item
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-          parallelism: 0
           iterateParam: loop-item-param-1
         metadata:
           labels:

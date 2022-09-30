@@ -38,14 +38,13 @@ metadata:
       "optional": true, "type": "Integer"}], "name": "conditions-and-loops"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "conditions-and-loops-for-loop-1"},
-      "spec": {"iterateParam": "produce-numbers-Output-loop-item", "parallelism":
-      0, "pipelineSpec": {"params": [{"name": "produce-numbers-Output-loop-item",
-      "type": "string"}, {"name": "threshold", "type": "string"}], "tasks": [{"name":
-      "add-numbers", "params": [{"name": "produce-numbers-Output-loop-item", "value":
-      "$(params.produce-numbers-Output-loop-item)"}], "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"Add numbers\",
-      \"outputs\": [{\"name\": \"Output\", \"type\": \"Integer\"}], \"version\": \"Add
-      numbers@sha256=4a4bea3d4b7966f0ce3cdef5ad4d997a283ef6a895959791e037cf391732bb04\"}"},
+      "spec": {"iterateParam": "produce-numbers-Output-loop-item", "pipelineSpec":
+      {"params": [{"name": "produce-numbers-Output-loop-item", "type": "string"},
+      {"name": "threshold", "type": "string"}], "tasks": [{"name": "add-numbers",
+      "params": [{"name": "produce-numbers-Output-loop-item", "value": "$(params.produce-numbers-Output-loop-item)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"Add numbers\", \"outputs\": [{\"name\": \"Output\", \"type\":
+      \"Integer\"}], \"version\": \"Add numbers@sha256=4a4bea3d4b7966f0ce3cdef5ad4d997a283ef6a895959791e037cf391732bb04\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "produce-numbers-Output-loop-item", "type": "string"}], "results": [{"description":
       "/tmp/outputs/Output/data", "name": "Output", "type": "string"}], "steps": [{"args":

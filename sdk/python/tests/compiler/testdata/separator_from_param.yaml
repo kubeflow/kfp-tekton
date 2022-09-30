@@ -85,7 +85,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766"}'
-          parallelism: 0
           iterateParam: loop-item-param-1
           iterateParamStringSeparator: loop-item-param-2
         metadata:

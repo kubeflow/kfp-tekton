@@ -395,7 +395,6 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-12",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
                       "print-12@sha256=8c34161acc91f4c5e394f75aeffd0a793db16e196aa8a246c0c26bd2336c54e6"}'
-          parallelism: 0
           iterateParam: loop-item-param-1
         metadata:
           labels:

@@ -30,25 +30,24 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"name": "loop-3-range"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "loop-3-range-for-loop-2"}, "spec":
-      {"iterateNumeric": "loop-item-param-1", "parallelism": 0, "pipelineSpec": {"params":
-      [{"name": "loop-item-param-1", "type": "string"}], "tasks": [{"name": "loop-3-range-for-loop-4",
+      {"iterateNumeric": "loop-item-param-1", "pipelineSpec": {"params": [{"name":
+      "loop-item-param-1", "type": "string"}], "tasks": [{"name": "loop-3-range-for-loop-4",
       "params": [{"name": "from", "value": "1"}, {"name": "loop-item-param-1", "value":
       "$(params.loop-item-param-1)"}, {"name": "to", "value": "2"}], "taskRef": {"apiVersion":
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "loop-3-range-for-loop-4"}}]}}},
       {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata":
       {"name": "loop-3-range-for-loop-4"}, "spec": {"iterateNumeric": "loop-item-param-3",
-      "parallelism": 0, "pipelineSpec": {"params": [{"name": "loop-item-param-1",
-      "type": "string"}, {"name": "loop-item-param-3", "type": "string"}], "tasks":
-      [{"name": "loop-3-range-for-loop-6", "params": [{"name": "from", "value": "1"},
-      {"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"}, {"name":
-      "loop-item-param-3", "value": "$(params.loop-item-param-3)"}, {"name": "to",
-      "value": "2"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind":
-      "PipelineLoop", "name": "loop-3-range-for-loop-6"}}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "loop-3-range-for-loop-6"}, "spec":
-      {"iterateNumeric": "loop-item-param-5", "parallelism": 0, "pipelineSpec": {"params":
-      [{"name": "loop-item-param-1", "type": "string"}, {"name": "loop-item-param-3",
-      "type": "string"}, {"name": "loop-item-param-5", "type": "string"}], "tasks":
-      [{"name": "print", "params": [{"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"},
+      "pipelineSpec": {"params": [{"name": "loop-item-param-1", "type": "string"},
+      {"name": "loop-item-param-3", "type": "string"}], "tasks": [{"name": "loop-3-range-for-loop-6",
+      "params": [{"name": "from", "value": "1"}, {"name": "loop-item-param-1", "value":
+      "$(params.loop-item-param-1)"}, {"name": "loop-item-param-3", "value": "$(params.loop-item-param-3)"},
+      {"name": "to", "value": "2"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "name": "loop-3-range-for-loop-6"}}]}}}, {"apiVersion":
+      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "loop-3-range-for-loop-6"},
+      "spec": {"iterateNumeric": "loop-item-param-5", "pipelineSpec": {"params": [{"name":
+      "loop-item-param-1", "type": "string"}, {"name": "loop-item-param-3", "type":
+      "string"}, {"name": "loop-item-param-5", "type": "string"}], "tasks": [{"name":
+      "print", "params": [{"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"},
       {"name": "loop-item-param-3", "value": "$(params.loop-item-param-3)"}, {"name":
       "loop-item-param-5", "value": "$(params.loop-item-param-5)"}], "taskSpec": {"metadata":
       {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
