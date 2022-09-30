@@ -52,7 +52,12 @@ spec:
         steps:
         - name: main
           command:
-          - 'echo last it: no $(inputs.params.pipeline-for-loop-4-last-idx): $(inputs.params.pipeline-for-loop-4-last-elem)'
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0
+          - 'last it: no $(inputs.params.pipeline-for-loop-4-last-idx): $(inputs.params.pipeline-for-loop-4-last-elem)'
           image: alpine:3.6
         params:
         - name: pipeline-for-loop-4-last-elem
@@ -62,7 +67,7 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
-              [], "version": "print@sha256=83c856284def54c9fb1d856f2884233e7724d17a97d213f6646d00df4be7b320"}'
+              [], "version": "print@sha256=fab857e67527b293d70a6637e295a10c70b9b8b114e2b64cd5a17a33e3cab2a1"}'
     - name: pipeline-for-loop-4
       params:
       - name: loop-item-param-2
@@ -90,7 +95,12 @@ spec:
                 steps:
                 - name: main
                   command:
-                  - 'echo it no $(inputs.params.iteration-number-5): $(inputs.params.loop-item-param-2)'
+                  - sh
+                  - -c
+                  - |
+                    set -e
+                    echo $0
+                  - 'it no $(inputs.params.iteration-number-5): $(inputs.params.loop-item-param-2)'
                   image: alpine:3.6
                 params:
                 - name: iteration-number-5
@@ -102,7 +112,7 @@ spec:
                     pipelines.kubeflow.org/cache_enabled: "true"
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
-                      "outputs": [], "version": "print@sha256=83c856284def54c9fb1d856f2884233e7724d17a97d213f6646d00df4be7b320"}'
+                      "outputs": [], "version": "print@sha256=fab857e67527b293d70a6637e295a10c70b9b8b114e2b64cd5a17a33e3cab2a1"}'
           iterationNumberParam: iteration-number-5
           iterateParam: loop-item-param-2
           iterateParamStringSeparator: loop-item-param-3

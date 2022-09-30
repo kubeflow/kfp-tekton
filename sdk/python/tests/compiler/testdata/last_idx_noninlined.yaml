@@ -38,10 +38,10 @@ metadata:
       "string"}], "tasks": [{"name": "print", "params": [{"name": "iteration-number-5",
       "value": "$(params.iteration-number-5)"}, {"name": "loop-item-param-2", "value":
       "$(params.loop-item-param-2)"}], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
-      "{\"name\": \"print\", \"outputs\": [], \"version\": \"print@sha256=83c856284def54c9fb1d856f2884233e7724d17a97d213f6646d00df4be7b320\"}"},
+      "{\"name\": \"print\", \"outputs\": [], \"version\": \"print@sha256=fab857e67527b293d70a6637e295a10c70b9b8b114e2b64cd5a17a33e3cab2a1\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "iteration-number-5", "type": "string"}, {"name": "loop-item-param-2", "type":
-      "string"}], "steps": [{"command": ["echo it no $(inputs.params.iteration-number-5):
+      "string"}], "steps": [{"command": ["sh", "-c", "set -e\necho $0\n", "it no $(inputs.params.iteration-number-5):
       $(inputs.params.loop-item-param-2)"], "image": "alpine:3.6", "name": "main"}]}}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
@@ -65,7 +65,12 @@ spec:
         steps:
         - name: main
           command:
-          - 'echo last it: no $(inputs.params.pipeline-for-loop-4-last-idx): $(inputs.params.pipeline-for-loop-4-last-elem)'
+          - sh
+          - -c
+          - |
+            set -e
+            echo $0
+          - 'last it: no $(inputs.params.pipeline-for-loop-4-last-idx): $(inputs.params.pipeline-for-loop-4-last-elem)'
           image: alpine:3.6
         params:
         - name: pipeline-for-loop-4-last-elem
@@ -75,7 +80,7 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "print", "outputs":
-              [], "version": "print@sha256=83c856284def54c9fb1d856f2884233e7724d17a97d213f6646d00df4be7b320"}'
+              [], "version": "print@sha256=fab857e67527b293d70a6637e295a10c70b9b8b114e2b64cd5a17a33e3cab2a1"}'
     - name: pipeline-for-loop-4
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1

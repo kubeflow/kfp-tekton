@@ -26,9 +26,12 @@ PrintOp = load_component_from_text("""
     container:
       image: alpine:3.6
       command:
-      - concat:
-        - "echo "
-        - { inputValue: msg }
+      - sh
+      - -c
+      - |
+        set -e
+        echo $0
+      - {inputValue: msg }
 """)
 
 
