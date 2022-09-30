@@ -46,19 +46,19 @@ spec:
     - name: text
       default: a,b,c
     tasks:
-    - name: separator-from-param-for-loop-2
+    - name: separator-from-param-for-loop-3
       params:
       - name: loop-item-param-1
-        value: $(params.separator)
-      - name: text-loop-item
         value: $(params.text)
+      - name: loop-item-param-2
+        value: $(params.separator)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         spec:
           pipelineSpec:
             params:
-            - name: text-loop-item
+            - name: loop-item-param-1
               type: string
             tasks:
             - name: print
@@ -85,8 +85,9 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766"}'
-          iterateParam: text-loop-item
-          iterateParamStringSeparator: loop-item-param-1
+          parallelism: 0
+          iterateParam: loop-item-param-1
+          iterateParamStringSeparator: loop-item-param-2
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"

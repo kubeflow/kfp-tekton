@@ -32,11 +32,12 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"name": "withparam-output"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "withparam-output-for-loop-1"},
-      "spec": {"iterateParam": "my-out-cop0-out-loop-item", "pipelineSpec": {"params":
-      [{"name": "my-out-cop0-out-loop-item", "type": "string"}], "tasks": [{"name":
-      "my-in-cop1", "params": [{"name": "my-out-cop0-out-loop-item", "value": "$(params.my-out-cop0-out-loop-item)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
-      "{\"name\": \"my-in-cop1\", \"outputs\": [], \"version\": \"my-in-cop1@sha256=636096cc65b3fe23f6fd1d965dd294fae75e328c1fb46f036f9ccad27dc692eb\"}"},
+      "spec": {"iterateParam": "my-out-cop0-out-loop-item", "parallelism": 0, "pipelineSpec":
+      {"params": [{"name": "my-out-cop0-out-loop-item", "type": "string"}], "tasks":
+      [{"name": "my-in-cop1", "params": [{"name": "my-out-cop0-out-loop-item", "value":
+      "$(params.my-out-cop0-out-loop-item)"}], "taskSpec": {"metadata": {"annotations":
+      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"my-in-cop1\",
+      \"outputs\": [], \"version\": \"my-in-cop1@sha256=636096cc65b3fe23f6fd1d965dd294fae75e328c1fb46f036f9ccad27dc692eb\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "my-out-cop0-out-loop-item", "type": "string"}], "steps": [{"args": ["set -e\necho
       no output global op1, item: \"$0\"\n", "$(inputs.params.my-out-cop0-out-loop-item)"],

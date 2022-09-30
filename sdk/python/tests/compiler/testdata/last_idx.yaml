@@ -113,6 +113,7 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print",
                       "outputs": [], "version": "print@sha256=fab857e67527b293d70a6637e295a10c70b9b8b114e2b64cd5a17a33e3cab2a1"}'
+          parallelism: 0
           iterationNumberParam: iteration-number-5
           iterateParam: loop-item-param-2
           iterateParamStringSeparator: loop-item-param-3

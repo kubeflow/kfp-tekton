@@ -453,6 +453,7 @@ spec:
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
+          parallelism: 0
           iterateParam: produce-numbers-Output-loop-item
         metadata:
           labels:

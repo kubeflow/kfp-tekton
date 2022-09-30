@@ -178,7 +178,7 @@ spec:
       - foo-10
       - foo-11
       - foo-12
-      name: prefixes-for-loop-1
+      name: prefixes-for-loop-2
       params:
       - name: foo-00-bar-00-val
         value: $(tasks.foo-00.results.bar-00-val)
@@ -192,7 +192,7 @@ spec:
         value: $(tasks.foo-11.results.foo-11-val)
       - name: foo-12-foo-12
         value: $(tasks.foo-12.results.foo-12)
-      - name: li-loop-item
+      - name: loop-item-param-1
         value: $(params.li)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -212,7 +212,7 @@ spec:
               type: string
             - name: foo-12-foo-12
               type: string
-            - name: li-loop-item
+            - name: loop-item-param-1
               type: string
             tasks:
             - name: fetch-00
@@ -395,7 +395,8 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-12",
                       "outputs": [{"name": "output_value", "type": "String"}], "version":
                       "print-12@sha256=8c34161acc91f4c5e394f75aeffd0a793db16e196aa8a246c0c26bd2336c54e6"}'
-          iterateParam: li-loop-item
+          parallelism: 0
+          iterateParam: loop-item-param-1
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"

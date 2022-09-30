@@ -134,6 +134,7 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "static-loop-inner-op2",
                       "outputs": [], "version": "static-loop-inner-op2@sha256=56d5b639d49c40d3d5eb06be4a8d277614742470a048197eb6f141c9c257324c"}'
+          parallelism: 0
           iterateParam: with-item-name
         metadata:
           labels:

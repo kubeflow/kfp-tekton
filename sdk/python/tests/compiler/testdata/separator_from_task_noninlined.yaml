@@ -34,13 +34,14 @@ metadata:
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"name": "separator-from-task"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "separator-from-task-for-loop-2"},
-      "spec": {"iterateParam": "text-output_value-loop-item", "iterateParamStringSeparator":
-      "loop-item-param-1", "pipelineSpec": {"params": [{"name": "text-output_value-loop-item",
-      "type": "string"}], "tasks": [{"name": "print", "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"print\", \"outputs\":
-      [{\"description\": \"Represents an output paramter.\", \"name\": \"output_value\",
-      \"type\": \"String\"}], \"version\": \"print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766\"}"},
+      "kind": "PipelineLoop", "metadata": {"name": "separator-from-task-for-loop-3"},
+      "spec": {"iterateParam": "loop-item-param-1", "iterateParamStringSeparator":
+      "loop-item-param-2", "parallelism": 0, "pipelineSpec": {"params": [{"name":
+      "loop-item-param-1", "type": "string"}], "tasks": [{"name": "print", "taskSpec":
+      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print\", \"outputs\": [{\"description\": \"Represents an output
+      paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
+      \"print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "results": [{"description":
       "/tmp/outputs/output_value/data", "name": "output-value", "type": "string"}],
       "steps": [{"command": ["sh", "-c", "set -e\necho $0 > $1\n", "print", "$(results.output-value.path)"],
@@ -99,13 +100,13 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "separator", "outputs":
               [{"description": "Represents an output paramter.", "name": "output_value",
               "type": "String"}], "version": "separator@sha256=176a29ae9edd6f2931e4ad6010305a84419ecedb4f4f3fbf82696746224b5c49"}'
-    - name: separator-from-task-for-loop-2
+    - name: separator-from-task-for-loop-3
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: separator-from-task-for-loop-2
+        name: separator-from-task-for-loop-3
       params:
       - name: loop-item-param-1
-        value: $(tasks.separator.results.output-value)
-      - name: text-output_value-loop-item
         value: $(tasks.text.results.output-value)
+      - name: loop-item-param-2
+        value: $(tasks.separator.results.output-value)

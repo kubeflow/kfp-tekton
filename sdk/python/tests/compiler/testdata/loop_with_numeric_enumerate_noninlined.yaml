@@ -33,13 +33,14 @@ metadata:
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "my-pipeline-for-loop-2"}, "spec":
       {"iterateNumeric": "loop-item-param-1", "iterationNumberParam": "iteration-number-3",
-      "pipelineSpec": {"params": [{"name": "iteration-number-3", "type": "string"},
-      {"name": "loop-item-param-1", "type": "string"}, {"name": "my_pipe_param", "type":
-      "string"}], "tasks": [{"name": "my-in-coop1", "params": [{"name": "iteration-number-3",
-      "value": "$(params.iteration-number-3)"}, {"name": "loop-item-param-1", "value":
-      "$(params.loop-item-param-1)"}, {"name": "my_pipe_param", "value": "$(params.my_pipe_param)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
-      "{\"name\": \"my-in-coop1\", \"outputs\": [], \"version\": \"my-in-coop1@sha256=3e0e81a9e227f372f7677b8cf32c5653b7947d243bedf2762beaf556af346719\"}"},
+      "parallelism": 0, "pipelineSpec": {"params": [{"name": "iteration-number-3",
+      "type": "string"}, {"name": "loop-item-param-1", "type": "string"}, {"name":
+      "my_pipe_param", "type": "string"}], "tasks": [{"name": "my-in-coop1", "params":
+      [{"name": "iteration-number-3", "value": "$(params.iteration-number-3)"}, {"name":
+      "loop-item-param-1", "value": "$(params.loop-item-param-1)"}, {"name": "my_pipe_param",
+      "value": "$(params.my_pipe_param)"}], "taskSpec": {"metadata": {"annotations":
+      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"my-in-coop1\",
+      \"outputs\": [], \"version\": \"my-in-coop1@sha256=3e0e81a9e227f372f7677b8cf32c5653b7947d243bedf2762beaf556af346719\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "iteration-number-3", "type": "string"}, {"name": "loop-item-param-1", "type":
       "string"}, {"name": "my_pipe_param", "type": "string"}], "steps": [{"args":
@@ -51,9 +52,9 @@ metadata:
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "my-pipeline-for-loop-5"}}]}}},
       {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata":
       {"name": "my-pipeline-for-loop-5"}, "spec": {"iterateNumeric": "loop-item-param-4",
-      "iterationNumberParam": "iteration-number-6", "pipelineSpec": {"params": [{"name":
-      "iteration-number-6", "type": "string"}, {"name": "loop-item-param-4", "type":
-      "string"}, {"name": "my_pipe_param", "type": "string"}], "tasks": [{"name":
+      "iterationNumberParam": "iteration-number-6", "parallelism": 0, "pipelineSpec":
+      {"params": [{"name": "iteration-number-6", "type": "string"}, {"name": "loop-item-param-4",
+      "type": "string"}, {"name": "my_pipe_param", "type": "string"}], "tasks": [{"name":
       "my-in-coop1-2", "params": [{"name": "iteration-number-6", "value": "$(params.iteration-number-6)"},
       {"name": "loop-item-param-4", "value": "$(params.loop-item-param-4)"}, {"name":
       "my_pipe_param", "value": "$(params.my_pipe_param)"}], "taskSpec": {"metadata":

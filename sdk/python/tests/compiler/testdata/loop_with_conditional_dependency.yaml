@@ -182,6 +182,7 @@ spec:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "print-3",
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print-3@sha256=5eed691c7d42c19cf0e5ca60612456bac19f7d8902ae2cf92ff0f37663cf4763"}'
+          parallelism: 0
           iterateParam: param-loop-item
         metadata:
           labels:
@@ -226,6 +227,7 @@ spec:
                       "outputs": [{"description": "Represents an output paramter.",
                       "name": "output_value", "type": "String"}], "version": "print-4@sha256=612578686b564fc00e7052b345cd44d6a9cad721cdd6ceb3ecfc68c392a932f7"}'
               runAfter: []
+          parallelism: 0
           iterateParam: param-loop-item
         metadata:
           labels:

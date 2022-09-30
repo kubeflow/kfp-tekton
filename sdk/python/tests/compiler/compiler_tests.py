@@ -190,6 +190,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.tekton_loop_dsl import pipeline
     self._test_pipeline_workflow(pipeline, 'tekton_loop_dsl.yaml')
 
+  def test_nested_loop_same_arg_workflow(self):
+    """
+    Test compiling a nested loop with same argument workflow.
+    """
+    from .testdata.nested_loop_same_arg import loop_multi
+    self._test_pipeline_workflow(loop_multi, 'nested_loop_same_arg.yaml')
+
   def test_loop_with_numeric_workflow(self):
     """
     Test compiling a loop with numeric inputs in workflow.

@@ -60,6 +60,7 @@ spec:
             - name: loop-item-param-1
               type: string
             tasks: []
+          parallelism: 0
           iterateNumeric: loop-item-param-1
         metadata:
           labels:

@@ -42,10 +42,10 @@ metadata:
     pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "[\"a\", \"b\",
       \"c\"]", "name": "param", "optional": true, "type": "JsonArray"}], "name": "any-sequencer-looped"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "any-sequencer-looped-for-loop-1"},
-      "spec": {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name":
-      "param-loop-item", "type": "string"}], "tasks": [{"name": "print-10", "taskSpec":
-      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "kind": "PipelineLoop", "metadata": {"name": "any-sequencer-looped-for-loop-2"},
+      "spec": {"iterateParam": "loop-item-param-1", "parallelism": 0, "pipelineSpec":
+      {"params": [{"name": "loop-item-param-1", "type": "string"}], "tasks": [{"name":
+      "print-10", "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"print-10\", \"outputs\": [{\"description\": \"Represents an output
       paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
       \"print-10@sha256=ea7fa8edfd92cf64a15f8464292143a4e0d5f34898368bfd63618884decf3be1\"}"},
@@ -168,11 +168,11 @@ spec:
         value: $(context.pipelineRun.name)
       - name: pipelineRun-namespace
         value: $(context.pipelineRun.namespace)
-    - name: any-sequencer-looped-for-loop-1
+    - name: any-sequencer-looped-for-loop-2
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
-        name: any-sequencer-looped-for-loop-1
+        name: any-sequencer-looped-for-loop-2
       params:
-      - name: param-loop-item
+      - name: loop-item-param-1
         value: $(params.param)

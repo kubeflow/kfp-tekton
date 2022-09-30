@@ -31,11 +31,11 @@ metadata:
       "some-very-long-name-with-lots-of-words-in-it-it-should-be-over-63-chars-long-in-order-to-observe-the-problem"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "some-very-long-name-with-lots-of-words-i-for-loop-1"},
-      "spec": {"iterateParam": "arr-loop-item", "pipelineSpec": {"params": [{"name":
-      "arr-loop-item", "type": "string"}], "tasks": [{"name": "print", "params": [{"name":
-      "arr-loop-item", "value": "$(params.arr-loop-item)"}], "taskSpec": {"metadata":
-      {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
-      \"print\", \"outputs\": [], \"version\": \"print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d\"}"},
+      "spec": {"iterateParam": "arr-loop-item", "parallelism": 0, "pipelineSpec":
+      {"params": [{"name": "arr-loop-item", "type": "string"}], "tasks": [{"name":
+      "print", "params": [{"name": "arr-loop-item", "value": "$(params.arr-loop-item)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print\", \"outputs\": [], \"version\": \"print@sha256=6094ad4b5bb22e7370e9532a47f8e1f4e78cf8916f98b5f06817fc6140285c4d\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "arr-loop-item", "type": "string"}], "steps": [{"command": ["echo", "$(inputs.params.arr-loop-item)"],
       "image": "alpine:3.6", "name": "main"}]}}]}}}]'

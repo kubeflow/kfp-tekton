@@ -31,12 +31,13 @@ metadata:
       "optional": true, "type": "String"}], "name": "static-loop-pipeline"}'
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "static-loop-pipeline-for-loop-2"},
-      "spec": {"iterateParam": "with-item-name", "pipelineSpec": {"params": [{"name":
-      "with-item-name", "type": "string"}, {"name": "my_pipe_param", "type": "string"}],
-      "tasks": [{"name": "static-loop-inner-op1", "params": [{"name": "with-item-name",
-      "value": "$(params.with-item-name)"}, {"name": "my_pipe_param", "value": "$(params.my_pipe_param)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
-      "{\"name\": \"static-loop-inner-op1\", \"outputs\": [], \"version\": \"static-loop-inner-op1@sha256=37bfbf9bbcc6525f9915ee1c07e8a8b482c487696eb3c10fd82c27049b1b55e9\"}"},
+      "spec": {"iterateParam": "with-item-name", "parallelism": 0, "pipelineSpec":
+      {"params": [{"name": "with-item-name", "type": "string"}, {"name": "my_pipe_param",
+      "type": "string"}], "tasks": [{"name": "static-loop-inner-op1", "params": [{"name":
+      "with-item-name", "value": "$(params.with-item-name)"}, {"name": "my_pipe_param",
+      "value": "$(params.my_pipe_param)"}], "taskSpec": {"metadata": {"annotations":
+      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"static-loop-inner-op1\",
+      \"outputs\": [], \"version\": \"static-loop-inner-op1@sha256=37bfbf9bbcc6525f9915ee1c07e8a8b482c487696eb3c10fd82c27049b1b55e9\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "with-item-name", "type": "string"}, {"name": "my_pipe_param", "type": "string"}],
       "steps": [{"args": ["echo op1 $0 $1\n", "$(inputs.params.with-item-name)", "$(inputs.params.my_pipe_param)"],
