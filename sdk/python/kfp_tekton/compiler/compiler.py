@@ -570,7 +570,7 @@ class TektonCompiler(Compiler):
       # get other input params
       input_helper(self.loops_pipeline[group_name], sub_group,
           self.loops_pipeline[group_name]['loop_sub_args'] + [sub_group.loop_args.full_name])
-      if sub_group.parallelism is not None:
+      if sub_group.parallelism is not None and sub_group.parallelism > 0:
         self.loops_pipeline[group_name]['spec']['parallelism'] = sub_group.parallelism
 
     return template
