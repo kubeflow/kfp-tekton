@@ -24,6 +24,10 @@ spec:
               key: objectStorePort
         - name: OBJECTSTORECONFIG_SECURE
           value: "false"
+        - name: CLIENTQPS
+          value: "50"
+        - name: CLIENTBURST
+          value: "50"
         - name: OBJECTSTORECONFIG_BUCKETNAME
           valueFrom:
             configMapKeyRef:
