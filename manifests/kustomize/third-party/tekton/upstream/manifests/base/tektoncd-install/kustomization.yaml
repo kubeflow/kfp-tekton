@@ -5,6 +5,14 @@ resources:
 patchesStrategicMerge:
 - tekton-config.yaml
 - tekton-default.yaml
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: tekton-pipelines-controller
+    namespace: tekton-pipelines
+  path: tekton-controller.yaml
 images:
 - name: $(registry)/$(controller)
   newName: $(registry)/$(controller)
