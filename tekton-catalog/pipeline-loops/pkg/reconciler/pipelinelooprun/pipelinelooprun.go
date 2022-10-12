@@ -106,8 +106,8 @@ type Reconciler struct {
 	clock                 clock.RealClock
 }
 type CacheKey struct {
-	params           []v1beta1.Param
-	pipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec
+	Params           []v1beta1.Param                        `json:"params"`
+	PipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec `json:"pipelineSpec"`
 }
 
 var (
@@ -212,8 +212,8 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 	if run.IsDone() {
 		if run.IsSuccessful() && !c.cacheStore.Disabled && isCachingEnabled(run) {
 			marshal, err := json.Marshal(CacheKey{
-				pipelineLoopSpec: status.PipelineLoopSpec,
-				params:           run.Spec.Params,
+				PipelineLoopSpec: status.PipelineLoopSpec,
+				Params:           run.Spec.Params,
 			})
 			if err == nil {
 				hashSum := fmt.Sprintf("%x", md5.Sum(marshal))
@@ -379,12 +379,10 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if err != nil {
 		return fmt.Errorf("error updating PipelineRun status for Run %s/%s: %w", run.Namespace, run.Name, err)
 	}
-	logger.Infof("Length: %d, %d", len(iterationElements), highestIteration)
-	currentIterationItemBytes, _ := json.Marshal(iterationElements[highestIteration])
 	if !c.cacheStore.Disabled && isCachingEnabled(run) {
 		marshal, err := json.Marshal(CacheKey{
-			pipelineLoopSpec: pipelineLoopSpec,
-			params:           getParameters(run, pipelineLoopSpec, highestIteration+1, string(currentIterationItemBytes)),
+			PipelineLoopSpec: pipelineLoopSpec,
+			Params:           run.Spec.Params,
 		})
 		if marshal != nil && err == nil {
 			hashSum = fmt.Sprintf("%x", md5.Sum(marshal))

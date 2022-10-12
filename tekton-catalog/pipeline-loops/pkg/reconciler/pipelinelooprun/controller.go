@@ -48,6 +48,8 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/system"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func loadObjectStoreConfig(ctx context.Context, kubeClientSet kubernetes.Interface, o *cl.ObjectStoreConfig) (bool, error) {
