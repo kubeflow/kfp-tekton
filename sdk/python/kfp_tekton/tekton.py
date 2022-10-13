@@ -239,23 +239,41 @@ class Loop(dsl.ParallelFor):
 
   @classmethod
   def sequential(cls,
-                 loop_args: _for_loop.ItemList):
-    return cls(loop_args=loop_args, parallelism=1)
+                 loop_args: _for_loop.ItemList,
+                 iterate_param_pass_style: Optional[str] = None,
+                 item_pass_style: Optional[str] = None):
+    return cls(loop_args=loop_args,
+               parallelism=1,
+               iterate_param_pass_style=iterate_param_pass_style,
+               item_pass_style=item_pass_style)
 
   @classmethod
   def from_string(cls,
                   loop_args: Union[str, _pipeline_param.PipelineParam],
                   separator: Optional[Union[str, _pipeline_param.PipelineParam]] = None,
-                  parallelism: Optional[int] = None):
-    return cls(loop_args=loop_args, separator=separator, parallelism=parallelism)
+                  parallelism: Optional[int] = None,
+                  iterate_param_pass_style: Optional[str] = None,
+                  item_pass_style: Optional[str] = None):
+    return cls(loop_args=loop_args,
+               separator=separator,
+               parallelism=parallelism,
+               iterate_param_pass_style=iterate_param_pass_style,
+               item_pass_style=item_pass_style)
 
   @classmethod
   def range(cls,
             start: Union[_Num, PipelineParam],
             end: Union[_Num, PipelineParam],
             step: Optional[Union[_Num, PipelineParam]] = None,
-            parallelism: Optional[int] = None):
-    return cls(start=start, step=step, end=end, parallelism=parallelism)
+            parallelism: Optional[int] = None,
+            iterate_param_pass_style: Optional[str] = None,
+            item_pass_style: Optional[str] = None):
+    return cls(start=start,
+               step=step,
+               end=end,
+               parallelism=parallelism,
+               iterate_param_pass_style=iterate_param_pass_style,
+               item_pass_style=item_pass_style)
 
   def add_pod_annotation(self, name: str, value: str):
     """Adds a pod's metadata annotation.
@@ -291,7 +309,9 @@ class Loop(dsl.ParallelFor):
                end: Union[_Num, PipelineParam, None] = None,
                step: Union[_Num, PipelineParam, None] = None,
                separator: Optional[Union[str, _pipeline_param.PipelineParam]] = None,
-               parallelism: Optional[int] = None):
+               parallelism: Optional[int] = None,
+               iterate_param_pass_style: Optional[str] = None,
+               item_pass_style: Optional[str] = None):
     self.start = None
     self.end = None
     self.step = None
@@ -299,6 +319,9 @@ class Loop(dsl.ParallelFor):
     self.iteration_number = None
     self.pod_annotations = {}
     self.pod_labels = {}
+    self.iterate_param_pass_style = iterate_param_pass_style
+    self.item_pass_style = item_pass_style
+
     if start and end:
         super().__init__(loop_args=["iteration"], parallelism=parallelism)
         self.start = start

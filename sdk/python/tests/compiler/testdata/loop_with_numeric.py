@@ -47,10 +47,10 @@ implementation:
 def pipeline(my_pipe_param: int = 10, start: int = 1, end: int = 2):
     start_2 = 1
     end_2 = 2
-    with Loop.range(start=start, end=end) as item:
+    with Loop.range(start=start, end=end, iterate_param_pass_style='inline') as item:
         op1_template = components.load_component_from_text(op1_yaml)
         op1_template(item, my_pipe_param)
-        with Loop.range(start=start_2, end=end_2) as item2:
+        with Loop.range(start=start_2, end=end_2, item_pass_style='file') as item2:
             op1_template(item2, my_pipe_param)
 
 

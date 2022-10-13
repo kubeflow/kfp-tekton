@@ -572,6 +572,20 @@ class TektonCompiler(Compiler):
           self.loops_pipeline[group_name]['loop_sub_args'] + [sub_group.loop_args.full_name])
       if sub_group.parallelism is not None and sub_group.parallelism > 0:
         self.loops_pipeline[group_name]['spec']['parallelism'] = sub_group.parallelism
+      if hasattr(sub_group, 'iterate_param_pass_style') and sub_group.iterate_param_pass_style is not None:
+        iterate_param_pass_style_value = sub_group.iterate_param_pass_style.lower()
+        if iterate_param_pass_style_value == 'inline' or iterate_param_pass_style_value == 'file':
+          self.loops_pipeline[group_name]['spec']['iterateParamPassStyle'] = iterate_param_pass_style_value
+        else:
+          raise ValueError("iterate_param_pass_style value in loop %s must be either 'inline' or 'file', not %s" %
+                           (group_name, iterate_param_pass_style_value))
+      if hasattr(sub_group, 'item_pass_style') and sub_group.item_pass_style is not None:
+        item_pass_style_value = sub_group.item_pass_style.lower()
+        if item_pass_style_value == 'inline' or item_pass_style_value == 'file':
+          self.loops_pipeline[group_name]['spec']['itemPassStyle'] = item_pass_style_value
+        else:
+          raise ValueError("item_pass_style_value value in loop %s must be either 'inline' or 'file', not %s" %
+                           (group_name, item_pass_style_value))
 
     return template
 
