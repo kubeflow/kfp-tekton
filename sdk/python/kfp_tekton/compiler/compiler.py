@@ -572,20 +572,20 @@ class TektonCompiler(Compiler):
           self.loops_pipeline[group_name]['loop_sub_args'] + [sub_group.loop_args.full_name])
       if sub_group.parallelism is not None and sub_group.parallelism > 0:
         self.loops_pipeline[group_name]['spec']['parallelism'] = sub_group.parallelism
+      config_value_list = ['inline', 'file']
+
+      def insert_extra_config_field(config_name, config_object):
+        config_value = config_object.lower()
+        if config_value in config_value_list:
+          self.loops_pipeline[group_name]['spec'].setdefault('extraConfigs', {})
+          self.loops_pipeline[group_name]['spec']['extraConfigs'][config_name] = config_value
+        else:
+          raise ValueError("%s value in loop %s must be either 'inline' or 'file', not %s" %
+                           (config_name, group_name, config_value))
       if hasattr(sub_group, 'iterate_param_pass_style') and sub_group.iterate_param_pass_style is not None:
-        iterate_param_pass_style_value = sub_group.iterate_param_pass_style.lower()
-        if iterate_param_pass_style_value == 'inline' or iterate_param_pass_style_value == 'file':
-          self.loops_pipeline[group_name]['spec']['iterateParamPassStyle'] = iterate_param_pass_style_value
-        else:
-          raise ValueError("iterate_param_pass_style value in loop %s must be either 'inline' or 'file', not %s" %
-                           (group_name, iterate_param_pass_style_value))
+        insert_extra_config_field('iterateParamPassStyle', sub_group.iterate_param_pass_style)
       if hasattr(sub_group, 'item_pass_style') and sub_group.item_pass_style is not None:
-        item_pass_style_value = sub_group.item_pass_style.lower()
-        if item_pass_style_value == 'inline' or item_pass_style_value == 'file':
-          self.loops_pipeline[group_name]['spec']['itemPassStyle'] = item_pass_style_value
-        else:
-          raise ValueError("item_pass_style_value value in loop %s must be either 'inline' or 'file', not %s" %
-                           (group_name, item_pass_style_value))
+        insert_extra_config_field('itemPassStyle', sub_group.item_pass_style)
 
     return template
 
