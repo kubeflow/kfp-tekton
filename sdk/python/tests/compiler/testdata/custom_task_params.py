@@ -19,7 +19,6 @@ from kfp import dsl
 custom_task_name = "some-custom-task"
 custom_task_api_version = "custom.tekton.dev/v1alpha1"
 custom_task_image = "some-image"
-custom_task_command = "cmd"
 custom_task_kind = "custom-task"
 
 
@@ -61,7 +60,7 @@ def custom_task(resource_label: str, foo: str, bar: Any, pi: float) -> dsl.Conta
     task = dsl.ContainerOp(
         name=custom_task_name,
         image=custom_task_image,
-        command=[custom_task_command],
+        command=["--name", foo],
         arguments=[
             "--apiVersion", custom_task_api_version,
             "--kind", custom_task_kind,

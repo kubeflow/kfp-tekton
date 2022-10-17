@@ -1006,13 +1006,23 @@ class TektonCompiler(Compiler):
           if i.get('image', '') in TEKTON_CUSTOM_TASK_IMAGES:
             custom_task_args = {}
             container_args = i.get('args', [])
+            custom_task_command = {}
+            container_command = i.get('command', [])
             for index, item in enumerate(container_args):
               if item.startswith('--'):
                 custom_task_args[item[2:]] = container_args[index + 1]
+            for index, item in enumerate(container_command):
+              if item.startswith('--'):
+                custom_task_command[item[2:]] = container_command[index + 1]
             non_param_keys = ['name', 'apiVersion', 'kind', 'taskSpec', 'taskRef']
             task_params = []
+            command_params = []
+            for key, value in custom_task_command.items():
+              task_params.append({'name': key, 'value': value})
+              # Parameters in command spec get higher priority
+              command_params.append(key)
             for key, value in custom_task_args.items():
-              if key not in non_param_keys:
+              if key not in non_param_keys and key not in command_params:
                 task_params.append({'name': key, 'value': value})
             task_orig_params = task_ref['params']
             task_ref = {
