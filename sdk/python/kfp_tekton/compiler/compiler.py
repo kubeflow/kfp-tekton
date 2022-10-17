@@ -577,8 +577,7 @@ class TektonCompiler(Compiler):
       def insert_extra_config_field(config_name, config_object):
         config_value = config_object.lower()
         if config_value in config_value_list:
-          self.loops_pipeline[group_name]['spec'].setdefault('extraConfigs', {})
-          self.loops_pipeline[group_name]['spec']['extraConfigs'][config_name] = config_value
+          self.loops_pipeline[group_name]['spec'][config_name] = config_value
         else:
           raise ValueError("%s value in loop %s must be either 'inline' or 'file', not %s" %
                            (config_name, group_name, config_value))

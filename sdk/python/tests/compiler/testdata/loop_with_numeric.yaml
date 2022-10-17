@@ -58,8 +58,7 @@ spec:
         value: $(params.my_pipe_param)
       - name: to
         value: $(params.end)
-      extraConfigs:
-        iterateParamPassStyle: inline
+      iterateParamPassStyle: inline
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
@@ -109,8 +108,7 @@ spec:
                 value: $(params.my_pipe_param)
               - name: to
                 value: '2'
-              extraConfigs:
-                itemPassStyle: file
+              itemPassStyle: file
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: PipelineLoop
