@@ -48,8 +48,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/system"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func loadObjectStoreConfig(ctx context.Context, kubeClientSet kubernetes.Interface, o *cl.ObjectStoreConfig) (bool, error) {
@@ -104,7 +102,7 @@ func initCache(ctx context.Context, kubeClientSet kubernetes.Interface, params d
 	disabled, err := loadCacheConfig(ctx, kubeClientSet, &params)
 	if err != nil {
 		logger.Errorf("Config map could not be loaded. Error : %w", err)
-		params.LoadMySQLDefaults()
+		// params.LoadMySQLDefaults()
 		params.Timeout = 10 * time.Second
 	}
 	cacheStore := &taskCache.TaskCacheStore{Params: params}

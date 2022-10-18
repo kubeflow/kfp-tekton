@@ -24,7 +24,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/test"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/test/diff"

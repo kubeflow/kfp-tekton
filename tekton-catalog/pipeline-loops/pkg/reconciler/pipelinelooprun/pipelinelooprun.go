@@ -221,7 +221,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 				if err1 != nil {
 					return fmt.Errorf("error while marshalling result to cache for run: %s, %w", run.Name, err)
 				}
-				_, err = c.cacheStore.Put(&model.TaskCache{
+				err = c.cacheStore.Put(&model.TaskCache{
 					TaskHashKey: hashSum,
 					TaskOutput:  string(resultBytes),
 				})
