@@ -43,8 +43,6 @@ func (t *TaskCacheStore) Get(taskHashKey string) (*model.TaskCache, error) {
 		return nil, nil
 	}
 	entry := &model.TaskCache{}
-	// d := t.db.Table("task_caches").Where("TaskHashKey = ?", taskHashKey).
-	// 	Order("CreatedAt DESC").First(entry)
 	d := t.db.Model(&model.TaskCache{}).Where("TaskHashKey = ?", taskHashKey).
 		Order("CreatedAt DESC").First(entry)
 	if d.Error != nil {

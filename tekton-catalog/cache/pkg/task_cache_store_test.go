@@ -31,7 +31,7 @@ func newTestingCacheStore(disabled bool) (*TaskCacheStore, error) {
 		// 	DbHost: "127.0.0.1", DbPort: "3306", DbPwd: "", DbUser: "root",
 		// 	Timeout: 10 * time.Second,
 		// },
-		Params: db.ConnectionParams{DbDriver: "sqlite", DbName: "tests_kfp.db"},
+		Params: db.ConnectionParams{DbDriver: "sqlite", DbName: ":memory:"},
 	}
 	err := t.Connect()
 	return &t, err
