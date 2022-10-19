@@ -572,19 +572,23 @@ class TektonCompiler(Compiler):
           self.loops_pipeline[group_name]['loop_sub_args'] + [sub_group.loop_args.full_name])
       if sub_group.parallelism is not None and sub_group.parallelism > 0:
         self.loops_pipeline[group_name]['spec']['parallelism'] = sub_group.parallelism
-      config_value_list = ['inline', 'file']
 
-      def insert_extra_config_field(config_name, config_object):
+      def insert_extra_config_field(config_name, config_object, extra_field_name):
+        # Default allowed values
+        config_value_list = ['inline', 'file']
         config_value = config_object.lower()
+        # Update the list of allowed values if exist
+        if hasattr(sub_group, 'config_value_list'):
+          config_value_list = sub_group.config_value_list.get(extra_field_name, config_value_list)
         if config_value in config_value_list:
           self.loops_pipeline[group_name]['spec'][config_name] = config_value
         else:
           raise ValueError("%s value in loop %s must be either 'inline' or 'file', not %s" %
                            (config_name, group_name, config_value))
       if hasattr(sub_group, 'iterate_param_pass_style') and sub_group.iterate_param_pass_style is not None:
-        insert_extra_config_field('iterateParamPassStyle', sub_group.iterate_param_pass_style)
+        insert_extra_config_field('iterateParamPassStyle', sub_group.iterate_param_pass_style, 'iterate_param_pass_style')
       if hasattr(sub_group, 'item_pass_style') and sub_group.item_pass_style is not None:
-        insert_extra_config_field('itemPassStyle', sub_group.item_pass_style)
+        insert_extra_config_field('itemPassStyle', sub_group.item_pass_style, 'item_pass_style')
 
     return template
 
