@@ -583,8 +583,8 @@ class TektonCompiler(Compiler):
         if config_value in config_value_list:
           self.loops_pipeline[group_name]['spec'][config_name] = config_value
         else:
-          raise ValueError("%s value in loop %s must be either 'inline' or 'file', not %s" %
-                           (config_name, group_name, config_value))
+          raise ValueError("%s value in loop %s must be one of [%s], not %s" %
+                           (config_name, group_name, ",".join(config_value_list), config_value))
       if hasattr(sub_group, 'iterate_param_pass_style') and sub_group.iterate_param_pass_style is not None:
         insert_extra_config_field('iterateParamPassStyle', sub_group.iterate_param_pass_style, 'iterate_param_pass_style')
       if hasattr(sub_group, 'item_pass_style') and sub_group.item_pass_style is not None:
