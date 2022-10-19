@@ -2346,9 +2346,10 @@ func TestReconcilePipelineLoopRunCachedRun(t *testing.T) {
 			}
 			cm := corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "cache-config",
+					Name:      "cache-config",
+					Namespace: system.Namespace(),
 				},
-				Data: map[string]string{"driver": "sqlite3", "dbName": "/tmp/testing.db"},
+				Data: map[string]string{"driver": "sqlite", "dbName": "/tmp/testing2.db", "timeout": "2s"},
 			}
 			d := test.Data{
 				Runs:         []*v1alpha1.Run{tc.run},

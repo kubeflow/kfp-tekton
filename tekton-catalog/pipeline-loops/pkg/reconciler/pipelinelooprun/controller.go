@@ -90,7 +90,7 @@ func loadCacheConfig(ctx context.Context, kubeClientSet kubernetes.Interface, p 
 	p.DbPwd = configMap.Data["password"]
 	timeout, err := time.ParseDuration(configMap.Data["timeout"])
 	if err != nil {
-		return true, err
+		return true, fmt.Errorf("invalid value passed for timeout: %v", err)
 	}
 	p.Timeout = timeout
 	return false, nil
@@ -102,7 +102,7 @@ func initCache(ctx context.Context, kubeClientSet kubernetes.Interface, params d
 	logger := logging.FromContext(ctx)
 	disabled, err := loadCacheConfig(ctx, kubeClientSet, &params)
 	if err != nil {
-		logger.Errorf("ConfigMap cache-config could not be loaded."+
+		logger.Errorf("ConfigMap cache-config could not be loaded. "+
 			"Cache store disabled. Error : %v", err)
 	}
 	cacheStore := &taskCache.TaskCacheStore{Params: params}
