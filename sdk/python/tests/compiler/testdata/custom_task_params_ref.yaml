@@ -52,6 +52,8 @@ spec:
     tasks:
     - name: some-custom-task
       params:
+      - name: name
+        value: $(params.foo)
       - name: foo
         value: $(params.foo)
       - name: bar
