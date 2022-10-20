@@ -1956,34 +1956,3 @@ def _validate_workflow(workflow: Dict[Text, Any]):
 
   if non_k8s_annotations:
     raise RuntimeError(error_msg_tmplt % ("annotations", json.dumps(non_k8s_annotations, sort_keys=False, indent=2)))
-
-  # TODO: Tekton pipeline parameter validation
-  #   workflow = workflow.copy()
-  #   # Working around Argo lint issue
-  #   for argument in workflow['spec'].get('arguments', {}).get('parameters', []):
-  #     if 'value' not in argument:
-  #       argument['value'] = ''
-  #   yaml_text = dump_yaml(workflow)
-  #   if '{{pipelineparam' in yaml_text:
-  #     raise RuntimeError(
-  #         '''Internal compiler error: Found unresolved PipelineParam.
-  # Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues
-  # attaching the pipeline code and the pipeline package.'''
-  #     )
-
-  # TODO: Tekton lint, if a tool exists for it
-  #   # Running Argo lint if available
-  #   import shutil
-  #   import subprocess
-  #   argo_path = shutil.which('argo')
-  #   if argo_path:
-  #     result = subprocess.run([argo_path, 'lint', '/dev/stdin'], input=yaml_text.encode('utf-8'),
-  #                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  #     if result.returncode:
-  #       raise RuntimeError(
-  #         '''Internal compiler error: Compiler has produced Argo-incompatible workflow.
-  # Please create a new issue at https://github.com/kubeflow/kfp-tekton/issues
-  # attaching the pipeline code and the pipeline package.
-  # Error: {}'''.format(result.stderr.decode('utf-8'))
-  #       )
-  pass

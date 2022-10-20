@@ -179,7 +179,6 @@ def CEL_ConditionOp(condition_statement):
            DEFAULT_CONDITION_OUTPUT_KEYWORD)
     ConditionOp_template = components.load_component_from_text(ConditionOp_yaml)
     ConditionOp = ConditionOp_template(condition_statement)
-    ConditionOp.add_pod_annotation("valid_container", "false")
     return ConditionOp
 
 
