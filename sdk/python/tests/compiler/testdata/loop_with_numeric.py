@@ -47,10 +47,12 @@ implementation:
 def pipeline(my_pipe_param: int = 10, start: int = 1, end: int = 2):
     start_2 = 1
     end_2 = 2
-    with Loop.range(start=start, end=end) as item:
+    iterate_param_pass_style_field = {'iterate_param_pass_style': 'inline'}
+    item_pass_style_field = {'item_pass_style': 'file'}
+    with Loop.range(start=start, end=end, extra_fields=iterate_param_pass_style_field) as item:
         op1_template = components.load_component_from_text(op1_yaml)
         op1_template(item, my_pipe_param)
-        with Loop.range(start=start_2, end=end_2) as item2:
+        with Loop.range(start=start_2, end=end_2, extra_fields=item_pass_style_field) as item2:
             op1_template(item2, my_pipe_param)
 
 
