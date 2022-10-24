@@ -58,11 +58,9 @@ spec:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "Produce list",
               "outputs": [{"name": "data_list", "type": "List"}], "version": "Produce
               list@sha256=3d80b314916a06826def6fa78eab66cd69199497d7d92a8d199bd5d906706abe"}'
-    - runAfter:
-      - produce-list
-      name: loop-with-enumerate-basic-for-loop-1
+    - name: loop-with-enumerate-basic-for-loop-2
       params:
-      - name: produce-list-data_list-loop-item
+      - name: loop-item-param-1
         value: $(tasks.produce-list.results.data-list)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -70,29 +68,29 @@ spec:
         spec:
           pipelineSpec:
             params:
-            - name: iteration-number-2
+            - name: iteration-number-3
               type: string
-            - name: produce-list-data_list-loop-item
+            - name: loop-item-param-1
               type: string
             tasks:
             - name: consume-data
               params:
-              - name: iteration-number-2
-                value: $(params.iteration-number-2)
-              - name: produce-list-data_list-loop-item
-                value: $(params.produce-list-data_list-loop-item)
+              - name: iteration-number-3
+                value: $(params.iteration-number-3)
+              - name: loop-item-param-1
+                value: $(params.loop-item-param-1)
               taskSpec:
                 steps:
                 - name: main
                   command:
                   - echo
-                  - $(inputs.params.iteration-number-2)
-                  - $(inputs.params.produce-list-data_list-loop-item)
+                  - $(inputs.params.iteration-number-3)
+                  - $(inputs.params.loop-item-param-1)
                   image: busybox
                 params:
-                - name: iteration-number-2
+                - name: iteration-number-3
                   type: string
-                - name: produce-list-data_list-loop-item
+                - name: loop-item-param-1
                   type: string
                 metadata:
                   labels:
@@ -100,8 +98,8 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "Consume
                       data", "outputs": [], "version": "Consume data@sha256=748cfc9398fb5667535b2ae5940d7947826385c62858c6b1b637b527d9b57e6e"}'
-          iterationNumberParam: iteration-number-2
-          iterateParam: produce-list-data_list-loop-item
+          iterationNumberParam: iteration-number-3
+          iterateParam: loop-item-param-1
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"

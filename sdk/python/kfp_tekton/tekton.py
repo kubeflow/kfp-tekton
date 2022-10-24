@@ -352,6 +352,10 @@ class Loop(dsl.ParallelFor):
             self.items_is_string = True
         else:
             super().__init__(loop_args=loop_args, parallelism=parallelism)
+            self.loop_args = TektonLoopArguments(
+                loop_args,
+                code=self._next_id(),
+            )
             self.items_is_string = False
 
         self.separator = None

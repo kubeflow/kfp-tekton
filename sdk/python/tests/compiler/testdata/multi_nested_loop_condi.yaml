@@ -78,11 +78,11 @@ spec:
               "type": "String"}], "version": "print-0@sha256=5dd3c506ec54281b82008ca8ec5d8142834eae18d74ce8a110a31dd6e371b40d"}'
     - runAfter:
       - print-0
-      name: loop-cond2-for-loop-1
+      name: loop-cond2-for-loop-2
       params:
       - name: flag
         value: $(params.flag)
-      - name: param-loop-item
+      - name: loop-item-param-1
         value: $(params.param)
       - name: print-0-output_value
         value: $(tasks.print-0.results.output-value)
@@ -94,7 +94,7 @@ spec:
             params:
             - name: flag
               type: string
-            - name: param-loop-item
+            - name: loop-item-param-1
               type: string
             - name: print-0-output_value
               type: string
@@ -193,7 +193,7 @@ spec:
                 operator: in
                 values:
                 - "true"
-          iterateParam: param-loop-item
+          iterateParam: loop-item-param-1
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"

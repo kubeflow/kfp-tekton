@@ -136,9 +136,9 @@ spec:
         value: $(context.pipelineRun.name)
       - name: pipelineRun-namespace
         value: $(context.pipelineRun.namespace)
-    - name: any-sequencer-looped-for-loop-1
+    - name: any-sequencer-looped-for-loop-2
       params:
-      - name: param-loop-item
+      - name: loop-item-param-1
         value: $(params.param)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -146,7 +146,7 @@ spec:
         spec:
           pipelineSpec:
             params:
-            - name: param-loop-item
+            - name: loop-item-param-1
               type: string
             tasks:
             - name: print-10
@@ -234,7 +234,7 @@ spec:
                 value: $(context.pipelineRun.name)
               - name: pipelineRun-namespace
                 value: $(context.pipelineRun.namespace)
-          iterateParam: param-loop-item
+          iterateParam: loop-item-param-1
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
