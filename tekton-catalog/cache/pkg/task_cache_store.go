@@ -18,16 +18,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
+	"gorm.io/gorm"
 )
-
 
 type TaskCacheStore struct {
 	db       *gorm.DB
 	Disabled bool
-	Params db.ConnectionParams
+	Params   db.ConnectionParams
 }
 
 func (t *TaskCacheStore) Connect() error {
@@ -44,7 +43,7 @@ func (t *TaskCacheStore) Get(taskHashKey string) (*model.TaskCache, error) {
 		return nil, nil
 	}
 	entry := &model.TaskCache{}
-	d := t.db.Table("task_caches").Where("TaskHashKey = ?", taskHashKey).
+	d := t.db.Model(&model.TaskCache{}).Where("TaskHashKey = ?", taskHashKey).
 		Order("CreatedAt DESC").First(entry)
 	if d.Error != nil {
 		return nil, fmt.Errorf("failed to get entry from cache: %q. Error: %v", taskHashKey, d.Error)
@@ -52,20 +51,15 @@ func (t *TaskCacheStore) Get(taskHashKey string) (*model.TaskCache, error) {
 	return entry, nil
 }
 
-func (t *TaskCacheStore) Put(entry *model.TaskCache) (*model.TaskCache, error) {
+func (t *TaskCacheStore) Put(entry *model.TaskCache) error {
 	if t.Disabled || t.db == nil {
-		return nil, nil
+		return nil
 	}
-	ok := t.db.NewRecord(entry)
-	if !ok {
-		return nil, fmt.Errorf("failed to create a new cache entry, %#v, Error: %v", entry, t.db.Error)
-	}
-	rowInsert := &model.TaskCache{}
-	d := t.db.Create(entry).Scan(rowInsert)
+	d := t.db.Create(entry)
 	if d.Error != nil {
-		return nil, d.Error
+		return fmt.Errorf("failed to create a new cache entry, %#v, Error: %v", entry, t.db.Error)
 	}
-	return rowInsert, nil
+	return nil
 }
 
 func (t *TaskCacheStore) Delete(id string) error {

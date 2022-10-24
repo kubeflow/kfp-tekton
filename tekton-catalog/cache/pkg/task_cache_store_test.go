@@ -22,13 +22,16 @@ import (
 
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func newTestingCacheStore(disabled bool) (*TaskCacheStore, error) {
 	t := TaskCacheStore{
 		Disabled: disabled,
-		Params:   db.ConnectionParams{DbDriver: "sqlite3", DbName: ":memory:"},
+		// Params: db.ConnectionParams{DbDriver: "mysql", DbName: "testdb",
+		// 	DbHost: "127.0.0.1", DbPort: "3306", DbPwd: "", DbUser: "root",
+		// 	Timeout: 10 * time.Second,
+		// },
+		Params: db.ConnectionParams{DbDriver: "sqlite", DbName: ":memory:"},
 	}
 	err := t.Connect()
 	return &t, err
@@ -47,19 +50,11 @@ func TestPut(t *testing.T) {
 		t.Fatal(err)
 	}
 	entry := createTaskCache("x", "y")
-	taskCache, err := taskCacheStore.Put(entry)
+	err = taskCacheStore.Put(entry)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if taskCache.TaskHashKey != entry.TaskHashKey {
-		t.Errorf("Mismatached key. Expected %s Found: %s", entry.TaskHashKey,
-			taskCache.TaskHashKey)
-	}
-	if taskCache.TaskOutput != entry.TaskOutput {
-		t.Errorf("Mismatached output. Expected : %s Found: %s",
-			entry.TaskOutput,
-			taskCache.TaskOutput)
-	}
+
 }
 
 func TestGet(t *testing.T) {
@@ -68,11 +63,11 @@ func TestGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	entry := createTaskCache("x", "y")
-	taskCache, err := taskCacheStore.Put(entry)
+	err = taskCacheStore.Put(entry)
 	if err != nil {
 		t.Fatal(err)
 	}
-	cacheResult, err := taskCacheStore.Get(taskCache.TaskHashKey)
+	cacheResult, err := taskCacheStore.Get(entry.TaskHashKey)
 	if err != nil {
 		t.Error(err)
 	}
@@ -95,11 +90,11 @@ func TestGetLatest(t *testing.T) {
 	}
 	for i := 1; i < 10; i++ {
 		entry := createTaskCache("x", fmt.Sprintf("y%d", i))
-		taskCache, err := taskCacheStore.Put(entry)
+		err := taskCacheStore.Put(entry)
 		if err != nil {
 			t.Fatal(err)
 		}
-		cacheResult, err := taskCacheStore.Get(taskCache.TaskHashKey)
+		cacheResult, err := taskCacheStore.Get(entry.TaskHashKey)
 		if err != nil {
 			t.Error(err)
 		}
@@ -122,7 +117,7 @@ func TestDisabledCache(t *testing.T) {
 	}
 	taskCache, err := taskCacheStore.Get("random")
 	if err != nil {
-		t.Errorf("a disabled cache returned non nil error: %w", err)
+		t.Errorf("a disabled cache returned non nil error: %s", err)
 	}
 	if taskCache != nil {
 		t.Errorf("a disabled cache should return nil")
@@ -141,7 +136,7 @@ func TestPruneOlderThan(t *testing.T) {
 			TaskOutput:  "cacheOutput",
 			CreatedAt:   time.UnixMicro(int64(i * 100)),
 		}
-		_, err = taskCacheStore.Put(t1)
+		err = taskCacheStore.Put(t1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -157,7 +152,7 @@ func TestPruneOlderThan(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	taskCache, err = taskCacheStore.Get(hashKey)
+	_, err = taskCacheStore.Get(hashKey)
 	if err == nil {
 		t.Errorf("Expected error to be not nil")
 	}

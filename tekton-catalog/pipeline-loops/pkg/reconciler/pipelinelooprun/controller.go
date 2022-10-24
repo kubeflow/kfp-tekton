@@ -25,6 +25,7 @@ import (
 	"syscall"
 	"time"
 
+	backoff "github.com/cenkalti/backoff/v4"
 	taskCache "github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
 	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstore/pkg/writer"
@@ -75,7 +76,7 @@ func loadCacheConfig(ctx context.Context, kubeClientSet kubernetes.Interface, p 
 	configMap, err := kubeClientSet.CoreV1().ConfigMaps(system.Namespace()).Get(ctx,
 		"cache-config", metaV1.GetOptions{})
 	if err != nil {
-		return false, err
+		return true, err
 	}
 	if configMap.Data["disabled"] == "true" {
 		return true, nil
@@ -89,7 +90,7 @@ func loadCacheConfig(ctx context.Context, kubeClientSet kubernetes.Interface, p 
 	p.DbPwd = configMap.Data["password"]
 	timeout, err := time.ParseDuration(configMap.Data["timeout"])
 	if err != nil {
-		return false, err
+		return true, fmt.Errorf("invalid value passed for timeout: %v", err)
 	}
 	p.Timeout = timeout
 	return false, nil
@@ -101,17 +102,21 @@ func initCache(ctx context.Context, kubeClientSet kubernetes.Interface, params d
 	logger := logging.FromContext(ctx)
 	disabled, err := loadCacheConfig(ctx, kubeClientSet, &params)
 	if err != nil {
-		logger.Errorf("Config map could not be loaded. Error : %w", err)
-		params.LoadMySQLDefaults()
-		params.Timeout = 10 * time.Second
+		logger.Errorf("ConfigMap cache-config could not be loaded. "+
+			"Cache store disabled. Error : %v", err)
 	}
 	cacheStore := &taskCache.TaskCacheStore{Params: params}
 	if disabled {
 		cacheStore.Disabled = true
 	}
 	if !cacheStore.Disabled {
-		logger.Infof("Params: %#v", params)
-		err := cacheStore.Connect()
+		logger.Infof("Cache store Params: %#v", params)
+		b := backoff.NewExponentialBackOff()
+		b.MaxElapsedTime = params.Timeout
+		var operation = func() error {
+			return cacheStore.Connect()
+		}
+		err := backoff.Retry(operation, b)
 		if err != nil {
 			cacheStore.Disabled = true
 			logger.Errorf("Failed to connect to cache store backend, cache store disabled. err: %v", err)

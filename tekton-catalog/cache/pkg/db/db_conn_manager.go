@@ -18,9 +18,8 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/model"
+	"gorm.io/gorm"
 )
 
 type ConnectionParams struct {
@@ -32,36 +31,32 @@ type ConnectionParams struct {
 	DbPwd               string
 	DbGroupConcatMaxLen string
 	DbExtraParams       string
-	Timeout				time.Duration
+	Timeout             time.Duration
 }
 
 func InitDBClient(params ConnectionParams, initConnectionTimeout time.Duration) (*gorm.DB, error) {
 	driverName := params.DbDriver
-	var arg string
+	var db *gorm.DB
 	var err error
 
 	switch driverName {
-	case mysqlDBDriverDefault:
-		arg, err = initMysql(params, initConnectionTimeout)
-		if err != nil {
-			return nil, err
-		}
-	case sqliteDriverDefault:
-		arg = initSqlite(params.DbName)
+	case "mysql":
+		db, err = initMysql(params)
+	case "sqlite":
+		db, err = initSqlite(params.DbName)
 	default:
-		return nil, fmt.Errorf("driver %v is not supported", driverName)
+		return nil, fmt.Errorf("driver %s is not supported", driverName)
 	}
 
 	// db is safe for concurrent use by multiple goroutines
 	// and maintains its own pool of idle connections.
-	db, err := gorm.Open(driverName, arg)
 	if err != nil {
 		return nil, err
 	}
 	// Create table
 	response := db.AutoMigrate(&model.TaskCache{})
-	if response.Error != nil {
-		return nil, fmt.Errorf("failed to initialize the databases: Error: %w", response.Error)
+	if response != nil {
+		return nil, fmt.Errorf("failed to initialize the databases: Error: %v", response)
 	}
 	return db, nil
 }

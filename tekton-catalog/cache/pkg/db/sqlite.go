@@ -14,16 +14,19 @@
 
 package db
 
-const sqliteDriverDefault = "sqlite3"
+import (
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
 
-func (params *ConnectionParams) LoadSqliteDefaults() {
-	setDefault(&params.DbDriver, sqliteDriverDefault)
-	setDefault(&params.DbName, ":memory:")
-}
-
-func initSqlite(dbName string) string {
+func initSqlite(dbName string) (*gorm.DB, error) {
+	var db *gorm.DB
+	var err error
 	if dbName == "" {
-		dbName = ":memory:" // default db.
+		db, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	} else {
+		db, err = gorm.Open(sqlite.Open(dbName), &gorm.Config{})
 	}
-	return dbName
+
+	return db, err
 }

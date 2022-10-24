@@ -33,7 +33,6 @@ import (
 	fakeclient "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/client/fake"
 	fakepipelineloopinformer "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/informers/pipelineloop/v1alpha1/pipelineloop/fake"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/test"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	ttesting "github.com/tektoncd/pipeline/pkg/reconciler/testing"
@@ -61,7 +60,7 @@ var (
 
 func initCacheParams() {
 	tmp := os.TempDir()
-	params.DbDriver = "sqlite3"
+	params.DbDriver = "sqlite"
 	params.DbName = tmp + "/testing.db"
 	params.Timeout = 2 * time.Second
 }
@@ -2347,9 +2346,10 @@ func TestReconcilePipelineLoopRunCachedRun(t *testing.T) {
 			}
 			cm := corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "cache-config",
+					Name:      "cache-config",
+					Namespace: system.Namespace(),
 				},
-				Data: map[string]string{"driver": "sqlite3", "dbName": "/tmp/testing.db"},
+				Data: map[string]string{"driver": "sqlite", "dbName": "/tmp/testing2.db", "timeout": "2s"},
 			}
 			d := test.Data{
 				Runs:         []*v1alpha1.Run{tc.run},

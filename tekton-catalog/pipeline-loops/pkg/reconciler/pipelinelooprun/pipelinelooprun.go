@@ -105,6 +105,10 @@ type Reconciler struct {
 	cacheStore            *cache.TaskCacheStore
 	clock                 clock.RealClock
 }
+type CacheKey struct {
+	Params           []v1beta1.Param                        `json:"params"`
+	PipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec `json:"pipelineSpec"`
+}
 
 var (
 	// Check that our Reconciler implements runreconciler.Interface
@@ -207,14 +211,17 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) pkgre
 
 	if run.IsDone() {
 		if run.IsSuccessful() && !c.cacheStore.Disabled && isCachingEnabled(run) {
-			marshal, err := json.Marshal(status.PipelineLoopSpec)
+			marshal, err := json.Marshal(CacheKey{
+				PipelineLoopSpec: status.PipelineLoopSpec,
+				Params:           run.Spec.Params,
+			})
 			if err == nil {
 				hashSum := fmt.Sprintf("%x", md5.Sum(marshal))
 				resultBytes, err1 := json.Marshal(run.Status.Results)
 				if err1 != nil {
 					return fmt.Errorf("error while marshalling result to cache for run: %s, %w", run.Name, err)
 				}
-				_, err = c.cacheStore.Put(&model.TaskCache{
+				err = c.cacheStore.Put(&model.TaskCache{
 					TaskHashKey: hashSum,
 					TaskOutput:  string(resultBytes),
 				})
@@ -353,26 +360,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 			pipelineLoopMeta.Namespace, pipelineLoopMeta.Name, err)
 		return nil
 	}
-	if !c.cacheStore.Disabled && isCachingEnabled(run) {
-		marshal, err := json.Marshal(pipelineLoopSpec)
-		if marshal != nil && err == nil {
-			hashSum = fmt.Sprintf("%x", md5.Sum(marshal))
-			taskCache, err := c.cacheStore.Get(hashSum)
-			if err == nil && taskCache != nil {
-				logger.Infof("Found a cached entry, for run: %s, with key:", run.Name, hashSum)
-				err := json.Unmarshal([]byte(taskCache.TaskOutput), &run.Status.Results)
-				if err != nil {
-					logger.Errorf("error while unmarshal of task output. %v", err)
-				}
-				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonCacheHit.String(),
-					"A cached result of the previous run was found.")
-				return nil
-			}
-		}
-		if err != nil {
-			logger.Warnf("failed marshalling the spec, for pipelineloop: %s", pipelineLoopMeta.Name)
-		}
-	}
+
 	// Determine how many iterations of the Task will be done.
 	totalIterations, iterationElements, err := computeIterations(run, pipelineLoopSpec)
 	if err != nil {
@@ -391,7 +379,29 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 	if err != nil {
 		return fmt.Errorf("error updating PipelineRun status for Run %s/%s: %w", run.Namespace, run.Name, err)
 	}
-
+	if !c.cacheStore.Disabled && isCachingEnabled(run) {
+		marshal, err := json.Marshal(CacheKey{
+			PipelineLoopSpec: pipelineLoopSpec,
+			Params:           run.Spec.Params,
+		})
+		if marshal != nil && err == nil {
+			hashSum = fmt.Sprintf("%x", md5.Sum(marshal))
+			taskCache, err := c.cacheStore.Get(hashSum)
+			if err == nil && taskCache != nil {
+				logger.Infof("Found a cached entry, for run: %s, with key:", run.Name, hashSum)
+				err := json.Unmarshal([]byte(taskCache.TaskOutput), &run.Status.Results)
+				if err != nil {
+					logger.Errorf("error while unmarshal of task output. %v", err)
+				}
+				run.Status.MarkRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonCacheHit.String(),
+					"A cached result of the previous run was found.")
+				return nil
+			}
+		}
+		if err != nil {
+			logger.Warnf("failed marshalling the spec, for pipelineloop: %s", pipelineLoopMeta.Name)
+		}
+	}
 	if highestIteration > 0 {
 		updateRunStatus(run, "last-idx", fmt.Sprintf("%d", highestIteration))
 		updateRunStatus(run, "last-elem", fmt.Sprintf("%s", iterationElements[highestIteration-1]))
