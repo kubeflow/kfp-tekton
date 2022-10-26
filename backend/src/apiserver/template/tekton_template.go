@@ -255,15 +255,28 @@ func (t *Tekton) tektonPreprocessing(workflow util.Workflow) error {
 
 func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON map[string][][]interface{}) {
 	for _, task := range workflow.Spec.PipelineSpec.Tasks {
-		artifacts, hasArtifacts := artifactItemsJSON[task.Name]
+		artifacts, injectArtifacts := artifactItemsJSON[task.Name]
 		archiveLogs := common.IsArchiveLogs()
 		trackArtifacts := common.IsTrackArtifacts()
 		stripEOF := common.IsStripEOF()
 		injectDefaultScript := common.IsInjectDefaultScript()
 		copyStepTemplate := common.GetCopyStepTemplate()
 
+		if injectArtifacts {
+			workflow.SetAnnotations(common.TrackArtifactAnnotation, "true")
+		}
+		artifactAnnotation, exists := workflow.ObjectMeta.Annotations[common.TrackArtifactAnnotation]
+		hasArtifacts := false
+		if exists && strings.ToLower(artifactAnnotation) == "true" {
+			hasArtifacts = true
+		}
 		if task.TaskSpec != nil && task.TaskSpec.Steps != nil {
-			if (hasArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
+			injectStepArtifacts := false
+			stepArtifactAnnotation, exists := task.TaskSpec.Metadata.Annotations[common.TrackStepArtifactAnnotation]
+			if hasArtifacts || (exists && strings.ToLower(stepArtifactAnnotation) == "true") {
+				injectStepArtifacts = true
+			}
+			if (injectStepArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (injectStepArtifacts && len(artifacts) > 0 && stripEOF) {
 				artifactScript := common.GetArtifactScript()
 				if archiveLogs {
 					// Logging volumes
@@ -311,7 +324,7 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 
 				// Process the artifacts into minimum sh commands if running with minimum linux kernel
 				if injectDefaultScript {
-					artifactScript = t.injectDefaultScript(workflow, artifactScript, artifacts, hasArtifacts, archiveLogs, trackArtifacts, stripEOF, moveStep)
+					artifactScript = t.injectDefaultScript(workflow, artifactScript, artifacts, injectStepArtifacts, archiveLogs, trackArtifacts, stripEOF, moveStep)
 				}
 
 				// Define post-processing step
