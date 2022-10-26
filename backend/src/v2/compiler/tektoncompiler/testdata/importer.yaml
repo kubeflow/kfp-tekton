@@ -1,0 +1,123 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    pipelines.kubeflow.org/v2_pipeline: "true"
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+  creationTimestamp: null
+  generateName: pipeline-with-importer-
+  labels:
+    pipeline-uid: 7dde640b-39c0-4320-8d1b-610f20a536f6
+    pipelines.kubeflow.org/v2_component: "true"
+spec:
+  pipelineSpec:
+    tasks:
+    - name: importer
+      params:
+      - name: task
+        value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-importer"},"inputs":{"parameters":{"uri":{"runtimeValue":{"constantValue":{"stringValue":"gs://ml-pipeline-playground/shakespeare1.txt"}}}}},"taskInfo":{"name":"importer"}}'
+      - name: component
+        value: '{"executorLabel":"exec-importer","inputDefinitions":{"parameters":{"uri":{"type":"STRING"}}},"outputDefinitions":{"artifacts":{"artifact":{"artifactType":{"schemaTitle":"system.Dataset"}}}}}'
+      - name: importer
+        value: '{"executorLabel":"exec-importer","inputDefinitions":{"parameters":{"uri":{"type":"STRING"}}},"outputDefinitions":{"artifacts":{"artifact":{"artifactType":{"schemaTitle":"system.Dataset"}}}}}'
+      - name: parent-dag-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
+      - name: run-id
+        value: 7dde640b-39c0-4320-8d1b-610f20a536f6
+      runAfter:
+      - root-system-dag-driver
+      taskSpec:
+        metadata:
+          annotations:
+            pipelines.kubeflow.org/v2_pipeline: "true"
+          labels:
+            pipeline-uid: 7dde640b-39c0-4320-8d1b-610f20a536f6
+            pipelines.kubeflow.org/v2_component: "true"
+        params:
+        - name: task
+          type: string
+        - name: component
+          type: string
+        - name: importer
+          type: string
+        - name: parent-dag-id
+          type: string
+        results:
+        - description: execution id
+          name: execution-id
+        - description: executor input
+          name: executor-input
+        spec: null
+        steps:
+        - args:
+          - --executor_type
+          - importer
+          - --task_spec
+          - $(params.task)
+          - --component_spec
+          - $(params.component)
+          - --importer_spec
+          - $(params.importer)
+          - --pipeline_name
+          - pipeline-with-importer
+          - --run_id
+          - $(params.run-id)
+          - --parent_dag_id
+          - $(params.parent-dag-id)
+          - --pod_name
+          - $(KFP_POD_NAME)
+          - --pod_uid
+          - $(KFP_POD_UID)
+          - --mlmd_server_address
+          - $(METADATA_GRPC_SERVICE_HOST)
+          - --mlmd_server_port
+          - $(METADATA_GRPC_SERVICE_PORT)
+          command:
+          - launcher-v2
+          env:
+          - name: KFP_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: KFP_POD_UID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.uid
+          envFrom:
+          - configMapRef:
+              name: metadata-grpc-configmap
+              optional: true
+          image: gcr.io/ml-pipeline-test/dev/kfp-launcher-v2:latest
+          name: importer-main
+          resources: {}
+    - name: root-system-dag-driver
+      params:
+      - name: type
+        value: ROOT_DAG
+      - name: pipeline_name
+        value: pipeline-with-importer
+      - name: run_id
+        value: 7dde640b-39c0-4320-8d1b-610f20a536f6
+      - name: dag_execution_id
+        value: "0"
+      - name: component
+        value: '{"dag":{"tasks":{"importer":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-importer"},"inputs":{"parameters":{"uri":{"runtimeValue":{"constantValue":{"stringValue":"gs://ml-pipeline-playground/shakespeare1.txt"}}}}},"taskInfo":{"name":"importer"}}}},"inputDefinitions":{"parameters":{"dataset2":{"type":"STRING"}}}}'
+      - name: task
+        value: ""
+      - name: runtime_config
+        value: '{}'
+      - name: iteration_index
+        value: "-1"
+      - name: execution_id
+        value: execution-id
+      - name: iteration_count
+        value: iteration-count
+      - name: condition
+        value: condition
+      taskRef:
+        apiVersion: kfp-driver.tekton.dev/v1alpha1
+        kind: KFPDriver
+        name: kfp-driver
+status: {}
