@@ -31,6 +31,7 @@ and test pipelines found in the KFP repository.
     - [Input Artifacts](#input-artifacts)
     - [Output Artifacts](#output-artifacts)
     - [Caching](#caching)
+    - [Enforce Artifact Tracking](#enforce-artifact-tracking)
   - [Features with Limitations](#features-with-limitations)
     - [Variable Substitutions](#variable-substitutions)
 
@@ -255,6 +256,24 @@ via a Kubernetes configmap.
 By default compiling a pipeline will add metadata annotations and labels so that results from tasks within a pipeline run can be re-used if that task is reused in a new pipeline run. This saves the pipeline run from re-executing the task when the results are already known. In order to disable caching, a label must be added to a task's metadata like in [this sample pipeline](./python/tests/compiler/testdata/cache.py#L39).
 
 The specific annotations and labels that are added to the task spec metadata to enable caching are: `annotations={'tekton.dev/template': ""}` and `labels={'pipelines.kubeflow.org/cache_enabled': 'true', 'pipelines.kubeflow.org/pipelinename': '', 'pipelines.kubeflow.org/generation': ''}`.
+
+### Enforce Artifact Tracking
+
+If you pipelines require artifact tracking in order to run, enforce artfact tracking to be always on for your pipelines using one of the two ways.
+
+Enable by adding a new pipeline annotation that enforce artifact tracking for the whole pipeline:
+```python
+import kfp_tekton
+from kfp_tekton.compiler import TektonCompiler
+pipeline_conf = kfp_tekton.compiler.pipeline_utils.TektonPipelineConf()
+pipeline_conf.add_pipeline_annotation("tekton.dev/track_artifact", 'true')
+TektonCompiler().compile(echo_pipeline, 'echo_pipeline.yaml', tekton_pipeline_conf=pipeline_conf)
+```
+
+Enable by adding a new task annotation that enforce artifact tracking for a specific task:
+```python
+task.add_pod_annotation("tekton.dev/track_step_artifact", "true")
+```
 
 ## Features with Limitations
 
