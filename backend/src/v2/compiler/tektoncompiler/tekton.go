@@ -19,7 +19,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -74,9 +73,6 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 		}
 	}
 
-	// uid
-	uid := uuid.New().String()
-
 	// initialization
 	pr := &pipelineapi.PipelineRun{
 		TypeMeta: k8smeta.TypeMeta{
@@ -93,7 +89,6 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 			},
 			Labels: map[string]string{
 				"pipelines.kubeflow.org/v2_component": "true",
-				"pipeline-uid":                        uid,
 			},
 		},
 		Spec: pipelineapi.PipelineRunSpec{
@@ -110,7 +105,6 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 		spec:          spec,
 		dagStack:      make([]string, 0, 10),
 		executors:     deploy.GetExecutors(),
-		uid:           uid,
 	}
 	if opts != nil {
 		if opts.DriverImage != "" {
@@ -289,7 +283,6 @@ type pipelinerunCompiler struct {
 	dagTasks       map[string]*pipelinespec.PipelineTaskSpec
 	componentSpecs map[string]string
 	containerSpecs map[string]string
-	uid            string
 }
 
 // if the dependency is a component with DAG, then replace the dependency with DAG's leaf nodes
@@ -444,10 +437,10 @@ const (
 	paramNameExecutorInput    = "executor_input"
 )
 
-// func runID() string {
-// 	// KFP API server converts this to KFP run ID.
-// 	return "$(context.pipelineRun.uid)"
-// }
+func runID() string {
+	// KFP API server converts this to KFP run ID.
+	return "$(context.pipelineRun.uid)"
+}
 
 // In a container template, refer to inputs to the template.
 func inputValue(parameter string) string {

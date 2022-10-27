@@ -85,7 +85,7 @@ func (c *pipelinerunCompiler) dagDriverTask(
 	if inputs == nil || len(inputs.component) == 0 {
 		return nil, fmt.Errorf("dagDriverTask: component must be non-nil")
 	}
-	runtimeConfigJson := "{}"
+	runtimeConfigJson := ""
 	if inputs.runtimeConfig != nil {
 		rtStr, err := stablyMarshalJSON(inputs.runtimeConfig)
 		if err != nil {
@@ -115,7 +115,7 @@ func (c *pipelinerunCompiler) dagDriverTask(
 			// "--run_id"
 			{
 				Name:  paramNameRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.uid},
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
 			{

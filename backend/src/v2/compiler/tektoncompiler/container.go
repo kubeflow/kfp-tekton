@@ -110,7 +110,7 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			// "--run_id", runID(),
 			{
 				Name:  paramNameRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.uid},
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
 			{
@@ -197,7 +197,7 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			},
 			{
 				Name:  paramRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.uid},
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
 			},
 			{
 				Name:  paramComponentSpec,
@@ -242,7 +242,6 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 			},
 			Labels: map[string]string{
 				"pipelines.kubeflow.org/v2_component": "true",
-				"pipeline-uid":                        c.uid,
 			},
 		},
 		TaskSpec: pipelineapi.TaskSpec{
