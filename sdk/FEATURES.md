@@ -18,7 +18,6 @@ and test pipelines found in the KFP repository.
     - [Affinity, Node Selector, and Tolerations](#affinity-node-selector-and-tolerations)
     - [ImagePullSecrets](#imagepullsecrets)
     - [Exit Handler](#exit-handler)
-    - [Pipeline Loops](#pipeline-loops)
     - [Any Sequencer](#any-sequencer)
     - [Tekton Pipeline Variables](#tekton-pipeline-variables)
     - [Sidecars](#sidecars)
@@ -31,6 +30,7 @@ and test pipelines found in the KFP repository.
     - [Input Artifacts](#input-artifacts)
     - [Output Artifacts](#output-artifacts)
     - [Caching](#caching)
+    - [Pipeline Loops](#pipeline-loops)
   - [Features with Limitations](#features-with-limitations)
     - [Variable Substitutions](#variable-substitutions)
 
@@ -126,25 +126,6 @@ section under the Pipeline `spec`. An example of how to use an _exit handler_ ca
 the [exit_handler](/sdk/python/tests/compiler/testdata/exit_handler.py) compiler test.
 
 The `finally` syntax is supported since Tekton version `0.14.0`.
-
-### Pipeline Loops
-
-PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks Controller](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops.
-
-By default, the SDK will not compile all the recursion loop resources in the pipelineRun annotations. If you want to apply the recursion loop resources together with pipelinerun as an admin, add the following code snippet before compiling the pipeline.
-```python
-import kfp_tekton
-kfp_tekton.compiler.LOOP_RESOURCES_IN_SEPARATE_YAML=False
-```
-
-To use this feature, please ensure Tekton version >= v0.19, and "data.enable-custom-tasks" is "true" in feature-flags configmap:
-`kubectl edit cm feature-flags -n tekton-pipelines`
-
-To see how the Python SDK provides this feature, refer to the examples below:
-- [loop_static](/sdk/python/tests/compiler/testdata/loop_static.py)
-- [withparam_global](/sdk/python/tests/compiler/testdata/withparam_global.py)
-- [withitem_nested](/sdk/python/tests/compiler/testdata/withitem_nested.py)
-- [parallelfor_item_argument_resolving](/sdk/python/tests/compiler/testdata/parallelfor_item_argument_resolving.py)
 
 ### Any Sequencer
 
@@ -255,6 +236,26 @@ via a Kubernetes configmap.
 By default compiling a pipeline will add metadata annotations and labels so that results from tasks within a pipeline run can be re-used if that task is reused in a new pipeline run. This saves the pipeline run from re-executing the task when the results are already known. In order to disable caching, a label must be added to a task's metadata like in [this sample pipeline](./python/tests/compiler/testdata/cache.py#L39).
 
 The specific annotations and labels that are added to the task spec metadata to enable caching are: `annotations={'tekton.dev/template': ""}` and `labels={'pipelines.kubeflow.org/cache_enabled': 'true', 'pipelines.kubeflow.org/pipelinename': '', 'pipelines.kubeflow.org/generation': ''}`.
+
+
+### Pipeline Loops
+
+PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks Controller](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops.
+
+By default, the SDK will not compile all the recursion loop resources in the pipelineRun annotations. If you want to apply the recursion loop resources together with pipelinerun as an admin, add the following code snippet before compiling the pipeline.
+```python
+import kfp_tekton
+kfp_tekton.compiler.LOOP_RESOURCES_IN_SEPARATE_YAML=False
+```
+
+To use this feature, please ensure Tekton version >= v0.19, and "data.enable-custom-tasks" is "true" in feature-flags configmap:
+`kubectl edit cm feature-flags -n tekton-pipelines`
+
+To see how the Python SDK provides this feature, refer to the examples below:
+- [loop_static](/sdk/python/tests/compiler/testdata/loop_static.py)
+- [withparam_global](/sdk/python/tests/compiler/testdata/withparam_global.py)
+- [withitem_nested](/sdk/python/tests/compiler/testdata/withitem_nested.py)
+- [parallelfor_item_argument_resolving](/sdk/python/tests/compiler/testdata/parallelfor_item_argument_resolving.py)
 
 ## Features with Limitations
 
