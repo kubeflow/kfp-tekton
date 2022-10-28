@@ -31,6 +31,7 @@ and test pipelines found in the KFP repository.
     - [Output Artifacts](#output-artifacts)
     - [Caching](#caching)
     - [Pipeline Loops](#pipeline-loops)
+    - [Enforce Artifact Tracking](#enforce-artifact-tracking)
   - [Features with Limitations](#features-with-limitations)
     - [Variable Substitutions](#variable-substitutions)
 
@@ -237,7 +238,6 @@ By default compiling a pipeline will add metadata annotations and labels so that
 
 The specific annotations and labels that are added to the task spec metadata to enable caching are: `annotations={'tekton.dev/template': ""}` and `labels={'pipelines.kubeflow.org/cache_enabled': 'true', 'pipelines.kubeflow.org/pipelinename': '', 'pipelines.kubeflow.org/generation': ''}`.
 
-
 ### Pipeline Loops
 
 PipelineLoops is a feature for running a component or a set of component tasks multiple times in a loop. Right now, Tekton supports loop pipeline/tasks via an implementation of [Tekton Custom Tasks Controller](https://github.com/tektoncd/community/blob/master/teps/0002-custom-tasks.md) named as "PipelineLoop". Please refer to the examples [here](/tekton-catalog/pipeline-loops/examples) to understand more details about the usage of loops.
@@ -256,6 +256,24 @@ To see how the Python SDK provides this feature, refer to the examples below:
 - [withparam_global](/sdk/python/tests/compiler/testdata/withparam_global.py)
 - [withitem_nested](/sdk/python/tests/compiler/testdata/withitem_nested.py)
 - [parallelfor_item_argument_resolving](/sdk/python/tests/compiler/testdata/parallelfor_item_argument_resolving.py)
+
+### Enforce Artifact Tracking
+
+If you pipelines require artifact tracking in order to run, enforce artfact tracking to be always on for your pipelines using one of the two ways.
+
+Enable by adding a new pipeline annotation that enforce artifact tracking for the whole pipeline:
+```python
+import kfp_tekton
+from kfp_tekton.compiler import TektonCompiler
+pipeline_conf = kfp_tekton.compiler.pipeline_utils.TektonPipelineConf()
+pipeline_conf.add_pipeline_annotation("tekton.dev/track_artifact", 'true')
+TektonCompiler().compile(echo_pipeline, 'echo_pipeline.yaml', tekton_pipeline_conf=pipeline_conf)
+```
+
+Enable by adding a new task annotation that enforce artifact tracking for a specific task:
+```python
+task.add_pod_annotation("tekton.dev/track_step_artifact", "true")
+```
 
 ## Features with Limitations
 

@@ -80,6 +80,8 @@ const (
 	ArtifactBucketAnnotation         string = "tekton.dev/artifact_bucket"
 	ArtifactEndpointAnnotation       string = "tekton.dev/artifact_endpoint"
 	ArtifactEndpointSchemeAnnotation string = "tekton.dev/artifact_endpoint_scheme"
+	TrackArtifactAnnotation          string = "tekton.dev/track_artifact"
+	TrackStepArtifactAnnotation      string = "tekton.dev/track_step_artifact"
 )
 
 // For backward compatibility. Remove after 0.3 release

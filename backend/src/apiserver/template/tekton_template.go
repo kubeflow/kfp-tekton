@@ -262,8 +262,17 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 		injectDefaultScript := common.IsInjectDefaultScript()
 		copyStepTemplate := common.GetCopyStepTemplate()
 
+		artifactAnnotation, exists := workflow.ObjectMeta.Annotations[common.TrackArtifactAnnotation]
+		if exists && strings.ToLower(artifactAnnotation) == "true" {
+			trackArtifacts = true
+		}
 		if task.TaskSpec != nil && task.TaskSpec.Steps != nil {
-			if (hasArtifacts && len(artifacts) > 0 && trackArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
+			injectStepArtifacts := false
+			stepArtifactAnnotation, exists := task.TaskSpec.Metadata.Annotations[common.TrackStepArtifactAnnotation]
+			if trackArtifacts || (exists && strings.ToLower(stepArtifactAnnotation) == "true") {
+				injectStepArtifacts = true
+			}
+			if (hasArtifacts && len(artifacts) > 0 && injectStepArtifacts) || archiveLogs || (hasArtifacts && len(artifacts) > 0 && stripEOF) {
 				artifactScript := common.GetArtifactScript()
 				if archiveLogs {
 					// Logging volumes
@@ -311,7 +320,7 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 
 				// Process the artifacts into minimum sh commands if running with minimum linux kernel
 				if injectDefaultScript {
-					artifactScript = t.injectDefaultScript(workflow, artifactScript, artifacts, hasArtifacts, archiveLogs, trackArtifacts, stripEOF, moveStep)
+					artifactScript = t.injectDefaultScript(workflow, artifactScript, artifacts, hasArtifacts, archiveLogs, injectStepArtifacts, stripEOF, moveStep)
 				}
 
 				// Define post-processing step
@@ -357,9 +366,14 @@ func (t *Tekton) injectDefaultScript(workflow util.Workflow, artifactScript stri
 	// Upload Artifacts if the artifact is enabled and the annoations are present
 	if hasArtifacts && len(artifacts) > 0 && trackArtifacts {
 		for _, artifact := range artifacts {
+			artifactBaseName := fmt.Sprintf("\"$(basename \"%s\")", artifact[1])
+			artifactPathName := fmt.Sprintf("\"%s/%s", common.GetPath4InternalResults(), artifactBaseName)
+			if artifact[0] == "mlpipeline-ui-metadata" || artifact[0] == "mlpipeline-metrics" {
+				artifactPathName = fmt.Sprintf("\"%s\"", artifact[1])
+			}
 			if len(artifact) == 2 {
-				artifactScript += fmt.Sprintf("push_artifact \"%s\" \"%s/\"$(basename \"%s\")\n",
-					artifact[0], common.GetPath4InternalResults(), artifact[1])
+				artifactScript += fmt.Sprintf("push_artifact \"%s\" %s\n",
+					artifact[0], artifactPathName)
 			} else {
 				glog.Warningf("Artifact annotations are missing for run %v.", workflow.Name)
 			}

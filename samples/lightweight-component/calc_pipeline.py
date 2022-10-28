@@ -72,6 +72,7 @@ def calc_pipeline(
     #Passing a task output reference as operation arguments
     #For an operation with a single return value, the output reference can be accessed using `task.output` or `task.outputs['output_name']` syntax
     divmod_task = divmod_op(add_task.output, b)
+    divmod_task.add_pod_annotation("tekton.dev/track_step_artifact", "true")
 
     #For an operation with a multiple return values, the output references can be accessed using `task.outputs['output_name']` syntax
     result_task = add_op(divmod_task.outputs['quotient'], c)
