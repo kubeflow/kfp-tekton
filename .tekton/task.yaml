@@ -35,7 +35,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: run-go-unittests
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -104,7 +104,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: build-image
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -170,7 +170,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: build-image
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -240,7 +240,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: build-image
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -350,7 +350,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: deploy-kfp-tekton
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -400,7 +400,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: run-test
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: IBM_CLOUD_API_KEY
           value: $(params.apikey)
@@ -472,7 +472,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: publish-images-to-dockerhub
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: IBM_CLOUD_API_KEY
           value: $(params.apikey)
@@ -577,7 +577,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: undeploy-kfp-tekton
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: PIPELINE_KUBERNETES_CLUSTER_NAME
           value: $(params.kubernetes-cluster)
@@ -607,7 +607,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: build-binaries
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: BUILD_DIR
           value: $(params.build-dir)
@@ -629,7 +629,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: setup-deploy
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       command:
         - /bin/bash
         - '-c'
@@ -651,7 +651,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: setup-deploy
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       command:
         - /bin/bash
         - '-c'
@@ -694,7 +694,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: iks-script
-      image: docker.io/aipipeline/pipeline-base-image:1.4
+      image: docker.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: IBM_CLOUD_API_KEY
           value: $(params.apikey)
