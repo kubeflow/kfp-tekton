@@ -142,22 +142,10 @@ func (c *pipelinerunCompiler) dagDriverTask(
 				Name:  paramNameIterationIndex,
 				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getIterationIndex()},
 			},
-			//output below, make them constances for now
-			// "--execution_id", outputPath(paramExecutionID), change from execution_id_path to execution_id
-			// {
-			// 	Name:  paramNameExecutionId,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramExecutionID},
-			// },
-			// // "--iteration_count", outputPath(paramIterationCount),
-			// {
-			// 	Name:  paramNameIterationCount,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramIterationCount},
-			// },
-			// // "--condition_path", outputPath(paramCondition),
-			// {
-			// 	Name:  paramNameCondition,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramCondition},
-			// },
+			// produce the following outputs:
+			// - execution-id
+			// - iteration-count
+			// - condition
 		},
 	}
 	if len(inputs.deps) > 0 {

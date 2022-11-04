@@ -92,14 +92,12 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 			},
 		},
 		Spec: pipelineapi.PipelineRunSpec{
-			PipelineSpec:       &pipelineapi.PipelineSpec{},
-			ServiceAccountName: "pipeline-runner",
+			PipelineSpec: &pipelineapi.PipelineSpec{},
 		},
 	}
 	c := &pipelinerunCompiler{
 		pr: pr,
 		// TODO(chensun): release process and update the images.
-		driverImage:   "gcr.io/ml-pipeline-test/dev/kfp-driver:latest",
 		launcherImage: "gcr.io/ml-pipeline-test/dev/kfp-launcher-v2:latest",
 		job:           job,
 		spec:          spec,
@@ -107,9 +105,6 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 		executors:     deploy.GetExecutors(),
 	}
 	if opts != nil {
-		if opts.DriverImage != "" {
-			c.driverImage = opts.DriverImage
-		}
 		if opts.LauncherImage != "" {
 			c.launcherImage = opts.LauncherImage
 		}
@@ -125,24 +120,36 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 }
 
 type TektonVisitor interface {
+	// receive task and component reference and use these information to create
+	// container driver and executor tasks
 	Container(taskName, compRef string,
 		task *pipelinespec.PipelineTaskSpec,
 		component *pipelinespec.ComponentSpec,
 		container *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec) error
+
+	// use task and component information to create importer task
 	Importer(name string,
 		task *pipelinespec.PipelineTaskSpec,
 		component *pipelinespec.ComponentSpec,
 		importer *pipelinespec.PipelineDeploymentConfig_ImporterSpec) error
+
 	// Resolver(name string, component *pipelinespec.ComponentSpec, resolver *pipelinespec.PipelineDeploymentConfig_ResolverSpec) error
+
+	// create root dag and sub-dag driver task
 	DAG(taskName, compRef string,
 		task *pipelinespec.PipelineTaskSpec, // could be sub-dag
 		component *pipelinespec.ComponentSpec,
 		dag *pipelinespec.DagSpec) error
+
+	// put the current DAG into the stack. when processing tasks inside a DAG, this could be used
+	// to know which DAG they belong to
 	PushDagStack(dag string)
+
+	// pop the DAG when finishing the processing
 	PopDagStack() string
+
+	// get current DAG when processing the tasks inside a DAG
 	CurrentDag() string
-	StoreDagTask(name string, task *pipelinespec.PipelineTaskSpec)
-	GetDagTask(name string) *pipelinespec.PipelineTaskSpec
 }
 
 type pipelinerunDFS struct {
@@ -172,9 +179,14 @@ func Accept(job *pipelinespec.PipelineJob, v TektonVisitor) error {
 		visitor: v,
 		visited: make(map[string]bool),
 	}
+	// start to traverse the DAG, starting from the root node
 	return state.dfs(compiler.RootComponentName, compiler.RootComponentName, nil, spec.GetRoot())
 }
 
+// taskName:  the task's name in a DAG
+// compRef:   the component name that this task refers to
+// task:      the task's task spec
+// component: the task's component spec
 func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.PipelineTaskSpec, component *pipelinespec.ComponentSpec) error {
 	// each component is only visited once
 	// TODO(Bobgy): return an error when circular reference detected
@@ -220,6 +232,7 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 		return err
 	}
 
+	// from here, start to process DAG task, push self to DAG stack first
 	state.visitor.PushDagStack(taskName)
 
 	tasks := dag.GetTasks()
@@ -250,6 +263,7 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 			return err
 		}
 	}
+
 	// pop the dag stack, assume no need to use the dag stack when processing DAG
 	// for sub-dag, it can also get its parent dag
 	state.visitor.PopDagStack()
@@ -277,10 +291,8 @@ type pipelinerunCompiler struct {
 	executors map[string]*pipelinespec.PipelineDeploymentConfig_ExecutorSpec
 	// state
 	pr             *pipelineapi.PipelineRun
-	driverImage    string
 	launcherImage  string
 	dagStack       []string
-	dagTasks       map[string]*pipelinespec.PipelineTaskSpec
 	componentSpecs map[string]string
 	containerSpecs map[string]string
 }
@@ -329,20 +341,6 @@ func (c *pipelinerunCompiler) CurrentDag() string {
 	return ""
 }
 
-func (c *pipelinerunCompiler) StoreDagTask(name string, task *pipelinespec.PipelineTaskSpec) {
-	if c.dagTasks == nil {
-		c.dagTasks = make(map[string]*pipelinespec.PipelineTaskSpec)
-	}
-	c.dagTasks[name] = task
-}
-
-func (c *pipelinerunCompiler) GetDagTask(name string) *pipelinespec.PipelineTaskSpec {
-	if c.dagTasks == nil {
-		return nil
-	}
-	return c.dagTasks[name]
-}
-
 func (c *pipelinerunCompiler) Resolver(name string, component *pipelinespec.ComponentSpec, resolver *pipelinespec.PipelineDeploymentConfig_ResolverSpec) error {
 	return fmt.Errorf("resolver not implemented yet")
 }
@@ -384,7 +382,6 @@ func (c *pipelinerunCompiler) useComponentImpl(name string) (string, error) {
 	return c.getValueFromMap(prefixContainers+name, c.containerSpecs)
 }
 
-// TODO(Bobgy): sanitize component name
 func (c *pipelinerunCompiler) putValueToMap(name string, msg proto.Message, maps map[string]string) error {
 	if _, alreadyExists := maps[name]; alreadyExists {
 		return fmt.Errorf("componentSpec %q already exists", name)

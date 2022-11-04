@@ -56,7 +56,12 @@ func (t *V2Spec) ScheduledWorkflow(modelJob *model.Job) (*scheduledworkflow.Sche
 	}
 	job.RuntimeConfig = jobRuntimeConfig
 
-	obj, err := tektoncompiler.Compile(job, nil)
+	var obj interface{}
+	if util.CurrentExecutionType() == util.ArgoWorkflow {
+		obj, err = argocompiler.Compile(job, nil)
+	} else if util.CurrentExecutionType() == util.TektonPipelineRun {
+		obj, err = tektoncompiler.Compile(job, nil)
+	}
 	if err != nil {
 		return nil, util.Wrap(err, "Failed to compile job.")
 	}
