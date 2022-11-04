@@ -41,7 +41,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
-	github.com/tektoncd/pipeline v0.38.3
+	github.com/tektoncd/pipeline v0.38.4
 	gocloud.dev v0.22.0
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 	google.golang.org/genproto v0.0.0-20220310185008-1973136f34c6
