@@ -22,7 +22,7 @@ set -e
 # - KUBEFLOW_NS:                        namespace for kfp-tekton, defulat: kubeflow
 
 MAX_RETRIES="${MAX_RETRIES:-5}"
-SLEEP_TIME="${SLEEP_TIME:-30}"
+SLEEP_TIME="${SLEEP_TIME:-40}"
 REGISTRY="${REGISTRY:-kind-registry:5000}"
 EXIT_CODE=0
 
