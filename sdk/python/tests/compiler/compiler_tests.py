@@ -197,6 +197,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.nested_loop_same_arg import loop_multi
     self._test_pipeline_workflow(loop_multi, 'nested_loop_same_arg.yaml')
 
+  def test_nested_loop_with_underscore_workflow(self):
+    """
+    Test compiling a nested loop with underscore argument workflow.
+    """
+    from .testdata.nested_loop_with_underscore import double_loop_with_underscore
+    self._test_pipeline_workflow(double_loop_with_underscore, 'nested_loop_with_underscore.yaml')
+
   def test_loop_with_numeric_workflow(self):
     """
     Test compiling a loop with numeric inputs in workflow.
