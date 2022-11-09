@@ -314,9 +314,17 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                                     json.dumps(task['params']).replace(task_param['value'],
                                     '$(params.%s)' % param_result[1]))
                             else:
+                                new_param_ref = '%s-%s' % param_result
+                                # Nested task reference name must be the same as the one in the params
+                                # Otherwise, use the default param ref since it will be generated
+                                # by the custom task functions such as condition and loop
+                                for i in task.get('params', []):
+                                    if sanitize_k8s_name(i['name']) == new_param_ref:
+                                        new_param_ref = i['name']
+                                        break
                                 task['params'] = json.loads(
                                     json.dumps(task['params']).replace(task_param['value'],
-                                    '$(params.%s-%s)' % param_result))
+                                    '$(params.%s)' % new_param_ref))
         custom_task_crs.append(custom_task_cr)
         custom_task[custom_task_key]['spec']['params'] = sorted(custom_task[custom_task_key]['spec']['params'],
                                                                           key=lambda k: k['name'])
