@@ -12,9 +12,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp import dsl
+import itertools
+import yaml
+from kfp import dsl, components
 from kfp.components import load_component_from_text
 from kfp_tekton.compiler import TektonCompiler
+from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES
+
+
+ARTIFACT_FETCHER_IMAGE_NAME = "fetcher/image:latest"
+TEKTON_CUSTOM_TASK_IMAGES = TEKTON_CUSTOM_TASK_IMAGES.append(ARTIFACT_FETCHER_IMAGE_NAME)
+
+_artifact_fetcher_no = 0
+
+
+def artifact_fetcher(**artifact_paths: str):
+  '''A containerOp template resolving some artifacts, given their paths.'''
+  global _artifact_fetcher_no
+  template_yaml = {
+    'name': f'artifact-fetcher-{_artifact_fetcher_no}',
+    'description': 'Artifact Fetch',
+    'inputs': [
+      {'name': name, 'type': 'String'}
+      for name in artifact_paths.keys()
+    ],
+    'outputs': [
+      {'name': name, 'type': 'Artifact'}
+      for name in artifact_paths.keys()
+    ],
+    'implementation': {
+      'container': {
+        'image': ARTIFACT_FETCHER_IMAGE_NAME,
+        'command': ['sh', '-c'],  # irrelevant
+        'args': [
+          '--apiVersion', 'fetcher.tekton.dev/v1alpha1',
+          '--kind', 'FETCHER',
+          '--name', 'artifact_fetcher',
+          *itertools.chain(*[
+            (f'--{name}', {'inputValue': name})
+            for name in artifact_paths.keys()
+          ])
+        ]
+      }
+    }
+  }
+  _artifact_fetcher_no += 1
+  template_str = yaml.dump(template_yaml, Dumper=yaml.SafeDumper)
+  template = components.load_component_from_text(template_str)
+  op = template(**artifact_paths)
+  op.add_pod_annotation("valid_container", "false")
+  return op
 
 
 class Coder:
@@ -57,6 +104,7 @@ def double_loop_with_underscore(param_a: list = [1, 2, 3], param_b: list = ["a",
   with dsl.ParallelFor(param_a):
     with dsl.ParallelFor(param_b):
       op1 = PrintOp('print-1', f"print {op0.output}")
+      op2 = artifact_fetcher(path=op0.output)
 
 
 if __name__ == '__main__':
