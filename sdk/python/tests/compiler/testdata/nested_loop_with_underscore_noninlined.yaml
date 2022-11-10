@@ -58,7 +58,7 @@ metadata:
       "name": "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c",
       "set -e\necho $0 > $1\n", "print $(inputs.params.print-0-output_value)", "$(results.output-value.path)"],
       "image": "alpine:3.6", "name": "main"}]}}, {"name": "artifact-fetcher-1", "params":
-      [{"name": "path", "value": "$(params.print-0-output-value)"}], "taskRef": {"apiVersion":
+      [{"name": "path", "value": "$(params.print-0-output_value)"}], "taskRef": {"apiVersion":
       "fetcher.tekton.dev/v1alpha1", "kind": "FETCHER", "name": "artifact_fetcher"}}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
