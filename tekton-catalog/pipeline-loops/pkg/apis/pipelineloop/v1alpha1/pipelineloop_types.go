@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -74,7 +75,7 @@ type PipelineLoopSpec struct {
 
 	// PodTemplate holds pod specific configuration
 	// +optional
-	PodTemplate *v1beta1.PodTemplate `json:"podTemplate,omitempty"`
+	PodTemplate *pod.PodTemplate `json:"podTemplate,omitempty"`
 
 	// +optional
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
