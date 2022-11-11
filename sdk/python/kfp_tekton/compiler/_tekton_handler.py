@@ -315,10 +315,10 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                                     '$(params.%s)' % param_result[1]))
                             else:
                                 new_param_ref = '%s-%s' % param_result
-                                # Nested task reference name must be the same as the one in the params
+                                # Nested task reference name must be the same as the one in the pipeline params
                                 # Otherwise, use the default param ref since it will be generated
                                 # by the custom task functions such as condition and loop
-                                for i in task.get('params', []):
+                                for i in custom_task_cr['spec']['pipelineSpec'].get('params', []):
                                     if sanitize_k8s_name(i['name']) == new_param_ref:
                                         new_param_ref = i['name']
                                         break
