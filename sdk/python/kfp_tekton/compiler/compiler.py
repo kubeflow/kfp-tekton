@@ -137,8 +137,8 @@ class TektonCompiler(Compiler):
     self.custom_task_crs = []
     self.uuid = self._get_unique_id_code()
     self._group_names = []
-    self.pipeline_labels = {}
-    self.pipeline_annotations = {}
+    self.pipeline_labels = {'pipelines.kubeflow.org/pipelinename': '', 'pipelines.kubeflow.org/generation': ''}
+    self.pipeline_annotations = {'tekton.dev/template': ''}
     self.tekton_inline_spec = True
     self.resource_in_separate_yaml = False
     self.produce_taskspec = True
