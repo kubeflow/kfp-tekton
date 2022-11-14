@@ -257,10 +257,10 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                                                                       custom_task_cr['spec']['iterationNumberParam']]
             custom_task_cr['spec']['iterateParam'] = custom_task[custom_task_key]['loop_args']
             separator = custom_task[custom_task_key].get('separator')
+            start_end_step_keys = ['from', 'to', 'step']
             if separator is not None:
                 custom_task_cr['spec']['iterateParamStringSeparator'] = separator
             if custom_task[custom_task_key].get('start') is not None:
-                start_end_step_keys = ['from', 'to', 'step']
                 custom_task_cr['spec']['pipelineSpec']['params'] = [value for value
                                                                     in custom_task_cr['spec']['pipelineSpec']['params']
                                                                     if value['name'] not in start_end_step_keys]
@@ -280,8 +280,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 if len(item) == 1:
                     replacement_item = item[0]
                 if len(item) > 1:
-                    forbidden_keywords = ['to', 'from', 'step']
-                    forbidden_keystrings = ['$(params.%s)' % x for x in forbidden_keywords]
+                    forbidden_keystrings = ['$(params.%s)' % x for x in start_end_step_keys]
                     for i in item:
                         if i not in forbidden_keystrings:
                             replacement_item = i
