@@ -33,6 +33,7 @@ import (
 	fakeclient "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/client/fake"
 	fakepipelineloopinformer "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/informers/pipelineloop/v1alpha1/pipelineloop/fake"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/test"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	ttesting "github.com/tektoncd/pipeline/pkg/reconciler/testing"
@@ -331,7 +332,7 @@ var newPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
 		PipelineRef:        &v1beta1.PipelineRef{Name: "a-pipeline"},
 		IterateParam:       "current-item",
 		ServiceAccountName: "default",
-		PodTemplate: &v1beta1.PodTemplate{
+		PodTemplate: &pod.PodTemplate{
 			HostAliases: []corev1.HostAlias{{
 				IP:        "0.0.0.0",
 				Hostnames: []string{"localhost"},
@@ -341,7 +342,7 @@ var newPipelineLoop = &pipelineloopv1alpha1.PipelineLoop{
 		TaskRunSpecs: []v1beta1.PipelineTaskRunSpec{{
 			PipelineTaskName:       "test-task",
 			TaskServiceAccountName: "test",
-			TaskPodTemplate: &v1beta1.PodTemplate{
+			TaskPodTemplate: &pod.PodTemplate{
 				HostAliases: []corev1.HostAlias{{
 					IP:        "0.0.0.0",
 					Hostnames: []string{"localhost"},
@@ -584,7 +585,7 @@ var runNewPipelineLoopWithPodTemplateAndSA = &v1alpha1.Run{
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeArray, ArrayVal: []string{"item1", "item2"}},
 		}},
 		ServiceAccountName: "pipeline-runner",
-		PodTemplate: &v1beta1.PodTemplate{
+		PodTemplate: &pod.PodTemplate{
 			HostAliases: []corev1.HostAlias{{
 				IP:        "0.0.0.0",
 				Hostnames: []string{"localhost"},
@@ -1591,7 +1592,7 @@ var expectedPipelineRunWithPodTemplateAndSA = &v1beta1.PipelineRun{
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
 		}},
 		ServiceAccountName: "pipeline-runner",
-		PodTemplate: &v1beta1.PodTemplate{
+		PodTemplate: &pod.PodTemplate{
 			HostAliases: []corev1.HostAlias{{
 				IP:        "0.0.0.0",
 				Hostnames: []string{"localhost"},
@@ -1634,7 +1635,7 @@ var expectedPipelineRunWithPodTemplate = &v1beta1.PipelineRun{
 			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "item1"},
 		}},
 		ServiceAccountName: "default",
-		PodTemplate: &v1beta1.PodTemplate{
+		PodTemplate: &pod.PodTemplate{
 			HostAliases: []corev1.HostAlias{{
 				IP:        "0.0.0.0",
 				Hostnames: []string{"localhost"},
@@ -1644,7 +1645,7 @@ var expectedPipelineRunWithPodTemplate = &v1beta1.PipelineRun{
 		TaskRunSpecs: []v1beta1.PipelineTaskRunSpec{{
 			PipelineTaskName:       "test-task",
 			TaskServiceAccountName: "test",
-			TaskPodTemplate: &v1beta1.PodTemplate{
+			TaskPodTemplate: &pod.PodTemplate{
 				HostAliases: []corev1.HostAlias{{
 					IP:        "0.0.0.0",
 					Hostnames: []string{"localhost"},
