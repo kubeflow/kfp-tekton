@@ -27,11 +27,15 @@ metadata:
     tekton.dev/artifact_items: '{"exit-handler": [], "frequent-word": [["word", "$(results.word.path)"]],
       "save-message": []}'
     sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
     pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Get Most Frequent Word
       and Save to GCS", "inputs": [{"default": "When flies fly behind flies", "name":
       "message"}, {"default": "default_output", "name": "outputpath"}], "name": "Save
       Most Frequent Word"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
 spec:
   params:
   - name: message
