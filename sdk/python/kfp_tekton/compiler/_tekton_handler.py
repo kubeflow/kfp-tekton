@@ -257,10 +257,10 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                                                                       custom_task_cr['spec']['iterationNumberParam']]
             custom_task_cr['spec']['iterateParam'] = custom_task[custom_task_key]['loop_args']
             separator = custom_task[custom_task_key].get('separator')
+            start_end_step_keys = ['from', 'to', 'step']
             if separator is not None:
                 custom_task_cr['spec']['iterateParamStringSeparator'] = separator
             if custom_task[custom_task_key].get('start') is not None:
-                start_end_step_keys = ['from', 'to', 'step']
                 custom_task_cr['spec']['pipelineSpec']['params'] = [value for value
                                                                     in custom_task_cr['spec']['pipelineSpec']['params']
                                                                     if value['name'] not in start_end_step_keys]
@@ -270,10 +270,24 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
 
                 custom_task_cr['spec']['iterateNumeric'] = custom_task_cr['spec']['iterateParam']
                 custom_task_cr['spec'].pop('iterateParam')
+            # check whether or not the nested custom task param reference need to be replaced
+            custom_task_param_map = {}
             for custom_task_param in custom_task[custom_task_key]['spec']['params']:
                 if custom_task_param['name'] != custom_task[custom_task_key]['loop_args'] and '$(tasks.' in custom_task_param['value']:
+                    custom_task_param_map.setdefault(custom_task_param['value'], []).append('$(params.%s)' % custom_task_param['name'])
+            for key, item in custom_task_param_map.items():
+                replacement_item = None
+                if len(item) == 1:
+                    replacement_item = item[0]
+                if len(item) > 1:
+                    forbidden_keystrings = ['$(params.%s)' % x for x in start_end_step_keys]
+                    for i in item:
+                        if i not in forbidden_keystrings:
+                            replacement_item = i
+                            break
+                if replacement_item:
                     custom_task_cr = json.loads(
-                        json.dumps(custom_task_cr).replace(custom_task_param['value'], '$(params.%s)' % custom_task_param['name']))
+                        json.dumps(custom_task_cr).replace(key, replacement_item))
 
             # remove separator from CR params
             if custom_task[custom_task_key].get('separator') is not None:
