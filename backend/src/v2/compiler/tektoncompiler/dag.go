@@ -235,24 +235,6 @@ func addImplicitDependencies(dagSpec *pipelinespec.DagSpec) error {
 	return nil
 }
 
-func getLeafNodes(dagSpec *pipelinespec.DagSpec) []string {
-	leaves := make(map[string]int)
-	tasks := dagSpec.GetTasks()
-	alldeps := make([]string, 0)
-	for _, task := range tasks {
-		leaves[task.GetTaskInfo().GetName()] = 0
-		alldeps = append(alldeps, task.GetDependentTasks()...)
-	}
-	for _, dep := range alldeps {
-		delete(leaves, dep)
-	}
-	rev := make([]string, 0, len(leaves))
-	for dep := range leaves {
-		rev = append(rev, dep)
-	}
-	return rev
-}
-
 // depends builds an enhanced depends string for argo.
 // Argo DAG normal dependencies run even when upstream tasks are skipped, which
 // is not what we want. Using enhanced depends, we can be strict that upstream

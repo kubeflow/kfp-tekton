@@ -7,9 +7,8 @@ metadata:
     tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
     tekton.dev/artifact_endpoint_scheme: http://
   creationTimestamp: null
-  name: end-to-end-pipeline
+  generateName: end-to-end-pipeline-
   labels:
-    pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
     pipelines.kubeflow.org/v2_component: "true"
 spec:
   pipelineSpec:
@@ -21,7 +20,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
@@ -57,7 +56,7 @@ spec:
       - name: execution-id
         value: $(tasks.convert-experiment-spec-to-str-driver.results.execution-id)
       - name: run-id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-convert-experiment-spec-to-str","inputDefinitions":{"parameters":{"experiment_spec_json":{"parameterType":"STRUCT"}}},"outputDefinitions":{"parameters":{"experiment_spec_str_output":{"parameterType":"STRING"}}}}'
       runAfter:
@@ -67,7 +66,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
@@ -178,7 +176,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
@@ -219,7 +217,7 @@ spec:
       - name: execution-id
         value: $(tasks.convert-katib-results-driver.results.execution-id)
       - name: run-id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-convert-katib-results","inputDefinitions":{"artifacts":{"katib_results":{"artifactType":{"schemaTitle":"system.Artifact","schemaVersion":"0.0.1"}}}},"outputDefinitions":{"parameters":{"Output":{"parameterType":"STRING"}}}}'
       runAfter:
@@ -229,7 +227,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
@@ -353,7 +350,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
@@ -378,7 +375,7 @@ spec:
       - name: execution-id
         value: $(tasks.create-dataset-driver.results.execution-id)
       - name: run-id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-create-dataset","inputDefinitions":{"parameters":{"experiment_name":{"parameterType":"STRING"},"experiment_namespace":{"parameterType":"STRING"},"experiment_spec_json":{"parameterType":"STRING"},"experiment_timeout_minutes":{"parameterType":"NUMBER_INTEGER"}}},"outputDefinitions":{"artifacts":{"parameter_set":{"artifactType":{"schemaTitle":"system.Artifact","schemaVersion":"0.0.1"}}}}}'
       runAfter:
@@ -388,7 +385,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
@@ -482,7 +478,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
@@ -553,7 +549,7 @@ spec:
       - name: execution-id
         value: $(tasks.create-katib-experiment-task-driver.results.execution-id)
       - name: run-id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-create-katib-experiment-task","inputDefinitions":{"parameters":{"experiment_name":{"parameterType":"STRING"},"experiment_namespace":{"parameterType":"STRING"},"training_steps":{"parameterType":"STRING"}}},"outputDefinitions":{"parameters":{"experiment_spec_json":{"parameterType":"STRUCT"}}}}'
       runAfter:
@@ -563,7 +559,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
@@ -816,7 +811,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
@@ -877,7 +872,7 @@ spec:
       - name: execution-id
         value: $(tasks.create-tfjob-task-driver.results.execution-id)
       - name: run-id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-create-tfjob-task","inputDefinitions":{"parameters":{"best_hps":{"parameterType":"STRING"},"model_volume_name":{"parameterType":"STRING"},"tfjob_name":{"parameterType":"STRING"},"tfjob_namespace":{"parameterType":"STRING"},"training_steps":{"parameterType":"STRING"}}},"outputDefinitions":{"parameters":{"chief_spec":{"parameterType":"STRUCT"},"worker_spec":{"parameterType":"STRUCT"}}}}'
       runAfter:
@@ -887,7 +882,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
@@ -1026,7 +1020,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.serving-pipeline-dag-driver.results.execution-id)
       - name: component
@@ -1061,7 +1055,7 @@ spec:
       - name: execution-id
         value: $(tasks.convert-inference-service-to-artifact-driver.results.execution-id)
       - name: run-id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-convert-inference-service-to-artifact","inputDefinitions":{"parameters":{"inferenceservice_yaml":{"parameterType":"STRUCT"}}},"outputDefinitions":{"artifacts":{"inferenceservice_artifact":{"artifactType":{"schemaTitle":"system.Artifact","schemaVersion":"0.0.1"}}}}}'
       runAfter:
@@ -1071,7 +1065,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
@@ -1182,7 +1175,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.serving-pipeline-dag-driver.results.execution-id)
       - name: component
@@ -1222,7 +1215,7 @@ spec:
       - name: execution-id
         value: $(tasks.create-serving-task-driver.results.execution-id)
       - name: run-id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-create-serving-task","inputDefinitions":{"parameters":{"model_name":{"parameterType":"STRING"},"model_namespace":{"parameterType":"STRING"},"model_volume_name":{"parameterType":"STRING"}}},"outputDefinitions":{"parameters":{"inferenceservice_yaml":{"parameterType":"STRUCT"}}}}'
       runAfter:
@@ -1232,7 +1225,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
@@ -1364,7 +1356,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.serving-pipeline-dag-driver.results.execution-id)
       - name: component
@@ -1390,7 +1382,7 @@ spec:
       - name: execution-id
         value: $(tasks.serving-launcher-driver.results.execution-id)
       - name: run-id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-serving-launcher","inputDefinitions":{"parameters":{"action":{"parameterType":"STRING"},"inferenceservice_yaml":{"parameterType":"STRUCT"}}}}'
       runAfter:
@@ -1400,7 +1392,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
@@ -1486,7 +1477,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
@@ -1494,7 +1485,7 @@ spec:
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-serving-pipeline"},"dependentTasks":["tfjob-launcher"],"inputs":{"parameters":{"model_name":{"componentInputParameter":"name"},"model_namespace":{"componentInputParameter":"namespace"},"model_volume_name":{"componentInputParameter":"model_volume_name"}}},"taskInfo":{"name":"serving-pipeline"}}'
       - name: runtime_config
-        value: '{}'
+        value: ""
       - name: iteration_index
         value: "-1"
       runAfter:
@@ -1511,7 +1502,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
@@ -1537,7 +1528,7 @@ spec:
       - name: execution-id
         value: $(tasks.tfjob-launcher-driver.results.execution-id)
       - name: run-id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-tfjob-launcher","inputDefinitions":{"parameters":{"chief_spec":{"parameterType":"STRUCT"},"tfjob_name":{"parameterType":"STRING"},"tfjob_namespace":{"parameterType":"STRING"},"tfjob_timeout_minutes":{"parameterType":"NUMBER_INTEGER"},"worker_spec":{"parameterType":"STRUCT"}}}}'
       runAfter:
@@ -1547,7 +1538,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 77d8cf97-c795-473e-97a5-2074ac80a2d5
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
@@ -1641,7 +1631,7 @@ spec:
       - name: pipeline_name
         value: end-to-end-pipeline
       - name: run_id
-        value: 77d8cf97-c795-473e-97a5-2074ac80a2d5
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: "0"
       - name: component
@@ -1656,5 +1646,4 @@ spec:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver
         name: kfp-driver
-  serviceAccountName: pipeline-runner
 status: {}

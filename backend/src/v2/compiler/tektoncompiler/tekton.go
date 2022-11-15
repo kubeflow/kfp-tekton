@@ -98,7 +98,7 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 	c := &pipelinerunCompiler{
 		pr: pr,
 		// TODO(chensun): release process and update the images.
-		launcherImage: "gcr.io/ml-pipeline-test/dev/kfp-launcher-v2:latest",
+		launcherImage: "gcr.io/ml-pipeline-test/dev/kfp-launcher-v2@sha256:4513cf5c10c252d94f383ce51a890514799c200795e3de5e90f91b98b2e2f959",
 		job:           job,
 		spec:          spec,
 		dagStack:      make([]string, 0, 10),
@@ -254,10 +254,9 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 		if !ok {
 			return componentError(fmt.Errorf("cannot find component ref name=%q", refName))
 		}
-		// TODO: revisit this
-		// check the dependencies
-		// state.checkDependencies(task, dag)
 
+		// check the dependencies
+		state.checkDependencies(task, dag)
 		err := state.dfs(key, refName, task, subComponent)
 		if err != nil {
 			return err
@@ -298,26 +297,50 @@ type pipelinerunCompiler struct {
 }
 
 // if the dependency is a component with DAG, then replace the dependency with DAG's leaf nodes
-// func (state *pipelinerunDFS) checkDependencies(task *pipelinespec.PipelineTaskSpec, dag *pipelinespec.DagSpec) {
-// 	tasks := task.GetDependentTasks()
-// 	newDeps := make([]string, 0)
-// 	for _, task := range tasks {
-// 		taskSpec, ok := dag.GetTasks()[task]
-// 		if ok {
-// 			comp, ok := state.spec.Components[taskSpec.GetComponentRef().GetName()]
-// 			if ok {
-// 				depDag := comp.GetDag()
-// 				//depends on a DAG
-// 				if depDag != nil {
-// 					newDeps = append(newDeps, getLeafNodes(depDag)...)
-// 					continue
-// 				}
-// 			}
-// 		}
-// 		newDeps = append(newDeps, task)
-// 	}
-// 	task.DependentTasks = newDeps
-// }
+func (state *pipelinerunDFS) checkDependencies(task *pipelinespec.PipelineTaskSpec, dag *pipelinespec.DagSpec) {
+	tasks := task.GetDependentTasks()
+	newDeps := make([]string, 0)
+	for _, depTask := range tasks {
+		if taskSpec, ok := dag.GetTasks()[depTask]; ok {
+			if comp, ok := state.spec.Components[taskSpec.GetComponentRef().GetName()]; ok {
+				depDag := comp.GetDag()
+				//depends on a DAG
+				if depDag != nil {
+					newDeps = append(newDeps, state.getLeafNodes(depDag)...)
+					continue
+				} else {
+					newDeps = append(newDeps, depTask)
+				}
+			}
+		}
+	}
+	task.DependentTasks = newDeps
+}
+
+func (state *pipelinerunDFS) getLeafNodes(dagSpec *pipelinespec.DagSpec) []string {
+	leaves := make(map[string]int)
+	tasks := dagSpec.GetTasks()
+	alldeps := make([]string, 0)
+	for _, task := range tasks {
+		leaves[task.GetTaskInfo().GetName()] = 0
+		alldeps = append(alldeps, task.GetDependentTasks()...)
+	}
+	for _, dep := range alldeps {
+		delete(leaves, dep)
+	}
+	rev := make([]string, 0, len(leaves))
+	for dep := range leaves {
+		refName := tasks[dep].GetComponentRef().GetName()
+		if comp, ok := state.spec.Components[refName]; ok {
+			if comp.GetDag() != nil {
+				rev = append(rev, state.getLeafNodes(comp.GetDag())...)
+			} else {
+				rev = append(rev, dep)
+			}
+		}
+	}
+	return rev
+}
 
 func (c *pipelinerunCompiler) PushDagStack(dagName string) {
 	c.dagStack = append(c.dagStack, dagName)
