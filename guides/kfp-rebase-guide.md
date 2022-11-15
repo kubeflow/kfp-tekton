@@ -118,6 +118,7 @@ git apply --reject --whitespace=fix \
     --exclude=contrib/* \
     --exclude=proxy/* \
     --exclude=test/* \
+    --exclude=v2/* \
     --exclude=third_party/* \
     --exclude=OWNERS \
     --exclude=VERSION \
