@@ -58,7 +58,7 @@ type GetPipelineVersionTemplateOK struct {
 }
 
 func (o *GetPipelineVersionTemplateOK) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{version_id}/templates][%d] getPipelineVersionTemplateOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1beta1/pipeline_versions/{version_id}/templates][%d] getPipelineVersionTemplateOK  %+v", 200, o.Payload)
 }
 
 func (o *GetPipelineVersionTemplateOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -96,7 +96,7 @@ func (o *GetPipelineVersionTemplateDefault) Code() int {
 }
 
 func (o *GetPipelineVersionTemplateDefault) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{version_id}/templates][%d] GetPipelineVersionTemplate default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1beta1/pipeline_versions/{version_id}/templates][%d] GetPipelineVersionTemplate default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *GetPipelineVersionTemplateDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {

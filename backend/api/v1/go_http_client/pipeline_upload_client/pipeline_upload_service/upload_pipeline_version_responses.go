@@ -54,16 +54,16 @@ func NewUploadPipelineVersionOK() *UploadPipelineVersionOK {
 UploadPipelineVersionOK upload pipeline version o k
 */
 type UploadPipelineVersionOK struct {
-	Payload *pipeline_upload_model.V1beta1PipelineVersion
+	Payload *pipeline_upload_model.V1PipelineVersion
 }
 
 func (o *UploadPipelineVersionOK) Error() string {
-	return fmt.Sprintf("[POST /apis/v1beta1/pipelines/upload_version][%d] uploadPipelineVersionOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/pipelines/upload_version][%d] uploadPipelineVersionOK  %+v", 200, o.Payload)
 }
 
 func (o *UploadPipelineVersionOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(pipeline_upload_model.V1beta1PipelineVersion)
+	o.Payload = new(pipeline_upload_model.V1PipelineVersion)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
@@ -87,7 +87,7 @@ UploadPipelineVersionDefault upload pipeline version default
 type UploadPipelineVersionDefault struct {
 	_statusCode int
 
-	Payload *pipeline_upload_model.V1beta1Status
+	Payload *pipeline_upload_model.V1Status
 }
 
 // Code gets the status code for the upload pipeline version default response
@@ -96,12 +96,12 @@ func (o *UploadPipelineVersionDefault) Code() int {
 }
 
 func (o *UploadPipelineVersionDefault) Error() string {
-	return fmt.Sprintf("[POST /apis/v1beta1/pipelines/upload_version][%d] UploadPipelineVersion default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/pipelines/upload_version][%d] UploadPipelineVersion default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *UploadPipelineVersionDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(pipeline_upload_model.V1beta1Status)
+	o.Payload = new(pipeline_upload_model.V1Status)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

@@ -36,7 +36,7 @@ func (a *Client) UploadPipeline(params *UploadPipelineParams, authInfo runtime.C
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "UploadPipeline",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/pipelines/upload",
+		PathPattern:        "/apis/v1/pipelines/upload",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"multipart/form-data"},
 		Schemes:            []string{"http", "https"},
@@ -65,7 +65,7 @@ func (a *Client) UploadPipelineVersion(params *UploadPipelineVersionParams, auth
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "UploadPipelineVersion",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/pipelines/upload_version",
+		PathPattern:        "/apis/v1/pipelines/upload_version",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"multipart/form-data"},
 		Schemes:            []string{"http", "https"},

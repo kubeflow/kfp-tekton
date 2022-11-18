@@ -1,4 +1,4 @@
-# kfp_server_api_v1beta1.RunServiceApi
+# kfp_server_api_v1.RunServiceApi
 
 All URIs are relative to *http://localhost*
 
@@ -27,12 +27,12 @@ Archives a run.
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -42,7 +42,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -52,9 +52,9 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
     id = 'id_example' # str | The ID of the run to be archived.
 
     try:
@@ -93,7 +93,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **create_run**
-> V1beta1RunDetail create_run(body)
+> V1RunDetail create_run(body)
 
 Creates a new run.
 
@@ -103,12 +103,12 @@ Creates a new run.
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -118,7 +118,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -128,10 +128,10 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
-    body = kfp_server_api_v1beta1.V1beta1Run() # V1beta1Run | 
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
+    body = kfp_server_api_v1.V1Run() # V1Run | 
 
     try:
         # Creates a new run.
@@ -145,11 +145,11 @@ with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body** | [**V1beta1Run**](V1beta1Run.md)|  | 
+ **body** | [**V1Run**](V1Run.md)|  | 
 
 ### Return type
 
-[**V1beta1RunDetail**](V1beta1RunDetail.md)
+[**V1RunDetail**](V1RunDetail.md)
 
 ### Authorization
 
@@ -179,12 +179,12 @@ Deletes a run.
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -194,7 +194,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -204,9 +204,9 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
     id = 'id_example' # str | The ID of the run to be deleted.
 
     try:
@@ -245,7 +245,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_run**
-> V1beta1RunDetail get_run(run_id)
+> V1RunDetail get_run(run_id)
 
 Finds a specific run by ID.
 
@@ -255,12 +255,12 @@ Finds a specific run by ID.
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -270,7 +270,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -280,9 +280,9 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
     run_id = 'run_id_example' # str | The ID of the run to be retrieved.
 
     try:
@@ -301,7 +301,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**V1beta1RunDetail**](V1beta1RunDetail.md)
+[**V1RunDetail**](V1RunDetail.md)
 
 ### Authorization
 
@@ -321,7 +321,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **list_runs**
-> V1beta1ListRunsResponse list_runs(page_token=page_token, page_size=page_size, sort_by=sort_by, resource_reference_key_type=resource_reference_key_type, resource_reference_key_id=resource_reference_key_id, filter=filter)
+> V1ListRunsResponse list_runs(page_token=page_token, page_size=page_size, sort_by=sort_by, resource_reference_key_type=resource_reference_key_type, resource_reference_key_id=resource_reference_key_id, filter=filter)
 
 Finds all runs.
 
@@ -331,12 +331,12 @@ Finds all runs.
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -346,7 +346,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -356,15 +356,15 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
     page_token = 'page_token_example' # str | A page token to request the next page of results. The token is acquried from the nextPageToken field of the response from the previous ListRuns call or can be omitted when fetching the first page. (optional)
 page_size = 56 # int | The number of runs to be listed per page. If there are more runs than this number, the response message will contain a nextPageToken field you can use to fetch the next page. (optional)
 sort_by = 'sort_by_example' # str | Can be format of \"field_name\", \"field_name asc\" or \"field_name desc\" (Example, \"name asc\" or \"id desc\"). Ascending by default. (optional)
 resource_reference_key_type = 'UNKNOWN_RESOURCE_TYPE' # str | The type of the resource that referred to. (optional) (default to 'UNKNOWN_RESOURCE_TYPE')
 resource_reference_key_id = 'resource_reference_key_id_example' # str | The ID of the resource that referred to. (optional)
-filter = 'filter_example' # str | A url-encoded, JSON-serialized Filter protocol buffer (see [filter.proto](https://github.com/kubeflow/pipelines/blob/master/backend/api/filter.proto)). (optional)
+filter = 'filter_example' # str | A url-encoded, JSON-serialized Filter protocol buffer (see [filter.proto](https://github.com/kubeflow/pipelines/blob/master/backend/api/v1/filter.proto)). (optional)
 
     try:
         # Finds all runs.
@@ -383,11 +383,11 @@ Name | Type | Description  | Notes
  **sort_by** | **str**| Can be format of \&quot;field_name\&quot;, \&quot;field_name asc\&quot; or \&quot;field_name desc\&quot; (Example, \&quot;name asc\&quot; or \&quot;id desc\&quot;). Ascending by default. | [optional] 
  **resource_reference_key_type** | **str**| The type of the resource that referred to. | [optional] [default to &#39;UNKNOWN_RESOURCE_TYPE&#39;]
  **resource_reference_key_id** | **str**| The ID of the resource that referred to. | [optional] 
- **filter** | **str**| A url-encoded, JSON-serialized Filter protocol buffer (see [filter.proto](https://github.com/kubeflow/pipelines/blob/master/backend/api/filter.proto)). | [optional]
+ **filter** | **str**| A url-encoded, JSON-serialized Filter protocol buffer (see [filter.proto](https://github.com/kubeflow/pipelines/blob/master/backend/api/v1/filter.proto)). | [optional] 
 
 ### Return type
 
-[**V1beta1ListRunsResponse**](V1beta1ListRunsResponse.md)
+[**V1ListRunsResponse**](V1ListRunsResponse.md)
 
 ### Authorization
 
@@ -407,7 +407,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **read_artifact**
-> V1beta1ReadArtifactResponse read_artifact(run_id, node_id, artifact_name)
+> V1ReadArtifactResponse read_artifact(run_id, node_id, artifact_name)
 
 Finds a run's artifact data.
 
@@ -417,12 +417,12 @@ Finds a run's artifact data.
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -432,7 +432,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -442,9 +442,9 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
     run_id = 'run_id_example' # str | The ID of the run.
 node_id = 'node_id_example' # str | The ID of the running node.
 artifact_name = 'artifact_name_example' # str | The name of the artifact.
@@ -467,7 +467,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**V1beta1ReadArtifactResponse**](V1beta1ReadArtifactResponse.md)
+[**V1ReadArtifactResponse**](V1ReadArtifactResponse.md)
 
 ### Authorization
 
@@ -487,7 +487,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **report_run_metrics**
-> V1beta1ReportRunMetricsResponse report_run_metrics(run_id, body)
+> V1ReportRunMetricsResponse report_run_metrics(run_id, body)
 
 ReportRunMetrics reports metrics of a run. Each metric is reported in its own transaction, so this API accepts partial failures. Metric can be uniquely identified by (run_id, node_id, name). Duplicate reporting will be ignored by the API. First reporting wins.
 
@@ -497,12 +497,12 @@ ReportRunMetrics reports metrics of a run. Each metric is reported in its own tr
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -512,7 +512,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -522,11 +522,11 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
     run_id = 'run_id_example' # str | Required. The parent run ID of the metric.
-body = kfp_server_api_v1beta1.V1beta1ReportRunMetricsRequest() # V1beta1ReportRunMetricsRequest | 
+body = kfp_server_api_v1.V1ReportRunMetricsRequest() # V1ReportRunMetricsRequest | 
 
     try:
         # ReportRunMetrics reports metrics of a run. Each metric is reported in its own transaction, so this API accepts partial failures. Metric can be uniquely identified by (run_id, node_id, name). Duplicate reporting will be ignored by the API. First reporting wins.
@@ -541,11 +541,11 @@ body = kfp_server_api_v1beta1.V1beta1ReportRunMetricsRequest() # V1beta1ReportRu
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **run_id** | **str**| Required. The parent run ID of the metric. | 
- **body** | [**V1beta1ReportRunMetricsRequest**](V1beta1ReportRunMetricsRequest.md)|  | 
+ **body** | [**V1ReportRunMetricsRequest**](V1ReportRunMetricsRequest.md)|  | 
 
 ### Return type
 
-[**V1beta1ReportRunMetricsResponse**](V1beta1ReportRunMetricsResponse.md)
+[**V1ReportRunMetricsResponse**](V1ReportRunMetricsResponse.md)
 
 ### Authorization
 
@@ -575,12 +575,12 @@ Re-initiates a failed or terminated run.
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -590,7 +590,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -600,9 +600,9 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
     run_id = 'run_id_example' # str | The ID of the run to be retried.
 
     try:
@@ -651,12 +651,12 @@ Terminates an active run.
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -666,7 +666,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -676,9 +676,9 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
     run_id = 'run_id_example' # str | The ID of the run to be terminated.
 
     try:
@@ -727,12 +727,12 @@ Restores an archived run.
 ```python
 from __future__ import print_function
 import time
-import kfp_server_api_v1beta1
-from kfp_server_api_v1beta1.rest import ApiException
+import kfp_server_api_v1
+from kfp_server_api_v1.rest import ApiException
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost"
 )
 
@@ -742,7 +742,7 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # satisfies your auth use case.
 
 # Configure API key authorization: Bearer
-configuration = kfp_server_api_v1beta1.Configuration(
+configuration = kfp_server_api_v1.Configuration(
     host = "http://localhost",
     api_key = {
         'authorization': 'YOUR_API_KEY'
@@ -752,9 +752,9 @@ configuration = kfp_server_api_v1beta1.Configuration(
 # configuration.api_key_prefix['authorization'] = 'Bearer'
 
 # Enter a context with an instance of the API client
-with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+with kfp_server_api_v1.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = kfp_server_api_v1beta1.RunServiceApi(api_client)
+    api_instance = kfp_server_api_v1.RunServiceApi(api_client)
     id = 'id_example' # str | The ID of the run to be restored.
 
     try:

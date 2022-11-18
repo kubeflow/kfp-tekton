@@ -63,7 +63,7 @@ service PipelineService {
   // Creates a pipeline.
   rpc CreatePipeline(CreatePipelineRequest) returns (Pipeline) {
     option (google.api.http) = {
-      post: "/apis/v1/pipelines"
+      post: "/apis/v1beta1/pipelines"
       body: "pipeline"
     };
   }
@@ -71,28 +71,28 @@ service PipelineService {
   // Finds a specific pipeline by ID.
   rpc GetPipeline(GetPipelineRequest) returns (Pipeline) {
     option (google.api.http) = {
-      get: "/apis/v1/pipelines/{id}"
+      get: "/apis/v1beta1/pipelines/{id}"
     };
   }
 
   // Finds all pipelines.
   rpc ListPipelines(ListPipelinesRequest) returns (ListPipelinesResponse) {
     option (google.api.http) = {
-      get: "/apis/v1/pipelines"
+      get: "/apis/v1beta1/pipelines"
     };
   }
 
   // Deletes a pipeline and its pipeline versions.
   rpc DeletePipeline(DeletePipelineRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/apis/v1/pipelines/{id}"
+      delete: "/apis/v1beta1/pipelines/{id}"
     };
   }
 
   // Returns a single YAML template that contains the description, parameters, and metadata associated with the pipeline provided.
   rpc GetTemplate(GetTemplateRequest) returns (GetTemplateResponse) {
     option (google.api.http) = {
-      get: "/apis/v1/pipelines/{id}/templates"
+      get: "/apis/v1beta1/pipelines/{id}/templates"
     };
   }
 
@@ -100,7 +100,7 @@ service PipelineService {
   rpc CreatePipelineVersion(CreatePipelineVersionRequest)
       returns (PipelineVersion) {
     option (google.api.http) = {
-      post: "/apis/v1/pipeline_versions"
+      post: "/apis/v1beta1/pipeline_versions"
       body: "version"
     };
   }
@@ -108,7 +108,7 @@ service PipelineService {
   // Gets a pipeline version by pipeline version ID.
   rpc GetPipelineVersion(GetPipelineVersionRequest) returns (PipelineVersion) {
     option (google.api.http) = {
-      get: "/apis/v1/pipeline_versions/{version_id}"
+      get: "/apis/v1beta1/pipeline_versions/{version_id}"
     };
   }
 
@@ -116,7 +116,7 @@ service PipelineService {
   rpc ListPipelineVersions(ListPipelineVersionsRequest)
       returns (ListPipelineVersionsResponse) {
     option (google.api.http) = {
-      get: "/apis/v1/pipeline_versions"
+      get: "/apis/v1beta1/pipeline_versions"
     };
   }
 
@@ -129,21 +129,21 @@ service PipelineService {
   rpc DeletePipelineVersion(DeletePipelineVersionRequest)
       returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/apis/v1/pipeline_versions/{version_id}"
+      delete: "/apis/v1beta1/pipeline_versions/{version_id}"
     };
   }
 
   // Returns a YAML template that contains the specified pipeline version's description, parameters and metadata.
   rpc GetPipelineVersionTemplate(GetPipelineVersionTemplateRequest) returns (GetTemplateResponse) {
     option (google.api.http) = {
-      get: "/apis/v1/pipeline_versions/{version_id}/templates"
+      get: "/apis/v1beta1/pipeline_versions/{version_id}/templates"
     };
   }
 
   // Update the default pipeline version of a specific pipeline.
   rpc UpdatePipelineDefaultVersion(UpdatePipelineDefaultVersionRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/apis/v1/pipelines/{pipeline_id}/default_version/{version_id}"
+      post: "/apis/v1beta1/pipelines/{pipeline_id}/default_version/{version_id}"
 
     };
   }

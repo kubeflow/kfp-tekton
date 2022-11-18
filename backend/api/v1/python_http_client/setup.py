@@ -12,8 +12,8 @@
 
 from setuptools import setup, find_packages  # noqa: H301
 
-NAME = "kfp-server-api"
-VERSION = "1.8.4"
+NAME = "kfp-server-api-v1"
+VERSION = "1.4.0"
 # To install the library, run the following
 #
 # python setup.py install

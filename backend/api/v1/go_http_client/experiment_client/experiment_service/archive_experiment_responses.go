@@ -58,7 +58,7 @@ type ArchiveExperimentOK struct {
 }
 
 func (o *ArchiveExperimentOK) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/experiments/{id}:archive][%d] archiveExperimentOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1beta1/experiments/{id}:archive][%d] archiveExperimentOK  %+v", 200, o.Payload)
 }
 
 func (o *ArchiveExperimentOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -94,7 +94,7 @@ func (o *ArchiveExperimentDefault) Code() int {
 }
 
 func (o *ArchiveExperimentDefault) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/experiments/{id}:archive][%d] ArchiveExperiment default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1beta1/experiments/{id}:archive][%d] ArchiveExperiment default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *ArchiveExperimentDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {

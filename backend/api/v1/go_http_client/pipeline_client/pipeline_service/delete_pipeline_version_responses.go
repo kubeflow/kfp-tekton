@@ -58,7 +58,7 @@ type DeletePipelineVersionOK struct {
 }
 
 func (o *DeletePipelineVersionOK) Error() string {
-	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{version_id}][%d] deletePipelineVersionOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[DELETE /apis/v1beta1/pipeline_versions/{version_id}][%d] deletePipelineVersionOK  %+v", 200, o.Payload)
 }
 
 func (o *DeletePipelineVersionOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -94,7 +94,7 @@ func (o *DeletePipelineVersionDefault) Code() int {
 }
 
 func (o *DeletePipelineVersionDefault) Error() string {
-	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{version_id}][%d] DeletePipelineVersion default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[DELETE /apis/v1beta1/pipeline_versions/{version_id}][%d] DeletePipelineVersion default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *DeletePipelineVersionDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {

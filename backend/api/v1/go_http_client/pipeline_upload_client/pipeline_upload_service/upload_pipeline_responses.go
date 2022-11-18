@@ -54,16 +54,16 @@ func NewUploadPipelineOK() *UploadPipelineOK {
 UploadPipelineOK upload pipeline o k
 */
 type UploadPipelineOK struct {
-	Payload *pipeline_upload_model.V1beta1Pipeline
+	Payload *pipeline_upload_model.V1Pipeline
 }
 
 func (o *UploadPipelineOK) Error() string {
-	return fmt.Sprintf("[POST /apis/v1beta1/pipelines/upload][%d] uploadPipelineOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/pipelines/upload][%d] uploadPipelineOK  %+v", 200, o.Payload)
 }
 
 func (o *UploadPipelineOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(pipeline_upload_model.V1beta1Pipeline)
+	o.Payload = new(pipeline_upload_model.V1Pipeline)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
@@ -87,7 +87,7 @@ UploadPipelineDefault upload pipeline default
 type UploadPipelineDefault struct {
 	_statusCode int
 
-	Payload *pipeline_upload_model.V1beta1Status
+	Payload *pipeline_upload_model.V1Status
 }
 
 // Code gets the status code for the upload pipeline default response
@@ -96,12 +96,12 @@ func (o *UploadPipelineDefault) Code() int {
 }
 
 func (o *UploadPipelineDefault) Error() string {
-	return fmt.Sprintf("[POST /apis/v1beta1/pipelines/upload][%d] UploadPipeline default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/pipelines/upload][%d] UploadPipeline default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *UploadPipelineDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(pipeline_upload_model.V1beta1Status)
+	o.Payload = new(pipeline_upload_model.V1Status)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

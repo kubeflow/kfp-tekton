@@ -58,7 +58,7 @@ type GetHealthzOK struct {
 }
 
 func (o *GetHealthzOK) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/healthz][%d] getHealthzOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1beta1/healthz][%d] getHealthzOK  %+v", 200, o.Payload)
 }
 
 func (o *GetHealthzOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -96,7 +96,7 @@ func (o *GetHealthzDefault) Code() int {
 }
 
 func (o *GetHealthzDefault) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/healthz][%d] GetHealthz default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1beta1/healthz][%d] GetHealthz default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *GetHealthzDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {

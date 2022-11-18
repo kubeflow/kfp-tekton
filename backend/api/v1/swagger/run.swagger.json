@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/apis/v1/runs": {
+    "/apis/v1beta1/runs": {
       "get": {
         "summary": "Finds all runs.",
         "operationId": "ListRuns",
@@ -123,7 +123,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{id}": {
+    "/apis/v1beta1/runs/{id}": {
       "delete": {
         "summary": "Deletes a run.",
         "operationId": "DeleteRun",
@@ -155,7 +155,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{id}:archive": {
+    "/apis/v1beta1/runs/{id}:archive": {
       "post": {
         "summary": "Archives a run.",
         "operationId": "ArchiveRun",
@@ -187,7 +187,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{id}:unarchive": {
+    "/apis/v1beta1/runs/{id}:unarchive": {
       "post": {
         "summary": "Restores an archived run.",
         "operationId": "UnarchiveRun",
@@ -219,7 +219,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}": {
+    "/apis/v1beta1/runs/{run_id}": {
       "get": {
         "summary": "Finds a specific run by ID.",
         "operationId": "GetRun",
@@ -251,7 +251,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read": {
+    "/apis/v1beta1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read": {
       "get": {
         "summary": "Finds a run's artifact data.",
         "operationId": "ReadArtifact",
@@ -297,7 +297,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}/retry": {
+    "/apis/v1beta1/runs/{run_id}/retry": {
       "post": {
         "summary": "Re-initiates a failed or terminated run.",
         "operationId": "RetryRun",
@@ -329,7 +329,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}/terminate": {
+    "/apis/v1beta1/runs/{run_id}/terminate": {
       "post": {
         "summary": "Terminates an active run.",
         "operationId": "TerminateRun",
@@ -361,7 +361,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}:reportMetrics": {
+    "/apis/v1beta1/runs/{run_id}:reportMetrics": {
       "post": {
         "summary": "ReportRunMetrics reports metrics of a run. Each metric is reported in its\nown transaction, so this API accepts partial failures. Metric can be\nuniquely identified by (run_id, node_id, name). Duplicate reporting will be\nignored by the API. First reporting wins.",
         "operationId": "ReportRunMetrics",

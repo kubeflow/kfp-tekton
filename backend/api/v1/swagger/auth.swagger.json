@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/apis/v1/auth": {
+    "/apis/v1beta1/auth": {
       "get": {
         "operationId": "Authorize",
         "responses": {

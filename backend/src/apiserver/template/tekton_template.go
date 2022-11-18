@@ -13,7 +13,7 @@ import (
 	"github.com/ghodss/yaml"
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
-	api "github.com/kubeflow/pipelines/backend/api/go_client"
+	api "github.com/kubeflow/pipelines/backend/api/v1/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	scheduledworkflow "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
