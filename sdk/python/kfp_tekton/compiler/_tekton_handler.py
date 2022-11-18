@@ -244,10 +244,14 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
 
             # add loop special fields
             custom_task_cr['kind'] = 'PipelineLoop'
-            if custom_task[custom_task_key]['spec'].get('parallelism') is not None:
-                custom_task_cr['spec']['parallelism'] = custom_task[custom_task_key]['spec']['parallelism']
-                # remove from pipeline run spec
-                del custom_task[custom_task_key]['spec']['parallelism']
+            def process_inline_cr_field(field_name):
+                if custom_task[custom_task_key]['spec'].get(field_name) is not None:
+                    custom_task_cr['spec'][field_name] = custom_task[custom_task_key]['spec'][field_name]
+                    # remove from pipeline run spec
+                    del custom_task[custom_task_key]['spec'][field_name]
+            process_fields = ['parallelism', 'iterateParamPassStyle', 'itemPassStyle']
+            for process_field in process_fields:
+                process_inline_cr_field(process_field)
             if custom_task[custom_task_key].get('iteration_number') is not None:
                 # enumerate() is used, TektonLoopIterationNumber is injected, get its name and remove it from params
                 custom_task_cr['spec']['iterationNumberParam'] = custom_task[custom_task_key]['iteration_number']
