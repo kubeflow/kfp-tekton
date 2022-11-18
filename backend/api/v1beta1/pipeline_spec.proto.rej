@@ -1,0 +1,15 @@
+diff a/backend/api/v1beta1/pipeline_spec.proto b/backend/api/v1beta1/pipeline_spec.proto	(rejected hunks)
+@@ -14,10 +14,10 @@
+ 
+ syntax = "proto3";
+ 
+-option go_package = "github.com/kubeflow/pipelines/backend/api/go_client";
+-package api;
++option go_package = "github.com/kubeflow/pipelines/backend/api/v1beta1/go_client";
++package v1beta1;
+ 
+-import "backend/api/parameter.proto";
++import "backend/api/v1beta1/parameter.proto";
+ import "google/protobuf/struct.proto";
+ 
+ message PipelineSpec {

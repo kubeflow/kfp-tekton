@@ -1,0 +1,56 @@
+diff a/backend/api/v1beta1/python_http_client/docs/PipelineServiceApi.md b/backend/api/v1beta1/python_http_client/docs/PipelineServiceApi.md	(rejected hunks)
+@@ -399,7 +399,7 @@ Name | Type | Description  | Notes
+ [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+ 
+ # **get_pipeline_by_name**
+-> ApiPipeline get_pipeline_by_name(namespace, name)
++> V1beta1Pipeline get_pipeline_by_name(namespace, name)
+ 
+ Finds a pipeline by Name (and namespace)
+ 
+@@ -434,9 +434,9 @@ configuration = kfp_server_api.Configuration(
+ # configuration.api_key_prefix['authorization'] = 'Bearer'
+ 
+ # Enter a context with an instance of the API client
+-with kfp_server_api.ApiClient(configuration) as api_client:
++with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+     # Create an instance of the API class
+-    api_instance = kfp_server_api.PipelineServiceApi(api_client)
++    api_instance = kfp_server_api_v1beta1.PipelineServiceApi(api_client)
+     namespace = 'namespace_example' # str | The Namespace the pipeline belongs to. In the case of shared pipelines and KFPipeline standalone installation, the pipeline name is the only needed field for unique resource lookup (namespace is not required). In those case, please provide hyphen (dash character, \"-\").
+ name = 'name_example' # str | The Name of the pipeline to be retrieved.
+ 
+@@ -457,7 +457,7 @@ Name | Type | Description  | Notes
+ 
+ ### Return type
+ 
+-[**ApiPipeline**](ApiPipeline.md)
++[**V1beta1Pipeline**](V1beta1Pipeline.md)
+ 
+ ### Authorization
+ 
+@@ -887,12 +887,12 @@ Update the default pipeline version of a specific pipeline.
+ ```python
+ from __future__ import print_function
+ import time
+-import kfp_server_api
+-from kfp_server_api.rest import ApiException
++import kfp_server_api_v1beta1
++from kfp_server_api_v1beta1.rest import ApiException
+ from pprint import pprint
+ # Defining the host is optional and defaults to http://localhost
+ # See configuration.py for a list of all supported configuration parameters.
+-configuration = kfp_server_api.Configuration(
++configuration = kfp_server_api_v1beta1.Configuration(
+     host = "http://localhost"
+ )
+ 
+@@ -902,7 +902,7 @@ configuration = kfp_server_api.Configuration(
+ # satisfies your auth use case.
+ 
+ # Configure API key authorization: Bearer
+-configuration = kfp_server_api.Configuration(
++configuration = kfp_server_api_v1beta1.Configuration(
+     host = "http://localhost",
+     api_key = {
+         'authorization': 'YOUR_API_KEY'

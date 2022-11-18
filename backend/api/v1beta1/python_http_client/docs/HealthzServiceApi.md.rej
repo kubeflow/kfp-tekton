@@ -1,0 +1,13 @@
+diff a/backend/api/v1beta1/python_http_client/docs/HealthzServiceApi.md b/backend/api/v1beta1/python_http_client/docs/HealthzServiceApi.md	(rejected hunks)
+@@ -43,9 +43,9 @@ configuration = kfp_server_api.Configuration(
+ # configuration.api_key_prefix['authorization'] = 'Bearer'
+ 
+ # Enter a context with an instance of the API client
+-with kfp_server_api.ApiClient(configuration) as api_client:
++with kfp_server_api_v1beta1.ApiClient(configuration) as api_client:
+     # Create an instance of the API class
+-    api_instance = kfp_server_api.HealthzServiceApi(api_client)
++    api_instance = kfp_server_api_v1beta1.HealthzServiceApi(api_client)
+     
+     try:
+         # Get healthz data.
