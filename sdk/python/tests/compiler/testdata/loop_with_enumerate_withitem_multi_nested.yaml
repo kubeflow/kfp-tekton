@@ -50,12 +50,8 @@ spec:
       params:
       - name: loop-item-param-2
         value: '[{"a": 1, "b": 2}, {"a": 10, "b": 20}]'
-      - name: my_pipe_param
-        value: $(params.my_pipe_param)
       - name: my_pipe_param-loop-item
         value: $(params.my_pipe_param)
-      - name: my_pipe_param3
-        value: $(params.my_pipe_param3)
       - name: my_pipe_param3-loop-item
         value: $(params.my_pipe_param3)
       taskSpec:
@@ -144,8 +140,6 @@ spec:
                 value: $(params.loop-item-param-2-subvar-b)
               - name: my_pipe_param-loop-item
                 value: $(params.my_pipe_param-loop-item)
-              - name: my_pipe_param3
-                value: $(params.my_pipe_param3)
               - name: my_pipe_param3-loop-item
                 value: $(params.my_pipe_param3-loop-item)
               taskSpec:
@@ -205,8 +199,6 @@ spec:
                         value: $(params.loop-item-param-2-subvar-b)
                       - name: loop-item-param-7
                         value: '[4, 5]'
-                      - name: my_pipe_param3
-                        value: $(params.my_pipe_param3)
                       - name: my_pipe_param3-loop-item
                         value: $(params.my_pipe_param3-loop-item)
                       taskSpec:
