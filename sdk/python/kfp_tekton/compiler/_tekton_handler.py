@@ -244,6 +244,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
 
             # add loop special fields
             custom_task_cr['kind'] = 'PipelineLoop'
+
             def process_inline_cr_field(field_name):
                 if custom_task[custom_task_key]['spec'].get(field_name) is not None:
                     custom_task_cr['spec'][field_name] = custom_task[custom_task_key]['spec'][field_name]
