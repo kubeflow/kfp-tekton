@@ -38,21 +38,21 @@ metadata:
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "double-loop-with-underscore-for-loop-1"},
       "spec": {"iterateParam": "param_a-loop-item", "pipelineSpec": {"params": [{"name":
-      "param_a-loop-item", "type": "string"}, {"name": "param_b", "type": "string"},
-      {"name": "param_b-loop-item", "type": "string"}, {"name": "print-0-output_value",
-      "type": "string"}], "tasks": [{"name": "double-loop-with-underscore-for-loop-2",
-      "params": [{"name": "param_b-loop-item", "value": "$(params.param_b-loop-item)"},
-      {"name": "print-0-output_value", "value": "$(params.print-0-output_value)"}],
-      "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
-      "name": "double-loop-with-underscore-for-loop-2"}}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "metadata": {"name": "double-loop-with-underscore-for-loop-2"},
-      "spec": {"iterateParam": "param_b-loop-item", "pipelineSpec": {"params": [{"name":
-      "param_b-loop-item", "type": "string"}, {"name": "print-0-output_value", "type":
-      "string"}], "tasks": [{"name": "print-1", "params": [{"name": "print-0-output_value",
-      "value": "$(params.print-0-output_value)"}], "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"print-1\", \"outputs\":
-      [{\"description\": \"Represents an output paramter.\", \"name\": \"output_value\",
-      \"type\": \"String\"}], \"version\": \"print-1@sha256=3b81342bc143f625b58ebdb01e7c83b145880dee807be35c1e16fdb835d46580\"}"},
+      "param_a-loop-item", "type": "string"}, {"name": "param_b-loop-item", "type":
+      "string"}, {"name": "print-0-output_value", "type": "string"}], "tasks": [{"name":
+      "double-loop-with-underscore-for-loop-2", "params": [{"name": "param_b-loop-item",
+      "value": "$(params.param_b-loop-item)"}, {"name": "print-0-output_value", "value":
+      "$(params.print-0-output_value)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "name": "double-loop-with-underscore-for-loop-2"}}]}}},
+      {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata":
+      {"name": "double-loop-with-underscore-for-loop-2"}, "spec": {"iterateParam":
+      "param_b-loop-item", "pipelineSpec": {"params": [{"name": "param_b-loop-item",
+      "type": "string"}, {"name": "print-0-output_value", "type": "string"}], "tasks":
+      [{"name": "print-1", "params": [{"name": "print-0-output_value", "value": "$(params.print-0-output_value)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"print-1\", \"outputs\": [{\"description\": \"Represents an output
+      paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
+      \"print-1@sha256=3b81342bc143f625b58ebdb01e7c83b145880dee807be35c1e16fdb835d46580\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "print-0-output_value", "type": "string"}], "results": [{"description": "/tmp/outputs/output_value/data",
       "name": "output-value", "type": "string"}], "steps": [{"command": ["sh", "-c",
@@ -114,5 +114,3 @@ spec:
         value: $(params.param_b)
       - name: print-0-output_value
         value: $(tasks.print-0.results.output-value)
-      - name: param_b
-        value: $(params.param_b)

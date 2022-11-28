@@ -419,8 +419,12 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 # global param level.
                 for task in custom_task_crs:
                     if task['metadata']['name'] in all_nested_loop:
-                        if task['spec'].get('iterateNumeric'):
-                            nested_loop_counter_params.append(task['spec'].get('iterateNumeric'))
+                        # add additional pipelinerun controller generated params for the compiler to ignore for upward passing
+                        iterate_param_list = ['iterateNumeric', 'iterateParam', 'iterateParamStringSeparator', 'IterationNumberParam']
+                        for iterate_name in iterate_param_list:
+                            if task['spec'].get(iterate_name):
+                                nested_loop_counter_params.append(task['spec'].get(iterate_name))
+                        
                 for task in tasks:
                     if task['name'] == nested_custom_task['root_ct']:
                         task['params'].extend(copy.deepcopy(nested_custom_task_special_params))

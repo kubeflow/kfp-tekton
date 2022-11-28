@@ -81,8 +81,6 @@ spec:
       params:
       - name: param_a-loop-item
         value: $(params.param_a)
-      - name: param_b
-        value: $(params.param_b)
       - name: param_b-loop-item
         value: $(params.param_b)
       - name: print-0-output_value
@@ -94,8 +92,6 @@ spec:
           pipelineSpec:
             params:
             - name: param_a-loop-item
-              type: string
-            - name: param_b
               type: string
             - name: param_b-loop-item
               type: string

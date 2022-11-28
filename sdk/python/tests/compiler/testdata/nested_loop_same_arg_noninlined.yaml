@@ -32,18 +32,17 @@ metadata:
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "loop-multi-for-loop-2"}, "spec":
       {"iterateParam": "loop-item-param-1", "pipelineSpec": {"params": [{"name": "loop-item-param-1",
-      "type": "string"}, {"name": "loop-item-param-3", "type": "string"}, {"name":
-      "param", "type": "string"}], "tasks": [{"name": "loop-multi-for-loop-4", "params":
-      [{"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"}, {"name":
-      "loop-item-param-3", "value": "$(params.loop-item-param-3)"}], "taskRef": {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "loop-multi-for-loop-4"}}]}}},
-      {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata":
-      {"name": "loop-multi-for-loop-4"}, "spec": {"iterateParam": "loop-item-param-3",
-      "pipelineSpec": {"params": [{"name": "loop-item-param-1", "type": "string"},
-      {"name": "loop-item-param-3", "type": "string"}], "tasks": [{"name": "print-01",
-      "params": [{"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"},
-      {"name": "loop-item-param-3", "value": "$(params.loop-item-param-3)"}], "taskSpec":
-      {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "type": "string"}, {"name": "loop-item-param-3", "type": "string"}], "tasks":
+      [{"name": "loop-multi-for-loop-4", "params": [{"name": "loop-item-param-1",
+      "value": "$(params.loop-item-param-1)"}, {"name": "loop-item-param-3", "value":
+      "$(params.loop-item-param-3)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "name": "loop-multi-for-loop-4"}}]}}}, {"apiVersion":
+      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "loop-multi-for-loop-4"},
+      "spec": {"iterateParam": "loop-item-param-3", "pipelineSpec": {"params": [{"name":
+      "loop-item-param-1", "type": "string"}, {"name": "loop-item-param-3", "type":
+      "string"}], "tasks": [{"name": "print-01", "params": [{"name": "loop-item-param-1",
+      "value": "$(params.loop-item-param-1)"}, {"name": "loop-item-param-3", "value":
+      "$(params.loop-item-param-3)"}], "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"print-01\", \"outputs\": [{\"description\": \"Represents an output
       paramter.\", \"name\": \"output_value\", \"type\": \"String\"}], \"version\":
       \"print-01@sha256=d511ac628d43cc5b393fbebd10be93662b30117f1413b84afd4e7b2e5ff5ed33\"}"},
@@ -74,6 +73,4 @@ spec:
       - name: loop-item-param-1
         value: $(params.param)
       - name: loop-item-param-3
-        value: $(params.param)
-      - name: param
         value: $(params.param)

@@ -1,0 +1,145 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: loop-3-range
+  annotations:
+    tekton.dev/output_artifacts: '{"print": [{"key": "artifacts/$PIPELINERUN/print/output_value.tgz",
+      "name": "print-output_value", "path": "/tmp/outputs/output_value/data"}]}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"print": [["output_value", "$(results.output-value.path)"]]}'
+    sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "loop-3-range"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
+spec:
+  pipelineSpec:
+    tasks:
+    - name: loop-3-range-for-loop-4
+      params:
+      - name: loop-item-param-2
+        value: a,b,c
+      - name: loop-item-param-3
+        value: ','
+      taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: PipelineLoop
+        spec:
+          pipelineSpec:
+            params:
+            - name: loop-item-param-2
+              type: string
+            tasks:
+            - name: loop-3-range-for-loop-7
+              params:
+              - name: loop-item-param-2
+                value: $(params.loop-item-param-2)
+              - name: loop-item-param-6
+                value: '[A,B,C]'
+              taskSpec:
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: PipelineLoop
+                spec:
+                  pipelineSpec:
+                    params:
+                    - name: loop-item-param-2
+                      type: string
+                    - name: loop-item-param-6
+                      type: string
+                    tasks:
+                    - name: loop-3-range-for-loop-11
+                      params:
+                      - name: loop-item-param-10
+                        value: ','
+                      - name: loop-item-param-2
+                        value: $(params.loop-item-param-2)
+                      - name: loop-item-param-6
+                        value: $(params.loop-item-param-6)
+                      - name: loop-item-param-9
+                        value: 1,2,3
+                      taskSpec:
+                        apiVersion: custom.tekton.dev/v1alpha1
+                        kind: PipelineLoop
+                        spec:
+                          pipelineSpec:
+                            params:
+                            - name: loop-item-param-2
+                              type: string
+                            - name: loop-item-param-6
+                              type: string
+                            - name: loop-item-param-9
+                              type: string
+                            tasks:
+                            - name: print
+                              params:
+                              - name: loop-item-param-2
+                                value: $(params.loop-item-param-2)
+                              - name: loop-item-param-6
+                                value: $(params.loop-item-param-6)
+                              - name: loop-item-param-9
+                                value: $(params.loop-item-param-9)
+                              taskSpec:
+                                steps:
+                                - name: main
+                                  command:
+                                  - sh
+                                  - -c
+                                  - |
+                                    set -e
+                                    echo $0 > $1
+                                  - print $(inputs.params.loop-item-param-2) $(inputs.params.loop-item-param-6)
+                                    $(inputs.params.loop-item-param-9)
+                                  - $(results.output-value.path)
+                                  image: alpine:3.6
+                                params:
+                                - name: loop-item-param-2
+                                  type: string
+                                - name: loop-item-param-6
+                                  type: string
+                                - name: loop-item-param-9
+                                  type: string
+                                results:
+                                - name: output-value
+                                  type: string
+                                  description: /tmp/outputs/output_value/data
+                                metadata:
+                                  labels:
+                                    pipelines.kubeflow.org/cache_enabled: "true"
+                                  annotations:
+                                    pipelines.kubeflow.org/component_spec_digest: '{"name":
+                                      "print", "outputs": [{"description": "Represents
+                                      an output paramter.", "name": "output_value",
+                                      "type": "String"}], "version": "print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766"}'
+                          iterateParam: loop-item-param-9
+                          iterateParamStringSeparator: loop-item-param-10
+                        metadata:
+                          labels:
+                            pipelines.kubeflow.org/cache_enabled: "true"
+                  iterateParam: loop-item-param-6
+                metadata:
+                  labels:
+                    pipelines.kubeflow.org/cache_enabled: "true"
+          iterateParam: loop-item-param-2
+          iterateParamStringSeparator: loop-item-param-3
+        metadata:
+          labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
