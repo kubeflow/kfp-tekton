@@ -53,9 +53,10 @@ metadata:
       "set -e\necho $0 > $1\n", "print $(inputs.params.param)", "$(results.output-value.path)"],
       "image": "alpine:3.6", "name": "main"}]}}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "empty-loop-for-loop-3"}, "spec":
-      {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name": "param-loop-item",
-      "type": "string"}], "tasks": [{"name": "empty-loop-for-loop-4", "params": [{"name":
-      "param-loop-item", "value": "$(params.param)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name": "param",
+      "type": "string"}, {"name": "param-loop-item", "type": "string"}], "tasks":
+      [{"name": "empty-loop-for-loop-4", "params": [{"name": "param-loop-item", "value":
+      "$(params.param)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "name": "empty-loop-for-loop-4"}}]}}}, {"apiVersion":
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "empty-loop-for-loop-4"},
       "spec": {"iterateParam": "param-loop-item", "pipelineSpec": {"params": [{"name":

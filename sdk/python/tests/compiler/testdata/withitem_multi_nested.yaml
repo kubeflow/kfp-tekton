@@ -64,7 +64,11 @@ spec:
               type: string
             - name: loop-item-param-1-subvar-b
               type: string
+            - name: my_pipe_param
+              type: string
             - name: my_pipe_param-loop-item
+              type: string
+            - name: my_pipe_param3
               type: string
             - name: my_pipe_param3-loop-item
               type: string
@@ -141,6 +145,8 @@ spec:
                       type: string
                     - name: my_pipe_param-loop-item
                       type: string
+                    - name: my_pipe_param3
+                      type: string
                     - name: my_pipe_param3-loop-item
                       type: string
                     tasks:
@@ -191,6 +197,8 @@ spec:
                             - name: loop-item-param-1-subvar-b
                               type: string
                             - name: loop-item-param-4
+                              type: string
+                            - name: my_pipe_param3
                               type: string
                             - name: my_pipe_param3-loop-item
                               type: string

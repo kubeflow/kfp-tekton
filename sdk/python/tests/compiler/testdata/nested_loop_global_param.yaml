@@ -127,6 +127,8 @@ spec:
         spec:
           pipelineSpec:
             params:
+            - name: param
+              type: string
             - name: param-loop-item
               type: string
             tasks:

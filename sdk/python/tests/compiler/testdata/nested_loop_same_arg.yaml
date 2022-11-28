@@ -57,6 +57,8 @@ spec:
               type: string
             - name: loop-item-param-3
               type: string
+            - name: param
+              type: string
             tasks:
             - name: loop-multi-for-loop-4
               params:

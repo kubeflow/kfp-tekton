@@ -93,6 +93,8 @@ spec:
             params:
             - name: param_a-loop-item
               type: string
+            - name: param_b
+              type: string
             - name: param_b-loop-item
               type: string
             - name: print-0-output_value

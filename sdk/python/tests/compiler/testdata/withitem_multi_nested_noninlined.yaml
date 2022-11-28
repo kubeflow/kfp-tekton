@@ -34,11 +34,12 @@ metadata:
       "kind": "PipelineLoop", "metadata": {"name": "withitem-multiple-nesting-pipeline-for-loop-2"},
       "spec": {"iterateParam": "loop-item-param-1", "pipelineSpec": {"params": [{"name":
       "loop-item-param-1-subvar-a", "type": "string"}, {"name": "loop-item-param-1-subvar-b",
-      "type": "string"}, {"name": "my_pipe_param-loop-item", "type": "string"}, {"name":
-      "my_pipe_param3-loop-item", "type": "string"}], "tasks": [{"name": "my-in-coop1",
-      "params": [{"name": "loop-item-param-1-subvar-a", "value": "$(params.loop-item-param-1-subvar-a)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
-      "{\"name\": \"my-in-coop1\", \"outputs\": [], \"version\": \"my-in-coop1@sha256=7da1ee1a43a4ddb0a66d5603e5a1f097b9d88d4602cdbd92637408a6278ce663\"}"},
+      "type": "string"}, {"name": "my_pipe_param", "type": "string"}, {"name": "my_pipe_param-loop-item",
+      "type": "string"}, {"name": "my_pipe_param3", "type": "string"}, {"name": "my_pipe_param3-loop-item",
+      "type": "string"}], "tasks": [{"name": "my-in-coop1", "params": [{"name": "loop-item-param-1-subvar-a",
+      "value": "$(params.loop-item-param-1-subvar-a)"}], "taskSpec": {"metadata":
+      {"annotations": {"pipelines.kubeflow.org/component_spec_digest": "{\"name\":
+      \"my-in-coop1\", \"outputs\": [], \"version\": \"my-in-coop1@sha256=7da1ee1a43a4ddb0a66d5603e5a1f097b9d88d4602cdbd92637408a6278ce663\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "loop-item-param-1-subvar-a", "type": "string"}], "steps": [{"args": ["set -e\necho
       op1 \"$0\"\n", "$(inputs.params.loop-item-param-1-subvar-a)"], "command": ["sh",
@@ -60,11 +61,12 @@ metadata:
       "spec": {"iterateParam": "my_pipe_param-loop-item", "pipelineSpec": {"params":
       [{"name": "loop-item-param-1-subvar-a", "type": "string"}, {"name": "loop-item-param-1-subvar-b",
       "type": "string"}, {"name": "my_pipe_param-loop-item", "type": "string"}, {"name":
-      "my_pipe_param3-loop-item", "type": "string"}], "tasks": [{"name": "my-inner-inner-coop",
-      "params": [{"name": "loop-item-param-1-subvar-a", "value": "$(params.loop-item-param-1-subvar-a)"},
-      {"name": "my_pipe_param-loop-item", "value": "$(params.my_pipe_param-loop-item)"}],
-      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
-      "{\"name\": \"my-inner-inner-coop\", \"outputs\": [], \"version\": \"my-inner-inner-coop@sha256=e09082c663a9e1fc40f3b14bfbdd8d0174e6bc6391e6ab334383e3edca20d8dd\"}"},
+      "my_pipe_param3", "type": "string"}, {"name": "my_pipe_param3-loop-item", "type":
+      "string"}], "tasks": [{"name": "my-inner-inner-coop", "params": [{"name": "loop-item-param-1-subvar-a",
+      "value": "$(params.loop-item-param-1-subvar-a)"}, {"name": "my_pipe_param-loop-item",
+      "value": "$(params.my_pipe_param-loop-item)"}], "taskSpec": {"metadata": {"annotations":
+      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"my-inner-inner-coop\",
+      \"outputs\": [], \"version\": \"my-inner-inner-coop@sha256=e09082c663a9e1fc40f3b14bfbdd8d0174e6bc6391e6ab334383e3edca20d8dd\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "loop-item-param-1-subvar-a", "type": "string"}, {"name": "my_pipe_param-loop-item",
       "type": "string"}], "steps": [{"args": ["set -e\necho op11 \"$0\" \"$1\"\n",
@@ -79,8 +81,9 @@ metadata:
       {"name": "withitem-multiple-nesting-pipeline-for-loop-5"}, "spec": {"iterateParam":
       "loop-item-param-4", "pipelineSpec": {"params": [{"name": "loop-item-param-1-subvar-b",
       "type": "string"}, {"name": "loop-item-param-4", "type": "string"}, {"name":
-      "my_pipe_param3-loop-item", "type": "string"}], "tasks": [{"name": "my-inner-inner-coop-2",
-      "params": [{"name": "loop-item-param-1-subvar-b", "value": "$(params.loop-item-param-1-subvar-b)"},
+      "my_pipe_param3", "type": "string"}, {"name": "my_pipe_param3-loop-item", "type":
+      "string"}], "tasks": [{"name": "my-inner-inner-coop-2", "params": [{"name":
+      "loop-item-param-1-subvar-b", "value": "$(params.loop-item-param-1-subvar-b)"},
       {"name": "loop-item-param-4", "value": "$(params.loop-item-param-4)"}], "taskSpec":
       {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
       "{\"name\": \"my-inner-inner-coop\", \"outputs\": [], \"version\": \"my-inner-inner-coop@sha256=e09082c663a9e1fc40f3b14bfbdd8d0174e6bc6391e6ab334383e3edca20d8dd\"}"},
