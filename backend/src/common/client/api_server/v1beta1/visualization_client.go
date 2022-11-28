@@ -1,12 +1,12 @@
-package api_server
+package v1beta1
 
 import (
 	"fmt"
 
 	"github.com/go-openapi/strfmt"
-	apiclient "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/visualization_client"
-	params "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/visualization_client/visualization_service"
-	model "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/visualization_model"
+	apiclient "github.com/kubeflow/pipelines/backend/api/v1beta1/go_http_client/visualization_client"
+	params "github.com/kubeflow/pipelines/backend/api/v1beta1/go_http_client/visualization_client/visualization_service"
+	model "github.com/kubeflow/pipelines/backend/api/v1beta1/go_http_client/visualization_model"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"golang.org/x/net/context"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -14,7 +14,7 @@ import (
 )
 
 type VisualizationInterface interface {
-	Create(params *params.CreateVisualizationParams) (*model.V1Visualization, error)
+	Create(params *params.CreateVisualizationParams) (*model.V1beta1Visualization, error)
 }
 
 type VisualizationClient struct {
@@ -37,7 +37,7 @@ func NewVisualizationClient(clientConfig clientcmd.ClientConfig, debug bool) (
 	}, nil
 }
 
-func (c *VisualizationClient) Create(parameters *params.CreateVisualizationParams) (*model.V1Visualization,
+func (c *VisualizationClient) Create(parameters *params.CreateVisualizationParams) (*model.V1beta1Visualization,
 	error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)

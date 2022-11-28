@@ -24,12 +24,12 @@ import (
 	"net/http"
 
 	"github.com/cenkalti/backoff"
-	experimentparams "github.com/kubeflow/pipelines/backend/api/v1beta1/go_http_client/experiment_client/experiment_service"
-	jobparams "github.com/kubeflow/pipelines/backend/api/v1beta1/go_http_client/job_client/job_service"
-	pipelineparams "github.com/kubeflow/pipelines/backend/api/v1beta1/go_http_client/pipeline_client/pipeline_service"
-	runparams "github.com/kubeflow/pipelines/backend/api/v1beta1/go_http_client/run_client/run_service"
-	"github.com/kubeflow/pipelines/backend/api/v1beta1/go_http_client/run_model"
-	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
+	experimentparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/experiment_client/experiment_service"
+	jobparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/job_client/job_service"
+	pipelineparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_client/pipeline_service"
+	runparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
+	api_server "github.com/kubeflow/pipelines/backend/src/common/client/api_server/v1"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/tools/clientcmd"
@@ -98,10 +98,10 @@ func DeleteAllJobs(client *api_server.JobClient, t *testing.T) {
 	}
 }
 
-func GetExperimentIDFromAPIResourceReferences(resourceRefs []*run_model.V1beta1ResourceReference) string {
+func GetExperimentIDFromAPIResourceReferences(resourceRefs []*run_model.V1ResourceReference) string {
 	experimentID := ""
 	for _, resourceRef := range resourceRefs {
-		if resourceRef.Key.Type == run_model.V1beta1ResourceTypeEXPERIMENT {
+		if resourceRef.Key.Type == run_model.V1ResourceTypeEXPERIMENT {
 			experimentID = resourceRef.Key.ID
 			break
 		}

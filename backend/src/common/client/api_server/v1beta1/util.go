@@ -1,4 +1,4 @@
-package api_server
+package v1beta1
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	apiServerBasePath       = "/api/v1/namespaces/%s/services/ml-pipeline:8888/proxy/"
+	apiServerBasePath       = "/api/v1beta1/namespaces/%s/services/ml-pipeline:8888/proxy/"
 	apiServerDefaultTimeout = 35 * time.Second
 )
 
