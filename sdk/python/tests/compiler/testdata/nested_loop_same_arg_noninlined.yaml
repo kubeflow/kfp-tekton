@@ -75,5 +75,3 @@ spec:
         value: $(params.param)
       - name: loop-item-param-3
         value: $(params.param)
-      - name: param
-        value: $(params.param)

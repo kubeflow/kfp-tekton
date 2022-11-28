@@ -81,8 +81,6 @@ spec:
       params:
       - name: param_a-loop-item
         value: $(params.param_a)
-      - name: param_b
-        value: $(params.param_b)
       - name: param_b-loop-item
         value: $(params.param_b)
       - name: print-0-output_value

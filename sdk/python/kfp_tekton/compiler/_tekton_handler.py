@@ -419,8 +419,12 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 # global param level.
                 for task in custom_task_crs:
                     if task['metadata']['name'] in all_nested_loop:
-                        if task['spec'].get('iterateNumeric'):
-                            nested_loop_counter_params.append(task['spec'].get('iterateNumeric'))
+                        # add additional pipelinerun controller generated params for the compiler to ignore for upward passing
+                        iterate_param_list = ['iterateNumeric', 'iterateParam', 'iterateParamStringSeparator', 'IterationNumberParam']
+                        for iterate_name in iterate_param_list:
+                            if task['spec'].get(iterate_name):
+                                nested_loop_counter_params.append(task['spec'].get(iterate_name))
+                        
                 for task in tasks:
                     if task['name'] == nested_custom_task['root_ct']:
                         task['params'].extend(copy.deepcopy(nested_custom_task_special_params))
@@ -431,8 +435,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                         task['params'] = sorted(task['params'], key=lambda k: k['name'])
                         if task['name'] in all_nested_loop:
                             for param in task['params']:
-                                if '$(params.' in param['value'] and 'subvar-' not in param['value'] and \
-                                  param['name'] not in nested_loop_counter_params:
+                                if '$(params.' in param['value'] and 'subvar-' not in param['value']:
                                     global_task_values.add(param['value'])
                 # Add any pipeline global params to the nested loop layers
                 all_params = []
@@ -446,7 +449,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                              'type': 'string'}
                         )
                         for task in tasks:
-                            if task['name'] == nested_custom_task['father_ct']:
+                            if task['name'] == nested_custom_task['father_ct'] and global_task_value not in global_task_values:
                                 task['params'].append(
                                     {'name': re.findall('\$\(params.([^ \t\n.:,;\{\}]+)\)', global_task_value)[0],
                                      'value': global_task_value}
