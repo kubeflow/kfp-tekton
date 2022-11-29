@@ -119,6 +119,8 @@ spec:
             pipelines.kubeflow.org/cache_enabled: "true"
     - name: empty-loop-for-loop-3
       params:
+      - name: param
+        value: $(params.param)
       - name: param-loop-item
         value: $(params.param)
       taskSpec:
