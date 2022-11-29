@@ -34,73 +34,71 @@ metadata:
 spec:
   pipelineSpec:
     tasks:
-    - name: loop-3-range-for-loop-2
+    - name: loop-3-range-for-loop-4
       params:
-      - name: from
-        value: '1'
-      - name: to
-        value: '2'
+      - name: loop-item-param-2
+        value: a,b,c
+      - name: loop-item-param-3
+        value: ','
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
         spec:
           pipelineSpec:
             params:
-            - name: loop-item-param-1
+            - name: loop-item-param-2
               type: string
-            - name: loop-item-param-3
+            - name: loop-item-param-6
               type: string
             tasks:
-            - name: loop-3-range-for-loop-4
+            - name: loop-3-range-for-loop-7
               params:
-              - name: from
-                value: '1'
-              - name: loop-item-param-1
-                value: $(params.loop-item-param-1)
-              - name: to
-                value: '2'
+              - name: loop-item-param-2
+                value: $(params.loop-item-param-2)
+              - name: loop-item-param-6
+                value: '[A,B,C]'
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: PipelineLoop
                 spec:
                   pipelineSpec:
                     params:
-                    - name: loop-item-param-1
+                    - name: loop-item-param-2
                       type: string
-                    - name: loop-item-param-3
+                    - name: loop-item-param-6
                       type: string
                     tasks:
-                    - name: loop-3-range-for-loop-6
+                    - name: loop-3-range-for-loop-11
                       params:
-                      - name: from
-                        value: '1'
-                      - name: loop-item-param-1
-                        value: $(params.loop-item-param-1)
-                      - name: loop-item-param-3
-                        value: $(params.loop-item-param-3)
-                      - name: to
-                        value: '2'
+                      - name: loop-item-param-10
+                        value: ','
+                      - name: loop-item-param-2
+                        value: $(params.loop-item-param-2)
+                      - name: loop-item-param-6
+                        value: $(params.loop-item-param-6)
+                      - name: loop-item-param-9
+                        value: 1,2,3
                       taskSpec:
                         apiVersion: custom.tekton.dev/v1alpha1
                         kind: PipelineLoop
                         spec:
                           pipelineSpec:
                             params:
-                            - name: loop-item-param-1
+                            - name: loop-item-param-2
                               type: string
-                            - name: loop-item-param-3
+                            - name: loop-item-param-6
                               type: string
-                            - name: loop-item-param-5
+                            - name: loop-item-param-9
                               type: string
                             tasks:
                             - name: print
                               params:
-                              - name: loop-item-param-1
-                                value: $(params.loop-item-param-1)
-                              - name: loop-item-param-3
-                                value: $(params.loop-item-param-3)
-                              - name: loop-item-param-5
-                                value: $(params.loop-item-param-5)
+                              - name: loop-item-param-2
+                                value: $(params.loop-item-param-2)
+                              - name: loop-item-param-6
+                                value: $(params.loop-item-param-6)
+                              - name: loop-item-param-9
+                                value: $(params.loop-item-param-9)
                               taskSpec:
                                 steps:
                                 - name: main
@@ -110,16 +108,16 @@ spec:
                                   - |
                                     set -e
                                     echo $0 > $1
-                                  - print $(inputs.params.loop-item-param-1) $(inputs.params.loop-item-param-3)
-                                    $(inputs.params.loop-item-param-5)
+                                  - print $(inputs.params.loop-item-param-2) $(inputs.params.loop-item-param-6)
+                                    $(inputs.params.loop-item-param-9)
                                   - $(results.output-value.path)
                                   image: alpine:3.6
                                 params:
-                                - name: loop-item-param-1
+                                - name: loop-item-param-2
                                   type: string
-                                - name: loop-item-param-3
+                                - name: loop-item-param-6
                                   type: string
-                                - name: loop-item-param-5
+                                - name: loop-item-param-9
                                   type: string
                                 results:
                                 - name: output-value
@@ -133,15 +131,17 @@ spec:
                                       "print", "outputs": [{"description": "Represents
                                       an output paramter.", "name": "output_value",
                                       "type": "String"}], "version": "print@sha256=c6e88bb19253b3bedeb9912855f4e324700cd80285e6b625b9ebcffb58677766"}'
-                          iterateNumeric: loop-item-param-5
+                          iterateParam: loop-item-param-9
+                          iterateParamStringSeparator: loop-item-param-10
                         metadata:
                           labels:
                             pipelines.kubeflow.org/cache_enabled: "true"
-                  iterateNumeric: loop-item-param-3
+                  iterateParam: loop-item-param-6
                 metadata:
                   labels:
                     pipelines.kubeflow.org/cache_enabled: "true"
-          iterateNumeric: loop-item-param-1
+          iterateParam: loop-item-param-2
+          iterateParamStringSeparator: loop-item-param-3
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"

@@ -99,5 +99,3 @@ spec:
       params:
       - name: param-loop-item
         value: $(params.param)
-      - name: param
-        value: $(params.param)
