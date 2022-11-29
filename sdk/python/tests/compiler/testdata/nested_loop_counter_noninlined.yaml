@@ -31,18 +31,17 @@ metadata:
     tekton.dev/resource_templates: '[{"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "metadata": {"name": "loop-3-range-for-loop-2"}, "spec":
       {"iterateNumeric": "loop-item-param-1", "pipelineSpec": {"params": [{"name":
-      "loop-item-param-1", "type": "string"}, {"name": "loop-item-param-3", "type":
-      "string"}], "tasks": [{"name": "loop-3-range-for-loop-4", "params": [{"name":
-      "from", "value": "1"}, {"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"},
+      "loop-item-param-1", "type": "string"}], "tasks": [{"name": "loop-3-range-for-loop-4",
+      "params": [{"name": "from", "value": "1"}, {"name": "loop-item-param-1", "value":
+      "$(params.loop-item-param-1)"}, {"name": "to", "value": "2"}], "taskRef": {"apiVersion":
+      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "loop-3-range-for-loop-4"}}]}}},
+      {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata":
+      {"name": "loop-3-range-for-loop-4"}, "spec": {"iterateNumeric": "loop-item-param-3",
+      "pipelineSpec": {"params": [{"name": "loop-item-param-1", "type": "string"},
+      {"name": "loop-item-param-3", "type": "string"}], "tasks": [{"name": "loop-3-range-for-loop-6",
+      "params": [{"name": "from", "value": "1"}, {"name": "loop-item-param-1", "value":
+      "$(params.loop-item-param-1)"}, {"name": "loop-item-param-3", "value": "$(params.loop-item-param-3)"},
       {"name": "to", "value": "2"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
-      "kind": "PipelineLoop", "name": "loop-3-range-for-loop-4"}}]}}}, {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "loop-3-range-for-loop-4"},
-      "spec": {"iterateNumeric": "loop-item-param-3", "pipelineSpec": {"params": [{"name":
-      "loop-item-param-1", "type": "string"}, {"name": "loop-item-param-3", "type":
-      "string"}], "tasks": [{"name": "loop-3-range-for-loop-6", "params": [{"name":
-      "from", "value": "1"}, {"name": "loop-item-param-1", "value": "$(params.loop-item-param-1)"},
-      {"name": "loop-item-param-3", "value": "$(params.loop-item-param-3)"}, {"name":
-      "to", "value": "2"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
       "kind": "PipelineLoop", "name": "loop-3-range-for-loop-6"}}]}}}, {"apiVersion":
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "loop-3-range-for-loop-6"},
       "spec": {"iterateNumeric": "loop-item-param-5", "pipelineSpec": {"params": [{"name":

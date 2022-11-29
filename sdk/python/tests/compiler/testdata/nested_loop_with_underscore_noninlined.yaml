@@ -114,3 +114,5 @@ spec:
         value: $(params.param_b)
       - name: print-0-output_value
         value: $(tasks.print-0.results.output-value)
+      - name: param_b
+        value: $(params.param_b)
