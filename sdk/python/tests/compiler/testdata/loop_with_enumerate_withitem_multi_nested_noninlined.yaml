@@ -58,20 +58,20 @@ metadata:
       {"name": "loop-item-param-2-subvar-a", "value": "$(params.loop-item-param-2-subvar-a)"},
       {"name": "loop-item-param-2-subvar-b", "value": "$(params.loop-item-param-2-subvar-b)"},
       {"name": "my_pipe_param-loop-item", "value": "$(params.my_pipe_param-loop-item)"},
-      {"name": "my_pipe_param3-loop-item", "value": "$(params.my_pipe_param3-loop-item)"}],
-      "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
-      "name": "withitem-multiple-nesting-pipeline-for-loop-5"}}]}}}, {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "withitem-multiple-nesting-pipeline-for-loop-5"},
-      "spec": {"iterateParam": "my_pipe_param-loop-item", "pipelineSpec": {"params":
-      [{"name": "iteration-number-4", "type": "string"}, {"name": "loop-item-param-2-subvar-a",
-      "type": "string"}, {"name": "loop-item-param-2-subvar-b", "type": "string"},
-      {"name": "my_pipe_param-loop-item", "type": "string"}, {"name": "my_pipe_param3",
-      "type": "string"}, {"name": "my_pipe_param3-loop-item", "type": "string"}],
-      "tasks": [{"name": "my-1st-inner-coop", "params": [{"name": "loop-item-param-2-subvar-a",
-      "value": "$(params.loop-item-param-2-subvar-a)"}, {"name": "my_pipe_param-loop-item",
-      "value": "$(params.my_pipe_param-loop-item)"}], "taskSpec": {"metadata": {"annotations":
-      {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"my-1st-inner-coop\",
-      \"outputs\": [], \"version\": \"my-1st-inner-coop@sha256=feaa8a218c3caaa76fa1154bcca9fc485286e72814986c35d08edcd28d2a50b9\"}"},
+      {"name": "my_pipe_param3", "value": "$(params.my_pipe_param3)"}, {"name": "my_pipe_param3-loop-item",
+      "value": "$(params.my_pipe_param3-loop-item)"}], "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "name": "withitem-multiple-nesting-pipeline-for-loop-5"}}]}}},
+      {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata":
+      {"name": "withitem-multiple-nesting-pipeline-for-loop-5"}, "spec": {"iterateParam":
+      "my_pipe_param-loop-item", "pipelineSpec": {"params": [{"name": "iteration-number-4",
+      "type": "string"}, {"name": "loop-item-param-2-subvar-a", "type": "string"},
+      {"name": "loop-item-param-2-subvar-b", "type": "string"}, {"name": "my_pipe_param-loop-item",
+      "type": "string"}, {"name": "my_pipe_param3", "type": "string"}, {"name": "my_pipe_param3-loop-item",
+      "type": "string"}], "tasks": [{"name": "my-1st-inner-coop", "params": [{"name":
+      "loop-item-param-2-subvar-a", "value": "$(params.loop-item-param-2-subvar-a)"},
+      {"name": "my_pipe_param-loop-item", "value": "$(params.my_pipe_param-loop-item)"}],
+      "taskSpec": {"metadata": {"annotations": {"pipelines.kubeflow.org/component_spec_digest":
+      "{\"name\": \"my-1st-inner-coop\", \"outputs\": [], \"version\": \"my-1st-inner-coop@sha256=feaa8a218c3caaa76fa1154bcca9fc485286e72814986c35d08edcd28d2a50b9\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "loop-item-param-2-subvar-a", "type": "string"}, {"name": "my_pipe_param-loop-item",
       "type": "string"}], "steps": [{"args": ["set -e\necho \"op1-1\" \"$0\" \"$1\"\n",
@@ -80,10 +80,11 @@ metadata:
       {"name": "withitem-multiple-nesting-pipeline-for-loop-8", "params": [{"name":
       "iteration-number-4", "value": "$(params.iteration-number-4)"}, {"name": "loop-item-param-2-subvar-b",
       "value": "$(params.loop-item-param-2-subvar-b)"}, {"name": "loop-item-param-7",
-      "value": "[4, 5]"}, {"name": "my_pipe_param3-loop-item", "value": "$(params.my_pipe_param3-loop-item)"}],
-      "taskRef": {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop",
-      "name": "withitem-multiple-nesting-pipeline-for-loop-8"}}]}}}, {"apiVersion":
-      "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "metadata": {"name": "withitem-multiple-nesting-pipeline-for-loop-8"},
+      "value": "[4, 5]"}, {"name": "my_pipe_param3-loop-item", "value": "$(params.my_pipe_param3-loop-item)"},
+      {"name": "my_pipe_param3", "value": "$(params.my_pipe_param3)"}], "taskRef":
+      {"apiVersion": "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name":
+      "withitem-multiple-nesting-pipeline-for-loop-8"}}]}}}, {"apiVersion": "custom.tekton.dev/v1alpha1",
+      "kind": "PipelineLoop", "metadata": {"name": "withitem-multiple-nesting-pipeline-for-loop-8"},
       "spec": {"iterateParam": "loop-item-param-7", "iterationNumberParam": "iteration-number-9",
       "pipelineSpec": {"params": [{"name": "iteration-number-4", "type": "string"},
       {"name": "iteration-number-9", "type": "string"}, {"name": "loop-item-param-2-subvar-b",
@@ -144,7 +145,11 @@ spec:
       params:
       - name: loop-item-param-2
         value: '[{"a": 1, "b": 2}, {"a": 10, "b": 20}]'
+      - name: my_pipe_param
+        value: $(params.my_pipe_param)
       - name: my_pipe_param-loop-item
         value: $(params.my_pipe_param)
+      - name: my_pipe_param3
+        value: $(params.my_pipe_param3)
       - name: my_pipe_param3-loop-item
         value: $(params.my_pipe_param3)

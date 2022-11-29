@@ -442,14 +442,15 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                 for custom_param in custom_task_cr['spec']['pipelineSpec']['params']:
                     all_params.append(''.join(['$(params.', custom_param['name'], ')']))
                 for global_task_value in global_task_values:
-                    if global_task_value not in all_params:
+                    if global_task_value not in all_params and \
+                        re.findall('\$\(params.([^ \t\n.:,;\{\}]+)\)', global_task_value)[0] not in nested_loop_counter_params:
                         all_params.append(global_task_value)
                         custom_task_cr['spec']['pipelineSpec']['params'].append(
                             {'name': re.findall('\$\(params.([^ \t\n.:,;\{\}]+)\)', global_task_value)[0],
                              'type': 'string'}
                         )
                         for task in tasks:
-                            if task['name'] == nested_custom_task['father_ct'] and global_task_value not in global_task_values:
+                            if task['name'] == nested_custom_task['father_ct']:
                                 task['params'].append(
                                     {'name': re.findall('\$\(params.([^ \t\n.:,;\{\}]+)\)', global_task_value)[0],
                                      'value': global_task_value}
