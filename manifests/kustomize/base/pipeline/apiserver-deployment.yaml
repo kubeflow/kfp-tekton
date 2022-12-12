@@ -110,6 +110,11 @@ spec:
             configMapKeyRef:
               name: kfp-tekton-config
               key: artifact_image
+        - name: MOVERESULTS_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              name: kfp-tekton-config
+              key: moveresults_image
         - name: INJECT_DEFAULT_SCRIPT
           valueFrom:
             configMapKeyRef:

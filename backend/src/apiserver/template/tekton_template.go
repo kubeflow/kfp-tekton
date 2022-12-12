@@ -308,7 +308,7 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 					// move all results to /tekton/home/tep-results to avoid result duplication in copy-artifacts step
 					// TODO: disable eof strip, since no results under /tekton/results after this step
 					moveResults := workflowapi.Step{
-						Image:   "busybox",
+						Image:   common.GetMoveResultsImage(),
 						Name:    "move-all-results-to-tekton-home",
 						Command: []string{"sh", "-c"},
 						Args: []string{fmt.Sprintf("if [ -d /tekton/results ]; then mkdir -p %s; mv /tekton/results/* %s/ || true; fi\n",

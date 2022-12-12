@@ -73,6 +73,7 @@ const (
 	DefaultArtifactEndpoint       string = "minio-service.kubeflow:9000"
 	DefaultArtifactEndpointScheme string = "http://"
 	DefaultArtifactImage          string = "minio/mc"
+	DefaultMoveResultImage        string = "busybox"
 )
 
 const (
