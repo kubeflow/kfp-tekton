@@ -47,4 +47,6 @@ def timeout_sample_pipeline():
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(timeout_sample_pipeline, __file__.replace('.py', '.yaml'))
+    pipeline_conf = dsl.PipelineConf()
+    pipeline_conf.set_timeout(100)
+    TektonCompiler().compile(timeout_sample_pipeline, __file__.replace('.py', '.yaml'), pipeline_conf=pipeline_conf)
