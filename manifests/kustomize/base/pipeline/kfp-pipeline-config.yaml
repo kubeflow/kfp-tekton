@@ -8,6 +8,7 @@ data:
   artifact_endpoint_scheme: "http://"
   artifact_image: "minio/mc:RELEASE.2020-11-25T23-04-07Z"
   archive_logs: "true"
+  moveresults_image: "busybox:1.34.1"
   track_artifacts: "true"
   strip_eof: "true"
   inject_default_script: "true"

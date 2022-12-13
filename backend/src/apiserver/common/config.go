@@ -45,6 +45,7 @@ const (
 	InjectDefaultScript                     string = "INJECT_DEFAULT_SCRIPT"
 	ApplyTektonCustomResource               string = "APPLY_TEKTON_CUSTOM_RESOURCE"
 	TerminateStatus                         string = "TERMINATE_STATUS"
+	MoveResultsImage                        string = "MOVERESULTS_IMAGE"
 	Path4InternalResults                    string = "PATH_FOR_INTERNAL_RESULTS"
 	ObjectStoreAccessKey                    string = "OBJECTSTORECONFIG_ACCESSKEY"
 	ObjectStoreSecretKey                    string = "OBJECTSTORECONFIG_SECRETKEY"
@@ -142,6 +143,10 @@ func GetPodNamespace() string {
 
 func GetArtifactImage() string {
 	return GetStringConfigWithDefault(ArtifactImage, DefaultArtifactImage)
+}
+
+func GetMoveResultsImage() string {
+	return GetStringConfigWithDefault(MoveResultsImage, DefaultMoveResultImage)
 }
 
 func GetCopyStepTemplate() *workflowapi.Step {
