@@ -42,9 +42,10 @@ implementation:
 def timeout_sample_pipeline():
     op1 = random_failure_1Op('0,1,2,3').set_timeout(20)
     op2 = random_failure_1Op('0,1')
-    dsl.get_pipeline_conf().set_timeout(1)
 
 
 if __name__ == '__main__':
     from kfp_tekton.compiler import TektonCompiler
-    TektonCompiler().compile(timeout_sample_pipeline, __file__.replace('.py', '.yaml'))
+    pipeline_conf = dsl.PipelineConf()
+    pipeline_conf.set_timeout(100)
+    TektonCompiler().compile(timeout_sample_pipeline, __file__.replace('.py', '.yaml'), pipeline_conf=pipeline_conf)

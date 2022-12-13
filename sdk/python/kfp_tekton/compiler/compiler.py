@@ -1612,7 +1612,7 @@ class TektonCompiler(Compiler):
 
     if pipeline_conf and pipeline_conf.timeout > 0:
       workflow['spec'].setdefault('timeouts', {'pipeline': '0s', 'tasks': '0s'})
-      workflow['spec']['timeouts']['pipeline'] = '%ds' % pipeline_conf.timeout
+      workflow['spec']['timeouts']['tasks'] = '%ds' % pipeline_conf.timeout
       workflow['spec']['timeouts']['pipeline'] = '%ds' % (pipeline_conf.timeout + DEFAULT_FINALLY_SECONDS)
 
     workflow.setdefault('metadata', {}).setdefault('annotations', {})['pipelines.kubeflow.org/pipeline_spec'] = \
