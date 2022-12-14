@@ -1,0 +1,76 @@
+# Copyright 2021 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: pipeline-includes-two-steps-which-fail-randomly
+  annotations:
+    tekton.dev/output_artifacts: '{}'
+    tekton.dev/input_artifacts: '{}'
+    tekton.dev/artifact_bucket: mlpipeline
+    tekton.dev/artifact_endpoint: minio-service.kubeflow:9000
+    tekton.dev/artifact_endpoint_scheme: http://
+    tekton.dev/artifact_items: '{"random-failure": [], "random-failure-2": []}'
+    sidecar.istio.io/inject: "false"
+    tekton.dev/template: ''
+    pipelines.kubeflow.org/big_data_passing_format: $(workspaces.$TASK_NAME.path)/artifacts/$ORIG_PR_NAME/$TASKRUN_NAME/$TASK_PARAM_NAME
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "shows how to use ContainerOp
+      set_timeout().", "name": "pipeline-includes-two-steps-which-fail-randomly"}'
+  labels:
+    pipelines.kubeflow.org/pipelinename: ''
+    pipelines.kubeflow.org/generation: ''
+spec:
+  pipelineSpec:
+    tasks:
+    - name: random-failure
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - |
+            import random; import sys; exit_code = random.choice([$0]); print(exit_code);       import time; time.sleep(30); sys.exit(exit_code)
+          - 0,1,2,3
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+        metadata:
+          labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
+              "outputs": [], "version": "random-failure@sha256=7a3950e9d0afce355b325b09e2cd5710feb99e6233a330af889d80515c4aaac2"}'
+      timeout: 20s
+    - name: random-failure-2
+      taskSpec:
+        steps:
+        - name: main
+          args:
+          - |
+            import random; import sys; exit_code = random.choice([$0]); print(exit_code);       import time; time.sleep(30); sys.exit(exit_code)
+          - 0,1
+          command:
+          - python
+          - -c
+          image: python:alpine3.6
+        metadata:
+          labels:
+            pipelines.kubeflow.org/cache_enabled: "true"
+          annotations:
+            pipelines.kubeflow.org/component_spec_digest: '{"name": "random-failure",
+              "outputs": [], "version": "random-failure@sha256=7a3950e9d0afce355b325b09e2cd5710feb99e6233a330af889d80515c4aaac2"}'
+  timeouts:
+    pipeline: 400s
+    tasks: 100s
