@@ -634,6 +634,16 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.timeout import timeout_sample_pipeline
     self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout.yaml', skip_noninlined=True)
 
+  def test_timeout_config_workflow(self):
+    """
+    Test compiling a step level timeout config workflow.
+    """
+    from .testdata.timeout_config import timeout_sample_pipeline
+    from kfp import dsl
+    pipeline_conf = dsl.PipelineConf()
+    pipeline_conf.set_timeout(100)
+    self._test_pipeline_workflow(timeout_sample_pipeline, 'timeout_config.yaml', pipeline_conf=pipeline_conf, skip_noninlined=True)
+
   def test_display_name_workflow(self):
     """
     Test compiling a step level timeout workflow.
@@ -847,7 +857,8 @@ class TestTektonCompiler(unittest.TestCase):
                               pipeline_function,
                               pipeline_yaml,
                               normalize_compiler_output_function=None,
-                              tekton_pipeline_conf=TektonPipelineConf()):
+                              tekton_pipeline_conf=TektonPipelineConf(),
+                              pipeline_conf=None):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
     golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml)
     temp_dir = tempfile.mkdtemp()
@@ -856,7 +867,8 @@ class TestTektonCompiler(unittest.TestCase):
     try:
       compiler.TektonCompiler().compile(pipeline_function,
                                         compiled_yaml_file,
-                                        tekton_pipeline_conf=tekton_pipeline_conf)
+                                        tekton_pipeline_conf=tekton_pipeline_conf,
+                                        pipeline_conf=pipeline_conf)
       with open(compiled_yaml_file, 'r') as f:
         f = normalize_compiler_output_function(
           f.read()) if normalize_compiler_output_function else f
@@ -870,12 +882,14 @@ class TestTektonCompiler(unittest.TestCase):
                               pipeline_yaml,
                               normalize_compiler_output_function=None,
                               tekton_pipeline_conf=TektonPipelineConf(),
-                              skip_noninlined=False):
+                              skip_noninlined=False,
+                              pipeline_conf=None):
     self._test_pipeline_workflow_inlined_spec(
       pipeline_function=pipeline_function,
       pipeline_yaml=pipeline_yaml,
       normalize_compiler_output_function=normalize_compiler_output_function,
-      tekton_pipeline_conf=tekton_pipeline_conf)
+      tekton_pipeline_conf=tekton_pipeline_conf,
+      pipeline_conf=pipeline_conf)
     if not skip_noninlined:
       test_data_dir = os.path.join(os.path.dirname(__file__), 'testdata')
       golden_yaml_file = os.path.join(test_data_dir, pipeline_yaml.replace(".yaml", "") + "_noninlined.yaml")
@@ -885,7 +899,8 @@ class TestTektonCompiler(unittest.TestCase):
       try:
         compiler.TektonCompiler().compile(pipeline_function,
                                           compiled_yaml_file,
-                                          tekton_pipeline_conf=tekton_pipeline_conf)
+                                          tekton_pipeline_conf=tekton_pipeline_conf,
+                                          pipeline_conf=pipeline_conf)
         with open(compiled_yaml_file, 'r') as f:
           f = normalize_compiler_output_function(
             f.read()) if normalize_compiler_output_function else f
