@@ -22,7 +22,7 @@ import (
 	uploadParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_upload_client/pipeline_upload_service"
 	runParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
 	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
-	api_server "github.com/kubeflow/pipelines/backend/src/common/client/api_server/v1"
+	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/kubeflow/pipelines/backend/test"
 )

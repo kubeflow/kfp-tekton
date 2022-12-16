@@ -29,7 +29,7 @@ import (
 	pipelineparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_client/pipeline_service"
 	runparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
 	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
-	api_server "github.com/kubeflow/pipelines/backend/src/common/client/api_server/v1"
+	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/tools/clientcmd"
