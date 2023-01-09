@@ -134,6 +134,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.custom_task_output import uppercase_vs_lowercase
     self._test_pipeline_workflow(uppercase_vs_lowercase, 'custom_task_output.yaml', skip_noninlined=True)
 
+  def test_custom_task_dash_args_workflow(self):
+    """
+    Test compiling a custom task with dash arguments workflow.
+    """
+    from .testdata.custom_task_dash_args import pipeline_dash_args
+    self._test_pipeline_workflow(pipeline_dash_args, 'custom_task_dash_args.yaml', skip_noninlined=True)
+
   def test_parallel_join_workflow(self):
     """
     Test compiling a parallel join workflow.

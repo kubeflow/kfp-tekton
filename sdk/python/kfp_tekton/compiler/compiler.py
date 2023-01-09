@@ -1025,12 +1025,18 @@ class TektonCompiler(Compiler):
             container_args = i.get('args', [])
             custom_task_command = {}
             container_command = i.get('command', [])
-            for index, item in enumerate(container_args):
-              if item.startswith('--'):
-                custom_task_args[item[2:]] = container_args[index + 1]
-            for index, item in enumerate(container_command):
-              if item.startswith('--'):
-                custom_task_command[item[2:]] = container_command[index + 1]
+
+            def find_parameter(arg_list, arg_task_list):
+              skip_index = False
+              for index, item in enumerate(arg_list):
+                if skip_index:
+                  skip_index = False
+                  continue
+                if item.startswith('--'):
+                  arg_task_list[item[2:]] = arg_list[index + 1]
+                  skip_index = True
+            find_parameter(container_args, custom_task_args)
+            find_parameter(container_command, custom_task_command)
             non_param_keys = ['name', 'apiVersion', 'kind', 'taskSpec', 'taskRef']
             task_params = []
             command_params = []
