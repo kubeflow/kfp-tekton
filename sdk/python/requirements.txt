@@ -67,7 +67,7 @@ idna==2.10
     # via requests
 jsonschema==3.2.0
     # via kfp
-kfp==1.8.16
+kfp==1.8.18
     # via -r sdk/python/requirements.in
 kfp-pipeline-spec==0.1.16
     # via kfp
