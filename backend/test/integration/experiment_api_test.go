@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	params "github.com/kubeflow/pipelines/backend/api/go_http_client/experiment_client/experiment_service"
-	"github.com/kubeflow/pipelines/backend/api/go_http_client/experiment_model"
-	jobParams "github.com/kubeflow/pipelines/backend/api/go_http_client/job_client/job_service"
-	"github.com/kubeflow/pipelines/backend/api/go_http_client/job_model"
-	uploadParams "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_upload_client/pipeline_upload_service"
-	runParams "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client/run_service"
-	"github.com/kubeflow/pipelines/backend/api/go_http_client/run_model"
+	params "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/experiment_client/experiment_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/experiment_model"
+	jobParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/job_client/job_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/job_model"
+	uploadParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_upload_client/pipeline_upload_service"
+	runParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
 	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/kubeflow/pipelines/backend/test"
@@ -80,12 +80,12 @@ func (s *ExperimentApiTest) TestExperimentAPI() {
 	assert.True(t, len(experiments) == 0)
 
 	/* ---------- Create a new experiment ---------- */
-	experiment := &experiment_model.APIExperiment{Name: "training", Description: "my first experiment"}
+	experiment := &experiment_model.V1Experiment{Name: "training", Description: "my first experiment"}
 	trainingExperiment, err := s.experimentClient.Create(&params.CreateExperimentParams{
 		Body: experiment,
 	})
 	assert.Nil(t, err)
-	expectedTrainingExperiment := &experiment_model.APIExperiment{
+	expectedTrainingExperiment := &experiment_model.V1Experiment{
 		ID: trainingExperiment.ID, Name: experiment.Name,
 		Description: experiment.Description, CreatedAt: trainingExperiment.CreatedAt, StorageState: "STORAGESTATE_AVAILABLE"}
 	assert.Equal(t, expectedTrainingExperiment, trainingExperiment)
@@ -98,12 +98,12 @@ func (s *ExperimentApiTest) TestExperimentAPI() {
 	/* ---------- Create a few more new experiment ---------- */
 	// 1 second interval. This ensures they can be sorted by create time in expected order.
 	time.Sleep(1 * time.Second)
-	experiment = &experiment_model.APIExperiment{Name: "prediction", Description: "my second experiment"}
+	experiment = &experiment_model.V1Experiment{Name: "prediction", Description: "my second experiment"}
 	_, err = s.experimentClient.Create(&params.CreateExperimentParams{
 		Body: experiment,
 	})
 	time.Sleep(1 * time.Second)
-	experiment = &experiment_model.APIExperiment{Name: "moonshot", Description: "my second experiment"}
+	experiment = &experiment_model.V1Experiment{Name: "moonshot", Description: "my second experiment"}
 	_, err = s.experimentClient.Create(&params.CreateExperimentParams{
 		Body: experiment,
 	})
@@ -195,14 +195,14 @@ func (s *ExperimentApiTest) TestExperimentAPI() {
 			Pipelineid: util.StringPointer(pipeline.ID),
 		})
 	assert.Nil(t, err)
-	createRunRequest := &runParams.CreateRunParams{Body: &run_model.APIRun{
+	createRunRequest := &runParams.CreateRunParams{Body: &run_model.V1Run{
 		Name:        "hello world",
 		Description: "this is hello world",
-		ResourceReferences: []*run_model.APIResourceReference{
-			{Key: &run_model.APIResourceKey{Type: run_model.APIResourceTypeEXPERIMENT, ID: experiment.ID},
-				Name: experiment.Name, Relationship: run_model.APIRelationshipOWNER},
-			{Key: &run_model.APIResourceKey{Type: run_model.APIResourceTypePIPELINEVERSION, ID: pipelineVersion.ID},
-				Relationship: run_model.APIRelationshipCREATOR},
+		ResourceReferences: []*run_model.V1ResourceReference{
+			{Key: &run_model.V1ResourceKey{Type: run_model.V1ResourceTypeEXPERIMENT, ID: experiment.ID},
+				Name: experiment.Name, Relationship: run_model.V1RelationshipOWNER},
+			{Key: &run_model.V1ResourceKey{Type: run_model.V1ResourceTypePIPELINEVERSION, ID: pipelineVersion.ID},
+				Relationship: run_model.V1RelationshipCREATOR},
 		},
 	}}
 	run1, _, err := s.runClient.Create(createRunRequest)
@@ -210,14 +210,14 @@ func (s *ExperimentApiTest) TestExperimentAPI() {
 	run2, _, err := s.runClient.Create(createRunRequest)
 	assert.Nil(t, err)
 	/* ---------- Create a new hello world job by specifying pipeline ID ---------- */
-	createJobRequest := &jobParams.CreateJobParams{Body: &job_model.APIJob{
+	createJobRequest := &jobParams.CreateJobParams{Body: &job_model.V1Job{
 		Name:        "hello world",
 		Description: "this is hello world",
-		ResourceReferences: []*job_model.APIResourceReference{
-			{Key: &job_model.APIResourceKey{Type: job_model.APIResourceTypeEXPERIMENT, ID: experiment.ID},
-				Relationship: job_model.APIRelationshipOWNER},
-			{Key: &job_model.APIResourceKey{Type: job_model.APIResourceTypePIPELINEVERSION, ID: pipelineVersion.ID},
-				Relationship: job_model.APIRelationshipCREATOR},
+		ResourceReferences: []*job_model.V1ResourceReference{
+			{Key: &job_model.V1ResourceKey{Type: job_model.V1ResourceTypeEXPERIMENT, ID: experiment.ID},
+				Relationship: job_model.V1RelationshipOWNER},
+			{Key: &job_model.V1ResourceKey{Type: job_model.V1ResourceTypePIPELINEVERSION, ID: pipelineVersion.ID},
+				Relationship: job_model.V1RelationshipCREATOR},
 		},
 		MaxConcurrency: 10,
 		Enabled:        true,
@@ -233,13 +233,13 @@ func (s *ExperimentApiTest) TestExperimentAPI() {
 	/* ---------- Verify experiment and its runs ------- */
 	experiment, err = s.experimentClient.Get(&params.GetExperimentParams{ID: trainingExperiment.ID})
 	assert.Nil(t, err)
-	assert.Equal(t, experiment_model.APIExperimentStorageState("STORAGESTATE_ARCHIVED"), experiment.StorageState)
+	assert.Equal(t, experiment_model.V1ExperimentStorageState("STORAGESTATE_ARCHIVED"), experiment.StorageState)
 	retrievedRun1, _, err := s.runClient.Get(&runParams.GetRunParams{RunID: run1.Run.ID})
 	assert.Nil(t, err)
-	assert.Equal(t, run_model.APIRunStorageState("STORAGESTATE_ARCHIVED"), retrievedRun1.Run.StorageState)
+	assert.Equal(t, run_model.V1RunStorageState("STORAGESTATE_ARCHIVED"), retrievedRun1.Run.StorageState)
 	retrievedRun2, _, err := s.runClient.Get(&runParams.GetRunParams{RunID: run2.Run.ID})
 	assert.Nil(t, err)
-	assert.Equal(t, run_model.APIRunStorageState("STORAGESTATE_ARCHIVED"), retrievedRun2.Run.StorageState)
+	assert.Equal(t, run_model.V1RunStorageState("STORAGESTATE_ARCHIVED"), retrievedRun2.Run.StorageState)
 	retrievedJob1, err := s.jobClient.Get(&jobParams.GetJobParams{ID: job1.ID})
 	assert.Nil(t, err)
 	assert.Equal(t, false, retrievedJob1.Enabled)
@@ -253,13 +253,13 @@ func (s *ExperimentApiTest) TestExperimentAPI() {
 	/* ---------- Verify experiment and its runs and jobs --------- */
 	experiment, err = s.experimentClient.Get(&params.GetExperimentParams{ID: trainingExperiment.ID})
 	assert.Nil(t, err)
-	assert.Equal(t, experiment_model.APIExperimentStorageState("STORAGESTATE_AVAILABLE"), experiment.StorageState)
+	assert.Equal(t, experiment_model.V1ExperimentStorageState("STORAGESTATE_AVAILABLE"), experiment.StorageState)
 	retrievedRun1, _, err = s.runClient.Get(&runParams.GetRunParams{RunID: run1.Run.ID})
 	assert.Nil(t, err)
-	assert.Equal(t, run_model.APIRunStorageState("STORAGESTATE_ARCHIVED"), retrievedRun1.Run.StorageState)
+	assert.Equal(t, run_model.V1RunStorageState("STORAGESTATE_ARCHIVED"), retrievedRun1.Run.StorageState)
 	retrievedRun2, _, err = s.runClient.Get(&runParams.GetRunParams{RunID: run2.Run.ID})
 	assert.Nil(t, err)
-	assert.Equal(t, run_model.APIRunStorageState("STORAGESTATE_ARCHIVED"), retrievedRun2.Run.StorageState)
+	assert.Equal(t, run_model.V1RunStorageState("STORAGESTATE_ARCHIVED"), retrievedRun2.Run.StorageState)
 	retrievedJob1, err = s.jobClient.Get(&jobParams.GetJobParams{ID: job1.ID})
 	assert.Nil(t, err)
 	assert.Equal(t, false, retrievedJob1.Enabled)

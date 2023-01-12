@@ -732,7 +732,7 @@ message PipelineDeploymentConfig {
     // API Specification for invoking a Google Cloud AI Platform CustomJob.
     // The fields must match the field names and structures of CustomJob
     // defined in
-    // https://cloud.google.com/ai-platform-unified/docs/reference/rest/v1beta1/projects.locations.customJobs.
+    // https://cloud.google.com/ai-platform-unified/docs/reference/rest/v1/projects.locations.customJobs.
     // The field types must be either the same, or be a string containing the
     // string based placeholder contract defined in [ExecutorInput](). The
     // placeholders will be replaced with the actual value during the runtime

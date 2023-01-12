@@ -23,7 +23,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/golang/glog"
 
-	api "github.com/kubeflow/pipelines/backend/api/go_client"
+	api "github.com/kubeflow/pipelines/backend/api/v1/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/list"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
@@ -206,7 +206,7 @@ func (s *RunStore) GetRun(runId string) (*model.RunDetail, error) {
 	if len(runs) == 0 {
 		return nil, util.NewResourceNotFoundError("Run", fmt.Sprint(runId))
 	}
-	if runs[0].WorkflowRuntimeManifest == ""  && runs[0].WorkflowSpecManifest != ""{
+	if runs[0].WorkflowRuntimeManifest == "" && runs[0].WorkflowSpecManifest != "" {
 		// This can only happen when workflow reporting is failed.
 		return nil, util.NewResourceNotFoundError("Failed to get run: %s", runId)
 	}

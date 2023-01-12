@@ -13,16 +13,15 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
-	experimentParams "github.com/kubeflow/pipelines/backend/api/go_http_client/experiment_client/experiment_service"
-	"github.com/kubeflow/pipelines/backend/api/go_http_client/experiment_model"
-	jobparams "github.com/kubeflow/pipelines/backend/api/go_http_client/job_client/job_service"
-	"github.com/kubeflow/pipelines/backend/api/go_http_client/job_model"
-	pipelineParams "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
-	"github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_model"
-	uploadParams "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_upload_client/pipeline_upload_service"
-	runParams "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client/run_service"
-	"github.com/kubeflow/pipelines/backend/api/go_http_client/run_model"
-	pipelinetemplate "github.com/kubeflow/pipelines/backend/src/apiserver/template"
+	experimentParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/experiment_client/experiment_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/experiment_model"
+	jobparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/job_client/job_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/job_model"
+	pipelineParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_client/pipeline_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_model"
+	uploadParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_upload_client/pipeline_upload_service"
+	runParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
 	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/kubeflow/pipelines/backend/test"
@@ -126,7 +125,7 @@ func (s *UpgradeTests) PrepareExperiments() {
 	t := s.T()
 
 	/* ---------- Create a new experiment ---------- */
-	experiment := &experiment_model.APIExperiment{Name: "training", Description: "my first experiment"}
+	experiment := &experiment_model.V1Experiment{Name: "training", Description: "my first experiment"}
 	_, err := s.experimentClient.Create(&experimentParams.CreateExperimentParams{
 		Body: experiment,
 	})
@@ -135,14 +134,14 @@ func (s *UpgradeTests) PrepareExperiments() {
 	/* ---------- Create a few more new experiment ---------- */
 	// This ensures they can be sorted by create time in expected order.
 	time.Sleep(1 * time.Second)
-	experiment = &experiment_model.APIExperiment{Name: "prediction", Description: "my second experiment"}
+	experiment = &experiment_model.V1Experiment{Name: "prediction", Description: "my second experiment"}
 	_, err = s.experimentClient.Create(&experimentParams.CreateExperimentParams{
 		Body: experiment,
 	})
 	require.Nil(t, err)
 
 	time.Sleep(1 * time.Second)
-	experiment = &experiment_model.APIExperiment{Name: "moonshot", Description: "my third experiment"}
+	experiment = &experiment_model.V1Experiment{Name: "moonshot", Description: "my third experiment"}
 	_, err = s.experimentClient.Create(&experimentParams.CreateExperimentParams{
 		Body: experiment,
 	})
@@ -190,7 +189,7 @@ func (s *UpgradeTests) PreparePipelines() {
 	/* ---------- Import pipeline YAML by URL ---------- */
 	time.Sleep(1 * time.Second)
 	sequentialPipeline, err := s.pipelineClient.Create(&pipelineParams.CreatePipelineParams{
-		Body: &pipeline_model.APIPipeline{Name: "sequential", URL: &pipeline_model.APIURL{
+		Body: &pipeline_model.V1Pipeline{Name: "sequential", URL: &pipeline_model.V1URL{
 			PipelineURL: "https://storage.googleapis.com/ml-pipeline-dataset/sequential.yaml"}}})
 	require.Nil(t, err)
 	assert.Equal(t, "sequential", sequentialPipeline.Name)
@@ -205,7 +204,7 @@ func (s *UpgradeTests) PreparePipelines() {
 	/* ---------- Import pipeline tarball by URL ---------- */
 	time.Sleep(1 * time.Second)
 	argumentUrlPipeline, err := s.pipelineClient.Create(&pipelineParams.CreatePipelineParams{
-		Body: &pipeline_model.APIPipeline{URL: &pipeline_model.APIURL{
+		Body: &pipeline_model.V1Pipeline{URL: &pipeline_model.V1URL{
 			PipelineURL: "https://storage.googleapis.com/ml-pipeline-dataset/arguments.pipeline.zip"}}})
 	require.Nil(t, err)
 	assert.Equal(t, "arguments.pipeline.zip", argumentUrlPipeline.Name)
@@ -253,15 +252,15 @@ func (s *UpgradeTests) PrepareRuns() {
 	require.Equal(t, hello2, helloWorldExperiment)
 
 	/* ---------- Create a new hello world run by specifying pipeline ID ---------- */
-	createRunRequest := &runParams.CreateRunParams{Body: &run_model.APIRun{
+	createRunRequest := &runParams.CreateRunParams{Body: &run_model.V1Run{
 		Name:        "hello world",
 		Description: "this is hello world",
-		PipelineSpec: &run_model.APIPipelineSpec{
+		PipelineSpec: &run_model.V1PipelineSpec{
 			PipelineID: helloWorldPipeline.ID,
 		},
-		ResourceReferences: []*run_model.APIResourceReference{
-			{Key: &run_model.APIResourceKey{Type: run_model.APIResourceTypeEXPERIMENT, ID: helloWorldExperiment.ID},
-				Name: helloWorldExperiment.Name, Relationship: run_model.APIRelationshipOWNER},
+		ResourceReferences: []*run_model.V1ResourceReference{
+			{Key: &run_model.V1ResourceKey{Type: run_model.V1ResourceTypeEXPERIMENT, ID: helloWorldExperiment.ID},
+				Name: helloWorldExperiment.Name, Relationship: run_model.V1RelationshipOWNER},
 		},
 	}}
 	_, _, err := s.runClient.Create(createRunRequest)
@@ -291,15 +290,15 @@ func (s *UpgradeTests) PrepareJobs() {
 	experiment := s.getHelloWorldExperiment(true)
 
 	/* ---------- Create a new hello world job by specifying pipeline ID ---------- */
-	createJobRequest := &jobparams.CreateJobParams{Body: &job_model.APIJob{
+	createJobRequest := &jobparams.CreateJobParams{Body: &job_model.V1Job{
 		Name:        "hello world",
 		Description: "this is hello world",
-		PipelineSpec: &job_model.APIPipelineSpec{
+		PipelineSpec: &job_model.V1PipelineSpec{
 			PipelineID: pipeline.ID,
 		},
-		ResourceReferences: []*job_model.APIResourceReference{
-			{Key: &job_model.APIResourceKey{Type: job_model.APIResourceTypeEXPERIMENT, ID: experiment.ID},
-				Relationship: job_model.APIRelationshipOWNER},
+		ResourceReferences: []*job_model.V1ResourceReference{
+			{Key: &job_model.V1ResourceKey{Type: job_model.V1ResourceTypeEXPERIMENT, ID: experiment.ID},
+				Relationship: job_model.V1RelationshipOWNER},
 		},
 		MaxConcurrency: 10,
 		Enabled:        true,
@@ -323,21 +322,21 @@ func (s *UpgradeTests) VerifyJobs() {
 
 	// Check workflow manifest is not empty
 	assert.Contains(t, job.PipelineSpec.WorkflowManifest, "whalesay")
-	expectedJob := &job_model.APIJob{
+	expectedJob := &job_model.V1Job{
 		ID:          job.ID,
 		Name:        "hello world",
 		Description: "this is hello world",
-		PipelineSpec: &job_model.APIPipelineSpec{
+		PipelineSpec: &job_model.V1PipelineSpec{
 			PipelineID:       pipeline.ID,
 			PipelineName:     "hello-world.yaml",
 			WorkflowManifest: job.PipelineSpec.WorkflowManifest,
 		},
-		ResourceReferences: []*job_model.APIResourceReference{
-			{Key: &job_model.APIResourceKey{Type: job_model.APIResourceTypeEXPERIMENT, ID: experiment.ID},
-				Name: experiment.Name, Relationship: job_model.APIRelationshipOWNER,
+		ResourceReferences: []*job_model.V1ResourceReference{
+			{Key: &job_model.V1ResourceKey{Type: job_model.V1ResourceTypeEXPERIMENT, ID: experiment.ID},
+				Name: experiment.Name, Relationship: job_model.V1RelationshipOWNER,
 			},
-			{Key: &job_model.APIResourceKey{ID: pipeline.ID, Type: job_model.APIResourceTypePIPELINEVERSION},
-				Name: "hello-world.yaml", Relationship: job_model.APIRelationshipCREATOR,
+			{Key: &job_model.V1ResourceKey{ID: pipeline.ID, Type: job_model.V1ResourceTypePIPELINEVERSION},
+				Name: "hello-world.yaml", Relationship: job_model.V1RelationshipCREATOR,
 			},
 		},
 		ServiceAccount: "pipeline-runner",
@@ -347,7 +346,7 @@ func (s *UpgradeTests) VerifyJobs() {
 		CreatedAt:      job.CreatedAt,
 		UpdatedAt:      job.UpdatedAt,
 		Status:         job.Status,
-		Trigger:        &job_model.APITrigger{},
+		Trigger:        &job_model.V1Trigger{},
 	}
 
 	sort.Sort(JobResourceReferenceSorter(job.ResourceReferences))
@@ -355,7 +354,7 @@ func (s *UpgradeTests) VerifyJobs() {
 	assert.Equal(t, expectedJob, job)
 }
 
-func checkHelloWorldRunDetail(t *testing.T, runDetail *run_model.APIRunDetail) {
+func checkHelloWorldRunDetail(t *testing.T, runDetail *run_model.V1RunDetail) {
 	// Check workflow manifest is not empty
 	assert.Contains(t, runDetail.Run.PipelineSpec.WorkflowManifest, "whalesay")
 	// Check runtime workflow manifest is not empty
@@ -364,22 +363,22 @@ func checkHelloWorldRunDetail(t *testing.T, runDetail *run_model.APIRunDetail) {
 	expectedExperimentID := test.GetExperimentIDFromAPIResourceReferences(runDetail.Run.ResourceReferences)
 	require.NotEmpty(t, expectedExperimentID)
 
-	expectedRun := &run_model.APIRun{
+	expectedRun := &run_model.V1Run{
 		ID:          runDetail.Run.ID,
 		Name:        "hello world",
 		Description: "this is hello world",
 		Status:      runDetail.Run.Status,
-		PipelineSpec: &run_model.APIPipelineSpec{
+		PipelineSpec: &run_model.V1PipelineSpec{
 			PipelineID:       runDetail.Run.PipelineSpec.PipelineID,
 			PipelineName:     "hello-world.yaml",
 			WorkflowManifest: runDetail.Run.PipelineSpec.WorkflowManifest,
 		},
-		ResourceReferences: []*run_model.APIResourceReference{
-			{Key: &run_model.APIResourceKey{Type: run_model.APIResourceTypeEXPERIMENT, ID: expectedExperimentID},
-				Name: "hello world experiment", Relationship: run_model.APIRelationshipOWNER,
+		ResourceReferences: []*run_model.V1ResourceReference{
+			{Key: &run_model.V1ResourceKey{Type: run_model.V1ResourceTypeEXPERIMENT, ID: expectedExperimentID},
+				Name: "hello world experiment", Relationship: run_model.V1RelationshipOWNER,
 			},
-			{Key: &run_model.APIResourceKey{ID: runDetail.Run.PipelineSpec.PipelineID, Type: run_model.APIResourceTypePIPELINEVERSION},
-				Name: "hello-world.yaml", Relationship: run_model.APIRelationshipCREATOR,
+			{Key: &run_model.V1ResourceKey{ID: runDetail.Run.PipelineSpec.PipelineID, Type: run_model.V1ResourceTypePIPELINEVERSION},
+				Name: "hello-world.yaml", Relationship: run_model.V1RelationshipCREATOR,
 			},
 		},
 		ServiceAccount: "pipeline-runner",
@@ -392,22 +391,22 @@ func checkHelloWorldRunDetail(t *testing.T, runDetail *run_model.APIRunDetail) {
 	assert.Equal(t, expectedRun, runDetail.Run)
 }
 
-func (s *UpgradeTests) createHelloWorldExperiment() *experiment_model.APIExperiment {
+func (s *UpgradeTests) createHelloWorldExperiment() *experiment_model.V1Experiment {
 	t := s.T()
 
-	experiment := &experiment_model.APIExperiment{Name: "hello world experiment"}
+	experiment := &experiment_model.V1Experiment{Name: "hello world experiment"}
 	helloWorldExperiment, err := s.experimentClient.Create(&experimentParams.CreateExperimentParams{Body: experiment})
 	require.Nil(t, err)
 
 	return helloWorldExperiment
 }
 
-func (s *UpgradeTests) getHelloWorldExperiment(createIfNotExist bool) *experiment_model.APIExperiment {
+func (s *UpgradeTests) getHelloWorldExperiment(createIfNotExist bool) *experiment_model.V1Experiment {
 	t := s.T()
 
 	experiments, err := s.experimentClient.ListAll(&experimentParams.ListExperimentParams{}, 1000)
 	require.Nil(t, err)
-	var helloWorldExperiment *experiment_model.APIExperiment
+	var helloWorldExperiment *experiment_model.V1Experiment
 	for _, experiment := range experiments {
 		if experiment.Name == "hello world experiment" {
 			helloWorldExperiment = experiment
@@ -421,12 +420,12 @@ func (s *UpgradeTests) getHelloWorldExperiment(createIfNotExist bool) *experimen
 	return helloWorldExperiment
 }
 
-func (s *UpgradeTests) getHelloWorldPipeline(createIfNotExist bool) *pipeline_model.APIPipeline {
+func (s *UpgradeTests) getHelloWorldPipeline(createIfNotExist bool) *pipeline_model.V1Pipeline {
 	t := s.T()
 
 	pipelines, err := s.pipelineClient.ListAll(&pipelineParams.ListPipelinesParams{}, 1000)
 	require.Nil(t, err)
-	var helloWorldPipeline *pipeline_model.APIPipeline
+	var helloWorldPipeline *pipeline_model.V1Pipeline
 	for _, pipeline := range pipelines {
 		if pipeline.Name == "hello-world.yaml" {
 			helloWorldPipeline = pipeline
@@ -440,7 +439,7 @@ func (s *UpgradeTests) getHelloWorldPipeline(createIfNotExist bool) *pipeline_mo
 	return helloWorldPipeline
 }
 
-func (s *UpgradeTests) createHelloWorldPipeline() *pipeline_model.APIPipeline {
+func (s *UpgradeTests) createHelloWorldPipeline() *pipeline_model.V1Pipeline {
 	t := s.T()
 
 	/* ---------- Upload pipelines YAML ---------- */

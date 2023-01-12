@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/strfmt"
-	runparams "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client/run_service"
-	runmodel "github.com/kubeflow/pipelines/backend/api/go_http_client/run_model"
+	runparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
+	runmodel "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
@@ -16,14 +16,14 @@ const (
 	RunForClientErrorTest = "RUN_CLIENT_ERROR"
 )
 
-func getDefaultRun(id string, name string) *runmodel.APIRunDetail {
-	return &runmodel.APIRunDetail{
-		PipelineRuntime: &runmodel.APIPipelineRuntime{WorkflowManifest: getDefaultWorkflowAsString()},
-		Run: &runmodel.APIRun{
+func getDefaultRun(id string, name string) *runmodel.V1RunDetail {
+	return &runmodel.V1RunDetail{
+		PipelineRuntime: &runmodel.V1PipelineRuntime{WorkflowManifest: getDefaultWorkflowAsString()},
+		Run: &runmodel.V1Run{
 			CreatedAt: strfmt.NewDateTime(),
 			ID:        id,
 			Name:      name,
-			Metrics:   []*runmodel.APIRunMetric{},
+			Metrics:   []*runmodel.V1RunMetric{},
 		},
 	}
 }
@@ -34,7 +34,7 @@ func NewRunClientFake() *RunClientFake {
 	return &RunClientFake{}
 }
 
-func (c *RunClientFake) Get(params *runparams.GetRunParams) (*runmodel.APIRunDetail,
+func (c *RunClientFake) Get(params *runparams.GetRunParams) (*runmodel.V1RunDetail,
 	*workflowapi.PipelineRun, error) {
 	switch params.RunID {
 	case RunForClientErrorTest:
@@ -45,7 +45,7 @@ func (c *RunClientFake) Get(params *runparams.GetRunParams) (*runmodel.APIRunDet
 }
 
 func (c *RunClientFake) List(params *runparams.ListRunsParams) (
-	[]*runmodel.APIRun, int, string, error) {
+	[]*runmodel.V1Run, int, string, error) {
 	const (
 		FirstToken  = ""
 		SecondToken = "SECOND_TOKEN"
@@ -59,12 +59,12 @@ func (c *RunClientFake) List(params *runparams.ListRunsParams) (
 
 	switch token {
 	case FirstToken:
-		return []*runmodel.APIRun{
+		return []*runmodel.V1Run{
 			getDefaultRun("100", "MY_FIRST_RUN").Run,
 			getDefaultRun("101", "MY_SECOND_RUN").Run,
 		}, 2, SecondToken, nil
 	case SecondToken:
-		return []*runmodel.APIRun{
+		return []*runmodel.V1Run{
 			getDefaultRun("102", "MY_THIRD_RUN").Run,
 		}, 1, FinalToken, nil
 	default:
@@ -73,7 +73,7 @@ func (c *RunClientFake) List(params *runparams.ListRunsParams) (
 }
 
 func (c *RunClientFake) ListAll(params *runparams.ListRunsParams, maxResultSize int) (
-	[]*runmodel.APIRun, error) {
+	[]*runmodel.V1Run, error) {
 	return listAllForRun(c, params, maxResultSize)
 }
 

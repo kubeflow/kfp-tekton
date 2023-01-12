@@ -7,13 +7,14 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
-	params "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
-	"github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_model"
-	uploadParams "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_upload_client/pipeline_upload_service"
+	params "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_client/pipeline_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_model"
+	uploadParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_upload_client/pipeline_upload_service"
 	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/kubeflow/pipelines/backend/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
@@ -108,15 +109,15 @@ func (s *PipelineVersionApiTest) TestArgoSpec() {
 	/* ---------- Import pipeline version YAML by URL ---------- */
 	time.Sleep(1 * time.Second)
 	sequentialPipelineVersion, err := s.pipelineClient.CreatePipelineVersion(&params.CreatePipelineVersionParams{
-		Body: &pipeline_model.APIPipelineVersion{
+		Body: &pipeline_model.V1PipelineVersion{
 			Name: "sequential",
-			PackageURL: &pipeline_model.APIURL{
+			PackageURL: &pipeline_model.V1URL{
 				PipelineURL: "https://storage.googleapis.com/ml-pipeline-dataset/sequential.yaml",
 			},
-			ResourceReferences: []*pipeline_model.APIResourceReference{
+			ResourceReferences: []*pipeline_model.V1ResourceReference{
 				{
-					Key:          &pipeline_model.APIResourceKey{Type: pipeline_model.APIResourceTypePIPELINE, ID: pipelineId},
-					Relationship: pipeline_model.APIRelationshipOWNER,
+					Key:          &pipeline_model.V1ResourceKey{Type: pipeline_model.V1ResourceTypePIPELINE, ID: pipelineId},
+					Relationship: pipeline_model.V1RelationshipOWNER,
 				},
 			},
 		}})
@@ -136,15 +137,15 @@ func (s *PipelineVersionApiTest) TestArgoSpec() {
 	/* ---------- Import pipeline tarball by URL ---------- */
 	time.Sleep(1 * time.Second)
 	argumentUrlPipelineVersion, err := s.pipelineClient.CreatePipelineVersion(&params.CreatePipelineVersionParams{
-		Body: &pipeline_model.APIPipelineVersion{
+		Body: &pipeline_model.V1PipelineVersion{
 			Name: "arguments",
-			PackageURL: &pipeline_model.APIURL{
+			PackageURL: &pipeline_model.V1URL{
 				PipelineURL: "https://storage.googleapis.com/ml-pipeline-dataset/arguments.pipeline.zip",
 			},
-			ResourceReferences: []*pipeline_model.APIResourceReference{
+			ResourceReferences: []*pipeline_model.V1ResourceReference{
 				{
-					Key:          &pipeline_model.APIResourceKey{Type: pipeline_model.APIResourceTypePIPELINE, ID: pipelineId},
-					Relationship: pipeline_model.APIRelationshipOWNER,
+					Key:          &pipeline_model.V1ResourceKey{Type: pipeline_model.V1ResourceTypePIPELINE, ID: pipelineId},
+					Relationship: pipeline_model.V1RelationshipOWNER,
 				},
 			},
 		}})
@@ -166,7 +167,7 @@ func (s *PipelineVersionApiTest) TestArgoSpec() {
 
 		if p.Name == "arguments" {
 			assert.Equal(t, p.Parameters,
-				[]*pipeline_model.APIParameter{
+				[]*pipeline_model.V1Parameter{
 					{Name: "param1", Value: "hello"}, // Default value in the pipeline template
 					{Name: "param2"},                 // No default value in the pipeline
 				})
@@ -281,7 +282,7 @@ func (s *PipelineVersionApiTest) TestArgoSpec() {
 	assert.Equal(t, pipelineVersion.Name, "arguments")
 	assert.NotNil(t, pipelineVersion.CreatedAt)
 	assert.Equal(t, pipelineVersion.Parameters,
-		[]*pipeline_model.APIParameter{
+		[]*pipeline_model.V1Parameter{
 			{Name: "param1", Value: "hello"},
 			{Name: "param2"},
 		})

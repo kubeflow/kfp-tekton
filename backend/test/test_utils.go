@@ -24,11 +24,11 @@ import (
 	"net/http"
 
 	"github.com/cenkalti/backoff"
-	experimentparams "github.com/kubeflow/pipelines/backend/api/go_http_client/experiment_client/experiment_service"
-	jobparams "github.com/kubeflow/pipelines/backend/api/go_http_client/job_client/job_service"
-	pipelineparams "github.com/kubeflow/pipelines/backend/api/go_http_client/pipeline_client/pipeline_service"
-	runparams "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client/run_service"
-	"github.com/kubeflow/pipelines/backend/api/go_http_client/run_model"
+	experimentparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/experiment_client/experiment_service"
+	jobparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/job_client/job_service"
+	pipelineparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_client/pipeline_service"
+	runparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
+	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
 	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -98,10 +98,10 @@ func DeleteAllJobs(client *api_server.JobClient, t *testing.T) {
 	}
 }
 
-func GetExperimentIDFromAPIResourceReferences(resourceRefs []*run_model.APIResourceReference) string {
+func GetExperimentIDFromAPIResourceReferences(resourceRefs []*run_model.V1ResourceReference) string {
 	experimentID := ""
 	for _, resourceRef := range resourceRefs {
-		if resourceRef.Key.Type == run_model.APIResourceTypeEXPERIMENT {
+		if resourceRef.Key.Type == run_model.V1ResourceTypeEXPERIMENT {
 			experimentID = resourceRef.Key.ID
 			break
 		}

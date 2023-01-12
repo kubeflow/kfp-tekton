@@ -15,7 +15,7 @@ go_library(
         "run_client_fake.go",
         "util.go",
         "visualization_client.go",
-        "visualization_client_fake.go",
+        "visualization_client_fake.go"
     ],
     importpath = "github.com/kubeflow/pipelines/backend/src/common/client/api_server",
     visibility = ["//visibility:public"],

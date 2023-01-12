@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/golang/glog"
-	params "github.com/kubeflow/pipelines/backend/api/go_http_client/experiment_client/experiment_service"
-	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
+	params "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/experiment_client/experiment_service"
+	api_server "github.com/kubeflow/pipelines/backend/src/common/client/api_server"
 	"github.com/kubeflow/pipelines/backend/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

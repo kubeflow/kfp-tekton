@@ -2,11 +2,12 @@ package server
 
 import (
 	"context"
-	api "github.com/kubeflow/pipelines/backend/api/go_client"
+	"strings"
+
+	api "github.com/kubeflow/pipelines/backend/api/v1/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
-	"strings"
 )
 
 type TaskServer struct {

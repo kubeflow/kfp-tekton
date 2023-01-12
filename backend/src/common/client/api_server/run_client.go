@@ -5,9 +5,9 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/strfmt"
-	apiclient "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client"
-	params "github.com/kubeflow/pipelines/backend/api/go_http_client/run_client/run_service"
-	model "github.com/kubeflow/pipelines/backend/api/go_http_client/run_model"
+	apiclient "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client"
+	params "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
+	model "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"golang.org/x/net/context"
@@ -17,9 +17,9 @@ import (
 
 type RunInterface interface {
 	Archive(params *params.ArchiveRunParams) error
-	Get(params *params.GetRunParams) (*model.APIRunDetail, *workflowapi.PipelineRun, error)
-	List(params *params.ListRunsParams) ([]*model.APIRun, int, string, error)
-	ListAll(params *params.ListRunsParams, maxResultSize int) ([]*model.APIRun, error)
+	Get(params *params.GetRunParams) (*model.V1RunDetail, *workflowapi.PipelineRun, error)
+	List(params *params.ListRunsParams) ([]*model.V1Run, int, string, error)
+	ListAll(params *params.ListRunsParams, maxResultSize int) ([]*model.V1Run, error)
 	Unarchive(params *params.UnarchiveRunParams) error
 	Terminate(params *params.TerminateRunParams) error
 }
@@ -44,7 +44,7 @@ func NewRunClient(clientConfig clientcmd.ClientConfig, debug bool) (
 	}, nil
 }
 
-func (c *RunClient) Create(parameters *params.CreateRunParams) (*model.APIRunDetail,
+func (c *RunClient) Create(parameters *params.CreateRunParams) (*model.V1RunDetail,
 	*workflowapi.PipelineRun, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
@@ -78,7 +78,7 @@ func (c *RunClient) Create(parameters *params.CreateRunParams) (*model.APIRunDet
 	return response.Payload, &workflow, nil
 }
 
-func (c *RunClient) Get(parameters *params.GetRunParams) (*model.APIRunDetail,
+func (c *RunClient) Get(parameters *params.GetRunParams) (*model.V1RunDetail,
 	*workflowapi.PipelineRun, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
@@ -185,7 +185,7 @@ func (c *RunClient) Delete(parameters *params.DeleteRunParams) error {
 }
 
 func (c *RunClient) List(parameters *params.ListRunsParams) (
-	[]*model.APIRun, int, string, error) {
+	[]*model.V1Run, int, string, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
 	defer cancel()
@@ -210,17 +210,17 @@ func (c *RunClient) List(parameters *params.ListRunsParams) (
 }
 
 func (c *RunClient) ListAll(parameters *params.ListRunsParams, maxResultSize int) (
-	[]*model.APIRun, error) {
+	[]*model.V1Run, error) {
 	return listAllForRun(c, parameters, maxResultSize)
 }
 
 func listAllForRun(client RunInterface, parameters *params.ListRunsParams, maxResultSize int) (
-	[]*model.APIRun, error) {
+	[]*model.V1Run, error) {
 	if maxResultSize < 0 {
 		maxResultSize = 0
 	}
 
-	allResults := make([]*model.APIRun, 0)
+	allResults := make([]*model.V1Run, 0)
 	firstCall := true
 	for (firstCall || (parameters.PageToken != nil && *parameters.PageToken != "")) &&
 		(len(allResults) < maxResultSize) {
