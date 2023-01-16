@@ -23,8 +23,11 @@ import (
 	"strings"
 
 	"github.com/kubeflow/pipelines/backend/src/common/util"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	wfapiAlpha "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	wfapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	runAlpha "github.com/tektoncd/pipeline/pkg/apis/run/v1alpha1"
+	customRun "github.com/tektoncd/pipeline/pkg/apis/run/v1beta1"
+
 	wfclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	"github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -163,7 +166,7 @@ func (c *WorkflowClient) getStatusFromChildReferences(namespace, selector string
 				runStatus := run.Status.DeepCopy()
 				runStatuses[run.Name] = &wfapi.PipelineRunRunStatus{
 					PipelineTaskName: run.Labels["tekton.dev/pipelineTask"],
-					Status:           runStatus,
+					Status:           FromRunStatus(runStatus),
 				}
 				// handle nested status
 				c.handleNestedStatus(&run, runStatus, namespace)
@@ -175,7 +178,7 @@ func (c *WorkflowClient) getStatusFromChildReferences(namespace, selector string
 }
 
 // handle nested status case for specific types of Run
-func (c *WorkflowClient) handleNestedStatus(run *v1alpha1.Run, runStatus *v1alpha1.RunStatus, namespace string) {
+func (c *WorkflowClient) handleNestedStatus(run *wfapiAlpha.Run, runStatus *runAlpha.RunStatus, namespace string) {
 	if sort.SearchStrings(childReferencesKinds, run.Spec.Spec.Kind) < len(childReferencesKinds) {
 		// need to lookup the nested status
 		obj := make(map[string]interface{})
@@ -257,7 +260,7 @@ func (c *WorkflowClient) updateExtraFields(obj map[string]interface{}, namespace
 								runStatusStatus := runCR.Status.DeepCopy()
 								runStatus[name] = &wfapi.PipelineRunRunStatus{
 									PipelineTaskName: runCR.Labels["tekton.dev/pipelineTask"],
-									Status:           runStatusStatus,
+									Status:           FromRunStatus(runStatusStatus),
 								}
 								statusobj["runs"] = runStatus
 								// handle nested status recursively
@@ -272,4 +275,29 @@ func (c *WorkflowClient) updateExtraFields(obj map[string]interface{}, namespace
 
 	}
 	return updated
+}
+
+// FromRunStatus converts a *v1alpha1.RunStatus into a corresponding *v1beta1.CustomRunStatus
+func FromRunStatus(orig *runAlpha.RunStatus) *customRun.CustomRunStatus {
+	crs := customRun.CustomRunStatus{
+		Status: orig.Status,
+		CustomRunStatusFields: customRun.CustomRunStatusFields{
+			StartTime:      orig.StartTime,
+			CompletionTime: orig.CompletionTime,
+			ExtraFields:    orig.ExtraFields,
+		},
+	}
+
+	for _, origRes := range orig.Results {
+		crs.Results = append(crs.Results, customRun.CustomRunResult{
+			Name:  origRes.Name,
+			Value: origRes.Value,
+		})
+	}
+
+	for _, origRetryStatus := range orig.RetriesStatus {
+		crs.RetriesStatus = append(crs.RetriesStatus, customRun.FromRunStatus(origRetryStatus))
+	}
+
+	return &crs
 }

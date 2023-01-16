@@ -416,7 +416,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *v1alpha1.Run, status *p
 		} else {
 			reason := pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String()
 			if run.HasTimedOut(c.clock) { // This check is only possible if we are on tekton 0.27.0 +
-				reason = v1alpha1.RunReasonTimedOut
+				reason = v1alpha1.RunReasonTimedOut.String()
 			}
 			run.Status.MarkRunFailed(reason, "Run %s/%s was cancelled", run.Namespace, run.Name)
 		}
