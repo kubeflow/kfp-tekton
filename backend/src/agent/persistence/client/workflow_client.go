@@ -275,6 +275,7 @@ func (c *WorkflowClient) updateExtraFields(obj map[string]interface{}, namespace
 	return updated
 }
 
+// TODO: update status to v1beta1 base once pipelineloop supports v1beta1 customrun
 // FromRunStatus converts a *v1alpha1.RunStatus into a corresponding *v1beta1.CustomRunStatus
 func FromRunStatus(orig *v1alpha1.RunStatus) *customRun.CustomRunStatus {
 	crs := customRun.CustomRunStatus{
