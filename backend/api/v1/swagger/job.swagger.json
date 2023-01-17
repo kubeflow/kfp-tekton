@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/apis/v1beta1/jobs": {
+    "/apis/v1/jobs": {
       "get": {
         "summary": "Finds all jobs.",
         "operationId": "ListJobs",
@@ -124,7 +124,7 @@
         ]
       }
     },
-    "/apis/v1beta1/jobs/{id}": {
+    "/apis/v1/jobs/{id}": {
       "get": {
         "summary": "Finds a specific job by ID.",
         "operationId": "GetJob",
@@ -186,7 +186,7 @@
         ]
       }
     },
-    "/apis/v1beta1/jobs/{id}/disable": {
+    "/apis/v1/jobs/{id}/disable": {
       "post": {
         "summary": "Stops a job and all its associated runs. The job is not deleted.",
         "operationId": "DisableJob",
@@ -218,7 +218,7 @@
         ]
       }
     },
-    "/apis/v1beta1/jobs/{id}/enable": {
+    "/apis/v1/jobs/{id}/enable": {
       "post": {
         "summary": "Restarts a job that was previously stopped. All runs associated with the job will continue.",
         "operationId": "EnableJob",

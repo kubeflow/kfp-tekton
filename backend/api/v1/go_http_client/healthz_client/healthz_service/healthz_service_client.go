@@ -36,7 +36,7 @@ func (a *Client) GetHealthz(params *GetHealthzParams, authInfo runtime.ClientAut
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "GetHealthz",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/healthz",
+		PathPattern:        "/apis/v1/healthz",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},

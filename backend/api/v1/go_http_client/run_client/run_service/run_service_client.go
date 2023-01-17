@@ -36,7 +36,7 @@ func (a *Client) ArchiveRun(params *ArchiveRunParams, authInfo runtime.ClientAut
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ArchiveRun",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/runs/{id}:archive",
+		PathPattern:        "/apis/v1/runs/{id}:archive",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -65,7 +65,7 @@ func (a *Client) CreateRun(params *CreateRunParams, authInfo runtime.ClientAuthI
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "CreateRun",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/runs",
+		PathPattern:        "/apis/v1/runs",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -94,7 +94,7 @@ func (a *Client) DeleteRun(params *DeleteRunParams, authInfo runtime.ClientAuthI
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "DeleteRun",
 		Method:             "DELETE",
-		PathPattern:        "/apis/v1beta1/runs/{id}",
+		PathPattern:        "/apis/v1/runs/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -123,7 +123,7 @@ func (a *Client) GetRun(params *GetRunParams, authInfo runtime.ClientAuthInfoWri
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "GetRun",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/runs/{run_id}",
+		PathPattern:        "/apis/v1/runs/{run_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -152,7 +152,7 @@ func (a *Client) ListRuns(params *ListRunsParams, authInfo runtime.ClientAuthInf
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ListRuns",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/runs",
+		PathPattern:        "/apis/v1/runs",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -181,7 +181,7 @@ func (a *Client) ReadArtifact(params *ReadArtifactParams, authInfo runtime.Clien
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ReadArtifact",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read",
+		PathPattern:        "/apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -210,7 +210,7 @@ func (a *Client) ReportRunMetrics(params *ReportRunMetricsParams, authInfo runti
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ReportRunMetrics",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/runs/{run_id}:reportMetrics",
+		PathPattern:        "/apis/v1/runs/{run_id}:reportMetrics",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -239,7 +239,7 @@ func (a *Client) RetryRun(params *RetryRunParams, authInfo runtime.ClientAuthInf
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "RetryRun",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/runs/{run_id}/retry",
+		PathPattern:        "/apis/v1/runs/{run_id}/retry",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -268,7 +268,7 @@ func (a *Client) TerminateRun(params *TerminateRunParams, authInfo runtime.Clien
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "TerminateRun",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/runs/{run_id}/terminate",
+		PathPattern:        "/apis/v1/runs/{run_id}/terminate",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -297,7 +297,7 @@ func (a *Client) UnarchiveRun(params *UnarchiveRunParams, authInfo runtime.Clien
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "UnarchiveRun",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/runs/{id}:unarchive",
+		PathPattern:        "/apis/v1/runs/{id}:unarchive",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},

@@ -36,7 +36,7 @@ func (a *Client) CreateJob(params *CreateJobParams, authInfo runtime.ClientAuthI
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "CreateJob",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/jobs",
+		PathPattern:        "/apis/v1/jobs",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -65,7 +65,7 @@ func (a *Client) DeleteJob(params *DeleteJobParams, authInfo runtime.ClientAuthI
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "DeleteJob",
 		Method:             "DELETE",
-		PathPattern:        "/apis/v1beta1/jobs/{id}",
+		PathPattern:        "/apis/v1/jobs/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -94,7 +94,7 @@ func (a *Client) DisableJob(params *DisableJobParams, authInfo runtime.ClientAut
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "DisableJob",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/jobs/{id}/disable",
+		PathPattern:        "/apis/v1/jobs/{id}/disable",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -123,7 +123,7 @@ func (a *Client) EnableJob(params *EnableJobParams, authInfo runtime.ClientAuthI
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "EnableJob",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/jobs/{id}/enable",
+		PathPattern:        "/apis/v1/jobs/{id}/enable",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -152,7 +152,7 @@ func (a *Client) GetJob(params *GetJobParams, authInfo runtime.ClientAuthInfoWri
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "GetJob",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/jobs/{id}",
+		PathPattern:        "/apis/v1/jobs/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -181,7 +181,7 @@ func (a *Client) ListJobs(params *ListJobsParams, authInfo runtime.ClientAuthInf
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ListJobs",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/jobs",
+		PathPattern:        "/apis/v1/jobs",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
