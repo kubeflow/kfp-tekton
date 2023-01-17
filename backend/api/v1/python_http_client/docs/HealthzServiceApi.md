@@ -4,7 +4,7 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**get_healthz**](HealthzServiceApi.md#get_healthz) | **GET** /apis/v1beta1/healthz | Get healthz data.
+[**get_healthz**](HealthzServiceApi.md#get_healthz) | **GET** /apis/v1/healthz | Get healthz data.
 
 
 # **get_healthz**

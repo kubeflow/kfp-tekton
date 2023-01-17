@@ -4,17 +4,17 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**create_pipeline**](PipelineServiceApi.md#create_pipeline) | **POST** /apis/v1beta1/pipelines | Creates a pipeline.
-[**create_pipeline_version**](PipelineServiceApi.md#create_pipeline_version) | **POST** /apis/v1beta1/pipeline_versions | Adds a pipeline version to the specified pipeline.
-[**delete_pipeline**](PipelineServiceApi.md#delete_pipeline) | **DELETE** /apis/v1beta1/pipelines/{id} | Deletes a pipeline and its pipeline versions.
-[**delete_pipeline_version**](PipelineServiceApi.md#delete_pipeline_version) | **DELETE** /apis/v1beta1/pipeline_versions/{version_id} | Deletes a pipeline version by pipeline version ID. If the deleted pipeline version is the default pipeline version, the pipeline&#39;s default version changes to the pipeline&#39;s most recent pipeline version. If there are no remaining pipeline versions, the pipeline will have no default version. Examines the run_service_api.ipynb notebook to learn more about creating a run using a pipeline version (https://github.com/kubeflow/pipelines/blob/master/tools/benchmarks/run_service_api.ipynb).
-[**get_pipeline**](PipelineServiceApi.md#get_pipeline) | **GET** /apis/v1beta1/pipelines/{id} | Finds a specific pipeline by ID.
-[**get_pipeline_version**](PipelineServiceApi.md#get_pipeline_version) | **GET** /apis/v1beta1/pipeline_versions/{version_id} | Gets a pipeline version by pipeline version ID.
-[**get_pipeline_version_template**](PipelineServiceApi.md#get_pipeline_version_template) | **GET** /apis/v1beta1/pipeline_versions/{version_id}/templates | Returns a YAML template that contains the specified pipeline version&#39;s description, parameters and metadata.
-[**get_template**](PipelineServiceApi.md#get_template) | **GET** /apis/v1beta1/pipelines/{id}/templates | Returns a single YAML template that contains the description, parameters, and metadata associated with the pipeline provided.
-[**list_pipeline_versions**](PipelineServiceApi.md#list_pipeline_versions) | **GET** /apis/v1beta1/pipeline_versions | Lists all pipeline versions of a given pipeline.
-[**list_pipelines**](PipelineServiceApi.md#list_pipelines) | **GET** /apis/v1beta1/pipelines | Finds all pipelines.
-[**update_pipeline_default_version**](PipelineServiceApi.md#update_pipeline_default_version) | **POST** /apis/v1beta1/pipelines/{pipeline_id}/default_version/{version_id} | Update the default pipeline version of a specific pipeline.
+[**create_pipeline**](PipelineServiceApi.md#create_pipeline) | **POST** /apis/v1/pipelines | Creates a pipeline.
+[**create_pipeline_version**](PipelineServiceApi.md#create_pipeline_version) | **POST** /apis/v1/pipeline_versions | Adds a pipeline version to the specified pipeline.
+[**delete_pipeline**](PipelineServiceApi.md#delete_pipeline) | **DELETE** /apis/v1/pipelines/{id} | Deletes a pipeline and its pipeline versions.
+[**delete_pipeline_version**](PipelineServiceApi.md#delete_pipeline_version) | **DELETE** /apis/v1/pipeline_versions/{version_id} | Deletes a pipeline version by pipeline version ID. If the deleted pipeline version is the default pipeline version, the pipeline&#39;s default version changes to the pipeline&#39;s most recent pipeline version. If there are no remaining pipeline versions, the pipeline will have no default version. Examines the run_service_api.ipynb notebook to learn more about creating a run using a pipeline version (https://github.com/kubeflow/pipelines/blob/master/tools/benchmarks/run_service_api.ipynb).
+[**get_pipeline**](PipelineServiceApi.md#get_pipeline) | **GET** /apis/v1/pipelines/{id} | Finds a specific pipeline by ID.
+[**get_pipeline_version**](PipelineServiceApi.md#get_pipeline_version) | **GET** /apis/v1/pipeline_versions/{version_id} | Gets a pipeline version by pipeline version ID.
+[**get_pipeline_version_template**](PipelineServiceApi.md#get_pipeline_version_template) | **GET** /apis/v1/pipeline_versions/{version_id}/templates | Returns a YAML template that contains the specified pipeline version&#39;s description, parameters and metadata.
+[**get_template**](PipelineServiceApi.md#get_template) | **GET** /apis/v1/pipelines/{id}/templates | Returns a single YAML template that contains the description, parameters, and metadata associated with the pipeline provided.
+[**list_pipeline_versions**](PipelineServiceApi.md#list_pipeline_versions) | **GET** /apis/v1/pipeline_versions | Lists all pipeline versions of a given pipeline.
+[**list_pipelines**](PipelineServiceApi.md#list_pipelines) | **GET** /apis/v1/pipelines | Finds all pipelines.
+[**update_pipeline_default_version**](PipelineServiceApi.md#update_pipeline_default_version) | **POST** /apis/v1/pipelines/{pipeline_id}/default_version/{version_id} | Update the default pipeline version of a specific pipeline.
 
 
 # **create_pipeline**

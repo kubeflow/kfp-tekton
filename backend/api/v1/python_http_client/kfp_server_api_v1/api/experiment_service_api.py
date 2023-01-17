@@ -143,7 +143,7 @@ class ExperimentServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/experiments/{id}:archive', 'POST',
+            '/apis/v1/experiments/{id}:archive', 'POST',
             path_params,
             query_params,
             header_params,
@@ -269,7 +269,7 @@ class ExperimentServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/experiments', 'POST',
+            '/apis/v1/experiments', 'POST',
             path_params,
             query_params,
             header_params,
@@ -391,7 +391,7 @@ class ExperimentServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/experiments/{id}', 'DELETE',
+            '/apis/v1/experiments/{id}', 'DELETE',
             path_params,
             query_params,
             header_params,
@@ -513,7 +513,7 @@ class ExperimentServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/experiments/{id}', 'GET',
+            '/apis/v1/experiments/{id}', 'GET',
             path_params,
             query_params,
             header_params,
@@ -666,7 +666,7 @@ class ExperimentServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/experiments', 'GET',
+            '/apis/v1/experiments', 'GET',
             path_params,
             query_params,
             header_params,
@@ -788,7 +788,7 @@ class ExperimentServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/experiments/{id}:unarchive', 'POST',
+            '/apis/v1/experiments/{id}:unarchive', 'POST',
             path_params,
             query_params,
             header_params,

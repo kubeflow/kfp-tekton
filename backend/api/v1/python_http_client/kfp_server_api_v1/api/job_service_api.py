@@ -147,7 +147,7 @@ class JobServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/jobs', 'POST',
+            '/apis/v1/jobs', 'POST',
             path_params,
             query_params,
             header_params,
@@ -269,7 +269,7 @@ class JobServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/jobs/{id}', 'DELETE',
+            '/apis/v1/jobs/{id}', 'DELETE',
             path_params,
             query_params,
             header_params,
@@ -391,7 +391,7 @@ class JobServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/jobs/{id}/disable', 'POST',
+            '/apis/v1/jobs/{id}/disable', 'POST',
             path_params,
             query_params,
             header_params,
@@ -513,7 +513,7 @@ class JobServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/jobs/{id}/enable', 'POST',
+            '/apis/v1/jobs/{id}/enable', 'POST',
             path_params,
             query_params,
             header_params,
@@ -635,7 +635,7 @@ class JobServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/jobs/{id}', 'GET',
+            '/apis/v1/jobs/{id}', 'GET',
             path_params,
             query_params,
             header_params,
@@ -788,7 +788,7 @@ class JobServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/jobs', 'GET',
+            '/apis/v1/jobs', 'GET',
             path_params,
             query_params,
             header_params,

@@ -132,7 +132,7 @@ class HealthzServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/healthz', 'GET',
+            '/apis/v1/healthz', 'GET',
             path_params,
             query_params,
             header_params,

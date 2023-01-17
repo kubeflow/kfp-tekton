@@ -4,12 +4,12 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**archive_experiment**](ExperimentServiceApi.md#archive_experiment) | **POST** /apis/v1beta1/experiments/{id}:archive | Archives an experiment and the experiment&#39;s runs and jobs.
-[**create_experiment**](ExperimentServiceApi.md#create_experiment) | **POST** /apis/v1beta1/experiments | Creates a new experiment.
-[**delete_experiment**](ExperimentServiceApi.md#delete_experiment) | **DELETE** /apis/v1beta1/experiments/{id} | Deletes an experiment without deleting the experiment&#39;s runs and jobs. To avoid unexpected behaviors, delete an experiment&#39;s runs and jobs before deleting the experiment.
-[**get_experiment**](ExperimentServiceApi.md#get_experiment) | **GET** /apis/v1beta1/experiments/{id} | Finds a specific experiment by ID.
-[**list_experiment**](ExperimentServiceApi.md#list_experiment) | **GET** /apis/v1beta1/experiments | Finds all experiments. Supports pagination, and sorting on certain fields.
-[**unarchive_experiment**](ExperimentServiceApi.md#unarchive_experiment) | **POST** /apis/v1beta1/experiments/{id}:unarchive | Restores an archived experiment. The experiment&#39;s archived runs and jobs will stay archived.
+[**archive_experiment**](ExperimentServiceApi.md#archive_experiment) | **POST** /apis/v1/experiments/{id}:archive | Archives an experiment and the experiment&#39;s runs and jobs.
+[**create_experiment**](ExperimentServiceApi.md#create_experiment) | **POST** /apis/v1/experiments | Creates a new experiment.
+[**delete_experiment**](ExperimentServiceApi.md#delete_experiment) | **DELETE** /apis/v1/experiments/{id} | Deletes an experiment without deleting the experiment&#39;s runs and jobs. To avoid unexpected behaviors, delete an experiment&#39;s runs and jobs before deleting the experiment.
+[**get_experiment**](ExperimentServiceApi.md#get_experiment) | **GET** /apis/v1/experiments/{id} | Finds a specific experiment by ID.
+[**list_experiment**](ExperimentServiceApi.md#list_experiment) | **GET** /apis/v1/experiments | Finds all experiments. Supports pagination, and sorting on certain fields.
+[**unarchive_experiment**](ExperimentServiceApi.md#unarchive_experiment) | **POST** /apis/v1/experiments/{id}:unarchive | Restores an archived experiment. The experiment&#39;s archived runs and jobs will stay archived.
 
 
 # **archive_experiment**

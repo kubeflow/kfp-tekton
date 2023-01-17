@@ -4,12 +4,12 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**create_job**](JobServiceApi.md#create_job) | **POST** /apis/v1beta1/jobs | Creates a new job.
-[**delete_job**](JobServiceApi.md#delete_job) | **DELETE** /apis/v1beta1/jobs/{id} | Deletes a job.
-[**disable_job**](JobServiceApi.md#disable_job) | **POST** /apis/v1beta1/jobs/{id}/disable | Stops a job and all its associated runs. The job is not deleted.
-[**enable_job**](JobServiceApi.md#enable_job) | **POST** /apis/v1beta1/jobs/{id}/enable | Restarts a job that was previously stopped. All runs associated with the job will continue.
-[**get_job**](JobServiceApi.md#get_job) | **GET** /apis/v1beta1/jobs/{id} | Finds a specific job by ID.
-[**list_jobs**](JobServiceApi.md#list_jobs) | **GET** /apis/v1beta1/jobs | Finds all jobs.
+[**create_job**](JobServiceApi.md#create_job) | **POST** /apis/v1/jobs | Creates a new job.
+[**delete_job**](JobServiceApi.md#delete_job) | **DELETE** /apis/v1/jobs/{id} | Deletes a job.
+[**disable_job**](JobServiceApi.md#disable_job) | **POST** /apis/v1/jobs/{id}/disable | Stops a job and all its associated runs. The job is not deleted.
+[**enable_job**](JobServiceApi.md#enable_job) | **POST** /apis/v1/jobs/{id}/enable | Restarts a job that was previously stopped. All runs associated with the job will continue.
+[**get_job**](JobServiceApi.md#get_job) | **GET** /apis/v1/jobs/{id} | Finds a specific job by ID.
+[**list_jobs**](JobServiceApi.md#list_jobs) | **GET** /apis/v1/jobs | Finds all jobs.
 
 
 # **create_job**

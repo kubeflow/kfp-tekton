@@ -147,7 +147,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipelines', 'POST',
+            '/apis/v1/pipelines', 'POST',
             path_params,
             query_params,
             header_params,
@@ -273,7 +273,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipeline_versions', 'POST',
+            '/apis/v1/pipeline_versions', 'POST',
             path_params,
             query_params,
             header_params,
@@ -395,7 +395,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipelines/{id}', 'DELETE',
+            '/apis/v1/pipelines/{id}', 'DELETE',
             path_params,
             query_params,
             header_params,
@@ -517,7 +517,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipeline_versions/{version_id}', 'DELETE',
+            '/apis/v1/pipeline_versions/{version_id}', 'DELETE',
             path_params,
             query_params,
             header_params,
@@ -639,7 +639,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipelines/{id}', 'GET',
+            '/apis/v1/pipelines/{id}', 'GET',
             path_params,
             query_params,
             header_params,
@@ -761,7 +761,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipeline_versions/{version_id}', 'GET',
+            '/apis/v1/pipeline_versions/{version_id}', 'GET',
             path_params,
             query_params,
             header_params,
@@ -883,7 +883,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipeline_versions/{version_id}/templates', 'GET',
+            '/apis/v1/pipeline_versions/{version_id}/templates', 'GET',
             path_params,
             query_params,
             header_params,
@@ -1005,7 +1005,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipelines/{id}/templates', 'GET',
+            '/apis/v1/pipelines/{id}/templates', 'GET',
             path_params,
             query_params,
             header_params,
@@ -1158,7 +1158,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipeline_versions', 'GET',
+            '/apis/v1/pipeline_versions', 'GET',
             path_params,
             query_params,
             header_params,
@@ -1311,7 +1311,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipelines', 'GET',
+            '/apis/v1/pipelines', 'GET',
             path_params,
             query_params,
             header_params,
@@ -1444,7 +1444,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1beta1/pipelines/{pipeline_id}/default_version/{version_id}', 'POST',
+            '/apis/v1/pipelines/{pipeline_id}/default_version/{version_id}', 'POST',
             path_params,
             query_params,
             header_params,

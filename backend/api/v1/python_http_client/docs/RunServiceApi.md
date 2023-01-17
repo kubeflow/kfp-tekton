@@ -4,16 +4,16 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**archive_run**](RunServiceApi.md#archive_run) | **POST** /apis/v1beta1/runs/{id}:archive | Archives a run.
-[**create_run**](RunServiceApi.md#create_run) | **POST** /apis/v1beta1/runs | Creates a new run.
-[**delete_run**](RunServiceApi.md#delete_run) | **DELETE** /apis/v1beta1/runs/{id} | Deletes a run.
-[**get_run**](RunServiceApi.md#get_run) | **GET** /apis/v1beta1/runs/{run_id} | Finds a specific run by ID.
-[**list_runs**](RunServiceApi.md#list_runs) | **GET** /apis/v1beta1/runs | Finds all runs.
-[**read_artifact**](RunServiceApi.md#read_artifact) | **GET** /apis/v1beta1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read | Finds a run&#39;s artifact data.
-[**report_run_metrics**](RunServiceApi.md#report_run_metrics) | **POST** /apis/v1beta1/runs/{run_id}:reportMetrics | ReportRunMetrics reports metrics of a run. Each metric is reported in its own transaction, so this API accepts partial failures. Metric can be uniquely identified by (run_id, node_id, name). Duplicate reporting will be ignored by the API. First reporting wins.
-[**retry_run**](RunServiceApi.md#retry_run) | **POST** /apis/v1beta1/runs/{run_id}/retry | Re-initiates a failed or terminated run.
-[**terminate_run**](RunServiceApi.md#terminate_run) | **POST** /apis/v1beta1/runs/{run_id}/terminate | Terminates an active run.
-[**unarchive_run**](RunServiceApi.md#unarchive_run) | **POST** /apis/v1beta1/runs/{id}:unarchive | Restores an archived run.
+[**archive_run**](RunServiceApi.md#archive_run) | **POST** /apis/v1/runs/{id}:archive | Archives a run.
+[**create_run**](RunServiceApi.md#create_run) | **POST** /apis/v1/runs | Creates a new run.
+[**delete_run**](RunServiceApi.md#delete_run) | **DELETE** /apis/v1/runs/{id} | Deletes a run.
+[**get_run**](RunServiceApi.md#get_run) | **GET** /apis/v1/runs/{run_id} | Finds a specific run by ID.
+[**list_runs**](RunServiceApi.md#list_runs) | **GET** /apis/v1/runs | Finds all runs.
+[**read_artifact**](RunServiceApi.md#read_artifact) | **GET** /apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read | Finds a run&#39;s artifact data.
+[**report_run_metrics**](RunServiceApi.md#report_run_metrics) | **POST** /apis/v1/runs/{run_id}:reportMetrics | ReportRunMetrics reports metrics of a run. Each metric is reported in its own transaction, so this API accepts partial failures. Metric can be uniquely identified by (run_id, node_id, name). Duplicate reporting will be ignored by the API. First reporting wins.
+[**retry_run**](RunServiceApi.md#retry_run) | **POST** /apis/v1/runs/{run_id}/retry | Re-initiates a failed or terminated run.
+[**terminate_run**](RunServiceApi.md#terminate_run) | **POST** /apis/v1/runs/{run_id}/terminate | Terminates an active run.
+[**unarchive_run**](RunServiceApi.md#unarchive_run) | **POST** /apis/v1/runs/{id}:unarchive | Restores an archived run.
 
 
 # **archive_run**
