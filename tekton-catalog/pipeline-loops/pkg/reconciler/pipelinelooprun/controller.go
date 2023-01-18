@@ -30,14 +30,14 @@ import (
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/cache/pkg/db"
 	cl "github.com/kubeflow/kfp-tekton/tekton-catalog/objectstore/pkg/writer"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop"
-	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
-	pipelineloopclient "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/client"
-	pipelineloopinformer "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/informers/pipelineloop/v1alpha1/pipelineloop"
-	pipelineclient "github.com/tektoncd/pipeline/pkg/client/injection/client"
-	runinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1alpha1/run"
-	pipelineruninformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/pipelinerun"
-	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
-	pipelinecontroller "github.com/tektoncd/pipeline/pkg/controller"
+	pipelineLoopV1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
+	pipelineLoopClient "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/client"
+	pipelineLoopInformer "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/injection/informers/pipelineloop/v1alpha1/pipelineloop"
+	pipelineClient "github.com/tektoncd/pipeline/pkg/client/injection/client"
+	customRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/customrun"
+	pipelineRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/pipelinerun"
+	customRunReconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
+	pipelineController "github.com/tektoncd/pipeline/pkg/controller"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,7 +45,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/clock"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	kubeClient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -181,47 +181,47 @@ func initLogger(ctx context.Context, kubeClientSet kubernetes.Interface) *zap.Su
 // NewController instantiates a new controller.Impl from knative.dev/pkg/controller
 func NewController(namespace string) func(context.Context, configmap.Watcher) *controller.Impl {
 	return func(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-		kubeclientset := kubeclient.Get(ctx)
-		pipelineclientset := pipelineclient.Get(ctx)
-		pipelineloopclientset := pipelineloopclient.Get(ctx)
-		runInformer := runinformer.Get(ctx)
-		pipelineLoopInformer := pipelineloopinformer.Get(ctx)
-		pipelineRunInformer := pipelineruninformer.Get(ctx)
-		logger := initLogger(ctx, kubeclientset)
+		kubeClientSet := kubeClient.Get(ctx)
+		pipelineClientSet := pipelineClient.Get(ctx)
+		pipelineLoopClientSet := pipelineLoopClient.Get(ctx)
+		customRunInformer := customRunInformer.Get(ctx)
+		pipelineLoopInformer := pipelineLoopInformer.Get(ctx)
+		pipelineRunInformer := pipelineRunInformer.Get(ctx)
+		logger := initLogger(ctx, kubeClientSet)
 		ctx = logging.WithLogger(ctx, logger)
-		cacheStore := initCache(ctx, kubeclientset, params)
+		cacheStore := initCache(ctx, kubeClientSet, params)
 		c := &Reconciler{
-			KubeClientSet:         kubeclientset,
-			pipelineClientSet:     pipelineclientset,
-			pipelineloopClientSet: pipelineloopclientset,
-			runLister:             runInformer.Lister(),
+			KubeClientSet:         kubeClientSet,
+			pipelineClientSet:     pipelineClientSet,
+			pipelineloopClientSet: pipelineLoopClientSet,
+			runLister:             customRunInformer.Lister(),
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
 			pipelineRunLister:     pipelineRunInformer.Lister(),
 			cacheStore:            cacheStore,
 			clock:                 clock.RealClock{},
 		}
 
-		impl := runreconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
+		impl := customRunReconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
 			return controller.Options{
-				AgentName: "run-pipelineloop",
+				AgentName: "customrun-pipelineloop",
 			}
 		})
 
 		logger.Info("Setting up event handlers")
 
 		// Add event handler for Runs of Pipelineloop
-		runInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-			FilterFunc: pipelinecontroller.FilterRunRef(pipelineloopv1alpha1.SchemeGroupVersion.String(), pipelineloop.PipelineLoopControllerName),
+		customRunInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+			FilterFunc: pipelineController.FilterCustomRunRef(pipelineLoopV1alpha1.SchemeGroupVersion.String(), pipelineloop.PipelineLoopControllerName),
 			Handler:    controller.HandleAll(impl.Enqueue),
 		})
 		// Add event handler for Runs of BreakTask
-		runInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-			FilterFunc: pipelinecontroller.FilterRunRef(pipelineloopv1alpha1.SchemeGroupVersion.String(), pipelineloop.BreakTaskName),
+		customRunInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+			FilterFunc: pipelineController.FilterCustomRunRef(pipelineLoopV1alpha1.SchemeGroupVersion.String(), pipelineloop.BreakTaskName),
 			Handler:    controller.HandleAll(impl.Enqueue),
 		})
 		// Add event handler for PipelineRuns controlled by Run
 		pipelineRunInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-			FilterFunc: pipelinecontroller.FilterOwnerRunRef(runInformer.Lister(), pipelineloopv1alpha1.SchemeGroupVersion.String(), pipelineloop.PipelineLoopControllerName),
+			FilterFunc: pipelineController.FilterOwnerCustomRunRef(customRunInformer.Lister(), pipelineLoopV1alpha1.SchemeGroupVersion.String(), pipelineloop.PipelineLoopControllerName),
 			Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 		})
 
