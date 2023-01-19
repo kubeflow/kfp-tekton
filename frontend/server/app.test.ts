@@ -127,7 +127,7 @@ describe('UIServer apis', () => {
       .expect(200, expectedIndexHtml, done);
   });
 
-  describe('/apis/v1beta1/healthz', () => {
+  describe('/apis/v1/healthz', () => {
     it('responds with apiServerReady to be false if ml-pipeline api server is not ready.', done => {
       (fetch as any).mockImplementationOnce((_url: string, _opt: any) => ({
         json: () => Promise.reject('Unknown error'),
@@ -136,7 +136,7 @@ describe('UIServer apis', () => {
       const configs = loadConfigs(argv, {});
       app = new UIServer(configs);
       requests(app.start())
-        .get('/apis/v1beta1/healthz')
+        .get('/apis/v1/healthz')
         .expect(
           200,
           {
@@ -162,7 +162,7 @@ describe('UIServer apis', () => {
       const configs = loadConfigs(argv, {});
       app = new UIServer(configs);
       requests(app.start())
-        .get('/apis/v1beta1/healthz')
+        .get('/apis/v1/healthz')
         .expect(
           200,
           {
@@ -367,7 +367,7 @@ describe('UIServer apis', () => {
   // TODO: Add integration tests for k8s helper related endpoints
   // describe('/k8s/pod/logs', () => {});
 
-  describe('/apis/v1beta1/', () => {
+  describe('/apis/v1/', () => {
     let request: requests.SuperTest<requests.Test>;
     let kfpApiServer: Server;
 
@@ -396,10 +396,10 @@ describe('UIServer apis', () => {
     it('rejects reportMetrics because it is not public kfp api', done => {
       const runId = 'a-random-run-id';
       request
-        .post(`/apis/v1beta1/runs/${runId}:reportMetrics`)
+        .post(`/apis/v1/runs/${runId}:reportMetrics`)
         .expect(
           403,
-          '/apis/v1beta1/runs/a-random-run-id:reportMetrics endpoint is not meant for external usage.',
+          '/apis/v1/runs/a-random-run-id:reportMetrics endpoint is not meant for external usage.',
           done,
         );
     });
@@ -407,10 +407,10 @@ describe('UIServer apis', () => {
     it('rejects reportWorkflow because it is not public kfp api', done => {
       const workflowId = 'a-random-workflow-id';
       request
-        .post(`/apis/v1beta1/workflows/${workflowId}`)
+        .post(`/apis/v1/workflows/${workflowId}`)
         .expect(
           403,
-          '/apis/v1beta1/workflows/a-random-workflow-id endpoint is not meant for external usage.',
+          '/apis/v1/workflows/a-random-workflow-id endpoint is not meant for external usage.',
           done,
         );
     });
@@ -418,24 +418,22 @@ describe('UIServer apis', () => {
     it('rejects reportScheduledWorkflow because it is not public kfp api', done => {
       const swf = 'a-random-swf-id';
       request
-        .post(`/apis/v1beta1/scheduledworkflows/${swf}`)
+        .post(`/apis/v1/scheduledworkflows/${swf}`)
         .expect(
           403,
-          '/apis/v1beta1/scheduledworkflows/a-random-swf-id endpoint is not meant for external usage.',
+          '/apis/v1/scheduledworkflows/a-random-swf-id endpoint is not meant for external usage.',
           done,
         );
     });
 
     it('does not reject similar apis', done => {
       request // use reportMetrics as runId to see if it can confuse route parsing
-        .post(`/apis/v1beta1/runs/xxx-reportMetrics:archive`)
+        .post(`/apis/v1/runs/xxx-reportMetrics:archive`)
         .expect(200, 'KFP API is working', done);
     });
 
     it('proxies other run apis', done => {
-      request
-        .post(`/apis/v1beta1/runs/a-random-run-id:archive`)
-        .expect(200, 'KFP API is working', done);
+      request.post(`/apis/v1/runs/a-random-run-id:archive`).expect(200, 'KFP API is working', done);
     });
   });
 });

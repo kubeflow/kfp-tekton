@@ -50,6 +50,7 @@ const helloWorldHtmlPath = './model-output/hello-world.html';
 const helloWorldBigHtmlPath = './model-output/hello-world-big.html';
 
 const v1beta1Prefix = '/apis/v1beta1';
+const v1Prefix = '/apis/v1';
 
 let tensorboardPod = '';
 
@@ -70,12 +71,12 @@ export default (app: express.Application) => {
     next();
   });
 
-  proxyMiddleware(app as any, v1beta1Prefix);
+  proxyMiddleware(app as any, v1Prefix);
 
   app.set('json spaces', 2);
   app.use(express.json());
 
-  app.get(v1beta1Prefix + '/healthz', (_, res) => {
+  app.get(v1Prefix + '/healthz', (_, res) => {
     res.header('Content-Type', 'application/json');
     res.send({
       apiServerCommitHash: 'd3c4add0a95e930c70a330466d0923827784eb9a',
@@ -113,7 +114,7 @@ export default (app: express.Application) => {
     return { desc, key };
   }
 
-  app.get(v1beta1Prefix + '/jobs', (req, res) => {
+  app.get(v1Prefix + '/jobs', (req, res) => {
     res.header('Content-Type', 'application/json');
     // Note: the way that we use the next_page_token here may not reflect the way the backend works.
     const response: ApiListJobsResponse = {
@@ -150,7 +151,7 @@ export default (app: express.Application) => {
     res.json(response);
   });
 
-  app.get(v1beta1Prefix + '/experiments', (req, res) => {
+  app.get(v1Prefix + '/experiments', (req, res) => {
     res.header('Content-Type', 'application/json');
     // Note: the way that we use the next_page_token here may not reflect the way the backend works.
     const response: ApiListExperimentsResponse = {
@@ -187,7 +188,7 @@ export default (app: express.Application) => {
     res.json(response);
   });
 
-  app.post(v1beta1Prefix + '/experiments', (req, res) => {
+  app.post(v1Prefix + '/experiments', (req, res) => {
     const experiment: ApiExperiment = req.body;
     if (fixedData.experiments.find(e => e.name!.toLowerCase() === experiment.name!.toLowerCase())) {
       res.status(404).send('An experiment with the same name already exists');
@@ -201,7 +202,7 @@ export default (app: express.Application) => {
     }, 1000);
   });
 
-  app.get(v1beta1Prefix + '/experiments/:eid', (req, res) => {
+  app.get(v1Prefix + '/experiments/:eid', (req, res) => {
     res.header('Content-Type', 'application/json');
     const experiment = fixedData.experiments.find(exp => exp.id === req.params.eid);
     if (!experiment) {
@@ -211,7 +212,7 @@ export default (app: express.Application) => {
     res.json(experiment);
   });
 
-  app.post(v1beta1Prefix + '/jobs', (req, res) => {
+  app.post(v1Prefix + '/jobs', (req, res) => {
     const job: ApiJob = req.body;
     job.id = 'new-job-' + (fixedData.jobs.length + 1);
     job.created_at = new Date();
@@ -237,7 +238,7 @@ export default (app: express.Application) => {
     }, 1000);
   });
 
-  app.all(v1beta1Prefix + '/jobs/:jid', (req, res) => {
+  app.all(v1Prefix + '/jobs/:jid', (req, res) => {
     res.header('Content-Type', 'application/json');
     switch (req.method) {
       case 'DELETE':
@@ -263,7 +264,7 @@ export default (app: express.Application) => {
     }
   });
 
-  app.get(v1beta1Prefix + '/runs', (req, res) => {
+  app.get(v1Prefix + '/runs', (req, res) => {
     res.header('Content-Type', 'application/json');
     // Note: the way that we use the next_page_token here may not reflect the way the backend works.
     const response: ApiListRunsResponse = {
@@ -311,7 +312,7 @@ export default (app: express.Application) => {
     res.json(response);
   });
 
-  app.get(v1beta1Prefix + '/runs/:rid', (req, res) => {
+  app.get(v1Prefix + '/runs/:rid', (req, res) => {
     const rid = req.params.rid;
     const run = fixedData.runs.find(r => r.run!.id === rid);
     if (!run) {
@@ -321,7 +322,7 @@ export default (app: express.Application) => {
     res.json(run);
   });
 
-  app.post(v1beta1Prefix + '/runs', (req, res) => {
+  app.post(v1Prefix + '/runs', (req, res) => {
     const date = new Date();
     const run: ApiRun = req.body;
     run.id = 'new-run-' + (fixedData.runs.length + 1);
@@ -340,7 +341,7 @@ export default (app: express.Application) => {
     }, 1000);
   });
 
-  app.post(v1beta1Prefix + '/runs/:rid::method', (req, res) => {
+  app.post(v1Prefix + '/runs/:rid::method', (req, res) => {
     if (req.params.method !== 'archive' && req.params.method !== 'unarchive') {
       res.status(500).send('Bad method');
     }
@@ -356,7 +357,7 @@ export default (app: express.Application) => {
     }
   });
 
-  app.post(v1beta1Prefix + '/jobs/:jid/enable', (req, res) => {
+  app.post(v1Prefix + '/jobs/:jid/enable', (req, res) => {
     setTimeout(() => {
       const job = fixedData.jobs.find(j => j.id === req.params.jid);
       if (job) {
@@ -368,7 +369,7 @@ export default (app: express.Application) => {
     }, 1000);
   });
 
-  app.post(v1beta1Prefix + '/jobs/:jid/disable', (req, res) => {
+  app.post(v1Prefix + '/jobs/:jid/disable', (req, res) => {
     setTimeout(() => {
       const job = fixedData.jobs.find(j => j.id === req.params.jid);
       if (job) {
@@ -438,7 +439,7 @@ export default (app: express.Application) => {
     return resources;
   }
 
-  app.get(v1beta1Prefix + '/pipelines', (req, res) => {
+  app.get(v1Prefix + '/pipelines', (req, res) => {
     res.header('Content-Type', 'application/json');
     const response: ApiListPipelinesResponse = {
       next_page_token: '',
@@ -474,7 +475,7 @@ export default (app: express.Application) => {
     res.json(response);
   });
 
-  app.delete(v1beta1Prefix + '/pipelines/:pid', (req, res) => {
+  app.delete(v1Prefix + '/pipelines/:pid', (req, res) => {
     res.header('Content-Type', 'application/json');
     const i = fixedData.pipelines.findIndex(p => p.id === req.params.pid);
 
@@ -492,7 +493,7 @@ export default (app: express.Application) => {
     res.json({});
   });
 
-  app.get(v1beta1Prefix + '/pipelines/:pid', (req, res) => {
+  app.get(v1Prefix + '/pipelines/:pid', (req, res) => {
     res.header('Content-Type', 'application/json');
     const pipeline = fixedData.pipelines.find(p => p.id === req.params.pid);
     if (!pipeline) {
@@ -502,7 +503,7 @@ export default (app: express.Application) => {
     res.json(pipeline);
   });
 
-  app.get(v1beta1Prefix + '/pipelines/:pid/templates', (req, res) => {
+  app.get(v1Prefix + '/pipelines/:pid/templates', (req, res) => {
     res.header('Content-Type', 'text/x-yaml');
     const pipeline = fixedData.pipelines.find(p => p.id === req.params.pid);
     if (!pipeline) {
@@ -527,7 +528,7 @@ export default (app: express.Application) => {
     res.send(JSON.stringify({ template: fs.readFileSync(filePath, 'utf-8') }));
   });
 
-  app.get(v1beta1Prefix + '/pipeline_versions/:pid/templates', (req, res) => {
+  app.get(v1Prefix + '/pipeline_versions/:pid/templates', (req, res) => {
     res.header('Content-Type', 'text/x-yaml');
 
     // Find v2 pipeline template
@@ -549,7 +550,7 @@ export default (app: express.Application) => {
     res.send(JSON.stringify({ template: fs.readFileSync(filePath, 'utf-8') }));
   });
 
-  app.get(v1beta1Prefix + '/pipeline_versions/:pid', (req, res) => {
+  app.get(v1Prefix + '/pipeline_versions/:pid', (req, res) => {
     res.header('Content-Type', 'application/json');
     const pipeline = PIPELINE_VERSIONS_LIST_FULL.find(p => p.id === req.params.pid);
     if (!pipeline) {
@@ -559,7 +560,7 @@ export default (app: express.Application) => {
     res.json(pipeline);
   });
 
-  app.get(v1beta1Prefix + '/pipeline_versions', (req, res) => {
+  app.get(v1Prefix + '/pipeline_versions', (req, res) => {
     // Sample query format:
     // query: {
     //   'resource_key.type': 'PIPELINE',
@@ -611,7 +612,7 @@ export default (app: express.Application) => {
     return;
   });
 
-  app.get(v1beta1Prefix + '/pipeline_versions/:pid', (req, res) => {
+  app.get(v1Prefix + '/pipeline_versions/:pid', (req, res) => {
     // TODO: Temporary returning default version only. It requires
     // keeping a record of all pipeline id in order to search non-default version.
     res.header('Content-Type', 'application/json');
@@ -661,11 +662,11 @@ export default (app: express.Application) => {
     }
   }
 
-  app.post(v1beta1Prefix + '/pipelines', (req, res) => {
+  app.post(v1Prefix + '/pipelines', (req, res) => {
     mockCreatePipeline(res, req.body.name);
   });
 
-  app.post(v1beta1Prefix + '/pipelines/upload', (req, res) => {
+  app.post(v1Prefix + '/pipelines/upload', (req, res) => {
     mockCreatePipeline(res, decodeURIComponent(req.query.name), req.body);
   });
 
@@ -745,7 +746,7 @@ export default (app: express.Application) => {
     res.send('mock-project-id');
   });
 
-  app.all(v1beta1Prefix + '*', (req, res) => {
+  app.all(v1Prefix + '*', (req, res) => {
     res.status(404).send('Bad request endpoint.');
   });
 };

@@ -59,12 +59,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kubeflow/pipelines.git"
+    "url": "git+https://github.com/kubeflow/kfp-tekton.git"
   },
   "author": "",
   "license": "",
   "bugs": {
-    "url": "https://github.com/kubeflow/pipelines/issues"
+    "url": "https://github.com/kubeflow/kfp-tekton/issues"
   },
-  "homepage": "https://github.com/kubeflow/pipelines#readme"
+  "homepage": "https://github.com/kubeflow/kfp-tekton#readme"
 }

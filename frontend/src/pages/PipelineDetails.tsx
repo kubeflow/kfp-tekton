@@ -27,7 +27,7 @@ import {
   convertSubDagToFlowElements,
   convertFlowElements,
   PipelineFlowElement,
-}from 'src/lib/v2/StaticFlow';
+} from 'src/lib/v2/StaticFlow';
 import * as WorkflowUtils from 'src/lib/v2/WorkflowUtils';
 import { convertJsonToV2PipelineSpec } from 'src/lib/v2/WorkflowUtils';
 import { classes } from 'typestyle';

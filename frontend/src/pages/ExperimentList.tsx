@@ -24,13 +24,13 @@ import CustomTable, {
 } from '../components/CustomTable';
 import RunList from './RunList';
 import produce from 'immer';
-import { ApiFilter, PredicateOp } from '../apis/filter';
+import { V1Filter, PredicateOp } from '../apis/filter';
 import {
-  ApiListExperimentsResponse,
-  ApiExperiment,
-  ApiExperimentStorageState,
+  V1ListExperimentsResponse,
+  V1Experiment,
+  V1ExperimentStorageState,
 } from '../apis/experiment';
-import { ApiRun, ApiRunStorageState } from '../apis/run';
+import { V1Run, V1RunStorageState } from '../apis/run';
 import { Apis, ExperimentSortKeys, ListRequest, RunSortKeys } from '../lib/Apis';
 import { Link } from 'react-router-dom';
 import { NodePhase } from '../lib/StatusUtils';
@@ -44,8 +44,8 @@ import { statusToIcon } from './Status';
 import Tooltip from '@material-ui/core/Tooltip';
 import { NamespaceContext } from 'src/lib/KubeflowClient';
 
-interface DisplayExperiment extends ApiExperiment {
-  last5Runs?: ApiRun[];
+interface DisplayExperiment extends V1Experiment {
+  last5Runs?: V1Run[];
   error?: string;
   expandState?: ExpandState;
 }
@@ -162,8 +162,8 @@ export class ExperimentList extends Page<{ namespace?: string }, ExperimentListS
     );
   };
 
-  public _last5RunsCustomRenderer: React.FC<CustomRendererProps<ApiRun[]>> = (
-    props: CustomRendererProps<ApiRun[]>,
+  public _last5RunsCustomRenderer: React.FC<CustomRendererProps<V1Run[]>> = (
+    props: CustomRendererProps<V1Run[]>,
   ) => {
     return (
       <div className={commonCss.flex}>
@@ -178,7 +178,7 @@ export class ExperimentList extends Page<{ namespace?: string }, ExperimentListS
 
   private async _reload(request: ListRequest): Promise<string> {
     // Fetch the list of experiments
-    let response: ApiListExperimentsResponse;
+    let response: V1ListExperimentsResponse;
     let displayExperiments: DisplayExperiment[];
     try {
       // This ExperimentList page is used as the "All experiments" tab
@@ -186,12 +186,12 @@ export class ExperimentList extends Page<{ namespace?: string }, ExperimentListS
       // Archived experiments are listed in "Archive" page.
       const filter = JSON.parse(
         decodeURIComponent(request.filter || '{"predicates": []}'),
-      ) as ApiFilter;
+      ) as V1Filter;
       filter.predicates = (filter.predicates || []).concat([
         {
           key: 'storage_state',
           op: PredicateOp.NOTEQUALS,
-          string_value: ApiExperimentStorageState.ARCHIVED.toString(),
+          string_value: V1ExperimentStorageState.ARCHIVED.toString(),
         },
       ]);
       request.filter = encodeURIComponent(JSON.stringify(filter));
@@ -228,10 +228,10 @@ export class ExperimentList extends Page<{ namespace?: string }, ExperimentListS
                   {
                     key: 'storage_state',
                     op: PredicateOp.NOTEQUALS,
-                    string_value: ApiRunStorageState.ARCHIVED.toString(),
+                    string_value: V1RunStorageState.ARCHIVED.toString(),
                   },
                 ],
-              } as ApiFilter),
+              } as V1Filter),
             ),
           );
           experiment.last5Runs = listRunsResponse.runs || [];
@@ -280,7 +280,7 @@ export class ExperimentList extends Page<{ namespace?: string }, ExperimentListS
         disablePaging={false}
         selectedIds={this.state.selectedIds}
         noFilterBox={true}
-        storageState={ApiRunStorageState.AVAILABLE}
+        storageState={V1RunStorageState.AVAILABLE}
         onSelectionChange={this._selectionChanged.bind(this)}
         disableSorting={true}
       />

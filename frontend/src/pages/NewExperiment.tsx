@@ -18,7 +18,7 @@ import * as React from 'react';
 import BusyButton from '../atoms/BusyButton';
 import Button from '@material-ui/core/Button';
 import Input from '../atoms/Input';
-import { ApiExperiment, ApiResourceType, ApiRelationship } from '../apis/experiment';
+import { V1Experiment, V1ResourceType, V1Relationship } from '../apis/experiment';
 import { Apis } from '../lib/Apis';
 import { Page, PageProps } from './Page';
 import { RoutePage, QUERY_PARAMS } from '../components/Router';
@@ -144,7 +144,7 @@ export class NewExperiment extends Page<{ namespace?: string }, NewExperimentSta
   };
 
   private _create(): void {
-    const newExperiment: ApiExperiment = {
+    const newExperiment: V1Experiment = {
       description: this.state.description,
       name: this.state.experimentName,
       resource_references: this.props.namespace
@@ -152,9 +152,9 @@ export class NewExperiment extends Page<{ namespace?: string }, NewExperimentSta
             {
               key: {
                 id: this.props.namespace,
-                type: ApiResourceType.NAMESPACE,
+                type: V1ResourceType.NAMESPACE,
               },
-              relationship: ApiRelationship.OWNER,
+              relationship: V1Relationship.OWNER,
             },
           ]
         : undefined,

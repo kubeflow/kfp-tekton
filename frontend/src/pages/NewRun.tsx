@@ -30,17 +30,17 @@ import ResourceSelector from './ResourceSelector';
 import RunUtils from '../lib/RunUtils';
 import { TextFieldProps } from '@material-ui/core/TextField';
 import Trigger from '../components/Trigger';
-import { ApiExperiment, ApiExperimentStorageState } from '../apis/experiment';
-import { ApiPipeline, ApiParameter, ApiPipelineVersion } from '../apis/pipeline';
+import { V1Experiment, V1ExperimentStorageState } from '../apis/experiment';
+import { V1Pipeline, V1Parameter, V1PipelineVersion } from '../apis/pipeline';
 import {
-  ApiRun,
-  ApiResourceReference,
-  ApiRelationship,
-  ApiResourceType,
-  ApiRunDetail,
-  ApiPipelineRuntime,
+  V1Run,
+  V1ResourceReference,
+  V1Relationship,
+  V1ResourceType,
+  V1RunDetail,
+  V1PipelineRuntime,
 } from '../apis/run';
-import { ApiTrigger, ApiJob } from '../apis/job';
+import { V1Trigger, V1Job } from '../apis/job';
 import { Apis, PipelineSortKeys, PipelineVersionSortKeys, ExperimentSortKeys } from '../lib/Apis';
 import { Link } from 'react-router-dom';
 import { Page, PageProps } from './Page';
@@ -56,14 +56,14 @@ import { CustomRendererProps } from '../components/CustomTable';
 import { Description } from '../components/Description';
 import { NamespaceContext } from '../lib/KubeflowClient';
 import { NameWithTooltip } from '../components/CustomTableNameColumn';
-import { PredicateOp, ApiFilter } from '../apis/filter';
+import { PredicateOp, V1Filter } from '../apis/filter';
 import { HelpButton } from 'src/atoms/HelpButton';
 import { ExternalLink } from 'src/atoms/ExternalLink';
 
 interface NewRunState {
   description: string;
   errorMessage: string;
-  experiment?: ApiExperiment;
+  experiment?: V1Experiment;
   experimentName: string;
   serviceAccount: string;
   experimentSelectorOpen: boolean;
@@ -73,9 +73,9 @@ interface NewRunState {
   isRecurringRun: boolean;
   maxConcurrentRuns?: string;
   catchup: boolean;
-  parameters: ApiParameter[];
-  pipeline?: ApiPipeline;
-  pipelineVersion?: ApiPipelineVersion;
+  parameters: V1Parameter[];
+  pipeline?: V1Pipeline;
+  pipelineVersion?: V1PipelineVersion;
   // This represents a pipeline from a run that is being cloned, or if a user is creating a run from
   // a pipeline that was not uploaded to the system (as in the case of runs created from notebooks).
   workflowFromRun?: Workflow;
@@ -88,10 +88,10 @@ interface NewRunState {
   pipelineSelectorOpen: boolean;
   pipelineVersionSelectorOpen: boolean;
   runName: string;
-  trigger?: ApiTrigger;
-  unconfirmedSelectedExperiment?: ApiExperiment;
-  unconfirmedSelectedPipeline?: ApiPipeline;
-  unconfirmedSelectedPipelineVersion?: ApiPipelineVersion;
+  trigger?: V1Trigger;
+  unconfirmedSelectedExperiment?: V1Experiment;
+  unconfirmedSelectedPipeline?: V1Pipeline;
+  unconfirmedSelectedPipelineVersion?: V1PipelineVersion;
   useWorkflowFromRun: boolean;
   uploadDialogOpen: boolean;
   usePipelineFromRunLabel: string;
@@ -308,7 +308,7 @@ export class NewRun extends Page<{ namespace?: string }, NewRunState> {
                 columns={this.pipelineSelectorColumns}
                 emptyMessage='No pipelines found. Upload a pipeline and then try again.'
                 initialSortColumn={PipelineSortKeys.CREATED_AT}
-                selectionChanged={(selectedPipeline: ApiPipeline) =>
+                selectionChanged={(selectedPipeline: V1Pipeline) =>
                   this.setStateSafe({ unconfirmedSelectedPipeline: selectedPipeline })
                 }
                 toolbarActionMap={buttons
@@ -366,7 +366,7 @@ export class NewRun extends Page<{ namespace?: string }, NewRunState> {
                 columns={this.pipelineVersionSelectorColumns}
                 emptyMessage='No pipeline versions found. Select or upload a pipeline then try again.'
                 initialSortColumn={PipelineVersionSortKeys.CREATED_AT}
-                selectionChanged={(selectedPipelineVersion: ApiPipelineVersion) =>
+                selectionChanged={(selectedPipelineVersion: V1PipelineVersion) =>
                   this.setStateSafe({ unconfirmedSelectedPipelineVersion: selectedPipelineVersion })
                 }
                 toolbarActionMap={buttons
@@ -426,12 +426,12 @@ export class NewRun extends Page<{ namespace?: string }, NewRunState> {
                   // only list unarchived experiments.
                   const new_filter = JSON.parse(
                     decodeURIComponent(filter || '{"predicates": []}'),
-                  ) as ApiFilter;
+                  ) as V1Filter;
                   new_filter.predicates = (new_filter.predicates || []).concat([
                     {
                       key: 'storage_state',
                       op: PredicateOp.NOTEQUALS,
-                      string_value: ApiExperimentStorageState.ARCHIVED.toString(),
+                      string_value: V1ExperimentStorageState.ARCHIVED.toString(),
                     },
                   ]);
                   const response = await Apis.experimentServiceApi.listExperiment(
@@ -450,7 +450,7 @@ export class NewRun extends Page<{ namespace?: string }, NewRunState> {
                 columns={this.experimentSelectorColumns}
                 emptyMessage='No experiments found. Create an experiment and then try again.'
                 initialSortColumn={ExperimentSortKeys.CREATED_AT}
-                selectionChanged={(selectedExperiment: ApiExperiment) =>
+                selectionChanged={(selectedExperiment: V1Experiment) =>
                   this.setStateSafe({ unconfirmedSelectedExperiment: selectedExperiment })
                 }
               />
@@ -746,7 +746,7 @@ export class NewRun extends Page<{ namespace?: string }, NewRunState> {
       }
     }
 
-    let experiment: ApiExperiment | undefined;
+    let experiment: V1Experiment | undefined;
     let experimentName = '';
     const breadcrumbs = [{ displayName: 'Experiments', href: RoutePage.EXPERIMENTS }];
     if (experimentId) {
@@ -901,7 +901,7 @@ export class NewRun extends Page<{ namespace?: string }, NewRunState> {
 
   private async _prepareFormFromEmbeddedPipeline(embeddedRunId: string): Promise<void> {
     let embeddedPipelineSpec: string | null;
-    let runWithEmbeddedPipeline: ApiRunDetail;
+    let runWithEmbeddedPipeline: V1RunDetail;
 
     try {
       runWithEmbeddedPipeline = await Apis.runServiceApi.getRun(embeddedRunId);
@@ -944,16 +944,16 @@ export class NewRun extends Page<{ namespace?: string }, NewRunState> {
   }
 
   private async _prepareFormFromClone(
-    originalRun?: ApiRun | ApiJob,
-    runtime?: ApiPipelineRuntime,
+    originalRun?: V1Run | V1Job,
+    runtime?: V1PipelineRuntime,
   ): Promise<void> {
     if (!originalRun) {
       logger.error('Could not get cloned run details');
       return;
     }
 
-    let pipeline: ApiPipeline | undefined;
-    let pipelineVersion: ApiPipelineVersion | undefined;
+    let pipeline: V1Pipeline | undefined;
+    let pipelineVersion: V1PipelineVersion | undefined;
     let workflowFromRun: Workflow | undefined;
     let useWorkflowFromRun = false;
     let usePipelineFromRunLabel = '';
@@ -1057,27 +1057,27 @@ export class NewRun extends Page<{ namespace?: string }, NewRunState> {
       logger.error('Cannot start run without pipeline version');
       return;
     }
-    const references: ApiResourceReference[] = [];
+    const references: V1ResourceReference[] = [];
     if (this.state.experiment) {
       references.push({
         key: {
           id: this.state.experiment.id,
-          type: ApiResourceType.EXPERIMENT,
+          type: V1ResourceType.EXPERIMENT,
         },
-        relationship: ApiRelationship.OWNER,
+        relationship: V1Relationship.OWNER,
       });
     }
     if (this.state.pipelineVersion) {
       references.push({
         key: {
           id: this.state.pipelineVersion!.id,
-          type: ApiResourceType.PIPELINEVERSION,
+          type: V1ResourceType.PIPELINEVERSION,
         },
-        relationship: ApiRelationship.CREATOR,
+        relationship: V1Relationship.CREATOR,
       });
     }
 
-    let newRun: ApiRun | ApiJob = {
+    let newRun: V1Run | V1Job = {
       description: this.state.description,
       name: this.state.runName,
       pipeline_spec: {

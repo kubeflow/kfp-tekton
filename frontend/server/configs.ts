@@ -15,7 +15,7 @@ import * as path from 'path';
 import { loadJSON } from './utils';
 import { loadArtifactsProxyConfig, ArtifactsProxyConfig } from './handlers/artifacts';
 export const BASEPATH = '/pipeline';
-export const apiVersion = 'v1beta1';
+export const apiVersion = 'v1';
 export const apiVersionPrefix = `apis/${apiVersion}`;
 
 export enum Deployments {

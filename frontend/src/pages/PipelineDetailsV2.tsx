@@ -15,7 +15,7 @@
  */
 import React, { useState } from 'react';
 import { Elements, FlowElement } from 'react-flow-renderer';
-import { ApiPipeline, ApiPipelineVersion } from 'src/apis/pipeline';
+import { V1Pipeline, V1PipelineVersion } from 'src/apis/pipeline';
 import MD2Tabs from 'src/atoms/MD2Tabs';
 import Editor from 'src/components/Editor';
 import { FlowElementDataBase } from 'src/components/graph/Constants';
@@ -33,9 +33,9 @@ interface PipelineDetailsV2Props {
   templateString?: string;
   pipelineFlowElements: PipelineFlowElement[];
   setSubDagLayers: (layers: string[]) => void;
-  apiPipeline: ApiPipeline | null;
-  selectedVersion: ApiPipelineVersion | undefined;
-  versions: ApiPipelineVersion[];
+  apiPipeline: V1Pipeline | null;
+  selectedVersion: V1PipelineVersion | undefined;
+  versions: V1PipelineVersion[];
   handleVersionSelected: (versionId: string) => Promise<void>;
 }
 

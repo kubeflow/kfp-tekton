@@ -24,7 +24,8 @@ import * as Utils from './Utils';
 import { buildQuery } from './Utils';
 import { StoragePath, StorageService } from './WorkflowParser';
 
-const v1beta1Prefix = 'apis/v1beta1';
+const v1Prefix = 'apis/v1';
+const v1beta1Prefix = v1Prefix;
 
 export interface ListRequest {
   filter?: string;

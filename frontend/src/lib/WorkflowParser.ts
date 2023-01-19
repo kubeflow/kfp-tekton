@@ -203,11 +203,19 @@ export default class WorkflowParser {
         if (isV2Pipeline(workflow)) {
           mlmdState = nodeStateMap.get(taskId);
         }
-        const taskStatusJson = statusMap.get(task['name']) || {status: {startTime:"", completionTime: ""}}
+        const taskStatusJson = statusMap.get(task['name']) || {
+          status: { startTime: '', completionTime: '' },
+        };
         // Add a node for the Task
         graph.setNode(taskId, {
           height: Constants.NODE_HEIGHT,
-          icon: statusToIcon(status,taskStatusJson["status"]["startTime"], taskStatusJson["status"]["completionTime"], "", mlmdState),
+          icon: statusToIcon(
+            status,
+            taskStatusJson['status']['startTime'],
+            taskStatusJson['status']['completionTime'],
+            '',
+            mlmdState,
+          ),
           label: parseTaskDisplayName(task['taskSpec'] || task['taskRef']) || task['name'],
           statusColoring: statusColoring,
           width: Constants.NODE_WIDTH,
@@ -399,7 +407,7 @@ export default class WorkflowParser {
     for (const runId of Object.getOwnPropertyNames(workflow.status.runs || {})) {
       const run = workflow.status.runs[runId];
       if (run.status && run.pipelineTaskName === nodeId) {
-        taskName = run.pipelineTaskName
+        taskName = run.pipelineTaskName;
         taskStatus = this.getStatus(run);
       }
     }
@@ -430,7 +438,9 @@ export default class WorkflowParser {
       workflow.spec.pipelineSpec.tasks.forEach((task: any) => {
         if (
           parentTask === task.name &&
-          ((((task.taskSpec||{}).metadata||{}).labels||{})['pipelines.kubeflow.org/cache_enabled']||'false') === 'true' &&
+          ((((task.taskSpec || {}).metadata || {}).labels || {})[
+            'pipelines.kubeflow.org/cache_enabled'
+          ] || 'false') === 'true' &&
           cachedPipelineRun
         )
           pipelineRunID = cachedPipelineRun;
@@ -468,7 +478,9 @@ export default class WorkflowParser {
       workflow.spec.pipelineSpec.tasks.forEach((task: any) => {
         if (
           taskName === task.name &&
-          ((((task.taskSpec||{}).metadata||{}).labels||{})['pipelines.kubeflow.org/cache_enabled']||'false') === 'true' &&
+          ((((task.taskSpec || {}).metadata || {}).labels || {})[
+            'pipelines.kubeflow.org/cache_enabled'
+          ] || 'false') === 'true' &&
           cachedPipelineRun
         )
           pipelineRunID = cachedPipelineRun;

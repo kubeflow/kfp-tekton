@@ -804,8 +804,8 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
                   podInfo.metadata['annotations']['pipelines.kubeflow.org/cached_pipeline_run'],
               });
             }
-          } catch(err) {
-            console.error(`Failed to get cached pod: ${err}`)
+          } catch (err) {
+            console.error(`Failed to get cached pod: ${err}`);
           }
         }
       }
@@ -856,7 +856,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
         logger.warn(err);
       }
 
-      const graph = WorkflowParser.createRuntimeGraph(workflow, mlmdExecutions)
+      const graph = WorkflowParser.createRuntimeGraph(workflow, mlmdExecutions);
 
       let reducedGraph = graph
         ? // copy graph before removing edges

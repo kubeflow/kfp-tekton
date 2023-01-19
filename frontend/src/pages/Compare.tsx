@@ -19,7 +19,7 @@ import { Redirect } from 'react-router-dom';
 import { useNamespaceChangeEvent } from 'src/lib/KubeflowClient';
 import { classes, stylesheet } from 'typestyle';
 import { Workflow } from '../third_party/mlmd/argo_template';
-import { ApiRunDetail } from '../apis/run';
+import { V1RunDetail } from '../apis/run';
 import Hr from '../atoms/Hr';
 import Separator from '../atoms/Separator';
 import CollapseButton from '../components/CollapseButton';
@@ -58,7 +58,7 @@ export interface CompareState {
   fullscreenViewerConfig: PlotCardProps | null;
   paramsCompareProps: CompareTableProps;
   metricsCompareProps: CompareTableProps;
-  runs: ApiRunDetail[];
+  runs: V1RunDetail[];
   selectedIds: string[];
   viewersMap: Map<PlotType, TaggedViewerConfig[]>;
   workflowObjects: Workflow[];
@@ -220,7 +220,7 @@ class Compare extends Page<{}, CompareState> {
 
     const queryParamRunIds = new URLParser(this.props).get(QUERY_PARAMS.runlist);
     const runIds = (queryParamRunIds && queryParamRunIds.split(',')) || [];
-    const runs: ApiRunDetail[] = [];
+    const runs: V1RunDetail[] = [];
     const workflowObjects: Workflow[] = [];
     const failingRuns: string[] = [];
     let lastError: Error | null = null;

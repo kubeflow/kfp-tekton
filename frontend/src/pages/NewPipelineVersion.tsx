@@ -26,8 +26,8 @@ import * as React from 'react';
 import Dropzone from 'react-dropzone';
 import { DocumentationCompilePipeline } from 'src/components/UploadPipelineDialog';
 import { classes, stylesheet } from 'typestyle';
-import { ApiPipeline, ApiPipelineVersion } from '../apis/pipeline';
-import { ApiResourceType } from '../apis/run';
+import { V1Pipeline, V1PipelineVersion } from '../apis/pipeline';
+import { V1ResourceType } from '../apis/run';
 import BusyButton from '../atoms/BusyButton';
 import Input from '../atoms/Input';
 import { CustomRendererProps } from '../components/CustomTable';
@@ -298,7 +298,7 @@ class NewPipelineVersion extends Page<{}, NewPipelineVersionState> {
                     columns={this.pipelineSelectorColumns}
                     emptyMessage='No pipelines found. Upload a pipeline and then try again.'
                     initialSortColumn={PipelineSortKeys.CREATED_AT}
-                    selectionChanged={(selectedPipeline: ApiPipeline) =>
+                    selectionChanged={(selectedPipeline: V1Pipeline) =>
                       this.setStateSafe({ unconfirmedSelectedPipeline: selectedPipeline })
                     }
                     toolbarActionMap={buttons
@@ -592,7 +592,7 @@ class NewPipelineVersion extends Page<{}, NewPipelineVersionState> {
         // Get the new pipeline's id.
         // The new pipeline version is going to be put under this new pipeline
         // instead of an eixsting pipeline. So create this new pipeline first.
-        const newPipeline: ApiPipeline = {
+        const newPipeline: V1Pipeline = {
           description: this.state.pipelineDescription,
           name: this.state.pipelineName,
           url: { pipeline_url: this.state.packageUrl },
@@ -620,7 +620,7 @@ class NewPipelineVersion extends Page<{}, NewPipelineVersionState> {
         description: this.state.pipelineVersionDescription,
         package_url: { pipeline_url: this.state.packageUrl },
         resource_references: [
-          { key: { id: await getPipelineId(), type: ApiResourceType.PIPELINE }, relationship: 1 },
+          { key: { id: await getPipelineId(), type: V1ResourceType.PIPELINE }, relationship: 1 },
         ],
       });
     }

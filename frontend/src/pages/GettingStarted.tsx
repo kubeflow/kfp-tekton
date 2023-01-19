@@ -17,7 +17,7 @@
 import Markdown from 'markdown-to-jsx';
 import * as React from 'react';
 import { classes, cssRaw } from 'typestyle';
-import { ApiFilter, PredicateOp } from '../apis/filter/api';
+import { V1Filter, PredicateOp } from '../apis/filter/api';
 import { AutoLink } from '../atoms/ExternalLink';
 import { RoutePageFactory } from '../components/Router';
 import { ToolbarProps } from '../components/Toolbar';
@@ -163,7 +163,7 @@ function getPipelineLink(id: string) {
 }
 
 function createAndEncodeFilter(filterString: string): string {
-  const filter: ApiFilter = {
+  const filter: V1Filter = {
     predicates: [
       {
         key: 'name',
