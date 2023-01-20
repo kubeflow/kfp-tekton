@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiExperiment } from '../src/apis/experiment';
-import { ApiJob } from '../src/apis/job';
-import { ApiPipeline, ApiPipelineVersion } from '../src/apis/pipeline';
-import { ApiRelationship, ApiResourceType, ApiRunDetail, RunMetricFormat } from '../src/apis/run';
+import { V1Experiment } from '../src/apis/experiment';
+import { V1Job } from '../src/apis/job';
+import { V1Pipeline, V1PipelineVersion } from '../src/apis/pipeline';
+import { V1Relationship, V1ResourceType, V1RunDetail, RunMetricFormat } from '../src/apis/run';
 import v2_lightweight_python_pipeline from './data/v2/pipeline/mock_lightweight_python_functions_v2_pipeline.json';
 import xgboost_sample_pipeline from './data/v2/pipeline/xgboost_sample_pipeline.json';
 import protobuf_value_params_pipeline from './data/v2/pipeline/protobuf_value_params_v2.json';
@@ -43,7 +43,7 @@ const NUM_DUMMY_JOBS = 20;
 const NUM_DUMMY_RUNS = 20;
 
 const PIPELINE_ID_V2_PYTHON_TWO_STEPS = '8fbe3bd6-a01f-11e8-98d0-529269fb1460';
-const PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT: ApiPipelineVersion = {
+const PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT: V1PipelineVersion = {
   created_at: new Date('2021-11-24T20:58:23.000Z'),
   id: PIPELINE_ID_V2_PYTHON_TWO_STEPS,
   name: 'default version',
@@ -54,7 +54,7 @@ const PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT: ApiPipelineVersion = {
     },
   ],
 };
-const PIPELINE_V2_PYTHON_TWO_STEPS: ApiPipeline = {
+const PIPELINE_V2_PYTHON_TWO_STEPS: V1Pipeline = {
   ...PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT,
   description: 'This is pipeline level description.',
   name: 'v2_lightweight_python_functions_pipeline',
@@ -62,7 +62,7 @@ const PIPELINE_V2_PYTHON_TWO_STEPS: ApiPipeline = {
 };
 
 const PIPELINE_ID_V2_PYTHON_TWO_STEPS_REV = '9fbe3bd6-a01f-11e8-98d0-529269fb1460';
-const PIPELINE_V2_PYTHON_TWO_STEPS_REV: ApiPipelineVersion = {
+const PIPELINE_V2_PYTHON_TWO_STEPS_REV: V1PipelineVersion = {
   created_at: new Date('2021-12-24T20:58:23.000Z'),
   id: PIPELINE_ID_V2_PYTHON_TWO_STEPS_REV,
   name: 'revision',
@@ -77,46 +77,46 @@ const PIPELINE_V2_PYTHON_TWO_STEPS_REV: ApiPipelineVersion = {
 };
 
 const PIPELINE_ID_V2_LOOPS_CONDITIONS = '8fbe3bd6-a01f-11e8-98d0-529269fb1461';
-const PIPELINE_V2_LOOPS_CONDITIONS_DEFAULT: ApiPipelineVersion = {
+const PIPELINE_V2_LOOPS_CONDITIONS_DEFAULT: V1PipelineVersion = {
   created_at: new Date('2021-04-13T20:58:23.000Z'),
   id: PIPELINE_ID_V2_LOOPS_CONDITIONS,
   name: 'v2_loops_and_conditions',
   parameters: [],
 };
-const PIPELINE_V2_LOOPS_CONDITIONS: ApiPipeline = {
+const PIPELINE_V2_LOOPS_CONDITIONS: V1Pipeline = {
   description: 'V2 Sub-DAG: Loops and Conditions.',
   ...PIPELINE_V2_LOOPS_CONDITIONS_DEFAULT,
   default_version: PIPELINE_V2_LOOPS_CONDITIONS_DEFAULT,
 };
 
 const PIPELINE_ID_V2_XGBOOST = '8fbe3bd6-a01f-11e8-98d0-529269fb1462';
-const PIPELINE_V2_XGBOOST_DEFAULT: ApiPipelineVersion = {
+const PIPELINE_V2_XGBOOST_DEFAULT: V1PipelineVersion = {
   created_at: new Date('2021-02-24T20:58:23.000Z'),
   id: PIPELINE_ID_V2_XGBOOST,
   name: 'v2_xgboost',
   parameters: [],
 };
-const PIPELINE_V2_XGBOOST: ApiPipeline = {
+const PIPELINE_V2_XGBOOST: V1Pipeline = {
   description: 'V2 Xgboost sample pipeline.',
   ...PIPELINE_V2_XGBOOST_DEFAULT,
   default_version: PIPELINE_V2_XGBOOST_DEFAULT,
 };
 
 const PIPELINE_ID_V2_PROTOBUF_PARAMS = '8fbe3bd6-a01f-11e8-98d0-529269fb2222';
-const PIPELINE_V2_PROTOBUF_PARAMS_DEFAULT: ApiPipelineVersion = {
+const PIPELINE_V2_PROTOBUF_PARAMS_DEFAULT: V1PipelineVersion = {
   created_at: new Date('2021-11-24T20:58:23.000Z'),
   id: PIPELINE_ID_V2_PROTOBUF_PARAMS,
   name: 'v2_protobuf_value_paramas',
   parameters: [],
 };
-const PIPELINE_V2_PROTOBUF_PARAMS: ApiPipeline = {
+const PIPELINE_V2_PROTOBUF_PARAMS: V1Pipeline = {
   description: 'V2 Protobuf.Value param pipeline.',
   ...PIPELINE_V2_PROTOBUF_PARAMS_DEFAULT,
   default_version: PIPELINE_V2_PROTOBUF_PARAMS_DEFAULT,
 };
 
 const PIPELINE_UNSTRUCTURED_ID = '8fbe3bd6-a01f-11e8-98d0-529269fb1459';
-const PIPELINE_UNSTRUCTED_TEXT_DEFAULT: ApiPipelineVersion = {
+const PIPELINE_UNSTRUCTED_TEXT_DEFAULT: V1PipelineVersion = {
   created_at: new Date('2018-04-01T20:58:23.000Z'),
   id: PIPELINE_UNSTRUCTURED_ID,
   name: 'Unstructured text',
@@ -133,13 +133,13 @@ const PIPELINE_UNSTRUCTED_TEXT_DEFAULT: ApiPipelineVersion = {
     },
   ],
 };
-const PIPELINE_UNSTRUCTED_TEXT: ApiPipeline = {
+const PIPELINE_UNSTRUCTED_TEXT: V1Pipeline = {
   description: 'An unstructured text pipeline.',
   ...PIPELINE_UNSTRUCTED_TEXT_DEFAULT,
   default_version: PIPELINE_UNSTRUCTED_TEXT_DEFAULT,
 };
 
-const PIPELINE_IMAGE_CLASSIFICATION_DEFAULT: ApiPipelineVersion = {
+const PIPELINE_IMAGE_CLASSIFICATION_DEFAULT: V1PipelineVersion = {
   created_at: new Date('2018-04-02T20:59:29.000Z'),
   id: '8fbe3f78-a01f-11e8-98d0-529269fb1459',
   name: 'Image classification',
@@ -158,37 +158,37 @@ const PIPELINE_IMAGE_CLASSIFICATION_DEFAULT: ApiPipelineVersion = {
     },
   ],
 };
-const PIPELINE_IMAGE_CLASSIFICATION: ApiPipeline = {
+const PIPELINE_IMAGE_CLASSIFICATION: V1Pipeline = {
   description: 'An awesome image classification pipeline.',
   ...PIPELINE_IMAGE_CLASSIFICATION_DEFAULT,
   default_version: PIPELINE_IMAGE_CLASSIFICATION_DEFAULT,
 };
 
-const PIPELINE_NO_PARAM_DEFAULT: ApiPipelineVersion = {
+const PIPELINE_NO_PARAM_DEFAULT: V1PipelineVersion = {
   created_at: new Date('2018-04-03T20:58:23.000Z'),
   id: '8fbe41b2-a01f-11e8-98d0-529269fb1459',
   name: 'No parameters',
   parameters: [],
 };
-const PIPELINE_NO_PARAM: ApiPipeline = {
+const PIPELINE_NO_PARAM: V1Pipeline = {
   description: 'This pipeline has no parameters',
   ...PIPELINE_NO_PARAM_DEFAULT,
   default_version: PIPELINE_NO_PARAM_DEFAULT,
 };
 
-const PIPELINE_UNDEFINED_PARAM_DEFAULT: ApiPipelineVersion = {
+const PIPELINE_UNDEFINED_PARAM_DEFAULT: V1PipelineVersion = {
   created_at: new Date('2018-04-04T20:58:23.000Z'),
   id: '8fbe42f2-a01f-11e8-98d0-529269fb1459',
   name: 'Undefined parameters',
   parameters: undefined as any,
 };
-const PIPELINE_UNDEFINED_PARAM: ApiPipeline = {
+const PIPELINE_UNDEFINED_PARAM: V1Pipeline = {
   description: 'This pipeline has undefined parameters',
   ...PIPELINE_UNDEFINED_PARAM_DEFAULT,
   default_version: PIPELINE_UNDEFINED_PARAM_DEFAULT,
 };
 
-const pipelines: ApiPipeline[] = [
+const pipelines: V1Pipeline[] = [
   PIPELINE_UNSTRUCTED_TEXT,
   PIPELINE_IMAGE_CLASSIFICATION,
   PIPELINE_NO_PARAM,
@@ -233,7 +233,7 @@ const pipelines: ApiPipeline[] = [
 
 pipelines.push(...generateNPipelines());
 
-const jobs: ApiJob[] = [
+const jobs: V1Job[] = [
   {
     created_at: new Date('2018-03-01T21:58:23.000Z'),
     description: 'This job has no runs',
@@ -267,9 +267,9 @@ const jobs: ApiJob[] = [
       {
         key: {
           id: '275ea11d-ac63-4ce3-bc33-ec81981ed56a',
-          type: ApiResourceType.EXPERIMENT,
+          type: V1ResourceType.EXPERIMENT,
         },
-        relationship: ApiRelationship.OWNER,
+        relationship: V1Relationship.OWNER,
       },
     ],
     status: 'Failed:Succeeded',
@@ -311,9 +311,9 @@ const jobs: ApiJob[] = [
       {
         key: {
           id: '275ea11d-ac63-4ce3-bc33-ec81981ed56a',
-          type: ApiResourceType.EXPERIMENT,
+          type: V1ResourceType.EXPERIMENT,
         },
-        relationship: ApiRelationship.OWNER,
+        relationship: V1Relationship.OWNER,
       },
     ],
     status: 'Succeeded',
@@ -358,9 +358,9 @@ const jobs: ApiJob[] = [
       {
         key: {
           id: '275ea11d-ac63-4ce3-bc33-ec81981ed56a',
-          type: ApiResourceType.EXPERIMENT,
+          type: V1ResourceType.EXPERIMENT,
         },
-        relationship: ApiRelationship.OWNER,
+        relationship: V1Relationship.OWNER,
       },
     ],
     status: 'Succeeded',
@@ -376,7 +376,7 @@ const jobs: ApiJob[] = [
 
 jobs.push(...generateNJobs());
 
-const experiments: ApiExperiment[] = [
+const experiments: V1Experiment[] = [
   {
     description: 'This experiment includes KFP v2 runs',
     id: '275ea11d-ac63-4ce3-bc33-ec81981ed56b',
@@ -406,7 +406,7 @@ const experiments: ApiExperiment[] = [
   },
 ];
 
-const versions: ApiPipelineVersion[] = [
+const versions: V1PipelineVersion[] = [
   {
     created_at: new Date('2021-02-06T20:58:23.000Z'),
     id: PIPELINE_UNSTRUCTURED_ID + '1',
@@ -430,7 +430,7 @@ const versions: ApiPipelineVersion[] = [
   },
 ];
 
-const runs: ApiRunDetail[] = [
+const runs: V1RunDetail[] = [
   {
     pipeline_runtime: {
       // workflow_manifest: JSON.stringify(coinflipRun),
@@ -450,9 +450,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: '275ea11d-ac63-4ce3-bc33-ec81981ed56b',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2021-05-17T20:58:23.000Z'),
@@ -478,9 +478,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: '275ea11d-ac63-4ce3-bc33-ec81981ed56b',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2021-04-17T20:58:23.000Z'),
@@ -504,9 +504,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: '275ea11d-ac63-4ce3-bc33-ec81981ed56b',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2021-03-17T20:58:23.000Z'),
@@ -532,9 +532,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: '275ea11d-ac63-4ce3-bc33-ec81981ed56b',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2021-11-17T20:58:23.000Z'),
@@ -577,9 +577,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: '275ea11d-ac63-4ce3-bc33-ec81981ed56a',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2018-03-17T20:58:23.000Z'),
@@ -618,9 +618,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: '275ea11d-ac63-4ce3-bc33-ec81981ed56a',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2018-04-17T21:00:00.000Z'),
@@ -656,9 +656,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: 'a4d4f8c6-ce9c-4200-a92e-c48ec759b733',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2018-05-17T21:58:23.000Z'),
@@ -694,9 +694,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: 'a4d4f8c6-ce9c-4200-a92e-c48ec759b733',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2018-05-17T21:58:23.000Z'),
@@ -780,9 +780,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: '275ea11d-ac63-4ce3-bc33-ec81981ed56a',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2018-07-17T23:58:23.000Z'),
@@ -835,9 +835,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: 'a4d4f8c6-ce9c-4200-a92e-c48ec759b733',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2018-08-18T20:58:23.000Z'),
@@ -879,9 +879,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: 'a4d4f8c6-ce9c-4200-a92e-c48ec759b733',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('2018-08-18T20:58:23.000Z'),
@@ -905,9 +905,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: 'a4d4f8c6-ce9c-4200-a92e-c48ec759b733',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('1970-01-01T00:00:00.000Z'),
@@ -929,9 +929,9 @@ const runs: ApiRunDetail[] = [
         {
           key: {
             id: '275ea11d-ac63-4ce3-bc33-ec81981ed56a',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       scheduled_at: new Date('1970-01-01T00:00:00Z'),
@@ -942,8 +942,8 @@ const runs: ApiRunDetail[] = [
 
 runs.push(...generateNRuns());
 
-function generateNPipelines(): ApiPipeline[] {
-  const dummyPipelines: ApiPipeline[] = [];
+function generateNPipelines(): V1Pipeline[] {
+  const dummyPipelines: V1Pipeline[] = [];
   for (let i = pipelines.length + 1; i < NUM_DUMMY_PIPELINES + pipelines.length + 1; i++) {
     dummyPipelines.push({
       created_at: new Date('2018-02-12T20:' + padStartTwoZeroes(i.toString()) + ':23.000Z'),
@@ -961,8 +961,8 @@ function generateNPipelines(): ApiPipeline[] {
   return dummyPipelines;
 }
 
-function generateNRuns(): ApiRunDetail[] {
-  const dummyRuns: ApiRunDetail[] = [];
+function generateNRuns(): V1RunDetail[] {
+  const dummyRuns: V1RunDetail[] = [];
   for (let i = runs.length + 1; i < NUM_DUMMY_RUNS + runs.length + 1; i++) {
     dummyRuns.push({
       pipeline_runtime: {
@@ -1008,9 +1008,9 @@ function generateNRuns(): ApiRunDetail[] {
           {
             key: {
               id: '275ea11d-ac63-4ce3-bc33-ec81981ed56a',
-              type: ApiResourceType.EXPERIMENT,
+              type: V1ResourceType.EXPERIMENT,
             },
-            relationship: ApiRelationship.OWNER,
+            relationship: V1Relationship.OWNER,
           },
         ],
         scheduled_at: new Date('2018-02-12T20:' + padStartTwoZeroes(i.toString()) + ':23.000Z'),
@@ -1021,8 +1021,8 @@ function generateNRuns(): ApiRunDetail[] {
   return dummyRuns;
 }
 
-function generateNJobs(): ApiJob[] {
-  const dummyJobs: ApiJob[] = [];
+function generateNJobs(): V1Job[] {
+  const dummyJobs: V1Job[] = [];
   for (let i = jobs.length + 1; i < NUM_DUMMY_JOBS + jobs.length + 1; i++) {
     dummyJobs.push({
       created_at: new Date('2018-02-01T20:' + padStartTwoZeroes(i.toString()) + ':23.000Z'),
@@ -1056,9 +1056,9 @@ function generateNJobs(): ApiJob[] {
         {
           key: {
             id: '7fc01714-4a13-4c05-5902-a8a72c14253b',
-            type: ApiResourceType.EXPERIMENT,
+            type: V1ResourceType.EXPERIMENT,
           },
-          relationship: ApiRelationship.OWNER,
+          relationship: V1Relationship.OWNER,
         },
       ],
       status: 'Succeeded',
@@ -1105,16 +1105,16 @@ export const v2PipelineSpecMap: Map<string, string> = new Map([
 ]);
 
 // Kubeflow versions
-export const V2_TWO_STEPS_VERSION_LIST: ApiPipelineVersion[] = [
+export const V2_TWO_STEPS_VERSION_LIST: V1PipelineVersion[] = [
   PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT,
   PIPELINE_V2_PYTHON_TWO_STEPS_REV,
 ];
 
-export const PIPELINE_VERSIONS_LIST_MAP: Map<string, ApiPipelineVersion[]> = new Map([
+export const PIPELINE_VERSIONS_LIST_MAP: Map<string, V1PipelineVersion[]> = new Map([
   [PIPELINE_ID_V2_PYTHON_TWO_STEPS, V2_TWO_STEPS_VERSION_LIST],
 ]);
 
-export const PIPELINE_VERSIONS_LIST_FULL: ApiPipelineVersion[] = [
+export const PIPELINE_VERSIONS_LIST_FULL: V1PipelineVersion[] = [
   ...pipelines,
   PIPELINE_V2_PYTHON_TWO_STEPS_REV,
 ];

@@ -16,16 +16,16 @@ import * as express from 'express';
 import { Response } from 'express-serve-static-core';
 import * as fs from 'fs';
 import * as _path from 'path';
-import { ApiExperiment, ApiListExperimentsResponse } from '../src/apis/experiment';
-import { ApiFilter, PredicateOp } from '../src/apis/filter';
-import { ApiJob, ApiListJobsResponse } from '../src/apis/job';
+import { V1Experiment, V1ListExperimentsResponse } from '../src/apis/experiment';
+import { V1Filter, PredicateOp } from '../src/apis/filter';
+import { V1Job, V1ListJobsResponse } from '../src/apis/job';
 import {
-  ApiListPipelinesResponse,
-  ApiListPipelineVersionsResponse,
-  ApiPipeline,
-  ApiPipelineVersion,
+  V1ListPipelinesResponse,
+  V1ListPipelineVersionsResponse,
+  V1Pipeline,
+  V1PipelineVersion,
 } from '../src/apis/pipeline';
-import { ApiListRunsResponse, ApiResourceType, ApiRun, ApiRunStorageState } from '../src/apis/run';
+import { V1ListRunsResponse, V1ResourceType, V1Run, V1RunStorageState } from '../src/apis/run';
 import { ExperimentSortKeys, PipelineSortKeys, RunSortKeys } from '../src/lib/Apis';
 import RunUtils from '../src/lib/RunUtils';
 import {
@@ -117,12 +117,12 @@ export default (app: express.Application) => {
   app.get(v1Prefix + '/jobs', (req, res) => {
     res.header('Content-Type', 'application/json');
     // Note: the way that we use the next_page_token here may not reflect the way the backend works.
-    const response: ApiListJobsResponse = {
+    const response: V1ListJobsResponse = {
       jobs: [],
       next_page_token: '',
     };
 
-    let jobs: ApiJob[] = fixedData.jobs;
+    let jobs: V1Job[] = fixedData.jobs;
     if (req.query.filter) {
       jobs = filterResources(fixedData.jobs, req.query.filter);
     }
@@ -154,12 +154,12 @@ export default (app: express.Application) => {
   app.get(v1Prefix + '/experiments', (req, res) => {
     res.header('Content-Type', 'application/json');
     // Note: the way that we use the next_page_token here may not reflect the way the backend works.
-    const response: ApiListExperimentsResponse = {
+    const response: V1ListExperimentsResponse = {
       experiments: [],
       next_page_token: '',
     };
 
-    let experiments: ApiExperiment[] = fixedData.experiments;
+    let experiments: V1Experiment[] = fixedData.experiments;
     if (req.query.filter) {
       experiments = filterResources(fixedData.experiments, req.query.filter);
     }
@@ -189,7 +189,7 @@ export default (app: express.Application) => {
   });
 
   app.post(v1Prefix + '/experiments', (req, res) => {
-    const experiment: ApiExperiment = req.body;
+    const experiment: V1Experiment = req.body;
     if (fixedData.experiments.find(e => e.name!.toLowerCase() === experiment.name!.toLowerCase())) {
       res.status(404).send('An experiment with the same name already exists');
       return;
@@ -213,7 +213,7 @@ export default (app: express.Application) => {
   });
 
   app.post(v1Prefix + '/jobs', (req, res) => {
-    const job: ApiJob = req.body;
+    const job: V1Job = req.body;
     job.id = 'new-job-' + (fixedData.jobs.length + 1);
     job.created_at = new Date();
     job.updated_at = new Date();
@@ -267,18 +267,18 @@ export default (app: express.Application) => {
   app.get(v1Prefix + '/runs', (req, res) => {
     res.header('Content-Type', 'application/json');
     // Note: the way that we use the next_page_token here may not reflect the way the backend works.
-    const response: ApiListRunsResponse = {
+    const response: V1ListRunsResponse = {
       next_page_token: '',
       runs: [],
     };
 
-    let runs: ApiRun[] = fixedData.runs.map(r => r.run!);
+    let runs: V1Run[] = fixedData.runs.map(r => r.run!);
 
     if (req.query.filter) {
       runs = filterResources(runs, req.query.filter);
     }
 
-    if (req.query['resource_reference_key.type'] === ApiResourceType.EXPERIMENT) {
+    if (req.query['resource_reference_key.type'] === V1ResourceType.EXPERIMENT) {
       runs = runs.filter(r =>
         RunUtils.getAllExperimentReferences(r).some(
           ref =>
@@ -324,7 +324,7 @@ export default (app: express.Application) => {
 
   app.post(v1Prefix + '/runs', (req, res) => {
     const date = new Date();
-    const run: ApiRun = req.body;
+    const run: V1Run = req.body;
     run.id = 'new-run-' + (fixedData.runs.length + 1);
     run.created_at = date;
     run.scheduled_at = date;
@@ -349,8 +349,8 @@ export default (app: express.Application) => {
     if (runDetail) {
       runDetail.run!.storage_state =
         req.params.method === 'archive'
-          ? ApiRunStorageState.ARCHIVED
-          : ApiRunStorageState.AVAILABLE;
+          ? V1RunStorageState.ARCHIVED
+          : V1RunStorageState.AVAILABLE;
       res.json({});
     } else {
       res.status(500).send('Cannot find a run with id ' + req.params.rid);
@@ -385,7 +385,7 @@ export default (app: express.Application) => {
     if (!filterString) {
       return resources;
     }
-    const filter: ApiFilter = JSON.parse(decodeURIComponent(filterString));
+    const filter: V1Filter = JSON.parse(decodeURIComponent(filterString));
     ((filter && filter.predicates) || []).forEach(p => {
       resources = resources.filter(r => {
         switch (p.op) {
@@ -396,8 +396,8 @@ export default (app: express.Application) => {
               );
             } else if (p.key === 'storage_state') {
               return (
-                (r as ApiRun).storage_state &&
-                (r as ApiRun).storage_state!.toString() === p.string_value
+                (r as V1Run).storage_state &&
+                (r as V1Run).storage_state!.toString() === p.string_value
               );
             } else {
               throw new Error(`Key: ${p.key} is not yet supported by the mock API server`);
@@ -408,7 +408,7 @@ export default (app: express.Application) => {
                 r.name && r.name.toLocaleLowerCase() !== (p.string_value || '').toLocaleLowerCase()
               );
             } else if (p.key === 'storage_state') {
-              return ((r as ApiRun).storage_state || {}).toString() !== p.string_value;
+              return ((r as V1Run).storage_state || {}).toString() !== p.string_value;
             } else {
               throw new Error(`Key: ${p.key} is not yet supported by the mock API server`);
             }
@@ -441,12 +441,12 @@ export default (app: express.Application) => {
 
   app.get(v1Prefix + '/pipelines', (req, res) => {
     res.header('Content-Type', 'application/json');
-    const response: ApiListPipelinesResponse = {
+    const response: V1ListPipelinesResponse = {
       next_page_token: '',
       pipelines: [],
     };
 
-    let pipelines: ApiPipeline[] = fixedData.pipelines;
+    let pipelines: V1Pipeline[] = fixedData.pipelines;
     if (req.query.filter) {
       pipelines = filterResources(fixedData.pipelines, req.query.filter);
     }
@@ -573,12 +573,12 @@ export default (app: express.Application) => {
       req.query['resource_key.type'] === 'PIPELINE' &&
       req.query.page_size > 0
     ) {
-      const response: ApiListPipelineVersionsResponse = {
+      const response: V1ListPipelineVersionsResponse = {
         next_page_token: '',
         versions: [],
       };
 
-      let versions: ApiPipelineVersion[] =
+      let versions: V1PipelineVersion[] =
         PIPELINE_VERSIONS_LIST_MAP.get(req.query['resource_key.id']) || [];
 
       if (versions.length === 0) {
@@ -589,7 +589,7 @@ export default (app: express.Application) => {
         }
 
         // Default version list is pipeline with single default version.
-        const pipeline_versions_list_response: ApiListPipelineVersionsResponse = {
+        const pipeline_versions_list_response: V1ListPipelineVersionsResponse = {
           total_size: 1,
           versions: [pipeline.default_version],
         };

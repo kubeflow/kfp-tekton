@@ -154,7 +154,7 @@ describe('/apps/tensorboard', () => {
     function setupMockKfpApiService({ port = 3001 }: { port?: number } = {}) {
       const receivedHeaders: any[] = [];
       kfpApiServer = express()
-        .get('/apis/v1beta1/auth', (req, res) => {
+        .get('/apis/v1/auth', (req, res) => {
           receivedHeaders.push(req.headers);
           res.status(200).send('{}'); // Authorized
         })
@@ -218,7 +218,7 @@ describe('/apps/tensorboard', () => {
 
       const apiServerPort = 3001;
       kfpApiServer = express()
-        .get('/apis/v1beta1/auth', (_, res) => {
+        .get('/apis/v1/auth', (_, res) => {
           res.status(400).send(
             JSON.stringify({
               error: 'User xxx is not unauthorized to list viewers',

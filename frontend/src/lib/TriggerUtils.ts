@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ApiTrigger, ApiPeriodicSchedule, ApiCronSchedule } from '../../src/apis/job';
+import { V1Trigger, V1PeriodicSchedule, V1CronSchedule } from '../../src/apis/job';
 
 export enum TriggerType {
   INTERVALED,
@@ -158,14 +158,14 @@ export function buildTrigger(
   endDateTime: Date | undefined,
   type: TriggerType,
   cron: string,
-): ApiTrigger {
-  let trigger: ApiTrigger;
+): V1Trigger {
+  let trigger: V1Trigger;
   switch (type) {
     case TriggerType.INTERVALED:
       trigger = {
         periodic_schedule: {
           interval_second: getPeriodInSeconds(intervalCategory, intervalValue).toString(),
-        } as ApiPeriodicSchedule,
+        } as V1PeriodicSchedule,
       };
       trigger.periodic_schedule!.start_time = startDateTime;
       trigger.periodic_schedule!.end_time = endDateTime;
@@ -174,7 +174,7 @@ export function buildTrigger(
       trigger = {
         cron_schedule: {
           cron,
-        } as ApiCronSchedule,
+        } as V1CronSchedule,
       };
       trigger.cron_schedule!.start_time = startDateTime;
       trigger.cron_schedule!.end_time = endDateTime;
@@ -204,7 +204,7 @@ export type ParsedTrigger =
       cron: string;
     };
 
-export function parseTrigger(trigger: ApiTrigger): ParsedTrigger {
+export function parseTrigger(trigger: V1Trigger): ParsedTrigger {
   if (trigger.periodic_schedule) {
     const periodicSchedule = trigger.periodic_schedule;
     const intervalSeconds = parseInt(periodicSchedule.interval_second || '', 10);
@@ -259,7 +259,7 @@ export function dateToPickerFormat(d: Date): [string, string] {
   return [nowDate, nowTime];
 }
 
-export function triggerDisplayString(trigger?: ApiTrigger): string {
+export function triggerDisplayString(trigger?: V1Trigger): string {
   if (trigger) {
     if (trigger.cron_schedule && trigger.cron_schedule.cron) {
       return trigger.cron_schedule.cron;

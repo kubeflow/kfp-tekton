@@ -52,7 +52,7 @@ interface NewPipelineVersionState {
   pipelineName?: string;
   pipelineVersionName: string;
   pipelineVersionDescription: string;
-  pipeline?: ApiPipeline;
+  pipeline?: V1Pipeline;
 
   codeSourceUrl: string;
 
@@ -68,7 +68,7 @@ interface NewPipelineVersionState {
 
   // Select existing pipeline
   pipelineSelectorOpen: boolean;
-  unconfirmedSelectedPipeline?: ApiPipeline;
+  unconfirmedSelectedPipeline?: V1Pipeline;
 }
 
 export enum ImportMethod {
@@ -583,7 +583,7 @@ class NewPipelineVersion extends Page<{}, NewPipelineVersionState> {
     });
   }
 
-  private async _createPipelineVersion(): Promise<ApiPipelineVersion> {
+  private async _createPipelineVersion(): Promise<V1PipelineVersion> {
     const getPipelineId = async () => {
       if (this.state.pipelineId) {
         // Get existing pipeline's id.

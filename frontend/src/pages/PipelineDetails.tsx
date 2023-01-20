@@ -32,8 +32,8 @@ import * as WorkflowUtils from 'src/lib/v2/WorkflowUtils';
 import { convertJsonToV2PipelineSpec } from 'src/lib/v2/WorkflowUtils';
 import { classes } from 'typestyle';
 import { Workflow } from '../third_party/mlmd/argo_template';
-import { ApiExperiment } from '../apis/experiment';
-import { ApiGetTemplateResponse, ApiPipeline, ApiPipelineVersion } from '../apis/pipeline';
+import { V1Experiment } from '../apis/experiment';
+import { V1GetTemplateResponse, V1Pipeline, V1PipelineVersion } from '../apis/pipeline';
 import { QUERY_PARAMS, RoutePage, RouteParams } from '../components/Router';
 import { ToolbarProps } from '../components/Toolbar';
 import { commonCss, padding } from '../Css';
@@ -51,12 +51,12 @@ interface PipelineDetailsState {
   graph: dagre.graphlib.Graph | null;
   reducedGraph: dagre.graphlib.Graph | null;
   graphV2: PipelineFlowElement[] | null;
-  pipeline: ApiPipeline | null;
+  pipeline: V1Pipeline | null;
   selectedNodeInfo: JSX.Element | null;
-  selectedVersion?: ApiPipelineVersion;
+  selectedVersion?: V1PipelineVersion;
   template?: Workflow;
   templateString?: string;
-  versions: ApiPipelineVersion[];
+  versions: V1PipelineVersion[];
 }
 
 // Adjusted for use with Tekton Backend
@@ -191,14 +191,14 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
     this.clearBanner();
     const fromRunId = new URLParser(this.props).get(QUERY_PARAMS.fromRunId);
 
-    let pipeline: ApiPipeline | null = null;
-    let version: ApiPipelineVersion | null = null;
+    let pipeline: V1Pipeline | null = null;
+    let version: V1PipelineVersion | null = null;
     let templateString = '';
     let breadcrumbs: Array<{ displayName: string; href: string }> = [];
     const toolbarActions = this.props.toolbarProps.actions;
     let pageTitle = '';
-    let selectedVersion: ApiPipelineVersion | undefined;
-    let versions: ApiPipelineVersion[] = [];
+    let selectedVersion: V1PipelineVersion | undefined;
+    let versions: V1PipelineVersion[] = [];
 
     // If fromRunId is specified, load the run and get the pipeline template from it
     if (fromRunId) {
@@ -238,7 +238,7 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
         }
 
         const relatedExperimentId = RunUtils.getFirstExperimentReferenceId(runDetails.run);
-        let experiment: ApiExperiment | undefined;
+        let experiment: V1Experiment | undefined;
         if (relatedExperimentId) {
           experiment = await Apis.experimentServiceApi.getExperiment(relatedExperimentId);
         }
@@ -391,7 +391,7 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
 
   private async _getTemplateString(pipelineId: string, versionId: string): Promise<string> {
     try {
-      let templateResponse: ApiGetTemplateResponse;
+      let templateResponse: V1GetTemplateResponse;
       if (versionId) {
         templateResponse = await Apis.pipelineServiceApi.getPipelineVersionTemplate(versionId);
       } else {

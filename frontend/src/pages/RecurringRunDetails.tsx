@@ -18,8 +18,8 @@ import * as React from 'react';
 import Buttons, { ButtonKeys } from '../lib/Buttons';
 import DetailsTable from '../components/DetailsTable';
 import RunUtils from '../lib/RunUtils';
-import { ApiExperiment } from '../apis/experiment';
-import { ApiJob } from '../apis/job';
+import { V1Experiment } from '../apis/experiment';
+import { V1Job } from '../apis/job';
 import { Apis } from '../lib/Apis';
 import { Page } from './Page';
 import { RoutePage, RouteParams } from '../components/Router';
@@ -31,7 +31,7 @@ import { formatDateString, enabledDisplayString, errorToMessage } from '../lib/U
 import { triggerDisplayString } from '../lib/TriggerUtils';
 
 interface RecurringRunConfigState {
-  run: ApiJob | null;
+  run: V1Job | null;
 }
 
 class RecurringRunDetails extends Page<{}, RecurringRunConfigState> {
@@ -139,7 +139,7 @@ class RecurringRunDetails extends Page<{}, RecurringRunConfigState> {
     this.clearBanner();
     const runId = this.props.match.params[RouteParams.runId];
 
-    let run: ApiJob;
+    let run: V1Job;
     try {
       run = await Apis.jobServiceApi.getJob(runId);
     } catch (err) {
@@ -152,7 +152,7 @@ class RecurringRunDetails extends Page<{}, RecurringRunConfigState> {
     }
 
     const relatedExperimentId = RunUtils.getFirstExperimentReferenceId(run);
-    let experiment: ApiExperiment | undefined;
+    let experiment: V1Experiment | undefined;
     if (relatedExperimentId) {
       try {
         experiment = await Apis.experimentServiceApi.getExperiment(relatedExperimentId);

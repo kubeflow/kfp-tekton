@@ -17,7 +17,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import { ApiPipeline, ApiPipelineVersion } from 'src/apis/pipeline/api';
+import { V1Pipeline, V1PipelineVersion } from 'src/apis/pipeline/api';
 import { testBestPractices } from 'src/TestUtils';
 import { PipelineVersionCard } from './PipelineVersionCard';
 
@@ -25,7 +25,7 @@ const DEFAULT_VERSION_NAME = 'default version';
 const REVISION_NAME = 'revision';
 
 const PIPELINE_ID_V2_PYTHON_TWO_STEPS = '8fbe3bd6-a01f-11e8-98d0-529269fb1460';
-const PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT: ApiPipelineVersion = {
+const PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT: V1PipelineVersion = {
   created_at: new Date('2021-11-24T20:58:23.000Z'),
   id: PIPELINE_ID_V2_PYTHON_TWO_STEPS,
   name: DEFAULT_VERSION_NAME,
@@ -37,7 +37,7 @@ const PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT: ApiPipelineVersion = {
   ],
 };
 const PIPELINE_ID_V2_PYTHON_TWO_STEPS_REV = '9fbe3bd6-a01f-11e8-98d0-529269fb1460';
-const PIPELINE_V2_PYTHON_TWO_STEPS_REV: ApiPipelineVersion = {
+const PIPELINE_V2_PYTHON_TWO_STEPS_REV: V1PipelineVersion = {
   created_at: new Date('2021-12-24T20:58:23.000Z'),
   id: PIPELINE_ID_V2_PYTHON_TWO_STEPS_REV,
   name: REVISION_NAME,
@@ -49,11 +49,11 @@ const PIPELINE_V2_PYTHON_TWO_STEPS_REV: ApiPipelineVersion = {
   ],
 };
 
-const V2_TWO_STEPS_VERSION_LIST: ApiPipelineVersion[] = [
+const V2_TWO_STEPS_VERSION_LIST: V1PipelineVersion[] = [
   PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT,
   PIPELINE_V2_PYTHON_TWO_STEPS_REV,
 ];
-const PIPELINE_V2_PYTHON_TWO_STEPS: ApiPipeline = {
+const PIPELINE_V2_PYTHON_TWO_STEPS: V1Pipeline = {
   ...PIPELINE_V2_PYTHON_TWO_STEPS_DEFAULT,
   description: 'This is pipeline level description.',
   name: 'v2_lightweight_python_functions_pipeline',

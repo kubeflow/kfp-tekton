@@ -19,14 +19,14 @@ import * as Utils from '../lib/Utils';
 import RunList, { RunListProps } from './RunList';
 import TestUtils from '../TestUtils';
 import produce from 'immer';
-import { ApiFilter, PredicateOp } from '../apis/filter';
+import { V1Filter, PredicateOp } from '../apis/filter';
 import {
-  ApiRun,
-  ApiRunDetail,
-  ApiResourceType,
-  ApiRunMetric,
+  V1Run,
+  V1RunDetail,
+  V1ResourceType,
+  V1RunMetric,
   RunMetricFormat,
-  ApiRunStorageState,
+  V1RunStorageState,
 } from '../apis/run';
 import { Apis, RunSortKeys, ListRequest } from '../lib/Apis';
 import { MetricMetadata } from '../lib/RunUtils';
@@ -62,7 +62,7 @@ describe('RunList', () => {
     };
   }
 
-  function mockNRuns(n: number, runTemplate: Partial<ApiRunDetail>): void {
+  function mockNRuns(n: number, runTemplate: Partial<V1RunDetail>): void {
     getRunSpy.mockImplementation(id =>
       Promise.resolve(
         produce(runTemplate, draft => {
@@ -77,7 +77,7 @@ describe('RunList', () => {
       Promise.resolve({
         runs: range(1, n + 1).map(i => {
           if (runTemplate.run) {
-            return produce(runTemplate.run as Partial<ApiRun>, draft => {
+            return produce(runTemplate.run as Partial<V1Run>, draft => {
               draft.id = 'testrun' + i;
               draft.name = 'run with id: testrun' + i;
             });
@@ -131,14 +131,14 @@ describe('RunList', () => {
   describe('in archived state', () => {
     it('renders the empty experience', () => {
       const props = generateProps();
-      props.storageState = ApiRunStorageState.ARCHIVED;
+      props.storageState = V1RunStorageState.ARCHIVED;
       expect(shallow(<RunList {...props} />)).toMatchSnapshot();
     });
 
     it('loads runs whose storage state is not ARCHIVED when storage state equals AVAILABLE', async () => {
       mockNRuns(1, {});
       const props = generateProps();
-      props.storageState = ApiRunStorageState.AVAILABLE;
+      props.storageState = V1RunStorageState.AVAILABLE;
       tree = shallow(<RunList {...props} />);
       await (tree.instance() as RunListTest)._loadRuns({});
       expect(Apis.runServiceApi.listRuns).toHaveBeenLastCalledWith(
@@ -153,10 +153,10 @@ describe('RunList', () => {
               {
                 key: 'storage_state',
                 op: PredicateOp.NOTEQUALS,
-                string_value: ApiRunStorageState.ARCHIVED.toString(),
+                string_value: V1RunStorageState.ARCHIVED.toString(),
               },
             ],
-          } as ApiFilter),
+          } as V1Filter),
         ),
       );
     });
@@ -164,7 +164,7 @@ describe('RunList', () => {
     it('loads runs whose storage state is ARCHIVED when storage state equals ARCHIVED', async () => {
       mockNRuns(1, {});
       const props = generateProps();
-      props.storageState = ApiRunStorageState.ARCHIVED;
+      props.storageState = V1RunStorageState.ARCHIVED;
       tree = shallow(<RunList {...props} />);
       await (tree.instance() as RunListTest)._loadRuns({});
       expect(Apis.runServiceApi.listRuns).toHaveBeenLastCalledWith(
@@ -179,10 +179,10 @@ describe('RunList', () => {
               {
                 key: 'storage_state',
                 op: PredicateOp.EQUALS,
-                string_value: ApiRunStorageState.ARCHIVED.toString(),
+                string_value: V1RunStorageState.ARCHIVED.toString(),
               },
             ],
-          } as ApiFilter),
+          } as V1Filter),
         ),
       );
     });
@@ -190,7 +190,7 @@ describe('RunList', () => {
     it('augments request filter with storage state predicates', async () => {
       mockNRuns(1, {});
       const props = generateProps();
-      props.storageState = ApiRunStorageState.ARCHIVED;
+      props.storageState = V1RunStorageState.ARCHIVED;
       tree = shallow(<RunList {...props} />);
       await (tree.instance() as RunListTest)._loadRuns({
         filter: encodeURIComponent(
@@ -216,10 +216,10 @@ describe('RunList', () => {
               {
                 key: 'storage_state',
                 op: PredicateOp.EQUALS,
-                string_value: ApiRunStorageState.ARCHIVED.toString(),
+                string_value: V1RunStorageState.ARCHIVED.toString(),
               },
             ],
-          } as ApiFilter),
+          } as V1Filter),
         ),
       );
     });

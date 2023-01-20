@@ -15,9 +15,9 @@
 import * as portableFetch from 'portable-fetch';
 import { ExperimentServiceApi, FetchAPI } from '../apis/experiment';
 import { JobServiceApi } from '../apis/job';
-import { ApiPipeline, ApiPipelineVersion, PipelineServiceApi } from '../apis/pipeline';
+import { V1Pipeline, V1PipelineVersion, PipelineServiceApi } from '../apis/pipeline';
 import { RunServiceApi } from '../apis/run';
-import { ApiVisualization, VisualizationServiceApi } from '../apis/visualization';
+import { V1Visualization, VisualizationServiceApi } from '../apis/visualization';
 import { HTMLViewerConfig } from '../components/viewers/HTMLViewer';
 import { PlotType } from '../components/viewers/Viewer';
 import * as Utils from './Utils';
@@ -25,7 +25,6 @@ import { buildQuery } from './Utils';
 import { StoragePath, StorageService } from './WorkflowParser';
 
 const v1Prefix = 'apis/v1';
-const v1beta1Prefix = v1Prefix;
 
 export interface ListRequest {
   filter?: string;
@@ -70,7 +69,7 @@ export class Apis {
   }
 
   public static async buildPythonVisualizationConfig(
-    visualizationData: ApiVisualization,
+    visualizationData: V1Visualization,
     namespace?: string,
   ): Promise<HTMLViewerConfig> {
     const visualization = await Apis.visualizationServiceApi.createVisualization(
@@ -202,7 +201,7 @@ export class Apis {
    * Retrieve various information about the build.
    */
   public static async getBuildInfo(): Promise<BuildInfo> {
-    return await this._fetchAndParse<BuildInfo>('/healthz', v1beta1Prefix);
+    return await this._fetchAndParse<BuildInfo>('/healthz', v1Prefix);
   }
 
   /**
@@ -331,12 +330,12 @@ export class Apis {
     pipelineName: string,
     pipelineDescription: string,
     pipelineData: File,
-  ): Promise<ApiPipeline> {
+  ): Promise<V1Pipeline> {
     const fd = new FormData();
     fd.append('uploadfile', pipelineData, pipelineData.name);
-    return await this._fetchAndParse<ApiPipeline>(
+    return await this._fetchAndParse<V1Pipeline>(
       '/pipelines/upload',
-      v1beta1Prefix,
+      v1Prefix,
       `name=${encodeURIComponent(pipelineName)}&description=${encodeURIComponent(
         pipelineDescription,
       )}`,
@@ -353,12 +352,12 @@ export class Apis {
     pipelineId: string,
     versionData: File,
     description?: string,
-  ): Promise<ApiPipelineVersion> {
+  ): Promise<V1PipelineVersion> {
     const fd = new FormData();
     fd.append('uploadfile', versionData, versionData.name);
-    return await this._fetchAndParse<ApiPipelineVersion>(
+    return await this._fetchAndParse<V1PipelineVersion>(
       '/pipelines/upload_version',
-      v1beta1Prefix,
+      v1Prefix,
       `name=${encodeURIComponent(versionName)}&pipelineid=${encodeURIComponent(pipelineId)}` +
         (description ? `&description=${encodeURIComponent(description)}` : ''),
       {

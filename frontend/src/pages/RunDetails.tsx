@@ -29,9 +29,9 @@ import { isV2Pipeline } from 'src/lib/v2/WorkflowUtils';
 import { Context, Execution } from 'src/third_party/mlmd';
 import { classes, stylesheet } from 'typestyle';
 import { NodePhase as ArgoNodePhase } from '../third_party/mlmd/argo_template';
-import { ApiExperiment } from '../apis/experiment';
-import { ApiRun, ApiRunStorageState } from '../apis/run';
-import { ApiVisualization, ApiVisualizationType } from '../apis/visualization';
+import { V1Experiment } from '../apis/experiment';
+import { V1Run, V1RunStorageState } from '../apis/run';
+import { V1Visualization, V1VisualizationType } from '../apis/visualization';
 import Hr from '../atoms/Hr';
 import MD2Tabs from '../atoms/MD2Tabs';
 import Separator from '../atoms/Separator';
@@ -115,7 +115,7 @@ interface GeneratedVisualization {
 interface RunDetailsState {
   allArtifactConfigs: AnnotatedConfig[];
   allowCustomVisualizations: boolean;
-  experiment?: ApiExperiment;
+  experiment?: V1Experiment;
   generatedVisualizations: GeneratedVisualization[];
   isGeneratingVisualization: boolean;
   logsBannerAdditionalInfo: string;
@@ -124,7 +124,7 @@ interface RunDetailsState {
   graph?: dagre.graphlib.Graph;
   reducedGraph?: dagre.graphlib.Graph;
   runFinished: boolean;
-  runMetadata?: ApiRun;
+  runMetadata?: V1Run;
   selectedTab: number;
   selectedNodeDetails: SelectedNodeDetails | null;
   sidepanelBannerMode: Mode;
@@ -274,7 +274,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     const visualizationCreatorConfig: VisualizationCreatorConfig = {
       allowCustomVisualizations,
       isBusy: isGeneratingVisualization,
-      onGenerate: (visualizationArguments: string, source: string, type: ApiVisualizationType) => {
+      onGenerate: (visualizationArguments: string, source: string, type: V1VisualizationType) => {
         this._onGenerate(visualizationArguments, source, type, namespace || '');
       },
       type: PlotType.VISUALIZATION_CREATOR,
@@ -752,7 +752,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       const runDetail = await Apis.runServiceApi.getRun(runId);
 
       const relatedExperimentId = RunUtils.getFirstExperimentReferenceId(runDetail.run);
-      let experiment: ApiExperiment | undefined;
+      let experiment: V1Experiment | undefined;
       let namespace: string | undefined;
       if (relatedExperimentId) {
         experiment = await Apis.experimentServiceApi.getExperiment(relatedExperimentId);
@@ -869,7 +869,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       const breadcrumbs: Array<{ displayName: string; href: string }> = [];
       // If this is an archived run, only show Archive in breadcrumbs, otherwise show
       // the full path, including the experiment if any.
-      if (runMetadata.storage_state === ApiRunStorageState.ARCHIVED) {
+      if (runMetadata.storage_state === V1RunStorageState.ARCHIVED) {
         breadcrumbs.push({ displayName: 'Archive', href: RoutePage.ARCHIVED_RUNS });
       } else {
         if (experiment) {
@@ -901,7 +901,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
         this.getInitialToolbarState().actions,
       );
       const idGetter = () => (runMetadata ? [runMetadata!.id!] : []);
-      runMetadata!.storage_state === ApiRunStorageState.ARCHIVED
+      runMetadata!.storage_state === V1RunStorageState.ARCHIVED
         ? buttons.restore('run', idGetter, true, () => this.refresh())
         : buttons.archive('run', idGetter, true, () => this.refresh());
       const actions = buttons.getToolbarActionMap();
@@ -1004,7 +1004,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
     this.setStateSafe({ allArtifactConfigs });
   }
 
-  private _getDetailsFields(workflow: any, runMetadata?: ApiRun): Array<KeyValue<string>> {
+  private _getDetailsFields(workflow: any, runMetadata?: V1Run): Array<KeyValue<string>> {
     return !workflow.status
       ? []
       : [
@@ -1178,7 +1178,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
   private async _onGenerate(
     visualizationArguments: string,
     source: string,
-    type: ApiVisualizationType,
+    type: V1VisualizationType,
     namespace: string,
   ): Promise<void> {
     const nodeId = this.state.selectedNodeDetails ? this.state.selectedNodeDetails.id : '';
@@ -1197,7 +1197,7 @@ class RunDetails extends Page<RunDetailsInternalProps, RunDetailsState> {
       }
     }
     this.setState({ isGeneratingVisualization: true });
-    const visualizationData: ApiVisualization = {
+    const visualizationData: V1Visualization = {
       arguments: visualizationArguments,
       source,
       type,

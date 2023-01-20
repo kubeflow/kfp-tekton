@@ -19,8 +19,8 @@ import * as pako from 'pako';
 import * as React from 'react';
 import { classes } from 'typestyle';
 import { Workflow } from '../third_party/mlmd/argo_template';
-import { ApiTrigger } from '../apis/job';
-import { ApiRun } from '../apis/run';
+import { V1Trigger } from '../apis/job';
+import { V1Run } from '../apis/run';
 import { Column, ExpandState, Row } from '../components/CustomTable';
 import { css, CustomTableRow } from '../components/CustomTableRow';
 import { padding } from '../Css';
@@ -83,7 +83,7 @@ export async function errorToMessage(error: any): Promise<string> {
   return JSON.stringify(error) || '';
 }
 
-export function enabledDisplayString(trigger: ApiTrigger | undefined, enabled: boolean): string {
+export function enabledDisplayString(trigger: V1Trigger | undefined, enabled: boolean): string {
   if (trigger) {
     return enabled ? 'Yes' : 'No';
   }
@@ -118,7 +118,7 @@ export function getRunDuration(run?: any): string {
   return getDuration(new Date(run.created_at), new Date(run.finished_at));
 }
 
-export function getRunDurationFromApiRun(apiRun?: ApiRun): string {
+export function getRunDurationFromApiRun(apiRun?: V1Run): string {
   if (!apiRun || !apiRun.created_at || !apiRun.finished_at) {
     return '-';
   }

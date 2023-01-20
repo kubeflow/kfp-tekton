@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Router } from 'react-router-dom';
 import { NamespaceContext } from 'src/lib/KubeflowClient';
 import { Workflow } from 'third_party/argo-ui/argo_template';
-import { ApiResourceType, ApiRunDetail, ApiRunStorageState } from '../apis/run';
+import { V1ResourceType, V1RunDetail, V1RunStorageState } from '../apis/run';
 import { QUERY_PARAMS, RoutePage, RouteParams } from '../components/Router';
 import { PlotType } from '../components/viewers/Viewer';
 import { Apis, JSONObject } from '../lib/Apis';
@@ -415,7 +415,7 @@ describe('RunDetails', () => {
 
   it('shows experiment name in breadcrumbs if the run is not archived', async () => {
     testRun.run!.resource_references = [
-      { key: { id: 'some-experiment-id', type: ApiResourceType.EXPERIMENT } },
+      { key: { id: 'some-experiment-id', type: V1ResourceType.EXPERIMENT } },
     ];
     tree = shallow(<RunDetails {...generateProps()} />);
     await getRunSpy;
@@ -437,7 +437,7 @@ describe('RunDetails', () => {
   });
 
   it('has a Restore button if the run is archived', async () => {
-    testRun.run!.storage_state = ApiRunStorageState.ARCHIVED;
+    testRun.run!.storage_state = V1RunStorageState.ARCHIVED;
     tree = shallow(<RunDetails {...generateProps()} />);
     await getRunSpy;
     await TestUtils.flushPromises();
@@ -446,7 +446,7 @@ describe('RunDetails', () => {
   });
 
   it('shows Archive in breadcrumbs if the run is archived', async () => {
-    testRun.run!.storage_state = ApiRunStorageState.ARCHIVED;
+    testRun.run!.storage_state = V1RunStorageState.ARCHIVED;
     tree = shallow(<RunDetails {...generateProps()} />);
     await getRunSpy;
     await TestUtils.flushPromises();
@@ -491,7 +491,7 @@ describe('RunDetails', () => {
 
   it('shows an error banner if get experiment API fails', async () => {
     testRun.run!.resource_references = [
-      { key: { id: 'experiment1', type: ApiResourceType.EXPERIMENT } },
+      { key: { id: 'experiment1', type: V1ResourceType.EXPERIMENT } },
     ];
     TestUtils.makeErrorResponseOnce(getExperimentSpy, 'woops');
     tree = shallow(<RunDetails {...generateProps()} />);
@@ -512,7 +512,7 @@ describe('RunDetails', () => {
 
   it('calls the get experiment API once to load it if the run has its reference', async () => {
     testRun.run!.resource_references = [
-      { key: { id: 'experiment1', type: ApiResourceType.EXPERIMENT } },
+      { key: { id: 'experiment1', type: V1ResourceType.EXPERIMENT } },
     ];
     tree = shallow(<RunDetails {...generateProps()} />);
     await getRunSpy;

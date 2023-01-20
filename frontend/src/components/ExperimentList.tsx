@@ -18,27 +18,27 @@ import CustomTable, { Column, CustomRendererProps, Row, ExpandState } from './Cu
 import * as React from 'react';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import {
-  ApiListExperimentsResponse,
-  ApiExperiment,
-  ApiExperimentStorageState,
+  V1ListExperimentsResponse,
+  V1Experiment,
+  V1ExperimentStorageState,
 } from '../apis/experiment';
 import { errorToMessage } from '../lib/Utils';
 import { RoutePage, RouteParams } from './Router';
 import { commonCss } from '../Css';
 import { Apis, ExperimentSortKeys, ListRequest } from '../lib/Apis';
-import { ApiRunStorageState } from 'src/apis/run';
+import { V1RunStorageState } from 'src/apis/run';
 import RunList from '../pages/RunList';
-import { PredicateOp, ApiFilter } from '../apis/filter';
+import { PredicateOp, V1Filter } from '../apis/filter';
 import produce from 'immer';
 import Tooltip from '@material-ui/core/Tooltip';
 
 export interface ExperimentListProps extends RouteComponentProps {
   namespace?: string;
-  storageState?: ApiExperimentStorageState;
+  storageState?: V1ExperimentStorageState;
   onError: (message: string, error: Error) => void;
 }
 
-interface DisplayExperiment extends ApiExperiment {
+interface DisplayExperiment extends V1Experiment {
   error?: string;
   expandState?: ExpandState;
 }
@@ -130,17 +130,17 @@ export class ExperimentList extends React.PureComponent<ExperimentListProps, Exp
         // Augment the request filter with the storage state predicate
         const filter = JSON.parse(
           decodeURIComponent(request.filter || '{"predicates": []}'),
-        ) as ApiFilter;
+        ) as V1Filter;
         filter.predicates = (filter.predicates || []).concat([
           {
             key: 'storage_state',
             // Use EQUALS ARCHIVED or NOT EQUALS ARCHIVED to account for cases where the field
             // is missing, in which case it should be counted as available.
             op:
-              this.props.storageState === ApiExperimentStorageState.ARCHIVED
+              this.props.storageState === V1ExperimentStorageState.ARCHIVED
                 ? PredicateOp.EQUALS
                 : PredicateOp.NOTEQUALS,
-            string_value: ApiExperimentStorageState.ARCHIVED.toString(),
+            string_value: V1ExperimentStorageState.ARCHIVED.toString(),
           },
         ]);
         request.filter = encodeURIComponent(JSON.stringify(filter));
@@ -152,7 +152,7 @@ export class ExperimentList extends React.PureComponent<ExperimentListProps, Exp
     }
 
     try {
-      let response: ApiListExperimentsResponse;
+      let response: V1ListExperimentsResponse;
       response = await Apis.experimentServiceApi.listExperiment(
         request.pageToken,
         request.pageSize,
@@ -196,9 +196,9 @@ export class ExperimentList extends React.PureComponent<ExperimentListProps, Exp
         disablePaging={false}
         noFilterBox={true}
         storageState={
-          this.props.storageState === ApiExperimentStorageState.ARCHIVED
-            ? ApiRunStorageState.ARCHIVED
-            : ApiRunStorageState.AVAILABLE
+          this.props.storageState === V1ExperimentStorageState.ARCHIVED
+            ? V1RunStorageState.ARCHIVED
+            : V1RunStorageState.AVAILABLE
         }
         disableSorting={true}
         disableSelection={true}

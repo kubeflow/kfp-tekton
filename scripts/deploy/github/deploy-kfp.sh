@@ -54,6 +54,8 @@ kustomize edit set image "docker.io/aipipeline/persistenceagent=${REGISTRY}/kfp-
 kustomize edit set image "docker.io/aipipeline/metadata-writer=${REGISTRY}/kfp-tekton/metadata-writer:latest"
 kustomize edit set image "docker.io/aipipeline/scheduledworkflow=${REGISTRY}/kfp-tekton/scheduledworkflow:latest"
 kustomize edit set image "docker.io/aipipeline/cache-server=${REGISTRY}/kfp-tekton/cache-server:latest"
+kustomize edit set image "docker.io/aipipeline/frontend=${REGISTRY}/kfp-tekton/frontend:latest"
+
 popd > /dev/null
 
 # Build manifest

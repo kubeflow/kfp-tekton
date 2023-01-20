@@ -18,7 +18,7 @@ import * as React from 'react';
 import BusyButton from '../atoms/BusyButton';
 import CustomTable, { Column, Row, CustomRendererProps } from '../components/CustomTable';
 import Toolbar, { ToolbarActionMap } from '../components/Toolbar';
-import { ApiJob } from '../apis/job';
+import { V1Job } from '../apis/job';
 import { Apis, JobSortKeys, ListRequest } from '../lib/Apis';
 import { DialogProps, RoutePage, RouteParams } from '../components/Router';
 import { Link } from 'react-router-dom';
@@ -35,7 +35,7 @@ export interface RecurringRunListProps extends RouteComponentProps {
 
 interface RecurringRunListState {
   busyIds: Set<string>;
-  runs: ApiJob[];
+  runs: V1Job[];
   selectedIds: string[];
   toolbarActionMap: ToolbarActionMap;
 }
@@ -139,7 +139,7 @@ class RecurringRunsManager extends React.Component<RecurringRunListProps, Recurr
   };
 
   protected async _loadRuns(request: ListRequest): Promise<string> {
-    let runs: ApiJob[] = [];
+    let runs: V1Job[] = [];
     let nextPageToken = '';
     try {
       const response = await Apis.jobServiceApi.listJobs(

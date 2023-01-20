@@ -22,7 +22,7 @@ import { PageProps } from './Page';
 import { Apis } from '../lib/Apis';
 import { RoutePage, RouteParams, QUERY_PARAMS } from '../components/Router';
 import { ApiExperiment, ApiListExperimentsResponse } from '../apis/experiment';
-import { ApiPipeline, ApiPipelineVersion } from '../apis/pipeline';
+import { V1Pipeline, V1PipelineVersion } from '../apis/pipeline';
 import { ApiResourceType, ApiRunDetail, ApiParameter, ApiRelationship } from '../apis/run';
 import { MemoryRouter } from 'react-router';
 import { logger } from '../lib/Utils';
@@ -84,7 +84,7 @@ describe('NewRun', () => {
     };
   }
 
-  function newMockPipeline(): ApiPipeline {
+  function newMockPipeline(): V1Pipeline {
     return {
       id: 'original-run-pipeline-id',
       name: 'original mock pipeline name',
@@ -96,7 +96,7 @@ describe('NewRun', () => {
     };
   }
 
-  function newMockPipelineWithParameters(): ApiPipeline {
+  function newMockPipelineWithParameters(): V1Pipeline {
     return {
       id: 'unoriginal-run-pipeline-id',
       name: 'unoriginal mock pipeline name',
@@ -117,7 +117,7 @@ describe('NewRun', () => {
     };
   }
 
-  function newMockPipelineVersion(): ApiPipelineVersion {
+  function newMockPipelineVersion(): V1PipelineVersion {
     return {
       id: 'original-run-pipeline-version-id',
       name: 'original mock pipeline version name',

@@ -19,7 +19,7 @@ import * as Utils from '../lib/Utils';
 import { ExperimentList, ExperimentListProps } from './ExperimentList';
 import TestUtils from '../TestUtils';
 import { ApiFilter, PredicateOp } from '../apis/filter';
-import { ApiRunStorageState } from '../apis/run';
+import { V1RunStorageState } from '../apis/run';
 import { ApiExperimentStorageState } from '../apis/experiment';
 import { ExpandState } from './CustomTable';
 
@@ -290,7 +290,7 @@ describe('ExperimentList', () => {
             {
               key: 'storage_state',
               op: PredicateOp.NOTEQUALS,
-              string_value: ApiRunStorageState.ARCHIVED.toString(),
+              string_value: V1RunStorageState.ARCHIVED.toString(),
             },
           ],
         } as ApiFilter),
@@ -341,7 +341,7 @@ describe('ExperimentList', () => {
             {
               key: 'storage_state',
               op: PredicateOp.EQUALS,
-              string_value: ApiRunStorageState.ARCHIVED.toString(),
+              string_value: V1RunStorageState.ARCHIVED.toString(),
             },
           ],
         } as ApiFilter),

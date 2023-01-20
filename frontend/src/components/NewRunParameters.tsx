@@ -19,13 +19,13 @@ import { commonCss } from '../Css';
 import Button from '@material-ui/core/Button';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
-import { ApiParameter } from '../apis/pipeline';
+import { V1Parameter } from '../apis/pipeline';
 import { classes, stylesheet } from 'typestyle';
 import { color, spacing } from '../Css';
 import Editor from './Editor';
 
 export interface NewRunParametersProps {
-  initialParams: ApiParameter[];
+  initialParams: V1Parameter[];
   titleMessage: string;
   handleParamChange: (index: number, value: string) => void;
 }
@@ -84,7 +84,7 @@ class NewRunParameters extends React.Component<NewRunParametersProps> {
 interface ParamEditorProps {
   id: string;
   onChange: (value: string) => void;
-  param: ApiParameter;
+  param: V1Parameter;
 }
 
 interface ParamEditorState {

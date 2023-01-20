@@ -19,7 +19,7 @@ import { shallow, mount } from 'enzyme';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PlotType } from './Viewer';
 import VisualizationCreator, { VisualizationCreatorConfig } from './VisualizationCreator';
-import { ApiVisualizationType } from '../../apis/visualization';
+import { V1VisualizationType } from '../../apis/visualization';
 import { diffHTML } from 'src/TestUtils';
 
 describe('VisualizationCreator', () => {
@@ -83,7 +83,7 @@ describe('VisualizationCreator', () => {
     const tree = shallow(<VisualizationCreator configs={[config]} />);
     tree.setState({
       // source by default is set to ''
-      selectedType: ApiVisualizationType.ROCCURVE,
+      selectedType: V1VisualizationType.ROCCURVE,
     });
     expect(tree).toMatchSnapshot();
   });
@@ -97,7 +97,7 @@ describe('VisualizationCreator', () => {
     const tree = shallow(<VisualizationCreator configs={[config]} />);
     tree.setState({
       // source by default is set to ''
-      selectedType: ApiVisualizationType.CUSTOM,
+      selectedType: V1VisualizationType.CUSTOM,
     });
     expect(tree).toMatchSnapshot();
   });
@@ -129,7 +129,7 @@ describe('VisualizationCreator', () => {
     const tree = shallow(<VisualizationCreator configs={[config]} />);
     tree.setState({
       // source by default is set to ''
-      selectedType: ApiVisualizationType.ROCCURVE,
+      selectedType: V1VisualizationType.ROCCURVE,
     });
     expect(
       tree
@@ -146,7 +146,7 @@ describe('VisualizationCreator', () => {
     };
     const tree = shallow(<VisualizationCreator configs={[config]} />);
     tree.setState({
-      selectedType: ApiVisualizationType.ROCCURVE,
+      selectedType: V1VisualizationType.ROCCURVE,
       source: 'gs://ml-pipeline/data.csv',
     });
     expect(
@@ -165,7 +165,7 @@ describe('VisualizationCreator', () => {
     };
     const tree = shallow(<VisualizationCreator configs={[config]} />);
     tree.setState({
-      selectedType: ApiVisualizationType.ROCCURVE,
+      selectedType: V1VisualizationType.ROCCURVE,
       source: 'gs://ml-pipeline/data.csv',
     });
     expect(
@@ -184,7 +184,7 @@ describe('VisualizationCreator', () => {
     };
     const tree = shallow(<VisualizationCreator configs={[config]} />);
     tree.setState({
-      selectedType: ApiVisualizationType.ROCCURVE,
+      selectedType: V1VisualizationType.ROCCURVE,
       source: 'gs://ml-pipeline/data.csv',
     });
     expect(
@@ -205,7 +205,7 @@ describe('VisualizationCreator', () => {
     const tree = shallow(<VisualizationCreator configs={[config]} />);
     tree.setState({
       arguments: '{}',
-      selectedType: ApiVisualizationType.ROCCURVE,
+      selectedType: V1VisualizationType.ROCCURVE,
       source: 'gs://ml-pipeline/data.csv',
     });
     tree
@@ -225,7 +225,7 @@ describe('VisualizationCreator', () => {
     const tree = shallow(<VisualizationCreator configs={[config]} />);
     tree.setState({
       arguments: '{}',
-      selectedType: ApiVisualizationType.ROCCURVE,
+      selectedType: V1VisualizationType.ROCCURVE,
       source: 'gs://ml-pipeline/data.csv',
     });
     tree
@@ -235,7 +235,7 @@ describe('VisualizationCreator', () => {
     expect(onGenerate).toBeCalledWith(
       '{}',
       'gs://ml-pipeline/data.csv',
-      ApiVisualizationType.ROCCURVE,
+      V1VisualizationType.ROCCURVE,
     );
   });
 
@@ -248,7 +248,7 @@ describe('VisualizationCreator', () => {
       arguments: JSON.stringify({ is_generated: 'True' }),
       // selectedType is required to be set so that the argument editor
       // component is visible.
-      selectedType: ApiVisualizationType.ROCCURVE,
+      selectedType: V1VisualizationType.ROCCURVE,
     });
     expect(tree).toMatchSnapshot();
   });
@@ -276,7 +276,7 @@ describe('VisualizationCreator', () => {
     };
     const tree = shallow(<VisualizationCreator configs={[config]} />);
     tree.setState({
-      selectedType: ApiVisualizationType.ROCCURVE,
+      selectedType: V1VisualizationType.ROCCURVE,
     });
     expect(tree).toMatchSnapshot();
   });
@@ -305,7 +305,7 @@ describe('VisualizationCreator', () => {
   it('has an argument placeholder for every visualization type', () => {
     // Taken from VisualizationCreator.tsx, update this if updated within
     // VisualizationCreator.tsx.
-    const types = Object.keys(ApiVisualizationType)
+    const types = Object.keys(V1VisualizationType)
       .map((key: string) => key.replace('_', ''))
       .filter((key: string, i: number, arr: string[]) => arr.indexOf(key) === i);
     const config: VisualizationCreatorConfig = {
