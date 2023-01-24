@@ -10,7 +10,7 @@ attrs==20.3.0
     # via jsonschema
 cachetools==4.2.1
     # via google-auth
-certifi==2020.12.5
+certifi==2022.12.7
     # via
     #   kfp-server-api
     #   kubernetes
@@ -161,7 +161,7 @@ urllib3==1.26.3
     #   requests
 websocket-client==0.57.0
     # via kubernetes
-wheel==0.36.2
+wheel==0.38.1
     # via strip-hints
 wrapt==1.12.1
     # via deprecated
