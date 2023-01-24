@@ -513,6 +513,24 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
 
 
 def find_ancestors(nested_custom_tasks: list, father_ct_name, ancestors: list, root_ct):
+""" Finds the ancestors of a nested custom task.
+
+    Parameters
+    ----------
+    nested_custom_tasks : list
+        A list of dictionaries, each dictionary containing the name of a nested custom task and the name of its father custom task.
+    father_ct_name : str
+        The name of the father custom task.
+    ancestors : list
+        A list of the ancestors of the nested custom task.
+    root_ct : str
+        The name of the root custom task.
+
+    Returns
+    -------
+    relationship : dict
+        A dictionary containing the ancestors of the nested custom task and the name of the root custom task.
+"""
     relationship = {'ancestors': ancestors, 'root_ct': root_ct}
     for custom_task in nested_custom_tasks:
         if father_ct_name == custom_task['nested_custom_task']:

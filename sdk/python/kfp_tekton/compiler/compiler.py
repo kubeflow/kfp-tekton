@@ -383,6 +383,15 @@ class TektonCompiler(Compiler):
             })
 
     def process_pipelineparam(s):
+    """
+      This function takes a string and replaces all instances of {{pipelineparam:op=<op_name>;name=<param_name>}}
+      with the appropriate value.
+
+      If op_name is empty, then the value of the parameter is taken from the pipeline parameters.
+      If op_name is not empty, then the value of the parameter is taken from the results of the operation.
+
+      The parameter name is sanitized to be a valid Kubernetes name.
+    """
       if "{{pipelineparam" in s:
         pipe_params = re.findall(r"{{pipelineparam:op=([^ \t\n,]*);name=([^ \t\n,]*)}}", s)
         for pipe_param in pipe_params:
@@ -880,7 +889,15 @@ class TektonCompiler(Compiler):
     return inputs, outputs
 
   def _process_resourceOp(self, task_refs, pipeline):
-    """ handle resourceOp cases in pipeline """
+    """
+    This function is used to handle resourceOp cases in pipeline.
+    It will add the action, merge_strategy, success_condition, failure_condition, set_owner_reference, output to the task params.
+    Args:
+        task_refs: the task_refs in pipeline.
+        pipeline: the pipeline object
+    Returns:
+        None
+    """
     for task in task_refs:
       op = pipeline.ops.get(task['name'])
       if isinstance(op, dsl.ResourceOp):
