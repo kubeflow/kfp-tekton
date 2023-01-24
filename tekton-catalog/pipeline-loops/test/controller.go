@@ -23,14 +23,12 @@ import (
 	"testing"
 
 	// Link in the fakes so they get injected into injection.Fake
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	fakepipelineclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/fake"
-	informersv1alpha1 "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1alpha1"
 	informersv1beta1 "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
 	fakepipelineclient "github.com/tektoncd/pipeline/pkg/client/injection/client/fake"
-	fakeruninformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1alpha1/run/fake"
 	fakeclustertaskinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/clustertask/fake"
+	fakeCustomRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/customrun/fake"
 	fakepipelineinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/pipeline/fake"
 	fakepipelineruninformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/pipelinerun/fake"
 	faketaskinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/task/fake"
@@ -64,7 +62,7 @@ type Data struct {
 	TaskRuns        []*v1beta1.TaskRun
 	Tasks           []*v1beta1.Task
 	ClusterTasks    []*v1beta1.ClusterTask
-	Runs            []*v1alpha1.Run
+	CustomRuns      []*v1beta1.CustomRun
 	Pods            []*corev1.Pod
 	Namespaces      []*corev1.Namespace
 	ConfigMaps      []*corev1.ConfigMap
@@ -84,7 +82,7 @@ type Informers struct {
 	PipelineRun    informersv1beta1.PipelineRunInformer
 	Pipeline       informersv1beta1.PipelineInformer
 	TaskRun        informersv1beta1.TaskRunInformer
-	Run            informersv1alpha1.RunInformer
+	CustomRun      informersv1beta1.CustomRunInformer
 	Task           informersv1beta1.TaskInformer
 	ClusterTask    informersv1beta1.ClusterTaskInformer
 	Pod            coreinformers.PodInformer
@@ -162,7 +160,7 @@ func SeedTestData(t *testing.T, ctx context.Context, d Data) (Clients, Informers
 		PipelineRun:    fakepipelineruninformer.Get(ctx),
 		Pipeline:       fakepipelineinformer.Get(ctx),
 		TaskRun:        faketaskruninformer.Get(ctx),
-		Run:            fakeruninformer.Get(ctx),
+		CustomRun:      fakeCustomRunInformer.Get(ctx),
 		Task:           faketaskinformer.Get(ctx),
 		ClusterTask:    fakeclustertaskinformer.Get(ctx),
 		Pod:            fakepodinformer.Get(ctx),
@@ -208,10 +206,10 @@ func SeedTestData(t *testing.T, ctx context.Context, d Data) (Clients, Informers
 			t.Fatal(err)
 		}
 	}
-	c.Pipeline.PrependReactor("*", "runs", AddToInformer(t, i.Run.Informer().GetIndexer()))
-	for _, run := range d.Runs {
+	c.Pipeline.PrependReactor("*", "customruns", AddToInformer(t, i.CustomRun.Informer().GetIndexer()))
+	for _, run := range d.CustomRuns {
 		run := run.DeepCopy() // Avoid assumptions that the informer's copy is modified.
-		if _, err := c.Pipeline.TektonV1alpha1().Runs(run.Namespace).Create(ctx, run, metav1.CreateOptions{}); err != nil {
+		if _, err := c.Pipeline.TektonV1beta1().CustomRuns(run.Namespace).Create(ctx, run, metav1.CreateOptions{}); err != nil {
 			t.Fatal(err)
 		}
 	}

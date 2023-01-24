@@ -24,8 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/test"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/test/diff"
 	"github.com/tektoncd/pipeline/test/names"
 	corev1 "k8s.io/api/core/v1"
@@ -33,7 +32,7 @@ import (
 	_ "knative.dev/pkg/system/testing"
 )
 
-var expectedPipelineRunWithRange1 = &v1beta1.PipelineRun{
+var expectedPipelineRunWithRange1 = &tektonv1beta1.PipelineRun{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "run-pipelineloop-00001-9l9zj",
 		Namespace: "foo",
@@ -57,19 +56,19 @@ var expectedPipelineRunWithRange1 = &v1beta1.PipelineRun{
 			"custom.tekton.dev/pipelineLoopCurrentIterationItem": "-1",
 		},
 	},
-	Spec: v1beta1.PipelineRunSpec{
-		PipelineRef: &v1beta1.PipelineRef{Name: "n-pipeline"},
-		Params: []v1beta1.Param{{
+	Spec: tektonv1beta1.PipelineRunSpec{
+		PipelineRef: &tektonv1beta1.PipelineRef{Name: "n-pipeline"},
+		Params: []tektonv1beta1.Param{{
 			Name:  "additional-parameter",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+			Value: tektonv1beta1.ArrayOrString{Type: tektonv1beta1.ParamTypeString, StringVal: "stuff"},
 		}, {
 			Name:  "iteration",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "-1"},
+			Value: tektonv1beta1.ArrayOrString{Type: tektonv1beta1.ParamTypeString, StringVal: "-1"},
 		}},
 	},
 }
 
-var expectedPipelineRunWithRange2 = &v1beta1.PipelineRun{
+var expectedPipelineRunWithRange2 = &tektonv1beta1.PipelineRun{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "run-pipelineloop-00001-9l9zj",
 		Namespace: "foo",
@@ -93,18 +92,18 @@ var expectedPipelineRunWithRange2 = &v1beta1.PipelineRun{
 			"custom.tekton.dev/pipelineLoopCurrentIterationItem": "1",
 		},
 	},
-	Spec: v1beta1.PipelineRunSpec{
-		PipelineRef: &v1beta1.PipelineRef{Name: "n-pipeline"},
-		Params: []v1beta1.Param{{
+	Spec: tektonv1beta1.PipelineRunSpec{
+		PipelineRef: &tektonv1beta1.PipelineRef{Name: "n-pipeline"},
+		Params: []tektonv1beta1.Param{{
 			Name:  "additional-parameter",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+			Value: tektonv1beta1.ArrayOrString{Type: tektonv1beta1.ParamTypeString, StringVal: "stuff"},
 		}, {
 			Name:  "iteration",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "1"},
+			Value: tektonv1beta1.ArrayOrString{Type: tektonv1beta1.ParamTypeString, StringVal: "1"},
 		}},
 	},
 }
-var expectedPipelineRunWithRange3 = &v1beta1.PipelineRun{
+var expectedPipelineRunWithRange3 = &tektonv1beta1.PipelineRun{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "run-pipelineloop-00001-9l9zj",
 		Namespace: "foo",
@@ -128,14 +127,14 @@ var expectedPipelineRunWithRange3 = &v1beta1.PipelineRun{
 			"custom.tekton.dev/pipelineLoopCurrentIterationItem": "0",
 		},
 	},
-	Spec: v1beta1.PipelineRunSpec{
-		PipelineRef: &v1beta1.PipelineRef{Name: "n-pipeline"},
-		Params: []v1beta1.Param{{
+	Spec: tektonv1beta1.PipelineRunSpec{
+		PipelineRef: &tektonv1beta1.PipelineRef{Name: "n-pipeline"},
+		Params: []tektonv1beta1.Param{{
 			Name:  "additional-parameter",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "stuff"},
+			Value: tektonv1beta1.ArrayOrString{Type: tektonv1beta1.ParamTypeString, StringVal: "stuff"},
 		}, {
 			Name:  "iteration",
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: "0"},
+			Value: tektonv1beta1.ArrayOrString{Type: tektonv1beta1.ParamTypeString, StringVal: "0"},
 		}},
 	},
 }
@@ -149,7 +148,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		step                 string
 		expectedStatus       corev1.ConditionStatus
 		expectedReason       pipelineloopv1alpha1.PipelineLoopRunReason
-		expectedPipelineruns []*v1beta1.PipelineRun
+		expectedPipelineruns []*tektonv1beta1.PipelineRun
 		expectedEvents       []string
 	}{{
 		name:                 "Case from = to",
@@ -158,7 +157,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		step:                 "1",
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange2},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{expectedPipelineRunWithRange2},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Case from 0 to 0 and non zero step increment",
@@ -167,7 +166,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "0",
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange3},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{expectedPipelineRunWithRange3},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Case from < to and +ve step increment",
@@ -176,7 +175,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "0",
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange1},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{expectedPipelineRunWithRange1},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Case from < to and step == 0",
@@ -185,7 +184,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "0",
 		expectedStatus:       corev1.ConditionFalse,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
-		expectedPipelineruns: []*v1beta1.PipelineRun{},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{},
 		expectedEvents:       []string{"Normal Started ", "Warning Failed Cannot determine number of iterations: invalid values step: 0 found in runs"},
 	}, {
 		name:                 "Case to - from < step and step > 0",
@@ -194,7 +193,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "-1",
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange2},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{expectedPipelineRunWithRange2},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Case to - from < step and step > 0",
@@ -203,7 +202,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "-1",
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange3},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{expectedPipelineRunWithRange3},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Case from = to",
@@ -212,7 +211,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "-1",
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange1},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{expectedPipelineRunWithRange1},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Case from > to and non -ve step increment",
@@ -221,7 +220,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "-1",
 		expectedStatus:       corev1.ConditionFalse,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
-		expectedPipelineruns: []*v1beta1.PipelineRun{},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{},
 		expectedEvents:       []string{"Normal Started ", "Warning Failed Cannot determine number of iterations: invalid values step: 0 found in runs"},
 	}, {
 		name:                 "Case step == 0",
@@ -230,7 +229,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "-1",
 		expectedStatus:       corev1.ConditionFalse,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
-		expectedPipelineruns: []*v1beta1.PipelineRun{},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{},
 		expectedEvents:       []string{"Normal Started ", "Warning Failed Cannot determine number of iterations: invalid values step: 0 found in runs"},
 	}, {
 		name:                 "Case from > to and -ve step increment",
@@ -239,7 +238,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "-1",
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange2},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{expectedPipelineRunWithRange2},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Case from > to and -ve step increment",
@@ -248,7 +247,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "-1",
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange3},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{expectedPipelineRunWithRange3},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Case from == 0\n",
@@ -257,7 +256,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "-1\n",
 		expectedStatus:       corev1.ConditionUnknown,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonRunning,
-		expectedPipelineruns: []*v1beta1.PipelineRun{expectedPipelineRunWithRange3},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{expectedPipelineRunWithRange3},
 		expectedEvents:       []string{"Normal Started ", "Normal Running Iterations completed: 0"},
 	}, {
 		name:                 "Case from == abc\n",
@@ -266,7 +265,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 		to:                   "edf",
 		expectedStatus:       corev1.ConditionFalse,
 		expectedReason:       pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation,
-		expectedPipelineruns: []*v1beta1.PipelineRun{},
+		expectedPipelineruns: []*tektonv1beta1.PipelineRun{},
 		expectedEvents:       []string{"Normal Started ", "Warning Failed Cannot determine number of iterations: input \"to\" is not a number"},
 	}}
 
@@ -276,9 +275,9 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 			names.TestingSeed()
 			run := specifyLoopRange(tc.from, tc.to, tc.step, runPipelineLoopWithIterateNumeric)
 			d := test.Data{
-				Runs:         []*v1alpha1.Run{run},
-				Pipelines:    []*v1beta1.Pipeline{nPipeline},
-				PipelineRuns: []*v1beta1.PipelineRun{},
+				CustomRuns:   []*tektonv1beta1.CustomRun{run},
+				Pipelines:    []*tektonv1beta1.Pipeline{nPipeline},
+				PipelineRuns: []*tektonv1beta1.PipelineRun{},
 			}
 
 			testAssets, _ := getPipelineLoopController(t, d, []*pipelineloopv1alpha1.PipelineLoop{nPipelineLoop})
@@ -290,7 +289,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 			}
 
 			// Fetch the updated Run
-			reconciledRun, err := clients.Pipeline.TektonV1alpha1().Runs(run.Namespace).Get(ctx, run.Name, metav1.GetOptions{})
+			reconciledRun, err := clients.Pipeline.TektonV1beta1().CustomRuns(run.Namespace).Get(ctx, run.Name, metav1.GetOptions{})
 			if err != nil {
 				t.Fatalf("Error getting reconciled run from fake client: %s", err)
 			}
@@ -335,7 +334,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 				if len(createdPipelineruns) == 0 {
 					t.Errorf("A PipelineRun should have been created but was not")
 				} else {
-					pipelineRunsExpectedToBeCreated := make([]*v1beta1.PipelineRun, len(createdPipelineruns))
+					pipelineRunsExpectedToBeCreated := make([]*tektonv1beta1.PipelineRun, len(createdPipelineruns))
 					i := 0
 					for _, pr := range tc.expectedPipelineruns {
 						if pr.Labels["deleted"] != "True" {
