@@ -16,22 +16,22 @@ from kubernetes import client as k8s_client
 
 
 def env_from_secret(env_name, secret_name, secret_key):
-""" Creates a V1EnvVar object from a secret.
+    """ Creates a V1EnvVar object from a secret.
 
-    Parameters
-    ----------
-    env_name : str
-        The name of the environment variable.
-    secret_name : str
-        The name of the secret.
-    secret_key : str
-        The key of the secret.
+        Parameters
+        ----------
+        env_name : str
+            The name of the environment variable.
+        secret_name : str
+            The name of the secret.
+        secret_key : str
+            The key of the secret.
 
-    Returns
-    -------
-    V1EnvVar
-        A V1EnvVar object.
-"""
+        Returns
+        -------
+        V1EnvVar
+            A V1EnvVar object.
+    """
     return k8s_client.V1EnvVar(
         name=env_name,
         value_from=k8s_client.V1EnvVarSource(

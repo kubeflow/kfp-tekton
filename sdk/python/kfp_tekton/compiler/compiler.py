@@ -383,15 +383,15 @@ class TektonCompiler(Compiler):
             })
 
     def process_pipelineparam(s):
-    """
-      This function takes a string and replaces all instances of {{pipelineparam:op=<op_name>;name=<param_name>}}
-      with the appropriate value.
+      """
+        This function takes a string and replaces all instances of {{pipelineparam:op=<op_name>;name=<param_name>}}
+        with the appropriate value.
 
-      If op_name is empty, then the value of the parameter is taken from the pipeline parameters.
-      If op_name is not empty, then the value of the parameter is taken from the results of the operation.
+        If op_name is empty, then the value of the parameter is taken from the pipeline parameters.
+        If op_name is not empty, then the value of the parameter is taken from the results of the operation.
 
-      The parameter name is sanitized to be a valid Kubernetes name.
-    """
+        The parameter name is sanitized to be a valid Kubernetes name.
+      """
       if "{{pipelineparam" in s:
         pipe_params = re.findall(r"{{pipelineparam:op=([^ \t\n,]*);name=([^ \t\n,]*)}}", s)
         for pipe_param in pipe_params:
