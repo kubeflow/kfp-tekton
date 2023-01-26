@@ -663,7 +663,7 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 			Name:      prName,
 			Namespace: run.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(run,
-				schema.GroupVersionKind{Group: "tekton.dev", Version: "v1alpha1", Kind: "Run"})},
+				schema.GroupVersionKind{Group: "tekton.dev", Version: "v1beta1", Kind: "CustomRun"})},
 			Labels:      getPipelineRunLabels(run, strconv.Itoa(iteration)),
 			Annotations: pipelineRunAnnotations,
 		},
