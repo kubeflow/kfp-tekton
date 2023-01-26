@@ -122,15 +122,13 @@ func (c *WorkflowClient) Get(namespace string, name string) (
 
 func (c *WorkflowClient) getStatusFromChildReferences(namespace, selector string, status *wfapi.PipelineRunStatus) error {
 	if status.ChildReferences != nil {
-		hasTaskRun, hasRun, hasCustomRun := false, false, false
+		hasTaskRun, hasRun := false, false
 		for _, child := range status.ChildReferences {
 			switch child.Kind {
 			case "TaskRun":
 				hasTaskRun = true
 			case "Run":
 				hasRun = true
-			case "CustomRun":
-				hasCustomRun = true
 			default:
 			}
 		}
@@ -173,25 +171,6 @@ func (c *WorkflowClient) getStatusFromChildReferences(namespace, selector string
 			}
 			status.Runs = runStatuses
 		}
-		if hasCustomRun {
-			customRuns, err := c.clientset.TektonV1beta1().CustomRuns(namespace).List(context.Background(), v1.ListOptions{
-				LabelSelector: selector,
-			})
-			if err != nil {
-				return util.NewInternalServerError(err, "can't fetch runs")
-			}
-			customRunStatuses := make(map[string]*wfapi.PipelineRunRunStatus, len(customRuns.Items))
-			for _, customRun := range customRuns.Items {
-				customRunStatus := customRun.Status.DeepCopy()
-				customRunStatuses[customRun.Name] = &wfapi.PipelineRunRunStatus{
-					PipelineTaskName: customRun.Labels["tekton.dev/pipelineTask"],
-					Status:           customRunStatus,
-				}
-				// handle nested status
-				c.handleNestedStatusV1beta1(&customRun, customRunStatus, namespace)
-			}
-			status.Runs = customRunStatuses
-		}
 	}
 	return nil
 }
@@ -207,22 +186,6 @@ func (c *WorkflowClient) handleNestedStatus(run *v1alpha1.Run, runStatus *v1alph
 		if c.updateExtraFields(obj, namespace) {
 			if newStatus, err := json.Marshal(obj); err == nil {
 				runStatus.ExtraFields.Raw = newStatus
-			}
-		}
-	}
-}
-
-// handle nested status case for specific types of Run
-func (c *WorkflowClient) handleNestedStatusV1beta1(customRun *wfapi.CustomRun, customRunStatus *customRun.CustomRunStatus, namespace string) {
-	if sort.SearchStrings(childReferencesKinds, customRun.Spec.CustomSpec.Kind) < len(childReferencesKinds) {
-		// need to lookup the nested status
-		obj := make(map[string]interface{})
-		if err := json.Unmarshal(customRunStatus.ExtraFields.Raw, &obj); err != nil {
-			return
-		}
-		if c.updateExtraFields(obj, namespace) {
-			if newStatus, err := json.Marshal(obj); err == nil {
-				customRunStatus.ExtraFields.Raw = newStatus
 			}
 		}
 	}
@@ -300,24 +263,6 @@ func (c *WorkflowClient) updateExtraFields(obj map[string]interface{}, namespace
 								statusobj["runs"] = runStatus
 								// handle nested status recursively
 								c.handleNestedStatus(runCR, runStatusStatus, namespace)
-								updated = true
-							}
-						}
-					} else if kind == "CustomRun" {
-						if customRunsCR, err := c.clientset.TektonV1beta1().CustomRuns(namespace).Get(context.Background(), name, v1.GetOptions{}); err == nil {
-							customRuns, ok := statusobj["customRuns"]
-							if !ok {
-								customRuns = make(map[string]*wfapi.PipelineRunRunStatus)
-							}
-							if customRunStatus, ok := customRuns.(map[string]*wfapi.PipelineRunRunStatus); ok {
-								customRunStatusStatus := customRunsCR.Status.DeepCopy()
-								customRunStatus[name] = &wfapi.PipelineRunRunStatus{
-									PipelineTaskName: customRunsCR.Labels["tekton.dev/pipelineTask"],
-									Status:           customRunStatusStatus,
-								}
-								statusobj["customRuns"] = customRunStatus
-								// handle nested status recursively
-								c.handleNestedStatusV1beta1(customRunsCR, customRunStatusStatus, namespace)
 								updated = true
 							}
 						}

@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
-	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -44,11 +43,11 @@ type PipelineLoopSpec struct {
 	// TaskRef is a reference to a task definition.
 	// +optional
 	// TaskRef     *v1beta1.TaskRef     `json:"taskRef,omitempty"`
-	PipelineRef *tektonv1beta1.PipelineRef `json:"pipelineRef,omitempty"`
+	PipelineRef *v1beta1.PipelineRef `json:"pipelineRef,omitempty"`
 
 	// TaskSpec is a specification of a task
 	// +optional
-	PipelineSpec *tektonv1beta1.PipelineSpec `json:"pipelineSpec,omitempty"`
+	PipelineSpec *v1beta1.PipelineSpec `json:"pipelineSpec,omitempty"`
 
 	// IterateParam is the name of the task parameter that is iterated upon.
 	IterateParam string `json:"iterateParam"`
