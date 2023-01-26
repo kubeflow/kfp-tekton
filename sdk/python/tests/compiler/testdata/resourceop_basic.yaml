@@ -78,7 +78,9 @@ spec:
           name: set-ownerreference
           type: string
         steps:
-        - args:
+        - command:
+          - kubeclient
+          args:
           - --action=$(params.action)
           - --merge-strategy=$(params.merge-strategy)
           - |
