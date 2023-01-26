@@ -157,6 +157,9 @@ def _get_resourceOp_template(op: BaseOp,
             ],
             'steps': [
                 {
+                    "command": [
+                        "kubeclient"
+                    ],
                     "args": [
                         "--action=$(params.action)",
                         "--merge-strategy=$(params.merge-strategy)",
