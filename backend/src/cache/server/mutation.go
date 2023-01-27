@@ -295,9 +295,9 @@ func mutateContainer(results map[string][]*tektonv1beta1.TaskRunResult, original
 		return originalContainer, fmt.Errorf("could not find cached output for container %s", originalContainer.Name)
 	}
 	args := []string{}
-	args = append(args, "printf 'This step output is taken from cache.\n\n'")
+	args = append(args, "printf '%s' 'This step output is taken from cache.\n\n'")
 	for _, result := range outputs {
-		arg := fmt.Sprintf("printf '%s: %s\n'; printf '%s' > /tekton/results/%s", result.Name, result.Value.StringVal, result.Value.StringVal, result.Name)
+		arg := fmt.Sprintf("printf '%%s' '%s: %s\n'; printf '%%s' '%s' > /tekton/results/%s", result.Name, result.Value.StringVal, result.Value.StringVal, result.Name)
 		args = append(args, arg)
 	}
 
