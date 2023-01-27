@@ -37,8 +37,8 @@ var expectedPipelineRunWithRange1 = &tektonv1beta1.PipelineRun{
 		Name:      "run-pipelineloop-00001-9l9zj",
 		Namespace: "foo",
 		OwnerReferences: []metav1.OwnerReference{{
-			APIVersion:         "tekton.dev/v1alpha1",
-			Kind:               "Run",
+			APIVersion:         "tekton.dev/v1beta1",
+			Kind:               "CustomRun",
 			Name:               "run-pipelineloop",
 			Controller:         &trueB,
 			BlockOwnerDeletion: &trueB,
@@ -73,8 +73,8 @@ var expectedPipelineRunWithRange2 = &tektonv1beta1.PipelineRun{
 		Name:      "run-pipelineloop-00001-9l9zj",
 		Namespace: "foo",
 		OwnerReferences: []metav1.OwnerReference{{
-			APIVersion:         "tekton.dev/v1alpha1",
-			Kind:               "Run",
+			APIVersion:         "tekton.dev/v1beta1",
+			Kind:               "CustomRun",
 			Name:               "run-pipelineloop",
 			Controller:         &trueB,
 			BlockOwnerDeletion: &trueB,
@@ -108,8 +108,8 @@ var expectedPipelineRunWithRange3 = &tektonv1beta1.PipelineRun{
 		Name:      "run-pipelineloop-00001-9l9zj",
 		Namespace: "foo",
 		OwnerReferences: []metav1.OwnerReference{{
-			APIVersion:         "tekton.dev/v1alpha1",
-			Kind:               "Run",
+			APIVersion:         "tekton.dev/v1beta1",
+			Kind:               "CustomRun",
 			Name:               "run-pipelineloop",
 			Controller:         &trueB,
 			BlockOwnerDeletion: &trueB,
