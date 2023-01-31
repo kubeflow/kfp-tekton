@@ -35,8 +35,8 @@ spec:
     - name: suffix
       value: $(params.suffix)
 ---
-apiVersion: tekton.dev/v1alpha1
-kind: Run
+apiVersion: tekton.dev/v1beta1
+kind: CustomRun
 metadata:
   name: simpletasklooprun02
 spec:
@@ -48,7 +48,7 @@ spec:
         - roll
     - name: suffix
       value: ing
-  spec:
+  customSpec:
     apiVersion: custom.tekton.dev/v1alpha1
     kind: PipelineLoop
     spec:

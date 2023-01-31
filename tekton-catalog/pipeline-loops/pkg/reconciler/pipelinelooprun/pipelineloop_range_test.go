@@ -284,7 +284,7 @@ func TestReconcilePipelineLoopRunRange(t *testing.T) {
 			c := testAssets.Controller
 			clients := testAssets.Clients
 
-			if err := c.Reconciler.Reconcile(ctx, getRunName(run)); err != nil {
+			if err := c.Reconciler.Reconcile(ctx, getCustomRunName(run)); err != nil {
 				t.Fatalf("Error reconciling: %s", err)
 			}
 
