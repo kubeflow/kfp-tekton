@@ -1,2 +1,3 @@
 kfp>=1.8.10,<1.8.19
 protobuf>=3.20.1,<4
+kfp-tekton-server-api==1.5.0
