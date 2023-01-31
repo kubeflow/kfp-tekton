@@ -34,11 +34,11 @@ def echo_pipeline():
   - [Uploading Pipelines](#uploading-pipelines)
     - [1. Upload Pipelines with the Kubeflow Pipeline User Interface](#1-upload-pipelines-with-the-kubeflow-pipeline-user-interface)
     - [2. Upload Pipelines Using the `kfp_tekton.TektonClient` in Python](#2-upload-pipelines-using-the-kfp_tektontektonclient-in-python)
-    - [3. Upload Pipelines Using the `kfp` Bash Command Line Tool](#3-upload-pipelines-using-the-kfp-bash-command-line-tool)
+    - [3. Upload Pipelines Using the `kfp-tekton` Bash Command Line Tool](#3-upload-pipelines-using-the-kfp-tekton-bash-command-line-tool)
   - [Running Pipelines](#running-pipelines)
     - [1. Run Pipelines with the Kubeflow Pipeline User Interface](#1-run-pipelines-with-the-kubeflow-pipeline-user-interface)
     - [2. Run Pipelines Using the `kfp_tekton.TektonClient` in Python](#2-run-pipelines-using-the-kfp_tektontektonclient-in-python)
-    - [3. Run Pipelines Using the `kfp` Bash Command Line Tool](#3-run-pipelines-using-the-kfp-bash-command-line-tool)
+    - [3. Run Pipelines Using the `kfp-tekton` Bash Command Line Tool](#3-run-pipelines-using-the-kfp-tekton-bash-command-line-tool)
     - [4. Optional: Run Tekton Pipelines Without Using the Kubeflow Pipelines Engine](#4-optional-run-tekton-pipelines-without-using-the-kubeflow-pipelines-engine)
   - [Best Practices](#best-practices)
     - [Artifacts and Parameter output files for Tekton](#artifacts-and-parameter-output-files-for-tekton)
@@ -190,9 +190,9 @@ pipeline_version = client.pipeline_uploads.upload_pipeline_version(pipeline_vers
 ```
 
 
-### 3. Upload Pipelines Using the `kfp` Bash Command Line Tool
+### 3. Upload Pipelines Using the `kfp-tekton` Bash Command Line Tool
 
-The kfp-tekton SDK also comes with a bash command line tool for uploading Kubeflow pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster. Please be aware that the `kfp` CLI only works for single user mode.
+The kfp-tekton SDK also comes with a bash command line tool for uploading Kubeflow pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster. Please be aware that the `kfp-tekton` CLI only works for single user mode on kfp-tekton version 1.6+, for kfp-tekton 1.5 and below, please use the old `kfp` bash command.
 ```shell
 kubectl get pods -n kubeflow | grep ml-pipeline
 # ml-pipeline-fc87669c7-f98x4                                      1/1     Running   0          8d
@@ -207,7 +207,7 @@ kubectl get pods -n kubeflow | grep ml-pipeline
 
 To upload a new pipeline
 ```shell
-kfp pipeline upload -p echo_pipeline echo_pipeline.yaml
+kfp-tekton pipeline upload -p echo_pipeline echo_pipeline.yaml
 # Pipeline 925415d5-18e9-4e08-b57f-3b06e3e54648 has been submitted
 
 # Pipeline Details
@@ -220,7 +220,7 @@ kfp pipeline upload -p echo_pipeline echo_pipeline.yaml
 
 To upload a new version of an existing pipeline
 ```shell
-kfp pipeline upload-version -p <existing_pipeline_id> -v new_pipeline_version echo_pipeline.yaml
+kfp-tekton pipeline upload-version -p <existing_pipeline_id> -v new_pipeline_version echo_pipeline.yaml
 # The new_pipeline_version version of the pipeline 925415d5-18e9-4e08-b57f-3b06e3e54648 has been submitted
 
 # Pipeline Version Details
@@ -317,9 +317,9 @@ run = client.run_pipeline(experiment.id, pipeline_id='925415d5-18e9-4e08-b57f-3b
 ``` 
 
 
-### 3. Run Pipelines Using the `kfp` Bash Command Line Tool
+### 3. Run Pipelines Using the `kfp-tekton` Bash Command Line Tool
 
-The kfp-tekton SDK also comes with a bash command line tool for running Kubeflow Pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster. Please be aware that currently the `kfp` CLI only works for single user mode.
+The kfp-tekton SDK also comes with a bash command line tool for running Kubeflow Pipelines. Before running the below commands, we need to make sure our `kubectl` is connected to our Kubeflow cluster. Please be aware that the `kfp-tekton` CLI only works for single user mode on kfp-tekton version 1.6+, for kfp-tekton 1.5 and below, please use the old `kfp` bash command.
 ```shell
 kubectl get pods -n kubeflow | grep ml-pipeline
 # ml-pipeline-fc87669c7-f98x4                                      1/1     Running   0          8d
@@ -334,7 +334,7 @@ kubectl get pods -n kubeflow | grep ml-pipeline
 
 Then, we need to find the pipeline ID that we want to execute.
 ```shell
-kfp pipeline list
+kfp-tekton pipeline list
 # +--------------------------------------+-----------------------------------+---------------------------+
 # | Pipeline ID                          | Name                              | Uploaded at               |
 # +======================================+===================================+===========================+
@@ -344,7 +344,7 @@ kfp pipeline list
 
 Next, submit the pipeline ID for execution
 ```shell
-kfp run submit kfp run submit -e experiment-name -r run-name -p 925415d5-18e9-4e08-b57f-3b06e3e54648
+kfp-tekton run submit -e experiment-name -r run-name -p 925415d5-18e9-4e08-b57f-3b06e3e54648
 # Creating experiment experiment-name.
 # Run bb96363f-ec0d-4e5a-9ce9-f69a485c2d94 is submitted
 # +--------------------------------------+----------+----------+---------------------------+
@@ -356,7 +356,7 @@ kfp run submit kfp run submit -e experiment-name -r run-name -p 925415d5-18e9-4e
 
 Lastly, we can check the status of the pipeline execution
 ```shell
-kfp run get bb96363f-ec0d-4e5a-9ce9-f69a485c2d94
+kfp-tekton run get bb96363f-ec0d-4e5a-9ce9-f69a485c2d94
 # +--------------------------------------+----------+-----------+---------------------------+
 # | run id                               | name     | status    | created at                |
 # +======================================+==========+===========+===========================+
