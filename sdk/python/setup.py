@@ -68,6 +68,7 @@ def get_requirements(requirements_file: str) -> List[str]:
     lines = [line for line in lines if not (line.startswith('#') or line.startswith('-')) and line]
     return lines
 
+
 def find_version(*file_path_parts):
 
     if "KFP_TEKTON_VERSION" in env:
