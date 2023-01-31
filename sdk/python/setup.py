@@ -206,6 +206,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'dsl-compile-tekton = kfp_tekton.compiler.main:main'
+            'dsl-compile-tekton = kfp_tekton.compiler.main:main',
+            'kfp-tekton=kfp_tekton.cli.cli:main'
         ]
     })
