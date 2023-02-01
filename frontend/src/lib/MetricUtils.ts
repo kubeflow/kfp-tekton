@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { ApiRunMetric, RunMetricFormat } from '../apis/run';
+import { V1RunMetric, RunMetricFormat } from '../apis/run';
 
-function getMetricDisplayString(metric?: ApiRunMetric, decimalPlaces = 3): string {
+function getMetricDisplayString(metric?: V1RunMetric, decimalPlaces = 3): string {
   if (!metric || metric.number_value === undefined) {
     return '';
   }

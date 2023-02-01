@@ -16,8 +16,8 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Elements, FlowElement } from 'react-flow-renderer';
 import { useQuery } from 'react-query';
-import { ApiExperiment } from 'src/apis/experiment';
-import { ApiRun, ApiRunDetail, ApiRunStorageState } from 'src/apis/run';
+import { V1Experiment } from 'src/apis/experiment';
+import { V1Run, V1RunDetail, V1RunStorageState } from 'src/apis/run';
 import MD2Tabs from 'src/atoms/MD2Tabs';
 import DetailsTable from 'src/components/DetailsTable';
 import { FlowElementDataBase } from 'src/components/graph/Constants';
@@ -63,7 +63,7 @@ export interface NodeMlmdInfo {
 
 interface RunDetailsV2Info {
   pipeline_job: string;
-  runDetail: ApiRunDetail;
+  runDetail: V1RunDetail;
 }
 
 export type RunDetailsV2Props = RunDetailsV2Info & RunDetailsProps;
@@ -141,7 +141,7 @@ export function RunDetailsV2(props: RunDetailsV2Props) {
 
   // Retrieves experiment detail.
   const experimentId = RunUtils.getFirstExperimentReferenceId(runDetail.run);
-  const { data: apiExperiment } = useQuery<ApiExperiment, Error>(
+  const { data: apiExperiment } = useQuery<V1Experiment, Error>(
     ['RunDetailsV2_experiment', { runId: runId, experimentId: experimentId }],
     () => getExperiment(experimentId),
     {},
@@ -217,7 +217,7 @@ export function RunDetailsV2(props: RunDetailsV2Props) {
   );
 }
 
-async function getExperiment(experimentId: string | null): Promise<ApiExperiment> {
+async function getExperiment(experimentId: string | null): Promise<V1Experiment> {
   if (experimentId) {
     return Apis.experimentServiceApi.getExperiment(experimentId);
   }
@@ -225,8 +225,8 @@ async function getExperiment(experimentId: string | null): Promise<ApiExperiment
 }
 
 function updateToolBar(
-  apiRunDetail: ApiRunDetail | undefined,
-  apiExperiment: ApiExperiment | undefined,
+  apiRunDetail: V1RunDetail | undefined,
+  apiExperiment: V1Experiment | undefined,
   updateToolBarCallback: (toolbarProps: Partial<ToolbarProps>) => void,
 ) {
   const runMetadata = apiRunDetail?.run;
@@ -262,7 +262,7 @@ function updateToolBar(
 function updateToolBarActions(
   buttons: Buttons,
   runIdFromParams: string,
-  apiRunDetail: ApiRunDetail | undefined,
+  apiRunDetail: V1RunDetail | undefined,
   runFinished: boolean,
   updateToolbar: (toolbarProps: Partial<ToolbarProps>) => void,
   refresh: () => void,
@@ -276,7 +276,7 @@ function updateToolBarActions(
     .retryRun(getRunIdList, true, () => retry())
     .cloneRun(getRunIdList, true)
     .terminateRun(getRunIdList, true, () => refresh());
-  !runMetadata || runMetadata.storage_state === ApiRunStorageState.ARCHIVED
+  !runMetadata || runMetadata.storage_state === V1RunStorageState.ARCHIVED
     ? buttons.restore('run', getRunIdList, true, () => refresh())
     : buttons.archive('run', getRunIdList, true, () => refresh());
 
@@ -291,7 +291,7 @@ function updateToolBarActions(
   updateToolbar({ actions });
 }
 
-function getDetailsFields(apiRun?: ApiRun): Array<KeyValue<string>> {
+function getDetailsFields(apiRun?: V1Run): Array<KeyValue<string>> {
   return [
     ['Run ID', apiRun?.id || '-'],
     ['Workflow name', apiRun?.name || '-'],

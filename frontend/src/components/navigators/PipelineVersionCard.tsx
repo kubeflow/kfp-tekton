@@ -21,15 +21,15 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
 import Select from '@material-ui/core/Select';
 import React, { useState } from 'react';
-import { ApiPipeline, ApiPipelineVersion } from 'src/apis/pipeline';
+import { V1Pipeline, V1PipelineVersion } from 'src/apis/pipeline';
 import { Description } from 'src/components/Description';
 import { commonCss } from 'src/Css';
 import { formatDateString } from 'src/lib/Utils';
 
 interface PipelineVersionCardProps {
-  apiPipeline: ApiPipeline | null;
-  selectedVersion: ApiPipelineVersion | undefined;
-  versions: ApiPipelineVersion[];
+  apiPipeline: V1Pipeline | null;
+  selectedVersion: V1PipelineVersion | undefined;
+  versions: V1PipelineVersion[];
   handleVersionSelected: (versionId: string) => Promise<void>;
 }
 

@@ -23,11 +23,11 @@ import { RoutePage, RouteParams } from '../components/Router';
 import { commonCss, color } from '../Css';
 import { formatDateString, errorToMessage } from '../lib/Utils';
 import Tooltip from '@material-ui/core/Tooltip';
-import { ApiJob, ApiTrigger } from '../apis/job';
+import { V1Job, V1Trigger } from '../apis/job';
 
 interface DisplayRecurringRun {
   experiment?: ExperimentInfo;
-  job: ApiJob;
+  job: V1Job;
   error?: string;
 }
 
@@ -182,8 +182,8 @@ class RecurringRunList extends React.PureComponent<RecurringRunListProps, Recurr
     );
   };
 
-  public _triggerCustomRenderer: React.FC<CustomRendererProps<ApiTrigger>> = (
-    props: CustomRendererProps<ApiTrigger>,
+  public _triggerCustomRenderer: React.FC<CustomRendererProps<V1Trigger>> = (
+    props: CustomRendererProps<V1Trigger>,
   ) => {
     if (props.value?.cron_schedule) {
       return <div>Cron: {props.value.cron_schedule.cron}</div>;
@@ -294,7 +294,7 @@ class RecurringRunList extends React.PureComponent<RecurringRunListProps, Recurr
   ): Promise<DisplayRecurringRun[]> {
     return Promise.all(
       displayRecurringRuns.map(async displayRecurringRun => {
-        let getJobResponse: ApiJob;
+        let getJobResponse: V1Job;
         try {
           getJobResponse = await Apis.jobServiceApi.getJob(displayRecurringRun.job!.id!);
           displayRecurringRun.job = getJobResponse!;

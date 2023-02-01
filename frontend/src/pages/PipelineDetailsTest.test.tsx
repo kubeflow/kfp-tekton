@@ -19,7 +19,7 @@ import { graphlib } from 'dagre';
 import * as JsYaml from 'js-yaml';
 import React from 'react';
 import { ApiExperiment } from 'src/apis/experiment';
-import { ApiPipeline, ApiPipelineVersion } from 'src/apis/pipeline';
+import { ApiPipeline, V1PipelineVersion } from 'src/apis/pipeline';
 import { ApiRunDetail } from 'src/apis/run';
 import { QUERY_PARAMS, RouteParams } from 'src/components/Router';
 import * as v2PipelineSpec from 'src/data/test/mock_lightweight_python_functions_v2_pipeline.json';
@@ -42,8 +42,8 @@ describe('switch between v1 and v2', () => {
   const updateToolbarSpy = jest.fn();
   const historyPushSpy = jest.fn();
 
-  let testPipeline: ApiPipeline = {};
-  let testPipelineVersion: ApiPipelineVersion = {};
+  let testPipeline: V1Pipeline = {};
+  let testPipelineVersion: V1PipelineVersion = {};
   let testRun: ApiRunDetail = {};
 
   function generateProps(fromRunSpec = false): PageProps {

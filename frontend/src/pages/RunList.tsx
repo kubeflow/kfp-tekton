@@ -18,11 +18,11 @@ import * as React from 'react';
 import CustomTable, { Column, Row, CustomRendererProps } from '../components/CustomTable';
 import Metric from '../components/Metric';
 import RunUtils, { MetricMetadata, ExperimentInfo } from '../../src/lib/RunUtils';
-import { ApiRun, ApiRunMetric, ApiRunStorageState, ApiRunDetail } from '../../src/apis/run';
+import { V1Run, V1RunMetric, V1RunStorageState, V1RunDetail } from '../../src/apis/run';
 import { Apis, RunSortKeys, ListRequest } from '../lib/Apis';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { NodePhase } from '../lib/StatusUtils';
-import { PredicateOp, ApiFilter } from '../apis/filter';
+import { PredicateOp, V1Filter } from '../apis/filter';
 import { RoutePage, RouteParams, QUERY_PARAMS } from '../components/Router';
 import { URLParser } from '../lib/URLParser';
 import { commonCss, color } from '../Css';
@@ -47,14 +47,14 @@ interface RecurringRunInfo {
 interface DisplayRun {
   experiment?: ExperimentInfo;
   recurringRun?: RecurringRunInfo;
-  run: ApiRun;
+  run: V1Run;
   pipelineVersion?: PipelineVersionInfo;
   error?: string;
 }
 
 interface DisplayMetric {
   metadata?: MetricMetadata;
-  metric?: ApiRunMetric;
+  metric?: V1RunMetric;
 }
 
 // Both masks cannot be provided together.
@@ -75,7 +75,7 @@ export type RunListProps = MaskProps &
     onSelectionChange?: (selectedRunIds: string[]) => void;
     runIdListMask?: string[];
     selectedIds?: string[];
-    storageState?: ApiRunStorageState;
+    storageState?: V1RunStorageState;
   };
 
 interface RunListState {
@@ -192,7 +192,7 @@ class RunList extends React.PureComponent<RunListProps, RunListState> {
           emptyMessage={
             `No` +
             `${
-              this.props.storageState === ApiRunStorageState.ARCHIVED ? ' archived' : ' available'
+              this.props.storageState === V1RunStorageState.ARCHIVED ? ' archived' : ' available'
             }` +
             ` runs found` +
             `${
@@ -343,17 +343,17 @@ class RunList extends React.PureComponent<RunListProps, RunListState> {
           // Augment the request filter with the storage state predicate
           const filter = JSON.parse(
             decodeURIComponent(request.filter || '{"predicates": []}'),
-          ) as ApiFilter;
+          ) as V1Filter;
           filter.predicates = (filter.predicates || []).concat([
             {
               key: 'storage_state',
               // Use EQUALS ARCHIVED or NOT EQUALS ARCHIVED to account for cases where the field
               // is missing, in which case it should be counted as available.
               op:
-                this.props.storageState === ApiRunStorageState.ARCHIVED
+                this.props.storageState === V1RunStorageState.ARCHIVED
                   ? PredicateOp.EQUALS
                   : PredicateOp.NOTEQUALS,
-              string_value: ApiRunStorageState.ARCHIVED.toString(),
+              string_value: V1RunStorageState.ARCHIVED.toString(),
             },
           ]);
           request.filter = encodeURIComponent(JSON.stringify(filter));
@@ -435,7 +435,7 @@ class RunList extends React.PureComponent<RunListProps, RunListState> {
   private _getAndSetRuns(displayRuns: DisplayRun[]): Promise<DisplayRun[]> {
     return Promise.all(
       displayRuns.map(async displayRun => {
-        let getRunResponse: ApiRunDetail;
+        let getRunResponse: V1RunDetail;
         try {
           getRunResponse = await Apis.runServiceApi.getRun(displayRun.run!.id!);
           displayRun.run = getRunResponse.run!;

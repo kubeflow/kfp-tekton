@@ -105,7 +105,7 @@ describe('Apis', () => {
     };
     const spy = fetchSpy(JSON.stringify(expectedBuildInfo));
     const actualBuildInfo = await Apis.getBuildInfo();
-    expect(spy).toHaveBeenCalledWith('apis/v1beta1/healthz', { credentials: 'same-origin' });
+    expect(spy).toHaveBeenCalledWith('apis/v1/healthz', { credentials: 'same-origin' });
     expect(actualBuildInfo).toEqual(expectedBuildInfo);
   });
 
@@ -292,7 +292,7 @@ describe('Apis', () => {
     );
     expect(result).toEqual({ name: 'resultName' });
     expect(spy).toHaveBeenCalledWith(
-      'apis/v1beta1/pipelines/upload?name=' +
+      'apis/v1/pipelines/upload?name=' +
         encodeURIComponent('test pipeline name') +
         '&description=' +
         encodeURIComponent('test description'),
@@ -307,15 +307,15 @@ describe('Apis', () => {
 
   it('checks if Tensorboard pod is ready', async () => {
     const spy = fetchSpy('');
-    const ready = await Apis.isTensorboardPodReady('apis/v1beta1/_proxy/pod_address');
+    const ready = await Apis.isTensorboardPodReady('apis/v1/_proxy/pod_address');
     expect(ready).toBe(true);
-    expect(spy).toHaveBeenCalledWith('apis/v1beta1/_proxy/pod_address', { method: 'HEAD' });
+    expect(spy).toHaveBeenCalledWith('apis/v1/_proxy/pod_address', { method: 'HEAD' });
   });
 
   it('checks if Tensorboard pod is not ready', async () => {
     const spy = failedFetchSpy('');
-    const ready = await Apis.isTensorboardPodReady('apis/v1beta1/_proxy/pod_address');
+    const ready = await Apis.isTensorboardPodReady('apis/v1/_proxy/pod_address');
     expect(ready).toBe(false);
-    expect(spy).toHaveBeenCalledWith('apis/v1beta1/_proxy/pod_address', { method: 'HEAD' });
+    expect(spy).toHaveBeenCalledWith('apis/v1/_proxy/pod_address', { method: 'HEAD' });
   });
 });

@@ -203,8 +203,10 @@ def sanitize_k8s_object(k8s_obj, type=None):
     else:
       for attr in k8s_obj.attribute_map:
         if getattr(k8s_obj, attr) is not None:
-          type = k8s_obj.openapi_types[attr]
           value = getattr(k8s_obj, attr)
-          value = sanitize_k8s_object(value, type)
+          # cover edge case when k8s is using old swagger spec
+          if getattr(k8s_obj, "openapi_types", None) is not None:
+            type = k8s_obj.openapi_types[attr]
+            value = sanitize_k8s_object(value, type)
           setattr(k8s_obj, attr, value)
       return k8s_obj

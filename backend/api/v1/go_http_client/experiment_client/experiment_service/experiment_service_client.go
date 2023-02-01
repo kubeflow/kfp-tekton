@@ -36,7 +36,7 @@ func (a *Client) ArchiveExperiment(params *ArchiveExperimentParams, authInfo run
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ArchiveExperiment",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/experiments/{id}:archive",
+		PathPattern:        "/apis/v1/experiments/{id}:archive",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -65,7 +65,7 @@ func (a *Client) CreateExperiment(params *CreateExperimentParams, authInfo runti
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "CreateExperiment",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/experiments",
+		PathPattern:        "/apis/v1/experiments",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -94,7 +94,7 @@ func (a *Client) DeleteExperiment(params *DeleteExperimentParams, authInfo runti
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "DeleteExperiment",
 		Method:             "DELETE",
-		PathPattern:        "/apis/v1beta1/experiments/{id}",
+		PathPattern:        "/apis/v1/experiments/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -123,7 +123,7 @@ func (a *Client) GetExperiment(params *GetExperimentParams, authInfo runtime.Cli
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "GetExperiment",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/experiments/{id}",
+		PathPattern:        "/apis/v1/experiments/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -152,7 +152,7 @@ func (a *Client) ListExperiment(params *ListExperimentParams, authInfo runtime.C
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ListExperiment",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/experiments",
+		PathPattern:        "/apis/v1/experiments",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -181,7 +181,7 @@ func (a *Client) UnarchiveExperiment(params *UnarchiveExperimentParams, authInfo
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "UnarchiveExperiment",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/experiments/{id}:unarchive",
+		PathPattern:        "/apis/v1/experiments/{id}:unarchive",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},

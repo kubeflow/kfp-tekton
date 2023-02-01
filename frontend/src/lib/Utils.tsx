@@ -19,8 +19,8 @@ import * as pako from 'pako';
 import * as React from 'react';
 import { classes } from 'typestyle';
 import { Workflow } from '../third_party/mlmd/argo_template';
-import { ApiTrigger } from '../apis/job';
-import { ApiRun } from '../apis/run';
+import { V1Trigger } from '../apis/job';
+import { V1Run } from '../apis/run';
 import { Column, ExpandState, Row } from '../components/CustomTable';
 import { css, CustomTableRow } from '../components/CustomTableRow';
 import { padding } from '../Css';
@@ -83,7 +83,7 @@ export async function errorToMessage(error: any): Promise<string> {
   return JSON.stringify(error) || '';
 }
 
-export function enabledDisplayString(trigger: ApiTrigger | undefined, enabled: boolean): string {
+export function enabledDisplayString(trigger: V1Trigger | undefined, enabled: boolean): string {
   if (trigger) {
     return enabled ? 'Yes' : 'No';
   }
@@ -118,12 +118,12 @@ export function getRunDuration(run?: any): string {
   return getDuration(new Date(run.created_at), new Date(run.finished_at));
 }
 
-export function getRunDurationFromApiRun(apiRun?: ApiRun): string {
-    if (!apiRun || !apiRun.created_at || !apiRun.finished_at) {
-      return '-';
-    }
+export function getRunDurationFromApiRun(apiRun?: V1Run): string {
+  if (!apiRun || !apiRun.created_at || !apiRun.finished_at) {
+    return '-';
+  }
 
-    return getDuration(new Date(apiRun.created_at), new Date(apiRun.finished_at));
+  return getDuration(new Date(apiRun.created_at), new Date(apiRun.finished_at));
 }
 
 // Adjusted for use with Tekton Backend
@@ -410,15 +410,15 @@ export async function decodeCompressedNodes(compressedNodes: string): Promise<ob
 }
 
 export function isSafari(): boolean {
-    // Since react-ace Editor doesn't support in Safari when height or width is a percentage.
-    // Fix the Yaml file cannot display issue via defining “width/height” does not not take percentage if it's Safari browser.
-    // The code of detecting wether isSafari is from: https://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser/9851769#9851769
-    const isSafari =
-      /constructor/i.test(window.HTMLElement.toString()) ||
-      (function(p) {
-        return p.toString() === '[object SafariRemoteNotification]';
-      })(!window['safari'] || (typeof 'safari' !== 'undefined' && window['safari'].pushNotification));
-    return isSafari;
+  // Since react-ace Editor doesn't support in Safari when height or width is a percentage.
+  // Fix the Yaml file cannot display issue via defining “width/height” does not not take percentage if it's Safari browser.
+  // The code of detecting wether isSafari is from: https://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser/9851769#9851769
+  const isSafari =
+    /constructor/i.test(window.HTMLElement.toString()) ||
+    (function(p) {
+      return p.toString() === '[object SafariRemoteNotification]';
+    })(!window['safari'] || (typeof 'safari' !== 'undefined' && window['safari'].pushNotification));
+  return isSafari;
 }
 
 // For any String value Enum, use this approach to get the string of Enum Key.

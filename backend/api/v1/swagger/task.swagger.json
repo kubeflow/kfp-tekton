@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/apis/v1alpha1/tasks": {
+    "/apis/v1/tasks": {
       "get": {
         "summary": "Finds all tasks. Supports pagination, and sorting on certain fields.",
         "operationId": "ListTasks",

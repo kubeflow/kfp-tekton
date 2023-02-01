@@ -15,7 +15,7 @@
  */
 
 import * as React from 'react';
-import { ApiRunMetric, RunMetricFormat } from '../apis/run';
+import { V1RunMetric, RunMetricFormat } from '../apis/run';
 import { MetricMetadata } from '../lib/RunUtils';
 import { stylesheet } from 'typestyle';
 import { logger } from '../lib/Utils';
@@ -39,7 +39,7 @@ const css = stylesheet({
 
 interface MetricProps {
   metadata?: MetricMetadata;
-  metric?: ApiRunMetric;
+  metric?: V1RunMetric;
 }
 
 class Metric extends React.PureComponent<MetricProps> {

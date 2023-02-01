@@ -16,7 +16,7 @@
 
 import { csvParseRows } from 'd3-dsv';
 import { Artifact, ArtifactType, Execution } from 'src/third_party/mlmd';
-import { ApiVisualization, ApiVisualizationType } from '../apis/visualization';
+import { V1Visualization, V1VisualizationType } from '../apis/visualization';
 import { ConfusionMatrixConfig } from '../components/viewers/ConfusionMatrix';
 import { HTMLViewerConfig } from '../components/viewers/HTMLViewer';
 import { MarkdownViewerConfig } from '../components/viewers/MarkdownViewer';
@@ -473,10 +473,10 @@ async function buildArtifactViewer({
   script: string[];
   namespace: string;
 }): Promise<HTMLViewerConfig> {
-  const visualizationData: ApiVisualization = {
+  const visualizationData: V1Visualization = {
     arguments: JSON.stringify({ code: script }),
     source: '',
-    type: ApiVisualizationType.CUSTOM,
+    type: V1VisualizationType.CUSTOM,
   };
   const visualization = await Apis.buildPythonVisualizationConfig(visualizationData, namespace);
   if (!visualization.htmlContent) {
@@ -496,7 +496,7 @@ async function buildArtifactViewer({
 // ): Promise<HTMLViewerConfig> {
 //   const visualizationData: ApiVisualization = {
 //     source: url,
-//     type: ApiVisualizationType.TFDV,
+//     type: V1VisualizationType.TFDV,
 //   };
 //   const visualization = await Apis.buildPythonVisualizationConfig(visualizationData, namespace);
 //   if (!visualization.htmlContent) {

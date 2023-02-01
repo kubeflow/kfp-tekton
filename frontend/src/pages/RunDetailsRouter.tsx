@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { useQuery } from 'react-query';
-import { ApiRunDetail } from 'src/apis/run';
+import { V1RunDetail } from 'src/apis/run';
 import { RouteParams } from 'src/components/Router';
 import { Apis } from 'src/lib/Apis';
 import * as WorkflowUtils from 'src/lib/v2/WorkflowUtils';
@@ -28,7 +28,7 @@ export default function RunDetailsRouter(props: RunDetailsProps) {
   const runId = props.match.params[RouteParams.runId];
 
   // Retrieves run detail.
-  const { isSuccess, data } = useQuery<ApiRunDetail, Error>(
+  const { isSuccess, data } = useQuery<V1RunDetail, Error>(
     ['run_detail', { id: runId }],
     () => Apis.runServiceApi.getRun(runId),
     {},

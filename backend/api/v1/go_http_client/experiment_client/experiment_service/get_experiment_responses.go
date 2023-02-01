@@ -58,7 +58,7 @@ type GetExperimentOK struct {
 }
 
 func (o *GetExperimentOK) Error() string {
-	return fmt.Sprintf("[GET /apis/v1beta1/experiments/{id}][%d] getExperimentOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/experiments/{id}][%d] getExperimentOK  %+v", 200, o.Payload)
 }
 
 func (o *GetExperimentOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -96,7 +96,7 @@ func (o *GetExperimentDefault) Code() int {
 }
 
 func (o *GetExperimentDefault) Error() string {
-	return fmt.Sprintf("[GET /apis/v1beta1/experiments/{id}][%d] GetExperiment default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/experiments/{id}][%d] GetExperiment default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *GetExperimentDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {

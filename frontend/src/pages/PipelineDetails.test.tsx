@@ -18,7 +18,7 @@ import { graphlib } from 'dagre';
 import { ReactWrapper, shallow, ShallowWrapper } from 'enzyme';
 import * as React from 'react';
 import { ApiExperiment } from '../apis/experiment';
-import { ApiPipeline, ApiPipelineVersion } from '../apis/pipeline';
+import { V1Pipeline, V1PipelineVersion } from '../apis/pipeline';
 import { ApiResourceType, ApiRunDetail } from '../apis/run';
 import { QUERY_PARAMS, RoutePage, RouteParams } from '../components/Router';
 import { Apis } from '../lib/Apis';
@@ -48,8 +48,8 @@ describe('PipelineDetails', () => {
   const createGraphSpy = jest.spyOn(StaticGraphParser, 'createGraph');
 
   let tree: ShallowWrapper | ReactWrapper;
-  let testPipeline: ApiPipeline = {};
-  let testPipelineVersion: ApiPipelineVersion = {};
+  let testPipeline: V1Pipeline = {};
+  let testPipelineVersion: V1PipelineVersion = {};
   let testRun: ApiRunDetail = {};
 
   function generateProps(fromRunSpec = false): PageProps {

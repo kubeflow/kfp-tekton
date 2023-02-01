@@ -19,7 +19,7 @@ import produce from 'immer';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { classes } from 'typestyle';
-import { ApiListPipelinesResponse, ApiPipeline } from '../apis/pipeline';
+import { V1ListPipelinesResponse, V1Pipeline } from '../apis/pipeline';
 import CustomTable, {
   Column,
   CustomRendererProps,
@@ -37,7 +37,7 @@ import { errorToMessage, formatDateString } from '../lib/Utils';
 import { Page } from './Page';
 import PipelineVersionList from './PipelineVersionList';
 
-interface DisplayPipeline extends ApiPipeline {
+interface DisplayPipeline extends V1Pipeline {
   expandState?: ExpandState;
 }
 
@@ -168,7 +168,7 @@ class PipelineList extends Page<{}, PipelineListState> {
   }
 
   private async _reload(request: ListRequest): Promise<string> {
-    let response: ApiListPipelinesResponse | null = null;
+    let response: V1ListPipelinesResponse | null = null;
     let displayPipelines: DisplayPipeline[];
     try {
       response = await Apis.pipelineServiceApi.listPipelines(

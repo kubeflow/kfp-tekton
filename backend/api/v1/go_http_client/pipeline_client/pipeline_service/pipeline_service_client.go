@@ -36,7 +36,7 @@ func (a *Client) CreatePipeline(params *CreatePipelineParams, authInfo runtime.C
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "CreatePipeline",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/pipelines",
+		PathPattern:        "/apis/v1/pipelines",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -65,7 +65,7 @@ func (a *Client) CreatePipelineVersion(params *CreatePipelineVersionParams, auth
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "CreatePipelineVersion",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/pipeline_versions",
+		PathPattern:        "/apis/v1/pipeline_versions",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -94,7 +94,7 @@ func (a *Client) DeletePipeline(params *DeletePipelineParams, authInfo runtime.C
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "DeletePipeline",
 		Method:             "DELETE",
-		PathPattern:        "/apis/v1beta1/pipelines/{id}",
+		PathPattern:        "/apis/v1/pipelines/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -123,7 +123,7 @@ func (a *Client) DeletePipelineVersion(params *DeletePipelineVersionParams, auth
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "DeletePipelineVersion",
 		Method:             "DELETE",
-		PathPattern:        "/apis/v1beta1/pipeline_versions/{version_id}",
+		PathPattern:        "/apis/v1/pipeline_versions/{version_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -152,7 +152,7 @@ func (a *Client) GetPipeline(params *GetPipelineParams, authInfo runtime.ClientA
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "GetPipeline",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/pipelines/{id}",
+		PathPattern:        "/apis/v1/pipelines/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -181,7 +181,7 @@ func (a *Client) GetPipelineVersion(params *GetPipelineVersionParams, authInfo r
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "GetPipelineVersion",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/pipeline_versions/{version_id}",
+		PathPattern:        "/apis/v1/pipeline_versions/{version_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -210,7 +210,7 @@ func (a *Client) GetPipelineVersionTemplate(params *GetPipelineVersionTemplatePa
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "GetPipelineVersionTemplate",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/pipeline_versions/{version_id}/templates",
+		PathPattern:        "/apis/v1/pipeline_versions/{version_id}/templates",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -239,7 +239,7 @@ func (a *Client) GetTemplate(params *GetTemplateParams, authInfo runtime.ClientA
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "GetTemplate",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/pipelines/{id}/templates",
+		PathPattern:        "/apis/v1/pipelines/{id}/templates",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -268,7 +268,7 @@ func (a *Client) ListPipelineVersions(params *ListPipelineVersionsParams, authIn
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ListPipelineVersions",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/pipeline_versions",
+		PathPattern:        "/apis/v1/pipeline_versions",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -297,7 +297,7 @@ func (a *Client) ListPipelines(params *ListPipelinesParams, authInfo runtime.Cli
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ListPipelines",
 		Method:             "GET",
-		PathPattern:        "/apis/v1beta1/pipelines",
+		PathPattern:        "/apis/v1/pipelines",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -326,7 +326,7 @@ func (a *Client) UpdatePipelineDefaultVersion(params *UpdatePipelineDefaultVersi
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "UpdatePipelineDefaultVersion",
 		Method:             "POST",
-		PathPattern:        "/apis/v1beta1/pipelines/{pipeline_id}/default_version/{version_id}",
+		PathPattern:        "/apis/v1/pipelines/{pipeline_id}/default_version/{version_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},

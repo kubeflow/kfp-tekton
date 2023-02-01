@@ -26,7 +26,7 @@ import RecurringRunsManager from './RecurringRunsManager';
 import RunListsRouter, { RunListsGroupTab } from './RunListsRouter';
 import Toolbar, { ToolbarProps } from '../components/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
-import { ApiExperiment, ApiExperimentStorageState } from '../apis/experiment';
+import { V1Experiment, V1ExperimentStorageState } from '../apis/experiment';
 import { Apis } from '../lib/Apis';
 import { Page, PageProps } from './Page';
 import { RoutePage, RouteParams } from '../components/Router';
@@ -35,7 +35,7 @@ import { color, commonCss, padding } from '../Css';
 import { logger } from '../lib/Utils';
 import { useNamespaceChangeEvent } from 'src/lib/KubeflowClient';
 import { Redirect } from 'react-router-dom';
-import { ApiRunStorageState } from 'src/apis/run';
+import { V1RunStorageState } from 'src/apis/run';
 
 const css = stylesheet({
   card: {
@@ -101,10 +101,10 @@ const css = stylesheet({
 
 interface ExperimentDetailsState {
   activeRecurringRunsCount: number;
-  experiment: ApiExperiment | null;
+  experiment: V1Experiment | null;
   recurringRunsManagerOpen: boolean;
   selectedIds: string[];
-  runStorageState: ApiRunStorageState;
+  runStorageState: V1RunStorageState;
   runListToolbarProps: ToolbarProps;
   runlistRefreshCount: number;
 }
@@ -125,7 +125,7 @@ export class ExperimentDetails extends Page<{}, ExperimentDetailsState> {
       },
       // TODO: remove
       selectedIds: [],
-      runStorageState: ApiRunStorageState.AVAILABLE,
+      runStorageState: V1RunStorageState.AVAILABLE,
       runlistRefreshCount: 0,
     };
   }
@@ -289,7 +289,7 @@ export class ExperimentDetails extends Page<{}, ExperimentDetailsState> {
         this.getInitialToolbarState().actions,
       );
       const idGetter = () => (experiment.id ? [experiment.id] : []);
-      experiment.storage_state === ApiExperimentStorageState.ARCHIVED
+      experiment.storage_state === V1ExperimentStorageState.ARCHIVED
         ? buttons.restore('experiment', idGetter, true, () => this.refresh())
         : buttons.archive('experiment', idGetter, true, () => this.refresh());
       // If experiment is archived, shows archived runs list by default.
@@ -300,9 +300,9 @@ export class ExperimentDetails extends Page<{}, ExperimentDetailsState> {
       // want to view.
       if (isFirstTimeLoad) {
         runStorageState =
-          experiment.storage_state === ApiExperimentStorageState.ARCHIVED
-            ? ApiRunStorageState.ARCHIVED
-            : ApiRunStorageState.AVAILABLE;
+          experiment.storage_state === V1ExperimentStorageState.ARCHIVED
+            ? V1RunStorageState.ARCHIVED
+            : V1RunStorageState.AVAILABLE;
       }
 
       const actions = buttons.getToolbarActionMap();
@@ -355,9 +355,9 @@ export class ExperimentDetails extends Page<{}, ExperimentDetailsState> {
    * @param tab selected by user for run storage state
    */
   _onRunTabSwitch = (tab: RunListsGroupTab) => {
-    let runStorageState = ApiRunStorageState.AVAILABLE;
+    let runStorageState = V1RunStorageState.AVAILABLE;
     if (tab === RunListsGroupTab.ARCHIVE) {
-      runStorageState = ApiRunStorageState.ARCHIVED;
+      runStorageState = V1RunStorageState.ARCHIVED;
     }
     let runlistRefreshCount = this.state.runlistRefreshCount + 1;
     this.setStateSafe(
@@ -377,7 +377,7 @@ export class ExperimentDetails extends Page<{}, ExperimentDetailsState> {
     const toolbarButtons = this._getRunInitialToolBarButtons();
     // If user selects to show Active runs list, shows `Archive` button for selected runs.
     // If user selects to show Archive runs list, shows `Restore` button for selected runs.
-    if (this.state.runStorageState === ApiRunStorageState.AVAILABLE) {
+    if (this.state.runStorageState === V1RunStorageState.AVAILABLE) {
       toolbarButtons.archive(
         'run',
         () => this.state.selectedIds,

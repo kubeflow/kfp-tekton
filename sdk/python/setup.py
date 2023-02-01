@@ -34,10 +34,12 @@
 import logging
 import re
 import sys
+import os
 
 from os import environ as env
 from os.path import abspath, dirname, join
 from setuptools import setup
+from typing import List
 
 
 NAME = "kfp-tekton"
@@ -51,20 +53,20 @@ generating Tekton YAML instead of Argo YAML. The project is still in an early
 development stage. Contributions are welcome: {}
 """.format(HOMEPAGE)
 
-# NOTICE, after any updates to the following, ./requirements.in should be updated
-# accordingly.
-REQUIRES = [
-    "kfp>=1.8.10,<1.8.19",
-]
-
-TESTS_REQUIRE = [
-    'pytest',
-]
-
-
 logging.basicConfig()
 logger = logging.getLogger("kfp_tekton/setup.py")
 logger.setLevel(logging.INFO)
+
+
+def get_requirements(requirements_file: str) -> List[str]:
+    """Read requirements from requirements.in."""
+
+    file_path = os.path.join(os.path.dirname(__file__), requirements_file)
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+    lines = [line.strip() for line in lines]
+    lines = [line for line in lines if not (line.startswith('#') or line.startswith('-')) and line]
+    return lines
 
 
 def find_version(*file_path_parts):
@@ -179,8 +181,8 @@ setup(
     author="kubeflow.org",
     license=LICENSE,
     url=HOMEPAGE,
-    install_requires=REQUIRES,
-    tests_require=TESTS_REQUIRE,
+    install_requires=get_requirements('requirements.in'),
+    tests_require=get_requirements('requirements-test.txt'),
     packages=[
         'kfp_tekton',
         'kfp_tekton.compiler',
@@ -200,10 +202,11 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    python_requires='>=3.6.1',
+    python_requires='>=3.7.0',
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'dsl-compile-tekton = kfp_tekton.compiler.main:main'
+            'dsl-compile-tekton = kfp_tekton.compiler.main:main',
+            'kfp-tekton=kfp_tekton.cli.cli:main'
         ]
     })

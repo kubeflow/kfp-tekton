@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ApiRunDetail, ApiRun } from '../apis/run';
+import { V1RunDetail, V1Run } from '../apis/run';
 import { CompareTableProps } from '../components/CompareTable';
 import { Workflow } from 'src/third_party/mlmd/argo_template';
 import { chain, flatten } from 'lodash';
@@ -32,7 +32,7 @@ export default class CompareUtils {
    * is run[i]'s parsed workflow object
    */
   public static getParamsCompareProps(
-    runs: ApiRunDetail[],
+    runs: V1RunDetail[],
     workflowObjects: Workflow[],
   ): CompareTableProps {
     if (runs.length !== workflowObjects.length) {
@@ -62,7 +62,7 @@ export default class CompareUtils {
     };
   }
 
-  public static multiRunMetricsCompareProps(runs: ApiRun[]): CompareTableProps {
+  public static multiRunMetricsCompareProps(runs: V1Run[]): CompareTableProps {
     const metricMetadataMap = RunUtils.runsToMetricMetadataMap(runs);
 
     const yLabels = Array.from(metricMetadataMap.keys());
@@ -92,7 +92,7 @@ export default class CompareUtils {
    * execution.
    */
   public static singleRunToMetricsCompareProps(
-    run?: ApiRun,
+    run?: V1Run,
     workflow?: Workflow,
   ): CompareTableProps {
     let rows: string[][] = [];

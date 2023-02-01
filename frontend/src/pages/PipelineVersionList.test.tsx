@@ -17,7 +17,7 @@
 import * as React from 'react';
 import PipelineVersionList, { PipelineVersionListProps } from './PipelineVersionList';
 import TestUtils from '../TestUtils';
-import { ApiPipelineVersion } from '../apis/pipeline';
+import { V1PipelineVersion } from '../apis/pipeline';
 import { Apis, ListRequest } from '../lib/Apis';
 import { shallow, ReactWrapper, ShallowWrapper } from 'enzyme';
 import { range } from 'lodash';
@@ -81,7 +81,7 @@ describe('PipelineVersionList', () => {
         {
           created_at: new Date(2018, 8, 22, 11, 5, 48),
           name: 'pipelineversion1',
-        } as ApiPipelineVersion,
+        } as V1PipelineVersion,
       ],
     });
     await listPipelineVersionsSpy;
@@ -96,7 +96,7 @@ describe('PipelineVersionList', () => {
           created_at: new Date(2018, 8, 22, 11, 5, 48),
           name: 'pipelineversion1',
           description: 'pipelineversion1 description',
-        } as ApiPipelineVersion,
+        } as V1PipelineVersion,
       ],
     });
     await listPipelineVersionsSpy;
@@ -109,7 +109,7 @@ describe('PipelineVersionList', () => {
       pipelines: [
         {
           name: 'pipelineversion1',
-        } as ApiPipelineVersion,
+        } as V1PipelineVersion,
       ],
     });
     await listPipelineVersionsSpy;
@@ -125,7 +125,7 @@ describe('PipelineVersionList', () => {
           error: 'oops! could not load pipeline',
           name: 'pipeline1',
           parameters: [],
-        } as ApiPipelineVersion,
+        } as V1PipelineVersion,
       ],
     });
     await listPipelineVersionsSpy;

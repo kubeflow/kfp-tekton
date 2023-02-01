@@ -44,11 +44,11 @@ import {
   GetExecutionsByContextRequest,
 } from 'src/third_party/mlmd';
 import {
-    GetArtifactsByContextRequest,
-    GetContextsByExecutionRequest,
-    GetContextsByExecutionResponse,
-    GetContextTypeRequest,
-    GetContextTypeResponse,
+  GetArtifactsByContextRequest,
+  GetContextsByExecutionRequest,
+  GetContextsByExecutionResponse,
+  GetContextTypeRequest,
+  GetContextTypeResponse,
 } from 'src/third_party/mlmd/generated/ml_metadata/proto/metadata_store_service_pb';
 import { Workflow } from 'src/third_party/mlmd/argo_template';
 

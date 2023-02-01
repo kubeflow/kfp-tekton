@@ -15,11 +15,12 @@
 package worker
 
 import (
+	"time"
+
 	"github.com/kubeflow/pipelines/backend/src/agent/persistence/client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	log "github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"time"
 )
 
 // WorkflowSaver provides a function to persist a workflow to a database.
@@ -31,7 +32,7 @@ type WorkflowSaver struct {
 }
 
 func NewWorkflowSaver(client client.WorkflowClientInterface,
-		pipelineClient client.PipelineClientInterface, ttlSecondsAfterWorkflowFinish int64) *WorkflowSaver {
+	pipelineClient client.PipelineClientInterface, ttlSecondsAfterWorkflowFinish int64) *WorkflowSaver {
 	return &WorkflowSaver{
 		client:                        client,
 		pipelineClient:                pipelineClient,

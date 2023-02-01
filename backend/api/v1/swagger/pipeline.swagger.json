@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/apis/v1beta1/pipeline_versions": {
+    "/apis/v1/pipeline_versions": {
       "get": {
         "summary": "Lists all pipeline versions of a given pipeline.",
         "operationId": "ListPipelineVersions",
@@ -124,7 +124,7 @@
         ]
       }
     },
-    "/apis/v1beta1/pipeline_versions/{version_id}": {
+    "/apis/v1/pipeline_versions/{version_id}": {
       "get": {
         "summary": "Gets a pipeline version by pipeline version ID.",
         "operationId": "GetPipelineVersion",
@@ -186,7 +186,7 @@
         ]
       }
     },
-    "/apis/v1beta1/pipeline_versions/{version_id}/templates": {
+    "/apis/v1/pipeline_versions/{version_id}/templates": {
       "get": {
         "summary": "Returns a YAML template that contains the specified pipeline version's description, parameters and metadata.",
         "operationId": "GetPipelineVersionTemplate",
@@ -218,7 +218,7 @@
         ]
       }
     },
-    "/apis/v1beta1/pipelines": {
+    "/apis/v1/pipelines": {
       "get": {
         "summary": "Finds all pipelines.",
         "operationId": "ListPipelines",
@@ -326,7 +326,7 @@
         ]
       }
     },
-    "/apis/v1beta1/pipelines/{id}": {
+    "/apis/v1/pipelines/{id}": {
       "get": {
         "summary": "Finds a specific pipeline by ID.",
         "operationId": "GetPipeline",
@@ -388,7 +388,7 @@
         ]
       }
     },
-    "/apis/v1beta1/pipelines/{id}/templates": {
+    "/apis/v1/pipelines/{id}/templates": {
       "get": {
         "summary": "Returns a single YAML template that contains the description, parameters, and metadata associated with the pipeline provided.",
         "operationId": "GetTemplate",
@@ -420,7 +420,7 @@
         ]
       }
     },
-    "/apis/v1beta1/pipelines/{pipeline_id}/default_version/{version_id}": {
+    "/apis/v1/pipelines/{pipeline_id}/default_version/{version_id}": {
       "post": {
         "summary": "Update the default pipeline version of a specific pipeline.",
         "operationId": "UpdatePipelineDefaultVersion",

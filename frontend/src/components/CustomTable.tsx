@@ -33,7 +33,7 @@ import { ListRequest } from '../lib/Apis';
 import { classes, stylesheet } from 'typestyle';
 import { fonts, fontsize, dimension, commonCss, color, padding, zIndex } from '../Css';
 import { logger } from '../lib/Utils';
-import { ApiFilter, PredicateOp } from '../apis/filter/api';
+import { V1Filter, PredicateOp } from '../apis/filter/api';
 import { debounce } from 'lodash';
 import { InputAdornment } from '@material-ui/core';
 import { CustomTableRow } from './CustomTableRow';
@@ -517,7 +517,7 @@ export default class CustomTable extends React.Component<CustomTableProps, Custo
   }
 
   private _createAndEncodeFilter(filterString: string): string {
-    const filter: ApiFilter = {
+    const filter: V1Filter = {
       predicates: [
         {
           // TODO: remove this hardcoding once more sophisticated filtering is supported

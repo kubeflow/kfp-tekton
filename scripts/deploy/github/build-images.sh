@@ -25,5 +25,5 @@ docker build -t "${REGISTRY}/kfp-tekton/persistenceagent:latest" -f backend/Dock
 docker build -t "${REGISTRY}/kfp-tekton/metadata-writer:latest" -f backend/metadata_writer/Dockerfile . && docker push "${REGISTRY}/kfp-tekton/metadata-writer:latest" &
 docker build -t "${REGISTRY}/kfp-tekton/scheduledworkflow:latest" -f backend/Dockerfile.scheduledworkflow . && docker push "${REGISTRY}/kfp-tekton/scheduledworkflow:latest" &
 docker build -t "${REGISTRY}/kfp-tekton/cache-server:latest" -f backend/Dockerfile.cacheserver . && docker push "${REGISTRY}/kfp-tekton/cache-server:latest" &
-
+docker build -t "${REGISTRY}/kfp-tekton/frontend:latest" -f frontend/Dockerfile . && docker push "${REGISTRY}/kfp-tekton/frontend:latest" &
 wait

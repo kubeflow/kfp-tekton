@@ -23,7 +23,7 @@ import Select from '@material-ui/core/Select';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import * as React from 'react';
 import { useState } from 'react';
-import { ApiPipeline, ApiPipelineVersion } from 'src/apis/pipeline';
+import { V1Pipeline, V1PipelineVersion } from 'src/apis/pipeline';
 import { BannerProps } from 'src/components/Banner';
 import { classes, stylesheet } from 'typestyle';
 import MD2Tabs from '../atoms/MD2Tabs';
@@ -87,11 +87,11 @@ export const css = stylesheet({
 export interface PipelineDetailsV1Props {
   graph: dagre.graphlib.Graph | null;
   reducedGraph: dagre.graphlib.Graph | null;
-  pipeline: ApiPipeline | null;
+  pipeline: V1Pipeline | null;
   templateString?: string;
   updateBanner: (bannerProps: BannerProps) => void;
-  selectedVersion: ApiPipelineVersion | undefined;
-  versions: ApiPipelineVersion[];
+  selectedVersion: V1PipelineVersion | undefined;
+  versions: V1PipelineVersion[];
   handleVersionSelected: (versionId: string) => Promise<void>;
 }
 

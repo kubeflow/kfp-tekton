@@ -140,15 +140,15 @@ func startHttpProxy(resourceManager *resource.ResourceManager) {
 	// accept pipeline url for importing.
 	// https://github.com/grpc-ecosystem/grpc-gateway/issues/410
 	pipelineUploadServer := server.NewPipelineUploadServer(resourceManager, &server.PipelineUploadServerOptions{CollectMetrics: *collectMetricsFlag})
-	topMux.HandleFunc("/apis/v1beta1/pipelines/upload", pipelineUploadServer.UploadPipeline)
-	topMux.HandleFunc("/apis/v1beta1/pipelines/upload_version", pipelineUploadServer.UploadPipelineVersion)
-	topMux.HandleFunc("/apis/v1beta1/healthz", func(w http.ResponseWriter, r *http.Request) {
+	topMux.HandleFunc("/apis/v1/pipelines/upload", pipelineUploadServer.UploadPipeline)
+	topMux.HandleFunc("/apis/v1/pipelines/upload_version", pipelineUploadServer.UploadPipelineVersion)
+	topMux.HandleFunc("/apis/v1/healthz", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, `{"commit_sha":"`+common.GetStringConfigWithDefault("COMMIT_SHA", "unknown")+`", "tag_name":"`+common.GetStringConfigWithDefault("TAG_NAME", "unknown")+`", "multi_user":`+strconv.FormatBool(common.IsMultiUserMode())+`}`)
 	})
 
 	// log streaming is provided via HTTP.
 	runLogServer := server.NewRunLogServer(resourceManager)
-	topMux.HandleFunc("/apis/v1beta1/runs/{run_id}/nodes/{node_id}/log", runLogServer.ReadRunLog)
+	topMux.HandleFunc("/apis/v1/runs/{run_id}/nodes/{node_id}/log", runLogServer.ReadRunLog)
 
 	topMux.PathPrefix("/apis/").Handler(runtimeMux)
 

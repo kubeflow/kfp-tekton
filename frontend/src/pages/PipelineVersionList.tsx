@@ -18,7 +18,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import CustomTable, { Column, CustomRendererProps, Row } from '../components/CustomTable';
 import * as React from 'react';
 import { Link, RouteComponentProps } from 'react-router-dom';
-import { ApiPipelineVersion, ApiListPipelineVersionsResponse } from '../apis/pipeline';
+import { V1PipelineVersion, V1ListPipelineVersionsResponse } from '../apis/pipeline';
 import { Description } from '../components/Description';
 import { Apis, ListRequest, PipelineVersionSortKeys } from '../lib/Apis';
 import { errorToMessage, formatDateString } from '../lib/Utils';
@@ -37,7 +37,7 @@ export interface PipelineVersionListProps extends RouteComponentProps {
 }
 
 interface PipelineVersionListState {
-  pipelineVersions: ApiPipelineVersion[];
+  pipelineVersions: V1PipelineVersion[];
 }
 
 const descriptionCustomRenderer: React.FC<CustomRendererProps<string>> = (
@@ -135,7 +135,7 @@ class PipelineVersionList extends React.PureComponent<
   }
 
   protected async _loadPipelineVersions(request: ListRequest): Promise<string> {
-    let response: ApiListPipelineVersionsResponse | null = null;
+    let response: V1ListPipelineVersionsResponse | null = null;
 
     if (this.props.pipelineId) {
       try {

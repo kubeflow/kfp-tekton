@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/apis/v1beta1/healthz": {
+    "/apis/v1/healthz": {
       "get": {
         "summary": "Get healthz data.",
         "operationId": "GetHealthz",
