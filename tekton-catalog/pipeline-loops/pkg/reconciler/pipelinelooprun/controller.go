@@ -194,7 +194,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			KubeClientSet:         kubeClientSet,
 			pipelineClientSet:     pipelineClientSet,
 			pipelineloopClientSet: pipelineLoopClientSet,
-			runLister:             customRunInformer.Lister(),
+			customRunLister:       customRunInformer.Lister(),
 			pipelineLoopLister:    pipelineLoopInformer.Lister(),
 			pipelineRunLister:     pipelineRunInformer.Lister(),
 			cacheStore:            cacheStore,

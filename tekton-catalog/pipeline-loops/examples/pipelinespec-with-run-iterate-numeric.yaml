@@ -26,8 +26,8 @@ spec:
   iterateNumeric: iteration-item
 
 ---
-apiVersion: tekton.dev/v1alpha1
-kind: Run
+apiVersion: tekton.dev/v1beta1
+kind: CustomRun
 metadata:
   name: simplepipelinelooprun
 spec:
@@ -38,7 +38,7 @@ spec:
       value: '1'
     - name: to
       value: '15'
-  ref:
+  customRef:
     apiVersion: custom.tekton.dev/v1alpha1
     kind: PipelineLoop
     name: echoloop

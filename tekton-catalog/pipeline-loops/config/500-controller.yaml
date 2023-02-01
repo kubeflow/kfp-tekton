@@ -68,3 +68,10 @@ spec:
           value: config-observability
         - name: METRICS_DOMAIN
           value: tekton.dev/pipeline
+        securityContext:
+             allowPrivilegeEscalation: false
+             capabilities:
+               drop: ['ALL']
+             runAsNonRoot: true
+             seccompProfile:
+               type: RuntimeDefault

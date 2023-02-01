@@ -69,22 +69,22 @@ func init() {
 	initCacheParams()
 }
 
-func getRunName(run *tektonv1beta1.CustomRun) string {
-	return strings.Join([]string{run.Namespace, run.Name}, "/")
+func getCustomRunName(customRun *tektonv1beta1.CustomRun) string {
+	return strings.Join([]string{customRun.Namespace, customRun.Name}, "/")
 }
 
-func loopRunning(run *tektonv1beta1.CustomRun) *tektonv1beta1.CustomRun {
-	runWithStatus := run.DeepCopy()
-	runWithStatus.Status.InitializeConditions()
-	runWithStatus.Status.MarkCustomRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(), "")
-	return runWithStatus
+func loopRunning(customRun *tektonv1beta1.CustomRun) *tektonv1beta1.CustomRun {
+	customRunWithStatus := customRun.DeepCopy()
+	customRunWithStatus.Status.InitializeConditions()
+	customRunWithStatus.Status.MarkCustomRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(), "")
+	return customRunWithStatus
 }
 
-func loopSucceeded(run *tektonv1beta1.CustomRun) *tektonv1beta1.CustomRun {
-	runWithStatus := run.DeepCopy()
-	runWithStatus.Status.InitializeConditions()
-	runWithStatus.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(), "")
-	return runWithStatus
+func loopSucceeded(customRun *tektonv1beta1.CustomRun) *tektonv1beta1.CustomRun {
+	customRunWithStatus := customRun.DeepCopy()
+	customRunWithStatus.Status.InitializeConditions()
+	customRunWithStatus.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(), "")
+	return customRunWithStatus
 }
 
 func successful(pr *tektonv1beta1.PipelineRun) *tektonv1beta1.PipelineRun {
@@ -123,9 +123,9 @@ func failed(pr *tektonv1beta1.PipelineRun) *tektonv1beta1.PipelineRun {
 	return prWithStatus
 }
 
-func setRetries(run *tektonv1beta1.CustomRun, retries int) *tektonv1beta1.CustomRun {
-	run.Spec.Retries = retries
-	return run
+func setRetries(customRun *tektonv1beta1.CustomRun, retries int) *tektonv1beta1.CustomRun {
+	customRun.Spec.Retries = retries
+	return customRun
 }
 
 func setDeleted(pr *tektonv1beta1.PipelineRun) *tektonv1beta1.PipelineRun {
@@ -215,24 +215,24 @@ func checkEvents(fr *record.FakeRecorder, testName string, wantEvents []string) 
 func checkRunCondition(t *testing.T, customRun *tektonv1beta1.CustomRun, expectedStatus corev1.ConditionStatus, expectedReason pipelineloopv1alpha1.PipelineLoopRunReason) {
 	condition := customRun.Status.GetCondition(apis.ConditionSucceeded)
 	if condition == nil {
-		t.Error("Condition missing in Run")
+		t.Error("Condition missing in CustomRun")
 	} else {
 		if condition.Status != expectedStatus {
-			t.Errorf("Expected Run status to be %v but was %v", expectedStatus, condition)
+			t.Errorf("Expected CustomRun status to be %v but was %v", expectedStatus, condition)
 		}
 		if condition.Reason != expectedReason.String() {
 			t.Errorf("Expected reason to be %q but was %q", expectedReason.String(), condition.Reason)
 		}
 	}
 	if customRun.Status.StartTime == nil {
-		t.Errorf("Expected Run start time to be set but it wasn't")
+		t.Errorf("Expected CustomRun start time to be set but it wasn't")
 	}
 	if expectedStatus == corev1.ConditionUnknown {
 		if customRun.Status.CompletionTime != nil {
-			t.Errorf("Expected Run completion time to not be set but it was")
+			t.Errorf("Expected CustomRun completion time to not be set but it was")
 		}
 	} else if customRun.Status.CompletionTime == nil {
-		t.Errorf("Expected Run completion time to be set but it wasn't")
+		t.Errorf("Expected CustomRun completion time to be set but it wasn't")
 	}
 }
 
@@ -243,27 +243,27 @@ func checkRunStatus(t *testing.T, customRun *tektonv1beta1.CustomRun, expectedSt
 	}
 	t.Log("pipelineruns", status.PipelineRuns)
 	if len(status.PipelineRuns) != len(expectedStatus) {
-		t.Errorf("Expected Run status to include %d PipelineRuns but found %d: %v", len(expectedStatus), len(status.PipelineRuns), status.PipelineRuns)
+		t.Errorf("Expected CustomRun status to include %d PipelineRuns but found %d: %v", len(expectedStatus), len(status.PipelineRuns), status.PipelineRuns)
 		return
 	}
 	for expectedPipelineRunName, expectedPipelineRunStatus := range expectedStatus {
 		actualPipelineRunStatus, exists := status.PipelineRuns[expectedPipelineRunName]
 		if !exists {
-			t.Errorf("Expected Run status to include PipelineRun status for PipelineRun %s", expectedPipelineRunName)
+			t.Errorf("Expected CustomRun status to include PipelineRun status for PipelineRun %s", expectedPipelineRunName)
 			continue
 		}
 		if actualPipelineRunStatus.Iteration != expectedPipelineRunStatus.Iteration {
-			t.Errorf("Run status for PipelineRun %s has iteration number %d instead of %d",
+			t.Errorf("CustomRun status for PipelineRun %s has iteration number %d instead of %d",
 				expectedPipelineRunName, actualPipelineRunStatus.Iteration, expectedPipelineRunStatus.Iteration)
 		}
 		acturalIterationItem, error := json.Marshal(actualPipelineRunStatus.IterationItem)
 		expectedIterationItem, _ := json.Marshal(expectedPipelineRunStatus.IterationItem)
 		if error != nil || string(acturalIterationItem) != string(expectedIterationItem) {
-			t.Errorf("Run status for PipelineRun %s has iteration item %v instead of %v",
+			t.Errorf("CustomRun status for PipelineRun %s has iteration item %v instead of %v",
 				expectedPipelineRunName, actualPipelineRunStatus.IterationItem, expectedPipelineRunStatus.IterationItem)
 		}
 		if d := cmp.Diff(expectedPipelineRunStatus.Status, actualPipelineRunStatus.Status, cmpopts.IgnoreTypes(apis.Condition{}.LastTransitionTime.Inner.Time)); d != "" {
-			t.Errorf("Run status for PipelineRun %s is incorrect. Diff %s", expectedPipelineRunName, diff.PrintWantGot(d))
+			t.Errorf("CustomRun status for PipelineRun %s is incorrect. Diff %s", expectedPipelineRunName, diff.PrintWantGot(d))
 		}
 	}
 }
@@ -2008,7 +2008,7 @@ func TestReconcilePipelineLoopRun(t *testing.T) {
 			c := testAssets.Controller
 			clients := testAssets.Clients
 
-			if err := c.Reconciler.Reconcile(ctx, getRunName(tc.run)); err != nil {
+			if err := c.Reconciler.Reconcile(ctx, getCustomRunName(tc.run)); err != nil {
 				t.Fatalf("Error reconciling: %s", err)
 			}
 
@@ -2166,7 +2166,7 @@ func TestReconcilePipelineLoopRunFailures(t *testing.T) {
 			c := testAssets.Controller
 			clients := testAssets.Clients
 
-			if err := c.Reconciler.Reconcile(ctx, getRunName(tc.customRun)); err != nil {
+			if err := c.Reconciler.Reconcile(ctx, getCustomRunName(tc.customRun)); err != nil {
 				t.Fatalf("Error reconciling: %s", err)
 			}
 
@@ -2273,7 +2273,7 @@ func TestReconcilePipelineLoopRunCachedRun(t *testing.T) {
 			c := testAssets.Controller
 			clients := testAssets.Clients
 
-			if err := c.Reconciler.Reconcile(ctx, getRunName(tc.run)); err != nil {
+			if err := c.Reconciler.Reconcile(ctx, getCustomRunName(tc.run)); err != nil {
 				t.Fatalf("Error reconciling: %s", err)
 			}
 			// Fetch the updated Run
@@ -2343,7 +2343,7 @@ func TestReconcilePipelineLoopRunLastElemResult(t *testing.T) {
 			c := testAssets.Controller
 			clients := testAssets.Clients
 
-			if err := c.Reconciler.Reconcile(ctx, getRunName(tc.customRun)); err != nil {
+			if err := c.Reconciler.Reconcile(ctx, getCustomRunName(tc.customRun)); err != nil {
 				t.Fatalf("Error reconciling: %s", err)
 			}
 			// Fetch the updated Run

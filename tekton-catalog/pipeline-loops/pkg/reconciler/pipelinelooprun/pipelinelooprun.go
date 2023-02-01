@@ -45,7 +45,7 @@ import (
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
-	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
+	customRunReconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
 	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/pkg/names"
 	"github.com/tektoncd/pipeline/pkg/reconciler/events"
@@ -98,7 +98,7 @@ type Reconciler struct {
 	KubeClientSet         kubernetes.Interface
 	pipelineClientSet     clientset.Interface
 	pipelineloopClientSet pipelineloopclientset.Interface
-	runLister             listers.CustomRunLister
+	customRunLister       listers.CustomRunLister
 	pipelineLoopLister    listerspipelineloop.PipelineLoopLister
 	pipelineRunLister     listers.PipelineRunLister
 	cacheStore            *cache.TaskCacheStore
@@ -111,7 +111,7 @@ type CacheKey struct {
 
 var (
 	// Check that our Reconciler implements runreconciler.Interface
-	_                runreconciler.Interface = (*Reconciler)(nil)
+	_                customRunReconciler.Interface = (*Reconciler)(nil)
 	cancelPatchBytes []byte
 	iterationLimit   int = DefaultIterationLimit
 )
@@ -141,17 +141,17 @@ func isCachingEnabled(run *tektonv1beta1.CustomRun) bool {
 }
 
 // ReconcileKind compares the actual state with the desired, and attempts to converge the two.
-// It then updates the Status block of the Run resource with the current status of the resource.
+// It then updates the Status block of the CustomRun resource with the current status of the resource.
 func (c *Reconciler) ReconcileKind(ctx context.Context, customRun *tektonv1beta1.CustomRun) pkgreconciler.Event {
 	var merr error
 	logger := logging.FromContext(ctx)
-	logger.Infof("Reconciling Run %s/%s at %v", customRun.Namespace, customRun.Name, time.Now())
+	logger.Infof("Reconciling CustomRun %s/%s at %v", customRun.Namespace, customRun.Name, time.Now())
 	if customRun.Spec.CustomRef != nil && customRun.Spec.CustomSpec != nil {
-		logger.Errorf("Run %s/%s can provide one of Run.Spec.Ref/Run.Spec.Spec", customRun.Namespace, customRun.Name)
+		logger.Errorf("CustomRun %s/%s can provide one of CustomRun.Spec.CustomRef/CustomRun.Spec.CustomSpec", customRun.Namespace, customRun.Name)
 		return nil
 	}
 	if customRun.Spec.CustomSpec == nil && customRun.Spec.CustomRef == nil {
-		logger.Errorf("Run %s/%s does not provide a spec or ref.", customRun.Namespace, customRun.Name)
+		logger.Errorf("CustomRun %s/%s does not provide a spec or ref.", customRun.Namespace, customRun.Name)
 		return nil
 	}
 	if (customRun.Spec.CustomRef != nil && customRun.Spec.CustomRef.Kind == pipelineloop.BreakTaskName) ||
@@ -164,32 +164,32 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, customRun *tektonv1beta1
 		logger.Infof("Break task encountered %s", customRun.Name)
 		return nil
 	}
-	// Check that the Run references a PipelineLoop CRD.  The logic is controller.go should ensure that only this type of Run
+	// Check that the CustomRun references a PipelineLoop CRD.  The logic is controller.go should ensure that only this type of Run
 	// is reconciled this controller but it never hurts to do some bullet-proofing.
 	if customRun.Spec.CustomRef != nil &&
 		(customRun.Spec.CustomRef.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
 			customRun.Spec.CustomRef.Kind != pipelineloop.PipelineLoopControllerName) {
-		logger.Errorf("Received control for a Run %s/%s/%v that does not reference a PipelineLoop custom CRD ref", customRun.Namespace, customRun.Name, customRun.Spec.CustomRef)
+		logger.Errorf("Received control for a CustomRun %s/%s/%v that does not reference a PipelineLoop custom CRD ref", customRun.Namespace, customRun.Name, customRun.Spec.CustomRef)
 		return nil
 	}
 
 	if customRun.Spec.CustomSpec != nil &&
 		(customRun.Spec.CustomSpec.APIVersion != pipelineloopv1alpha1.SchemeGroupVersion.String() ||
 			customRun.Spec.CustomSpec.Kind != pipelineloop.PipelineLoopControllerName) {
-		logger.Errorf("Received control for a Run %s/%s that does not reference a PipelineLoop custom CRD spec", customRun.Namespace, customRun.Name)
+		logger.Errorf("Received control for a CustomRun %s/%s that does not reference a PipelineLoop custom CRD spec", customRun.Namespace, customRun.Name)
 		return nil
 	}
-	logger.Infof("Received control for a Run %s/%s %-v", customRun.Namespace, customRun.Name, customRun.Spec.CustomSpec)
-	// If the Run has not started, initialize the Condition and set the start time.
+	logger.Infof("Received control for a CustomRun %s/%s %-v", customRun.Namespace, customRun.Name, customRun.Spec.CustomSpec)
+	// If the CustomRun has not started, initialize the Condition and set the start time.
 	if !customRun.HasStarted() {
-		logger.Infof("Starting new Run %s/%s", customRun.Namespace, customRun.Name)
+		logger.Infof("Starting new CustomRun %s/%s", customRun.Namespace, customRun.Name)
 		customRun.Status.InitializeConditions()
 		// In case node time was not synchronized, when controller has been scheduled to other nodes.
 		if customRun.Status.StartTime.Sub(customRun.CreationTimestamp.Time) < 0 {
-			logger.Warnf("Run %s createTimestamp %s is after the Run started %s", customRun.Name, customRun.CreationTimestamp, customRun.Status.StartTime)
+			logger.Warnf("Run %s createTimestamp %s is after the CustomRun started %s", customRun.Name, customRun.CreationTimestamp, customRun.Status.StartTime)
 			customRun.Status.StartTime = &customRun.CreationTimestamp
 		}
-		// Emit events. During the first reconcile the status of the Run may change twice
+		// Emit events. During the first reconcile the status of the CustomRun may change twice
 		// from not Started to Started and then to Running, so we need to sent the event here
 		// and at the end of 'Reconcile' again.
 		// We also want to send the "Started" event as soon as possible for anyone who may be waiting
@@ -218,19 +218,19 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, customRun *tektonv1beta1
 				hashSum := fmt.Sprintf("%x", md5.Sum(marshal))
 				resultBytes, err1 := json.Marshal(customRun.Status.Results)
 				if err1 != nil {
-					return fmt.Errorf("error while marshalling result to cache for run: %s, %w", customRun.Name, err)
+					return fmt.Errorf("error while marshalling result to cache for CustomRun: %s, %w", customRun.Name, err)
 				}
 				err = c.cacheStore.Put(&model.TaskCache{
 					TaskHashKey: hashSum,
 					TaskOutput:  string(resultBytes),
 				})
 				if err != nil {
-					return fmt.Errorf("error while adding result to cache for run: %s, %w", customRun.Name, err)
+					return fmt.Errorf("error while adding result to cache for CustomRun: %s, %w", customRun.Name, err)
 				}
-				logger.Infof("cached the results of successful run %s, with key: %s", customRun.Name, hashSum)
+				logger.Infof("cached the results of successful CustomRun %s, with key: %s", customRun.Name, hashSum)
 			}
 		}
-		logger.Infof("Run %s/%s is done", customRun.Namespace, customRun.Name)
+		logger.Infof("CustomRun %s/%s is done", customRun.Namespace, customRun.Name)
 		return nil
 	}
 	// Reconcile the Run
@@ -240,7 +240,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, customRun *tektonv1beta1
 	}
 
 	if err := c.updateLabelsAndAnnotations(ctx, customRun); err != nil {
-		logger.Warn("Failed to update Run labels/annotations", zap.Error(err))
+		logger.Warn("Failed to update CustomRun labels/annotations", zap.Error(err))
 		merr = multierror.Append(merr, err)
 	}
 
@@ -300,7 +300,7 @@ func getMaxNestedStackDepth(pipelineLoopMeta *metav1.ObjectMeta) (int, error) {
 	return DefaultNestedStackDepth, nil
 }
 
-func (c *Reconciler) setMaxNestedStackDepth(ctx context.Context, pipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec, run *tektonv1beta1.CustomRun, depth int) {
+func (c *Reconciler) setMaxNestedStackDepth(ctx context.Context, pipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec, customRun *tektonv1beta1.CustomRun, depth int) {
 	logger := logging.FromContext(ctx)
 
 	if pipelineLoopSpec.PipelineSpec == nil {
@@ -318,14 +318,14 @@ func (c *Reconciler) setMaxNestedStackDepth(ctx context.Context, pipelineLoopSpe
 			}
 		} else if t.TaskRef != nil {
 			if t.TaskRef.Kind == "PipelineLoop" {
-				tl, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(run.Namespace).Get(ctx, t.TaskRef.Name, metav1.GetOptions{})
+				tl, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(customRun.Namespace).Get(ctx, t.TaskRef.Name, metav1.GetOptions{})
 				if err == nil && tl != nil {
 					if len(tl.ObjectMeta.Annotations) == 0 {
 						tl.ObjectMeta.Annotations = map[string]string{MaxNestedStackDepthKey: fmt.Sprint(depth)}
 					} else {
 						tl.ObjectMeta.Annotations[MaxNestedStackDepthKey] = fmt.Sprint(depth)
 					}
-					_, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(run.Namespace).Update(ctx, tl, metav1.UpdateOptions{})
+					_, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(customRun.Namespace).Update(ctx, tl, metav1.UpdateOptions{})
 					if err != nil {
 						logger.Errorf("Error while updating pipelineloop nested stack depth, %v", err)
 					}
@@ -337,63 +337,63 @@ func (c *Reconciler) setMaxNestedStackDepth(ctx context.Context, pipelineLoopSpe
 	}
 }
 
-func (c *Reconciler) reconcile(ctx context.Context, run *tektonv1beta1.CustomRun, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
+func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.CustomRun, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
 	ctx = EnableCustomTaskFeatureFlag(ctx)
 	logger := logging.FromContext(ctx)
 	var hashSum string
-	// Get the PipelineLoop referenced by the Run
-	pipelineLoopMeta, pipelineLoopSpec, err := c.getPipelineLoop(ctx, run)
+	// Get the PipelineLoop referenced by the CustomRun
+	pipelineLoopMeta, pipelineLoopSpec, err := c.getPipelineLoop(ctx, customRun)
 	if err != nil {
 		return nil
 	}
-	// Store the fetched PipelineLoopSpec on the Run for auditing
+	// Store the fetched PipelineLoopSpec on the CustomRun for auditing
 	storePipelineLoopSpec(status, pipelineLoopSpec)
 
 	// Propagate labels and annotations from PipelineLoop to Run.
-	propagatePipelineLoopLabelsAndAnnotations(run, pipelineLoopMeta)
+	propagatePipelineLoopLabelsAndAnnotations(customRun, pipelineLoopMeta)
 
 	pipelineLoopSpec.SetDefaults(ctx)
 	// Validate PipelineLoop spec
 	if err := pipelineLoopSpec.Validate(ctx); err != nil {
-		run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
-			"PipelineLoop %s/%s can't be Run; it has an invalid spec: %s",
+		customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
+			"PipelineLoop %s/%s can't be CustomRun; it has an invalid spec: %s",
 			pipelineLoopMeta.Namespace, pipelineLoopMeta.Name, err)
 		return nil
 	}
 
 	// Determine how many iterations of the Task will be done.
-	totalIterations, iterationElements, err := computeIterations(run, pipelineLoopSpec)
+	totalIterations, iterationElements, err := computeIterations(customRun, pipelineLoopSpec)
 	if err != nil {
-		run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
+		customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
 			"Cannot determine number of iterations: %s", err)
 		return nil
 	}
 	if totalIterations > iterationLimit {
-		run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
+		customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
 			"Total number of iterations exceeds the limit: %d", iterationLimit)
 		return nil
 	}
 
 	// Update status of PipelineRuns.  Return the PipelineRun representing the highest loop iteration.
-	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(ctx, iterationElements, run, status)
+	highestIteration, currentRunningPrs, failedPrs, err := c.updatePipelineRunStatus(ctx, iterationElements, customRun, status)
 	if err != nil {
-		return fmt.Errorf("error updating PipelineRun status for Run %s/%s: %w", run.Namespace, run.Name, err)
+		return fmt.Errorf("error updating PipelineRun status for CustomRun %s/%s: %w", customRun.Namespace, customRun.Name, err)
 	}
-	if !c.cacheStore.Disabled && isCachingEnabled(run) {
+	if !c.cacheStore.Disabled && isCachingEnabled(customRun) {
 		marshal, err := json.Marshal(CacheKey{
 			PipelineLoopSpec: pipelineLoopSpec,
-			Params:           run.Spec.Params,
+			Params:           customRun.Spec.Params,
 		})
 		if marshal != nil && err == nil {
 			hashSum = fmt.Sprintf("%x", md5.Sum(marshal))
 			taskCache, err := c.cacheStore.Get(hashSum)
 			if err == nil && taskCache != nil {
-				logger.Infof("Found a cached entry, for run: %s, with key:", run.Name, hashSum)
-				err := json.Unmarshal([]byte(taskCache.TaskOutput), &run.Status.Results)
+				logger.Infof("Found a cached entry, for customRun: %s, with key:", customRun.Name, hashSum)
+				err := json.Unmarshal([]byte(taskCache.TaskOutput), &customRun.Status.Results)
 				if err != nil {
 					logger.Errorf("error while unmarshal of task output. %v", err)
 				}
-				run.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonCacheHit.String(),
+				customRun.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonCacheHit.String(),
 					"A cached result of the previous run was found.")
 				return nil
 			}
@@ -403,27 +403,27 @@ func (c *Reconciler) reconcile(ctx context.Context, run *tektonv1beta1.CustomRun
 		}
 	}
 	if highestIteration > 0 {
-		updateRunStatus(run, "last-idx", fmt.Sprintf("%d", highestIteration))
-		updateRunStatus(run, "last-elem", fmt.Sprintf("%s", iterationElements[highestIteration-1]))
+		updateRunStatus(customRun, "last-idx", fmt.Sprintf("%d", highestIteration))
+		updateRunStatus(customRun, "last-elem", fmt.Sprintf("%s", iterationElements[highestIteration-1]))
 	}
-	// Run is cancelled, just cancel all the running instance and return
-	if run.IsCancelled() {
+	// CustomRun is cancelled, just cancel all the running instance and return
+	if customRun.IsCancelled() {
 		if len(failedPrs) > 0 {
-			run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
-				"Run %s/%s was failed",
-				run.Namespace, run.Name)
+			customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
+				"CustomRun %s/%s was failed",
+				customRun.Namespace, customRun.Name)
 		} else {
 			reason := pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String()
-			if run.HasTimedOut(c.clock) { // This check is only possible if we are on tekton 0.27.0 +
+			if customRun.HasTimedOut(c.clock) { // This check is only possible if we are on tekton 0.27.0 +
 				reason = string(tektonv1beta1.CustomRunReasonTimedOut)
 			}
-			run.Status.MarkCustomRunFailed(reason, "Run %s/%s was cancelled", run.Namespace, run.Name)
+			customRun.Status.MarkCustomRunFailed(reason, "CustomRun %s/%s was cancelled", customRun.Namespace, customRun.Name)
 		}
 
 		for _, currentRunningPr := range currentRunningPrs {
-			logger.Infof("Run %s/%s is cancelled.  Cancelling PipelineRun %s.", run.Namespace, run.Name, currentRunningPr.Name)
-			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
-				run.Status.MarkCustomRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
+			logger.Infof("CustomRun %s/%s is cancelled.  Cancelling PipelineRun %s.", customRun.Namespace, customRun.Name, currentRunningPr.Name)
+			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(customRun.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
+				customRun.Status.MarkCustomRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
 					"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
 				return nil
 			}
@@ -431,31 +431,31 @@ func (c *Reconciler) reconcile(ctx context.Context, run *tektonv1beta1.CustomRun
 		return nil
 	}
 
-	// Run may be marked succeeded already by updatePipelineRunStatus
-	if run.IsSuccessful() {
+	// CustomRun may be marked succeeded already by updatePipelineRunStatus
+	if customRun.IsSuccessful() {
 		return nil
 	}
 
-	retriesDone := len(run.Status.RetriesStatus)
-	retries := run.Spec.Retries
+	retriesDone := len(customRun.Status.RetriesStatus)
+	retries := customRun.Spec.Retries
 	if retriesDone < retries && failedPrs != nil && len(failedPrs) > 0 {
 		logger.Infof("RetriesDone: %d, Total Retries: %d", retriesDone, retries)
-		run.Status.RetriesStatus = append(run.Status.RetriesStatus, tektonv1beta1.CustomRunStatus{
+		customRun.Status.RetriesStatus = append(customRun.Status.RetriesStatus, tektonv1beta1.CustomRunStatus{
 			Status: duckv1.Status{
 				ObservedGeneration: 0,
-				Conditions:         run.Status.Conditions.DeepCopy(),
+				Conditions:         customRun.Status.Conditions.DeepCopy(),
 				Annotations:        nil,
 			},
 			CustomRunStatusFields: tektonv1beta1.CustomRunStatusFields{
-				StartTime:      run.Status.StartTime.DeepCopy(),
-				CompletionTime: run.Status.CompletionTime.DeepCopy(),
-				Results:        run.Status.Results,
+				StartTime:      customRun.Status.StartTime.DeepCopy(),
+				CompletionTime: customRun.Status.CompletionTime.DeepCopy(),
+				Results:        customRun.Status.Results,
 				RetriesStatus:  nil,
 				ExtraFields:    runtime.RawExtension{},
 			},
 		})
 		// Without immediately updating here, wrong number of retries are performed.
-		_, err := c.pipelineClientSet.TektonV1beta1().CustomRuns(run.Namespace).UpdateStatus(ctx, run, metav1.UpdateOptions{})
+		_, err := c.pipelineClientSet.TektonV1beta1().CustomRuns(customRun.Namespace).UpdateStatus(ctx, customRun, metav1.UpdateOptions{})
 		if err != nil {
 			return err
 		}
@@ -474,9 +474,9 @@ func (c *Reconciler) reconcile(ctx context.Context, run *tektonv1beta1.CustomRun
 			}
 			_, _ = c.pipelineClientSet.TektonV1beta1().PipelineRuns(failedPr.Namespace).
 				Patch(ctx, failedPr.Name, types.MergePatchType, patch, metav1.PatchOptions{})
-			pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, highestIteration, iterationElements)
+			pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, customRun, highestIteration, iterationElements)
 			if err != nil {
-				return fmt.Errorf("error creating PipelineRun from Run %s while retrying: %w", run.Name, err)
+				return fmt.Errorf("error creating PipelineRun from CustomRun %s while retrying: %w", customRun.Name, err)
 			}
 			status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 				Iteration:     highestIteration,
@@ -492,22 +492,22 @@ func (c *Reconciler) reconcile(ctx context.Context, run *tektonv1beta1.CustomRun
 	if len(failedPrs) > 0 {
 		for _, failedPr := range failedPrs {
 			if status.CurrentRunning == 0 {
-				run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
+				customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
 					"PipelineRun %s has failed", failedPr.Name)
 			} else {
-				run.Status.MarkCustomRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
+				customRun.Status.MarkCustomRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
 					"PipelineRun %s has failed", failedPr.Name)
 			}
 		}
 		return nil
 	}
 
-	// Mark run status Running
-	run.Status.MarkCustomRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
+	// Mark customRun status Running
+	customRun.Status.MarkCustomRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonRunning.String(),
 		"Iterations completed: %d", highestIteration-len(currentRunningPrs))
 
 	// Move on to the next iteration (or the first iteration if there was no PipelineRun).
-	// Check if the Run is done.
+	// Check if the CustomRun is done.
 	nextIteration := highestIteration + 1
 	if nextIteration > totalIterations {
 		// Still running which we already marked, just waiting
@@ -516,16 +516,16 @@ func (c *Reconciler) reconcile(ctx context.Context, run *tektonv1beta1.CustomRun
 			return nil
 		}
 		// All task finished
-		run.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
+		customRun.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 			"All PipelineRuns completed successfully")
-		updateRunStatus(run, "condition", "succeeded")
+		updateRunStatus(customRun, "condition", "succeeded")
 		return nil
 	}
-	// Before starting up another PipelineRun, check if the run was cancelled.
-	if run.IsCancelled() {
-		run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String(),
-			"Run %s/%s was cancelled",
-			run.Namespace, run.Name)
+	// Before starting up another PipelineRun, check if the customRun was cancelled.
+	if customRun.IsCancelled() {
+		customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String(),
+			"CustomRun %s/%s was cancelled",
+			customRun.Namespace, customRun.Name)
 		return nil
 	}
 	actualParallelism := 1
@@ -540,7 +540,7 @@ func (c *Reconciler) reconcile(ctx context.Context, run *tektonv1beta1.CustomRun
 		return nil
 	}
 
-	// Create PipelineRun to run this iteration based on parallelism
+	// Create PipelineRun to customRun this iteration based on parallelism
 	for i := 0; i < actualParallelism-len(currentRunningPrs); i++ {
 		if isNestedPipelineLoop(pipelineLoopSpec) {
 			maxNestedStackDepth, err := getMaxNestedStackDepth(pipelineLoopMeta)
@@ -550,16 +550,16 @@ func (c *Reconciler) reconcile(ctx context.Context, run *tektonv1beta1.CustomRun
 			}
 			if maxNestedStackDepth > 0 {
 				maxNestedStackDepth = maxNestedStackDepth - 1
-				c.setMaxNestedStackDepth(ctx, pipelineLoopSpec, run, maxNestedStackDepth)
+				c.setMaxNestedStackDepth(ctx, pipelineLoopSpec, customRun, maxNestedStackDepth)
 			} else if maxNestedStackDepth <= 0 {
-				run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonStackLimitExceeded.String(), "nested stack depth limit reached.")
+				customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonStackLimitExceeded.String(), "nested stack depth limit reached.")
 				return nil
 			}
 		}
 
-		pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, run, nextIteration, iterationElements)
+		pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, customRun, nextIteration, iterationElements)
 		if err != nil {
-			return fmt.Errorf("error creating PipelineRun from Run %s: %w", run.Name, err)
+			return fmt.Errorf("error creating PipelineRun from CustomRun %s: %w", customRun.Name, err)
 		}
 		status.PipelineRuns[pr.Name] = &pipelineloopv1alpha1.PipelineLoopPipelineRunStatus{
 			Iteration:     nextIteration,
@@ -576,69 +576,66 @@ func (c *Reconciler) reconcile(ctx context.Context, run *tektonv1beta1.CustomRun
 	return nil
 }
 
-func (c *Reconciler) getPipelineLoop(ctx context.Context, run *tektonv1beta1.CustomRun) (*metav1.ObjectMeta, *pipelineloopv1alpha1.PipelineLoopSpec, error) {
+func (c *Reconciler) getPipelineLoop(ctx context.Context, customRun *tektonv1beta1.CustomRun) (*metav1.ObjectMeta, *pipelineloopv1alpha1.PipelineLoopSpec, error) {
 	pipelineLoopMeta := metav1.ObjectMeta{}
 	pipelineLoopSpec := pipelineloopv1alpha1.PipelineLoopSpec{}
-	if run.Spec.CustomRef != nil && run.Spec.CustomRef.Name != "" {
+	if customRun.Spec.CustomRef != nil && customRun.Spec.CustomRef.Name != "" {
 		// Use the k8 client to get the PipelineLoop rather than the lister.  This avoids a timing issue where
 		// the PipelineLoop is not yet in the lister cache if it is created at nearly the same time as the Run.
 		// See https://github.com/tektoncd/pipeline/issues/2740 for discussion on this issue.
 		//
-		// tl, err := c.pipelineLoopLister.PipelineLoops(run.Namespace).Get(run.Spec.Ref.Name)
-		tl, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(run.Namespace).Get(ctx, run.Spec.CustomRef.Name, metav1.GetOptions{})
+		// tl, err := c.pipelineLoopLister.PipelineLoops(customRun.Namespace).Get(customRun.Spec.Ref.Name)
+		tl, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(customRun.Namespace).Get(ctx, customRun.Spec.CustomRef.Name, metav1.GetOptions{})
 		if err != nil {
-			run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
-				"Error retrieving PipelineLoop for Run %s/%s: %s",
-				run.Namespace, run.Name, err)
-			return nil, nil, fmt.Errorf("error retrieving PipelineLoop for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
+			customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
+				"Error retrieving PipelineLoop for CustomRun %s/%s: %s",
+				customRun.Namespace, customRun.Name, err)
+			return nil, nil, fmt.Errorf("error retrieving PipelineLoop for CustomRun %s: %w", fmt.Sprintf("%s/%s", customRun.Namespace, customRun.Name), err)
 		}
 		pipelineLoopMeta = tl.ObjectMeta
 		pipelineLoopSpec = tl.Spec
-	} else if run.Spec.CustomSpec != nil {
-		err := json.Unmarshal(run.Spec.CustomSpec.Spec.Raw, &pipelineLoopSpec)
+	} else if customRun.Spec.CustomSpec != nil {
+		err := json.Unmarshal(customRun.Spec.CustomSpec.Spec.Raw, &pipelineLoopSpec)
 		if err != nil {
-			run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
-				"Error unmarshal PipelineLoop spec for Run %s/%s: %s",
-				run.Namespace, run.Name, err)
-			return nil, nil, fmt.Errorf("error unmarshal PipelineLoop spec for Run %s: %w", fmt.Sprintf("%s/%s", run.Namespace, run.Name), err)
+			customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
+				"Error unmarshal PipelineLoop spec for CustomRun %s/%s: %s",
+				customRun.Namespace, customRun.Name, err)
+			return nil, nil, fmt.Errorf("error unmarshal PipelineLoop spec for CustomRun %s: %w", fmt.Sprintf("%s/%s", customRun.Namespace, customRun.Name), err)
 		}
-		pipelineLoopMeta = metav1.ObjectMeta{Name: run.Name,
-			Namespace:       run.Namespace,
-			OwnerReferences: run.OwnerReferences,
-			Labels:          run.Spec.CustomSpec.Metadata.Labels,
-			Annotations:     run.Spec.CustomSpec.Metadata.Annotations}
+		pipelineLoopMeta = metav1.ObjectMeta{Name: customRun.Name,
+			Namespace:       customRun.Namespace,
+			OwnerReferences: customRun.OwnerReferences,
+			Labels:          customRun.Spec.CustomSpec.Metadata.Labels,
+			Annotations:     customRun.Spec.CustomSpec.Metadata.Annotations}
 	} else {
-		// Run does not require name but for PipelineLoop it does.
-		run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
-			"Missing spec.ref.name for Run %s/%s",
-			run.Namespace, run.Name)
-		return nil, nil, fmt.Errorf("missing spec.ref.name for Run %s", fmt.Sprintf("%s/%s", run.Namespace, run.Name))
+		// CustomRun does not require name but for PipelineLoop it does.
+		customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
+			"Missing spec.customRef.name for CustomRun %s/%s",
+			customRun.Namespace, customRun.Name)
+		return nil, nil, fmt.Errorf("missing spec.customRef.name for CustomRun %s", fmt.Sprintf("%s/%s", customRun.Namespace, customRun.Name))
 	}
-	// pass down the run's serviceAccountName and podTemplate if they were not configured in the loop spec
-	//if pipelineLoopSpec.PodTemplate == nil && run.Spec.PodTemplate != nil {
-	//	pipelineLoopSpec.PodTemplate = run.Spec.PodTemplate
-	//}
-	if pipelineLoopSpec.ServiceAccountName == "" && run.Spec.ServiceAccountName != "" && run.Spec.ServiceAccountName != "default" {
-		pipelineLoopSpec.ServiceAccountName = run.Spec.ServiceAccountName
+
+	if pipelineLoopSpec.ServiceAccountName == "" && customRun.Spec.ServiceAccountName != "" && customRun.Spec.ServiceAccountName != "default" {
+		pipelineLoopSpec.ServiceAccountName = customRun.Spec.ServiceAccountName
 	}
 	return &pipelineLoopMeta, &pipelineLoopSpec, nil
 }
 
-func updateRunStatus(run *tektonv1beta1.CustomRun, resultName string, resultVal string) bool {
+func updateRunStatus(customRun *tektonv1beta1.CustomRun, resultName string, resultVal string) bool {
 	indexResultLastIdx := -1
-	// if Run already has resultName, then update it else append.
-	for i, res := range run.Status.Results {
+	// if CustomRun already has resultName, then update it else append.
+	for i, res := range customRun.Status.Results {
 		if res.Name == resultName {
 			indexResultLastIdx = i
 		}
 	}
 	if indexResultLastIdx >= 0 {
-		run.Status.Results[indexResultLastIdx] = tektonv1beta1.CustomRunResult{
+		customRun.Status.Results[indexResultLastIdx] = tektonv1beta1.CustomRunResult{
 			Name:  resultName,
 			Value: resultVal,
 		}
 	} else {
-		run.Status.Results = append(run.Status.Results, tektonv1beta1.CustomRunResult{
+		customRun.Status.Results = append(customRun.Status.Results, tektonv1beta1.CustomRunResult{
 			Name:  resultName,
 			Value: resultVal,
 		})
@@ -646,11 +643,11 @@ func updateRunStatus(run *tektonv1beta1.CustomRun, resultName string, resultVal 
 	return true
 }
 
-func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, run *tektonv1beta1.CustomRun, iteration int, iterationElements []interface{}) (*v1beta1.PipelineRun, error) {
+func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, customRun *tektonv1beta1.CustomRun, iteration int, iterationElements []interface{}) (*v1beta1.PipelineRun, error) {
 
-	// Create name for PipelineRun from Run name plus iteration number.
-	prName := names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("%s-%s", run.Name, fmt.Sprintf("%05d", iteration)))
-	pipelineRunAnnotations := getPipelineRunAnnotations(run)
+	// Create name for PipelineRun from CustomRun name plus iteration number.
+	prName := names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("%s-%s", customRun.Name, fmt.Sprintf("%05d", iteration)))
+	pipelineRunAnnotations := getPipelineRunAnnotations(customRun)
 	currentIndex := iteration - 1
 	if currentIndex > len(iterationElements) {
 		currentIndex = len(iterationElements) - 1
@@ -661,14 +658,14 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 	pr := &tektonv1beta1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      prName,
-			Namespace: run.Namespace,
-			OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(run,
+			Namespace: customRun.Namespace,
+			OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(customRun,
 				schema.GroupVersionKind{Group: "tekton.dev", Version: "v1beta1", Kind: "CustomRun"})},
-			Labels:      getPipelineRunLabels(run, strconv.Itoa(iteration)),
+			Labels:      getPipelineRunLabels(customRun, strconv.Itoa(iteration)),
 			Annotations: pipelineRunAnnotations,
 		},
 		Spec: tektonv1beta1.PipelineRunSpec{
-			Params:             getParameters(run, tls, iteration, string(currentIterationItemBytes)),
+			Params:             getParameters(customRun, tls, iteration, string(currentIterationItemBytes)),
 			Timeout:            tls.Timeout,
 			ServiceAccountName: tls.ServiceAccountName,
 			PodTemplate:        tls.PodTemplate,
@@ -686,44 +683,44 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 	}
 
 	logger.Infof("Creating a new PipelineRun object %s", prName)
-	return c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Create(ctx, pr, metav1.CreateOptions{})
+	return c.pipelineClientSet.TektonV1beta1().PipelineRuns(customRun.Namespace).Create(ctx, pr, metav1.CreateOptions{})
 
 }
 
-func (c *Reconciler) updateLabelsAndAnnotations(ctx context.Context, run *tektonv1beta1.CustomRun) error {
-	newRun, err := c.runLister.CustomRuns(run.Namespace).Get(run.Name)
+func (c *Reconciler) updateLabelsAndAnnotations(ctx context.Context, customRun *tektonv1beta1.CustomRun) error {
+	newCustomRun, err := c.customRunLister.CustomRuns(customRun.Namespace).Get(customRun.Name)
 	if err != nil {
-		return fmt.Errorf("error getting Run %s when updating labels/annotations: %w", run.Name, err)
+		return fmt.Errorf("error getting CustomRun %s when updating labels/annotations: %w", customRun.Name, err)
 	}
-	if !reflect.DeepEqual(run.ObjectMeta.Labels, newRun.ObjectMeta.Labels) || !reflect.DeepEqual(run.ObjectMeta.Annotations, newRun.ObjectMeta.Annotations) {
+	if !reflect.DeepEqual(customRun.ObjectMeta.Labels, newCustomRun.ObjectMeta.Labels) || !reflect.DeepEqual(customRun.ObjectMeta.Annotations, newCustomRun.ObjectMeta.Annotations) {
 		mergePatch := map[string]interface{}{
 			"metadata": map[string]interface{}{
-				"labels":      run.ObjectMeta.Labels,
-				"annotations": run.ObjectMeta.Annotations,
+				"labels":      customRun.ObjectMeta.Labels,
+				"annotations": customRun.ObjectMeta.Annotations,
 			},
 		}
 		patch, err := json.Marshal(mergePatch)
 		if err != nil {
 			return err
 		}
-		_, err = c.pipelineClientSet.TektonV1beta1().CustomRuns(run.Namespace).Patch(ctx, run.Name, types.MergePatchType, patch, metav1.PatchOptions{})
+		_, err = c.pipelineClientSet.TektonV1beta1().CustomRuns(customRun.Namespace).Patch(ctx, customRun.Name, types.MergePatchType, patch, metav1.PatchOptions{})
 		return err
 	}
 	return nil
 }
 
-func (c *Reconciler) cancelAllPipelineRuns(ctx context.Context, run *tektonv1beta1.CustomRun) error {
+func (c *Reconciler) cancelAllPipelineRuns(ctx context.Context, customRun *tektonv1beta1.CustomRun) error {
 	logger := logging.FromContext(ctx)
-	pipelineRunLabels := getPipelineRunLabels(run, "")
-	currentRunningPrs, err := c.pipelineRunLister.PipelineRuns(run.Namespace).List(labels.SelectorFromSet(pipelineRunLabels))
+	pipelineRunLabels := getPipelineRunLabels(customRun, "")
+	currentRunningPrs, err := c.pipelineRunLister.PipelineRuns(customRun.Namespace).List(labels.SelectorFromSet(pipelineRunLabels))
 	if err != nil {
 		return fmt.Errorf("could not list PipelineRuns %#v", err)
 	}
 	for _, currentRunningPr := range currentRunningPrs {
 		if !currentRunningPr.IsDone() && !currentRunningPr.IsCancelled() {
 			logger.Infof("Cancelling PipelineRun %s.", currentRunningPr.Name)
-			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(run.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
-				run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
+			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(customRun.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
+				customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
 					"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
 				return nil
 			}
@@ -732,7 +729,7 @@ func (c *Reconciler) cancelAllPipelineRuns(ctx context.Context, run *tektonv1bet
 	return nil
 }
 
-func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationElements []interface{}, run *tektonv1beta1.CustomRun, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
+func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationElements []interface{}, customRun *tektonv1beta1.CustomRun, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
 	logger := logging.FromContext(ctx)
 	highestIteration := 0
 	var currentRunningPrs []*tektonv1beta1.PipelineRun
@@ -740,8 +737,8 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 	if status.PipelineRuns == nil {
 		status.PipelineRuns = make(map[string]*pipelineloopv1alpha1.PipelineLoopPipelineRunStatus)
 	}
-	pipelineRunLabels := getPipelineRunLabels(run, "")
-	pipelineRuns, err := c.pipelineRunLister.PipelineRuns(run.Namespace).List(labels.SelectorFromSet(pipelineRunLabels))
+	pipelineRunLabels := getPipelineRunLabels(customRun, "")
+	pipelineRuns, err := c.pipelineRunLister.PipelineRuns(customRun.Namespace).List(labels.SelectorFromSet(pipelineRunLabels))
 	if err != nil {
 		return 0, nil, nil, fmt.Errorf("could not list PipelineRuns %#v", err)
 	}
@@ -758,7 +755,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 		iterationStr := lbls[pipelineloop.GroupName+pipelineLoopIterationLabelKey]
 		iteration, err := strconv.Atoi(iterationStr)
 		if err != nil {
-			run.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
+			customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailedValidation.String(),
 				"Error converting iteration number in PipelineRun %s:  %#v", pr.Name, err)
 			logger.Errorf("Error converting iteration number in PipelineRun %s:  %#v", pr.Name, err)
 			return 0, nil, nil, nil
@@ -772,11 +769,11 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 			failedPrs = append(failedPrs, pr)
 		}
 
-		// Mark run successful if the condition are met.
-		// if the last loop task is skipped, but the highestIterationPr successed. Mark run success.
+		// Mark customRun successful if the condition are met.
+		// if the last loop task is skipped, but the highestIterationPr successed. Mark customRun success.
 		// lastLoopTask := highestIterationPr.ObjectMeta.Annotations["last-loop-task"]
 		lastLoopTask := ""
-		for key, val := range run.ObjectMeta.Labels {
+		for key, val := range customRun.ObjectMeta.Labels {
 			if key == "last-loop-task" {
 				lastLoopTask = val
 			}
@@ -785,10 +782,10 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 			skippedTaskList := pr.Status.SkippedTasks
 			for _, task := range skippedTaskList {
 				if task.Name == lastLoopTask {
-					// Mark run successful and stop the loop pipelinerun
-					run.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
+					// Mark customRun successful and stop the loop pipelinerun
+					customRun.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 						"PipelineRuns completed successfully with the conditions are met")
-					updateRunStatus(run, "condition", "pass")
+					updateRunStatus(customRun, "condition", "pass")
 				}
 			}
 		}
@@ -806,7 +803,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 				if strings.HasPrefix(child.PipelineTaskName, "pipelineloop-break-operation") {
 					switch child.Kind {
 					case "TaskRun":
-						tr, err := tkstatus.GetTaskRunStatusForPipelineTask(ctx, c.pipelineClientSet, run.Namespace, child)
+						tr, err := tkstatus.GetTaskRunStatusForPipelineTask(ctx, c.pipelineClientSet, customRun.Namespace, child)
 						if err != nil {
 							logger.Errorf("can not get status for TaskRun, %v", err)
 							return 0, nil, nil, fmt.Errorf("could not get TaskRun %s."+
@@ -821,10 +818,26 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 							Status:           tr.DeepCopy(),
 						}
 					case "Run":
-						run, err := tkstatus.GetRunStatusForPipelineTask(ctx, c.pipelineClientSet, run.Namespace, child)
+						run, err := tkstatus.GetRunStatusForPipelineTask(ctx, c.pipelineClientSet, customRun.Namespace, child)
 						if err != nil {
 							logger.Errorf("can not get status for Run, %v", err)
 							return 0, nil, nil, fmt.Errorf("could not get Run %s."+
+								" %#v", child.Name, err)
+						}
+						if pr.Status.Runs == nil {
+							pr.Status.Runs = make(map[string]*tektonv1beta1.PipelineRunRunStatus)
+						}
+
+						pr.Status.Runs[child.Name] = &tektonv1beta1.PipelineRunRunStatus{
+							PipelineTaskName: child.PipelineTaskName,
+							WhenExpressions:  child.WhenExpressions,
+							Status:           run.DeepCopy(),
+						}
+					case "CustomRun":
+						run, err := tkstatus.GetRunStatusForPipelineTask(ctx, c.pipelineClientSet, customRun.Namespace, child)
+						if err != nil {
+							logger.Errorf("can not get status for CustomRun, %v", err)
+							return 0, nil, nil, fmt.Errorf("could not get CustomRun %s."+
 								" %#v", child.Name, err)
 						}
 						if pr.Status.Runs == nil {
@@ -845,15 +858,15 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 		for _, runStatus := range pr.Status.Runs {
 			if strings.HasPrefix(runStatus.PipelineTaskName, "pipelineloop-break-operation") {
 				if runStatus.Status != nil && !runStatus.Status.GetCondition(apis.ConditionSucceeded).IsUnknown() {
-					err = c.cancelAllPipelineRuns(ctx, run)
+					err = c.cancelAllPipelineRuns(ctx, customRun)
 					if err != nil {
-						return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to Run %s."+
-							" %#v", run.Name, err)
+						return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to customRun %s."+
+							" %#v", customRun.Name, err)
 					}
-					// Mark run successful and stop the loop pipelinerun
-					run.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
+					// Mark customRun successful and stop the loop pipelinerun
+					customRun.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 						"PipelineRuns completed successfully with the conditions are met")
-					updateRunStatus(run, "condition", "pass")
+					updateRunStatus(customRun, "condition", "pass")
 					break
 				}
 			}
@@ -861,15 +874,15 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 		for _, taskRunStatus := range pr.Status.TaskRuns {
 			if strings.HasPrefix(taskRunStatus.PipelineTaskName, "pipelineloop-break-operation") {
 				if !taskRunStatus.Status.GetCondition(apis.ConditionSucceeded).IsUnknown() {
-					err = c.cancelAllPipelineRuns(ctx, run)
+					err = c.cancelAllPipelineRuns(ctx, customRun)
 					if err != nil {
-						return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to task run %s."+
-							" %#v", run.Name, err)
+						return 0, nil, nil, fmt.Errorf("could not cancel PipelineRuns belonging to task customRun %s."+
+							" %#v", customRun.Name, err)
 					}
-					// Mark run successful and stop the loop pipelinerun
-					run.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
+					// Mark customRun successful and stop the loop pipelinerun
+					customRun.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonSucceeded.String(),
 						"PipelineRuns completed successfully with the conditions are met")
-					updateRunStatus(run, "condition", "pass")
+					updateRunStatus(customRun, "condition", "pass")
 					break
 				}
 			}
@@ -1127,10 +1140,10 @@ func getParameters(run *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1.Pipel
 	return out
 }
 
-func getPipelineRunAnnotations(run *tektonv1beta1.CustomRun) map[string]string {
-	// Propagate annotations from Run to PipelineRun.
-	annotations := make(map[string]string, len(run.ObjectMeta.Annotations)+1)
-	for key, val := range run.ObjectMeta.Annotations {
+func getPipelineRunAnnotations(customRun *tektonv1beta1.CustomRun) map[string]string {
+	// Propagate annotations from CustomRun to PipelineRun.
+	annotations := make(map[string]string, len(customRun.ObjectMeta.Annotations)+1)
+	for key, val := range customRun.ObjectMeta.Annotations {
 		annotations[key] = val
 	}
 	return annotations
@@ -1147,27 +1160,27 @@ func Find(slice []string, val string) (int, bool) {
 	return -1, false
 }
 
-func getPipelineRunLabels(run *tektonv1beta1.CustomRun, iterationStr string) map[string]string {
-	// Propagate labels from Run to PipelineRun.
-	labels := make(map[string]string, len(run.ObjectMeta.Labels)+1)
+func getPipelineRunLabels(customRun *tektonv1beta1.CustomRun, iterationStr string) map[string]string {
+	// Propagate labels from CustomRun to PipelineRun.
+	labels := make(map[string]string, len(customRun.ObjectMeta.Labels)+1)
 	ignoreLabelsKey := []string{"tekton.dev/pipelineRun", "tekton.dev/pipelineTask", "tekton.dev/pipeline", "custom.tekton.dev/pipelineLoopIteration"}
-	for key, val := range run.ObjectMeta.Labels {
+	for key, val := range customRun.ObjectMeta.Labels {
 		if _, found := Find(ignoreLabelsKey, key); !found {
 			labels[key] = val
 		}
 	}
-	// Note: The Run label uses the normal Tekton group name.
-	labels[pipeline.GroupName+pipelineLoopRunLabelKey] = run.Name
+	// Note: The CustomRun label uses the normal Tekton group name.
+	labels[pipeline.GroupName+pipelineLoopRunLabelKey] = customRun.Name
 	if iterationStr != "" {
 		labels[pipelineloop.GroupName+pipelineLoopIterationLabelKey] = iterationStr
 	}
-	labels[pipelineloop.GroupName+parentPRKey] = run.ObjectMeta.Labels["tekton.dev/pipelineRun"]
+	labels[pipelineloop.GroupName+parentPRKey] = customRun.ObjectMeta.Labels["tekton.dev/pipelineRun"]
 
 	var prOriginalName string
-	if _, ok := run.ObjectMeta.Labels[pipelineloop.GroupName+originalPRKey]; ok {
-		prOriginalName = run.ObjectMeta.Labels[pipelineloop.GroupName+originalPRKey]
+	if _, ok := customRun.ObjectMeta.Labels[pipelineloop.GroupName+originalPRKey]; ok {
+		prOriginalName = customRun.ObjectMeta.Labels[pipelineloop.GroupName+originalPRKey]
 	} else {
-		prOriginalName = run.ObjectMeta.Labels["tekton.dev/pipelineRun"]
+		prOriginalName = customRun.ObjectMeta.Labels["tekton.dev/pipelineRun"]
 	}
 	labels[pipelineloop.GroupName+originalPRKey] = prOriginalName
 	// Empty the RunId reference from the KFP persistent agent because LabelKeyWorkflowRunId should be unique across all pipelineruns
@@ -1178,22 +1191,22 @@ func getPipelineRunLabels(run *tektonv1beta1.CustomRun, iterationStr string) map
 	return labels
 }
 
-func propagatePipelineLoopLabelsAndAnnotations(run *tektonv1beta1.CustomRun, pipelineLoopMeta *metav1.ObjectMeta) {
-	// Propagate labels from PipelineLoop to Run.
-	if run.ObjectMeta.Labels == nil {
-		run.ObjectMeta.Labels = make(map[string]string, len(pipelineLoopMeta.Labels)+1)
+func propagatePipelineLoopLabelsAndAnnotations(customRun *tektonv1beta1.CustomRun, pipelineLoopMeta *metav1.ObjectMeta) {
+	// Propagate labels from PipelineLoop to customRun.
+	if customRun.ObjectMeta.Labels == nil {
+		customRun.ObjectMeta.Labels = make(map[string]string, len(pipelineLoopMeta.Labels)+1)
 	}
 	for key, value := range pipelineLoopMeta.Labels {
-		run.ObjectMeta.Labels[key] = value
+		customRun.ObjectMeta.Labels[key] = value
 	}
-	run.ObjectMeta.Labels[pipelineloop.GroupName+pipelineLoopLabelKey] = pipelineLoopMeta.Name
+	customRun.ObjectMeta.Labels[pipelineloop.GroupName+pipelineLoopLabelKey] = pipelineLoopMeta.Name
 
 	// Propagate annotations from PipelineLoop to Run.
-	if run.ObjectMeta.Annotations == nil {
-		run.ObjectMeta.Annotations = make(map[string]string, len(pipelineLoopMeta.Annotations))
+	if customRun.ObjectMeta.Annotations == nil {
+		customRun.ObjectMeta.Annotations = make(map[string]string, len(pipelineLoopMeta.Annotations))
 	}
 	for key, value := range pipelineLoopMeta.Annotations {
-		run.ObjectMeta.Annotations[key] = value
+		customRun.ObjectMeta.Annotations[key] = value
 	}
 }
 
@@ -1205,7 +1218,7 @@ func storePipelineLoopSpec(status *pipelineloopv1alpha1.PipelineLoopRunStatus, t
 }
 
 // Storing PipelineSpec and TaskSpec in PipelineRunStatus is a source of significant memory consumption and OOM failures.
-// Additionally, performance of status update in Run reconciler is impacted.
+// Additionally, performance of status update in customRun reconciler is impacted.
 // PipelineSpec and TaskSpec seems to be redundant in this place.
 // See issue: https://github.com/kubeflow/kfp-tekton/issues/962
 func getPipelineRunStatusWithoutPipelineSpec(status *v1beta1.PipelineRunStatus) *v1beta1.PipelineRunStatus {
