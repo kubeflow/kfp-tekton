@@ -22,19 +22,20 @@ run_cache() {
   local PIPELINE_ID
   local RUN_ID
   local PIPELINE_NAME="cache"
+  local KFP_COMMAND="kfp-tekton"
 
   echo " =====   cache pipeline  ====="
   python3 sdk/python/tests/compiler/testdata/cache.py
-  retry 3 3 kfp --endpoint http://localhost:8888 pipeline upload -p "$PIPELINE_NAME" sdk/python/tests/compiler/testdata/cache.yaml || :
-  PIPELINE_ID=$(kfp --endpoint http://localhost:8888  pipeline list | grep "$PIPELINE_NAME" | awk '{print $2}')
+  retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 pipeline upload -p "$PIPELINE_NAME" sdk/python/tests/compiler/testdata/cache.yaml || :
+  PIPELINE_ID=$($KFP_COMMAND --endpoint http://localhost:8888  pipeline list | grep "$PIPELINE_NAME" | awk '{print $2}')
   if [[ -z "$PIPELINE_ID" ]]; then
     echo "Failed to upload pipeline"
     return "$REV"
   fi
 
   local RUN_NAME="${PIPELINE_NAME}-run-$((RANDOM%10000+1))"
-  retry 3 3 kfp --endpoint http://localhost:8888 run submit -e "exp-cache" -r "$RUN_NAME" -p "$PIPELINE_ID" || :
-  RUN_ID=$(kfp --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
+  retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 run submit -e "exp-cache" -r "$RUN_NAME" -p "$PIPELINE_ID" || :
+  RUN_ID=$($KFP_COMMAND --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
   if [[ -z "$RUN_ID" ]]; then
     echo "Failed to submit a run for cache pipeline"
     return "$REV"
@@ -43,7 +44,7 @@ run_cache() {
   local RUN_STATUS
   ENDTIME=$(date -ud "$DURATION minute" +%s)
   while [[ "$(date -u +%s)" -le "$ENDTIME" ]]; do
-    RUN_STATUS=$(kfp --endpoint http://localhost:8888 run list | grep "$RUN_NAME" | awk '{print $6}')
+    RUN_STATUS=$($KFP_COMMAND --endpoint http://localhost:8888 run list | grep "$RUN_NAME" | awk '{print $6}')
     if [[ "$RUN_STATUS" == "Succeeded" || "$RUN_STATUS" == "Completed" ]]; then
       REV=0
       break;
@@ -59,8 +60,8 @@ run_cache() {
 
   # need to run the pipeline twice to verify caching
   RUN_NAME="${PIPELINE_NAME}-run-$((RANDOM%10000+1))"
-  retry 3 3 kfp --endpoint http://localhost:8888 run submit -e "exp-cache" -r "$RUN_NAME" -p "$PIPELINE_ID" || :
-  RUN_ID=$(kfp --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
+  retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 run submit -e "exp-cache" -r "$RUN_NAME" -p "$PIPELINE_ID" || :
+  RUN_ID=$($KFP_COMMAND --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
   if [[ -z "$RUN_ID" ]]; then
     echo "Failed to submit a run for cache pipeline"
     return "$REV"
@@ -68,7 +69,7 @@ run_cache() {
 
   ENDTIME=$(date -ud "$DURATION minute" +%s)
   while [[ "$(date -u +%s)" -le "$ENDTIME" ]]; do
-    RUN_STATUS=$(kfp --endpoint http://localhost:8888 run list | grep "$RUN_NAME" | awk '{print $6}')
+    RUN_STATUS=$($KFP_COMMAND --endpoint http://localhost:8888 run list | grep "$RUN_NAME" | awk '{print $6}')
     if [[ "$RUN_STATUS" == "Succeeded" || "$RUN_STATUS" == "Completed" ]]; then
       REV=0
       break;
