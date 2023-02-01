@@ -21,19 +21,20 @@ run_flip_coin_example() {
   shift
   local PIPELINE_ID
   local RUN_ID
+  local KFP_COMMAND="kfp-tekton"
 
   echo " =====   flip coin sample  ====="
   python3 samples/flip-coin/condition.py
-  retry 3 3 kfp --endpoint http://localhost:8888 pipeline upload -p e2e-flip-coin samples/flip-coin/condition.yaml || :
-  PIPELINE_ID=$(kfp --endpoint http://localhost:8888  pipeline list | grep 'e2e-flip-coin' | awk '{print $2}')
+  retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 pipeline upload -p e2e-flip-coin samples/flip-coin/condition.yaml || :
+  PIPELINE_ID=$($KFP_COMMAND --endpoint http://localhost:8888  pipeline list | grep 'e2e-flip-coin' | awk '{print $2}')
   if [[ -z "$PIPELINE_ID" ]]; then
     echo "Failed to upload pipeline"
     return "$REV"
   fi
 
   local RUN_NAME="e2e-flip-coin-run-$((RANDOM%10000+1))"
-  retry 3 3 kfp --endpoint http://localhost:8888 run submit -e exp-e2e-flip-coin -r "$RUN_NAME" -p "$PIPELINE_ID" || :
-  RUN_ID=$(kfp --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
+  retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 run submit -e exp-e2e-flip-coin -r "$RUN_NAME" -p "$PIPELINE_ID" || :
+  RUN_ID=$($KFP_COMMAND --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
   if [[ -z "$RUN_ID" ]]; then
     echo "Failed to submit a run for flip coin pipeline"
     return "$REV"
@@ -42,7 +43,7 @@ run_flip_coin_example() {
   local RUN_STATUS
   ENDTIME=$(date -ud "$DURATION minute" +%s)
   while [[ "$(date -u +%s)" -le "$ENDTIME" ]]; do
-    RUN_STATUS=$(kfp --endpoint http://localhost:8888 run list | grep "$RUN_NAME" | awk '{print $6}')
+    RUN_STATUS=$($KFP_COMMAND --endpoint http://localhost:8888 run list | grep "$RUN_NAME" | awk '{print $6}')
     if [[ "$RUN_STATUS" == "Completed" ]]; then
       REV=0
       break;

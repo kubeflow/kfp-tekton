@@ -21,11 +21,12 @@ run_many_edges() {
   shift
   local PIPELINE_ID
   local RUN_ID
+  local KFP_COMMAND="kfp-tekton"
 
   echo " =====  many edges  ====="
   python3 scripts/deploy/iks/test/many-edges.py
-  retry 3 3 kfp --endpoint http://localhost:8888 pipeline upload -p many-edges scripts/deploy/iks/test/many-edges.yaml || :
-  PIPELINE_ID=$(kfp --endpoint http://localhost:8888  pipeline list | grep 'many-edges' | awk '{print $2}')
+  retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 pipeline upload -p many-edges scripts/deploy/iks/test/many-edges.yaml || :
+  PIPELINE_ID=$($KFP_COMMAND --endpoint http://localhost:8888  pipeline list | grep 'many-edges' | awk '{print $2}')
   if [[ -z "$PIPELINE_ID" ]]; then
     echo "Failed to upload pipeline"
     return "$REV"
@@ -35,8 +36,8 @@ run_many_edges() {
   local ENDTIME
 
   ENDTIME=$(date -ud "5 second" +%s)
-  retry 3 3 kfp --endpoint http://localhost:8888 run submit -e exp-many-edges -r "$RUN_NAME" -p "$PIPELINE_ID" || :
-  RUN_ID=$(kfp --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
+  retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 run submit -e exp-many-edges -r "$RUN_NAME" -p "$PIPELINE_ID" || :
+  RUN_ID=$($KFP_COMMAND --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
   if [[ -z "$RUN_ID" ]]; then
     echo "Failed to submit a run for many edges pipeline"
     return "$REV"
