@@ -394,7 +394,7 @@ func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.Cus
 					logger.Errorf("error while unmarshal of task output. %v", err)
 				}
 				customRun.Status.MarkCustomRunSucceeded(pipelineloopv1alpha1.PipelineLoopRunReasonCacheHit.String(),
-					"A cached result of the previous customRun was found.")
+					"A cached result of the previous run was found.")
 				return nil
 			}
 		}
