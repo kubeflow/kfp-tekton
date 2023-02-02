@@ -79,12 +79,15 @@ spec:
         - name: https-webhook
           containerPort: 8443
         securityContext:
-             allowPrivilegeEscalation: false
-             capabilities:
-               drop: ['ALL']
-             runAsNonRoot: true
-             seccompProfile:
-               type: RuntimeDefault
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsGroup: 65532
+          runAsNonRoot: true
+          runAsUser: 65532
+          seccompProfile:
+            type: RuntimeDefault
 ---
 apiVersion: v1
 kind: Service
