@@ -1036,13 +1036,13 @@ func computeIterations(run *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1.P
 	return numberOfIterations, iterationElements, err
 }
 
-func getParameters(run *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int, currentIterationItem string) []v1beta1.Param {
+func getParameters(customRun *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int, currentIterationItem string) []v1beta1.Param {
 	var out []v1beta1.Param
 	if tls.IterateParam != "" {
 		// IterateParam defined
 		var iterationParam, iterationParamStrSeparator *v1beta1.Param
 		var item, separator v1beta1.Param
-		for i, p := range run.Spec.Params {
+		for i, p := range customRun.Spec.Params {
 			if p.Name == tls.IterateParam {
 				if p.Value.Type == v1beta1.ParamTypeArray {
 					out = append(out, v1beta1.Param{
@@ -1058,7 +1058,7 @@ func getParameters(run *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1.Pipel
 				separator = p
 				iterationParamStrSeparator = &separator
 			} else {
-				out = append(out, run.Spec.Params[i])
+				out = append(out, customRun.Spec.Params[i])
 			}
 		}
 		if iterationParam != nil {
@@ -1119,9 +1119,9 @@ func getParameters(run *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1.Pipel
 	} else {
 		// IterateNumeric defined
 		IterateStrings := []string{"from", "step", "to"}
-		for i, p := range run.Spec.Params {
+		for i, p := range customRun.Spec.Params {
 			if _, found := Find(IterateStrings, p.Name); !found {
-				out = append(out, run.Spec.Params[i])
+				out = append(out, customRun.Spec.Params[i])
 			}
 		}
 	}
