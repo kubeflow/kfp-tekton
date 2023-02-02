@@ -1,4 +1,4 @@
-# CustomRun migration guide - Applicable to tetkton v0.43.x and greater.
+# CustomRun migration guide - Applicable to Tekton v0.43.x and greater.
 
 ## CustomTask beta
 
