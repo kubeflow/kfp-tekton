@@ -1420,7 +1420,6 @@ class TektonCompiler(Compiler):
       pipeline_run['spec']['podTemplate'].setdefault('env', [])
       for key, value in self.pipeline_env.items():
         pipeline_run['spec']['podTemplate']['env'].append({'name': key, 'value': value})
-      print(pipeline_run['spec']['podTemplate'])
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []
