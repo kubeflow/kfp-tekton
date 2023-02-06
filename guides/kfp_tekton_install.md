@@ -93,7 +93,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 1. Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#kubeflow-installation)
    to install the entire Kubeflow stack with `kfp-tekton`.
-   Kubeflow `v1.6.0` uses Tekton `v0.31.4` and `kfp-tekton` `v1.2.1`. <!-- TODO update-->
+   Kubeflow `v1.7.0` uses Tekton `v0.41.0` and `kfp-tekton` `v1.5.1`. <!-- TODO update-->
 
 2. Visit [KFP Tekton User Guide](/guides/kfp-user-guide) and start learning how to use Kubeflow pipeline.
 

@@ -64,7 +64,7 @@ done
 
 # define global variables
 KFP_GIT_VERSION=${KFP_VERSION:-1.8.4}
-KFP_SDK_VERSION=${KFP_VERSION:-1.8.14}
+KFP_SDK_VERSION=${KFP_VERSION:-1.8.18}
 KFP_REPO_URL="https://github.com/kubeflow/pipelines.git"
 SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)"
 PROJECT_DIR="${TRAVIS_BUILD_DIR:-$(cd "${SCRIPT_DIR%/sdk/python/tests}"; pwd)}"
