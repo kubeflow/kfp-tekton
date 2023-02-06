@@ -34,10 +34,10 @@ can be found in the [SDK README](/sdk/README.md)
 ## Development Prerequisites
 
 1. [`Python`](https://www.python.org/downloads/): version `3.7` or later (new code must maintain compatibility with `3.7`)
-2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.22` ([required by Kubeflow](https://www.kubeflow.org/docs/started/kubeflow-overview/) and Tekton `0.38.4`)
+2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.23` ([required by Kubeflow](https://www.kubeflow.org/docs/started/kubeflow-overview/) and Tekton `0.44.0`)
 3. [`kubectl` CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/): required to deploy Tekton pipelines to Kubernetes cluster
-4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.38.4/): version `0.38.4` or greater, required for end-to-end testing
-5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): version `0.17.2` or greater, required for end-to-end testing of Tekton pipelines
+4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.44.0/): version `0.44.0` or greater, required for end-to-end testing
+5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): version `0.29.1` or greater, required for end-to-end testing of Tekton pipelines
 6. [`Kubeflow Pipelines` Deployment](https://www.kubeflow.org/docs/pipelines/installation/overview/): required for some end-to-end tests
 
 
@@ -48,19 +48,13 @@ by the `kfp_tekton` compiler. The Tekton CLI is useful to start a pipeline and a
 
 #### Tekton Cluster
 
-Follow the instructions listed [here](https://github.com/tektoncd/pipeline/blob/v0.27.0/docs/install.md#installing-tekton-pipelines-on-kubernetes)
+Follow the instructions listed [here](https://github.com/tektoncd/pipeline/blob/v0.44.0/docs/install.md#installing-tekton-pipelines-on-kubernetes)
 or simply run:
 
-    kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.27.0/release.yaml
+    kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.44.0/release.yaml
 
 **Note**, if your container runtime does not support `image-reference:tag@digest` (like cri-o used in OpenShift 4.x),
 use `release.notags.yaml` instead.
-
-**Note**, for KFP, we shouldn't modify the default work directory for any component. Therefore, please run the following
-command to disable the [home and work directory overwrite](https://github.com/tektoncd/pipeline/blob/master/docs/install.md#customizing-the-pipelines-controller-behavior) from Tekton default.
-
-    kubectl patch cm feature-flags -n tekton-pipelines \
-        -p '{"data":{"disable-home-env-overwrite":"true","disable-working-directory-overwrite":"true"}}'
 
 Optionally, for convenience, set the default namespace to `tekton-pipelines`:
 
@@ -85,7 +79,7 @@ Mac OS users can install the Tekton CLI using the `homebrew` formula:
 
 Follow the installation instructions [here](https://github.com/tektoncd/dashboard/blob/master/docs/install.md), i.e.:
 
-    kubectl apply --filename https://github.com/tektoncd/dashboard/releases/download/v0.13.0/tekton-dashboard-release.yaml
+    kubectl apply --filename  https://storage.googleapis.com/tekton-releases/dashboard/previous/v0.32.0/release.yaml
 
 The Tekton Dashboard can be accessed through its `ClusterIP` service by running `kubectl proxy` or the service can
 be patched to expose a public `NodePort` IP:
@@ -108,7 +102,7 @@ the Tekton YAML instead of Argo YAML. Since the KFP SDK was not designed and imp
 _monkey-patching_ was used to replace non-class methods and functions at runtime.
 
 In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a
-specific version of the `kfp` SDK compiler. As of now the `kfp-tekton` SDK version is `1.5.0` which is aligned with KFP
+specific version of the `kfp` SDK compiler. As of now the `kfp-tekton` SDK version is `1.5.1` which is aligned with KFP
 SDK version [`1.8.18`](https://pypi.org/project/kfp/1.8.18/).
 
 
@@ -249,7 +243,7 @@ To update the ["Compiler Status Report"](/sdk/python/tests/README.md) use the ou
 All source files should have the following license header. Adjust the year accordingly to reflect the year the file was
 added, and the last year it was modified:
 
-    # Copyright 2019-2021 kubeflow.org
+    # Copyright 2019-2023 kubeflow.org
     #
     # Licensed under the Apache License, Version 2.0 (the "License");
     # you may not use this file except in compliance with the License.
