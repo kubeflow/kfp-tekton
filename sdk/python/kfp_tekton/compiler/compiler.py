@@ -145,6 +145,7 @@ class TektonCompiler(Compiler):
     self.security_context = None
     self.automount_service_account_token = None
     self.group_names = {}
+    self.pipeline_env = {}
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -157,6 +158,7 @@ class TektonCompiler(Compiler):
     self.resource_in_separate_yaml = tekton_pipeline_conf.resource_in_separate_yaml
     self.security_context = tekton_pipeline_conf.security_context
     self.automount_service_account_token = tekton_pipeline_conf.automount_service_account_token
+    self.pipeline_env = tekton_pipeline_conf.pipeline_env
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -1397,19 +1399,28 @@ class TektonCompiler(Compiler):
     self.pipeline_annotations['pipelines.kubeflow.org/big_data_passing_format'] = BIG_DATA_PATH_FORMAT
 
     if self.pipeline_annotations:
-      pipeline_run['metadata']['annotations'] = pipeline_run['metadata'].setdefault('annotations', {})
+      pipeline_run['metadata'].setdefault('annotations', {})
       pipeline_run['metadata']['annotations'].update(self.pipeline_annotations)
 
+    def python_name_to_yaml_name(name: str):
+      return re.sub(r'_([a-z])', lambda x: x.group(1).upper(), name)
+
     if self.security_context:
-      pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
+      pipeline_run['spec'].setdefault('podTemplate', {})
       for key, value in self.security_context.to_dict().items():
         if value is not None:
           pipeline_run['spec']['podTemplate']['securityContext'] = \
             pipeline_run['spec']['podTemplate'].setdefault('securityContext', {})
-          pipeline_run['spec']['podTemplate']['securityContext'][key] = value
+          pipeline_run['spec']['podTemplate']['securityContext'][python_name_to_yaml_name(key)] = value
     if self.automount_service_account_token is not None:
-      pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
+      pipeline_run['spec'].setdefault('podTemplate', {})
       pipeline_run['spec']['podTemplate']['automountServiceAccountToken'] = self.automount_service_account_token
+    if self.pipeline_env:
+      pipeline_run['spec'].setdefault('podTemplate', {})
+      pipeline_run['spec']['podTemplate'].setdefault('env', [])
+      for key, value in self.pipeline_env.items():
+        pipeline_run['spec']['podTemplate']['env'].append({'name': key, 'value': value})
+      print(pipeline_run['spec']['podTemplate'])
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []
