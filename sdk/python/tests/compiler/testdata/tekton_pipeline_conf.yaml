@@ -56,5 +56,8 @@ spec:
               [], "version": "echo@sha256=14be762d0ac645b725d45e703104370b0816a8b2b9abf44ca01c405e3bbf45c3"}'
   podTemplate:
     securityContext:
-      run_as_user: 0
+      runAsUser: 0
     automountServiceAccountToken: false
+    env:
+    - name: WATSON_CRED
+      value: ABCD1234
