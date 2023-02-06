@@ -79,7 +79,7 @@ Mac OS users can install the Tekton CLI using the `homebrew` formula:
 
 Follow the installation instructions [here](https://github.com/tektoncd/dashboard/blob/master/docs/install.md), i.e.:
 
-    kubectl apply --filename  https://storage.googleapis.com/tekton-releases/dashboard/previous/v0.32.0/release.yaml
+    kubectl apply --filename https://storage.googleapis.com/tekton-releases/dashboard/previous/v0.32.0/release.yaml
 
 The Tekton Dashboard can be accessed through its `ClusterIP` service by running `kubectl proxy` or the service can
 be patched to expose a public `NodePort` IP:
