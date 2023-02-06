@@ -47,6 +47,7 @@ pipeline_conf.add_pipeline_label('test2', 'label2')
 pipeline_conf.add_pipeline_annotation('test', 'annotation')
 pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0))
 pipeline_conf.set_automount_service_account_token(False)
+pipeline_conf.add_pipeline_env('WATSON_CRED', 'ABCD1234')
 
 
 if __name__ == "__main__":

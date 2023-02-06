@@ -191,7 +191,9 @@ used as a root OpsGroup in a pipeline. It can't be under other OpsGroup.
 Currently users can explicitly setup Security Context and Auto Mount Service Account Token at the pipeline level using Tekton Pipleine Config.
 Below are the usages and input types:
 - set_security_context() - InputType: `V1SecurityContext`
-- set_automount_service_account_token () - InputType: `Bool`
+- set_automount_service_account_token() - InputType: `Bool`
+- add_pipeline_env() - InputType: name `str`, value `str`
+- set_pipeline_env() - InputType: `Dict`
 
 ```python
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
@@ -199,6 +201,7 @@ from kubernetes.client import V1SecurityContext
 pipeline_conf = TektonPipelineConf()
 pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0)) # InputType: V1SecurityContext
 pipeline_conf.set_automount_service_account_token(False) # InputType: Bool
+pipeline_conf.add_pipeline_env('ENV_NAME', 'VALUE') # InputType: name `str`, value `str`
 self._test_pipeline_workflow(test_pipeline, 'test.yaml', tekton_pipeline_conf=pipeline_conf)
 ```
 
