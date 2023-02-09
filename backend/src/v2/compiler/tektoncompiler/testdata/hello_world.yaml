@@ -9,7 +9,6 @@ metadata:
   creationTimestamp: null
   generateName: hello-world-
   labels:
-    pipeline-uid: a6ff13db-e038-4d8a-9bb0-415aa0816fee
     pipelines.kubeflow.org/v2_component: "true"
 spec:
   pipelineSpec:
@@ -21,9 +20,9 @@ spec:
       - name: pipeline_name
         value: namespace/n1/pipeline/hello-world
       - name: run_id
-        value: a6ff13db-e038-4d8a-9bb0-415aa0816fee
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.root.results.execution-id)
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
         value: '{"executorLabel":"exec-hello-world","inputDefinitions":{"parameters":{"text":{"type":"STRING"}}}}'
       - name: task
@@ -37,18 +36,6 @@ spec:
           = vars(_parser.parse_args())\n\n_outputs = hello_world(**_parsed_args)\n"],"image":"python:3.7"}'
       - name: iteration_index
         value: ""
-      - name: execution_id
-        value: execution-id
-      - name: executor_input
-        value: executor-input
-      - name: function_to_execute
-        value: function-to-execute
-      - name: cached_decision
-        value: cached-decision
-      - name: condition
-        value: condition
-      runAfter:
-      - root-system-dag-driver
       taskRef:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver
@@ -59,40 +46,32 @@ spec:
         value: $(tasks.hello-world-driver.results.executor-input)
       - name: execution-id
         value: $(tasks.hello-world-driver.results.execution-id)
-      - name: function-to-execute
-        value: $(tasks.hello-world-driver.results.function-to-execute)
       - name: run-id
-        value: a6ff13db-e038-4d8a-9bb0-415aa0816fee
-      runAfter:
-      - hello-world-driver
+        value: $(context.pipelineRun.uid)
+      - name: component-spec
+        value: '{"executorLabel":"exec-hello-world","inputDefinitions":{"parameters":{"text":{"type":"STRING"}}}}'
       taskSpec:
         metadata:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: a6ff13db-e038-4d8a-9bb0-415aa0816fee
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: executor-input
           type: string
         - name: execution-id
           type: string
-        - name: function-to-execute
-          type: string
         - name: run-id
           type: string
-        results:
-        - description: execution id
-          name: execution-id
-        - description: executor input
-          name: executor-input
+        - name: component-spec
+          type: string
         spec: null
         steps:
         - command:
           - launcher-v2
           - --copy
           - /tekton/home/launch
-          image: gcr.io/ml-pipeline-test/dev/kfp-launcher-v2:latest
+          image: gcr.io/ml-pipeline-test/dev/kfp-launcher-v2@sha256:4513cf5c10c252d94f383ce51a890514799c200795e3de5e90f91b98b2e2f959
           imagePullPolicy: Always
           name: kfp-launcher
           resources: {}
@@ -126,6 +105,8 @@ spec:
           - $(params.execution-id)
           - --executor_input
           - $(params.executor-input)
+          - --component_spec
+          - $(params.component-spec)
           - --pod_name
           - $(KFP_POD_NAME)
           - --pod_uid
@@ -134,10 +115,6 @@ spec:
           - $(METADATA_GRPC_SERVICE_HOST)
           - --mlmd_server_port
           - $(METADATA_GRPC_SERVICE_PORT)
-          - --executor_input
-          - '{{$}}'
-          - --function_to_execute
-          - $(params.function-to-execute)
           - --
           env:
           - name: KFP_POD_NAME
@@ -171,7 +148,7 @@ spec:
       - name: pipeline_name
         value: namespace/n1/pipeline/hello-world
       - name: run_id
-        value: a6ff13db-e038-4d8a-9bb0-415aa0816fee
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: "0"
       - name: component
@@ -182,12 +159,22 @@ spec:
         value: '{"parameters":{"text":{"stringValue":"hi there"}}}'
       - name: iteration_index
         value: "-1"
-      - name: execution_id
-        value: execution-id
-      - name: iteration_count
-        value: iteration-count
-      - name: condition
-        value: condition
+      taskRef:
+        apiVersion: kfp-driver.tekton.dev/v1alpha1
+        kind: KFPDriver
+        name: kfp-driver
+    - name: root-system-dag-pub-driver
+      params:
+      - name: type
+        value: DAG-PUB
+      - name: pipeline_name
+        value: namespace/n1/pipeline/hello-world
+      - name: run_id
+        value: $(context.pipelineRun.uid)
+      - name: dag_execution_id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
+      runAfter:
+      - hello-world
       taskRef:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver

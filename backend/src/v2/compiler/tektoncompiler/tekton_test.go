@@ -94,8 +94,8 @@ func TestMnist(t *testing.T) {
 		tektonYAMLPath string // path of expected output argo workflow YAML
 	}{
 		{
-			yamlPath:       "testdata/mnist_pipeline_ir.yaml",
-			tektonYAMLPath: "testdata/mnist_pipeline.yaml",
+			yamlPath:       "testdata/exit_handler_ir.yaml",
+			tektonYAMLPath: "testdata/exit_handler.yaml",
 		},
 	}
 	for _, tt := range tests {
@@ -103,7 +103,7 @@ func TestMnist(t *testing.T) {
 
 			job := load(t, tt.yamlPath, "yaml")
 			if *update {
-				pr, err := tektoncompiler.Compile(job, nil)
+				pr, err := tektoncompiler.Compile(job, &tektoncompiler.Options{LauncherImage: "aipipeline/kfp-launcher-v2:latest"})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -120,7 +120,7 @@ func TestMnist(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			pr, err := tektoncompiler.Compile(job, nil)
+			pr, err := tektoncompiler.Compile(job, &tektoncompiler.Options{LauncherImage: "aipipeline/kfp-launcher-v2:latest"})
 			if err != nil {
 				t.Error(err)
 			}
@@ -130,7 +130,7 @@ func TestMnist(t *testing.T) {
 				t.Fatal(err)
 			}
 			if !cmp.Equal(pr, &expected) {
-				t.Errorf("compiler.Compile(%s)!=expected, diff: %s\n", tt.yamlPath, cmp.Diff(&expected, pr))
+				t.Errorf("compiler.Compile(%s)!=expected, diff: %s\n", tt.yamlPath, cmp.Diff(pr, &expected))
 			}
 		})
 

@@ -9,7 +9,6 @@ metadata:
   creationTimestamp: null
   generateName: pipeline-with-importer-
   labels:
-    pipeline-uid: 7dde640b-39c0-4320-8d1b-610f20a536f6
     pipelines.kubeflow.org/v2_component: "true"
 spec:
   pipelineSpec:
@@ -25,7 +24,7 @@ spec:
       - name: parent-dag-id
         value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: run-id
-        value: 7dde640b-39c0-4320-8d1b-610f20a536f6
+        value: $(context.pipelineRun.uid)
       runAfter:
       - root-system-dag-driver
       taskSpec:
@@ -33,7 +32,6 @@ spec:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
-            pipeline-uid: 7dde640b-39c0-4320-8d1b-610f20a536f6
             pipelines.kubeflow.org/v2_component: "true"
         params:
         - name: task
@@ -89,7 +87,7 @@ spec:
           - configMapRef:
               name: metadata-grpc-configmap
               optional: true
-          image: gcr.io/ml-pipeline-test/dev/kfp-launcher-v2:latest
+          image: gcr.io/ml-pipeline-test/dev/kfp-launcher-v2@sha256:4513cf5c10c252d94f383ce51a890514799c200795e3de5e90f91b98b2e2f959
           name: importer-main
           resources: {}
     - name: root-system-dag-driver
@@ -99,7 +97,7 @@ spec:
       - name: pipeline_name
         value: pipeline-with-importer
       - name: run_id
-        value: 7dde640b-39c0-4320-8d1b-610f20a536f6
+        value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: "0"
       - name: component
@@ -110,12 +108,22 @@ spec:
         value: '{}'
       - name: iteration_index
         value: "-1"
-      - name: execution_id
-        value: execution-id
-      - name: iteration_count
-        value: iteration-count
-      - name: condition
-        value: condition
+      taskRef:
+        apiVersion: kfp-driver.tekton.dev/v1alpha1
+        kind: KFPDriver
+        name: kfp-driver
+    - name: root-system-dag-pub-driver
+      params:
+      - name: type
+        value: DAG-PUB
+      - name: pipeline_name
+        value: pipeline-with-importer
+      - name: run_id
+        value: $(context.pipelineRun.uid)
+      - name: dag_execution_id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
+      runAfter:
+      - importer
       taskRef:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver

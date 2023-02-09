@@ -239,6 +239,8 @@ func (pr *PipelineRun) Condition() exec.ExecutionPhase {
 			return exec.ExecutionError
 		case "Failed":
 			return exec.ExecutionFailed
+		case "InvalidTaskResultReference":
+			return exec.ExecutionFailed
 		case "Pending":
 			return exec.ExecutionPending
 		case "Running":

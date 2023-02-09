@@ -38,6 +38,11 @@ func (c *pipelinerunCompiler) DAG(taskName, compRef string, task *pipelinespec.P
 	if err := c.addDagTask(taskName, compRef, task); err != nil {
 		return err
 	}
+
+	leaves := getLeafNodes(dagSpec, c.spec)
+	if err := c.addDagPubTask(taskName, leaves); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -75,6 +80,15 @@ func (c *pipelinerunCompiler) addDagTask(name, compRef string, task *pipelinespe
 		return err
 	}
 	c.addPipelineTask(driver)
+	return nil
+}
+
+func (c *pipelinerunCompiler) addDagPubTask(name string, deps []string) error {
+	pubdriver, err := c.dagPubDriverTask(getDAGPubTaskName(name), &pubDagDriverInputs{deps: deps, parentDagID: name})
+	if err != nil {
+		return err
+	}
+	c.addPipelineTask(pubdriver)
 	return nil
 }
 
@@ -154,6 +168,47 @@ func (c *pipelinerunCompiler) dagDriverTask(
 	return t, nil
 }
 
+func (c *pipelinerunCompiler) dagPubDriverTask(
+	name string,
+	inputs *pubDagDriverInputs,
+) (*pipelineapi.PipelineTask, error) {
+
+	t := &pipelineapi.PipelineTask{
+		Name: name,
+		TaskRef: &pipelineapi.TaskRef{
+			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
+			Kind:       "KFPDriver",
+			Name:       "kfp-driver",
+		},
+		Params: []pipelineapi.Param{
+			// "--type"
+			{
+				Name:  paramNameType,
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getDagType()},
+			},
+			// "--pipeline_name"
+			{
+				Name:  paramNamePipelineName,
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
+			},
+			// "--run_id"
+			{
+				Name:  paramNameRunId,
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
+			},
+			// "--dag_execution_id"
+			{
+				Name:  paramNameDagExecutionId,
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getParentDagID()},
+			},
+		},
+	}
+	if len(inputs.deps) > 0 {
+		t.RunAfter = inputs.deps
+	}
+	return t, nil
+}
+
 type dagDriverInputs struct {
 	parentDagID    string                                  // parent DAG execution ID. optional, the root DAG does not have parent
 	component      string                                  // input placeholder for component spec
@@ -161,6 +216,22 @@ type dagDriverInputs struct {
 	runtimeConfig  *pipelinespec.PipelineJob_RuntimeConfig // optional, only root DAG needs this
 	iterationIndex string                                  // optional, iterator passes iteration index to iteration tasks
 	deps           []string
+}
+
+type pubDagDriverInputs struct {
+	parentDagID string
+	deps        []string
+}
+
+func (i *pubDagDriverInputs) getDagType() string {
+	return "DAG-PUB"
+}
+
+func (i *pubDagDriverInputs) getParentDagID() string {
+	if i.parentDagID == "" {
+		return "0"
+	}
+	return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
 }
 
 func (i *dagDriverInputs) getParentDagID() string {

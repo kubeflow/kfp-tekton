@@ -298,6 +298,10 @@ type pipelinerunCompiler struct {
 
 // if the dependency is a component with DAG, then replace the dependency with DAG's leaf nodes
 func (state *pipelinerunDFS) checkDependencies(task *pipelinespec.PipelineTaskSpec, dag *pipelinespec.DagSpec) {
+	if task.GetTriggerPolicy() != nil && task.GetTriggerPolicy().GetStrategy().String() == "ALL_UPSTREAM_TASKS_COMPLETED" {
+		// don't change the exit handler's deps, let it depend on the dag
+		return
+	}
 	tasks := task.GetDependentTasks()
 	newDeps := make([]string, 0)
 	for _, depTask := range tasks {
@@ -306,7 +310,7 @@ func (state *pipelinerunDFS) checkDependencies(task *pipelinespec.PipelineTaskSp
 				depDag := comp.GetDag()
 				//depends on a DAG
 				if depDag != nil {
-					newDeps = append(newDeps, state.getLeafNodes(depDag)...)
+					newDeps = append(newDeps, getLeafNodes(depDag, state.spec)...)
 					continue
 				} else {
 					newDeps = append(newDeps, depTask)
@@ -317,7 +321,7 @@ func (state *pipelinerunDFS) checkDependencies(task *pipelinespec.PipelineTaskSp
 	task.DependentTasks = newDeps
 }
 
-func (state *pipelinerunDFS) getLeafNodes(dagSpec *pipelinespec.DagSpec) []string {
+func getLeafNodes(dagSpec *pipelinespec.DagSpec, spec *pipelinespec.PipelineSpec) []string {
 	leaves := make(map[string]int)
 	tasks := dagSpec.GetTasks()
 	alldeps := make([]string, 0)
@@ -331,9 +335,9 @@ func (state *pipelinerunDFS) getLeafNodes(dagSpec *pipelinespec.DagSpec) []strin
 	rev := make([]string, 0, len(leaves))
 	for dep := range leaves {
 		refName := tasks[dep].GetComponentRef().GetName()
-		if comp, ok := state.spec.Components[refName]; ok {
+		if comp, ok := spec.Components[refName]; ok {
 			if comp.GetDag() != nil {
-				rev = append(rev, state.getLeafNodes(comp.GetDag())...)
+				rev = append(rev, getLeafNodes(comp.GetDag(), spec)...)
 			} else {
 				rev = append(rev, dep)
 			}
@@ -374,6 +378,14 @@ func (c *pipelinerunCompiler) addPipelineTask(t *pipelineapi.PipelineTask) {
 		c.pr.Spec.PipelineSpec.Tasks = make([]pipelineapi.PipelineTask, 0)
 	}
 	c.pr.Spec.PipelineSpec.Tasks = append(c.pr.Spec.PipelineSpec.Tasks, *t)
+}
+
+/* no use of finally at this moment, use dependency to fullfil the exit handler for now */
+func (c *pipelinerunCompiler) addPipelineFinallyTask(t *pipelineapi.PipelineTask) {
+	if c.pr.Spec.PipelineSpec.Finally == nil {
+		c.pr.Spec.PipelineSpec.Finally = make([]pipelineapi.PipelineTask, 0)
+	}
+	c.pr.Spec.PipelineSpec.Finally = append(c.pr.Spec.PipelineSpec.Finally, *t)
 }
 
 // WIP: store component spec, task spec and executor spec in annotations
@@ -467,9 +479,9 @@ func inputValue(parameter string) string {
 	return fmt.Sprintf("$(params.%s)", parameter)
 }
 
-// func outputPath(parameter string) string {
-// 	return fmt.Sprintf("$(results.%s.path)", parameter)
-// }
+func outputPath(parameter string) string {
+	return fmt.Sprintf("$(results.%s.path)", parameter)
+}
 
 func taskOutputParameter(task string, param string) string {
 	//tasks.<taskName>.results.<resultName>
@@ -483,6 +495,15 @@ func getDAGDriverTaskName(dagName string) string {
 	}
 	// sub dag
 	return fmt.Sprintf("%s-dag-driver", dagName)
+}
+
+func getDAGPubTaskName(dagName string) string {
+	if dagName == compiler.RootComponentName {
+		// root dag
+		return fmt.Sprintf("%s-system-dag-pub-driver", dagName)
+	}
+	// sub dag
+	return fmt.Sprintf("%s-dag-pub-driver", dagName)
 }
 
 func getContainerDriverTaskName(name string) string {

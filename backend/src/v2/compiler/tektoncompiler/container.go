@@ -55,6 +55,10 @@ func (c *pipelinerunCompiler) Container(taskName, compRef string,
 		return err
 	}
 
+	exitHandler := false
+	if task.GetTriggerPolicy().GetStrategy().String() == "ALL_UPSTREAM_TASKS_COMPLETED" {
+		exitHandler = true
+	}
 	return c.containerDriverTask(taskName, &containerDriverInputs{
 		component:    componentSpec,
 		task:         taskSpecJson,
@@ -62,6 +66,7 @@ func (c *pipelinerunCompiler) Container(taskName, compRef string,
 		parentDag:    getDAGDriverTaskName(c.CurrentDag()),
 		taskDef:      task,
 		containerDef: container,
+		exitHandler:  exitHandler,
 	})
 }
 
@@ -82,20 +87,19 @@ type containerDriverInputs struct {
 	containerDef   *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec
 	parentDag      string
 	iterationIndex string // optional, when this is an iteration task
+	exitHandler    bool
 }
 
 func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *containerDriverInputs) error {
 
 	containerDriverName := getContainerDriverTaskName(name)
-	// task driver
-	c.addPipelineTask(&pipelineapi.PipelineTask{
+	driverTask := &pipelineapi.PipelineTask{
 		Name: containerDriverName,
 		TaskRef: &pipelineapi.TaskRef{
 			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
 			Kind:       "KFPDriver",
 			Name:       "kfp-driver",
 		},
-		RunAfter: append(inputs.taskDef.GetDependentTasks(), inputs.parentDag),
 		Params: []pipelineapi.Param{
 			// "--type", "CONTAINER",
 			{
@@ -143,7 +147,13 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			// - cached-decision
 			// - condition
 		},
-	})
+	}
+
+	if len(inputs.taskDef.GetDependentTasks()) > 0 {
+		driverTask.RunAfter = inputs.taskDef.GetDependentTasks()
+	}
+
+	c.addPipelineTask(driverTask)
 
 	// need container driver's output for executor
 	containerDriverOutputs := containerDriverOutputs{
@@ -154,10 +164,10 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 	}
 
 	t := c.containerExecutorTemplate(name, inputs.containerDef, c.spec.PipelineInfo.GetName())
-	c.addPipelineTask(&pipelineapi.PipelineTask{
+
+	executorTask := &pipelineapi.PipelineTask{
 		Name:     name,
 		TaskSpec: t,
-		RunAfter: []string{containerDriverName},
 		WhenExpressions: pipelineapi.WhenExpressions{
 			{
 				Input:    containerDriverOutputs.cached,
@@ -183,7 +193,9 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.component},
 			},
 		},
-	})
+	}
+
+	c.addPipelineTask(executorTask)
 
 	return nil
 }
@@ -229,10 +241,6 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 				{Name: paramExecutionID, Type: "string"},   // --execution_id
 				{Name: paramRunId, Type: "string"},         // --run_id
 				{Name: paramComponentSpec, Type: "string"}, // --component_spec
-			},
-			Results: []pipelineapi.TaskResult{
-				{Name: paramExecutionID, Description: "execution id"},
-				{Name: paramExecutorInput, Description: "executor input"},
 			},
 			Steps: []pipelineapi.Step{
 				// step 1: copy launcher

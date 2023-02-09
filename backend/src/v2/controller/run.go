@@ -111,6 +111,9 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]v1alpha1.RunRes
 		execution, err = driver.Container(ctx, options.options, options.mlmdClient, options.cacheClient)
 	case "DAG":
 		execution, err = driver.DAG(ctx, options.options, options.mlmdClient)
+	case "DAG-PUB":
+		// no-op for now
+		return &[]v1alpha1.RunResult{}, nil
 	default:
 		err = fmt.Errorf("unknown driverType %s", options.driverType)
 	}
