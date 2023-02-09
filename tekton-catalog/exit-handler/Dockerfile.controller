@@ -1,0 +1,41 @@
+# Copyright 2023 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+FROM golang:1.19.5-alpine3.16 as builder
+
+WORKDIR /go/src/github.com/kubeflow/pipelines
+COPY . .
+
+# Needed musl-dev for github.com/mattn/go-sqlite3
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh gcc musl-dev patch
+
+RUN CGO_ENABLED=0 GO111MODULE=on go build -o /bin/controller cmd/controller/*.go
+RUN go install github.com/google/go-licenses@d483853
+RUN go-licenses check ./cmd/controller/
+RUN go-licenses csv ./cmd/controller > /tmp/licenses.csv && \
+    diff /tmp/licenses.csv third_party_licenses/controller.csv && \
+    go-licenses save ./cmd/controller --save_path /tmp/NOTICES
+
+FROM alpine:3.8
+WORKDIR /bin
+
+COPY --from=builder /bin/controller /bin/controller
+# Copy licenses and notices.
+COPY --from=builder /tmp/licenses.csv /third_party/licenses.csv
+COPY --from=builder /tmp/NOTICES /third_party/NOTICES
+RUN chmod +x /bin/controller
+RUN apk --no-cache add tzdata
+
+CMD /bin/controller

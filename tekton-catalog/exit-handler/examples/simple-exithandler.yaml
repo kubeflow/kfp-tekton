@@ -1,0 +1,60 @@
+# Copyright 2023 kubeflow.org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: exithandler-example
+spec:
+  pipelineSpec:
+    tasks:
+      - name: first-task
+        taskSpec:
+          steps:
+            - name: echo
+              image: ubuntu
+              imagePullPolicy: IfNotPresent
+              script: |
+                #!/usr/bin/env bash
+                echo "I am the first task"
+    finally:
+      - name: exithandler
+        params:
+          - name: parent-dag-id
+            value: "11"
+        taskSpec:
+          apiVersion: custom.tekton.dev/v1alpha1
+          kind: ExitHandler
+          spec:
+            pipelineSpec:
+              params:
+                - name: parent-dag-id
+                  type: string
+              tasks:
+                - name: echo-loop-task
+                  params:
+                    - name:  parent-dag-id
+                      value: $(params.parent-dag-id)
+                  taskSpec:
+                    params:
+                      - name: parent-dag-id
+                        type: string
+                    steps:
+                      - name: echo
+                        image: ubuntu
+                        imagePullPolicy: IfNotPresent
+                        script: |
+                          #!/usr/bin/env bash
+                          echo "$(params.parent-dag-id)"
+                          # exit 1

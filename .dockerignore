@@ -4,3 +4,4 @@ dist
 **/node_modules
 backend/build
 v2/build
+.venv
