@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from kfp import dsl
-from kubernetes.client.models import V1SecurityContext
+from kubernetes.client.models import V1SecurityContext, V1Volume, V1PersistentVolumeClaimSpec
 from typing import Dict
 
 TEKTON_PIPELINE_ANNOTATIONS = ['sidecar.istio.io/inject', 'tekton.dev/artifact_bucket',
@@ -32,6 +32,7 @@ class TektonPipelineConf(dsl.PipelineConf):
         self.security_context = None
         self.automount_service_account_token = None
         self.pipeline_env = {}
+        self.pipeline_workspaces = {}
         super().__init__(**kwargs)
 
     def copy(self):
@@ -75,4 +76,16 @@ class TektonPipelineConf(dsl.PipelineConf):
 
     def set_pipeline_env(self, value: Dict[str, str]):
         self.pipeline_env = value
+        return self
+
+    def add_pipeline_workspace(self,
+                               workspace_name: str,
+                               volume: V1Volume = None,
+                               volume_claim_template_spec: V1PersistentVolumeClaimSpec = None,
+                               path_prefix: str = None):
+        if not (volume or volume_claim_template_spec) or (volume and volume_claim_template_spec):
+            raise ValueError("Only either volume or volume_claim_templateneeds to be defined in add_pipeline_workspace(%s)" %
+                             workspace_name)
+        volumeSpec = volume if volume else volume_claim_template_spec
+        self.pipeline_workspaces[workspace_name] = (volumeSpec, path_prefix)
         return self

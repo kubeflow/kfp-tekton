@@ -820,6 +820,8 @@ class TestTektonCompiler(unittest.TestCase):
     Test applying Tekton pipeline config to a workflow
     """
     from .testdata.tekton_pipeline_conf import echo_pipeline
+    from kubernetes.client.models import V1Volume, V1PersistentVolumeClaimVolumeSource, \
+        V1PersistentVolumeClaimSpec, V1ResourceRequirements
     pipeline_conf = TektonPipelineConf()
     pipeline_conf.add_pipeline_label('test', 'label')
     pipeline_conf.add_pipeline_label('test2', 'label2')
@@ -827,6 +829,16 @@ class TestTektonCompiler(unittest.TestCase):
     pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0))
     pipeline_conf.set_automount_service_account_token(False)
     pipeline_conf.add_pipeline_env('WATSON_CRED', 'ABCD1234')
+    pipeline_conf.add_pipeline_workspace(workspace_name="new-ws", volume=V1Volume(
+        name='data',
+        persistent_volume_claim=V1PersistentVolumeClaimVolumeSource(
+            claim_name='data-volume')
+    ), path_prefix='artifact_data/')
+    pipeline_conf.add_pipeline_workspace(workspace_name="new-ws-template",
+        volume_claim_template_spec=V1PersistentVolumeClaimSpec(
+          access_modes=["ReadWriteOnce"],
+          resources=V1ResourceRequirements(requests={"storage": "30Gi"})
+    ))
     self._test_pipeline_workflow(echo_pipeline, 'tekton_pipeline_conf.yaml',
                                  tekton_pipeline_conf=pipeline_conf,
                                  skip_noninlined=True)
