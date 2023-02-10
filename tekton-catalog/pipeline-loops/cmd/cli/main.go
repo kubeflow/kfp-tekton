@@ -237,11 +237,13 @@ func validatePipelineLoop(bytes []byte) error {
 }
 
 func validateNestedPipelineLoop(pl pipelineloopv1alpha1.PipelineLoop) (error, string) {
-	for _, task := range pl.Spec.PipelineSpec.Tasks {
-		if task.TaskSpec != nil && task.TaskSpec.Kind == pipelineloop.PipelineLoopControllerName {
-			err := validatePipelineLoopEmbedded(task.TaskSpec.Spec.Raw)
-			if err != nil {
-				return err, task.Name
+	if pl.Spec.PipelineSpec != nil {
+		for _, task := range pl.Spec.PipelineSpec.Tasks {
+			if task.TaskSpec != nil && task.TaskSpec.Kind == pipelineloop.PipelineLoopControllerName {
+				err := validatePipelineLoopEmbedded(task.TaskSpec.Spec.Raw)
+				if err != nil {
+					return err, task.Name
+				}
 			}
 		}
 	}
