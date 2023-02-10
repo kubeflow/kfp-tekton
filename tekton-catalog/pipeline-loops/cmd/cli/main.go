@@ -77,8 +77,9 @@ func main() {
 		if err != nil {
 			fmt.Printf("\nWarn: skipping file:%s, %v\n", inputFileName, err)
 			// os.Exit(2) These are warning because, certain yaml are not k8s resource and we can skip.
-			os.Exit(0)
+			os.Exit(2)
 		}
+		fmt.Printf("Reading file: %s\n", inputFileName)
 		for _, o := range objs {
 			marshalledBytes, err := o.MarshalJSON()
 			if err != nil {
