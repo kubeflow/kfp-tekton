@@ -47,6 +47,8 @@ jobs:
         run: make validate-generated-test-yamls
       - name: "Tekton validation for testdata."
         run: make validate-testdata
+      - name: "Validation for examples data."
+        run: make validate-pipelineloop-examples
   progress-report:
     runs-on: ubuntu-latest
     steps:

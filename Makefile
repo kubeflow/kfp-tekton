@@ -63,6 +63,11 @@ validate-testdata:
 	@cd tekton-catalog/pipeline-loops/ && make validate-testdata-python-sdk
 	@echo "$@: OK"
 
+.PHONY: validate-pipelineloop-examples
+validate-pipelineloop-examples:
+	@cd tekton-catalog/pipeline-loops/ && make validate-examples
+	@echo "$@: OK"
+
 .PHONY: unit_test
 unit_test: venv ## Run compiler unit tests
 	@echo "=================================================================="

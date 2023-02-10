@@ -92,6 +92,8 @@ func main() {
 				// No validation.
 			case "Run":
 				err = validateRun(marshalledBytes)
+			case "CustomRun":
+				err = validateCustomRun(marshalledBytes)
 			case "Pipeline":
 				err = validatePipeline(marshalledBytes)
 			case pipelineloop.PipelineLoopControllerName:
@@ -168,6 +170,23 @@ func validateRun(bytes []byte) error {
 	if r.Spec.Spec != nil && r.Spec.Spec.Kind == pipelineloop.PipelineLoopControllerName {
 		if err := validatePipelineLoopEmbedded(r.Spec.Spec.Spec.Raw); err != nil {
 			return fmt.Errorf("Found validation errors in Run: %s \n %s", r.Name, err.Error())
+		}
+	}
+	return nil
+}
+
+func validateCustomRun(bytes []byte) error {
+	customRun := v1beta1.CustomRun{}
+	err := json.Unmarshal(bytes, &customRun)
+	if err != nil {
+		return fmt.Errorf("Error while unmarshal CustomRun:%s\n", err.Error())
+	}
+	// We do not need to validate CustomRun because it is validated by tekton admission webhook
+	// And r.Spec.CustomRef is also validated by tekton.
+	// Here we only need to validate the embedded spec. i.e. r.Spec.Spec
+	if customRun.Spec.CustomSpec != nil && customRun.Spec.CustomSpec.Kind == pipelineloop.PipelineLoopControllerName {
+		if err := validatePipelineLoopEmbedded(customRun.Spec.CustomSpec.Spec.Raw); err != nil {
+			return fmt.Errorf("Found validation errors in CustomRun: %s \n %s", customRun.Name, err.Error())
 		}
 	}
 	return nil
