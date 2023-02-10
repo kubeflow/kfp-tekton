@@ -40,6 +40,11 @@ validate-testdata-python-sdk: cli $(info validate-testdata-python-sdk: validate 
 		\( -type f -name "*yaml" -not -path "*\test_data\*" -not -name "*component.yaml" \) \
 		-print0 | xargs -0 -n1 ${BIN_DIR}/pipelineloop-cli -f
 
+.PHONY: validate-examples
+validate-examples: cli $(info validate-examples: validate example yamls for pipelineloop custom task. )
+	@find ./examples/ \
+		\( -type f -name "*yaml" \) -print0 | xargs -0 -n1 ${BIN_DIR}/pipelineloop-cli -f
+
 local: update init
 	go build -o=${BIN_DIR}/pipelineloop-controller ./cmd/controller
 	go build -o=${BIN_DIR}/pipelineloop-webhook ./cmd/webhook

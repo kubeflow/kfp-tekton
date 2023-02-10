@@ -77,8 +77,9 @@ func main() {
 		if err != nil {
 			fmt.Printf("\nWarn: skipping file:%s, %v\n", inputFileName, err)
 			// os.Exit(2) These are warning because, certain yaml are not k8s resource and we can skip.
-			os.Exit(0)
+			os.Exit(2)
 		}
+		fmt.Printf("Reading file: %s\n", inputFileName)
 		for _, o := range objs {
 			marshalledBytes, err := o.MarshalJSON()
 			if err != nil {
@@ -92,6 +93,8 @@ func main() {
 				// No validation.
 			case "Run":
 				err = validateRun(marshalledBytes)
+			case "CustomRun":
+				err = validateCustomRun(marshalledBytes)
 			case "Pipeline":
 				err = validatePipeline(marshalledBytes)
 			case pipelineloop.PipelineLoopControllerName:
@@ -173,6 +176,23 @@ func validateRun(bytes []byte) error {
 	return nil
 }
 
+func validateCustomRun(bytes []byte) error {
+	customRun := v1beta1.CustomRun{}
+	err := json.Unmarshal(bytes, &customRun)
+	if err != nil {
+		return fmt.Errorf("Error while unmarshal CustomRun:%s\n", err.Error())
+	}
+	// We do not need to validate CustomRun because it is validated by tekton admission webhook
+	// And r.Spec.CustomRef is also validated by tekton.
+	// Here we only need to validate the embedded spec. i.e. r.Spec.Spec
+	if customRun.Spec.CustomSpec != nil && customRun.Spec.CustomSpec.Kind == pipelineloop.PipelineLoopControllerName {
+		if err := validatePipelineLoopEmbedded(customRun.Spec.CustomSpec.Spec.Raw); err != nil {
+			return fmt.Errorf("Found validation errors in CustomRun: %s \n %s", customRun.Name, err.Error())
+		}
+	}
+	return nil
+}
+
 func validatePipelineRun(bytes []byte) error {
 	pr := v1beta1.PipelineRun{}
 	if err := json.Unmarshal(bytes, &pr); err != nil {
@@ -218,11 +238,13 @@ func validatePipelineLoop(bytes []byte) error {
 }
 
 func validateNestedPipelineLoop(pl pipelineloopv1alpha1.PipelineLoop) (error, string) {
-	for _, task := range pl.Spec.PipelineSpec.Tasks {
-		if task.TaskSpec != nil && task.TaskSpec.Kind == pipelineloop.PipelineLoopControllerName {
-			err := validatePipelineLoopEmbedded(task.TaskSpec.Spec.Raw)
-			if err != nil {
-				return err, task.Name
+	if pl.Spec.PipelineSpec != nil {
+		for _, task := range pl.Spec.PipelineSpec.Tasks {
+			if task.TaskSpec != nil && task.TaskSpec.Kind == pipelineloop.PipelineLoopControllerName {
+				err := validatePipelineLoopEmbedded(task.TaskSpec.Spec.Raw)
+				if err != nil {
+					return err, task.Name
+				}
 			}
 		}
 	}
