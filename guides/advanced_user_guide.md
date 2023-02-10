@@ -194,14 +194,27 @@ Below are the usages and input types:
 - set_automount_service_account_token() - InputType: `Bool`
 - add_pipeline_env() - InputType: name `str`, value `str`
 - set_pipeline_env() - InputType: `Dict`
+- add_pipeline_workspace() - InputType: workspace_name `str`, volume `V1Volume` (optional), volume_claim_template_spec `V1PersistentVolumeClaimSpec` (optional), path_prefix `str`
 
 ```python
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kubernetes.client import V1SecurityContext
+from kubernetes.client.models import V1Volume, V1PersistentVolumeClaimVolumeSource, \
+    V1PersistentVolumeClaimSpec, V1ResourceRequirements
 pipeline_conf = TektonPipelineConf()
 pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0)) # InputType: V1SecurityContext
 pipeline_conf.set_automount_service_account_token(False) # InputType: Bool
 pipeline_conf.add_pipeline_env('ENV_NAME', 'VALUE') # InputType: name `str`, value `str`
+pipeline_conf.add_pipeline_workspace(workspace_name="new-ws", volume=V1Volume(
+    name='data',
+    persistent_volume_claim=V1PersistentVolumeClaimVolumeSource(
+        claim_name='data-volume')
+), path_prefix='artifact_data/') # InputType: workspace_name `str`, volume `V1Volume`, path_prefix `str`
+pipeline_conf.add_pipeline_workspace(workspace_name="new-ws-template",
+    volume_claim_template_spec=V1PersistentVolumeClaimSpec(
+        access_modes=["ReadWriteOnce"],
+        resources=V1ResourceRequirements(requests={"storage": "30Gi"})
+)) # InputType: workspace_name `str`, volume_claim_template_spec `V1PersistentVolumeClaimSpec`
 self._test_pipeline_workflow(test_pipeline, 'test.yaml', tekton_pipeline_conf=pipeline_conf)
 ```
 

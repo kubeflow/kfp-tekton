@@ -27,6 +27,8 @@ import collections
 from os import environ as env
 from typing import Callable, List, Text, Dict, Any
 import hashlib
+from kubernetes.client.models import V1Volume
+from kubernetes import client
 
 import yaml
 # Kubeflow Pipeline imports
@@ -146,6 +148,7 @@ class TektonCompiler(Compiler):
     self.automount_service_account_token = None
     self.group_names = {}
     self.pipeline_env = {}
+    self.pipeline_workspaces = {}
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -159,6 +162,7 @@ class TektonCompiler(Compiler):
     self.security_context = tekton_pipeline_conf.security_context
     self.automount_service_account_token = tekton_pipeline_conf.automount_service_account_token
     self.pipeline_env = tekton_pipeline_conf.pipeline_env
+    self.pipeline_workspaces = tekton_pipeline_conf.pipeline_workspaces
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -1625,6 +1629,20 @@ class TektonCompiler(Compiler):
 
     if pipeline_conf and pipeline_conf.data_passing_method is not None:
       workflow = fix_big_data_passing_using_volume(workflow, pipeline_conf)
+
+    # Inject user defined pipeline level workspaces
+    if self.pipeline_workspaces:
+      workflow['spec'].setdefault('workspaces', [])
+      for key, value in self.pipeline_workspaces.items():
+        workspaceSpec = {"name": key}
+        if isinstance(value[0], V1Volume):
+          workspaceSpec = client.ApiClient().sanitize_for_serialization(value[0])
+          workspaceSpec["name"] = key
+        else:
+          workspaceSpec['volumeClaimTemplate'] = {"spec": client.ApiClient().sanitize_for_serialization(value[0])}
+        if value[1]:
+          workspaceSpec['subPath'] = value[1]
+        workflow['spec']['workspaces'].append(workspaceSpec)
 
     if pipeline_conf and pipeline_conf.timeout > 0:
       workflow['spec'].setdefault('timeouts', {'pipeline': '0s', 'tasks': '0s'})

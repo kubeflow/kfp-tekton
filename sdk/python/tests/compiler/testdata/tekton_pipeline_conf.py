@@ -15,6 +15,8 @@
 from kfp import dsl, components
 import kfp_tekton
 from kubernetes.client import V1SecurityContext
+from kubernetes.client.models import V1Volume, V1PersistentVolumeClaimVolumeSource, \
+    V1PersistentVolumeClaimSpec, V1ResourceRequirements
 
 
 def echo_op():
@@ -48,6 +50,16 @@ pipeline_conf.add_pipeline_annotation('test', 'annotation')
 pipeline_conf.set_security_context(V1SecurityContext(run_as_user=0))
 pipeline_conf.set_automount_service_account_token(False)
 pipeline_conf.add_pipeline_env('WATSON_CRED', 'ABCD1234')
+pipeline_conf.add_pipeline_workspace(workspace_name="new-ws", volume=V1Volume(
+    name='data',
+    persistent_volume_claim=V1PersistentVolumeClaimVolumeSource(
+        claim_name='data-volume')
+), path_prefix='artifact_data/')
+pipeline_conf.add_pipeline_workspace(workspace_name="new-ws-template",
+    volume_claim_template_spec=V1PersistentVolumeClaimSpec(
+        access_modes=["ReadWriteOnce"],
+        resources=V1ResourceRequirements(requests={"storage": "30Gi"})
+))
 
 
 if __name__ == "__main__":

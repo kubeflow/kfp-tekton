@@ -61,3 +61,16 @@ spec:
     env:
     - name: WATSON_CRED
       value: ABCD1234
+  workspaces:
+  - name: new-ws
+    persistentVolumeClaim:
+      claimName: data-volume
+    subPath: artifact_data/
+  - name: new-ws-template
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 30Gi
