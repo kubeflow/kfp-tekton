@@ -655,4 +655,22 @@ def _op_to_template(op: BaseOp,
             if artifact[0] not in verified_result_size_map[step_counter].keys():
                 artifact[1] = '%s%s' % (TEKTON_HOME_RESULT_PATH, sanitize_k8s_name(artifact[0], allow_capital=True))
                 artifact_items[op.name][i] = artifact
+    # Add workspaces into task spec if defined as annotations
+    workspace_map = "{}"
+    if processed_op.pod_annotations:
+        workspace_map = processed_op.pod_annotations.get("workspaces", "{}")
+    if workspace_map and workspace_map != "{}":
+        try:
+            workspace_map = json.loads(workspace_map)
+        except ValueError:
+            raise ("workspace_map annotation is not a valid JSON")
+        workspaces = template['spec'].get("workspaces", [])
+        for key, value in workspace_map.items():
+            workspace_item = {"name": key}
+            if value.get("readOnly", None) is not None:
+                workspace_item["readOnly"] = value["readOnly"]
+            if value.get("mountPath", None) is not None:
+                workspace_item["mountPath"] = value["mountPath"]
+            workspaces.append(workspace_item)
+        template['spec']["workspaces"] = workspaces
     return template

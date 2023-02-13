@@ -14,6 +14,7 @@
 
 from kfp import dsl, components
 import kfp_tekton
+import json
 from kubernetes.client import V1SecurityContext
 from kubernetes.client.models import V1Volume, V1PersistentVolumeClaimVolumeSource, \
     V1PersistentVolumeClaimSpec, V1ResourceRequirements
@@ -40,7 +41,9 @@ def echo_op():
     description='echo pipeline'
 )
 def echo_pipeline():
-    echo_op()
+    echo = echo_op()
+    workspace_json = {'new-ws': {"readOnly": True}}
+    echo.add_pod_annotation('workspaces', json.dumps(workspace_json))
 
 
 pipeline_conf = kfp_tekton.compiler.pipeline_utils.TektonPipelineConf()
