@@ -1043,7 +1043,7 @@ class TektonCompiler(Compiler):
         if template['spec'].get("workspaces"):
           workspaces_spec = []
           for item in template['spec']['workspaces']:
-            workspaces_spec.append({"name": item["name"],"workspace": item["name"]})
+            workspaces_spec.append({"name": item["name"], "workspace": item["name"]})
             self.task_workspaces[item["name"]] = True
           task_ref['workspaces'] = workspaces_spec
 
