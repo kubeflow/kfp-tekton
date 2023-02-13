@@ -673,4 +673,6 @@ def _op_to_template(op: BaseOp,
                 workspace_item["mountPath"] = value["mountPath"]
             workspaces.append(workspace_item)
         template['spec']["workspaces"] = workspaces
+        processed_op.pod_annotations.pop("workspaces")
+        template['metadata']['annotations'].pop("workspaces")
     return template
