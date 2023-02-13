@@ -149,6 +149,7 @@ class TektonCompiler(Compiler):
     self.group_names = {}
     self.pipeline_env = {}
     self.pipeline_workspaces = {}
+    self.task_workspaces = {}
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -1039,6 +1040,12 @@ class TektonCompiler(Compiler):
             ],
             'taskSpec': template['spec'],
           }
+        if template['spec'].get("workspaces"):
+          workspaces_spec = []
+          for item in template['spec']['workspaces']:
+            workspaces_spec.append({"name": item["name"], "workspace": item["name"]})
+            self.task_workspaces[item["name"]] = True
+          task_ref['workspaces'] = workspaces_spec
 
         for i in template['spec'].get('steps', []):
           # TODO: change the below conditions to map with a label
@@ -1650,6 +1657,7 @@ class TektonCompiler(Compiler):
     # Inject user defined pipeline level workspaces
     if self.pipeline_workspaces:
       workflow['spec'].setdefault('workspaces', [])
+      workflow['spec']["pipelineSpec"].setdefault('workspaces', [])
       for key, value in self.pipeline_workspaces.items():
         workspaceSpec = {"name": key}
         if isinstance(value[0], V1Volume):
@@ -1660,6 +1668,12 @@ class TektonCompiler(Compiler):
         if value[1]:
           workspaceSpec['subPath'] = value[1]
         workflow['spec']['workspaces'].append(workspaceSpec)
+        workflow['spec']["pipelineSpec"]['workspaces'].append({"name": workspaceSpec["name"]})
+    
+    workspace_list = [workspace['name'] for workspace in workflow['spec']["pipelineSpec"].get("workspaces", [])]
+    for key in self.task_workspaces:
+      if key not in workspace_list:
+        raise ValueError("Missing workspace %s in the Tekton pipeline config object." % key)
 
     if pipeline_conf and pipeline_conf.timeout > 0:
       workflow['spec'].setdefault('timeouts', {'pipeline': '0s', 'tasks': '0s'})

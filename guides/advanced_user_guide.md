@@ -218,6 +218,15 @@ pipeline_conf.add_pipeline_workspace(workspace_name="new-ws-template",
 self._test_pipeline_workflow(test_pipeline, 'test.yaml', tekton_pipeline_conf=pipeline_conf)
 ```
 
+If you want to use the configured workspaces inside the task spec, you can add the `workspaces` annotation below to have the workspaces volume mounted in your tasks. From there, you can use the Tekton context variable to retrieve the Tekton workspace path.
+
+```python
+import json
+echo = echo_op() # tasks in the pipeline function
+workspace_json = {'new-ws': {"readOnly": True}}
+echo.add_pod_annotation('workspaces', json.dumps(workspace_json))
+```
+
 For more details on how this can be used in a real pipeline, visit the [Tekton Pipeline Conf example](/sdk/python/tests/compiler/testdata/tekton_pipeline_conf.py).
 
 ## Tekton Feature Flags
