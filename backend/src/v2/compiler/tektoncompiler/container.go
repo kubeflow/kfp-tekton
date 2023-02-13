@@ -1,4 +1,4 @@
-// Copyright 2021 The Kubeflow Authors
+// Copyright 2023 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
+	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	k8score "k8s.io/api/core/v1"
 )
@@ -63,7 +64,7 @@ func (c *pipelinerunCompiler) Container(taskName, compRef string,
 		component:    componentSpec,
 		task:         taskSpecJson,
 		container:    containerImpl,
-		parentDag:    getDAGDriverTaskName(c.CurrentDag()),
+		parentDag:    c.CurrentDag(),
 		taskDef:      task,
 		containerDef: container,
 		exitHandler:  exitHandler,
@@ -88,6 +89,17 @@ type containerDriverInputs struct {
 	parentDag      string
 	iterationIndex string // optional, when this is an iteration task
 	exitHandler    bool
+}
+
+func (i *containerDriverInputs) getParentDagID(isExitHandler bool) string {
+	if i.parentDag == "" {
+		return "0"
+	}
+	if isExitHandler && i.parentDag == compiler.RootComponentName {
+		return fmt.Sprintf("$(params.%s)", paramParentDagID)
+	} else {
+		return taskOutputParameter(getDAGDriverTaskName(i.parentDag), paramExecutionID)
+	}
 }
 
 func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *containerDriverInputs) error {
@@ -119,7 +131,7 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			// "--dag_execution_id"
 			{
 				Name:  paramNameDagExecutionId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: taskOutputParameter(inputs.parentDag, paramExecutionID)},
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
 			},
 			// "--component"
 			{

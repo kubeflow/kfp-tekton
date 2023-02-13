@@ -29,6 +29,8 @@ spec:
             value: kubeflow-userid
           - name: KUBEFLOW_USERID_PREFIX
             value: ""
+          - name: EXECUTIONTYPE
+            value: Workflow
         image: gcr.io/ml-pipeline/persistenceagent:dummy
         imagePullPolicy: IfNotPresent
         name: ml-pipeline-persistenceagent

@@ -1,4 +1,4 @@
-// Copyright 2021 The Kubeflow Authors
+// Copyright 2023 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,18 +15,22 @@
 package tektoncompiler
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
+	"github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis/exithandler"
+	ehv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis/exithandler/v1alpha1"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 	k8score "k8s.io/api/core/v1"
 	k8sres "k8s.io/apimachinery/pkg/api/resource"
 	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Options struct {
@@ -115,7 +119,11 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 
 	// compile
 	err = Accept(job, c)
-
+	if err != nil {
+		return nil, err
+	}
+	// finalize
+	err = c.Finalize()
 	return c.pr, err
 }
 
@@ -150,6 +158,11 @@ type TektonVisitor interface {
 
 	// get current DAG when processing the tasks inside a DAG
 	CurrentDag() string
+
+	// ExitHandlerScope or not
+	ExitHandlerScope() bool
+
+	SetExitHandlerScope(state bool)
 }
 
 type pipelinerunDFS struct {
@@ -257,7 +270,16 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 
 		// check the dependencies
 		state.checkDependencies(task, dag)
+
+		exitHandlerScope := task.GetTriggerPolicy().GetStrategy().String() == "ALL_UPSTREAM_TASKS_COMPLETED"
+		if exitHandlerScope {
+			task.DependentTasks = nil
+			state.visitor.SetExitHandlerScope(true)
+		}
 		err := state.dfs(key, refName, task, subComponent)
+		if exitHandlerScope {
+			state.visitor.SetExitHandlerScope(false)
+		}
 		if err != nil {
 			return err
 		}
@@ -289,11 +311,13 @@ type pipelinerunCompiler struct {
 	spec      *pipelinespec.PipelineSpec
 	executors map[string]*pipelinespec.PipelineDeploymentConfig_ExecutorSpec
 	// state
-	pr             *pipelineapi.PipelineRun
-	launcherImage  string
-	dagStack       []string
-	componentSpecs map[string]string
-	containerSpecs map[string]string
+	pr               *pipelineapi.PipelineRun
+	exithandler      *ehv1alpha1.ExitHandler
+	launcherImage    string
+	dagStack         []string
+	exitHandlerScope bool
+	componentSpecs   map[string]string
+	containerSpecs   map[string]string
 }
 
 // if the dependency is a component with DAG, then replace the dependency with DAG's leaf nodes
@@ -350,6 +374,14 @@ func (c *pipelinerunCompiler) PushDagStack(dagName string) {
 	c.dagStack = append(c.dagStack, dagName)
 }
 
+func (c *pipelinerunCompiler) SetExitHandlerScope(state bool) {
+	c.exitHandlerScope = state
+}
+
+func (c *pipelinerunCompiler) ExitHandlerScope() bool {
+	return c.exitHandlerScope
+}
+
 func (c *pipelinerunCompiler) PopDagStack() string {
 	lsize := len(c.dagStack)
 	if lsize > 0 {
@@ -374,18 +406,65 @@ func (c *pipelinerunCompiler) Resolver(name string, component *pipelinespec.Comp
 
 // Add a PipelineTask into a Pipeline as one of the tasks in its PipelineSpec
 func (c *pipelinerunCompiler) addPipelineTask(t *pipelineapi.PipelineTask) {
-	if c.pr.Spec.PipelineSpec.Tasks == nil {
-		c.pr.Spec.PipelineSpec.Tasks = make([]pipelineapi.PipelineTask, 0)
+	if c.exitHandlerScope {
+		c.initExitHandler()
+		c.exithandler.Spec.PipelineSpec.Tasks = append(c.exithandler.Spec.PipelineSpec.Tasks, *t)
+	} else {
+		c.pr.Spec.PipelineSpec.Tasks = append(c.pr.Spec.PipelineSpec.Tasks, *t)
 	}
-	c.pr.Spec.PipelineSpec.Tasks = append(c.pr.Spec.PipelineSpec.Tasks, *t)
 }
 
-/* no use of finally at this moment, use dependency to fullfil the exit handler for now */
-func (c *pipelinerunCompiler) addPipelineFinallyTask(t *pipelineapi.PipelineTask) {
-	if c.pr.Spec.PipelineSpec.Finally == nil {
-		c.pr.Spec.PipelineSpec.Finally = make([]pipelineapi.PipelineTask, 0)
+func (c *pipelinerunCompiler) addExitHandlerTask(t *pipelineapi.PipelineTask) {
+	c.exithandler.Spec.PipelineSpec.Tasks = append(c.exithandler.Spec.PipelineSpec.Tasks, *t)
+}
+
+// init exithandler
+func (c *pipelinerunCompiler) initExitHandler() {
+	if c.exithandler != nil {
+		return
 	}
-	c.pr.Spec.PipelineSpec.Finally = append(c.pr.Spec.PipelineSpec.Finally, *t)
+
+	c.exithandler = &ehv1alpha1.ExitHandler{
+		TypeMeta: k8smeta.TypeMeta{
+			Kind:       exithandler.Kind,
+			APIVersion: ehv1alpha1.SchemeGroupVersion.String(),
+		},
+		Spec: ehv1alpha1.ExitHandlerSpec{
+			PipelineSpec: &pipelineapi.PipelineSpec{
+				Params: []pipelineapi.ParamSpec{
+					{Name: paramParentDagID, Type: "string"},
+				}},
+		},
+	}
+}
+
+func (c *pipelinerunCompiler) Finalize() error {
+	if c.exithandler == nil {
+		return nil
+	}
+	raw, err := json.Marshal(c.exithandler.Spec)
+	if err != nil {
+		return fmt.Errorf("unable to Marshal pipelineSpec:%v", err)
+	}
+
+	c.pr.Spec.PipelineSpec.Finally = []pipelineapi.PipelineTask{
+		{
+			Name: "exithandler",
+			Params: []pipelineapi.Param{
+				{Name: paramParentDagID, Value: pipelineapi.ArrayOrString{
+					Type: "string", StringVal: taskOutputParameter(getDAGDriverTaskName(compiler.RootComponentName), paramExecutionID)}},
+			},
+			TaskSpec: &pipelineapi.EmbeddedTask{
+				TypeMeta: runtime.TypeMeta{
+					Kind:       exithandler.Kind,
+					APIVersion: ehv1alpha1.SchemeGroupVersion.String(),
+				},
+				Spec: runtime.RawExtension{
+					Raw: raw,
+				},
+			}},
+	}
+	return nil
 }
 
 // WIP: store component spec, task spec and executor spec in annotations

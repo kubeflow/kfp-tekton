@@ -14,22 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# run this on the project root directory
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT_DIR=$(dirname "${BASH_SOURCE%/*}")
+# need these two go pkgs for code-gen:
+#  - "knative.dev/hack"
+#	 - "knative.dev/pkg/hack"
+
 CODE_GEN_DIR=code-gen
 
 go mod vendor
-source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
+source $(dirname $0)/../../../vendor/knative.dev/hack/codegen-library.sh
 
 # If we run with -mod=vendor here, then generate-groups.sh looks for vendor files in the wrong place.
 export GOFLAGS=-mod=
 
 echo "=== Update Codegen for ${MODULE_NAME}"
-
-group "Kubernetes Codegen"
 
 rm -rf "${CODE_GEN_DIR}"
 
@@ -38,31 +41,21 @@ rm -rf "${CODE_GEN_DIR}"
 #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
-  github.com/kubeflow/kfp-tekton/tekton-catalog/exit-handler/pkg/client \
-  github.com/kubeflow/kfp-tekton/tekton-catalog/exit-handler/pkg/apis \
+  github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client \
+  github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis \
   "exithandler:v1alpha1" \
-  --go-header-file "${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt" \
+  --go-header-file ./tekton-catalog/exit-handler/hack/boilerplate/boilerplate.go.txt \
  --output-base "${CODE_GEN_DIR}"
-
-group "Knative Codegen"
 
 # Knative Injection
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
-  github.com/kubeflow/kfp-tekton/tekton-catalog/exit-handler/pkg/client \
-  github.com/kubeflow/kfp-tekton/tekton-catalog/exit-handler/pkg/apis \
+  github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client \
+  github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis \
   "exithandler:v1alpha1" \
-  --go-header-file "${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt" \
+  --go-header-file ./tekton-catalog/exit-handler/hack/boilerplate/boilerplate.go.txt \
  --output-base "${CODE_GEN_DIR}"
 
-cp -r "${CODE_GEN_DIR}/github.com/kubeflow/kfp-tekton/tekton-catalog/exit-handler/pkg/client" pkg/
-cp -r "${CODE_GEN_DIR}/github.com/kubeflow/kfp-tekton/tekton-catalog/exit-handler/pkg/apis/exithandler/v1alpha1/zz_generated.deepcopy.go" pkg/apis/exithandler/v1alpha1/
+cp -r "${CODE_GEN_DIR}/github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client" backend/src/v2/tekton-exithandler/
+cp -r "${CODE_GEN_DIR}/github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis/exithandler/v1alpha1/zz_generated.deepcopy.go" backend/src/v2/tekton-exithandler/apis/exithandler/v1alpha1/
 
 rm -rf "${CODE_GEN_DIR}"
-
-group "Update deps post-codegen"
-
-# Make sure our dependencies are up-to-date
-${REPO_ROOT_DIR}/hack/update-deps.sh
-
-# drop the license folder
-rm -rf third-party
