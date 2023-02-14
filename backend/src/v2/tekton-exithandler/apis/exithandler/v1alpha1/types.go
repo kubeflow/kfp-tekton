@@ -17,6 +17,7 @@
 package v1alpha1
 
 import (
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -46,6 +47,10 @@ type ExitHandlerSpec struct {
 	// TaskSpec is a specification of a task
 	// +optional
 	PipelineSpec *tektonv1beta1.PipelineSpec `json:"pipelineSpec,omitempty"`
+
+	// PodTemplate holds pod specific configuration
+	// +optional
+	PodTemplate *pod.PodTemplate `json:"podTemplate,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

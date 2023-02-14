@@ -23,12 +23,11 @@ import (
 	exithandlerv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis/exithandler/v1alpha1"
 	exithandlerClient "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client/injection/client"
 	exithandlerInformer "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client/injection/informers/exithandler/v1alpha1/exithandler"
-	pipelinev1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	pipelinev1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	pipelineClient "github.com/tektoncd/pipeline/pkg/client/injection/client"
-	runInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1alpha1/run"
+	customRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/customrun"
 	pipelineRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/pipelinerun"
-	runReconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
+	runReconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
 	pipelineController "github.com/tektoncd/pipeline/pkg/controller"
 	"knative.dev/pkg/logging"
 
@@ -52,7 +51,7 @@ func (r RunEventHandler) OnAdd(obj interface{}) {
 // OnUpdate ensures the proper handler is called depending on whether the filter matches
 func (r RunEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	// handle update event triggered by deletion or cancelation
-	run, ok := newObj.(*pipelinev1alpha1.Run)
+	run, ok := newObj.(*pipelinev1beta1.CustomRun)
 	if ok && (run.IsCancelled() || run.GetDeletionTimestamp() != nil) {
 		r.UpdateFunc(oldObj, newObj)
 	}
@@ -93,14 +92,14 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 		kubeClientSet := kubeClient.Get(ctx)
 		pipelineClientSet := pipelineClient.Get(ctx)
 		exitHandlerClientSet := exithandlerClient.Get(ctx)
-		runInformer := runInformer.Get(ctx)
+		customRunInformer := customRunInformer.Get(ctx)
 		exitHandlerInformer := exithandlerInformer.Get(ctx)
 		pipelineRunInformer := pipelineRunInformer.Get(ctx)
 		r := &Reconciler{
 			kubeClientSet:        kubeClientSet,
 			pipelineClientSet:    pipelineClientSet,
 			exitHandlerClientSet: exitHandlerClientSet,
-			runLister:            runInformer.Lister(),
+			runLister:            customRunInformer.Lister(),
 			exitHandlerLister:    exitHandlerInformer.Lister(),
 			pipelineRunLister:    pipelineRunInformer.Lister(),
 			clock:                clock.RealClock{},
@@ -116,8 +115,8 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 		logger.Info("Setting up event handlers")
 
 		// Add event handler for Runs of ExitHandler
-		runInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-			FilterFunc: pipelineController.FilterRunRef(exithandlerv1alpha1.SchemeGroupVersion.String(), exithandler.Kind),
+		customRunInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+			FilterFunc: pipelineController.FilterCustomRunRef(exithandlerv1alpha1.SchemeGroupVersion.String(), exithandler.Kind),
 			Handler: RunEventHandler{
 				// Only handle add and update event, because of finalizer, a deletion creates
 				// an update event followed by a delete event
@@ -127,7 +126,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 		})
 		// Add event handler for PipelineRuns controlled by Run
 		pipelineRunInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-			FilterFunc: pipelineController.FilterOwnerRunRef(runInformer.Lister(), exithandlerv1alpha1.SchemeGroupVersion.String(), exithandler.Kind),
+			FilterFunc: pipelineController.FilterOwnerCustomRunRef(customRunInformer.Lister(), exithandlerv1alpha1.SchemeGroupVersion.String(), exithandler.Kind),
 			Handler: PipelineRunEventHandler{
 				// Only handle add and update event, because of finalizer, a deletion creates
 				// an update event followed by a delete event

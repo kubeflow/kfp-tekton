@@ -27,12 +27,10 @@ set -o pipefail
 CODE_GEN_DIR=code-gen
 
 go mod vendor
-source $(dirname $0)/../../../vendor/knative.dev/hack/codegen-library.sh
-
 # If we run with -mod=vendor here, then generate-groups.sh looks for vendor files in the wrong place.
 export GOFLAGS=-mod=
 
-echo "=== Update Codegen for ${MODULE_NAME}"
+echo "=== Update Codegen for exit-handler"
 
 rm -rf "${CODE_GEN_DIR}"
 
@@ -40,7 +38,8 @@ rm -rf "${CODE_GEN_DIR}"
 # --output-base    because this script should also be able to run inside the vendor dir of
 #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
-${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
+CODEGEN_PKG=vendor/k8s.io/code-generator
+bash ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client \
   github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis \
   "exithandler:v1alpha1" \
@@ -48,7 +47,8 @@ ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
  --output-base "${CODE_GEN_DIR}"
 
 # Knative Injection
-${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+KNATIVE_CODEGEN_PKG=vendor/knative.dev/pkg
+bash ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client \
   github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis \
   "exithandler:v1alpha1" \

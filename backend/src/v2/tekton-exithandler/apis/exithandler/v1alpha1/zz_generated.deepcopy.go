@@ -20,6 +20,7 @@
 package v1alpha1
 
 import (
+	pod "github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -111,6 +112,11 @@ func (in *ExitHandlerSpec) DeepCopyInto(out *ExitHandlerSpec) {
 	if in.PipelineSpec != nil {
 		in, out := &in.PipelineSpec, &out.PipelineSpec
 		*out = new(v1beta1.PipelineSpec)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.PodTemplate != nil {
+		in, out := &in.PodTemplate, &out.PodTemplate
+		*out = new(pod.Template)
 		(*in).DeepCopyInto(*out)
 	}
 	return

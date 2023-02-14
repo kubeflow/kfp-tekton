@@ -3,8 +3,8 @@ package controller
 import (
 	context "context"
 
-	run "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1alpha1/run"
-	v1alpha1run "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
+	runInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/customrun"
+	customrun "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
 	tkncontroller "github.com/tektoncd/pipeline/pkg/controller"
 	"k8s.io/client-go/tools/cache"
 	configmap "knative.dev/pkg/configmap"
@@ -22,11 +22,11 @@ const (
 func NewController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
-	runInformer := run.Get(ctx)
+	runInformer := runInformer.Get(ctx)
 
 	r := &Reconciler{}
 
-	impl := v1alpha1run.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
+	impl := customrun.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
 		return controller.Options{
 			AgentName: ControllerName,
 		}
@@ -35,7 +35,7 @@ func NewController(ctx context.Context, cmw configmap.Watcher) *controller.Impl 
 	logger.Info("Setting up event handlers")
 
 	runInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: tkncontroller.FilterRunRef(apiVersion, kind),
+		FilterFunc: tkncontroller.FilterCustomRunRef(apiVersion, kind),
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 

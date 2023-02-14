@@ -26,12 +26,11 @@ import (
 	exithandlerv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis/exithandler/v1alpha1"
 	exithandlerClient "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client/clientset/versioned"
 	exithandlerListers "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client/listers/exithandler/v1alpha1"
-	tektonv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
-	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
-	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1alpha1"
-	pipelinerunListers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
+	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
+	listeners "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -51,9 +50,9 @@ type Reconciler struct {
 	kubeClientSet        kubernetes.Interface
 	pipelineClientSet    clientset.Interface
 	exitHandlerClientSet exithandlerClient.Interface
-	runLister            listers.RunLister
+	runLister            listeners.CustomRunLister
 	exitHandlerLister    exithandlerListers.ExitHandlerLister
-	pipelineRunLister    pipelinerunListers.PipelineRunLister
+	pipelineRunLister    listeners.PipelineRunLister
 	clock                clock.RealClock
 }
 
@@ -72,12 +71,12 @@ type exitHandlerState uint8
 type exitHandlerFS struct {
 	ctx        context.Context
 	reconciler *Reconciler
-	run        *tektonv1alpha1.Run
+	run        *tektonv1beta1.CustomRun
 	state      exitHandlerState
 	logger     *zap.SugaredLogger
 }
 
-func newExitHandlerFS(ctx context.Context, r *Reconciler, run *tektonv1alpha1.Run, logger *zap.SugaredLogger) *exitHandlerFS {
+func newExitHandlerFS(ctx context.Context, r *Reconciler, run *tektonv1beta1.CustomRun, logger *zap.SugaredLogger) *exitHandlerFS {
 	var state exitHandlerState
 	if !run.HasStarted() {
 		state = StateInit
@@ -117,33 +116,33 @@ func (ehs *exitHandlerFS) next() error {
 		pr, err := ehs.constructPipelineRun()
 		if err != nil {
 			ehs.logger.Infof("Failed to construct a PipelineRun:%v", err)
-			ehs.run.Status.MarkRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonInternalError.String(), "Failed to construct a PipelineRun: %v", err)
+			ehs.run.Status.MarkCustomRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonInternalError.String(), "Failed to construct a PipelineRun: %v", err)
 			return err
 		}
 
 		if _, err := ehs.reconciler.pipelineClientSet.TektonV1beta1().PipelineRuns(ehs.run.Namespace).Create(ehs.ctx, pr, metav1.CreateOptions{}); err != nil {
-			ehs.run.Status.MarkRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonFailed.String(), "Failed to create a PipelineRun")
+			ehs.run.Status.MarkCustomRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonFailed.String(), "Failed to create a PipelineRun")
 			return err
 		}
 		status := exithandlerv1alpha1.ExitHandlerRunStatus{ChildPipelineRun: pr.Name}
 		if err := ehs.run.Status.EncodeExtraFields(status); err != nil {
 			// ignore the pipelinerun deletion error if there is
 			ehs.reconciler.deletePipelineRun(ehs.ctx, ehs.run.Namespace, pr.Name)
-			ehs.run.Status.MarkRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonInternalError.String(), "Failed to encode extra fields")
+			ehs.run.Status.MarkCustomRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonInternalError.String(), "Failed to encode extra fields")
 			return err
 		}
-		ehs.run.Status.MarkRunRunning(exithandlerv1alpha1.ExitHandlerRunReasonRunning.String(), "ExitHandler kicks off a PipelineRun")
+		ehs.run.Status.MarkCustomRunRunning(exithandlerv1alpha1.ExitHandlerRunReasonRunning.String(), "ExitHandler kicks off a PipelineRun:%s", pr.Name)
 	case StateRunning:
 		// check if underlying PipelineRun finishes or not
 		status := exithandlerv1alpha1.ExitHandlerRunStatus{}
 		if err := ehs.run.Status.DecodeExtraFields(&status); err != nil {
-			ehs.run.Status.MarkRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonInternalError.String(), "Failed to decode extra fields")
+			ehs.run.Status.MarkCustomRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonInternalError.String(), "Failed to decode extra fields")
 			return err
 		}
 
 		pr, err := ehs.reconciler.pipelineClientSet.TektonV1beta1().PipelineRuns(ehs.run.Namespace).Get(ehs.ctx, status.ChildPipelineRun, metav1.GetOptions{})
 		if err != nil {
-			ehs.run.Status.MarkRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonInternalError.String(), "Failed to get the PipelineRun: %s", status.ChildPipelineRun)
+			ehs.run.Status.MarkCustomRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonInternalError.String(), "Failed to get the PipelineRun: %s", status.ChildPipelineRun)
 			return err
 		}
 
@@ -151,10 +150,10 @@ func (ehs *exitHandlerFS) next() error {
 		if condition.IsTrue() {
 			now := metav1.Now()
 			ehs.run.Status.CompletionTime = &now
-			ehs.run.Status.MarkRunSucceeded(exithandlerv1alpha1.ExitHandlerRunReasonSucceeded.String(), "ExitHandler finished")
+			ehs.run.Status.MarkCustomRunSucceeded(exithandlerv1alpha1.ExitHandlerRunReasonSucceeded.String(), "ExitHandler finished")
 		} else {
 
-			ehs.run.Status.MarkRunFailed(
+			ehs.run.Status.MarkCustomRunFailed(
 				exithandlerv1alpha1.ExitHandlerRunReasonFailed.String(),
 				"the spawned PipelineRun failed, PipelineRun:%s, reason: %s, message: %s",
 				status.ChildPipelineRun, condition.Reason, condition.Message)
@@ -185,7 +184,7 @@ func (ehs *exitHandlerFS) constructPipelineRun() (*tektonv1beta1.PipelineRun, er
 			Name:      fmt.Sprintf("eh-%s", pruuid),
 			Namespace: ehs.run.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(ehs.run,
-				schema.GroupVersionKind{Group: "tekton.dev", Version: "v1alpha1", Kind: "Run"})},
+				schema.GroupVersionKind{Group: pipeline.GroupName, Version: "v1beta1", Kind: "CustomRun"})},
 			Labels:      dupStringMaps(ehs.run.Labels, labelsToDrop),
 			Annotations: dupStringMaps(ehs.run.Annotations, annotationToDrop),
 		},
@@ -193,7 +192,7 @@ func (ehs *exitHandlerFS) constructPipelineRun() (*tektonv1beta1.PipelineRun, er
 			Params:             ehs.run.Spec.Params,
 			Timeout:            ehs.run.Spec.Timeout,
 			ServiceAccountName: ehs.run.Spec.ServiceAccountName,
-			PodTemplate:        ehs.run.Spec.PodTemplate,
+			PodTemplate:        ehSpec.PodTemplate,
 			Workspaces:         ehs.run.Spec.Workspaces,
 			PipelineSpec:       ehSpec.PipelineSpec,
 		}}
@@ -210,7 +209,7 @@ func dupStringMaps(source map[string]string, excludsive map[string]string) map[s
 	return rev
 }
 
-func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1alpha1.Run) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.CustomRun) reconciler.Event {
 	logger := logging.FromContext(ctx)
 	logger.Infof("Reconciling %s/%s", run.Namespace, run.Name)
 
@@ -229,7 +228,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1alpha1.Run)
 	return ehstate.next()
 }
 
-func (r *Reconciler) FinalizeKind(ctx context.Context, run *tektonv1alpha1.Run) reconciler.Event {
+func (r *Reconciler) FinalizeKind(ctx context.Context, run *tektonv1beta1.CustomRun) reconciler.Event {
 	logger := logging.FromContext(ctx)
 	logger.Infof("Finalizing  %s/%s", run.Namespace, run.Name)
 
@@ -264,39 +263,39 @@ func (r *Reconciler) deletePipelineRun(ctx context.Context, namespace, prName st
 }
 
 // double check run.Spec.Spec and run.Spec.Ref
-func checkRefAndSpec(run *tektonv1alpha1.Run) error {
-	if run.Spec.Ref != nil && run.Spec.Spec != nil {
+func checkRefAndSpec(run *tektonv1beta1.CustomRun) error {
+	if run.Spec.CustomRef != nil && run.Spec.CustomSpec != nil {
 		return errors.New("contains both taskRef and taskSpec")
 	}
-	if run.Spec.Spec == nil && run.Spec.Ref == nil {
+	if run.Spec.CustomSpec == nil && run.Spec.CustomRef == nil {
 		return errors.New("need taskRef or taskSpec")
 	}
 
 	// Check kind and apiVersion
-	if run.Spec.Ref != nil &&
-		(run.Spec.Ref.APIVersion != exithandlerv1alpha1.SchemeGroupVersion.String() || run.Spec.Ref.Kind != exithandler.Kind) {
-		return fmt.Errorf("doesn't support %s/%s", run.Spec.Ref.APIVersion, run.Spec.Ref.Kind)
+	if run.Spec.CustomRef != nil &&
+		(run.Spec.CustomRef.APIVersion != exithandlerv1alpha1.SchemeGroupVersion.String() || run.Spec.CustomRef.Kind != exithandler.Kind) {
+		return fmt.Errorf("doesn't support %s/%s", run.Spec.CustomRef.APIVersion, run.Spec.CustomRef.Kind)
 	}
 
-	if run.Spec.Spec != nil &&
-		(run.Spec.Spec.APIVersion != exithandlerv1alpha1.SchemeGroupVersion.String() || run.Spec.Spec.Kind != exithandler.Kind) {
-		return fmt.Errorf("doesn't support %s/%s", run.Spec.Spec.APIVersion, run.Spec.Spec.Kind)
+	if run.Spec.CustomSpec != nil &&
+		(run.Spec.CustomSpec.APIVersion != exithandlerv1alpha1.SchemeGroupVersion.String() || run.Spec.CustomSpec.Kind != exithandler.Kind) {
+		return fmt.Errorf("doesn't support %s/%s", run.Spec.CustomSpec.APIVersion, run.Spec.CustomSpec.Kind)
 
 	}
 	return nil
 }
 
-func (r *Reconciler) getExitHandlerSpec(ctx context.Context, run *tektonv1alpha1.Run) (*exithandlerv1alpha1.ExitHandlerSpec, error) {
-	if run.Spec.Ref != nil {
+func (r *Reconciler) getExitHandlerSpec(ctx context.Context, run *tektonv1beta1.CustomRun) (*exithandlerv1alpha1.ExitHandlerSpec, error) {
+	if run.Spec.CustomRef != nil {
 		// retrieve taskRef of the ExitHandler
-		eh, err := r.exitHandlerClientSet.CustomV1alpha1().ExitHandlers(run.Namespace).Get(ctx, run.Spec.Ref.Name, metav1.GetOptions{})
+		eh, err := r.exitHandlerClientSet.CustomV1alpha1().ExitHandlers(run.Namespace).Get(ctx, run.Spec.CustomRef.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
 		return &eh.Spec, nil
-	} else if run.Spec.Spec != nil {
+	} else if run.Spec.CustomSpec != nil {
 		var ehSpec exithandlerv1alpha1.ExitHandlerSpec
-		if err := json.Unmarshal(run.Spec.Spec.Spec.Raw, &ehSpec); err != nil {
+		if err := json.Unmarshal(run.Spec.CustomSpec.Spec.Raw, &ehSpec); err != nil {
 			return nil, err
 		}
 		return &ehSpec, nil
