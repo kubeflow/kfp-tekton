@@ -24,7 +24,7 @@ A Kubernetes cluster `v1.23` that has least 8 vCPU and 16 GB memory.
 ### OpenShift
 
    Depending on your situation, you can choose between the two approaches to set up the pipeline engine on Openshift:
-   1. Leverage [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.9/cicd/pipelines/installing-pipelines.html) (built on Tekton)
+   1. Leverage [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.12/cicd/pipelines/installing-pipelines.html) (built on Tekton)
    2. Install Tekton as part of deployment
 
    Once you decided your approach, follow the [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment) to install the Kubeflow Pipeline Stack.
@@ -41,29 +41,29 @@ A Kubernetes cluster `v1.23` that has least 8 vCPU and 16 GB memory.
 
 To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
 
-1. Install [Tekton v0.41.0](https://github.com/tektoncd/pipeline/blob/v0.41.0/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines or OpenShift Pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton/Openshift pipelines version is not v0.28.0+.
+1. Install [Tekton v0.44.0](https://github.com/tektoncd/pipeline/blob/v0.44.0/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines or OpenShift Pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton/Openshift pipelines version is not v0.28.0+.
 
    ```shell
-   kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.41.0/release.yaml
+   kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.44.0/release.yaml
    ```
 
 2. Enable custom task controller and other feature flags for kfp-tekton
    ```shell
    kubectl patch cm feature-flags -n tekton-pipelines \
-         -p '{"data":{"enable-custom-tasks": "true"}}'
+         -p '{"data":{"embedded-status": "full"}}'
    kubectl patch cm config-defaults -n tekton-pipelines \
          -p '{"data":{"default-timeout-minutes": "0"}}'
    ```
 
-3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.5.1` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
+3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.6.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
    > Note: You can ignore the error `no matches for kind "Application" in version "app.k8s.io/v1beta1"` since it's a warning saying `application` CRD is not yet ready.
     ```shell
-    kubectl apply --selector kubeflow/crd-install=true -f install/v1.5.1/kfp-tekton.yaml
+    kubectl apply --selector kubeflow/crd-install=true -f install/v1.6.0/kfp-tekton.yaml
     ```
 
-4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.5.1` deployment
+4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.6.0` deployment
     ```shell
-    kubectl apply -f install/v1.5.1/kfp-tekton.yaml
+    kubectl apply -f install/v1.6.0/kfp-tekton.yaml
     ```
 
 5. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
