@@ -21,6 +21,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+import time
 from os import environ as env
 
 import pytest
@@ -753,6 +754,16 @@ class TestTektonCompiler(unittest.TestCase):
     """
     from .testdata.create_component_from_func import create_component_pipeline
     self._test_pipeline_workflow(create_component_pipeline, 'create_component_from_func.yaml', skip_noninlined=True)
+
+  def test_compiler_perf_workflow(self):
+    """
+    Test compiling performance on a large workflow.
+    """
+    from .testdata.compiler_perf import echo_pipeline
+    start_time = time.time()
+    self._test_pipeline_workflow(echo_pipeline, 'compiler_perf.yaml', skip_noninlined=True)
+    end_time = time.time()
+    print("time diff %s, estimated time diff is 21.08" % (end_time - start_time))
 
   def test_katib_workflow(self):
     """
