@@ -32,10 +32,28 @@ spec:
       serviceAccountName: kfp-driver
       containers:
         - name: kfp-driver
-          image: yihongwang/kfp-v2-dev-driver-controller:latest
+          image: kfp-v2-dev-driver-controller:dummy
           imagePullPolicy: Always
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-leader-election
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: CONFIG_OBSERVABILITY_NAME
+              value: config-observability
+            - name: METRICS_DOMAIN
+              value: tekton.dev/pipeline
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
