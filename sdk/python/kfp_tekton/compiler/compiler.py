@@ -1958,13 +1958,13 @@ def _validate_workflow(workflow: Dict[Text, Any]):
   def _find_items(obj, search_key, current_path="", results_dict=dict()) -> dict:
     if isinstance(obj, dict):
       if search_key in obj:
-        results_dict.update({"%s.%s" % (current_path, search_key): obj[search_key]})
+        results_dict.update({("%s.%s" % (current_path, search_key)).lstrip("."): obj[search_key]})
       for k, v in obj.items():
         _find_items(v, search_key, "%s.%s" % (current_path, k), results_dict)
     elif isinstance(obj, list):
       for i, list_item in enumerate(obj):
         _find_items(list_item, search_key, "%s[%i]" % (current_path, i), results_dict)
-    return {k.lstrip("."): v for k, v in results_dict.items()}
+    return results_dict
 
   non_k8s_names = {path: name for path, name in _find_items(workflow, "name").items()
                    if "metadata" in path and name != sanitize_k8s_name(name, max_length=253)
