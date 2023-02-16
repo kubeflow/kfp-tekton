@@ -241,6 +241,8 @@ func (pr *PipelineRun) Condition() exec.ExecutionPhase {
 			return exec.ExecutionFailed
 		case "InvalidTaskResultReference":
 			return exec.ExecutionFailed
+		case "Cancelled":
+			return exec.ExecutionFailed
 		case "Pending":
 			return exec.ExecutionPending
 		case "Running":
@@ -492,7 +494,7 @@ func (pr *PipelineRun) StartedAtTime() metav1.Time {
 }
 
 func (pr *PipelineRun) IsTerminating() bool {
-	return pr.Spec.Status == "Cancelled"
+	return pr.Spec.Status == "Cancelled" && !pr.IsDone()
 }
 
 func (pr *PipelineRun) ServiceAccount() string {
