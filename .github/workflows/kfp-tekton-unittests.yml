@@ -139,9 +139,9 @@ jobs:
         uses: container-tools/kind-action@v1
         with:
           cluster_name: kfp-tekton
-          kubectl_version: v1.24.7
+          kubectl_version: v1.26.1
           version: v0.17.0
-          node_image: kindest/node:v1.24.7
+          node_image: kindest/node:v1.26.0
       - name: build images
         if: ${{ steps.backend-changes.outputs.all }}
         run: ./scripts/deploy/github/build-images.sh
