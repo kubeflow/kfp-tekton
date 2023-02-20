@@ -102,7 +102,8 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 	c := &pipelinerunCompiler{
 		pr: pr,
 		// TODO(chensun): release process and update the images.
-		launcherImage: "gcr.io/ml-pipeline-test/dev/kfp-launcher-v2@sha256:4513cf5c10c252d94f383ce51a890514799c200795e3de5e90f91b98b2e2f959",
+		// launcherImage: "gcr.io/ml-pipeline-test/dev/kfp-launcher-v2@sha256:4513cf5c10c252d94f383ce51a890514799c200795e3de5e90f91b98b2e2f959",
+		launcherImage: "docker.io/aipipeline/kfp-launcher-v2-dev:6402ce388",
 		job:           job,
 		spec:          spec,
 		dagStack:      make([]string, 0, 10),

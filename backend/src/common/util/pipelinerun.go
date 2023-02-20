@@ -16,7 +16,9 @@ package util
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -29,7 +31,10 @@ import (
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	pipelineapiv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"github.com/tektoncd/pipeline/pkg/apis/run/v1alpha1"
+	customRun "github.com/tektoncd/pipeline/pkg/apis/run/v1beta1"
 	prclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	prclientv1beta1 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1beta1"
 	prsinformers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
@@ -46,6 +51,39 @@ import (
 // PipelineRun is a type to help manipulate PipelineRun objects.
 type PipelineRun struct {
 	*pipelineapi.PipelineRun
+}
+
+type runKinds []string
+
+var (
+	// A list of Kinds that contains childReferences
+	// those childReferences would be scaned and retrieve their taskrun/run status
+	childReferencesKinds runKinds
+)
+
+const (
+	childReferencesKindFlagName = "childReferencesKinds"
+)
+
+func (rk *runKinds) String() string {
+	return fmt.Sprint(*rk)
+}
+
+func (rk *runKinds) Set(value string) error {
+	if len(*rk) > 0 {
+		return fmt.Errorf("%s has been set", childReferencesKindFlagName)
+	}
+
+	for _, k := range strings.Split(value, ",") {
+		*rk = append(*rk, k)
+	}
+	sort.Strings(*rk)
+
+	return nil
+}
+
+func init() {
+	flag.Var(&childReferencesKinds, childReferencesKindFlagName, "A list of kinds to search for the nested childReferences")
 }
 
 func NewPipelineRunFromBytes(bytes []byte) (*PipelineRun, error) {
@@ -830,8 +868,9 @@ func (pri *PipelineRunInterface) Patch(ctx context.Context, name string, pt type
 }
 
 type PipelineRunInformer struct {
-	informer prinformer.PipelineRunInformer
-	factory  prsinformers.SharedInformerFactory
+	informer  prinformer.PipelineRunInformer
+	clientset *prclientset.Clientset
+	factory   prsinformers.SharedInformerFactory
 }
 
 func (pri *PipelineRunInformer) AddEventHandler(funcs cache.ResourceEventHandler) {
@@ -847,6 +886,13 @@ func (pri *PipelineRunInformer) Get(namespace string, name string) (ExecutionSpe
 	if err != nil {
 		return nil, IsNotFound(err), errors.Wrapf(err,
 			"Error retrieving PipelineRun (%v) in namespace (%v): %v", name, namespace, err)
+	}
+	if err := pri.getStatusFromChildReferences(namespace,
+		fmt.Sprintf("%s=%s", LabelKeyWorkflowRunId, pipelinerun.Labels[LabelKeyWorkflowRunId]),
+		&pipelinerun.Status); err != nil {
+
+		return nil, IsNotFound(err), errors.Wrapf(err,
+			"Error retrieving the Status of the PipelineRun (%v) in namespace (%v): %v", name, namespace, err)
 	}
 	return NewPipelineRun(pipelinerun), false, nil
 }
@@ -866,4 +912,242 @@ func (pri *PipelineRunInformer) List(labels *labels.Selector) (ExecutionSpecList
 
 func (pri *PipelineRunInformer) InformerFactoryStart(stopCh <-chan struct{}) {
 	pri.factory.Start(stopCh)
+}
+
+func (pri *PipelineRunInformer) getStatusFromChildReferences(namespace, selector string, status *pipelineapi.PipelineRunStatus) error {
+	if status.ChildReferences == nil {
+		return nil
+	}
+
+	hasTaskRun, hasRun, hasCustomRun := false, false, false
+	for _, child := range status.ChildReferences {
+		switch child.Kind {
+		case "TaskRun":
+			hasTaskRun = true
+		case "Run":
+			hasRun = true
+		case "CustomRun":
+			hasCustomRun = true
+		default:
+		}
+	}
+	// TODO: restruct the workflow to contain taskrun/run status, these 2 field
+	// will be removed in the future
+	if hasTaskRun {
+		// fetch taskrun status and insert into Status.TaskRuns
+		taskruns, err := pri.clientset.TektonV1beta1().TaskRuns(namespace).List(context.Background(), metav1.ListOptions{
+			LabelSelector: selector,
+		})
+		if err != nil {
+			return NewInternalServerError(err, "can't fetch taskruns")
+		}
+
+		taskrunStatuses := make(map[string]*pipelineapi.PipelineRunTaskRunStatus, len(taskruns.Items))
+		for _, taskrun := range taskruns.Items {
+			taskrunStatuses[taskrun.Name] = &pipelineapi.PipelineRunTaskRunStatus{
+				PipelineTaskName: taskrun.Labels["tekton.dev/pipelineTask"],
+				Status:           taskrun.Status.DeepCopy(),
+			}
+		}
+		status.TaskRuns = taskrunStatuses
+	}
+	if hasRun {
+		runs, err := pri.clientset.TektonV1alpha1().Runs(namespace).List(context.Background(), metav1.ListOptions{
+			LabelSelector: selector,
+		})
+		if err != nil {
+			return NewInternalServerError(err, "can't fetch runs")
+		}
+		runStatuses := make(map[string]*pipelineapi.PipelineRunRunStatus, len(runs.Items))
+		for _, run := range runs.Items {
+			runStatus := run.Status.DeepCopy()
+			runStatuses[run.Name] = &pipelineapi.PipelineRunRunStatus{
+				PipelineTaskName: run.Labels["tekton.dev/pipelineTask"],
+				Status:           FromRunStatus(runStatus),
+			}
+			// handle nested status
+			pri.handleNestedStatus(&run, runStatus, namespace)
+		}
+		status.Runs = runStatuses
+	}
+	if hasCustomRun {
+		customRuns, err := pri.clientset.TektonV1beta1().CustomRuns(namespace).List(context.Background(), metav1.ListOptions{
+			LabelSelector: selector,
+		})
+		if err != nil {
+			return NewInternalServerError(err, "can't fetch runs")
+		}
+		customRunStatuses := make(map[string]*pipelineapi.PipelineRunRunStatus, len(customRuns.Items))
+		for _, customRun := range customRuns.Items {
+			customRunStatus := customRun.Status.DeepCopy()
+			customRunStatuses[customRun.Name] = &pipelineapi.PipelineRunRunStatus{
+				PipelineTaskName: customRun.Labels["tekton.dev/pipelineTask"],
+				Status:           customRunStatus,
+			}
+			// handle nested status
+			pri.handleNestedStatusV1beta1(&customRun, customRunStatus, namespace)
+		}
+		status.Runs = customRunStatuses
+	}
+	return nil
+}
+
+// handle nested status case for specific types of Run
+func (pri *PipelineRunInformer) handleNestedStatus(run *pipelineapiv1alpha1.Run, runStatus *pipelineapiv1alpha1.RunStatus, namespace string) {
+	if sort.SearchStrings(childReferencesKinds, run.Spec.Spec.Kind) < len(childReferencesKinds) {
+		// need to lookup the nested status
+		obj := make(map[string]interface{})
+		if err := json.Unmarshal(runStatus.ExtraFields.Raw, &obj); err != nil {
+			return
+		}
+		if pri.updateExtraFields(obj, namespace) {
+			if newStatus, err := json.Marshal(obj); err == nil {
+				runStatus.ExtraFields.Raw = newStatus
+			}
+		}
+	}
+}
+
+// handle nested status case for specific types of Run
+func (pri *PipelineRunInformer) handleNestedStatusV1beta1(customRun *pipelineapi.CustomRun, customRunStatus *customRun.CustomRunStatus, namespace string) {
+	if sort.SearchStrings(childReferencesKinds, customRun.Spec.CustomSpec.Kind) < len(childReferencesKinds) {
+		// need to lookup the nested status
+		obj := make(map[string]interface{})
+		if err := json.Unmarshal(customRunStatus.ExtraFields.Raw, &obj); err != nil {
+			return
+		}
+		if pri.updateExtraFields(obj, namespace) {
+			if newStatus, err := json.Marshal(obj); err == nil {
+				customRunStatus.ExtraFields.Raw = newStatus
+			}
+		}
+	}
+}
+
+// check ExtraFields and update nested status if needed
+func (pri *PipelineRunInformer) updateExtraFields(obj map[string]interface{}, namespace string) bool {
+	updated := false
+	val, ok := obj["pipelineRuns"]
+	if !ok {
+		return false
+	}
+	prs, ok := val.(map[string]interface{})
+	if !ok {
+		return false
+	}
+	// go through the list of pipelineRuns
+	for _, val := range prs {
+		probj, ok := val.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		val, ok := probj["status"]
+		if !ok {
+			continue
+		}
+		statusobj, ok := val.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		childRef, ok := statusobj["childReferences"]
+		if !ok {
+			continue
+		}
+		if children, ok := childRef.([]interface{}); ok {
+			for _, childObj := range children {
+				if child, ok := childObj.(map[string]interface{}); ok {
+					kindI, ok := child["kind"]
+					if !ok {
+						continue
+					}
+					nameI, ok := child["name"]
+					if !ok {
+						continue
+					}
+					kind := fmt.Sprintf("%v", kindI)
+					name := fmt.Sprintf("%v", nameI)
+					if kind == "TaskRun" {
+						if taskrunCR, err := pri.clientset.TektonV1beta1().TaskRuns(namespace).Get(context.Background(), name, metav1.GetOptions{}); err == nil {
+							taskruns, ok := statusobj["taskRuns"]
+							if !ok {
+								taskruns = make(map[string]*pipelineapi.PipelineRunTaskRunStatus)
+							}
+							if taskrunStatus, ok := taskruns.(map[string]*pipelineapi.PipelineRunTaskRunStatus); ok {
+								taskrunStatus[name] = &pipelineapi.PipelineRunTaskRunStatus{
+									PipelineTaskName: taskrunCR.Labels["tekton.dev/pipelineTask"],
+									Status:           taskrunCR.Status.DeepCopy(),
+								}
+								statusobj["taskRuns"] = taskrunStatus
+								updated = true
+							}
+						}
+					} else if kind == "Run" {
+						if runCR, err := pri.clientset.TektonV1alpha1().Runs(namespace).Get(context.Background(), name, metav1.GetOptions{}); err == nil {
+							runs, ok := statusobj["runs"]
+							if !ok {
+								runs = make(map[string]*pipelineapi.PipelineRunRunStatus)
+							}
+							if runStatus, ok := runs.(map[string]*pipelineapi.PipelineRunRunStatus); ok {
+								runStatusStatus := runCR.Status.DeepCopy()
+								runStatus[name] = &pipelineapi.PipelineRunRunStatus{
+									PipelineTaskName: runCR.Labels["tekton.dev/pipelineTask"],
+									Status:           FromRunStatus(runStatusStatus),
+								}
+								statusobj["runs"] = runStatus
+								// handle nested status recursively
+								pri.handleNestedStatus(runCR, runStatusStatus, namespace)
+								updated = true
+							}
+						}
+					} else if kind == "CustomRun" {
+						if customRunsCR, err := pri.clientset.TektonV1beta1().CustomRuns(namespace).Get(context.Background(), name, metav1.GetOptions{}); err == nil {
+							customRuns, ok := statusobj["customRuns"]
+							if !ok {
+								customRuns = make(map[string]*pipelineapi.PipelineRunRunStatus)
+							}
+							if customRunStatus, ok := customRuns.(map[string]*pipelineapi.PipelineRunRunStatus); ok {
+								customRunStatusStatus := customRunsCR.Status.DeepCopy()
+								customRunStatus[name] = &pipelineapi.PipelineRunRunStatus{
+									PipelineTaskName: customRunsCR.Labels["tekton.dev/pipelineTask"],
+									Status:           customRunStatusStatus,
+								}
+								statusobj["customRuns"] = customRunStatus
+								// handle nested status recursively
+								pri.handleNestedStatusV1beta1(customRunsCR, customRunStatusStatus, namespace)
+								updated = true
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+	return updated
+}
+
+// TODO: update status to v1beta1 base once pipelineloop supports v1beta1 customrun
+// FromRunStatus converts a *v1alpha1.RunStatus into a corresponding *v1beta1.CustomRunStatus
+func FromRunStatus(orig *v1alpha1.RunStatus) *customRun.CustomRunStatus {
+	crs := customRun.CustomRunStatus{
+		Status: orig.Status,
+		CustomRunStatusFields: customRun.CustomRunStatusFields{
+			StartTime:      orig.StartTime,
+			CompletionTime: orig.CompletionTime,
+			ExtraFields:    orig.ExtraFields,
+		},
+	}
+
+	for _, origRes := range orig.Results {
+		crs.Results = append(crs.Results, customRun.CustomRunResult{
+			Name:  origRes.Name,
+			Value: origRes.Value,
+		})
+	}
+
+	for _, origRetryStatus := range orig.RetriesStatus {
+		crs.RetriesStatus = append(crs.RetriesStatus, customRun.FromRunStatus(origRetryStatus))
+	}
+
+	return &crs
 }

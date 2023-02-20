@@ -39,6 +39,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/apiserver/model"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/server"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/template"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
@@ -48,6 +49,7 @@ import (
 
 const (
 	executionTypeEnv = "ExecutionType"
+	launcherEnv      = "Launcher"
 )
 
 var (
@@ -69,6 +71,9 @@ func main() {
 	// check ExecutionType Settings if presents
 	if viper.IsSet(executionTypeEnv) {
 		util.SetExecutionType(util.ExecutionType(common.GetStringConfig(executionTypeEnv)))
+	}
+	if viper.IsSet(launcherEnv) {
+		template.Launcher = common.GetStringConfig(launcherEnv)
 	}
 
 	clientManager := newClientManager()

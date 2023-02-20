@@ -34,6 +34,10 @@ type V2Spec struct {
 	spec *pipelinespec.PipelineSpec
 }
 
+var (
+	Launcher = ""
+)
+
 // Converts modelJob to ScheduledWorkflow.
 func (t *V2Spec) ScheduledWorkflow(modelJob *model.Job) (*scheduledworkflow.ScheduledWorkflow, error) {
 	job := &pipelinespec.PipelineJob{}
@@ -59,7 +63,7 @@ func (t *V2Spec) ScheduledWorkflow(modelJob *model.Job) (*scheduledworkflow.Sche
 	if util.CurrentExecutionType() == util.ArgoWorkflow {
 		obj, err = argocompiler.Compile(job, nil)
 	} else if util.CurrentExecutionType() == util.TektonPipelineRun {
-		obj, err = tektoncompiler.Compile(job, nil)
+		obj, err = tektoncompiler.Compile(job, &tektoncompiler.Options{LauncherImage: Launcher})
 	}
 	if err != nil {
 		return nil, util.Wrap(err, "Failed to compile job")
