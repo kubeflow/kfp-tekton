@@ -34,12 +34,10 @@
 import logging
 import re
 import sys
-import os
 
 from os import environ as env
 from os.path import abspath, dirname, join
 from setuptools import setup
-from typing import List
 
 
 NAME = "kfp-tekton"
