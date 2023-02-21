@@ -20,14 +20,14 @@
 #
 # To create a distribution for PyPi run:
 #
-#    $ export KFP_TEKTON_VERSION=1.6.1-rc1
+#    $ export KFP_TEKTON_VERSION=1.6.2-rc1
 #    $ python3 setup.py sdist
 #    $ twine check dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #    $ twine upload --repository pypi dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #
 #   ... or:
 #
-#    $ make distribution KFP_TEKTON_VERSION=1.6.1-rc1
+#    $ make distribution KFP_TEKTON_VERSION=1.6.2-rc1
 #
 # =============================================================================
 
@@ -58,15 +58,16 @@ logger = logging.getLogger("kfp_tekton/setup.py")
 logger.setLevel(logging.INFO)
 
 
-def get_requirements(requirements_file: str) -> List[str]:
-    """Read requirements from requirements.in."""
+# NOTICE, after any updates to the following, ./requirements.in should be updated
+# accordingly.
+REQUIRES = [
+    "kfp>=1.8.10,<1.8.20",
+    "kfp-tekton-server-api>=1.5.0"
+]
 
-    file_path = os.path.join(os.path.dirname(__file__), requirements_file)
-    with open(file_path, 'r') as f:
-        lines = f.readlines()
-    lines = [line.strip() for line in lines]
-    lines = [line for line in lines if not (line.startswith('#') or line.startswith('-')) and line]
-    return lines
+TESTS_REQUIRE = [
+    'pytest',
+]
 
 
 def find_version(*file_path_parts):
@@ -181,8 +182,8 @@ setup(
     author="kubeflow.org",
     license=LICENSE,
     url=HOMEPAGE,
-    install_requires=get_requirements('requirements.in'),
-    tests_require=get_requirements('requirements-test.txt'),
+    install_requires=REQUIRES,
+    tests_require=TESTS_REQUIRE,
     packages=[
         'kfp_tekton',
         'kfp_tekton.compiler',
