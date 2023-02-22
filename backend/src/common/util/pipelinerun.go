@@ -58,7 +58,7 @@ type runKinds []string
 var (
 	// A list of Kinds that contains childReferences
 	// those childReferences would be scaned and retrieve their taskrun/run status
-	childReferencesKinds runKinds
+	childReferencesKinds runKinds = []string{}
 )
 
 const (
@@ -1010,7 +1010,8 @@ func (pri *PipelineRunInformer) handleNestedStatus(run *pipelineapiv1alpha1.Run,
 
 // handle nested status case for specific types of Run
 func (pri *PipelineRunInformer) handleNestedStatusV1beta1(customRun *pipelineapi.CustomRun, customRunStatus *customRun.CustomRunStatus, namespace string) {
-	if sort.SearchStrings(childReferencesKinds, customRun.Spec.CustomSpec.Kind) < len(childReferencesKinds) {
+	if customRun != nil && customRun.Spec.CustomSpec != nil &&
+		sort.SearchStrings(childReferencesKinds, customRun.Spec.CustomSpec.Kind) < len(childReferencesKinds) {
 		// need to lookup the nested status
 		obj := make(map[string]interface{})
 		if err := json.Unmarshal(customRunStatus.ExtraFields.Raw, &obj); err != nil {
