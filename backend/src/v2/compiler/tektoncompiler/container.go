@@ -21,6 +21,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	k8score "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/selection"
 )
 
 const (
@@ -102,6 +103,17 @@ func (i *containerDriverInputs) getParentDagID(isExitHandler bool) string {
 	}
 }
 
+func (i *containerDriverInputs) getParentDagCondition(isExitHandler bool) string {
+	if i.parentDag == "" {
+		return "0"
+	}
+	if isExitHandler && i.parentDag == compiler.RootComponentName {
+		return fmt.Sprintf("$(params.%s)", paramCondition)
+	} else {
+		return taskOutputParameter(getDAGDriverTaskName(i.parentDag), paramCondition)
+	}
+}
+
 func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *containerDriverInputs) error {
 
 	containerDriverName := getContainerDriverTaskName(name)
@@ -111,6 +123,16 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
 			Kind:       "KFPDriver",
 			Name:       "kfp-driver",
+		},
+		// leverage when to fulfill the condition
+		// TODO: optimization: only generate when expression when trigger policy with the condition
+		//       presents in the parent dag
+		WhenExpressions: pipelineapi.WhenExpressions{
+			pipelineapi.WhenExpression{
+				Input:    inputs.getParentDagCondition(c.ExitHandlerScope()),
+				Operator: selection.NotIn,
+				Values:   []string{"false"},
+			},
 		},
 		Params: []pipelineapi.Param{
 			// "--type", "CONTAINER",

@@ -138,13 +138,20 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]v1beta1.CustomR
 			Value: fmt.Sprint(*execution.IterationCount),
 		})
 	}
-	if execution.Condition != nil {
-		logger.Infof("output execution.Condition=%v", *execution.Condition)
+
+	logger.Infof("output execution.Condition=%v", execution.Condition)
+	if execution.Condition == nil {
+		runResults = append(runResults, v1beta1.CustomRunResult{
+			Name:  Condition,
+			Value: "",
+		})
+	} else {
 		runResults = append(runResults, v1beta1.CustomRunResult{
 			Name:  Condition,
 			Value: strconv.FormatBool(*execution.Condition),
 		})
 	}
+
 	if execution.ExecutorInput != nil {
 		marshaler := jsonpb.Marshaler{}
 		executorInputJSON, err := marshaler.MarshalToString(execution.ExecutorInput)
@@ -174,7 +181,7 @@ func prettyPrint(jsonStr string) string {
 	if err != nil {
 		return jsonStr
 	}
-	return string(prettyJSON.Bytes())
+	return prettyJSON.String()
 }
 
 func parseParams(run *v1beta1.CustomRun) (*driverOptions, *apis.FieldError) {
