@@ -22,22 +22,25 @@ from datetime import timedelta
 from datetime import datetime as dt
 from kubernetes import client, config
 
+from kfp_server_api import ApiRunDetail
+from kfp_tekton._client import TektonClient
+
 elapsed_threshold = 1.5
 
 
-def get_apic() -> Tuple[client.CoreV1Api, client.CustomObjectsApi]:
+def get_client(ip: str = "localhost", port: str = "8888", ns: str = "kubeflow") -> Tuple[client.CoreV1Api, TektonClient]:
     config.load_kube_config()
-    return client.CoreV1Api(), client.CustomObjectsApi(client.ApiClient())
+    host = f"http://{ip}:{port}"
+    tclient = TektonClient(host=host)
+    tclient.set_user_namespace(ns)
+
+    return client.CoreV1Api(), tclient
 
 
-def query_pipelinerun(apic: client.CustomObjectsApi, runid: str, namespace: str) -> dict:
-    label_selector = 'pipeline/runid=' + runid
-    prs = apic.list_namespaced_custom_object(group='tekton.dev', version='v1beta1',
-        namespace=namespace, plural='pipelineruns', label_selector=label_selector)
-    if len(prs['items']) != 1:
-        return None
+def query_pipelinerun(tclient: TektonClient, runid: str, namespace: str) -> dict:
+    run_details: ApiRunDetail = tclient.get_run(runid)
 
-    return prs['items'][0]
+    return json.loads(run_details.to_dict()["pipeline_runtime"]["workflow_manifest"])
 
 
 def parse_pr(pr: dict) -> dict:
@@ -153,14 +156,16 @@ def compare(results: dict, seq: list, expected: dict):
 @click.command()
 @click.argument('runid')
 @click.argument('expect')
+@click.option('--ip', default='localhost', help='ip address for the kfp api endpoint')
+@click.option('--port', default='8888', help='port of the kfp api endpoint')
 @click.option('--namespace', default='kubeflow', help='namespace for the pipelinerun')
 @click.option('--threshold', default=1.5, help='threshold for elapsed time')
 @click.option('--dump', default=False, help='print out the taskruns/runs info')
-def verify_pipelinerun(runid, expect, namespace, threshold, dump):
+def verify_pipelinerun(runid, expect, ip, port, namespace, threshold, dump):
     global elapsed_threshold
     elapsed_threshold = threshold
-    corev1, apic = get_apic()
-    pr = query_pipelinerun(apic, runid, namespace)
+    corev1, tclient = get_client(ip, port, namespace)
+    pr = query_pipelinerun(tclient, runid, namespace)
     assert pr is not None, f"can't find the pipelinerun for runid:{runid} in namespace: {namespace}"
 
     with open(expect) as f:
