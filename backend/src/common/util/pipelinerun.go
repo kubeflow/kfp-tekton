@@ -987,40 +987,62 @@ func (pri *PipelineRunInformer) getStatusFromChildReferences(namespace, selector
 			// handle nested status
 			pri.handleNestedStatusV1beta1(&customRun, customRunStatus, namespace)
 		}
-		status.Runs = customRunStatuses
+		if status.Runs == nil {
+			status.Runs = customRunStatuses
+		} else {
+			for n, v := range customRunStatuses {
+				status.Runs[n] = v
+			}
+		}
 	}
 	return nil
 }
 
 // handle nested status case for specific types of Run
 func (pri *PipelineRunInformer) handleNestedStatus(run *pipelineapiv1alpha1.Run, runStatus *pipelineapiv1alpha1.RunStatus, namespace string) {
-	if sort.SearchStrings(childReferencesKinds, run.Spec.Spec.Kind) < len(childReferencesKinds) {
-		// need to lookup the nested status
-		obj := make(map[string]interface{})
-		if err := json.Unmarshal(runStatus.ExtraFields.Raw, &obj); err != nil {
-			return
-		}
-		if pri.updateExtraFields(obj, namespace) {
-			if newStatus, err := json.Marshal(obj); err == nil {
-				runStatus.ExtraFields.Raw = newStatus
-			}
+	var kind string
+	if run.Spec.Spec != nil {
+		kind = run.Spec.Spec.Kind
+	} else if run.Spec.Ref != nil {
+		kind = string(run.Spec.Ref.Kind)
+	}
+	if sort.SearchStrings(childReferencesKinds, kind) >= len(childReferencesKinds) {
+		return
+	}
+
+	// need to lookup the nested status
+	obj := make(map[string]interface{})
+	if err := json.Unmarshal(runStatus.ExtraFields.Raw, &obj); err != nil {
+		return
+	}
+	if pri.updateExtraFields(obj, namespace) {
+		if newStatus, err := json.Marshal(obj); err == nil {
+			runStatus.ExtraFields.Raw = newStatus
 		}
 	}
+
 }
 
 // handle nested status case for specific types of Run
 func (pri *PipelineRunInformer) handleNestedStatusV1beta1(customRun *pipelineapi.CustomRun, customRunStatus *customRun.CustomRunStatus, namespace string) {
-	if customRun != nil && customRun.Spec.CustomSpec != nil &&
-		sort.SearchStrings(childReferencesKinds, customRun.Spec.CustomSpec.Kind) < len(childReferencesKinds) {
-		// need to lookup the nested status
-		obj := make(map[string]interface{})
-		if err := json.Unmarshal(customRunStatus.ExtraFields.Raw, &obj); err != nil {
-			return
-		}
-		if pri.updateExtraFields(obj, namespace) {
-			if newStatus, err := json.Marshal(obj); err == nil {
-				customRunStatus.ExtraFields.Raw = newStatus
-			}
+	var kind string
+	if customRun.Spec.CustomSpec != nil {
+		kind = customRun.Spec.CustomSpec.Kind
+	} else if customRun.Spec.CustomRef != nil {
+		kind = string(customRun.Spec.CustomRef.Kind)
+	}
+	if sort.SearchStrings(childReferencesKinds, kind) >= len(childReferencesKinds) {
+		return
+	}
+
+	// need to lookup the nested status
+	obj := make(map[string]interface{})
+	if err := json.Unmarshal(customRunStatus.ExtraFields.Raw, &obj); err != nil {
+		return
+	}
+	if pri.updateExtraFields(obj, namespace) {
+		if newStatus, err := json.Marshal(obj); err == nil {
+			customRunStatus.ExtraFields.Raw = newStatus
 		}
 	}
 }
