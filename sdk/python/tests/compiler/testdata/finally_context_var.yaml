@@ -107,7 +107,7 @@ spec:
           - print-00,print-01
           command:
           - any-task
-          image: dspipelines/any-sequencer:latest
+          image: aipipeline/any-sequencer:latest
         - image: busybox
           name: copy-results
           command:
@@ -133,7 +133,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "None", "outputs":
               [{"description": "The output file to create the status", "name": "None"}],
-              "version": "None@sha256=d85996d2400bd94ea45204590fcba9374edf952e060744ff0c5a5102f1318d7f"}'
+              "version": "None@sha256=263a7de7e88ed7a2ebafbdb29c48f1445f9a3d365b774acdef2328d4549e1f71"}'
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace
@@ -212,7 +212,7 @@ spec:
                   - print-10,print-11
                   command:
                   - any-task
-                  image: dspipelines/any-sequencer:latest
+                  image: aipipeline/any-sequencer:latest
                 - image: busybox
                   name: copy-results
                   command:
@@ -238,7 +238,7 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "None",
                       "outputs": [{"description": "The output file to create the status",
-                      "name": "None"}], "version": "None@sha256=aa59b9bee1939a20a127f07c0be2c186967560086207bc68a8d0401e03b63dcd"}'
+                      "name": "None"}], "version": "None@sha256=b6db958a25121973b7ed13bf96289c894ecd54d8ee16321c33ce1afd5d92d5c4"}'
                 params:
                 - name: pipelineRun-name
                   type: string

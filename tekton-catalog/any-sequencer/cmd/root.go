@@ -28,8 +28,11 @@ import (
 
 	"github.com/spf13/cobra"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"github.com/tektoncd/pipeline/pkg/apis/run/v1alpha1"
+	customRun "github.com/tektoncd/pipeline/pkg/apis/run/v1beta1"
 	tektoncdclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"knative.dev/pkg/apis"
 )
@@ -237,16 +240,15 @@ func sanitize_task_result(result string) interface{} {
 	return i
 }
 
-func checkTaskrunConditions(crs []conditionResult, taskRunStatus *v1beta1.PipelineRunTaskRunStatus) (string, bool) {
+func checkTaskrunConditions(crs []conditionResult, taskRunStatus *v1beta1.TaskRunStatus, trName string) (string, bool) {
 	for _, cr := range crs {
 		parameters := make(map[string]interface{})
 		for _, result := range cr.results {
-			trName := taskRunStatus.PipelineTaskName
 			var found bool
-			for _, taskRunResults := range taskRunStatus.Status.TaskRunResults {
+			for _, taskRunResults := range taskRunStatus.TaskRunResults {
 				if result == taskRunResults.Name {
 					// Do not need sanitize parameter name but only for expression for go valuate
-					parameters[`results_`+trName+`_`+result] = sanitize_task_result(taskRunResults.Value)
+					parameters[`results_`+trName+`_`+result] = sanitize_task_result(taskRunResults.Value.StringVal)
 					found = true
 					break
 				}
@@ -276,13 +278,12 @@ func checkTaskrunConditions(crs []conditionResult, taskRunStatus *v1beta1.Pipeli
 	return "", true
 }
 
-func checkRunConditions(crs []conditionResult, runStatus *v1beta1.PipelineRunRunStatus) (string, bool) {
+func checkRunConditions(crs []conditionResult, runStatus *customRun.CustomRunStatus, runName string) (string, bool) {
 	for _, cr := range crs {
 		parameters := make(map[string]interface{})
 		for _, result := range cr.results {
-			runName := runStatus.PipelineTaskName
 			var found bool
-			for _, runResults := range runStatus.Status.Results {
+			for _, runResults := range runStatus.Results {
 				if result == runResults.Name {
 					// Do not need sanitize parameter name but only for expression for go valuate
 					parameters[`results_`+runName+`_`+result] = sanitize_task_result(runResults.Value)
@@ -326,7 +327,7 @@ func checkTaskRunStatus(taskRunStatus *v1beta1.PipelineRunTaskRunStatus, failedO
 			exitWithStatus(succeededStatus, 0)
 		}
 
-		condition, ok := checkTaskrunConditions(conditions, taskRunStatus)
+		condition, ok := checkTaskrunConditions(conditions, taskRunStatus.Status, taskName)
 		if ok { // condition passed -->  any-sequencer success
 			exitWithStatus(succeededStatus, 0)
 		}
@@ -353,7 +354,7 @@ func checkRunStatus(runStatus *v1beta1.PipelineRunRunStatus, failedOrSkippedTask
 		if !ok { // no conditions to be passed --> any-sequencer success
 			exitWithStatus(succeededStatus, 0)
 		}
-		condition, ok := checkRunConditions(conditions, runStatus)
+		condition, ok := checkRunConditions(conditions, runStatus.Status, taskName)
 		if ok { // condition passed -->  any-sequencer success
 			exitWithStatus(succeededStatus, 0)
 		}
@@ -362,6 +363,81 @@ func checkRunStatus(runStatus *v1beta1.PipelineRunRunStatus, failedOrSkippedTask
 	}
 
 	if runStatusCondition.IsFalse() {
+		taskFailed = true
+	}
+
+	if taskFailed {
+		failedOrSkippedTasksCh <- taskName
+	}
+}
+
+func checkChildReferencesStatus(childReferencesStatus v1beta1.ChildStatusReference, failedOrSkippedTasksCh chan string,
+	tektonClient *tektoncdclientset.Clientset) {
+	taskName := childReferencesStatus.PipelineTaskName
+	var taskFailed bool
+	var childReferencesStatusCondition *apis.Condition
+	switch childReferencesStatus.Kind {
+	case "TaskRun":
+		taskrun, err := tektonClient.TektonV1beta1().TaskRuns(namespace).Get(context.Background(), childReferencesStatus.Name, v1.GetOptions{})
+		if err != nil {
+			fmt.Println("Can't fetch taskrun: ", err)
+		}
+		childReferencesStatusCondition = taskrun.Status.GetCondition(apis.ConditionSucceeded)
+		if childReferencesStatusCondition.IsTrue() {
+			fmt.Printf("The Task of %s succeeded.\n", taskName)
+			conditions, ok := conditionMap[taskName]
+			if !ok { // no conditions to be passed --> any-sequencer success
+				exitWithStatus(succeededStatus, 0)
+			}
+			condition, ok := checkTaskrunConditions(conditions, &taskrun.Status, taskName)
+			if ok { // condition passed -->  any-sequencer success
+				exitWithStatus(succeededStatus, 0)
+			}
+			taskFailed = true
+			fmt.Printf("The condition %s for the task %s does not meet.\n", condition, taskName)
+		}
+	case "Run":
+		run, err := tektonClient.TektonV1alpha1().Runs(namespace).Get(context.Background(), childReferencesStatus.Name, v1.GetOptions{})
+		if err != nil {
+			fmt.Println("Can't fetch run: ", err)
+		}
+		childReferencesStatusCondition = run.Status.GetCondition(apis.ConditionSucceeded)
+		if childReferencesStatusCondition.IsTrue() {
+			fmt.Printf("The Task of %s succeeded.\n", taskName)
+			conditions, ok := conditionMap[taskName]
+			if !ok { // no conditions to be passed --> any-sequencer success
+				exitWithStatus(succeededStatus, 0)
+			}
+			condition, ok := checkRunConditions(conditions, FromRunStatus(&run.Status), taskName)
+			if ok { // condition passed -->  any-sequencer success
+				exitWithStatus(succeededStatus, 0)
+			}
+			taskFailed = true
+			fmt.Printf("The condition %s for the task %s does not meet.\n", condition, taskName)
+		}
+	case "CustomRun":
+		customRun, err := tektonClient.TektonV1beta1().CustomRuns(namespace).Get(context.Background(), childReferencesStatus.Name, v1.GetOptions{})
+		if err != nil {
+			fmt.Println("Can't fetch customrun: ", err)
+		}
+		childReferencesStatusCondition = customRun.Status.GetCondition(apis.ConditionSucceeded)
+		if childReferencesStatusCondition.IsTrue() {
+			fmt.Printf("The Task of %s succeeded.\n", taskName)
+			conditions, ok := conditionMap[taskName]
+			if !ok { // no conditions to be passed --> any-sequencer success
+				exitWithStatus(succeededStatus, 0)
+			}
+			condition, ok := checkRunConditions(conditions, &customRun.Status, taskName)
+			if ok { // condition passed -->  any-sequencer success
+				exitWithStatus(succeededStatus, 0)
+			}
+			taskFailed = true
+			fmt.Printf("The condition %s for the task %s does not meet.\n", condition, taskName)
+		}
+	default:
+	}
+
+	if childReferencesStatusCondition.IsFalse() {
 		taskFailed = true
 	}
 
@@ -412,6 +488,11 @@ func watchPipelineRun(tasks []string, failedOrSkippedTasksCh chan string) []stri
 
 		for event := range prWatcher.ResultChan() {
 			pr := event.Object.(*v1beta1.PipelineRun)
+			for _, childReferencesStatus := range pr.Status.ChildReferences {
+				if contains(tasks, childReferencesStatus.PipelineTaskName) {
+					checkChildReferencesStatus(childReferencesStatus, failedOrSkippedTasksCh, tektonClient)
+				}
+			}
 			for _, taskRunStatus := range pr.Status.TaskRuns {
 				if contains(tasks, taskRunStatus.PipelineTaskName) {
 					checkTaskRunStatus(taskRunStatus, failedOrSkippedTasksCh)
@@ -476,4 +557,29 @@ func watch(cmd *cobra.Command, args []string) {
 			exitWithStatus(skippedStatus, 1)
 		}
 	}
+}
+
+// FromRunStatus converts a *v1alpha1.RunStatus into a corresponding *v1beta1.CustomRunStatus
+func FromRunStatus(orig *v1alpha1.RunStatus) *customRun.CustomRunStatus {
+	crs := customRun.CustomRunStatus{
+		Status: orig.Status,
+		CustomRunStatusFields: customRun.CustomRunStatusFields{
+			StartTime:      orig.StartTime,
+			CompletionTime: orig.CompletionTime,
+			ExtraFields:    orig.ExtraFields,
+		},
+	}
+
+	for _, origRes := range orig.Results {
+		crs.Results = append(crs.Results, customRun.CustomRunResult{
+			Name:  origRes.Name,
+			Value: origRes.Value,
+		})
+	}
+
+	for _, origRetryStatus := range orig.RetriesStatus {
+		crs.RetriesStatus = append(crs.RetriesStatus, customRun.FromRunStatus(origRetryStatus))
+	}
+
+	return &crs
 }

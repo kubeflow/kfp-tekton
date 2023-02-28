@@ -22,7 +22,7 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
 BREAK_TASK_IMAGE_NAME = "aipipeline/breaktask:latest"
 CEL_EVAL_IMAGE = "aipipeline/cel-eval:latest"
-ANY_SEQUENCER_IMAGE = "dspipelines/any-sequencer:latest"
+ANY_SEQUENCER_IMAGE = "aipipeline/any-sequencer:latest"
 DEFAULT_CONDITION_OUTPUT_KEYWORD = "outcome"
 TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE, BREAK_TASK_IMAGE_NAME]
 LOOP_PIPELINE_NAME_LENGTH = 40
@@ -56,7 +56,7 @@ def AnySequencer(any: Iterable[Union[dsl.ContainerOp, ConditionOperator]],
                 but the exit status will still be succeeded. For `Fail_on_error` the
                 Any Sequencer should truly fail in the Tekton terms, as it does now.
 
-        image: The image to implement the any sequencer logic. Default to dspipelines/any-sequencer:latest.
+        image: The image to implement the any sequencer logic. Default to aipipeline/any-sequencer:latest.
     """
     arguments = [
                 "--namespace",
