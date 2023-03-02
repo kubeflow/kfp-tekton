@@ -36,7 +36,7 @@ TEKTON_HOME_RESULT_PATH = "/tekton/home/tep-results/"
 # The image to use in basic bash steps such as copying results in multi-step.
 TEKTON_BASH_STEP_IMAGE = 'busybox'
 TEKTON_COPY_RESULTS_STEP_IMAGE = 'library/bash'
-GENERATE_COMPONENT_SPEC_ANNOTATIONS = True
+GENERATE_COMPONENT_SPEC_ANNOTATIONS = env.get('GENERATE_COMPONENT_SPEC_ANNOTATIONS', True)
 
 
 def _get_base_step(name: str):
@@ -397,7 +397,8 @@ def _process_base_ops(op: BaseOp):
 
 def _op_to_template(op: BaseOp,
                     pipelinerun_output_artifacts={},
-                    artifact_items={}):
+                    artifact_items={},
+                    generate_component_spec_annotations=True):
     """Generate template given an operator inherited from BaseOp."""
 
     # Display name
@@ -556,7 +557,7 @@ def _op_to_template(op: BaseOp,
                                                                             for volume in processed_op.volumes]
         template['spec']['volumes'].sort(key=lambda x: x['name'])
 
-    if isinstance(op, dsl.ContainerOp) and op._metadata and GENERATE_COMPONENT_SPEC_ANNOTATIONS:
+    if isinstance(op, dsl.ContainerOp) and op._metadata and GENERATE_COMPONENT_SPEC_ANNOTATIONS and generate_component_spec_annotations:
         component_spec_dict = op._metadata.to_dict()
         component_spec_digest = hashlib.sha256(json.dumps(component_spec_dict, sort_keys=True).encode()).hexdigest()
         component_name = component_spec_dict.get('name', op.name)

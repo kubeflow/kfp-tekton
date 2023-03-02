@@ -195,6 +195,7 @@ Below are the usages and input types:
 - add_pipeline_env() - InputType: name `str`, value `str`
 - set_pipeline_env() - InputType: `Dict`
 - add_pipeline_workspace() - InputType: workspace_name `str`, volume `V1Volume` (optional), volume_claim_template_spec `V1PersistentVolumeClaimSpec` (optional), path_prefix `str`
+- set_generate_component_spec_annotations() - InputType: `Bool`
 
 ```python
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
@@ -215,6 +216,7 @@ pipeline_conf.add_pipeline_workspace(workspace_name="new-ws-template",
         access_modes=["ReadWriteOnce"],
         resources=V1ResourceRequirements(requests={"storage": "30Gi"})
 )) # InputType: workspace_name `str`, volume_claim_template_spec `V1PersistentVolumeClaimSpec`
+pipeline_conf.set_generate_component_spec_annotations(True) # InputType: Bool
 self._test_pipeline_workflow(test_pipeline, 'test.yaml', tekton_pipeline_conf=pipeline_conf)
 ```
 

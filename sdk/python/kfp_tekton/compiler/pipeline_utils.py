@@ -33,6 +33,7 @@ class TektonPipelineConf(dsl.PipelineConf):
         self.automount_service_account_token = None
         self.pipeline_env = {}
         self.pipeline_workspaces = {}
+        self.generate_component_spec_annotations = True
         super().__init__(**kwargs)
 
     def copy(self):
@@ -88,4 +89,8 @@ class TektonPipelineConf(dsl.PipelineConf):
                              workspace_name)
         volumeSpec = volume if volume else volume_claim_template_spec
         self.pipeline_workspaces[workspace_name] = (volumeSpec, path_prefix)
+        return self
+
+    def set_generate_component_spec_annotations(self, value: bool):
+        self.generate_component_spec_annotations = value
         return self
