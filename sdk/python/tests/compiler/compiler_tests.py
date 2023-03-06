@@ -850,6 +850,7 @@ class TestTektonCompiler(unittest.TestCase):
           access_modes=["ReadWriteOnce"],
           resources=V1ResourceRequirements(requests={"storage": "30Gi"})
     ))
+    pipeline_conf.set_generate_component_spec_annotations(False)
     self._test_pipeline_workflow(echo_pipeline, 'tekton_pipeline_conf.yaml',
                                  tekton_pipeline_conf=pipeline_conf,
                                  skip_noninlined=True)
