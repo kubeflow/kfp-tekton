@@ -130,7 +130,6 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-          annotations: {}
     - name: cop
       params:
       - name: create-pvc-name

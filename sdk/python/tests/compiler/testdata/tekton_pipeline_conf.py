@@ -63,6 +63,7 @@ pipeline_conf.add_pipeline_workspace(workspace_name="new-ws-template",
         access_modes=["ReadWriteOnce"],
         resources=V1ResourceRequirements(requests={"storage": "30Gi"})
 ))
+pipeline_conf.set_generate_component_spec_annotations(False)
 
 
 if __name__ == "__main__":

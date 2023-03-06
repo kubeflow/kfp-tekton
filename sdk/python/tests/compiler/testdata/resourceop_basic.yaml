@@ -130,4 +130,3 @@ spec:
         metadata:
           labels:
             pipelines.kubeflow.org/cache_enabled: "true"
-          annotations: {}

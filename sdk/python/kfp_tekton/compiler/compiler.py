@@ -150,6 +150,7 @@ class TektonCompiler(Compiler):
     self.pipeline_env = {}
     self.pipeline_workspaces = {}
     self.task_workspaces = {}
+    self.generate_component_spec_annotations = True
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -164,6 +165,7 @@ class TektonCompiler(Compiler):
     self.automount_service_account_token = tekton_pipeline_conf.automount_service_account_token
     self.pipeline_env = tekton_pipeline_conf.pipeline_env
     self.pipeline_workspaces = tekton_pipeline_conf.pipeline_workspaces
+    self.generate_component_spec_annotations = tekton_pipeline_conf.generate_component_spec_annotations
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -610,7 +612,8 @@ class TektonCompiler(Compiler):
 
     op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op,
                                                                   self.output_artifacts,
-                                                                  self.artifact_items)])
+                                                                  self.artifact_items,
+                                                                  self.generate_component_spec_annotations)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise
@@ -1123,8 +1126,10 @@ class TektonCompiler(Compiler):
           task_annotations = template['metadata'].get('annotations', {})
 
           # Updata default metadata at the end.
-          task_ref['taskSpec']['metadata']['labels'] = task_labels
-          task_ref['taskSpec']['metadata']['annotations'] = task_annotations
+          if task_labels:
+            task_ref['taskSpec']['metadata']['labels'] = task_labels
+          if task_annotations:
+            task_ref['taskSpec']['metadata']['annotations'] = task_annotations
 
         task_refs.append(task_ref)
 
