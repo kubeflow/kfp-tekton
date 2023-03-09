@@ -241,7 +241,7 @@ class TektonClient(kfp.Client):
             page_token=page_token,
             page_size=page_size,
             sort_by=sort_by,
-            resource_reference_key_type=kfp_server_api.models.V1_resource_type
+            resource_reference_key_type=kfp_server_api.models.v1_resource_type
             .v1ResourceType.NAMESPACE,
             resource_reference_key_id=namespace,
             filter=filter)
@@ -285,7 +285,7 @@ class TektonClient(kfp.Client):
             result = self._experiment_api.list_experiment(
                 filter=experiment_filter,
                 resource_reference_key_type=kfp_server_api.models
-                .V1_resource_type.V1ResourceType.NAMESPACE,
+                .v1_resource_type.V1ResourceType.NAMESPACE,
                 resource_reference_key_id=namespace)
         else:
             result = self._experiment_api.list_experiment(
@@ -579,7 +579,7 @@ class TektonClient(kfp.Client):
                 page_size=page_size,
                 sort_by=sort_by,
                 resource_reference_key_type=kfp_server_api.models
-                .V1_resource_type.V1ResourceType.EXPERIMENT,
+                .v1_resource_type.V1ResourceType.EXPERIMENT,
                 resource_reference_key_id=experiment_id,
                 filter=filter)
         elif namespace:
@@ -588,7 +588,7 @@ class TektonClient(kfp.Client):
                 page_size=page_size,
                 sort_by=sort_by,
                 resource_reference_key_type=kfp_server_api.models
-                .V1_resource_type.V1ResourceType.NAMESPACE,
+                .v1_resource_type.V1ResourceType.NAMESPACE,
                 resource_reference_key_id=namespace,
                 filter=filter)
         else:
@@ -624,7 +624,7 @@ class TektonClient(kfp.Client):
                 page_size=page_size,
                 sort_by=sort_by,
                 resource_reference_key_type=kfp_server_api.models
-                .V1_resource_type.V1ResourceType.EXPERIMENT,
+                .v1_resource_type.V1ResourceType.EXPERIMENT,
                 resource_reference_key_id=experiment_id,
                 filter=filter)
         else:
@@ -661,7 +661,7 @@ class TektonClient(kfp.Client):
             page_token=page_token,
             page_size=page_size,
             sort_by=sort_by,
-            resource_key_type=kfp_server_api.models.V1_resource_type
+            resource_key_type=kfp_server_api.models.v1_resource_type
             .V1ResourceType.PIPELINE,
             resource_key_id=pipeline_id)
 
