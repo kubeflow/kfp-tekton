@@ -242,7 +242,7 @@ class TektonClient(kfp.Client):
             page_size=page_size,
             sort_by=sort_by,
             resource_reference_key_type=kfp_server_api.models.v1_resource_type
-            .v1ResourceType.NAMESPACE,
+            .V1ResourceType.NAMESPACE,
             resource_reference_key_id=namespace,
             filter=filter)
         return response
