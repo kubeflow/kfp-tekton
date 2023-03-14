@@ -36,7 +36,7 @@ spec:
       serviceAccountName: tekton-pipelineloop-webhook
       containers:
       - name: webhook
-        image: docker.io/aipipeline/pipelineloop-webhook:nightly
+        image: quay.io/aipipeline/pipelineloop-webhook:nightly
         env:
         - name: SYSTEM_NAMESPACE
           valueFrom:

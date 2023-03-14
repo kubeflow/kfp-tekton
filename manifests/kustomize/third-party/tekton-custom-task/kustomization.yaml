@@ -7,7 +7,7 @@ bases:
 namespace: tekton-pipelines
 
 images:
-  - name: docker.io/aipipeline/pipelineloop-controller
+  - name: quay.io/aipipeline/pipelineloop-controller
     newTag: 1.6.2
-  - name: docker.io/aipipeline/pipelineloop-webhook
+  - name: quay.io/aipipeline/pipelineloop-webhook
     newTag: 1.6.2

@@ -2327,7 +2327,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: docker.io/aipipeline/cache-server:1.6.2
+        image: quay.io/aipipeline/cache-server:1.6.2
         imagePullPolicy: Always
         name: server
         ports:
@@ -2483,7 +2483,7 @@ spec:
             configMapKeyRef:
               key: archive_logs
               name: kfp-tekton-config
-        image: docker.io/aipipeline/metadata-writer:1.6.2
+        image: quay.io/aipipeline/metadata-writer:1.6.2
         name: main
       serviceAccountName: kubeflow-pipelines-metadata-writer
 ---
@@ -2695,7 +2695,7 @@ spec:
             configMapKeyRef:
               key: terminate_status
               name: kfp-tekton-config
-        image: docker.io/aipipeline/api-server:1.6.2
+        image: quay.io/aipipeline/api-server:1.6.2
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -2766,7 +2766,7 @@ spec:
           value: "2"
         - name: CHILDREFERENCES_KINDS
           value: PipelineLoop
-        image: docker.io/aipipeline/persistenceagent:1.6.2
+        image: quay.io/aipipeline/persistenceagent:1.6.2
         imagePullPolicy: IfNotPresent
         name: ml-pipeline-persistenceagent
         resources:
@@ -2807,7 +2807,7 @@ spec:
             configMapKeyRef:
               key: cronScheduleTimezone
               name: pipeline-install-config
-        image: docker.io/aipipeline/scheduledworkflow:1.6.2
+        image: quay.io/aipipeline/scheduledworkflow:1.6.2
         imagePullPolicy: IfNotPresent
         name: ml-pipeline-scheduledworkflow
       serviceAccountName: ml-pipeline-scheduledworkflow
@@ -2855,7 +2855,7 @@ spec:
           value: "true"
         - name: ARGO_ARCHIVE_LOGS
           value: "true"
-        image: docker.io/aipipeline/frontend:1.6.2
+        image: quay.io/aipipeline/frontend:1.6.2
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
@@ -3087,7 +3087,7 @@ spec:
           value: config-observability
         - name: METRICS_DOMAIN
           value: tekton.dev/pipeline
-        image: docker.io/aipipeline/pipelineloop-controller:1.6.2
+        image: quay.io/aipipeline/pipelineloop-controller:1.6.2
         name: tekton-pipelineloop-controller
         securityContext:
           allowPrivilegeEscalation: false
@@ -3154,7 +3154,7 @@ spec:
           value: tekton-pipelineloop-webhook-certs
         - name: METRICS_DOMAIN
           value: tekton.dev/pipeline
-        image: docker.io/aipipeline/pipelineloop-webhook:1.6.2
+        image: quay.io/aipipeline/pipelineloop-webhook:1.6.2
         name: webhook
         ports:
         - containerPort: 9090
