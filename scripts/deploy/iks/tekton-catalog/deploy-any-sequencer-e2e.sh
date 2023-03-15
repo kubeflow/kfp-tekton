@@ -28,13 +28,13 @@ MANIFEST="any_sequencer.yaml"
 
 pushd $BUILD_DIR > /dev/null
 
-if ! grep -q "image: $OLD_IMAGE" $MANIFEST; then
+if ! grep -q "image: .*$OLD_IMAGE" $MANIFEST; then
     echo "Unable to find $OLD_IMAGE in any_sequencer.yaml"
     exit 1
 fi
 
 # Use | as delimiter to avoid issues with slashes.
-sed 's|'"$OLD_IMAGE"'|'"$NEW_IMAGE_URL:$NEW_IMAGE_TAG"'|g' $MANIFEST > any_sequencer_temp.yaml
+sed 's|image: .*'"$OLD_IMAGE"'|image: '"$NEW_IMAGE_URL:$NEW_IMAGE_TAG"'|g' $MANIFEST > any_sequencer_temp.yaml
 
 mv any_sequencer_temp.yaml $MANIFEST
 

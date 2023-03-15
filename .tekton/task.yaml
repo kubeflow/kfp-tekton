@@ -35,7 +35,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: run-go-unittests
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -104,7 +104,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: build-image
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -170,7 +170,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: build-image
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -240,7 +240,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: build-image
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -342,6 +342,9 @@ spec:
       default: iamapikey
     - name: docker-password
       description: iam api key
+    - name: public-cr
+      description: public container registry
+      default: quay.io
     - name: archive-dir
       description: archive directory
       default: "."
@@ -350,7 +353,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: deploy-kfp-tekton
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -358,6 +361,8 @@ spec:
           value: $(params.docker-password)
         - name: IBM_CLOUD_API_KEY
           value: $(params.apikey)
+        - name: PUBLIC_CR
+          value: $(param.public-cr)
         - name: PIPELINE_KUBERNETES_CLUSTER_NAME
           value: $(params.kubernetes-cluster)
         - name: ARCHIVE_DIR
@@ -400,7 +405,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: run-test
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: IBM_CLOUD_API_KEY
           value: $(params.apikey)
@@ -451,10 +456,13 @@ spec:
       description: ibm container registry username
     - name: docker-password
       description: ibm container registry password
-    - name: dockerhub-username
-      description: dockerhub username
-    - name: dockerhub-password
-      description: dockerhub password/token
+    - name: public-cr-username
+      description: username for public container registry
+    - name: public-cr-password
+      description: password/token for public container registry
+    - name: public-cr
+      description: public conainer registry uri
+      default: docker.io
     - name: images
       description: image list to publish
       default: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend"
@@ -464,15 +472,15 @@ spec:
     - name: dind-ns
       description: dind namespace
       default: docker-build
-    - name: dockerhub-namespace
-      description: dockerhub namespace
+    - name: public-cr-namespace
+      description: namespace for public container registry
       default: aipipeline
   workspaces:
   - name: task-pvc
     mountPath: /artifacts
   steps:
-    - name: publish-images-to-dockerhub
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+    - name: publish-images-to-cr
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: IBM_CLOUD_API_KEY
           value: $(params.apikey)
@@ -488,12 +496,14 @@ spec:
           value: $(params.docker-username)
         - name: DOCKER_PASSWORD
           value: $(params.docker-password)
-        - name: DOCKERHUB_USERNAME
-          value: $(params.dockerhub-username)
-        - name: DOCKERHUB_TOKEN
-          value: $(params.dockerhub-password)
-        - name: DOCKERHUB_NAMESPACE
-          value: $(params.dockerhub-namespace)
+        - name: PUBLIC_CR_USERNAME
+          value: $(params.public-cr-username)
+        - name: PUBLIC_CR_TOKEN
+          value: $(params.public-cr-password)
+        - name: PUBLIC_CR_NAMESPACE
+          value: $(params.public-cr-namespace)
+        - name: PUBLIC_CR
+          value: $(params.public-cr)
         - name: IMAGES
           value: $(params.images)
         - name: PUBLISH_TAG
@@ -577,7 +587,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: undeploy-kfp-tekton
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.5
       env:
         - name: PIPELINE_KUBERNETES_CLUSTER_NAME
           value: $(params.kubernetes-cluster)
@@ -607,7 +617,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: build-binaries
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: BUILD_DIR
           value: $(params.build-dir)
@@ -629,7 +639,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: setup-deploy
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       command:
         - /bin/bash
         - '-c'
@@ -651,7 +661,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: setup-deploy
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       command:
         - /bin/bash
         - '-c'
@@ -694,7 +704,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: iks-script
-      image: docker.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: IBM_CLOUD_API_KEY
           value: $(params.apikey)
