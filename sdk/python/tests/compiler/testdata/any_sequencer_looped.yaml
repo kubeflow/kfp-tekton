@@ -116,7 +116,7 @@ spec:
           - $(results.status.path)
           command:
           - any-task
-          image: aipipeline/any-sequencer:latest
+          image: quay.io/aipipeline/any-sequencer:latest
         results:
         - name: status
           type: string
@@ -127,7 +127,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "any-seq-0", "outputs":
               [{"description": "The output file to create the status", "name": "status"}],
-              "version": "any-seq-0@sha256=b4d40d8c096838f57b1143bd7206f36738634816ca2ed8475ca9ab71498b74c0"}'
+              "version": "any-seq-0@sha256=da4407dd5374d57e7643f4d08de194ed708a04a17dab1a83b52f23b14daeecaf"}'
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace
@@ -212,7 +212,7 @@ spec:
                   - $(results.status.path)
                   command:
                   - any-task
-                  image: aipipeline/any-sequencer:latest
+                  image: quay.io/aipipeline/any-sequencer:latest
                 results:
                 - name: status
                   type: string
@@ -223,7 +223,7 @@ spec:
                   annotations:
                     pipelines.kubeflow.org/component_spec_digest: '{"name": "any-seq-1",
                       "outputs": [{"description": "The output file to create the status",
-                      "name": "status"}], "version": "any-seq-1@sha256=d89d1aa31bce532edec6e6f4d7042c047e9b76c5f3bc9a8bcbba5760465c2362"}'
+                      "name": "status"}], "version": "any-seq-1@sha256=f0b6a69aab6928600cc98ab050ad3c0cce2179a46fa99c776da89fe4db08b53d"}'
                 params:
                 - name: pipelineRun-name
                   type: string

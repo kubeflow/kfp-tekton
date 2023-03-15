@@ -22,7 +22,7 @@ from kfp_tekton.compiler._k8s_helper import sanitize_k8s_name
 
 BREAK_TASK_IMAGE_NAME = "aipipeline/breaktask:latest"
 CEL_EVAL_IMAGE = "aipipeline/cel-eval:latest"
-ANY_SEQUENCER_IMAGE = "aipipeline/any-sequencer:latest"
+ANY_SEQUENCER_IMAGE = "quay.io/aipipeline/any-sequencer:latest"
 DEFAULT_CONDITION_OUTPUT_KEYWORD = "outcome"
 TEKTON_CUSTOM_TASK_IMAGES = [CEL_EVAL_IMAGE, BREAK_TASK_IMAGE_NAME]
 LOOP_PIPELINE_NAME_LENGTH = 40
