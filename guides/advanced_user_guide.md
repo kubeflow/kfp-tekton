@@ -56,13 +56,12 @@ Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom t
     ConditionOp = dsl.ContainerOp(
             name="any-name",
             image=MY_CUSTOM_TASK_IMAGE_NAME,
-            command=["any", "command"],
             arguments=["--apiVersion", "custom_task_api_version",
                        "--kind", "custom_task_kind",
                        "--name", "custom_task_name",
                        "--taskSpec", {"task_spec_key": "task_spec_value"},
-                       "--taskRef", {"task_ref_key": "task_ref_value"},
-                       "--other_custom_task_argument_keys", custom_task_argument_values],
+                       "--taskRef", {"task_ref_key": "task_ref_value"}],
+            command=["--other_custom_task_argument_keys", custom_task_argument_values],
             file_outputs={"other_custom_task_argument_keys": '/anypath'}
         )
     # Annotation to tell the Argo controller that this containerOp is for specific Tekton runtime only.
@@ -79,6 +78,7 @@ Here, the `apiVersion`, `kind`, and `name` are mandatory fields for all custom t
       - **--taskSpec** (optional): Kubernetes Resource Spec for your custom task CRD. This gets inlined in the pipeline.  One of `--taskSpec` or `--taskRef` can be specified at a time.
         Custom task controller should support [embedded spec](https://github.com/tektoncd/pipeline/blob/main/docs/runs.md#2-specifying-the-target-custom-task-by-embedding-its-spec).
         The value should be a Python Dictionary.
+    - **command**: Define the key value pairs for the custom task input parameters.
       - **Other arguments** (optional): Parameters for your custom task CRD inputs.
 
       Then, you can add any extra arguments to map as the custom task CRD's `spec.params` fields.
