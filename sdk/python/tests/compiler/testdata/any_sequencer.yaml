@@ -182,7 +182,7 @@ spec:
           - results_flip-coin_Output == 'heads'
           command:
           - any-task
-          image: dspipelines/any-sequencer:latest
+          image: quay.io/aipipeline/any-sequencer:latest
         results:
         - name: status
           type: string
@@ -193,7 +193,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "any_test", "outputs":
               [{"description": "The output file to create the status", "name": "status"}],
-              "version": "any_test@sha256=c4aaac826d09733534b96ec4a17c6646fa9d71e55d1e4bece1a5c0d20873e563"}'
+              "version": "any_test@sha256=ae5120bb10faa95000bb4942f10bf75cd7da7573c6cb9df72b5ce931b2d81f07"}'
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace

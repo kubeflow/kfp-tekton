@@ -65,14 +65,14 @@ metadata:
       "value": "$(context.pipelineRun.namespace)"}], "taskSpec": {"metadata": {"annotations":
       {"pipelines.kubeflow.org/component_spec_digest": "{\"name\": \"any-seq-1\",
       \"outputs\": [{\"description\": \"The output file to create the status\", \"name\":
-      \"status\"}], \"version\": \"any-seq-1@sha256=75c65b3423dd61b79c35122746a1f16d67a98ab7b570daa36de2d310e1e57c22\"}"},
+      \"status\"}], \"version\": \"any-seq-1@sha256=f0b6a69aab6928600cc98ab050ad3c0cce2179a46fa99c776da89fe4db08b53d\"}"},
       "labels": {"pipelines.kubeflow.org/cache_enabled": "true"}}, "params": [{"name":
       "pipelineRun-name", "type": "string"}, {"name": "pipelineRun-namespace", "type":
       "string"}], "results": [{"description": "/tmp/outputs/status/data", "name":
       "status", "type": "string"}], "steps": [{"args": ["--namespace", "$(params.pipelineRun-namespace)",
       "--prName", "$(params.pipelineRun-name)", "--taskList", "print-10,print-11",
       "--statusPath", "$(results.status.path)"], "command": ["any-task"], "image":
-      "dspipelines/any-sequencer:latest", "name": "main"}]}}]}}}]'
+      "quay.io/aipipeline/any-sequencer:latest", "name": "main"}]}}]}}}]'
   labels:
     pipelines.kubeflow.org/pipelinename: ''
     pipelines.kubeflow.org/generation: ''
@@ -148,7 +148,7 @@ spec:
           - $(results.status.path)
           command:
           - any-task
-          image: dspipelines/any-sequencer:latest
+          image: quay.io/aipipeline/any-sequencer:latest
         results:
         - name: status
           type: string
@@ -159,7 +159,7 @@ spec:
           annotations:
             pipelines.kubeflow.org/component_spec_digest: '{"name": "any-seq-0", "outputs":
               [{"description": "The output file to create the status", "name": "status"}],
-              "version": "any-seq-0@sha256=2a9bf729444af0ff906f5a6a77eff3eecfd419ebfbdb51e5f04cdfc11d58a7b8"}'
+              "version": "any-seq-0@sha256=da4407dd5374d57e7643f4d08de194ed708a04a17dab1a83b52f23b14daeecaf"}'
         params:
         - name: pipelineRun-name
         - name: pipelineRun-namespace

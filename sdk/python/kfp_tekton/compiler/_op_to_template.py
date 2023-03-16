@@ -30,7 +30,7 @@ from kfp.dsl._container_op import BaseOp
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 
 
-RESOURCE_OP_IMAGE = ":".join(["aipipeline/kubectl-wrapper", "latest"])
+RESOURCE_OP_IMAGE = ":".join(["quay.io/aipipeline/kubectl-wrapper", "latest"])
 TEKTON_HOME_RESULT_PATH = "/tekton/home/tep-results/"
 
 # The image to use in basic bash steps such as copying results in multi-step.
