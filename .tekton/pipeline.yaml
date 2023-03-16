@@ -20,10 +20,13 @@ spec:
       default: iamapikey
     - name: docker-password
       description: iam api key
-    - name: dockerhub-username
-      description: dockerhub username
-    - name: dockerhub-password
-      description: dockerhub password/token
+    - name: public-cr-username
+      description: username for public container registry
+    - name: public-cr-password
+      description: password/token for public container registry
+    - name: public-cr
+      description: public container registry
+      default: docker.io
     - name: resource-group
       description: resource group
       default: default
@@ -49,8 +52,8 @@ spec:
     - name: slack-channel
       description: slack channel
       default: ""
-    - name: publish-to-dockerhub
-      description: publish images to dockerhub
+    - name: publish-to-public-cr
+      description: publish images to public container registry
       default: "0"
     - name: extra-test-cases
       description: execute extra test cases
@@ -61,8 +64,8 @@ spec:
     - name: image-tag
       description: image tag
       default: "nightly"
-    - name: dockerhub-namespace
-      description: dockerhub namespace
+    - name: public-cr-namespace
+      description: namespace for public container registry
       default: aipipeline
     - name: images
       description: a image list for publishing
@@ -471,6 +474,8 @@ spec:
           value: $(params.kubernetes-cluster)
         - name: kubeflow-ns
           value: $(params.kubeflow-ns)
+        - name: public-cr
+          value: $(params.public-cr)
         # - name: tekton-version
         #   value: $(params.tekton-version)
         # - name: tekton-ns
@@ -712,7 +717,7 @@ spec:
         - deploy-any-sequencer-e2e
         - deploy-kubectl-wrapper-e2e
       when:
-        - input: $(params.publish-to-dockerhub)
+        - input: $(params.publish-to-public-cr)
           operator: in
           values:
             - '1'
@@ -731,14 +736,16 @@ spec:
           value: $(params.docker-username)
         - name: docker-password
           value: $(params.docker-password)
-        - name: dockerhub-username
-          value: $(params.dockerhub-username)
-        - name: dockerhub-password
-          value: $(params.dockerhub-password)
+        - name: public-cr-username
+          value: $(params.public-cr-username)
+        - name: public-cr-password
+          value: $(params.public-cr-password)
         - name: image-tag
           value: $(params.image-tag)
-        - name: dockerhub-namespace
-          value: $(params.dockerhub-namespace)
+        - name: public-cr-namespace
+          value: $(params.public-cr-namespace)
+        - name: public-cr
+          value: $(params.public-cr)
         - name: images
           value: $(params.images)
       workspaces:

@@ -28,23 +28,24 @@ EXIT_CODE=0
 KUSTOMIZE_DIR="${KUSTOMIZE_DIR:-"manifests/kustomize/env/platform-agnostic"}"
 MANIFEST="${MANIFEST:-"kfp-tekton.yaml"}"
 KUBEFLOW_NS="${KUBEFLOW_NS:-kubeflow}"
+PUBLIC_CR=${PUBLIC_CR:-"quay.io"}
 
-API_SERVER_IMAGE="${API_SERVER_IMAGE:-"docker.io/aipipeline/api-server"}"
+API_SERVER_IMAGE="${API_SERVER_IMAGE:-"${PUBLIC_CR}/aipipeline/api-server"}"
 NEW_API_SERVER_IMAGE="${NEW_API_SERVER_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}/api-server:${IMAGE_TAG}"}"
 
-METADATA_WRITER_IMAGE="${METADATA_WRITER_IMAGE:-"docker.io/aipipeline/metadata-writer"}"
+METADATA_WRITER_IMAGE="${METADATA_WRITER_IMAGE:-"${PUBLIC_CR}/aipipeline/metadata-writer"}"
 NEW_METADATA_WRITER_IMAGE="${NEW_METADATA_WRITER_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}/metadata-writer:${IMAGE_TAG}"}"
 
-PERSISTENCEAGENT_IMAGE="${PERSISTENCEAGENT_IMAGE:-"docker.io/aipipeline/persistenceagent"}"
+PERSISTENCEAGENT_IMAGE="${PERSISTENCEAGENT_IMAGE:-"${PUBLIC_CR}/aipipeline/persistenceagent"}"
 NEW_PERSISTENCEAGENT_IMAGE="${NEW_PERSISTENCEAGENT_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}/persistenceagent:${IMAGE_TAG}"}"
 
-SCHEDULEDWORKFLOW_IMAGE="${SCHEDULEDWORKFLOW_IMAGE:-"docker.io/aipipeline/scheduledworkflow"}"
+SCHEDULEDWORKFLOW_IMAGE="${SCHEDULEDWORKFLOW_IMAGE:-"${PUBLIC_CR}/aipipeline/scheduledworkflow"}"
 NEW_SCHEDULEDWORKFLOW_IMAGE="${NEW_SCHEDULEDWORKFLOW_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}/scheduledworkflow:${IMAGE_TAG}"}"
 
-CACHESERVER_IMAGE="${CACHESERVER_IMAGE:-"docker.io/aipipeline/cache-server"}"
+CACHESERVER_IMAGE="${CACHESERVER_IMAGE:-"${PUBLIC_CR}/aipipeline/cache-server"}"
 NEW_CACHESERVER_IMAGE_IMAGE="${NEW_CACHESERVER_IMAGE_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}/cache-server:${IMAGE_TAG}"}"
 
-FRONTEND_IMAGE="${FRONTEND_IMAGE:-"docker.io/aipipeline/frontend"}"
+FRONTEND_IMAGE="${FRONTEND_IMAGE:-"${PUBLIC_CR}/aipipeline/frontend"}"
 NEW_FRONTEND_IMAGE="${NEW_FRONTEND_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}/frontend:${IMAGE_TAG}"}"
 
 # Need to specify the image pull secret for these service accounts in order to

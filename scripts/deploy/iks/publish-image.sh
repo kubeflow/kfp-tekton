@@ -18,12 +18,14 @@
 # Remove the x if you do need to print out each command
 set -xe
 
-# DOCKERHUB_USERNAME
-# DOCKERHUB_TOKEN
+# PUBLIC_CR_USERNAME
+# PUBLIC_CR_TOKEN
+# PUBLIC_CR
 DIND_NS=${DIND_NS:-"docker-build"}
 IMAGES=${IMAGES:-"api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend"}
 PUBLISH_TAG=${PUBLISH_TAG:-"nightly"}
-DOCKERHUB_NAMESPACE=${DOCKERHUB_NAMESPACE:-"aipipeline"}
+PUBLIC_CR_NAMESPACE=${PUBLIC_CR_NAMESPACE:-"aipipeline"}
+PUBLIC_CR=${PUBLIC_CR:-"quay.io"}
 
 echo "REGISTRY_URL=${REGISTRY_URL}"
 echo "REGISTRY_NAMESPACE=${REGISTRY_NAMESPACE}"
@@ -52,13 +54,14 @@ retry 3 3 ibmcloud target -r "$REGION" -o "$ORG" -s "$SPACE" -g "$RESOURCE_GROUP
 retry 3 3 ibmcloud ks cluster config -c "$PIPELINE_KUBERNETES_CLUSTER_NAME"
 retry 3 3 ibmcloud cr login
 
-# login dockerhub
+# login to public container registry
 set +x
-docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_TOKEN"
+echo "\"$PUBLIC_CR_USERNAME\""
+docker login -u="$PUBLIC_CR_USERNAME" -p="$PUBLIC_CR_TOKEN" "$PUBLIC_CR"
 set -x
 
 for one in $IMAGES; do
   docker pull "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}"
-  docker tag "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}" "${DOCKERHUB_NAMESPACE}/${one}:${PUBLISH_TAG}"
-  docker push "${DOCKERHUB_NAMESPACE}/${one}:${PUBLISH_TAG}"
+  docker tag "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}" "${PUBLIC_CR}/${PUBLIC_CR_NAMESPACE}/${one}:${PUBLISH_TAG}"
+  docker push "${PUBLIC_CR}/${PUBLIC_CR_NAMESPACE}/${one}:${PUBLISH_TAG}"
 done

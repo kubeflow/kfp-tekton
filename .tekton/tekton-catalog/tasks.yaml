@@ -18,7 +18,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: build-binaries
-      image: docker.io/aipipeline/pipeline-base-image:1.0
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: BUILD_DIR
           value: $(params.build-dir)
@@ -95,7 +95,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: create-docker-registry-secret
-      image: docker.io/aipipeline/pipeline-base-image:1.0
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: API_KEY
           valueFrom:
@@ -133,7 +133,7 @@ spec:
         - mountPath: /steps
           name: steps-volume
     - name: run-docker-commands
-      image: docker.io/aipipeline/pipeline-base-image:1.0
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: DOCKER_HOST
           value: "tcp://localhost:2376"
@@ -243,7 +243,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: cleanup
-      image: docker.io/aipipeline/pipeline-base-image:1.0
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: API_KEY
           valueFrom:
@@ -293,7 +293,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: setup-deploy
-      image: docker.io/aipipeline/pipeline-base-image:1.0
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: CONTROLLER_IMAGE_URL
           value: $(params.controller-image-url)
@@ -336,7 +336,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: setup-deploy
-      image: docker.io/aipipeline/pipeline-base-image:1.0
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: KUBECTL_WRAPPER_IMAGE_URL
           value: $(params.kubectl-wrapper-image-url)
