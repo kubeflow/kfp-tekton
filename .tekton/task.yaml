@@ -362,7 +362,7 @@ spec:
         - name: IBM_CLOUD_API_KEY
           value: $(params.apikey)
         - name: PUBLIC_CR
-          value: $(param.public-cr)
+          value: $(params.public-cr)
         - name: PIPELINE_KUBERNETES_CLUSTER_NAME
           value: $(params.kubernetes-cluster)
         - name: ARCHIVE_DIR
