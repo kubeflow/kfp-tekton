@@ -20,7 +20,7 @@ source scripts/deploy/iks/helper-functions.sh
 
 BUILD_DIR="sdk/python/tests/compiler/testdata"
 
-OLD_IMAGE="dspipelines/any-sequencer:latest"
+OLD_IMAGE="quay.io/aipipeline/any-sequencer:latest"
 NEW_IMAGE_URL="${NEW_IMAGE_URL:=us.icr.io/kfp-tekton/any-sequencer}"
 NEW_IMAGE_TAG="${NEW_IMAGE_TAG:=nightly}"
 
