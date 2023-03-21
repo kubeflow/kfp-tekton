@@ -1,9 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-bases:
+resources:
   - metadata-writer
   - cluster-scoped
-resources:
   - ml-pipeline-apiserver-deployment.yaml
   - ml-pipeline-apiserver-role.yaml
   - ml-pipeline-apiserver-rolebinding.yaml
@@ -37,9 +36,9 @@ resources:
   - viewer-sa.yaml
   - kfp-pipeline-config.yaml
   - kfp-launcher-configmap.yaml
-patchesStrategicMerge:
-  - apiserver-deployment.yaml
-  - metadata-writer-deployment.yaml
+patches:
+  - path: apiserver-deployment.yaml
+  - path: metadata-writer-deployment.yaml
 images:
   - name: gcr.io/ml-pipeline/api-server
     newName: quay.io/aipipeline/api-server

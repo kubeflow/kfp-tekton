@@ -1,6 +1,6 @@
 # How to prepare for the KFP Tekton Release
 
-1. Install [Kustomize V3](https://github.com/kubernetes-sigs/kustomize/tree/v3.2.0).
+1. Install [Kustomize V5](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv5.0.0).
 
 2. Update the [kfp tekton manifest template](/manifests/kustomize/env/kfp-template) for any kustomization update on this release.
 

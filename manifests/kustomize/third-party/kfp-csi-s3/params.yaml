@@ -3,9 +3,9 @@ varReference:
   kind: Secret
 - path: spec/template/spec/volumes/hostPath/path
   kind: StatefulSet
-- path: spec/template/spec/containers/*/args/2
+- path: spec/template/spec/containers[]/args[2]
   kind: DaemonSet
-- path: spec/template/spec/containers/*/volumeMounts/*/mountPath
+- path: spec/template/spec/containers[]/volumeMounts[]/mountPath
   kind: DaemonSet
 - path: spec/template/spec/volumes/hostPath/path
   kind: DaemonSet
