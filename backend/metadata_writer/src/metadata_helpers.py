@@ -15,7 +15,6 @@
 import json
 import os
 import sys
-import ml_metadata
 from time import sleep
 from ml_metadata.proto import metadata_store_pb2
 from ml_metadata.metadata_store import metadata_store
