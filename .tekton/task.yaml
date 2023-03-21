@@ -353,7 +353,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: deploy-kfp-tekton
-      image: quay.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: DOCKER_USERNAME
           value: $(params.docker-username)
@@ -587,7 +587,7 @@ spec:
     mountPath: /artifacts
   steps:
     - name: undeploy-kfp-tekton
-      image: quay.io/aipipeline/pipeline-base-image:1.5
+      image: quay.io/aipipeline/pipeline-base-image:1.6
       env:
         - name: PIPELINE_KUBERNETES_CLUSTER_NAME
           value: $(params.kubernetes-cluster)
