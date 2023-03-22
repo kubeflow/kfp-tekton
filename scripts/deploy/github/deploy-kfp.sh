@@ -34,10 +34,6 @@ C_DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$C_DIR" ]]; then C_DIR="$PWD"; fi
 source "${C_DIR}/../iks/helper-functions.sh"
 
-# Download kustomize
-wget --quiet --output-document=./kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.2.1/kustomize_kustomize.v3.2.1_linux_amd64 \
-  && chmod +x ./kustomize
-
 kubectl create ns "$KUBEFLOW_NS"
 
 wait_for_namespace "$KUBEFLOW_NS" "$MAX_RETRIES" "$SLEEP_TIME" || EXIT_CODE=$?
@@ -49,17 +45,17 @@ then
 fi
 
 pushd "$KUSTOMIZE_DIR" > /dev/null
-kustomize edit set image "docker.io/aipipeline/api-server=${REGISTRY}/kfp-tekton/apiserver:latest"
-kustomize edit set image "docker.io/aipipeline/persistenceagent=${REGISTRY}/kfp-tekton/persistenceagent:latest"
-kustomize edit set image "docker.io/aipipeline/metadata-writer=${REGISTRY}/kfp-tekton/metadata-writer:latest"
-kustomize edit set image "docker.io/aipipeline/scheduledworkflow=${REGISTRY}/kfp-tekton/scheduledworkflow:latest"
-kustomize edit set image "docker.io/aipipeline/cache-server=${REGISTRY}/kfp-tekton/cache-server:latest"
-kustomize edit set image "docker.io/aipipeline/frontend=${REGISTRY}/kfp-tekton/frontend:latest"
+kustomize edit set image "*/aipipeline/api-server=${REGISTRY}/kfp-tekton/apiserver:latest"
+kustomize edit set image "*/aipipeline/persistenceagent=${REGISTRY}/kfp-tekton/persistenceagent:latest"
+kustomize edit set image "*/aipipeline/metadata-writer=${REGISTRY}/kfp-tekton/metadata-writer:latest"
+kustomize edit set image "*/aipipeline/scheduledworkflow=${REGISTRY}/kfp-tekton/scheduledworkflow:latest"
+kustomize edit set image "*/aipipeline/cache-server=${REGISTRY}/kfp-tekton/cache-server:latest"
+kustomize edit set image "*/aipipeline/frontend=${REGISTRY}/kfp-tekton/frontend:latest"
 
 popd > /dev/null
 
 # Build manifest
-./kustomize build "$KUSTOMIZE_DIR" -o "${MANIFEST}"
+kustomize build "$KUSTOMIZE_DIR" -o "${MANIFEST}"
 
 # Deploy manifest
 deploy_with_retries "-f" "${MANIFEST}" "$MAX_RETRIES" "$SLEEP_TIME" || EXIT_CODE=$?

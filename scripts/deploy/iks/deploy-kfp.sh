@@ -51,68 +51,24 @@ NEW_FRONTEND_IMAGE="${NEW_FRONTEND_IMAGE:-"${REGISTRY_URL}/${REGISTRY_NAMESPACE}
 # Need to specify the image pull secret for these service accounts in order to
 # access images on ibm container registry: `kubeflow-pipelines-metadata-writer`,
 # `ml-pipeline`, `ml-pipeline-persistenceagent` `and ml-pipeline-scheduledworkflow`
-SA_PATCH=$(cat << EOF
+declare -a SA_PATCH
+SA_NAMES=( "kubeflow-pipelines-metadata-writer" " ml-pipeline" "ml-pipeline-persistenceagent" "ml-pipeline-scheduledworkflow" "kubeflow-pipelines-cache" "ml-pipeline-ui" )
+SA_IDX=0
+for SA in "${SA_NAMES[@]}"; do
+  SA_PATCH["${SA_IDX}"]=$(cat << EOF
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
     application-crd-id: kubeflow-pipelines
-  name: kubeflow-pipelines-metadata-writer
-  namespace: kubeflow
-imagePullSecrets:
-- name: all-icr-io
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    application-crd-id: kubeflow-pipelines
-  name: ml-pipeline
-  namespace: kubeflow
-imagePullSecrets:
-- name: all-icr-io
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    application-crd-id: kubeflow-pipelines
-  name: ml-pipeline-persistenceagent
-  namespace: kubeflow
-imagePullSecrets:
-- name: all-icr-io
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    application-crd-id: kubeflow-pipelines
-  name: ml-pipeline-scheduledworkflow
-  namespace: kubeflow
-imagePullSecrets:
-- name: all-icr-io
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    application-crd-id: kubeflow-pipelines
-  name: kubeflow-pipelines-cache
-  namespace: kubeflow
-imagePullSecrets:
-- name: all-icr-io
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    application-crd-id: kubeflow-pipelines
-  name: ml-pipeline-ui
+  name: ${SA}
   namespace: kubeflow
 imagePullSecrets:
 - name: all-icr-io
 EOF
 )
+  SA_IDX=$((SA_IDX+1))
+done
 
 # These env vars should come from the build.properties that `build-image.sh` generates
 echo "REGISTRY_URL=${REGISTRY_URL}"
@@ -174,8 +130,12 @@ kustomize edit set image "$PERSISTENCEAGENT_IMAGE=$NEW_PERSISTENCEAGENT_IMAGE"
 kustomize edit set image "$SCHEDULEDWORKFLOW_IMAGE=$NEW_SCHEDULEDWORKFLOW_IMAGE"
 kustomize edit set image "$CACHESERVER_IMAGE=$NEW_CACHESERVER_IMAGE_IMAGE"
 kustomize edit set image "$FRONTEND_IMAGE=$NEW_FRONTEND_IMAGE"
-echo "$SA_PATCH" > sa_patch.yaml
-kustomize edit add patch sa_patch.yaml
+PATCH_IDX=0
+for PATCH in "${SA_PATCH[@]}"; do
+  echo "$PATCH" > "sa_patch${PATCH_IDX}.yaml"
+  kustomize edit add patch --path "sa_patch${PATCH_IDX}.yaml"
+  PATCH_IDX=$((PATCH_IDX+1))
+done
 
 popd > /dev/null
 
