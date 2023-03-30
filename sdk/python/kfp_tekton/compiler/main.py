@@ -20,7 +20,6 @@ import kfp.compiler.main as kfp_compiler_main
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 
 from . import TektonCompiler
-from .. import __version__
 
 
 def parse_arguments():
@@ -86,7 +85,6 @@ def compile_pyfile(pyfile, function_name, output_path, type_check, tekton_pipeli
 
 
 def main():
-    print(f"KFP-Tekton Compiler {__version__}")
     args = parse_arguments()
     if ((args.py is None and args.package is None) or
         (args.py is not None and args.package is not None)):
