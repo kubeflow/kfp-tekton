@@ -78,26 +78,26 @@ wait_for_pods () {
 
         if [[ -z $pods ]]
         then
-            echo "Missing pods."
-            return 1
-        fi
-
-        # Using quotations around variables to keep column format in echo
-        # Remove 1st line (header line) -> trim whitespace -> cut statuses column (3rd column)
-        # Might be overkill to parse down to specific columns :).
-        statuses=$(echo "$pods" | tail -n +2 | tr -s ' '  | cut -d ' ' -f 3)
-        num_pods=$(echo "$statuses" | wc -l | xargs)
-        num_running=$(echo "$statuses" | grep -ow "Running\|Completed" | wc -l | xargs)
-
-        local msg="${num_running}/${num_pods} pods running in \"${namespace}\"."
-
-        if [[ $num_running -ne $num_pods ]]
-        then
-            echo "$msg Checking again in ${sleep_time}s."
+            echo "no pod is up yet"
         else
-            echo "$msg"
-            return 0
+            # Using quotations around variables to keep column format in echo
+            # Remove 1st line (header line) -> trim whitespace -> cut statuses column (3rd column)
+            # Might be overkill to parse down to specific columns :).
+            statuses=$(echo "$pods" | tail -n +2 | tr -s ' '  | cut -d ' ' -f 3)
+            num_pods=$(echo "$statuses" | wc -l | xargs)
+            num_running=$(echo "$statuses" | grep -ow "Running\|Completed" | wc -l | xargs)
+
+            local msg="${num_running}/${num_pods} pods running in \"${namespace}\"."
+
+            if [[ $num_running -ne $num_pods ]]
+            then
+                echo "$msg Checking again in ${sleep_time}s."
+            else
+                echo "$msg"
+                return 0
+            fi
         fi
+
         sleep "$sleep_time"
         i=$((i+1))
     done
