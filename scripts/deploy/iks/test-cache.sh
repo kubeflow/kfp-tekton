@@ -21,7 +21,7 @@ run_cache() {
   shift
   local PIPELINE_ID
   local RUN_ID
-  local PIPELINE_NAME="cache"
+  local PIPELINE_NAME="cache-$((RANDOM%10000+1))"
   local KFP_COMMAND="kfp-tekton"
 
   echo " =====   cache pipeline  ====="
