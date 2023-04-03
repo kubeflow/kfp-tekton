@@ -21,7 +21,7 @@ run_cond_dep() {
   shift
   local PIPELINE_ID
   local RUN_ID
-  local PIPELINE_NAME="cond-dep"
+  local PIPELINE_NAME="cond-dep-$((RANDOM%10000+1))"
   local KFP_COMMAND="kfp-tekton"
 
   echo " =====   condition depend pipeline  ====="
@@ -33,7 +33,7 @@ run_cond_dep() {
     return "$REV"
   fi
 
-  local RUN_NAME="${PIPELINE_NAME}-run-$((RANDOM%10000+1))"
+  local RUN_NAME="${PIPELINE_NAME}-run"
   retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 run submit -e "exp-cond-dep" -r "$RUN_NAME" -p "$PIPELINE_ID" || :
   RUN_ID=$($KFP_COMMAND --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
   if [[ -z "$RUN_ID" ]]; then
