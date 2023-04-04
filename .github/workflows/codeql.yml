@@ -13,7 +13,8 @@ name: "CodeQL"
 
 on:
   schedule:
-    - cron: '39 19 * * 5'
+    # Every Friday at 19:39
+    - cron: '39 19 * * 5' 
 
 jobs:
   analyze:
