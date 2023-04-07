@@ -10,8 +10,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 
-	"github.com/ghodss/yaml"
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"sigs.k8s.io/yaml"
 
 	api "github.com/kubeflow/pipelines/backend/api/v1/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"

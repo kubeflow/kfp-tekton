@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"sigs.k8s.io/yaml"
 
 	experimentParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/experiment_client/experiment_service"
 	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/experiment_model"
