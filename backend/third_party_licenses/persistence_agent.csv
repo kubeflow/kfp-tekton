@@ -10,7 +10,6 @@ github.com/cespare/xxhash/v2,https://github.com/cespare/xxhash/blob/v2.1.2/LICEN
 github.com/davecgh/go-spew/spew,https://github.com/davecgh/go-spew/blob/v1.1.1/LICENSE,ISC
 github.com/emicklei/go-restful/v3,https://github.com/emicklei/go-restful/blob/v3.9.0/LICENSE,MIT
 github.com/evanphx/json-patch/v5,https://github.com/evanphx/json-patch/blob/v5.6.0/v5/LICENSE,BSD-3-Clause
-github.com/ghodss/yaml,https://github.com/ghodss/yaml/blob/25d852aebe32/LICENSE,MIT
 github.com/go-kit/log,https://github.com/go-kit/log/blob/v0.2.0/LICENSE,MIT
 github.com/go-logfmt/logfmt,https://github.com/go-logfmt/logfmt/blob/v0.5.1/LICENSE,MIT
 github.com/go-logr/logr,https://github.com/go-logr/logr/blob/v1.2.3/LICENSE,Apache-2.0
@@ -55,7 +54,7 @@ github.com/prometheus/procfs,https://github.com/prometheus/procfs/blob/v0.8.0/LI
 github.com/prometheus/statsd_exporter/pkg/mapper,https://github.com/prometheus/statsd_exporter/blob/v0.21.0/LICENSE,Apache-2.0
 github.com/sirupsen/logrus,https://github.com/sirupsen/logrus/blob/v1.9.0/LICENSE,MIT
 github.com/spf13/pflag,https://github.com/spf13/pflag/blob/v1.0.5/LICENSE,BSD-3-Clause
-github.com/tektoncd/pipeline/pkg,https://github.com/tektoncd/pipeline/blob/v0.44.0/LICENSE,Apache-2.0
+github.com/tektoncd/pipeline/pkg,https://github.com/tektoncd/pipeline/blob/v0.44.2/LICENSE,Apache-2.0
 go.mongodb.org/mongo-driver,https://github.com/mongodb/mongo-go-driver/blob/v1.4.4/LICENSE,Apache-2.0
 go.opencensus.io,https://github.com/census-instrumentation/opencensus-go/blob/v0.22.5/LICENSE,Apache-2.0
 go.uber.org/atomic,https://github.com/uber-go/atomic/blob/v1.10.0/LICENSE.txt,MIT
@@ -87,7 +86,7 @@ k8s.io/kube-openapi/pkg/internal/third_party/go-json-experiment/json,https://git
 k8s.io/kube-openapi/pkg/validation/spec,https://github.com/kubernetes/kube-openapi/blob/172d655c2280/pkg/validation/spec/LICENSE,Apache-2.0
 k8s.io/utils,https://github.com/kubernetes/utils/blob/cfd413dd9e85/LICENSE,Apache-2.0
 k8s.io/utils/internal/third_party/forked/golang/net,https://github.com/kubernetes/utils/blob/cfd413dd9e85/internal/third_party/forked/golang/LICENSE,BSD-3-Clause
-knative.dev/pkg,https://github.com/knative/pkg/blob/b78020c16606/LICENSE,Apache-2.0
+knative.dev/pkg,https://github.com/knative/pkg/blob/2d84369c105d/LICENSE,Apache-2.0
 sigs.k8s.io/json,https://github.com/kubernetes-sigs/json/blob/f223a00ba0e2/LICENSE,Apache-2.0
 sigs.k8s.io/structured-merge-diff/v4,https://github.com/kubernetes-sigs/structured-merge-diff/blob/v4.2.3/LICENSE,Apache-2.0
 sigs.k8s.io/yaml,https://github.com/kubernetes-sigs/yaml/blob/v1.3.0/LICENSE,MIT
