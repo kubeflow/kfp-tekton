@@ -17,7 +17,7 @@ package util
 import (
 	"encoding/json"
 
-	"github.com/ghodss/yaml"
+	"sigs.k8s.io/yaml"
 
 	tektonV1Beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )

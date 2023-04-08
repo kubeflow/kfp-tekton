@@ -3,7 +3,6 @@ package api_server
 import (
 	"fmt"
 
-	"github.com/ghodss/yaml"
 	"github.com/go-openapi/strfmt"
 	apiclient "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client"
 	params "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
@@ -13,6 +12,7 @@ import (
 	"golang.org/x/net/context"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/yaml"
 )
 
 type RunInterface interface {

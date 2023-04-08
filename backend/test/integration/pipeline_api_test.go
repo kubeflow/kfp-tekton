@@ -7,11 +7,11 @@ import (
 
 	"github.com/kubeflow/pipelines/backend/test"
 
-	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	params "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_client/pipeline_service"
 	model "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_model"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"sigs.k8s.io/yaml"
 
 	uploadParams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_upload_client/pipeline_upload_service"
 	"github.com/kubeflow/pipelines/backend/src/common/client/api_server"
