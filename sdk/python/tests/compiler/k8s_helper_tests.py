@@ -184,7 +184,7 @@ class TestK8sHelper(unittest.TestCase):
                     timeout_seconds='777'
                 )) \
                 .set_lifecycle(lifecycle=k8s_client.V1Lifecycle(
-                    post_start=k8s_client.V1Handler(
+                    post_start=k8s_client.V1LifecycleHandler(
                         _exec=k8s_client.V1ExecAction(command=[11, 22, 33]),
                         http_get=k8s_client.V1HTTPGetAction(
                             host=11,
@@ -194,7 +194,7 @@ class TestK8sHelper(unittest.TestCase):
                             scheme=66),
                         tcp_socket=k8s_client.V1TCPSocketAction(host=555, port='666')
                     ),
-                    pre_stop=k8s_client.V1Handler(
+                    pre_stop=k8s_client.V1LifecycleHandler(
                         _exec=k8s_client.V1ExecAction(command=[11, 22, 33]),
                         http_get=k8s_client.V1HTTPGetAction(
                             host=11,

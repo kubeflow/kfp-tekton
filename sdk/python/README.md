@@ -102,8 +102,8 @@ the Tekton YAML instead of Argo YAML. Since the KFP SDK was not designed and imp
 _monkey-patching_ was used to replace non-class methods and functions at runtime.
 
 In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a
-specific version of the `kfp` SDK compiler. As of now the `kfp-tekton` SDK version is `1.6.4` which is aligned with KFP
-SDK version [`1.8.19`](https://pypi.org/project/kfp/1.8.19/).
+specific version of the `kfp` SDK compiler. As of now the `kfp-tekton` SDK version is `1.6.5` which is aligned with KFP
+SDK version [`1.8.20`](https://pypi.org/project/kfp/1.8.20/).
 
 
 ## Adding New Code
