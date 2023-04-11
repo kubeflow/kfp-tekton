@@ -112,6 +112,7 @@ git checkout -b kfp_${KFP_VERSION_NEW}_rebase
 
 ```Bash
 git apply --reject --whitespace=fix \
+    --exclude=api/* \
     --exclude=sdk/* \
     --exclude=samples/* \
     --exclude=components/* \
