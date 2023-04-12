@@ -33,10 +33,10 @@ can be found in the [SDK README](/sdk/README.md)
 
 ## Development Prerequisites
 
-1. [`Python`](https://www.python.org/downloads/): version `3.7` or later (new code must maintain compatibility with `3.7`)
-2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.23` ([required by Kubeflow](https://www.kubeflow.org/docs/started/kubeflow-overview/) and Tekton `0.44.0`)
+1. [`Python`](https://www.python.org/downloads/): version `3.8` or later (new code must maintain compatibility with `3.8`)
+2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.23` ([required by Kubeflow](https://www.kubeflow.org/docs/started/kubeflow-overview/) and Tekton `0.44.2`)
 3. [`kubectl` CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/): required to deploy Tekton pipelines to Kubernetes cluster
-4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.44.0/): version `0.44.0` or greater, required for end-to-end testing
+4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.44.2/): version `0.44.2` or greater, required for end-to-end testing
 5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): version `0.29.1` or greater, required for end-to-end testing of Tekton pipelines
 6. [`Kubeflow Pipelines` Deployment](https://www.kubeflow.org/docs/pipelines/installation/overview/): required for some end-to-end tests
 
