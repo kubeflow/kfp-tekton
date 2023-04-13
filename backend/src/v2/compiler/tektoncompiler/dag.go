@@ -1,4 +1,4 @@
-// Copyright 2021 The Kubeflow Authors
+// Copyright 2023 The Kubeflow Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,10 @@ func (c *pipelinerunCompiler) DAG(taskName, compRef string, task *pipelinespec.P
 	if err := c.addDagTask(taskName, compRef, task); err != nil {
 		return err
 	}
+
+	if err := c.addDagPubTask(taskName, dagSpec, c.spec); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -75,6 +79,33 @@ func (c *pipelinerunCompiler) addDagTask(name, compRef string, task *pipelinespe
 		return err
 	}
 	c.addPipelineTask(driver)
+	return nil
+}
+
+func (c *pipelinerunCompiler) addDagPubTask(name string, dagSpec *pipelinespec.DagSpec, pipelineSpec *pipelinespec.PipelineSpec) error {
+
+	if c.exithandler != nil && name == compiler.RootComponentName {
+		// this dag-pub only depends on the exit handler task, lets find out its name
+		exithandlerTask := ""
+		for name, task := range dagSpec.GetTasks() {
+			if task.GetTriggerPolicy().GetStrategy() == pipelinespec.PipelineTaskSpec_TriggerPolicy_ALL_UPSTREAM_TASKS_COMPLETED {
+				exithandlerTask = name
+				break
+			}
+		}
+		pubdriver, err := c.dagPubDriverTask(getDAGPubTaskName(name), &pubDagDriverInputs{deps: []string{exithandlerTask}, parentDagID: name})
+		if err != nil {
+			return err
+		}
+		c.addExitHandlerTask(pubdriver)
+	} else {
+		leaves := getLeafNodes(dagSpec, c.spec)
+		pubdriver, err := c.dagPubDriverTask(getDAGPubTaskName(name), &pubDagDriverInputs{deps: leaves, parentDagID: name})
+		if err != nil {
+			return err
+		}
+		c.addPipelineTask(pubdriver)
+	}
 	return nil
 }
 
@@ -120,7 +151,7 @@ func (c *pipelinerunCompiler) dagDriverTask(
 			// "--dag_execution_id"
 			{
 				Name:  paramNameDagExecutionId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getParentDagID()},
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
 			},
 			// "--component"
 			{
@@ -148,6 +179,48 @@ func (c *pipelinerunCompiler) dagDriverTask(
 			// - condition
 		},
 	}
+	if len(inputs.deps) > 0 && !(c.ExitHandlerScope() && inputs.parentDagID == compiler.RootComponentName) {
+		t.RunAfter = inputs.deps
+	}
+
+	return t, nil
+}
+
+func (c *pipelinerunCompiler) dagPubDriverTask(
+	name string,
+	inputs *pubDagDriverInputs,
+) (*pipelineapi.PipelineTask, error) {
+
+	t := &pipelineapi.PipelineTask{
+		Name: name,
+		TaskRef: &pipelineapi.TaskRef{
+			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
+			Kind:       "KFPDriver",
+			Name:       "kfp-driver",
+		},
+		Params: []pipelineapi.Param{
+			// "--type"
+			{
+				Name:  paramNameType,
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getDagType()},
+			},
+			// "--pipeline_name"
+			{
+				Name:  paramNamePipelineName,
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
+			},
+			// "--run_id"
+			{
+				Name:  paramNameRunId,
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
+			},
+			// "--dag_execution_id"
+			{
+				Name:  paramNameDagExecutionId,
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getParentDagID(c.exithandler != nil)},
+			},
+		},
+	}
 	if len(inputs.deps) > 0 {
 		t.RunAfter = inputs.deps
 	}
@@ -163,11 +236,37 @@ type dagDriverInputs struct {
 	deps           []string
 }
 
-func (i *dagDriverInputs) getParentDagID() string {
+type pubDagDriverInputs struct {
+	parentDagID string
+	deps        []string
+}
+
+func (i *pubDagDriverInputs) getDagType() string {
+	return "DAG-PUB"
+}
+
+func (i *pubDagDriverInputs) getParentDagID(isExitHandler bool) string {
 	if i.parentDagID == "" {
 		return "0"
 	}
-	return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
+	if isExitHandler && i.parentDagID == compiler.RootComponentName {
+		fmt.Printf("parentDagID")
+		return fmt.Sprintf("$(params.%s)", paramParentDagID)
+	} else {
+		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
+	}
+}
+
+func (i *dagDriverInputs) getParentDagID(isExitHandler bool) string {
+	if i.parentDagID == "" {
+		return "0"
+	}
+	if isExitHandler && i.parentDagID == compiler.RootComponentName {
+		fmt.Printf("parentDagID")
+		return fmt.Sprintf("$(params.%s)", paramParentDagID)
+	} else {
+		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
+	}
 }
 
 func (i *dagDriverInputs) getDagType() string {

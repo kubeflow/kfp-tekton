@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/golang/protobuf/jsonpb"
-	v1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
-	"github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
+	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
 	v1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
@@ -55,10 +55,10 @@ type driverOptions struct {
 }
 
 // Check that our Reconciler implements Interface
-var _ run.Interface = (*Reconciler)(nil)
+var _ customrun.Interface = (*Reconciler)(nil)
 
 // ReconcileKind implements Interface.ReconcileKind.
-func (r *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, run *v1beta1.CustomRun) reconciler.Event {
 	logger := logging.FromContext(ctx)
 	logger.Infof("Reconciling Run %s/%s", run.Namespace, run.Name)
 
@@ -81,7 +81,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) recon
 	options, err := parseParams(run)
 	if err != nil {
 		logger.Errorf("Run %s/%s is invalid because of %s", run.Namespace, run.Name, err)
-		run.Status.MarkRunFailed(ReasonFailedValidation,
+		run.Status.MarkCustomRunFailed(ReasonFailedValidation,
 			"Run can't be run because it has an invalid param - %v", err)
 		return nil
 	}
@@ -89,17 +89,17 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *v1alpha1.Run) recon
 	runResults, driverErr := execDriver(ctx, options)
 	if driverErr != nil {
 		logger.Errorf("kfp-driver execution failed when reconciling Run %s/%s: %v", run.Namespace, run.Name, driverErr)
-		run.Status.MarkRunFailed(ReasonDriverError,
+		run.Status.MarkCustomRunFailed(ReasonDriverError,
 			"kfp-driver execution failed: %v", driverErr)
 		return nil
 	}
 
 	run.Status.Results = append(run.Status.Results, *runResults...)
-	run.Status.MarkRunSucceeded(ReasonDriverSuccess, "kfp-driver finished successfully")
+	run.Status.MarkCustomRunSucceeded(ReasonDriverSuccess, "kfp-driver finished successfully")
 	return newReconciledNormal(run.Namespace, run.Name)
 }
 
-func execDriver(ctx context.Context, options *driverOptions) (*[]v1alpha1.RunResult, error) {
+func execDriver(ctx context.Context, options *driverOptions) (*[]v1beta1.CustomRunResult, error) {
 	var execution *driver.Execution
 	var err error
 	logger := logging.FromContext(ctx)
@@ -111,6 +111,9 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]v1alpha1.RunRes
 		execution, err = driver.Container(ctx, options.options, options.mlmdClient, options.cacheClient)
 	case "DAG":
 		execution, err = driver.DAG(ctx, options.options, options.mlmdClient)
+	case "DAG-PUB":
+		// no-op for now
+		return &[]v1beta1.CustomRunResult{}, nil
 	default:
 		err = fmt.Errorf("unknown driverType %s", options.driverType)
 	}
@@ -119,25 +122,25 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]v1alpha1.RunRes
 		return nil, err
 	}
 
-	var runResults []v1alpha1.RunResult
+	var runResults []v1beta1.CustomRunResult
 
 	if execution.ID != 0 {
 		logger.Infof("output execution.ID=%v", execution.ID)
-		runResults = append(runResults, v1alpha1.RunResult{
+		runResults = append(runResults, v1beta1.CustomRunResult{
 			Name:  ExecutionID,
 			Value: fmt.Sprint(execution.ID),
 		})
 	}
 	if execution.IterationCount != nil {
 		logger.Infof("output execution.IterationCount=%v", *execution.IterationCount)
-		runResults = append(runResults, v1alpha1.RunResult{
+		runResults = append(runResults, v1beta1.CustomRunResult{
 			Name:  IterationCount,
 			Value: fmt.Sprint(*execution.IterationCount),
 		})
 	}
 	if execution.Condition != nil {
 		logger.Infof("output execution.Condition=%v", *execution.Condition)
-		runResults = append(runResults, v1alpha1.RunResult{
+		runResults = append(runResults, v1beta1.CustomRunResult{
 			Name:  Condition,
 			Value: strconv.FormatBool(*execution.Condition),
 		})
@@ -149,14 +152,14 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]v1alpha1.RunRes
 			return nil, fmt.Errorf("failed to marshal ExecutorInput to JSON: %w", err)
 		}
 		logger.Infof("output ExecutorInput:%s\n", prettyPrint(executorInputJSON))
-		runResults = append(runResults, v1alpha1.RunResult{
+		runResults = append(runResults, v1beta1.CustomRunResult{
 			Name:  ExecutorInput,
 			Value: fmt.Sprint(executorInputJSON),
 		})
 	}
 	// seems no need to handle the PodSpecPatch
 	if execution.Cached != nil {
-		runResults = append(runResults, v1alpha1.RunResult{
+		runResults = append(runResults, v1beta1.CustomRunResult{
 			Name:  CacheDecision,
 			Value: strconv.FormatBool(*execution.Cached),
 		})
@@ -174,7 +177,7 @@ func prettyPrint(jsonStr string) string {
 	return string(prettyJSON.Bytes())
 }
 
-func parseParams(run *v1alpha1.Run) (*driverOptions, *apis.FieldError) {
+func parseParams(run *v1beta1.CustomRun) (*driverOptions, *apis.FieldError) {
 	if len(run.Spec.Params) == 0 {
 		return nil, apis.ErrMissingField("params")
 	}

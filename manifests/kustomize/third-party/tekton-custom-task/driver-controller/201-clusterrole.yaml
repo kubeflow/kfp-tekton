@@ -9,7 +9,8 @@ metadata:
 rules:
   # Controller needs cluster access to all Run CRs.
   - apiGroups: ["tekton.dev"]
-    resources: ["runs", "runs/finalizers", "runs/status", "pipelineruns", "task", "taskruns", "conditions"]
+    resources: ["runs", "customruns", "runs/finalizers", "customruns/finalizers",
+      "runs/status", "customruns/status", "pipelineruns", "task", "taskruns", "conditions"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
 
   # Controller needs cluster access to leases for leader election.

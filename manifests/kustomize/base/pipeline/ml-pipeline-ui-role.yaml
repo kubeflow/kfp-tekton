@@ -42,3 +42,18 @@ rules:
   verbs:
   - get
   - list
+- apiGroups:
+  - tekton.dev
+  resources:
+  - pipelineruns
+  - taskruns
+  - conditions
+  - tasks
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - patch
+  - delete
