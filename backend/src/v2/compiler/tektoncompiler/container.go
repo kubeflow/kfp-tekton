@@ -110,7 +110,7 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			// "--run_id", runID(),
 			{
 				Name:  paramNameRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.uid},
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
 			{
@@ -137,32 +137,11 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 				Name:  paramNameIterationIndex,
 				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.iterationIndex},
 			},
-			// output params below
-			// // "--execution_id",
-			// {
-			// 	Name:  paramNameExecutionId,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramExecutionID},
-			// },
-			// // "--executor_input",
-			// {
-			// 	Name:  paramNameExecutorInput,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramExecutorInput},
-			// },
-			// // "--function_to_execute"
-			// {
-			// 	Name:  paramNameFunctionToExecute,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramFunctionToExecute},
-			// },
-			// // "--cached_decision", outputPath(paramCachedDecision),
-			// {
-			// 	Name:  paramNameCachedDecision,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramCachedDecision},
-			// },
-			// // "--condition", outputPath(paramCondition),
-			// {
-			// 	Name:  paramNameCondition,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramCondition},
-			// },
+			// produce the following outputs:
+			// - execution-id
+			// - executor-input
+			// - cached-decision
+			// - condition
 		},
 	})
 
@@ -197,7 +176,7 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			},
 			{
 				Name:  paramRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.uid},
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
 			},
 			{
 				Name:  paramComponentSpec,
@@ -242,7 +221,6 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 			},
 			Labels: map[string]string{
 				"pipelines.kubeflow.org/v2_component": "true",
-				"pipeline-uid":                        c.uid,
 			},
 		},
 		TaskSpec: pipelineapi.TaskSpec{

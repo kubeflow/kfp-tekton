@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.17.6-alpine3.15 as builder
+FROM golang:1.19.5-alpine3.16 as builder
 
 WORKDIR /go/src/github.com/kubeflow/pipelines
 COPY . .
@@ -50,4 +50,6 @@ ENV TTL_SECONDS_AFTER_WORKFLOW_FINISH 86400
 # NUM_WORKERS indicates now many worker goroutines
 ENV NUM_WORKERS 2
 
-CMD persistence_agent --logtostderr=true --namespace=${NAMESPACE} --ttlSecondsAfterWorkflowFinish=${TTL_SECONDS_AFTER_WORKFLOW_FINISH} --numWorker ${NUM_WORKERS}
+ENV EXECUTIONTYPE Workflow
+
+CMD persistence_agent --logtostderr=true --namespace=${NAMESPACE} --ttlSecondsAfterWorkflowFinish=${TTL_SECONDS_AFTER_WORKFLOW_FINISH} --numWorker ${NUM_WORKERS} --executionType ${EXECUTIONTYPE}

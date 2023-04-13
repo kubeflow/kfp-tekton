@@ -19,7 +19,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -74,9 +73,6 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 		}
 	}
 
-	// uid
-	uid := uuid.New().String()
-
 	// initialization
 	pr := &pipelineapi.PipelineRun{
 		TypeMeta: k8smeta.TypeMeta{
@@ -93,29 +89,22 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 			},
 			Labels: map[string]string{
 				"pipelines.kubeflow.org/v2_component": "true",
-				"pipeline-uid":                        uid,
 			},
 		},
 		Spec: pipelineapi.PipelineRunSpec{
-			PipelineSpec:       &pipelineapi.PipelineSpec{},
-			ServiceAccountName: "pipeline-runner",
+			PipelineSpec: &pipelineapi.PipelineSpec{},
 		},
 	}
 	c := &pipelinerunCompiler{
 		pr: pr,
 		// TODO(chensun): release process and update the images.
-		driverImage:   "gcr.io/ml-pipeline-test/dev/kfp-driver:latest",
-		launcherImage: "gcr.io/ml-pipeline-test/dev/kfp-launcher-v2:latest",
+		launcherImage: "gcr.io/ml-pipeline-test/dev/kfp-launcher-v2@sha256:4513cf5c10c252d94f383ce51a890514799c200795e3de5e90f91b98b2e2f959",
 		job:           job,
 		spec:          spec,
 		dagStack:      make([]string, 0, 10),
 		executors:     deploy.GetExecutors(),
-		uid:           uid,
 	}
 	if opts != nil {
-		if opts.DriverImage != "" {
-			c.driverImage = opts.DriverImage
-		}
 		if opts.LauncherImage != "" {
 			c.launcherImage = opts.LauncherImage
 		}
@@ -131,24 +120,36 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 }
 
 type TektonVisitor interface {
+	// receive task and component reference and use these information to create
+	// container driver and executor tasks
 	Container(taskName, compRef string,
 		task *pipelinespec.PipelineTaskSpec,
 		component *pipelinespec.ComponentSpec,
 		container *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec) error
+
+	// use task and component information to create importer task
 	Importer(name string,
 		task *pipelinespec.PipelineTaskSpec,
 		component *pipelinespec.ComponentSpec,
 		importer *pipelinespec.PipelineDeploymentConfig_ImporterSpec) error
+
 	// Resolver(name string, component *pipelinespec.ComponentSpec, resolver *pipelinespec.PipelineDeploymentConfig_ResolverSpec) error
+
+	// create root dag and sub-dag driver task
 	DAG(taskName, compRef string,
 		task *pipelinespec.PipelineTaskSpec, // could be sub-dag
 		component *pipelinespec.ComponentSpec,
 		dag *pipelinespec.DagSpec) error
+
+	// put the current DAG into the stack. when processing tasks inside a DAG, this could be used
+	// to know which DAG they belong to
 	PushDagStack(dag string)
+
+	// pop the DAG when finishing the processing
 	PopDagStack() string
+
+	// get current DAG when processing the tasks inside a DAG
 	CurrentDag() string
-	StoreDagTask(name string, task *pipelinespec.PipelineTaskSpec)
-	GetDagTask(name string) *pipelinespec.PipelineTaskSpec
 }
 
 type pipelinerunDFS struct {
@@ -178,9 +179,14 @@ func Accept(job *pipelinespec.PipelineJob, v TektonVisitor) error {
 		visitor: v,
 		visited: make(map[string]bool),
 	}
+	// start to traverse the DAG, starting from the root node
 	return state.dfs(compiler.RootComponentName, compiler.RootComponentName, nil, spec.GetRoot())
 }
 
+// taskName:  the task's name in a DAG
+// compRef:   the component name that this task refers to
+// task:      the task's task spec
+// component: the task's component spec
 func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.PipelineTaskSpec, component *pipelinespec.ComponentSpec) error {
 	// each component is only visited once
 	// TODO(Bobgy): return an error when circular reference detected
@@ -226,6 +232,7 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 		return err
 	}
 
+	// from here, start to process DAG task, push self to DAG stack first
 	state.visitor.PushDagStack(taskName)
 
 	tasks := dag.GetTasks()
@@ -247,15 +254,15 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 		if !ok {
 			return componentError(fmt.Errorf("cannot find component ref name=%q", refName))
 		}
-		// TODO: revisit this
-		// check the dependencies
-		// state.checkDependencies(task, dag)
 
+		// check the dependencies
+		state.checkDependencies(task, dag)
 		err := state.dfs(key, refName, task, subComponent)
 		if err != nil {
 			return err
 		}
 	}
+
 	// pop the dag stack, assume no need to use the dag stack when processing DAG
 	// for sub-dag, it can also get its parent dag
 	state.visitor.PopDagStack()
@@ -283,36 +290,57 @@ type pipelinerunCompiler struct {
 	executors map[string]*pipelinespec.PipelineDeploymentConfig_ExecutorSpec
 	// state
 	pr             *pipelineapi.PipelineRun
-	driverImage    string
 	launcherImage  string
 	dagStack       []string
-	dagTasks       map[string]*pipelinespec.PipelineTaskSpec
 	componentSpecs map[string]string
 	containerSpecs map[string]string
-	uid            string
 }
 
 // if the dependency is a component with DAG, then replace the dependency with DAG's leaf nodes
-// func (state *pipelinerunDFS) checkDependencies(task *pipelinespec.PipelineTaskSpec, dag *pipelinespec.DagSpec) {
-// 	tasks := task.GetDependentTasks()
-// 	newDeps := make([]string, 0)
-// 	for _, task := range tasks {
-// 		taskSpec, ok := dag.GetTasks()[task]
-// 		if ok {
-// 			comp, ok := state.spec.Components[taskSpec.GetComponentRef().GetName()]
-// 			if ok {
-// 				depDag := comp.GetDag()
-// 				//depends on a DAG
-// 				if depDag != nil {
-// 					newDeps = append(newDeps, getLeafNodes(depDag)...)
-// 					continue
-// 				}
-// 			}
-// 		}
-// 		newDeps = append(newDeps, task)
-// 	}
-// 	task.DependentTasks = newDeps
-// }
+func (state *pipelinerunDFS) checkDependencies(task *pipelinespec.PipelineTaskSpec, dag *pipelinespec.DagSpec) {
+	tasks := task.GetDependentTasks()
+	newDeps := make([]string, 0)
+	for _, depTask := range tasks {
+		if taskSpec, ok := dag.GetTasks()[depTask]; ok {
+			if comp, ok := state.spec.Components[taskSpec.GetComponentRef().GetName()]; ok {
+				depDag := comp.GetDag()
+				//depends on a DAG
+				if depDag != nil {
+					newDeps = append(newDeps, state.getLeafNodes(depDag)...)
+					continue
+				} else {
+					newDeps = append(newDeps, depTask)
+				}
+			}
+		}
+	}
+	task.DependentTasks = newDeps
+}
+
+func (state *pipelinerunDFS) getLeafNodes(dagSpec *pipelinespec.DagSpec) []string {
+	leaves := make(map[string]int)
+	tasks := dagSpec.GetTasks()
+	alldeps := make([]string, 0)
+	for _, task := range tasks {
+		leaves[task.GetTaskInfo().GetName()] = 0
+		alldeps = append(alldeps, task.GetDependentTasks()...)
+	}
+	for _, dep := range alldeps {
+		delete(leaves, dep)
+	}
+	rev := make([]string, 0, len(leaves))
+	for dep := range leaves {
+		refName := tasks[dep].GetComponentRef().GetName()
+		if comp, ok := state.spec.Components[refName]; ok {
+			if comp.GetDag() != nil {
+				rev = append(rev, state.getLeafNodes(comp.GetDag())...)
+			} else {
+				rev = append(rev, dep)
+			}
+		}
+	}
+	return rev
+}
 
 func (c *pipelinerunCompiler) PushDagStack(dagName string) {
 	c.dagStack = append(c.dagStack, dagName)
@@ -334,20 +362,6 @@ func (c *pipelinerunCompiler) CurrentDag() string {
 		return c.dagStack[lsize-1]
 	}
 	return ""
-}
-
-func (c *pipelinerunCompiler) StoreDagTask(name string, task *pipelinespec.PipelineTaskSpec) {
-	if c.dagTasks == nil {
-		c.dagTasks = make(map[string]*pipelinespec.PipelineTaskSpec)
-	}
-	c.dagTasks[name] = task
-}
-
-func (c *pipelinerunCompiler) GetDagTask(name string) *pipelinespec.PipelineTaskSpec {
-	if c.dagTasks == nil {
-		return nil
-	}
-	return c.dagTasks[name]
 }
 
 func (c *pipelinerunCompiler) Resolver(name string, component *pipelinespec.ComponentSpec, resolver *pipelinespec.PipelineDeploymentConfig_ResolverSpec) error {
@@ -391,7 +405,6 @@ func (c *pipelinerunCompiler) useComponentImpl(name string) (string, error) {
 	return c.getValueFromMap(prefixContainers+name, c.containerSpecs)
 }
 
-// TODO(Bobgy): sanitize component name
 func (c *pipelinerunCompiler) putValueToMap(name string, msg proto.Message, maps map[string]string) error {
 	if _, alreadyExists := maps[name]; alreadyExists {
 		return fmt.Errorf("componentSpec %q already exists", name)
@@ -444,10 +457,10 @@ const (
 	paramNameExecutorInput    = "executor_input"
 )
 
-// func runID() string {
-// 	// KFP API server converts this to KFP run ID.
-// 	return "$(context.pipelineRun.uid)"
-// }
+func runID() string {
+	// KFP API server converts this to KFP run ID.
+	return "$(context.pipelineRun.uid)"
+}
 
 // In a container template, refer to inputs to the template.
 func inputValue(parameter string) string {

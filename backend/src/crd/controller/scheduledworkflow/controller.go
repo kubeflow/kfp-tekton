@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	workflowapi "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/kubeflow/pipelines/backend/src/crd/controller/scheduledworkflow/client"
 	"github.com/kubeflow/pipelines/backend/src/crd/controller/scheduledworkflow/util"
@@ -129,14 +128,9 @@ func NewController(
 	controller.workflowClient.AddEventHandler(&cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.handleWorkflow,
 		UpdateFunc: func(old, new interface{}) {
-			newWorkflow := new.(*workflowapi.Workflow)
-			oldWorkflow := old.(*workflowapi.Workflow)
-			if newWorkflow.ResourceVersion == oldWorkflow.ResourceVersion {
-				// Periodic resync will send update events for all known Workflows.
-				// Two different versions of the same WorkflowHistory will always have different RVs.
-				return
+			if workflowClientSet.Compare(old, new) {
+				controller.handleWorkflow(new)
 			}
-			controller.handleWorkflow(new)
 		},
 		DeleteFunc: controller.handleWorkflow,
 	})

@@ -69,7 +69,6 @@ func (c *pipelinerunCompiler) Importer(name string,
 				},
 				Labels: map[string]string{
 					"pipelines.kubeflow.org/v2_component": "true",
-					"pipeline-uid":                        c.uid,
 				},
 			},
 			TaskSpec: pipelineapi.TaskSpec{
@@ -136,7 +135,7 @@ func (c *pipelinerunCompiler) Importer(name string,
 			},
 			{
 				Name:  paramRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.uid},
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
 			},
 		},
 	}

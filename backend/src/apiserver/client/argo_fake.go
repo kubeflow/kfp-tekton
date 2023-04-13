@@ -34,6 +34,10 @@ func (c *FakeExecClient) Execution(namespace string) util.ExecutionInterface {
 	return c.workflowClientFake
 }
 
+func (c *FakeExecClient) Compare(old, new interface{}) bool {
+	return false
+}
+
 func (c *FakeExecClient) GetWorkflowCount() int {
 	return len(c.workflowClientFake.workflows)
 }

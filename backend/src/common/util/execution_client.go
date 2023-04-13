@@ -37,6 +37,7 @@ type ExecutionSpecList []ExecutionSpec
 // ExecutionClient is used to get a ExecutionInterface in specific namespace scope
 type ExecutionClient interface {
 	Execution(namespace string) ExecutionInterface
+	Compare(old, new interface{}) bool
 }
 
 // Mini version of ExecutionSpec informer

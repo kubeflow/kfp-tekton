@@ -85,7 +85,7 @@ func (c *pipelinerunCompiler) dagDriverTask(
 	if inputs == nil || len(inputs.component) == 0 {
 		return nil, fmt.Errorf("dagDriverTask: component must be non-nil")
 	}
-	runtimeConfigJson := "{}"
+	runtimeConfigJson := ""
 	if inputs.runtimeConfig != nil {
 		rtStr, err := stablyMarshalJSON(inputs.runtimeConfig)
 		if err != nil {
@@ -115,7 +115,7 @@ func (c *pipelinerunCompiler) dagDriverTask(
 			// "--run_id"
 			{
 				Name:  paramNameRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.uid},
+				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
 			{
@@ -142,22 +142,10 @@ func (c *pipelinerunCompiler) dagDriverTask(
 				Name:  paramNameIterationIndex,
 				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getIterationIndex()},
 			},
-			//output below, make them constances for now
-			// "--execution_id", outputPath(paramExecutionID), change from execution_id_path to execution_id
-			// {
-			// 	Name:  paramNameExecutionId,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramExecutionID},
-			// },
-			// // "--iteration_count", outputPath(paramIterationCount),
-			// {
-			// 	Name:  paramNameIterationCount,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramIterationCount},
-			// },
-			// // "--condition_path", outputPath(paramCondition),
-			// {
-			// 	Name:  paramNameCondition,
-			// 	Value: pipelineapi.ArrayOrString{Type: "string", StringVal: paramCondition},
-			// },
+			// produce the following outputs:
+			// - execution-id
+			// - iteration-count
+			// - condition
 		},
 	}
 	if len(inputs.deps) > 0 {
@@ -245,24 +233,6 @@ func addImplicitDependencies(dagSpec *pipelinespec.DagSpec) error {
 		}
 	}
 	return nil
-}
-
-func getLeafNodes(dagSpec *pipelinespec.DagSpec) []string {
-	leaves := make(map[string]int)
-	tasks := dagSpec.GetTasks()
-	alldeps := make([]string, 0)
-	for _, task := range tasks {
-		leaves[task.GetTaskInfo().GetName()] = 0
-		alldeps = append(alldeps, task.GetDependentTasks()...)
-	}
-	for _, dep := range alldeps {
-		delete(leaves, dep)
-	}
-	rev := make([]string, 0, len(leaves))
-	for dep := range leaves {
-		rev = append(rev, dep)
-	}
-	return rev
 }
 
 // depends builds an enhanced depends string for argo.

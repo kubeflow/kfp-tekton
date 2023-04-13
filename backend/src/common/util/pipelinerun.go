@@ -234,7 +234,32 @@ func (pr *PipelineRun) FinishedAtTime() metav1.Time {
 
 func (pr *PipelineRun) Condition() exec.ExecutionPhase {
 	if len(pr.Status.Status.Conditions) > 0 {
-		return exec.ExecutionPhase(pr.Status.Status.Conditions[0].Reason)
+		switch pr.Status.Status.Conditions[0].Reason {
+		case "Error":
+			return exec.ExecutionError
+		case "Failed":
+			return exec.ExecutionFailed
+		case "Pending":
+			return exec.ExecutionPending
+		case "Running":
+			return exec.ExecutionRunning
+		case "Succeeded":
+			return exec.ExecutionSucceeded
+		case "Completed":
+			return exec.ExecutionSucceeded
+		case "PipelineRunTimeout":
+			return exec.ExecutionError
+		case "PipelineRunCancelled":
+			return exec.ExecutionPhase("Terminated")
+		case "PipelineRunCouldntCancel":
+			return exec.ExecutionError
+		case "Terminating":
+			return exec.ExecutionPhase("Terminating")
+		case "Terminated":
+			return exec.ExecutionPhase("Terminated")
+		default:
+			return exec.ExecutionUnknown
+		}
 	} else {
 		return ""
 	}
@@ -722,6 +747,14 @@ func (prc *PipelineRunClient) Execution(namespace string) ExecutionInterface {
 		pipelinerunInterface: prc.client.TektonV1beta1().PipelineRuns(namespace),
 		informer:             informer,
 	}
+}
+
+func (prc *PipelineRunClient) Compare(old, new interface{}) bool {
+	newWorkflow := new.(*pipelineapi.PipelineRun)
+	oldWorkflow := old.(*pipelineapi.PipelineRun)
+	// Periodic resync will send update events for all known Workflows.
+	// Two different versions of the same WorkflowHistory will always have different RVs.
+	return newWorkflow.ResourceVersion != oldWorkflow.ResourceVersion
 }
 
 type PipelineRunInterface struct {
