@@ -68,7 +68,6 @@ func (c *pipelinerunCompiler) addDagTask(name, compRef string, task *pipelinespe
 		if err != nil {
 			return err
 		}
-		task.DependentTasks = append(task.DependentTasks, getDAGDriverTaskName(c.CurrentDag()))
 		inputs.task = taskSpecJson
 		inputs.deps = task.GetDependentTasks()
 		inputs.parentDagID = c.CurrentDag()
@@ -250,7 +249,6 @@ func (i *pubDagDriverInputs) getParentDagID(isExitHandler bool) string {
 		return "0"
 	}
 	if isExitHandler && i.parentDagID == compiler.RootComponentName {
-		fmt.Printf("parentDagID")
 		return fmt.Sprintf("$(params.%s)", paramParentDagID)
 	} else {
 		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
@@ -262,7 +260,6 @@ func (i *dagDriverInputs) getParentDagID(isExitHandler bool) string {
 		return "0"
 	}
 	if isExitHandler && i.parentDagID == compiler.RootComponentName {
-		fmt.Printf("parentDagID")
 		return fmt.Sprintf("$(params.%s)", paramParentDagID)
 	} else {
 		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)

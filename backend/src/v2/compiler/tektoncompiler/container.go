@@ -61,6 +61,7 @@ func (c *pipelinerunCompiler) Container(taskName, compRef string,
 	if task.GetTriggerPolicy().GetStrategy().String() == "ALL_UPSTREAM_TASKS_COMPLETED" {
 		exitHandler = true
 	}
+
 	return c.containerDriverTask(taskName, &containerDriverInputs{
 		component:    componentSpec,
 		task:         taskSpecJson,
@@ -124,16 +125,6 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			Kind:       "KFPDriver",
 			Name:       "kfp-driver",
 		},
-		// leverage when to fulfill the condition
-		// TODO: optimization: only generate when expression when trigger policy with the condition
-		//       presents in the parent dag
-		WhenExpressions: pipelineapi.WhenExpressions{
-			pipelineapi.WhenExpression{
-				Input:    inputs.getParentDagCondition(c.ExitHandlerScope()),
-				Operator: selection.NotIn,
-				Values:   []string{"false"},
-			},
-		},
 		Params: []pipelineapi.Param{
 			// "--type", "CONTAINER",
 			{
@@ -185,6 +176,17 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 
 	if len(inputs.taskDef.GetDependentTasks()) > 0 {
 		driverTask.RunAfter = inputs.taskDef.GetDependentTasks()
+	}
+
+	// adding WhenExpress for condition only if the task belongs to a DAG had a condition TriggerPolicy
+	if c.ConditionScope() {
+		driverTask.WhenExpressions = pipelineapi.WhenExpressions{
+			pipelineapi.WhenExpression{
+				Input:    inputs.getParentDagCondition(c.ExitHandlerScope()),
+				Operator: selection.NotIn,
+				Values:   []string{"false"},
+			},
+		}
 	}
 
 	c.addPipelineTask(driverTask)
