@@ -164,6 +164,9 @@ type TektonVisitor interface {
 	ExitHandlerScope() bool
 
 	SetExitHandlerScope(state bool)
+
+	ConditionScope() bool
+	SetConditionScope(state bool)
 }
 
 type pipelinerunDFS struct {
@@ -255,6 +258,8 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
+	// condition is in DAG level, detect condition existance here and the status is used in the container level
+	state.visitor.SetConditionScope(task.GetTriggerPolicy().GetCondition() != "")
 	for _, key := range keys {
 		task, ok := tasks[key]
 		if !ok {
@@ -271,20 +276,19 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 
 		// check the dependencies
 		state.checkDependencies(task, dag)
-
+		// exithandler is on task level, detect the exithandler here and the status is used in the container level
 		exitHandlerScope := task.GetTriggerPolicy().GetStrategy().String() == "ALL_UPSTREAM_TASKS_COMPLETED"
 		if exitHandlerScope {
 			task.DependentTasks = nil
-			state.visitor.SetExitHandlerScope(true)
 		}
+		state.visitor.SetExitHandlerScope(exitHandlerScope)
 		err := state.dfs(key, refName, task, subComponent)
-		if exitHandlerScope {
-			state.visitor.SetExitHandlerScope(false)
-		}
+		state.visitor.SetExitHandlerScope(false)
 		if err != nil {
 			return err
 		}
 	}
+	state.visitor.SetConditionScope(false)
 
 	// pop the dag stack, assume no need to use the dag stack when processing DAG
 	// for sub-dag, it can also get its parent dag
@@ -317,6 +321,7 @@ type pipelinerunCompiler struct {
 	launcherImage    string
 	dagStack         []string
 	exitHandlerScope bool
+	conditionScope   bool
 	componentSpecs   map[string]string
 	containerSpecs   map[string]string
 }
@@ -381,6 +386,14 @@ func (c *pipelinerunCompiler) SetExitHandlerScope(state bool) {
 
 func (c *pipelinerunCompiler) ExitHandlerScope() bool {
 	return c.exitHandlerScope
+}
+
+func (c *pipelinerunCompiler) SetConditionScope(state bool) {
+	c.conditionScope = state
+}
+
+func (c *pipelinerunCompiler) ConditionScope() bool {
+	return c.conditionScope
 }
 
 func (c *pipelinerunCompiler) PopDagStack() string {
