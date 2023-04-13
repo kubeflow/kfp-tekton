@@ -664,11 +664,7 @@ func (r *ResourceManager) ListJobs(filterContext *model.FilterContext, opts *lis
 
 // Terminates a workflow by setting its activeDeadlineSeconds to 0.
 func TerminateWorkflow(ctx context.Context, wfClient util.ExecutionInterface, name string) error {
-	patchObj := map[string]interface{}{
-		"spec": map[string]interface{}{
-			"activeDeadlineSeconds": 0,
-		},
-	}
+	patchObj := util.GetTerminatePatch(util.CurrentExecutionType())
 	patch, err := json.Marshal(patchObj)
 	if err != nil {
 		return util.NewInternalServerError(err, "Failed to terminate workflow %s due to error parsing the patch", name)

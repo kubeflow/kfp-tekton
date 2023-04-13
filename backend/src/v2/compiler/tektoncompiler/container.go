@@ -21,6 +21,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	k8score "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/selection"
 )
 
 const (
@@ -60,6 +61,7 @@ func (c *pipelinerunCompiler) Container(taskName, compRef string,
 	if task.GetTriggerPolicy().GetStrategy().String() == "ALL_UPSTREAM_TASKS_COMPLETED" {
 		exitHandler = true
 	}
+
 	return c.containerDriverTask(taskName, &containerDriverInputs{
 		component:    componentSpec,
 		task:         taskSpecJson,
@@ -99,6 +101,17 @@ func (i *containerDriverInputs) getParentDagID(isExitHandler bool) string {
 		return fmt.Sprintf("$(params.%s)", paramParentDagID)
 	} else {
 		return taskOutputParameter(getDAGDriverTaskName(i.parentDag), paramExecutionID)
+	}
+}
+
+func (i *containerDriverInputs) getParentDagCondition(isExitHandler bool) string {
+	if i.parentDag == "" {
+		return "0"
+	}
+	if isExitHandler && i.parentDag == compiler.RootComponentName {
+		return fmt.Sprintf("$(params.%s)", paramCondition)
+	} else {
+		return taskOutputParameter(getDAGDriverTaskName(i.parentDag), paramCondition)
 	}
 }
 
@@ -163,6 +176,17 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 
 	if len(inputs.taskDef.GetDependentTasks()) > 0 {
 		driverTask.RunAfter = inputs.taskDef.GetDependentTasks()
+	}
+
+	// adding WhenExpress for condition only if the task belongs to a DAG had a condition TriggerPolicy
+	if c.ConditionScope() {
+		driverTask.WhenExpressions = pipelineapi.WhenExpressions{
+			pipelineapi.WhenExpression{
+				Input:    inputs.getParentDagCondition(c.ExitHandlerScope()),
+				Operator: selection.NotIn,
+				Values:   []string{"false"},
+			},
+		}
 	}
 
 	c.addPipelineTask(driverTask)

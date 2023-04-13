@@ -311,3 +311,22 @@ func ScheduleSpecToExecutionSpec(
 			errors.New("ExecutionType is not supported"), "type:%s", execType)
 	}
 }
+
+func GetTerminatePatch(execType ExecutionType) interface{} {
+	switch execType {
+	case ArgoWorkflow:
+		return map[string]interface{}{
+			"spec": map[string]interface{}{
+				"activeDeadlineSeconds": 0,
+			},
+		}
+	case TektonPipelineRun:
+		return map[string]interface{}{
+			"spec": map[string]interface{}{
+				"status": "Cancelled",
+			},
+		}
+	default:
+		return nil
+	}
+}

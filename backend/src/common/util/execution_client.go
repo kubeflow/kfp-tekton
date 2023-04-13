@@ -166,6 +166,7 @@ func NewExecutionInformerOrFatal(execType ExecutionType, namespace string,
 		}
 	case TektonPipelineRun:
 		var prInformer prinformer.SharedInformerFactory
+		var prClient *prclientset.Clientset
 		var operation = func() error {
 			restConfig, err := rest.InClusterConfig()
 			if err != nil {
@@ -173,7 +174,7 @@ func NewExecutionInformerOrFatal(execType ExecutionType, namespace string,
 			}
 			restConfig.QPS = float32(clientParams.QPS)
 			restConfig.Burst = clientParams.Burst
-			prClient := prclientset.NewForConfigOrDie(restConfig)
+			prClient = prclientset.NewForConfigOrDie(restConfig)
 			if namespace == "" {
 				prInformer = prinformer.NewSharedInformerFactory(prClient, time.Second*30)
 			} else {
@@ -191,7 +192,7 @@ func NewExecutionInformerOrFatal(execType ExecutionType, namespace string,
 			glog.Fatalf("Failed to create ExecutionInformer for Argo. Error: %v", err)
 		}
 		return &PipelineRunInformer{
-			informer: prInformer.Tekton().V1beta1().PipelineRuns(), factory: prInformer}
+			informer: prInformer.Tekton().V1beta1().PipelineRuns(), factory: prInformer, clientset: prClient}
 	default:
 		glog.Fatalf("Not supported type of Execution")
 	}

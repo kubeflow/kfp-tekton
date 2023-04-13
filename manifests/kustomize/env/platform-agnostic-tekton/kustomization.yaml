@@ -18,13 +18,13 @@ commonLabels:
 images:
 - name: gcr.io/ml-pipeline/api-server
   newName: docker.io/aipipeline/apiserver-dev
-  newTag: 3dd15baff
+  newTag: a7ab288a8
 - name: gcr.io/ml-pipeline/persistenceagent
   newName: docker.io/aipipeline/persistenceagent-dev
-  newTag: 3dd15baff
+  newTag: 03ea78672
 - name: gcr.io/ml-pipeline/scheduledworkflow
   newName: docker.io/aipipeline/swf-dev
-  newTag: 3dd15baff
+  newTag: 03ea78672
 
 patchesStrategicMerge:
 - |-
