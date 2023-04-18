@@ -770,6 +770,20 @@ func readTaskRunMetricsJSONOrEmpty(
 		"There needs to be exactly one metrics file in the artifact archive, but zero or multiple files were found.")
 }
 
+func (pr *PipelineRun) NodeStatuses() map[string]NodeStatus {
+	// TODO: add implementation
+	rev := make(map[string]NodeStatus)
+	// rev := make(map[string]NodeStatus, len(pr.Status.PipelineRunStatusFields.ChildReferences))
+
+	return rev
+}
+
+func (pr *PipelineRun) HasNodes() bool {
+	return false
+	// TODO: add implementation
+	// return len(pr.Status.PipelineRunStatusFields.ChildReferences) > 0
+}
+
 // implementation of ExecutionClientInterface
 type PipelineRunClient struct {
 	client *prclientset.Clientset

@@ -22,6 +22,16 @@ import (
 
 type RetrieveArtifact func(request *api.ReadArtifactRequest, user string) (*api.ReadArtifactResponse, error)
 
+type NodeStatus struct {
+	ID          string
+	DisplayName string
+	State       string
+	StartTime   int64
+	CreateTime  int64
+	FinishTime  int64
+	Children    []string
+}
+
 // Abstract interface to encapsulate the resources of the execution runtime specifically
 // for status information. This interface is mainly to access the status related information
 type ExecutionStatus interface {
@@ -54,4 +64,8 @@ type ExecutionStatus interface {
 
 	// does ExecutionStatus contain any finished node or not
 	HasMetrics() bool
+
+	HasNodes() bool
+	// Get node statuses, the NodeStatus data struct could be extended if needed
+	NodeStatuses() map[string]NodeStatus
 }
