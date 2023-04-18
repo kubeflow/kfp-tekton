@@ -35,7 +35,7 @@ require (
 	github.com/tektoncd/pipeline v0.44.2
 	github.com/tidwall/pretty v1.1.0 // indirect
 	go.uber.org/zap v1.24.0
-	golang.org/x/net v0.5.0
+	golang.org/x/net v0.7.0
 	google.golang.org/genproto v0.0.0-20230109162033-3c3c17ce83e6
 	google.golang.org/grpc v1.51.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
