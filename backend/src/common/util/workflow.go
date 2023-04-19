@@ -277,22 +277,10 @@ func (w *Workflow) FindObjectStoreArtifactKeyOrEmpty(nodeID string, artifactName
 	// TODO: The below artifact keys are only for parameter artifacts. Will need to also implement
 	//       metric and raw input artifacts once we finallized the big data passing in our compiler.
 
-	if w.Status.PipelineRunStatusFields.TaskRuns == nil {
+	if w.Status.PipelineRunStatusFields.ChildReferences == nil || len(w.Status.PipelineRunStatusFields.ChildReferences) == 0 {
 		return ""
 	}
-	var s3Key string
-	s3Key = "artifacts/" + w.ObjectMeta.Name + "/" + nodeID + "/" + artifactName + ".tgz"
-	return s3Key
-}
-
-// FindTaskRunByPodName loops through all workflow task runs and look up by the pod name.
-func (w *Workflow) FindTaskRunByPodName(podName string) (*workflowapi.PipelineRunTaskRunStatus, string) {
-	for id, taskRun := range w.Status.TaskRuns {
-		if taskRun.Status.PodName == podName {
-			return taskRun, id
-		}
-	}
-	return nil, ""
+	return "artifacts/" + w.ObjectMeta.Name + "/" + nodeID + "/" + artifactName + ".tgz"
 }
 
 // IsInFinalState whether the workflow is in a final state.

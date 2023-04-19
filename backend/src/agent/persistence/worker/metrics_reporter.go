@@ -23,7 +23,6 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/agent/persistence/client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	log "github.com/sirupsen/logrus"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 const (
@@ -46,7 +45,8 @@ func NewMetricsReporter(pipelineClient client.PipelineClientInterface) *MetricsR
 
 // ReportMetrics reports workflow metrics to pipeline server.
 func (r MetricsReporter) ReportMetrics(workflow *util.Workflow) error {
-	if workflow.Status.PipelineRunStatusFields.TaskRuns == nil {
+	if workflow.Status.PipelineRunStatusFields.ChildReferences == nil ||
+		len(workflow.Status.PipelineRunStatusFields.ChildReferences) == 0 {
 		return nil
 	}
 	if _, ok := workflow.ObjectMeta.Labels[util.LabelKeyWorkflowRunId]; !ok {
@@ -56,21 +56,24 @@ func (r MetricsReporter) ReportMetrics(workflow *util.Workflow) error {
 	runID := workflow.ObjectMeta.Labels[util.LabelKeyWorkflowRunId]
 	runMetrics := []*api.RunMetric{}
 	partialFailures := []error{}
-	for _, nodeStatus := range workflow.Status.PipelineRunStatusFields.TaskRuns {
-		nodeMetrics, err := r.collectNodeMetricsOrNil(runID, *nodeStatus)
-		if err != nil {
-			partialFailures = append(partialFailures, err)
-			continue
-		}
-		if nodeMetrics != nil {
-			if len(runMetrics)+len(nodeMetrics) >= maxMetricsCountLimit {
-				leftQuota := maxMetricsCountLimit - len(runMetrics)
-				runMetrics = append(runMetrics, nodeMetrics[0:leftQuota]...)
-				// TODO(#1426): report the error back to api server to notify user
-				log.Errorf("Reported metrics are more than the limit %v", maxMetricsCountLimit)
-				break
+	for _, child := range workflow.Status.PipelineRunStatusFields.ChildReferences {
+		// for now only TaskRun may contain metrics, need to revisit this if this changes
+		if child.Kind == "TaskRun" {
+			nodeMetrics, err := r.collectNodeMetricsOrNil(runID, child.PipelineTaskName)
+			if err != nil {
+				partialFailures = append(partialFailures, err)
+				continue
 			}
-			runMetrics = append(runMetrics, nodeMetrics...)
+			if nodeMetrics != nil {
+				if len(runMetrics)+len(nodeMetrics) >= maxMetricsCountLimit {
+					leftQuota := maxMetricsCountLimit - len(runMetrics)
+					runMetrics = append(runMetrics, nodeMetrics[0:leftQuota]...)
+					// TODO(#1426): report the error back to api server to notify user
+					log.Errorf("Reported metrics are more than the limit %v", maxMetricsCountLimit)
+					break
+				}
+				runMetrics = append(runMetrics, nodeMetrics...)
+			}
 		}
 	}
 	if len(runMetrics) == 0 {
@@ -89,18 +92,15 @@ func (r MetricsReporter) ReportMetrics(workflow *util.Workflow) error {
 }
 
 func (r MetricsReporter) collectNodeMetricsOrNil(
-	runID string, nodeStatus workflowapi.PipelineRunTaskRunStatus) (
+	runID, pipelineTaskName string) (
 	[]*api.RunMetric, error) {
 	defer func() {
 		if panicMessage := recover(); panicMessage != nil {
 			log.Infof("nodeStatus is not yet created. Panic message: '%v'.", panicMessage)
 		}
 	}()
-	if nodeStatus.Status == nil ||
-		nodeStatus.Status.TaskRunStatusFields.CompletionTime == nil {
-		return nil, nil
-	}
-	metricsJSON, err := r.readNodeMetricsJSONOrEmpty(runID, nodeStatus)
+
+	metricsJSON, err := r.readNodeMetricsJSONOrEmpty(runID, pipelineTaskName)
 	if err != nil || metricsJSON == "" {
 		return nil, err
 	}
@@ -115,24 +115,24 @@ func (r MetricsReporter) collectNodeMetricsOrNil(
 		// TODO(#1426): report the error back to api server to notify user
 		log.WithFields(log.Fields{
 			"run":         runID,
-			"node":        nodeStatus.PipelineTaskName,
+			"node":        pipelineTaskName,
 			"raw_content": metricsJSON,
 			"error":       err.Error(),
 		}).Warning("Failed to unmarshal metrics file.")
 		return nil, util.NewCustomError(err, util.CUSTOM_CODE_PERMANENT,
-			"failed to unmarshal metrics file from (%s, %s).", runID, nodeStatus.PipelineTaskName)
+			"failed to unmarshal metrics file from (%s, %s).", runID, pipelineTaskName)
 	}
 	if reportMetricsRequest.GetMetrics() == nil {
 		return nil, nil
 	}
 	for _, metric := range reportMetricsRequest.GetMetrics() {
 		// User metrics just have name and value but no NodeId.
-		metric.NodeId = nodeStatus.PipelineTaskName
+		metric.NodeId = pipelineTaskName
 	}
 	return reportMetricsRequest.GetMetrics(), nil
 }
 
-func (r MetricsReporter) readNodeMetricsJSONOrEmpty(runID string, nodeStatus workflowapi.PipelineRunTaskRunStatus) (string, error) {
+func (r MetricsReporter) readNodeMetricsJSONOrEmpty(runID, pipelineTaskName string) (string, error) {
 	// Tekton doesn't support any artifact spec, artifact records are done by our custom metadata writers:
 	// 	if nodeStatus.Outputs == nil || nodeStatus.Outputs.Artifacts == nil {
 	// 		return "", nil // No output artifacts, skip the reporting
@@ -149,7 +149,7 @@ func (r MetricsReporter) readNodeMetricsJSONOrEmpty(runID string, nodeStatus wor
 
 	artifactRequest := &api.ReadArtifactRequest{
 		RunId:        runID,
-		NodeId:       nodeStatus.PipelineTaskName,
+		NodeId:       pipelineTaskName,
 		ArtifactName: metricsArtifactName,
 	}
 	artifactResponse, err := r.pipelineClient.ReadArtifact(artifactRequest)
