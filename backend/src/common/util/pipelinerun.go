@@ -40,6 +40,7 @@ import (
 	prsinformers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
 	prinformer "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/apis"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -771,17 +772,39 @@ func readTaskRunMetricsJSONOrEmpty(
 }
 
 func (pr *PipelineRun) NodeStatuses() map[string]NodeStatus {
-	// TODO: add implementation
-	rev := make(map[string]NodeStatus)
-	// rev := make(map[string]NodeStatus, len(pr.Status.PipelineRunStatusFields.ChildReferences))
+	// only need taskruns for now, in persistenceagent, it still convert the childreference to taskruns
+	// still use status.taskruns to get information for now
+	nodeCount := len(pr.Status.TaskRuns)
+	rev := make(map[string]NodeStatus, nodeCount)
+	for id, node := range pr.Status.TaskRuns {
+		// report the node status when the StartTime and CompletionTime are available
+		if node.Status.StartTime != nil && node.Status.CompletionTime != nil {
+			rev[id] = NodeStatus{
+				ID:          id,
+				DisplayName: node.PipelineTaskName,
+				State:       node.Status.GetCondition(apis.ConditionSucceeded).GetReason(),
+				StartTime:   node.Status.StartTime.Unix(),
+				CreateTime:  node.Status.StartTime.Unix(),
+				FinishTime:  node.Status.CompletionTime.Unix(),
+				// no children for a TaskRun task
+			}
+		}
+	}
 
 	return rev
 }
 
 func (pr *PipelineRun) HasNodes() bool {
+	if len(pr.Status.TaskRuns) == 0 {
+		return false
+	}
+	for _, node := range pr.Status.TaskRuns {
+		// report the node status when the StartTime and CompletionTime are available
+		if node.Status.StartTime != nil && node.Status.CompletionTime != nil {
+			return true
+		}
+	}
 	return false
-	// TODO: add implementation
-	// return len(pr.Status.PipelineRunStatusFields.ChildReferences) > 0
 }
 
 // implementation of ExecutionClientInterface
