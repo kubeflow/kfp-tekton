@@ -16,7 +16,7 @@
 #  - The help target was derived from https://stackoverflow.com/a/35730328/5601796
 
 VENV ?= .venv
-KFP_TEKTON_RELEASE ?= v1.6.4
+KFP_TEKTON_RELEASE ?= v1.6.5
 export VIRTUAL_ENV := $(abspath ${VENV})
 export PATH := ${VIRTUAL_ENV}/bin:${PATH}
 DOCKER_REGISTRY ?= aipipeline
