@@ -257,17 +257,10 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, customRun *tektonv1beta1
 
 func EnableCustomTaskFeatureFlag(ctx context.Context) context.Context {
 	defaults, _ := config.NewDefaultsFromMap(map[string]string{})
-	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{
-		"enable-custom-tasks": "true",
-		"custom-task-version": "v1alpha1",
-	})
-	artifactBucket, _ := config.NewArtifactBucketFromMap(map[string]string{})
-	artifactPVC, _ := config.NewArtifactPVCFromMap(map[string]string{})
+	featureFlags, _ := config.NewFeatureFlagsFromMap(map[string]string{})
 	c := &config.Config{
-		Defaults:       defaults,
-		FeatureFlags:   featureFlags,
-		ArtifactBucket: artifactBucket,
-		ArtifactPVC:    artifactPVC,
+		Defaults:     defaults,
+		FeatureFlags: featureFlags,
 	}
 	return config.ToContext(ctx, c)
 }
@@ -818,7 +811,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 							Status:           tr.DeepCopy(),
 						}
 					case "Run":
-						run, err := tkstatus.GetRunStatusForPipelineTask(ctx, c.pipelineClientSet, customRun.Namespace, child)
+						run, err := tkstatus.GetCustomRunStatusForPipelineTask(ctx, c.pipelineClientSet, customRun.Namespace, child)
 						if err != nil {
 							logger.Errorf("can not get status for Run, %v", err)
 							return 0, nil, nil, fmt.Errorf("could not get Run %s."+
@@ -834,7 +827,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 							Status:           run.DeepCopy(),
 						}
 					case "CustomRun":
-						run, err := tkstatus.GetRunStatusForPipelineTask(ctx, c.pipelineClientSet, customRun.Namespace, child)
+						run, err := tkstatus.GetCustomRunStatusForPipelineTask(ctx, c.pipelineClientSet, customRun.Namespace, child)
 						if err != nil {
 							logger.Errorf("can not get status for CustomRun, %v", err)
 							return 0, nil, nil, fmt.Errorf("could not get CustomRun %s."+
