@@ -14,7 +14,7 @@ require (
 	github.com/go-openapi/validate v0.20.3
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/glog v1.0.0
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/google/addlicense v0.0.0-20200906110928-a0294312aa76
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
@@ -31,19 +31,19 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.10.1
-	github.com/stretchr/testify v1.8.1
-	github.com/tektoncd/pipeline v0.44.2
+	github.com/stretchr/testify v1.8.2
+	github.com/tektoncd/pipeline v0.47.0
 	github.com/tidwall/pretty v1.1.0 // indirect
 	go.uber.org/zap v1.24.0
-	golang.org/x/net v0.7.0
-	google.golang.org/genproto v0.0.0-20230109162033-3c3c17ce83e6
-	google.golang.org/grpc v1.51.0
+	golang.org/x/net v0.9.0
+	google.golang.org/genproto v0.0.0-20230331144136-dcfb400f0633
+	google.golang.org/grpc v1.54.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
-	google.golang.org/protobuf v1.28.1
-	k8s.io/api v0.25.4
-	k8s.io/apimachinery v0.25.4
-	k8s.io/client-go v0.25.4
-	k8s.io/code-generator v0.25.4
+	google.golang.org/protobuf v1.30.0
+	k8s.io/api v0.25.9
+	k8s.io/apimachinery v0.26.4
+	k8s.io/client-go v0.25.9
+	k8s.io/code-generator v0.25.9
 	sigs.k8s.io/controller-runtime v0.11.2
 	sigs.k8s.io/yaml v1.3.0
 )

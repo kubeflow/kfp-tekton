@@ -12,6 +12,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/cache/model"
 	"github.com/peterhellberg/duration"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"github.com/tektoncd/pipeline/pkg/result"
 	"github.com/tektoncd/pipeline/pkg/termination"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -134,7 +135,7 @@ func parseResult(pod *corev1.Pod, logger *zap.SugaredLogger) (string, error) {
 			}
 			output := []*v1beta1.TaskRunResult{}
 			for _, r := range results {
-				if r.ResultType == v1beta1.TaskRunResultType {
+				if r.ResultType == result.TaskRunResultType {
 					itemRes := v1beta1.TaskRunResult{}
 					itemRes.Name = r.Key
 					itemRes.Value = *v1beta1.NewArrayOrString(r.Value)
