@@ -236,7 +236,7 @@ func (s *UpgradeTests) VerifyPipelines() {
 	require.Nil(t, err)
 	var expectedWorkflow v1beta1.PipelineRun
 	err = yaml.Unmarshal(expected, &expectedWorkflow)
-	assert.Equal(t, expectedWorkflow, *template)
+	assert.Equal(t, expectedWorkflow, template)
 }
 
 func (s *UpgradeTests) PrepareRuns() {
