@@ -50,7 +50,7 @@ retry() {
 }
 
 retry 3 3 ibmcloud login --apikey "${IBM_CLOUD_API_KEY}" --no-region
-retry 3 3 ibmcloud target -r "$REGION" -o "$ORG" -s "$SPACE" -g "$RESOURCE_GROUP"
+retry 3 3 ibmcloud target -r "$REGION" -g "$RESOURCE_GROUP"
 retry 3 3 ibmcloud ks cluster config -c "$PIPELINE_KUBERNETES_CLUSTER_NAME"
 retry 3 3 ibmcloud cr login
 

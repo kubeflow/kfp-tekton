@@ -41,6 +41,7 @@ set -xe
 # - GIT_COMMIT_SHORT:     git commit hash short
 
 REGION=${REGION:-"us-south"}
+RESOURCE_GROUP=${RESOURCE_GROUP:-"default"}
 ORG=${ORG:-"dev-advo"}
 SPACE=${SPACE:-"dev"}
 IMAGE_TAG="${BUILD_NUMBER}-${GIT_COMMIT_SHORT}"
@@ -62,7 +63,7 @@ retry() {
 }
 
 retry 3 3 ibmcloud login --apikey "${IBM_CLOUD_API_KEY}" --no-region
-retry 3 3 ibmcloud target -r "$REGION" -o "$ORG" -s "$SPACE" -g "$RESOURCE_GROUP"
+retry 3 3 ibmcloud target -r "$REGION" -g "$RESOURCE_GROUP"
 
 print_env_vars() {
   echo "REGISTRY_URL=${REGISTRY_URL}"
