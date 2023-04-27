@@ -27,6 +27,7 @@ set -xe
 # - DIND_NS:              kubernetes ns for DinD deployment
 
 REGION=${REGION:-"us-south"}
+RESOURCE_GROUP=${RESOURCE_GROUP:-"default"}
 ORG=${ORG:-"dev-advo"}
 SPACE=${SPACE:-"dev"}
 DIND_POD_NAME="docker"
@@ -92,7 +93,7 @@ check_dind_running() {
 }
 
 ibmcloud login --apikey "${IBM_CLOUD_API_KEY}" --no-region
-ibmcloud target -r "$REGION" -o "$ORG" -s "$SPACE"
+ibmcloud target -r "$REGION" -g "$RESOURCE_GROUP"
 ibmcloud ks cluster config -c "${KUBE_CLUSTER}"
 
 check_and_create_kubernetes_namespace "$DIND_NS"
