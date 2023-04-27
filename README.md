@@ -58,10 +58,6 @@ CI/CD-style pipelines. Tekton introduces several [Custom Resource Definitions](h
 
 [Kubeflow Slack](https://join.slack.com/t/kubeflow/shared_invite/zt-cpr020z4-PfcAue_2nw67~iIDy7maAQ)
 
-[CD Foundation MLOps Sig](https://cd.foundation/blog/2020/02/11/announcing-the-cd-foundation-mlops-sig/).
-
-[Instructions to join](https://github.com/cdfoundation/sig-mlops)
-
 ### References
 
 [Kubeflow and TFX Pipelines](/samples/kfp-tfx)
