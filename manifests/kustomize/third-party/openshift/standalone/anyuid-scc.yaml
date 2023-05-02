@@ -48,6 +48,8 @@ users:
 - system:serviceaccount:kubeflow:ml-pipeline-visualizationserver
 - system:serviceaccount:kubeflow:mysql
 - system:serviceaccount:kubeflow:kfp-csi-s3
+- system:serviceaccount:kubeflow:kfp-csi-attacher
+- system:serviceaccount:kubeflow:kfp-csi-provisioner
 - system:serviceaccount:tekton-pipelines:tekton-pipelineloop-controller
 - system:serviceaccount:tekton-pipelines:tekton-pipelineloop-webhook
 - system:serviceaccount:openshift-pipelines:tekton-pipelineloop-controller
