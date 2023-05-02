@@ -8,6 +8,7 @@
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
   * [Alternative KIND deployment](#alternative-kind-deployment)
 - [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
+- [Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment](#standalone-kubeflow-pipelines-with-openshift-pipelines-backend-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
 - [Upgrade to Multi-User KFP-Tekton on Kubeflow](#upgrade-to-multi-user-kfp-tekton-on-kubeflow)
 - [Troubleshooting](#troubleshooting)
@@ -24,8 +25,8 @@ A Kubernetes cluster `v1.23` that has least 8 vCPU and 16 GB memory.
 ### OpenShift
 
    Depending on your situation, you can choose between the two approaches to set up the pipeline engine on Openshift:
-   1. Leverage [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.12/cicd/pipelines/installing-pipelines.html) (built on Tekton), follow [Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment](#standalone-kubeflow-pipelines-with-openshift-pipelines-backend-deployment)
-   2. Install [Tekton on Openshift](https://github.com/tektoncd/pipeline/blob/v0.44.2/docs/install.md#installing-tekton-pipelines-on-openshift) as part of deployment, follow the [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment) to install the Kubeflow Pipeline Stack.
+   1. Using [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.12/cicd/pipelines/installing-pipelines.html) (built on Tekton), follow the [Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment](#standalone-kubeflow-pipelines-with-openshift-pipelines-backend-deployment)
+   2. Using [Tekton on Openshift](https://github.com/tektoncd/pipeline/blob/v0.44.2/docs/install.md#installing-tekton-pipelines-on-openshift), follow the [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment) to install the Kubeflow Pipeline Stack.
 
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
 
