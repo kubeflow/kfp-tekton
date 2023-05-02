@@ -17,7 +17,7 @@ rules:
     resourceNames: ["config-leader-election", "config-logging", "config-observability", "object-store-config"]
   - apiGroups: ["policy"]
     resources: ["podsecuritypolicies"]
-    resourceNames: ["tekton-pipelines"]
+    resourceNames: ["tekton-pipelines", "openshift-pipelines"]
     verbs: ["use"]
 ---
 kind: Role
@@ -50,5 +50,5 @@ rules:
     resourceNames: ["tekton-pipelineloop-webhook-certs"]
   - apiGroups: ["policy"]
     resources: ["podsecuritypolicies"]
-    resourceNames: ["tekton-pipelines"]
+    resourceNames: ["tekton-pipelines", "openshift-pipelines"]
     verbs: ["use"]
