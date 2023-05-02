@@ -37,6 +37,7 @@ spec:
     categories:
     - tekton
     - tekton-pipelines
+    - openshift-pipelines
     kind: BreakTask
     plural: breaktasks
   scope: Namespaced
@@ -66,6 +67,7 @@ spec:
     categories:
     - tekton
     - tekton-pipelines
+    - openshift-pipelines
     kind: PipelineLoop
     plural: pipelineloops
   scope: Namespaced
@@ -938,6 +940,7 @@ rules:
   - policy
   resourceNames:
   - tekton-pipelines
+  - openshift-pipelines
   resources:
   - podsecuritypolicies
   verbs:
@@ -991,6 +994,7 @@ rules:
   - policy
   resourceNames:
   - tekton-pipelines
+  - openshift-pipelines
   resources:
   - podsecuritypolicies
   verbs:
@@ -1404,6 +1408,7 @@ rules:
   - policy
   resourceNames:
   - tekton-pipelines
+  - openshift-pipelines
   resources:
   - podsecuritypolicies
   verbs:
@@ -3102,9 +3107,7 @@ spec:
           capabilities:
             drop:
             - ALL
-          runAsGroup: 65532
           runAsNonRoot: true
-          runAsUser: 65532
           seccompProfile:
             type: RuntimeDefault
       serviceAccountName: tekton-pipelineloop-controller
@@ -3176,9 +3179,7 @@ spec:
           capabilities:
             drop:
             - ALL
-          runAsGroup: 65532
           runAsNonRoot: true
-          runAsUser: 65532
           seccompProfile:
             type: RuntimeDefault
       serviceAccountName: tekton-pipelineloop-webhook
