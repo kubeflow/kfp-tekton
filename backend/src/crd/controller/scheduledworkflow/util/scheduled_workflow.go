@@ -155,7 +155,7 @@ func (s *ScheduledWorkflow) NewWorkflow(
 	nextScheduledEpoch int64, nowEpoch int64) (*commonutil.Workflow, error) {
 
 	const (
-		workflowKind       = "Workflow"
+		workflowKind       = "PipelineRun"
 		workflowApiVersion = "tekton.dev/v1beta1"
 	)
 
@@ -165,6 +165,8 @@ func (s *ScheduledWorkflow) NewWorkflow(
 	}
 	workflow.Kind = workflowKind
 	workflow.APIVersion = workflowApiVersion
+	workflow.Annotations = s.Spec.Workflow.Annotations
+	workflow.Labels = s.Spec.Workflow.Labels
 	result := commonutil.NewWorkflow(workflow)
 
 	uuid, err := s.uuid.NewRandom()
@@ -183,7 +185,6 @@ func (s *ScheduledWorkflow) NewWorkflow(
 	result.OverrideParameters(formattedParams)
 
 	result.SetCannonicalLabels(s.Name, nextScheduledEpoch, s.nextIndex())
-	result.SetLabels(commonutil.LabelKeyWorkflowRunId, uuid.String())
 	// Pod pipeline/runid label is used by v2 compatible mode.
 	result.SetLabels(commonutil.LabelKeyWorkflowRunId, uuid.String())
 	// Replace {{workflow.uid}} with runId

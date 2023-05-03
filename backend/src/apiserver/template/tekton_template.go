@@ -146,6 +146,10 @@ func (t *Tekton) ScheduledWorkflow(apiJob *api.Job, namespace string) (*schedule
 			Workflow: &scheduledworkflow.WorkflowResource{
 				Parameters: toCRDParameter(apiJob.GetPipelineSpec().GetParameters()),
 				Spec:       workflow.Spec,
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: workflow.Annotations,
+					Labels:      workflow.Labels,
+				},
 			},
 			NoCatchup: util.BoolPointer(apiJob.NoCatchup),
 		},
