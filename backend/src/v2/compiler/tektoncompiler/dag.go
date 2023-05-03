@@ -15,15 +15,19 @@
 package tektoncompiler
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	pipelineloopapi "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func (c *pipelinerunCompiler) DAG(taskName, compRef string, task *pipelinespec.PipelineTaskSpec, componentSpec *pipelinespec.ComponentSpec, dagSpec *pipelinespec.DagSpec) (err error) {
+func (c *pipelinerunCompiler) LoopDAG(taskName, compRef string, task *pipelinespec.PipelineTaskSpec, componentSpec *pipelinespec.ComponentSpec, dagSpec *pipelinespec.DagSpec) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("compiling DAG %q: %w", taskName, err)
@@ -35,17 +39,83 @@ func (c *pipelinerunCompiler) DAG(taskName, compRef string, task *pipelinespec.P
 		return err
 	}
 
-	if err := c.addDagTask(taskName, compRef, task); err != nil {
+	// create a PipelineLoop and push to stack
+	c.PushLoop(c.createPipelineLoop())
+
+	newTaskName := taskName + "-loop"
+	if err := c.addDagTask(newTaskName, compRef, task, true); err != nil {
 		return err
 	}
 
-	if err := c.addDagPubTask(taskName, dagSpec, c.spec); err != nil {
+	if err := c.addDagPubTask(newTaskName, dagSpec, c.spec, true, false); err != nil {
+		return err
+	}
+
+	// add the Loop DAG into DAG Stack
+	c.PushDagStack(newTaskName)
+	return nil
+}
+
+func (c *pipelinerunCompiler) EmbedLoopDAG(taskName, compRef string, task *pipelinespec.PipelineTaskSpec, componentSpec *pipelinespec.ComponentSpec, dagSpec *pipelinespec.DagSpec) (err error) {
+	loop := c.PopLoop()
+	raw, err := json.Marshal(loop.Spec)
+	if err != nil {
+		return fmt.Errorf("unable to Marshal pipelineSpec:%v", err)
+	}
+
+	pipelinelooptask := pipelineapi.PipelineTask{
+		Name: taskName + subfixPipelineLoop,
+		Params: []pipelineapi.Param{
+			{Name: paramParentDagID, Value: pipelineapi.ParamValue{
+				Type: "string", StringVal: taskOutputParameter(getDAGDriverTaskName(taskName), paramExecutionID)}},
+			{Name: "from", Value: pipelineapi.ParamValue{Type: "string", StringVal: "0"}},
+			{Name: "step", Value: pipelineapi.ParamValue{Type: "string", StringVal: "1"}},
+			{Name: "to", Value: pipelineapi.ParamValue{Type: "string", StringVal: taskOutputParameter(getDAGDriverTaskName(taskName), paramIterationCount)}},
+		},
+		TaskSpec: &pipelineapi.EmbeddedTask{
+			TypeMeta: runtime.TypeMeta{
+				Kind:       kindPipelineLoop,
+				APIVersion: pipelineloopapi.SchemeGroupVersion.String(),
+			},
+			Spec: runtime.RawExtension{
+				Raw: raw,
+			},
+		},
+	}
+
+	c.addPipelineTask(&pipelinelooptask)
+
+	c.PopDagStack()
+
+	return nil
+}
+
+func (c *pipelinerunCompiler) DAG(taskName, compRef string, task *pipelinespec.PipelineTaskSpec, componentSpec *pipelinespec.ComponentSpec, dagSpec *pipelinespec.DagSpec) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("compiling DAG %q: %w", taskName, err)
+		}
+	}()
+
+	// DAG with iteration already generate the compoentSpec string
+	if task.GetIterator() == nil {
+		err = c.saveComponentSpec(compRef, componentSpec)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := c.addDagTask(taskName, compRef, task, false); err != nil {
+		return err
+	}
+
+	if err := c.addDagPubTask(taskName, dagSpec, c.spec, false, task.GetIterator() != nil); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *pipelinerunCompiler) addDagTask(name, compRef string, task *pipelinespec.PipelineTaskSpec) error {
+func (c *pipelinerunCompiler) addDagTask(name, compRef string, task *pipelinespec.PipelineTaskSpec, loopDag bool) error {
 	driverTaskName := getDAGDriverTaskName(name)
 	componentSpecStr, err := c.useComponentSpec(compRef)
 	if err != nil {
@@ -73,6 +143,11 @@ func (c *pipelinerunCompiler) addDagTask(name, compRef string, task *pipelinespe
 		inputs.parentDagID = c.CurrentDag()
 	}
 
+	if loopDag {
+		inputs.iterationIndex = inputValue(paramIterationIndex)
+		inputs.loopDag = true
+	}
+
 	driver, err := c.dagDriverTask(driverTaskName, &inputs)
 	if err != nil {
 		return err
@@ -81,7 +156,7 @@ func (c *pipelinerunCompiler) addDagTask(name, compRef string, task *pipelinespe
 	return nil
 }
 
-func (c *pipelinerunCompiler) addDagPubTask(name string, dagSpec *pipelinespec.DagSpec, pipelineSpec *pipelinespec.PipelineSpec) error {
+func (c *pipelinerunCompiler) addDagPubTask(name string, dagSpec *pipelinespec.DagSpec, pipelineSpec *pipelinespec.PipelineSpec, inLoopDag, loopDag bool) error {
 
 	if c.exithandler != nil && name == compiler.RootComponentName {
 		// this dag-pub only depends on the exit handler task, lets find out its name
@@ -92,20 +167,42 @@ func (c *pipelinerunCompiler) addDagPubTask(name string, dagSpec *pipelinespec.D
 				break
 			}
 		}
-		pubdriver, err := c.dagPubDriverTask(getDAGPubTaskName(name), &pubDagDriverInputs{deps: []string{exithandlerTask}, parentDagID: name})
+		pubdriver, err := c.dagPubDriverTask(getDAGPubTaskName(name), &pubDagDriverInputs{
+			deps: []string{exithandlerTask}, parentDagID: name, inLoopDag: inLoopDag})
 		if err != nil {
 			return err
 		}
 		c.addExitHandlerTask(pubdriver)
 	} else {
 		leaves := getLeafNodes(dagSpec, c.spec)
-		pubdriver, err := c.dagPubDriverTask(getDAGPubTaskName(name), &pubDagDriverInputs{deps: leaves, parentDagID: name})
+		if loopDag {
+			leaves = []string{name + subfixPipelineLoop}
+		}
+		pubdriver, err := c.dagPubDriverTask(getDAGPubTaskName(name), &pubDagDriverInputs{
+			deps: leaves, parentDagID: name, inLoopDag: inLoopDag})
 		if err != nil {
 			return err
 		}
 		c.addPipelineTask(pubdriver)
 	}
 	return nil
+}
+
+func (c *pipelinerunCompiler) createPipelineLoop() *pipelineloopapi.PipelineLoop {
+	return &pipelineloopapi.PipelineLoop{
+		TypeMeta: k8smeta.TypeMeta{
+			Kind:       kindPipelineLoop,
+			APIVersion: pipelineloopapi.SchemeGroupVersion.String(),
+		},
+		Spec: pipelineloopapi.PipelineLoopSpec{
+			PipelineSpec: &pipelineapi.PipelineSpec{
+				Params: []pipelineapi.ParamSpec{
+					{Name: paramParentDagID, Type: "string"},
+					{Name: paramIterationIndex, Type: "string"},
+				}},
+			IterateNumeric: paramIterationIndex,
+		},
+	}
 }
 
 func (c *pipelinerunCompiler) dagDriverTask(
@@ -135,42 +232,42 @@ func (c *pipelinerunCompiler) dagDriverTask(
 			// "--type"
 			{
 				Name:  paramNameType,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getDagType()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getDagType()},
 			},
 			// "--pipeline_name"
 			{
 				Name:  paramNamePipelineName,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
 			// "--run_id"
 			{
 				Name:  paramNameRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
 			{
 				Name:  paramNameDagExecutionId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
 			},
 			// "--component"
 			{
 				Name:  paramComponent,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.component},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
 			},
 			// "--task"
 			{
 				Name:  paramTask,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.task},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.task},
 			},
 			// "--runtime_config"
 			{
 				Name:  paramNameRuntimeConfig,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runtimeConfigJson},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: runtimeConfigJson},
 			},
 			// "--iteration_index"
 			{
 				Name:  paramNameIterationIndex,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getIterationIndex()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getIterationIndex()},
 			},
 			// produce the following outputs:
 			// - execution-id
@@ -201,22 +298,22 @@ func (c *pipelinerunCompiler) dagPubDriverTask(
 			// "--type"
 			{
 				Name:  paramNameType,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getDagType()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getDagType()},
 			},
 			// "--pipeline_name"
 			{
 				Name:  paramNamePipelineName,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
 			// "--run_id"
 			{
 				Name:  paramNameRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
 			{
 				Name:  paramNameDagExecutionId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getParentDagID(c.exithandler != nil)},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
 			},
 		},
 	}
@@ -233,11 +330,13 @@ type dagDriverInputs struct {
 	runtimeConfig  *pipelinespec.PipelineJob_RuntimeConfig // optional, only root DAG needs this
 	iterationIndex string                                  // optional, iterator passes iteration index to iteration tasks
 	deps           []string
+	loopDag        bool
 }
 
 type pubDagDriverInputs struct {
 	parentDagID string
 	deps        []string
+	inLoopDag   bool
 }
 
 func (i *pubDagDriverInputs) getDagType() string {
@@ -250,6 +349,8 @@ func (i *pubDagDriverInputs) getParentDagID(isExitHandler bool) string {
 	}
 	if isExitHandler && i.parentDagID == compiler.RootComponentName {
 		return fmt.Sprintf("$(params.%s)", paramParentDagID)
+	} else if i.inLoopDag {
+		return fmt.Sprintf("$(params.%s)", paramParentDagID)
 	} else {
 		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
 	}
@@ -260,6 +361,8 @@ func (i *dagDriverInputs) getParentDagID(isExitHandler bool) string {
 		return "0"
 	}
 	if isExitHandler && i.parentDagID == compiler.RootComponentName {
+		return fmt.Sprintf("$(params.%s)", paramParentDagID)
+	} else if i.loopDag {
 		return fmt.Sprintf("$(params.%s)", paramParentDagID)
 	} else {
 		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)

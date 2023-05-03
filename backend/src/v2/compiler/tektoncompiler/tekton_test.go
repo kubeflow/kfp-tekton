@@ -94,8 +94,16 @@ func TestMnist(t *testing.T) {
 		tektonYAMLPath string // path of expected output argo workflow YAML
 	}{
 		{
+			yamlPath:       "testdata/mnist_pipeline_ir.yaml",
+			tektonYAMLPath: "testdata/mnist_pipeline.yaml",
+		},
+		{
 			yamlPath:       "testdata/exit_handler_ir.yaml",
 			tektonYAMLPath: "testdata/exit_handler.yaml",
+		},
+		{
+			yamlPath:       "testdata/loop_static_ir.yaml",
+			tektonYAMLPath: "testdata/loop_static.yaml",
 		},
 	}
 	for _, tt := range tests {
@@ -103,7 +111,7 @@ func TestMnist(t *testing.T) {
 
 			job := load(t, tt.yamlPath, "yaml")
 			if *update {
-				pr, err := tektoncompiler.Compile(job, &tektoncompiler.Options{LauncherImage: "aipipeline/kfp-launcher-v2:latest"})
+				pr, err := tektoncompiler.Compile(job, nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -111,7 +119,7 @@ func TestMnist(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				err = ioutil.WriteFile(tt.tektonYAMLPath, got, 0x664)
+				err = ioutil.WriteFile(tt.tektonYAMLPath, got, 0644)
 				if err != nil {
 					t.Fatal(err)
 				}
