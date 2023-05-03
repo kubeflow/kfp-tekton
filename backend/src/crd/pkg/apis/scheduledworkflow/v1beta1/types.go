@@ -93,6 +93,9 @@ type WorkflowResource struct {
 
 	// Specification of the workflow to start.
 	Spec v1beta1.PipelineRunSpec `json:"spec,omitempty"`
+
+	// Metadata from main pipelinerun
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 }
 
 type Parameter struct {
