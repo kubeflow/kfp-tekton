@@ -1,0 +1,58 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: simpletask
+spec:
+  params:
+    - name: word
+      type: string
+    - name: suffix
+      type: string
+  steps:
+    - name: echo
+      image: ubuntu
+      script: |
+        #!/usr/bin/env bash
+        echo "$(params.word)$(params.suffix)"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: demo-pipeline
+spec:
+  params:
+  - name: word
+    default: "wordi"
+  - name: suffix
+    default: "suffixi"
+  tasks:
+  - name: simplepipelinetask
+    taskRef:
+      name: simpletask
+    params:
+    - name: word
+      value: $(params.word)
+    - name: suffix
+      value: $(params.suffix)
+---
+apiVersion: tekton.dev/v1beta1
+kind: CustomRun
+metadata:
+  name: simpletasklooprun02
+spec:
+  params:
+    - name: word
+      value:
+        - jump
+        - land
+        - roll
+    - name: suffix
+      value: ing
+  customSpec:
+    apiVersion: custom.tekton.dev/v1alpha1
+    kind: PipelineLoop
+    spec:
+      pipelineRef:
+        name: demo-pipeline
+      iterateParam: word
+      timeout: 60s
