@@ -35,11 +35,10 @@ func (t *Tekton) RunWorkflow(apiRun *api.Run, options RunWorkflowOptions, namesp
 		workflow.SetLabels(util.LabelKeyCacheEnabled, common.IsCacheEnabled())
 	}
 
-	// Add a KFP specific label for cache service filtering. The cache_enabled flag here is a global control for whether cache server will
-	// receive targeting pods. Since cache server only receives pods in step level, the resource manager here will set this global label flag
-	// on every single step/pod so the cache server can understand.
-	// TODO: Add run_level flag with similar logic by reading flag value from create_run api.
-	workflow.SetLabelsToAllTemplates(util.LabelKeyCacheEnabled, common.IsCacheEnabled())
+	if strings.ToLower(common.IsCacheEnabledOld()) != "true" {
+		workflow.SetLabels(util.LabelKeyCacheEnabled, common.IsCacheEnabledOld())
+	}
+
 	parameters := toParametersMap(apiRun.GetPipelineSpec().GetParameters())
 	// Verify no additional parameter provided
 	if err := workflow.VerifyParameters(parameters); err != nil {
@@ -107,6 +106,17 @@ type Tekton struct {
 
 func (t *Tekton) ScheduledWorkflow(apiJob *api.Job, namespace string) (*scheduledworkflow.ScheduledWorkflow, error) {
 	workflow := util.NewWorkflow(t.wf.PipelineRun.DeepCopy())
+
+	// Add a KFP specific label for cache service filtering. The cache_enabled flag here is a global control for whether cache server will
+	// receive targeting pods. Since cache server only receives pods in step level, the resource manager here will set this global label flag
+	// on every single step/pod so the cache server can understand.
+	if strings.ToLower(common.IsCacheEnabled()) != "true" {
+		workflow.SetLabels(util.LabelKeyCacheEnabled, common.IsCacheEnabled())
+	}
+
+	if strings.ToLower(common.IsCacheEnabledOld()) != "true" {
+		workflow.SetLabels(util.LabelKeyCacheEnabled, common.IsCacheEnabledOld())
+	}
 
 	parameters := toParametersMap(apiJob.GetPipelineSpec().GetParameters())
 	// Verify no additional parameter provided
