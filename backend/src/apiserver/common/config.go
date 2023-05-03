@@ -27,7 +27,8 @@ const (
 	MultiUserMode                           string = "MULTIUSER"
 	MultiUserModeSharedReadAccess           string = "MULTIUSER_SHARED_READ"
 	PodNamespace                            string = "POD_NAMESPACE"
-	CacheEnabled                            string = "CacheEnabled"
+	CacheEnabledDeprecated                  string = "CacheEnabled"
+	CacheEnabled                            string = "CACHE_ENABLED"
 	DefaultPipelineRunnerServiceAccountFlag string = "DEFAULTPIPELINERUNNERSERVICEACCOUNT"
 	KubeflowUserIDHeader                    string = "KUBEFLOW_USERID_HEADER"
 	KubeflowUserIDPrefix                    string = "KUBEFLOW_USERID_PREFIX"
@@ -167,6 +168,10 @@ func GetBoolFromStringWithDefault(value string, defaultValue bool) bool {
 
 func IsCacheEnabled() string {
 	return GetStringConfigWithDefault(CacheEnabled, "true")
+}
+
+func IsCacheEnabledDeprecated() string {
+	return GetStringConfigWithDefault(CacheEnabledDeprecated, "true")
 }
 
 func GetKubeflowUserIDHeader() string {
