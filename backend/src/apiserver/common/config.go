@@ -27,7 +27,7 @@ const (
 	MultiUserMode                           string = "MULTIUSER"
 	MultiUserModeSharedReadAccess           string = "MULTIUSER_SHARED_READ"
 	PodNamespace                            string = "POD_NAMESPACE"
-	CacheEnabledOld                         string = "CacheEnabled"
+	CacheEnabledDeprecated                  string = "CacheEnabled"
 	CacheEnabled                            string = "CACHE_ENABLED"
 	DefaultPipelineRunnerServiceAccountFlag string = "DEFAULTPIPELINERUNNERSERVICEACCOUNT"
 	KubeflowUserIDHeader                    string = "KUBEFLOW_USERID_HEADER"
@@ -170,8 +170,8 @@ func IsCacheEnabled() string {
 	return GetStringConfigWithDefault(CacheEnabled, "true")
 }
 
-func IsCacheEnabledOld() string {
-	return GetStringConfigWithDefault(CacheEnabledOld, "true")
+func IsCacheEnabledDeprecated() string {
+	return GetStringConfigWithDefault(CacheEnabledDeprecated, "true")
 }
 
 func GetKubeflowUserIDHeader() string {
