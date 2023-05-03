@@ -129,42 +129,42 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			// "--type", "CONTAINER",
 			{
 				Name:  paramNameType,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: "CONTAINER"},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: "CONTAINER"},
 			},
 			// "--pipeline_name", c.spec.GetPipelineInfo().GetName(),
 			{
 				Name:  paramNamePipelineName,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
 			// "--run_id", runID(),
 			{
 				Name:  paramNameRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
 			{
 				Name:  paramNameDagExecutionId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
 			},
 			// "--component"
 			{
 				Name:  paramComponent,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.component},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
 			},
 			// "--task"
 			{
 				Name:  paramTask,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.task},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.task},
 			},
 			// "--container"
 			{
 				Name:  paramContainer,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.container},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.container},
 			},
 			// "--iteration_index", inputValue(paramIterationIndex),
 			{
 				Name:  paramNameIterationIndex,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.iterationIndex},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.iterationIndex},
 			},
 			// produce the following outputs:
 			// - execution-id
@@ -214,19 +214,19 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 		Params: []pipelineapi.Param{
 			{
 				Name:  paramExecutorInput,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: containerDriverOutputs.executiorInput},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: containerDriverOutputs.executiorInput},
 			},
 			{
 				Name:  paramExecutionID,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: containerDriverOutputs.executionId},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: containerDriverOutputs.executionId},
 			},
 			{
 				Name:  paramRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 			{
 				Name:  paramComponentSpec,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: inputs.component},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
 			},
 		},
 	}

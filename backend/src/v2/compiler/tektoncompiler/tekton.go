@@ -20,6 +20,7 @@ import (
 	"sort"
 	"strings"
 
+	pipelineloopapi "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
 	"github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis/exithandler"
@@ -150,6 +151,18 @@ type TektonVisitor interface {
 		component *pipelinespec.ComponentSpec,
 		dag *pipelinespec.DagSpec) error
 
+	// create a PipelineLoop and insert a DAG driver for each iteration
+	LoopDAG(taskName, compRef string,
+		task *pipelinespec.PipelineTaskSpec, // could be sub-dag
+		component *pipelinespec.ComponentSpec,
+		dag *pipelinespec.DagSpec) error
+
+	// convert the PipelineSpec in the PipelineLoop into embedded task spec
+	EmbedLoopDAG(taskName, compRef string,
+		task *pipelinespec.PipelineTaskSpec, // could be sub-dag
+		component *pipelinespec.ComponentSpec,
+		dag *pipelinespec.DagSpec) error
+
 	// put the current DAG into the stack. when processing tasks inside a DAG, this could be used
 	// to know which DAG they belong to
 	PushDagStack(dag string)
@@ -260,6 +273,16 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 	sort.Strings(keys)
 	// condition is in DAG level, detect condition existance here and the status is used in the container level
 	state.visitor.SetConditionScope(task.GetTriggerPolicy().GetCondition() != "")
+	if task.GetIterator() != nil {
+		// handle iterator case here
+		if task.GetArtifactIterator() != nil {
+			return fmt.Errorf("artifact iterator is not implemented yet")
+		}
+		// use PipelineLoop to handle param iterator. inside the PipelineLoop, each iteration
+		// is a sub-DAG containing a DAG dirver, and corresponding container driver and
+		// executor for each task.
+		state.visitor.LoopDAG(taskName, compRef, task, component, dag)
+	}
 	for _, key := range keys {
 		task, ok := tasks[key]
 		if !ok {
@@ -289,7 +312,10 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 		}
 	}
 	state.visitor.SetConditionScope(false)
-
+	if task.GetIterator() != nil {
+		// Covert the PipelineLoop.Spec.PipelineSpec as embedded task spec
+		state.visitor.EmbedLoopDAG(taskName, compRef, task, component, dag)
+	}
 	// pop the dag stack, assume no need to use the dag stack when processing DAG
 	// for sub-dag, it can also get its parent dag
 	state.visitor.PopDagStack()
@@ -318,6 +344,7 @@ type pipelinerunCompiler struct {
 	// state
 	pr               *pipelineapi.PipelineRun
 	exithandler      *ehv1alpha1.ExitHandler
+	loops            []*pipelineloopapi.PipelineLoop
 	launcherImage    string
 	dagStack         []string
 	exitHandlerScope bool
@@ -354,15 +381,20 @@ func (state *pipelinerunDFS) checkDependencies(task *pipelinespec.PipelineTaskSp
 func getLeafNodes(dagSpec *pipelinespec.DagSpec, spec *pipelinespec.PipelineSpec) []string {
 	leaves := make(map[string]int)
 	tasks := dagSpec.GetTasks()
+	pipelineloops := make([]string, 0)
 	alldeps := make([]string, 0)
 	for _, task := range tasks {
-		leaves[task.GetTaskInfo().GetName()] = 0
+		if task.GetIterator() == nil {
+			leaves[task.GetTaskInfo().GetName()] = 0
+		} else {
+			pipelineloops = append(pipelineloops, task.GetTaskInfo().GetName()+"-pipelineloop")
+		}
 		alldeps = append(alldeps, task.GetDependentTasks()...)
 	}
 	for _, dep := range alldeps {
 		delete(leaves, dep)
 	}
-	rev := make([]string, 0, len(leaves))
+	rev := make([]string, 0, len(leaves)+len(pipelineloops))
 	for dep := range leaves {
 		refName := tasks[dep].GetComponentRef().GetName()
 		if comp, ok := spec.Components[refName]; ok {
@@ -373,6 +405,7 @@ func getLeafNodes(dagSpec *pipelinespec.DagSpec, spec *pipelinespec.PipelineSpec
 			}
 		}
 	}
+	rev = append(rev, pipelineloops...)
 	return rev
 }
 
@@ -414,6 +447,38 @@ func (c *pipelinerunCompiler) CurrentDag() string {
 	return ""
 }
 
+func (c *pipelinerunCompiler) PushLoop(loop *pipelineloopapi.PipelineLoop) {
+	if c.loops == nil {
+		c.loops = make([]*pipelineloopapi.PipelineLoop, 0)
+	}
+	if loop == nil {
+		return
+	}
+	c.loops = append(c.loops, loop)
+}
+
+func (c *pipelinerunCompiler) PopLoop() *pipelineloopapi.PipelineLoop {
+	lsize := len(c.loops)
+	if lsize > 0 {
+		rev := c.loops[lsize-1]
+		c.loops = c.loops[:lsize-1]
+		return rev
+	}
+	return nil
+}
+
+func (c *pipelinerunCompiler) CurrentLoop() *pipelineloopapi.PipelineLoop {
+	lsize := len(c.loops)
+	if lsize > 0 {
+		return c.loops[lsize-1]
+	}
+	return nil
+}
+
+func (c *pipelinerunCompiler) InLoop() bool {
+	return len(c.loops) > 0
+}
+
 func (c *pipelinerunCompiler) Resolver(name string, component *pipelinespec.ComponentSpec, resolver *pipelinespec.PipelineDeploymentConfig_ResolverSpec) error {
 	return fmt.Errorf("resolver not implemented yet")
 }
@@ -423,6 +488,9 @@ func (c *pipelinerunCompiler) addPipelineTask(t *pipelineapi.PipelineTask) {
 	if c.exitHandlerScope {
 		c.initExitHandler()
 		c.exithandler.Spec.PipelineSpec.Tasks = append(c.exithandler.Spec.PipelineSpec.Tasks, *t)
+	} else if c.InLoop() {
+		loop := c.CurrentLoop()
+		loop.Spec.PipelineSpec.Tasks = append(loop.Spec.PipelineSpec.Tasks, *t)
 	} else {
 		c.pr.Spec.PipelineSpec.Tasks = append(c.pr.Spec.PipelineSpec.Tasks, *t)
 	}
@@ -465,7 +533,7 @@ func (c *pipelinerunCompiler) Finalize() error {
 		{
 			Name: "exithandler",
 			Params: []pipelineapi.Param{
-				{Name: paramParentDagID, Value: pipelineapi.ArrayOrString{
+				{Name: paramParentDagID, Value: pipelineapi.ParamValue{
 					Type: "string", StringVal: taskOutputParameter(getDAGDriverTaskName(compiler.RootComponentName), paramExecutionID)}},
 			},
 			TaskSpec: &pipelineapi.EmbeddedTask{
@@ -538,6 +606,7 @@ const (
 	paramRuntimeConfig  = "runtime-config" // job runtime config, pipeline level inputs
 	paramParentDagID    = "parent-dag-id"
 	paramExecutionID    = "execution-id"
+	paramIterationItem  = "iteration-item"
 	paramIterationCount = "iteration-count"
 	paramIterationIndex = "iteration-index"
 	paramExecutorInput  = "executor-input"
@@ -560,6 +629,9 @@ const (
 	paramNameCachedDecision   = "cached_decision"
 	paramNamePodSpecPatchPath = "pod_spec_patch_path"
 	paramNameExecutorInput    = "executor_input"
+
+	kindPipelineLoop   = "PipelineLoop"
+	subfixPipelineLoop = "-pipelineloop"
 )
 
 func runID() string {

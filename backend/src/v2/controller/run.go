@@ -132,10 +132,17 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]v1beta1.CustomR
 		})
 	}
 	if execution.IterationCount != nil {
-		logger.Infof("output execution.IterationCount=%v", *execution.IterationCount)
+		count := *execution.IterationCount
+		// the count would be use as 'to' in PipelineLoop. since PipelineLoop's numberic iteration includes to,
+		// need to substract 1 to compensate that.
+		count = count - 1
+		if count < 0 {
+			count = 0
+		}
+		logger.Infof("output execution.IterationCount=%v, count:=%v", *execution.IterationCount, count)
 		runResults = append(runResults, v1beta1.CustomRunResult{
 			Name:  IterationCount,
-			Value: fmt.Sprint(*execution.IterationCount),
+			Value: fmt.Sprint(count),
 		})
 	}
 
