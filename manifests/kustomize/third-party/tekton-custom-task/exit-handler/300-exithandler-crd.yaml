@@ -48,4 +48,5 @@ spec:
     categories:
     - tekton
     - tekton-pipelines
+    - openshift-pipelines
   scope: Namespaced

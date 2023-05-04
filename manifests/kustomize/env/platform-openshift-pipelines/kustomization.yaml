@@ -4,30 +4,10 @@ kind: Kustomization
 resources:
 - ../../base/installs/generic
 - ../../base/metadata/base
-- ../../third-party/tekton/installs/cluster
-- ../../third-party/tekton-custom-task
 - ../../third-party/minio/base
 - ../../third-party/mysql/base
-
-# Identifier for application manager to apply ownerReference.
-# The ownerReference ensures the resources get garbage collected
-# when application is deleted.
-
-images:
-- name: gcr.io/ml-pipeline/api-server
-  newName: docker.io/aipipeline/apiserver-dev
-  newTag: cd027af8e
-- name: gcr.io/ml-pipeline/persistenceagent
-  newName: docker.io/aipipeline/persistenceagent-dev
-  newTag: cd027af8e
-- name: gcr.io/ml-pipeline/scheduledworkflow
-  newName: docker.io/aipipeline/swf-dev
-  newTag: cd027af8e
-
-labels:
-- includeSelectors: true
-  pairs:
-    application-crd-id: kubeflow-pipelines
+- ../../third-party/openshift-pipelines-custom-task
+- ../../third-party/openshift/standalone
 
 patches:
 - patch: |-
@@ -69,3 +49,20 @@ patches:
               env:
               - name: EXECUTIONTYPE
                 value: PipelineRun
+
+
+images:
+- name: gcr.io/ml-pipeline/api-server
+  newName: docker.io/aipipeline/apiserver-dev
+  newTag: cd027af8e
+- name: gcr.io/ml-pipeline/persistenceagent
+  newName: docker.io/aipipeline/persistenceagent-dev
+  newTag: cd027af8e
+- name: gcr.io/ml-pipeline/scheduledworkflow
+  newName: docker.io/aipipeline/swf-dev
+  newTag: cd027af8e
+
+labels:
+- includeSelectors: true
+  pairs:
+    application-crd-id: kubeflow-pipelines

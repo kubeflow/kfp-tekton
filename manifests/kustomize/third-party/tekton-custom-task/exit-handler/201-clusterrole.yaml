@@ -92,7 +92,7 @@ rules:
     verbs: ["get", "update"]
   - apiGroups: ["policy"]
     resources: ["podsecuritypolicies"]
-    resourceNames: ["tekton-pipelines"]
+    resourceNames: ["tekton-pipelines", "openshift-pipelines"]
     verbs: ["use"]
 ---
 kind: ClusterRole

@@ -1,24 +1,25 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-bases:
+resources:
 - pipeline-loops
 - driver-controller
 - exit-handler
+- configmap.yaml
 
 namespace: tekton-pipelines
 
 images:
-  - name: docker.io/aipipeline/pipelineloop-controller
-    newTag: 1.6.0
-  - name: docker.io/aipipeline/pipelineloop-webhook
-    newTag: 1.6.0
+  - name: quay.io/aipipeline/pipelineloop-controller
+    newTag: 1.6.5
+  - name: quay.io/aipipeline/pipelineloop-webhook
+    newTag: 1.6.5
   - name: kfp-v2-dev-driver-controller
     newName: docker.io/aipipeline/tekton-driver-dev
-    newTag: d30d07c2d
+    newTag: cd027af8e
   - name: tekton-exithandler-controller
     newName: docker.io/aipipeline/tekton-exithandler-controller-dev
-    newTag: d30d07c2d
+    newTag: cd027af8e
   - name: tekton-exithandler-webhook
     newName: docker.io/aipipeline/tekton-exithandler-webhook-dev
-    newTag: d30d07c2d
+    newTag: cd027af8e
