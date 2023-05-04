@@ -3014,12 +3014,11 @@ func Test_toModelTask(t *testing.T) {
 			util.NodeStatus{
 				ID:          "1",
 				DisplayName: "node_1",
-				// Name:        "wrong name",
-				State:      "Pending",
-				Children:   []string{"node3", "node4"},
-				StartTime:  4,
-				CreateTime: 4,
-				FinishTime: 5,
+				State:       "Pending",
+				Children:    []string{"node3", "node4"},
+				StartTime:   4,
+				CreateTime:  4,
+				FinishTime:  5,
 			},
 			&model.Task{
 				PodName:           "1",
