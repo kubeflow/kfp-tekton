@@ -16,10 +16,10 @@ images:
     newTag: 1.6.5
   - name: kfp-v2-dev-driver-controller
     newName: docker.io/aipipeline/tekton-driver-dev
-    newTag: cd027af8e
+    newTag: 91ce40fba
   - name: tekton-exithandler-controller
     newName: docker.io/aipipeline/tekton-exithandler-controller-dev
-    newTag: cd027af8e
+    newTag: 91ce40fba
   - name: tekton-exithandler-webhook
     newName: docker.io/aipipeline/tekton-exithandler-webhook-dev
-    newTag: cd027af8e
+    newTag: 91ce40fba
