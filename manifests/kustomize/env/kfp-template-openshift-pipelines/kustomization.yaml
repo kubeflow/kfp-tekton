@@ -3,7 +3,7 @@ kind: Kustomization
 
 resources:
   - ../plain
-  - ../../third-party/tekton-custom-task
+  - ../../third-party/openshift-pipelines-custom-task
   - ../../third-party/openshift/standalone
   - namespace.yaml
 
