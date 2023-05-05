@@ -183,19 +183,19 @@ class TektonClient(kfp.Client):
         # Tekton pipelineruns Status
         # List of Tekton status: https://github.com/tektoncd/pipeline/blob/main/pkg/apis/pipeline/v1/pipelinerun_types.go
         # List of Tekton error status: https://github.com/tektoncd/pipeline/blob/main/pkg/reconciler/pipelinerun/pipelinerun.go
-        while (status is None or status.lower()
-               not in ['succeeded',
-                       'failed',
-                       'skipped',
-                       'error',
-                       'completed',
-                       'pipelineruncancelled',
-                       'pipelineruncouldntcancel',
-                       'pipelineruntimeout',
-                       'cancelled',
-                       'stoppedrunfinally',
-                       'cancelledrunfinally',
-                       'invalidtaskresultreference']):
+        tekton_completion_status = {'succeeded',
+                                    'failed',
+                                    'skipped',
+                                    'error',
+                                    'completed',
+                                    'pipelineruncancelled',
+                                    'pipelineruncouldntcancel',
+                                    'pipelineruntimeout',
+                                    'cancelled',
+                                    'stoppedrunfinally',
+                                    'cancelledrunfinally',
+                                    'invalidtaskresultreference'}
+        while True:
             try:
                 get_run_response = self._run_api.get_run(run_id=run_id)
                 is_valid_token = True
@@ -214,8 +214,9 @@ class TektonClient(kfp.Client):
             logging.info('Waiting for the job to complete...')
             if elapsed_time > timeout:
                 raise TimeoutError('Run timeout')
+            if status is not None and status.lower() in tekton_completion_status:
+                return get_run_response
             time.sleep(5)
-        return get_run_response
 
     def create_experiment(
             self,
