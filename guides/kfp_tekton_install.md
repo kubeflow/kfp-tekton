@@ -48,6 +48,8 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 2. Enable necessary Tekton configurations for kfp-tekton
    ```shell
+   kubectl patch cm feature-flags -n tekton-pipelines \
+         -p '{"data":{"running-in-environment-with-injected-sidecars": "false"}}'
    kubectl patch cm config-defaults -n tekton-pipelines \
          -p '{"data":{"default-timeout-minutes": "0"}}'
    ```
