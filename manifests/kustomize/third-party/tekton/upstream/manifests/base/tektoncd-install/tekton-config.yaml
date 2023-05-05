@@ -9,3 +9,4 @@ metadata:
 data:
   embedded-status: "minimal"
   custom-task-version: "v1beta1"
+  running-in-environment-with-injected-sidecars: "false"
