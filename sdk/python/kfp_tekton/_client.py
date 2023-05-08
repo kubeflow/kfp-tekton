@@ -20,7 +20,10 @@ import time
 from datetime import datetime
 from typing import Mapping, Callable
 
+from kfp_server_api import ApiException
+
 import kfp
+import logging
 
 from .compiler import TektonCompiler
 
@@ -62,3 +65,59 @@ class TektonClient(kfp.Client):
                                                    run_name, experiment_name, namespace)
     finally:
       os.remove(pipeline_package_path)
+
+  def wait_for_run_completion(self, run_id: str, timeout: int):
+    """Waits for a run to complete.
+
+    Args:
+      run_id: Run id, returned from run_pipeline.
+      timeout: Timeout in seconds.
+
+    Returns:
+      A run detail object: Most important fields are run and pipeline_runtime.
+
+    Raises:
+      TimeoutError: if the pipeline run failed to finish before the specified timeout.
+    """
+    status = 'Running:'
+    start_time = datetime.datetime.now()
+    if isinstance(timeout, datetime.timedelta):
+      timeout = timeout.total_seconds()
+    is_valid_token = False
+    # Tekton pipelineruns Status
+    # List of Tekton status: https://github.com/tektoncd/pipeline/blob/main/pkg/apis/pipeline/v1/pipelinerun_types.go
+    # List of Tekton error status: https://github.com/tektoncd/pipeline/blob/main/pkg/reconciler/pipelinerun/pipelinerun.go
+    tekton_completion_status = {'succeeded',
+                                'failed',
+                                'skipped',
+                                'error',
+                                'completed',
+                                'pipelineruncancelled',
+                                'pipelineruncouldntcancel',
+                                'pipelineruntimeout',
+                                'cancelled',
+                                'stoppedrunfinally',
+                                'cancelledrunfinally',
+                                'invalidtaskresultreference'}
+    while True:
+      try:
+        get_run_response = self._run_api.get_run(run_id=run_id)
+        is_valid_token = True
+      except ApiException as api_ex:
+        # if the token is valid but receiving 401 Unauthorized error
+        # then refresh the token
+        if is_valid_token and api_ex.status == 401:
+          logging.info('Access token has expired !!! Refreshing ...')
+          self._refresh_api_client_token()
+          continue
+        else:
+          raise api_ex
+      status = get_run_response.run.status
+      elapsed_time = (datetime.datetime.now() -
+                      start_time).total_seconds()
+      logging.info('Waiting for the job to complete...')
+      if elapsed_time > timeout:
+        raise TimeoutError('Run timeout')
+      if status is not None and status.lower() in tekton_completion_status:
+        return get_run_response
+      time.sleep(5)
