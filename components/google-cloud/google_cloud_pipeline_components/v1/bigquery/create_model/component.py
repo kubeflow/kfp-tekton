@@ -15,7 +15,6 @@
 from typing import Dict, List
 
 from google_cloud_pipeline_components.types.artifact_types import BQMLModel
-from google_cloud_pipeline_components.types.artifact_types import VertexEndpoint
 from kfp.dsl import ConcatPlaceholder
 from kfp.dsl import container_component
 from kfp.dsl import ContainerSpec
@@ -76,7 +75,7 @@ def bigquery_create_model_job(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',

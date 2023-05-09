@@ -15,7 +15,6 @@
 from google_cloud_pipeline_components.types.artifact_types import VertexModel
 from kfp import dsl
 from kfp.dsl import Input
-from kfp.dsl import OutputPath
 
 
 @dsl.container_component
@@ -37,7 +36,7 @@ def model_delete(model: Input[VertexModel], gcp_resources: dsl.OutputPath(str)):
   """
   # fmt: on
   return dsl.ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',
@@ -51,7 +50,7 @@ def model_delete(model: Input[VertexModel], gcp_resources: dsl.OutputPath(str)):
           dsl.ConcatPlaceholder([
               '{',
               '"model": "',
-              "{{$.inputs.artifacts['model'].metadata['resourceName']}}",
+              model.metadata['resourceName'],
               '"',
               '}',
           ]),

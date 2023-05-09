@@ -12,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict
 
 from google_cloud_pipeline_components.types.artifact_types import VertexEndpoint
-from google_cloud_pipeline_components.types.artifact_types import VertexModel
 from kfp.dsl import Input
-from kfp.dsl import OutputPath
 from kfp import dsl
 
 
@@ -43,7 +40,7 @@ def endpoint_delete(
   """
   # fmt: on
   return dsl.ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',
@@ -57,7 +54,7 @@ def endpoint_delete(
           dsl.ConcatPlaceholder([
               '{',
               '"endpoint": "',
-              "{{$.inputs.artifacts['endpoint'].metadata['resourceName']}}",
+              endpoint.metadata['resourceName'],
               '"',
               '}',
           ]),

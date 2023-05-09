@@ -779,8 +779,8 @@ github.com/aokoli/goutils v1.0.1/go.mod h1:SijmP0QR8LtwsmDs8Yii5Z/S4trXFGFC2oO5g
 github.com/apache/arrow/go/v10 v10.0.1/go.mod h1:YvhnlEePVnBS4+0z3fhPfUy7W1Ikj0Ih0vcRo/gZ1M0=
 github.com/apache/arrow/go/v11 v11.0.0/go.mod h1:Eg5OsL5H+e299f7u5ssuXsuHQVEGC4xei5aX110hRiI=
 github.com/apache/thrift v0.16.0/go.mod h1:PHK3hniurgQaNMZYaCLEqXKsYK8upmhPbmdP2FXSqgU=
-github.com/argoproj/argo-workflows/v3 v3.3.8 h1:ntLWfGaPTrA8v3biGCL2dhK1zds+Pl8IPle2cb3i9NM=
-github.com/argoproj/argo-workflows/v3 v3.3.8/go.mod h1:tsEb31ByM3NmWhhkiOyZsPr54MDAMj/H28KSkteY4D4=
+github.com/argoproj/argo-workflows/v3 v3.3.10 h1:ybgHGFC+RIvbBrOoD0Tmig6z7VtG/SiLerfcsORpd2Q=
+github.com/argoproj/argo-workflows/v3 v3.3.10/go.mod h1:Cg442YnzaUxILjmk6xMZo19X87Feev1DyEX4Onj08vo=
 github.com/argoproj/pkg v0.11.0 h1:kho8cjBRe/K7tFiMfNG7vnF6VBy9+p0idV21f9bbUO4=
 github.com/argoproj/pkg v0.11.0/go.mod h1:ra+bQPmbVAoEL+gYSKesuigt4m49i3Qa3mE/xQcjCiA=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=

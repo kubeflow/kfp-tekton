@@ -11,30 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Google Cloud Pipeline Experimental Forecasting Components."""
+"""Forecasting components."""
 
-import os
-
-
-from kfp.components import load_component_from_file
-
+from google_cloud_pipeline_components.v1.forecasting.prepare_data_for_train.component import prepare_data_for_train as ForecastingPrepareDataForTrainOp
+from google_cloud_pipeline_components.v1.forecasting.preprocess.component import forecasting_preprocessing as ForecastingPreprocessingOp
+from google_cloud_pipeline_components.v1.forecasting.validate.component import forecasting_validation as ForecastingValidationOp
 
 __all__ = [
     'ForecastingPreprocessingOp',
     'ForecastingValidationOp',
     'ForecastingPrepareDataForTrainOp',
 ]
-
-ForecastingPreprocessingOp = load_component_from_file(
-    os.path.join(os.path.dirname(__file__), 'preprocess/component.yaml')
-)
-
-ForecastingValidationOp = load_component_from_file(
-    os.path.join(os.path.dirname(__file__), 'validate/component.yaml')
-)
-
-ForecastingPrepareDataForTrainOp = load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'prepare_data_for_train/component.yaml'
-    )
-)

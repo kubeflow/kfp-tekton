@@ -163,7 +163,7 @@ def model_deploy(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',
@@ -177,13 +177,13 @@ def model_deploy(
           ConcatPlaceholder([
               '{',
               '"endpoint": "',
-              "{{$.inputs.artifacts['endpoint'].metadata['resourceName']}}",
+              endpoint.metadata['resourceName'],
               '"',
               ', "traffic_split": ',
               traffic_split,
               ', "deployed_model": {',
               '"model": "',
-              "{{$.inputs.artifacts['model'].metadata['resourceName']}}",
+              model.metadata['resourceName'],
               '"',
               ', "dedicated_resources": {',
               '"machine_spec": {',

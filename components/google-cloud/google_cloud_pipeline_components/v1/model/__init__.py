@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Google Cloud Pipeline Model components."""
+"""Model components."""
 
-from .delete_model.component import model_delete as ModelDeleteOp
-from .export_model.component import model_export as ModelExportOp
-from .upload_model.component import model_upload as ModelUploadOp
+from google_cloud_pipeline_components.v1.model.delete_model.component import model_delete as ModelDeleteOp
+from google_cloud_pipeline_components.v1.model.export_model.component import model_export as ModelExportOp
+from google_cloud_pipeline_components.v1.model.upload_model.component import model_upload as ModelUploadOp
 
 __all__ = [
     'ModelExportOp',

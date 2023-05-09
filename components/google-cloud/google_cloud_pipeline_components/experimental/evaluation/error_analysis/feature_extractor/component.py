@@ -76,7 +76,7 @@ def feature_extractor_error_analysis(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',
@@ -117,14 +117,14 @@ def feature_extractor_error_analysis(
               IfPresentPlaceholder(
                   input_name='test_dataset',
                   then=(
-                      "\", \"--test_dataset_resource_name={{$.inputs.artifacts['test_dataset'].metadata['resourceName']}}"
+                      f"\", \"--test_dataset_resource_name={test_dataset.metadata['resourceName']}"
                   ),
                   else_='',
               ),
               IfPresentPlaceholder(
                   input_name='training_dataset',
                   then=(
-                      "\", \"--training_dataset_resource_name={{$.inputs.artifacts['training_dataset'].metadata['resourceName']}}"
+                      f"\", \"--training_dataset_resource_name={training_dataset.metadata['resourceName']}"
                   ),
                   else_='',
               ),

@@ -81,7 +81,7 @@ def model_export(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',
@@ -95,7 +95,7 @@ def model_export(
           ConcatPlaceholder([
               '{',
               '"name": "',
-              "{{$.inputs.artifacts['model'].metadata['resourceName']}}",
+              model.metadata['resourceName'],
               '"',
               ', "output_config": {',
               '"export_format_id": "',

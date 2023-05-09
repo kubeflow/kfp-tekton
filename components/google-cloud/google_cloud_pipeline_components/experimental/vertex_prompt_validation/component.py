@@ -14,7 +14,6 @@
 
 from kfp.dsl import container_component
 from kfp.dsl import ContainerSpec
-from kfp.dsl import PipelineTaskFinalStatus
 
 
 @container_component
@@ -45,7 +44,7 @@ def vertex_pipelines_prompt_validation(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',

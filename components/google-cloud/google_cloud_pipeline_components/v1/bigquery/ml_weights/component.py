@@ -81,7 +81,7 @@ def bigquery_ml_weights_job(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',
@@ -97,11 +97,11 @@ def bigquery_ml_weights_job(
           location,
           '--model_name',
           ConcatPlaceholder([
-              "{{$.inputs.artifacts['model'].metadata['projectId']}}",
+              model.metadata['projectId'],
               '.',
-              "{{$.inputs.artifacts['model'].metadata['datasetId']}}",
+              model.metadata['datasetId'],
               '.',
-              "{{$.inputs.artifacts['model'].metadata['modelId']}}",
+              model.metadata['modelId'],
           ]),
           '--payload',
           ConcatPlaceholder([

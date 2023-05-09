@@ -53,7 +53,7 @@ def model_undeploy(
   """
   # fmt: on
   return dsl.ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',
@@ -67,10 +67,10 @@ def model_undeploy(
           dsl.ConcatPlaceholder([
               '{',
               '"endpoint": "',
-              "{{$.inputs.artifacts['endpoint'].metadata['resourceName']}}",
+              endpoint.metadata['resourceName'],
               '"',
               ', "model": "',
-              "{{$.inputs.artifacts['model'].metadata['resourceName']}}",
+              model.metadata['resourceName'],
               '"',
               ', "traffic_split": ',
               traffic_split,

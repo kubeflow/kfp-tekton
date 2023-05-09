@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List
+from typing import Dict
 
 from google_cloud_pipeline_components.types.artifact_types import BQMLModel
 from kfp.dsl import ConcatPlaceholder
@@ -72,7 +72,7 @@ def bigquery_export_model_job(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',
@@ -88,11 +88,11 @@ def bigquery_export_model_job(
           location,
           '--model_name',
           ConcatPlaceholder([
-              "{{$.inputs.artifacts['model'].metadata['projectId']}}",
+              model.metadata['projectId'],
               '.',
-              "{{$.inputs.artifacts['model'].metadata['datasetId']}}",
+              model.metadata['datasetId'],
               '.',
-              "{{$.inputs.artifacts['model'].metadata['modelId']}}",
+              model.metadata['modelId'],
           ]),
           '--model_destination_path',
           model_destination_path,

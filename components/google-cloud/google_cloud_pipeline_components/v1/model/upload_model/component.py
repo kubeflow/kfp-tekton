@@ -116,7 +116,7 @@ def model_upload(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b1',
+      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
       command=[
           'python3',
           '-u',
@@ -160,7 +160,7 @@ def model_upload(
               input_name='parent_model',
               then=ConcatPlaceholder([
                   '--parent_model_name ',
-                  "{{$.inputs.artifacts['parent_model'].metadata['resourceName']}}",
+                  parent_model.metadata['resourceName'],
               ]),
           ),
       ],

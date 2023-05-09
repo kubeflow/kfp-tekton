@@ -11,11 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Google Cloud Pipeline Dataset components."""
+"""Dataset components."""
 
-import os
-
-from kfp import components
+from google_cloud_pipeline_components.v1.dataset.create_image_dataset.component import image_dataset_create as ImageDatasetCreateOp
+from google_cloud_pipeline_components.v1.dataset.create_tabular_dataset.component import tabular_dataset_create as TabularDatasetCreateOp
+from google_cloud_pipeline_components.v1.dataset.create_text_dataset.component import text_dataset_create as TextDatasetCreateOp
+from google_cloud_pipeline_components.v1.dataset.create_time_series_dataset.component import time_series_dataset_create as TimeSeriesDatasetCreateOp
+from google_cloud_pipeline_components.v1.dataset.create_video_dataset.component import video_dataset_create as VideoDatasetCreateOp
+from google_cloud_pipeline_components.v1.dataset.export_image_dataset.component import image_dataset_export as ImageDatasetExportDataOp
+from google_cloud_pipeline_components.v1.dataset.export_tabular_dataset.component import tabular_dataset_export as TabularDatasetExportDataOp
+from google_cloud_pipeline_components.v1.dataset.export_text_dataset.component import text_dataset_export as TextDatasetExportDataOp
+from google_cloud_pipeline_components.v1.dataset.export_time_series_dataset.component import time_series_dataset_export as TimeSeriesDatasetExportDataOp
+from google_cloud_pipeline_components.v1.dataset.export_video_dataset.component import video_dataset_export as VideoDatasetExportDataOp
+from google_cloud_pipeline_components.v1.dataset.get_vertex_dataset.component import get_vertex_dataset as GetVertexDatasetOp
+from google_cloud_pipeline_components.v1.dataset.import_image_dataset.component import image_dataset_import as ImageDatasetImportDataOp
+from google_cloud_pipeline_components.v1.dataset.import_text_dataset.component import text_dataset_import as TextDatasetImportDataOp
+from google_cloud_pipeline_components.v1.dataset.import_video_dataset.component import video_dataset_import as VideoDatasetImportDataOp
 
 __all__ = [
     'ImageDatasetCreateOp',
@@ -33,75 +44,3 @@ __all__ = [
     'VideoDatasetImportDataOp',
     'GetVertexDatasetOp',
 ]
-
-ImageDatasetCreateOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'create_image_dataset/component.yaml'
-    )
-)
-ImageDatasetExportDataOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'export_image_dataset/component.yaml'
-    )
-)
-TabularDatasetCreateOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'create_tabular_dataset/component.yaml'
-    )
-)
-TextDatasetCreateOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'create_text_dataset/component.yaml'
-    )
-)
-TimeSeriesDatasetCreateOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'create_time_series_dataset/component.yaml'
-    )
-)
-VideoDatasetCreateOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'create_video_dataset/component.yaml'
-    )
-)
-TabularDatasetExportDataOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'export_tabular_dataset/component.yaml'
-    )
-)
-TextDatasetExportDataOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'export_text_dataset/component.yaml'
-    )
-)
-TimeSeriesDatasetExportDataOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'export_time_series_dataset/component.yaml'
-    )
-)
-VideoDatasetExportDataOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'export_video_dataset/component.yaml'
-    )
-)
-ImageDatasetImportDataOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'import_image_dataset/component.yaml'
-    )
-)
-
-TextDatasetImportDataOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'import_text_dataset/component.yaml'
-    )
-)
-
-VideoDatasetImportDataOp = components.load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'import_video_dataset/component.yaml'
-    )
-)
-
-GetVertexDatasetOp = components.load_component_from_file(
-    os.path.join(os.path.dirname(__file__), 'get_vertex_dataset/component.yaml')
-)
