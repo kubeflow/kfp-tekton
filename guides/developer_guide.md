@@ -115,7 +115,7 @@ The KFP backend with Tekton uses a modified version of Kubeflow Pipelines api-se
 
 4. Push the images to registry and modify the Kustomization to use your own built images.
 
-   Modify the `newName` under the `images` section in `manifests/kustomize/base/kustomization.yaml`.
+   Modify the `newName` under the `images` section in the [kustomization.yaml](/manifests/kustomize/base/pipeline/kustomization.yaml).
 
    Now you can follow the [Install Tekton KFP with pre-built images](#install-tekton-kfp-with-pre-built-images) instructions to install your own KFP backend.
 

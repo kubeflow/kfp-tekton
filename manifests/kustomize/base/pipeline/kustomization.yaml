@@ -42,20 +42,20 @@ patches:
 images:
   - name: gcr.io/ml-pipeline/api-server
     newName: quay.io/aipipeline/api-server
-    newTag: 1.6.6
+    newTag: 1.7.0
   - name: gcr.io/ml-pipeline/persistenceagent
     newName: quay.io/aipipeline/persistenceagent
-    newTag: 1.6.6
+    newTag: 1.7.0
   - name: gcr.io/ml-pipeline/scheduledworkflow
     newName: quay.io/aipipeline/scheduledworkflow
-    newTag: 1.6.6
+    newTag: 1.7.0
   - name: gcr.io/ml-pipeline/frontend
     newName: quay.io/aipipeline/frontend
-    newTag: 1.6.6
+    newTag: 1.7.0
   - name: gcr.io/ml-pipeline/viewer-crd-controller
     newTag: 1.8.4
   - name: gcr.io/ml-pipeline/visualization-server
     newTag: 1.8.4
   - name: gcr.io/ml-pipeline/metadata-writer
     newName: quay.io/aipipeline/metadata-writer
-    newTag: 1.6.6
+    newTag: 1.7.0
