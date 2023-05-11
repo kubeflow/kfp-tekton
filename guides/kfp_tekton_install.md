@@ -104,7 +104,7 @@ To install the standalone Kubeflow Pipelines with Openshift Pipelines, run the f
 
 3. Install Kubeflow Pipelines with Openshift pipelines backend (`kfp-tekton`) `v1.6.6` deployment
    ```shell
-   oc apply -k oc apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/kfp-template-openshift-pipelines\?ref\=v1.6.6
+   oc apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/kfp-template-openshift-pipelines\?ref\=v1.6.6
    ```
 
 4. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
