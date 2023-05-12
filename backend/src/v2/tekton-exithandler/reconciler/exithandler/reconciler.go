@@ -140,7 +140,7 @@ func (ehs *exitHandlerFS) next() error {
 			return err
 		}
 
-		pr, err := ehs.reconciler.pipelineClientSet.TektonV1beta1().PipelineRuns(ehs.run.Namespace).Get(ehs.ctx, status.ChildPipelineRun, metav1.GetOptions{})
+		pr, err := ehs.reconciler.pipelineRunLister.PipelineRuns(ehs.run.Namespace).Get(status.ChildPipelineRun)
 		if err != nil {
 			ehs.run.Status.MarkCustomRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonInternalError.String(), "Failed to get the PipelineRun: %s", status.ChildPipelineRun)
 			return err

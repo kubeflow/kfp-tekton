@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package exithandler
+package kfptask
 
 const (
-	// GroupName is the Kubernetes resource group name for ExitHandler types.
+	// GroupName is the Kubernetes resource group name for KFPTask types.
 	GroupName      = "custom.tekton.dev"
-	ControllerName = "exithandler-controller"
-	Kind           = "ExitHandler"
-	FinalizerName  = "exithandler-finalizer"
+	ControllerName = "kfptask-controller"
+	Kind           = "KFPTask"
+	FinalizerName  = "kfptask-finalizer"
 	Version        = "v1alpha1"
-	WebhookName    = "exithandler-webhook"
-	Plural         = "exithandlers"
+	WebhookName    = "kfptask-webhook"
+	Plural         = "kfptasks"
 	FullName       = Plural + "." + GroupName
 )

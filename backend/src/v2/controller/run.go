@@ -36,6 +36,7 @@ const (
 	CacheDecision  = "cached-decision"
 	Condition      = "condition"
 	IterationCount = "iteration-count"
+	PodSpecPatch   = "pod-spec-patch"
 )
 
 // newReconciledNormal makes a new reconciler event with event type Normal, and reason RunReconciled.
@@ -176,6 +177,13 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]v1beta1.CustomR
 		runResults = append(runResults, v1beta1.CustomRunResult{
 			Name:  CacheDecision,
 			Value: strconv.FormatBool(*execution.Cached),
+		})
+	}
+
+	if options.driverType == "CONTAINER" {
+		runResults = append(runResults, v1beta1.CustomRunResult{
+			Name:  PodSpecPatch,
+			Value: execution.PodSpecPatch,
 		})
 	}
 
