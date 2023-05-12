@@ -15,12 +15,16 @@
 package tektoncompiler
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
+	"github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/apis/kfptask"
+	ktv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/apis/kfptask/v1alpha1"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	k8score "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/selection"
 )
 
@@ -74,12 +78,12 @@ func (c *pipelinerunCompiler) Container(taskName, compRef string,
 }
 
 type containerDriverOutputs struct {
-	// podSpecPatch string
 	// break down podSpecPath to the following
 	executionId    string
 	executiorInput string
 	cached         string
 	condition      string
+	podSpecPatch   string
 }
 
 type containerDriverInputs struct {
@@ -197,9 +201,14 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 		condition:      taskOutputParameter(containerDriverName, paramCondition),
 		executiorInput: taskOutputParameter(containerDriverName, paramExecutorInput),
 		cached:         taskOutputParameter(containerDriverName, paramCachedDecision),
+		podSpecPatch:   taskOutputParameter(containerDriverName, paramPodSpecPatch),
 	}
 
-	t := c.containerExecutorTemplate(name, inputs.containerDef, c.spec.PipelineInfo.GetName())
+	t, err := c.containerExecutorTemplate(name, inputs.containerDef, c.spec.PipelineInfo.GetName())
+
+	if err != nil {
+		return err
+	}
 
 	executorTask := &pipelineapi.PipelineTask{
 		Name:     name,
@@ -228,6 +237,10 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 				Name:  paramComponentSpec,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
 			},
+			{
+				Name:  paramPodSpecPatch,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: containerDriverOutputs.podSpecPatch},
+			},
 		},
 	}
 
@@ -239,7 +252,7 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 func (c *pipelinerunCompiler) containerExecutorTemplate(
 	name string, container *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec,
 	pipelineName string,
-) *pipelineapi.EmbeddedTask {
+) (*pipelineapi.EmbeddedTask, error) {
 	userCmdArgs := make([]string, 0, len(container.Command)+len(container.Args))
 	userCmdArgs = append(userCmdArgs, container.Command...)
 	userCmdArgs = append(userCmdArgs, container.Args...)
@@ -262,16 +275,8 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 		"--", // separater before user command and args
 	}
 	mlmdConfigOptional := true
-	return &pipelineapi.EmbeddedTask{
-		Metadata: pipelineapi.PipelineTaskMetadata{
-			Annotations: map[string]string{
-				"pipelines.kubeflow.org/v2_pipeline": "true",
-			},
-			Labels: map[string]string{
-				"pipelines.kubeflow.org/v2_component": "true",
-			},
-		},
-		TaskSpec: pipelineapi.TaskSpec{
+	kfpTaskSpec := ktv1alpha1.KfpTaskSpec{
+		TaskSpec: &pipelineapi.TaskSpec{
 			Params: []pipelineapi.ParamSpec{
 				{Name: paramExecutorInput, Type: "string"}, // --executor_input
 				{Name: paramExecutionID, Type: "string"},   // --execution_id
@@ -325,4 +330,27 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 			},
 		},
 	}
+
+	raw, err := json.Marshal(kfpTaskSpec)
+	if err != nil {
+		return nil, fmt.Errorf("unable to Marshal KfpTaskSpec:%v", err)
+	}
+
+	return &pipelineapi.EmbeddedTask{
+		Metadata: pipelineapi.PipelineTaskMetadata{
+			Annotations: map[string]string{
+				"pipelines.kubeflow.org/v2_pipeline": "true",
+			},
+			Labels: map[string]string{
+				"pipelines.kubeflow.org/v2_component": "true",
+			},
+		},
+		TypeMeta: runtime.TypeMeta{
+			Kind:       kfptask.Kind,
+			APIVersion: ktv1alpha1.SchemeGroupVersion.String(),
+		},
+		Spec: runtime.RawExtension{
+			Raw: raw,
+		},
+	}, nil
 }

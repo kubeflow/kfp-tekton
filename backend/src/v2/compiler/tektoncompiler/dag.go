@@ -172,6 +172,7 @@ func (c *pipelinerunCompiler) addDagPubTask(name string, dagSpec *pipelinespec.D
 		if err != nil {
 			return err
 		}
+		// Add root dag pub to exithandler's pipelinerun to make sure it will be executed
 		c.addExitHandlerTask(pubdriver)
 	} else {
 		leaves := getLeafNodes(dagSpec, c.spec)
@@ -287,6 +288,7 @@ func (c *pipelinerunCompiler) dagPubDriverTask(
 	inputs *pubDagDriverInputs,
 ) (*pipelineapi.PipelineTask, error) {
 
+	rootDagPub := c.exithandler != nil && inputs.parentDagID == compiler.RootComponentName
 	t := &pipelineapi.PipelineTask{
 		Name: name,
 		TaskRef: &pipelineapi.TaskRef{
@@ -313,7 +315,7 @@ func (c *pipelinerunCompiler) dagPubDriverTask(
 			// "--dag_execution_id"
 			{
 				Name:  paramNameDagExecutionId,
-				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope() || rootDagPub)},
 			},
 		},
 	}

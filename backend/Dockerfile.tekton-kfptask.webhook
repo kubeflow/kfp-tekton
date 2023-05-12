@@ -21,12 +21,12 @@ COPY . .
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh gcc musl-dev patch
 
-RUN CGO_ENABLED=0 GO111MODULE=on go build -o /bin/webhook ./backend/src/v2/cmd/tekton-exithandler/webhook/*.go
+RUN CGO_ENABLED=0 GO111MODULE=on go build -o /bin/webhook ./backend/src/v2/cmd/tekton-kfptask/webhook/*.go
 RUN go install github.com/google/go-licenses@d483853
-RUN go-licenses check ./backend/src/v2/cmd/tekton-exithandler/webhook/
-RUN go-licenses csv ./backend/src/v2/cmd/tekton-exithandler/webhook > /tmp/licenses.csv && \
-    diff /tmp/licenses.csv backend/third_party_licenses/tekton-exithandler-webhook.csv && \
-    go-licenses save ./backend/src/v2/cmd/tekton-exithandler/webhook --save_path /tmp/NOTICES
+RUN go-licenses check ./backend/src/v2/cmd/tekton-kfptask/webhook/
+RUN go-licenses csv ./backend/src/v2/cmd/tekton-kfptask/webhook > /tmp/licenses.csv && \
+    diff /tmp/licenses.csv backend/third_party_licenses/tekton-kfptask-webhook.csv && \
+    go-licenses save ./backend/src/v2/cmd/tekton-kfptask/webhook --save_path /tmp/NOTICES
 
 FROM alpine:3.17
 WORKDIR /bin

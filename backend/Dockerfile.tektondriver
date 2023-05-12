@@ -31,7 +31,7 @@ RUN go-licenses csv ./backend/src/v2/cmd/controller > /tmp/licenses.csv && \
     diff /tmp/licenses.csv backend/third_party_licenses/tekton-driver.csv && \
     go-licenses save ./backend/src/v2/cmd/controller --save_path /tmp/NOTICES
 
-FROM alpine:3.8
+FROM alpine:3.17
 WORKDIR /bin
 
 COPY --from=builder /bin/controller /bin/controller

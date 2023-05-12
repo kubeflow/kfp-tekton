@@ -21,21 +21,21 @@ COPY . .
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh gcc musl-dev patch
 
-RUN CGO_ENABLED=0 GO111MODULE=on go build -o /bin/webhook ./backend/src/v2/cmd/tekton-exithandler/webhook/*.go
+RUN CGO_ENABLED=0 GO111MODULE=on go build -o /bin/controller ./backend/src/v2/cmd/tekton-kfptask/controller/*.go
 RUN go install github.com/google/go-licenses@d483853
-RUN go-licenses check ./backend/src/v2/cmd/tekton-exithandler/webhook/
-RUN go-licenses csv ./backend/src/v2/cmd/tekton-exithandler/webhook > /tmp/licenses.csv && \
-    diff /tmp/licenses.csv backend/third_party_licenses/tekton-exithandler-webhook.csv && \
-    go-licenses save ./backend/src/v2/cmd/tekton-exithandler/webhook --save_path /tmp/NOTICES
+RUN go-licenses check ./backend/src/v2/cmd/tekton-kfptask/controller/
+RUN go-licenses csv ./backend/src/v2/cmd/tekton-kfptask/controller > /tmp/licenses.csv && \
+    diff /tmp/licenses.csv backend/third_party_licenses/tekton-kfptask-controller.csv && \
+    go-licenses save ./backend/src/v2/cmd/tekton-kfptask/controller --save_path /tmp/NOTICES
 
 FROM alpine:3.17
 WORKDIR /bin
 
-COPY --from=builder /bin/webhook /bin/webhook
+COPY --from=builder /bin/controller /bin/controller
 # Copy licenses and notices.
 COPY --from=builder /tmp/licenses.csv /third_party/licenses.csv
 COPY --from=builder /tmp/NOTICES /third_party/NOTICES
-RUN chmod +x /bin/webhook
+RUN chmod +x /bin/controller
 RUN apk --no-cache add tzdata
 
-CMD /bin/webhook
+CMD /bin/controller
