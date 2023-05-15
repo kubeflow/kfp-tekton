@@ -26,7 +26,7 @@ A Kubernetes cluster `v1.23` that has least 8 vCPU and 16 GB memory.
 
    Depending on your situation, you can choose between the two approaches to set up the pipeline engine on Openshift:
    1. Using [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.12/cicd/pipelines/installing-pipelines.html) (built on Tekton), follow the [Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment](#standalone-kubeflow-pipelines-with-openshift-pipelines-backend-deployment)
-   2. Using [Tekton on Openshift](https://github.com/tektoncd/pipeline/blob/v0.44.2/docs/install.md#installing-tekton-pipelines-on-openshift), follow the [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment) to install the Kubeflow Pipeline Stack.
+   2. Using [Tekton on Openshift](https://github.com/tektoncd/pipeline/blob/v0.44.2/docs/install.md#installing-tekton-pipelines-on-openshift), follow the [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment) to install the Kubeflow Pipeline Stack. Note the current Tekton Open Source deployment for [Openshift doesn't work out of the box](https://github.com/tektoncd/pipeline/issues/3452), so we strongly recommend to deploy with Opneshift Pipelines (see above) if you want to run Kubeflow Pipelines on Openshift.
 
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
 
@@ -83,7 +83,8 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 7. (OpenShift only) If you are running the standalone KFP-Tekton on OpenShift, apply the necessary security context constraint below
    ```shell
-   oc apply -k manifests/kustomize/third-party/openshift/standalone
+   curl -L https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.7.0/kfp-tekton.yaml | yq 'del(.spec.template.spec.containers[].securityContext.runAsUser, .spec.template.spec.containers[].securityContext.runAsGroup)' | oc apply -f -
+   oc apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/third-party/openshift/standalone
    oc adm policy add-scc-to-user anyuid -z tekton-pipelines-controller
    oc adm policy add-scc-to-user anyuid -z tekton-pipelines-webhook
    ```

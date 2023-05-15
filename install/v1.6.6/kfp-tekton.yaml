@@ -3107,7 +3107,9 @@ spec:
           capabilities:
             drop:
             - ALL
+          runAsGroup: 65532
           runAsNonRoot: true
+          runAsUser: 65532
           seccompProfile:
             type: RuntimeDefault
       serviceAccountName: tekton-pipelineloop-controller
@@ -3179,7 +3181,9 @@ spec:
           capabilities:
             drop:
             - ALL
+          runAsGroup: 65532
           runAsNonRoot: true
+          runAsUser: 65532
           seccompProfile:
             type: RuntimeDefault
       serviceAccountName: tekton-pipelineloop-webhook
