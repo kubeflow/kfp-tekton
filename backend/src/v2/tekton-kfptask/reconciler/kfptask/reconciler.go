@@ -215,29 +215,36 @@ func (kts *kfptaskFS) constructTaskRun() (*tektonv1beta1.TaskRun, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse TaskSpecPatch: %v", err)
 		}
+		taskSpec := tr.Spec.TaskSpec
 		//TODO: need better merging strategy
-		for _, container := range podSpec.Containers {
-			if container.Name == "main" {
+		for p := range podSpec.Containers {
+			if podSpec.Containers[p].Name == "main" {
+				container := podSpec.Containers[p]
 				// patch for the user-main step
-				for _, step := range tr.Spec.TaskSpec.Steps {
-					if step.Name == "user-main" {
+				for i := range taskSpec.Steps {
+					if taskSpec.Steps[i].Name == "user-main" {
 						// merge the TaskSpec into this step
-						step.Image = container.Image
+						taskSpec.Steps[i].Image = container.Image
 						if len(container.Env) > 0 {
-							step.Env = append(step.Env, container.Env...)
+							taskSpec.Steps[i].Env = append(taskSpec.Steps[i].Env, container.Env...)
+						}
+						if len(container.EnvFrom) > 0 {
+							taskSpec.Steps[i].EnvFrom = append(taskSpec.Steps[i].EnvFrom, container.EnvFrom...)
 						}
 						if len(container.VolumeMounts) > 0 {
-							step.VolumeMounts = append(step.VolumeMounts, container.VolumeMounts...)
+							taskSpec.Steps[i].VolumeMounts = append(taskSpec.Steps[i].VolumeMounts, container.VolumeMounts...)
 						}
 						if len(container.Resources.Limits) > 0 || len(container.Resources.Requests) > 0 {
-							step.Resources = container.Resources
+							taskSpec.Steps[i].Resources = container.Resources
 						}
+						break
 					}
 				}
+				break
 			}
 		}
 		if len(podSpec.Volumes) > 0 {
-			tr.Spec.TaskSpec.Volumes = append(tr.Spec.TaskSpec.Volumes, podSpec.Volumes...)
+			taskSpec.Volumes = append(taskSpec.Volumes, podSpec.Volumes...)
 		}
 		if len(podSpec.NodeSelector) > 0 {
 			if tr.Spec.PodTemplate == nil {
