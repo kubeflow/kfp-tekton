@@ -127,7 +127,6 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 		TaskRef: &pipelineapi.TaskRef{
 			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
 			Kind:       "KFPDriver",
-			Name:       "kfp-driver",
 		},
 		Params: []pipelineapi.Param{
 			// "--type", "CONTAINER",

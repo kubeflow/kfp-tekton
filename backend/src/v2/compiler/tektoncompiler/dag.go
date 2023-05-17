@@ -227,7 +227,6 @@ func (c *pipelinerunCompiler) dagDriverTask(
 		TaskRef: &pipelineapi.TaskRef{
 			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
 			Kind:       "KFPDriver",
-			Name:       "kfp-driver",
 		},
 		Params: []pipelineapi.Param{
 			// "--type"
@@ -294,7 +293,6 @@ func (c *pipelinerunCompiler) dagPubDriverTask(
 		TaskRef: &pipelineapi.TaskRef{
 			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
 			Kind:       "KFPDriver",
-			Name:       "kfp-driver",
 		},
 		Params: []pipelineapi.Param{
 			// "--type"
