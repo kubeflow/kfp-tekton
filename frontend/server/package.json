@@ -10,7 +10,7 @@
     "gunzip-maybe": "^1.4.1",
     "http-proxy-middleware": "^0.18.0",
     "lodash": ">=4.17.21",
-    "minio": "^7.0.0",
+    "minio": "^7.1.0",
     "node-fetch": "^2.6.1",
     "peek-stream": "^1.1.3",
     "portable-fetch": "^3.0.0",
