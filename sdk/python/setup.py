@@ -59,7 +59,7 @@ logger.setLevel(logging.INFO)
 # NOTICE, after any updates to the following, ./requirements.in should be updated
 # accordingly.
 REQUIRES = [
-    "kfp>=1.8.10,<1.8.22",
+    "kfp>=1.8.10,<1.8.23",
     "kfp-tekton-server-api>=1.5.0"
 ]
 
