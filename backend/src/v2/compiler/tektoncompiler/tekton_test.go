@@ -32,28 +32,32 @@ var update = flag.Bool("update", true, "update golden files")
 
 func Test_tekton_compiler(t *testing.T) {
 	tests := []struct {
-		jobPath        string // path of input PipelineJob to compile
-		tektonYAMLPath string // path of expected output argo workflow YAML
+		jobPath          string // path of input PipelineJob to compile
+		platformSpecPath string // path of platform spec
+		tektonYAMLPath   string // path of expected output argo workflow YAML
 	}{
 		{
-			jobPath:        "../testdata/hello_world.json",
-			tektonYAMLPath: "testdata/hello_world.yaml",
+			jobPath:          "../testdata/hello_world.json",
+			platformSpecPath: "",
+			tektonYAMLPath:   "testdata/hello_world.yaml",
 		},
 		{
-			jobPath:        "../testdata/importer.json",
-			tektonYAMLPath: "testdata/importer.yaml",
+			jobPath:          "../testdata/importer.json",
+			platformSpecPath: "",
+			tektonYAMLPath:   "testdata/importer.yaml",
 		},
 		{
-			jobPath:        "../testdata/importer.json",
-			tektonYAMLPath: "testdata/importer.yaml",
+			jobPath:          "../testdata/importer.json",
+			platformSpecPath: "",
+			tektonYAMLPath:   "testdata/importer.yaml",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%+v", tt), func(t *testing.T) {
 
-			job := load(t, tt.jobPath, "json")
+			job, platformSpec := load(t, tt.jobPath, tt.platformSpecPath, "json")
 			if *update {
-				pr, err := tektoncompiler.Compile(job, nil)
+				pr, err := tektoncompiler.Compile(job, platformSpec, nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -70,7 +74,7 @@ func Test_tekton_compiler(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			pr, err := tektoncompiler.Compile(job, nil)
+			pr, err := tektoncompiler.Compile(job, platformSpec, nil)
 			if err != nil {
 				t.Error(err)
 			}
@@ -90,28 +94,32 @@ func Test_tekton_compiler(t *testing.T) {
 
 func TestMnist(t *testing.T) {
 	tests := []struct {
-		yamlPath       string // path of input PipelineJob to compile
-		tektonYAMLPath string // path of expected output argo workflow YAML
+		yamlPath         string // path of input PipelineJob to compile
+		platformSpecPath string // path of platform spec
+		tektonYAMLPath   string // path of expected output argo workflow YAML
 	}{
 		{
-			yamlPath:       "testdata/mnist_pipeline_ir.yaml",
-			tektonYAMLPath: "testdata/mnist_pipeline.yaml",
+			yamlPath:         "testdata/mnist_pipeline_ir.yaml",
+			platformSpecPath: "",
+			tektonYAMLPath:   "testdata/mnist_pipeline.yaml",
 		},
 		{
-			yamlPath:       "testdata/exit_handler_ir.yaml",
-			tektonYAMLPath: "testdata/exit_handler.yaml",
+			yamlPath:         "testdata/exit_handler_ir.yaml",
+			platformSpecPath: "",
+			tektonYAMLPath:   "testdata/exit_handler.yaml",
 		},
 		{
-			yamlPath:       "testdata/loop_static_ir.yaml",
-			tektonYAMLPath: "testdata/loop_static.yaml",
+			yamlPath:         "testdata/loop_static_ir.yaml",
+			platformSpecPath: "",
+			tektonYAMLPath:   "testdata/loop_static.yaml",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%+v", tt), func(t *testing.T) {
 
-			job := load(t, tt.yamlPath, "yaml")
+			job, platformSpec := load(t, tt.yamlPath, tt.platformSpecPath, "yaml")
 			if *update {
-				pr, err := tektoncompiler.Compile(job, nil)
+				pr, err := tektoncompiler.Compile(job, platformSpec, nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -128,7 +136,7 @@ func TestMnist(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			pr, err := tektoncompiler.Compile(job, &tektoncompiler.Options{LauncherImage: "aipipeline/kfp-launcher-v2:latest"})
+			pr, err := tektoncompiler.Compile(job, platformSpec, nil)
 			if err != nil {
 				t.Error(err)
 			}
@@ -145,7 +153,7 @@ func TestMnist(t *testing.T) {
 	}
 }
 
-func load(t *testing.T, path string, fileType string) *pipelinespec.PipelineJob {
+func load(t *testing.T, path string, platformSpecPath string, fileType string) (*pipelinespec.PipelineJob, *pipelinespec.SinglePlatformSpec) {
 	t.Helper()
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -161,5 +169,23 @@ func load(t *testing.T, path string, fileType string) *pipelinespec.PipelineJob 
 	if err := protojson.Unmarshal(content, job); err != nil {
 		t.Errorf("Failed to parse pipeline job, error: %s, job: %v", err, string(content))
 	}
-	return job
+
+	platformSpec := &pipelinespec.PlatformSpec{}
+	if platformSpecPath != "" {
+		content, err = ioutil.ReadFile(platformSpecPath)
+		if err != nil {
+			t.Error(err)
+		}
+		if fileType == "yaml" {
+			content, err = yaml.YAMLToJSON(content)
+			if err != nil {
+				t.Error(err)
+			}
+		}
+		if err := protojson.Unmarshal(content, platformSpec); err != nil {
+			t.Errorf("Failed to parse platform spec, error: %s, spec: %v", err, string(content))
+		}
+		return job, platformSpec.Platforms["kubernetes"]
+	}
+	return job, nil
 }
