@@ -27,6 +27,57 @@ spec:
             value: "2"
           - name: CHILDREFERENCES_KINDS
             value: "PipelineLoop"
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: OBJECTSTORECONFIG_SECURE
+            value: "false"
+          - name: OBJECTSTORECONFIG_BUCKETNAME
+            valueFrom:
+              configMapKeyRef:
+                name: pipeline-install-config
+                key: bucketName
+          - name: DBCONFIG_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: username
+          - name: DBCONFIG_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: password
+          - name: DBCONFIG_DBNAME
+            valueFrom:
+              configMapKeyRef:
+                name: pipeline-install-config
+                key: pipelineDb
+          - name: DBCONFIG_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: pipeline-install-config
+                key: dbHost
+          - name: DBCONFIG_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: pipeline-install-config
+                key: dbPort
+          - name: DBCONFIG_CONMAXLIFETIME
+            valueFrom:
+              configMapKeyRef:
+                name: pipeline-install-config
+                key: ConMaxLifeTime
+          - name: OBJECTSTORECONFIG_ACCESSKEY
+            valueFrom:
+              secretKeyRef:
+                name: mlpipeline-minio-artifact
+                key: accesskey
+          - name: OBJECTSTORECONFIG_SECRETACCESSKEY
+            valueFrom:
+              secretKeyRef:
+                name: mlpipeline-minio-artifact
+                key: secretkey
         image: gcr.io/ml-pipeline/persistenceagent:dummy
         imagePullPolicy: IfNotPresent
         name: ml-pipeline-persistenceagent
