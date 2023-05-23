@@ -19,6 +19,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/v2/cacheutils"
 	"github.com/kubeflow/pipelines/backend/src/v2/driver"
 	"github.com/kubeflow/pipelines/backend/src/v2/metadata"
+	"github.com/kubeflow/pipelines/kubernetes_platform/go/kubernetesplatform"
 )
 
 const (
@@ -280,6 +281,18 @@ func parseParams(run *v1beta1.CustomRun) (*driverOptions, *apis.FieldError) {
 			mlmdOpts.Address = param.Value.StringVal
 		case "mlmd_server_port":
 			mlmdOpts.Port = param.Value.StringVal
+		case "kubernetes_config":
+			var k8sExecCfg *kubernetesplatform.KubernetesExecutorConfig
+			if param.Value.StringVal != "" {
+				k8sExecCfg = &kubernetesplatform.KubernetesExecutorConfig{}
+				if err := jsonpb.UnmarshalString(param.Value.StringVal, k8sExecCfg); err != nil {
+					return nil, apis.ErrInvalidValue(
+						fmt.Sprintf("failed to unmarshal Kubernetes config, error: %v\nKubernetesConfig: %v", err, param.Value.StringVal),
+						"kubernetes_config",
+					)
+				}
+				opts.options.KubernetesExecutorConfig = k8sExecCfg
+			}
 		}
 	}
 

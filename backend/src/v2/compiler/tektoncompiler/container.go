@@ -23,6 +23,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/apis/kfptask"
 	ktv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/apis/kfptask/v1alpha1"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"google.golang.org/protobuf/types/known/structpb"
 	k8score "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/selection"
@@ -32,6 +33,15 @@ const (
 	volumeNameKFPLauncher = "kfp-launcher"
 	kfpLauncherPath       = "/tekton/home/launch"
 )
+
+// add KubernetesSpec for the container of the component
+func (c *pipelinerunCompiler) AddKubernetesSpec(name string, kubernetesSpec *structpb.Struct) error {
+	err := c.saveKubernetesSpec(name, kubernetesSpec)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func (c *pipelinerunCompiler) Container(taskName, compRef string,
 	task *pipelinespec.PipelineTaskSpec,
@@ -65,15 +75,16 @@ func (c *pipelinerunCompiler) Container(taskName, compRef string,
 	if task.GetTriggerPolicy().GetStrategy().String() == "ALL_UPSTREAM_TASKS_COMPLETED" {
 		exitHandler = true
 	}
-
+	kubernetesConfigPlaceholder, _ := c.useKubernetesImpl(taskName)
 	return c.containerDriverTask(taskName, &containerDriverInputs{
-		component:    componentSpec,
-		task:         taskSpecJson,
-		container:    containerImpl,
-		parentDag:    c.CurrentDag(),
-		taskDef:      task,
-		containerDef: container,
-		exitHandler:  exitHandler,
+		component:        componentSpec,
+		task:             taskSpecJson,
+		container:        containerImpl,
+		parentDag:        c.CurrentDag(),
+		taskDef:          task,
+		containerDef:     container,
+		exitHandler:      exitHandler,
+		kubernetesConfig: kubernetesConfigPlaceholder,
 	})
 }
 
@@ -87,14 +98,15 @@ type containerDriverOutputs struct {
 }
 
 type containerDriverInputs struct {
-	component      string
-	task           string
-	taskDef        *pipelinespec.PipelineTaskSpec
-	container      string
-	containerDef   *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec
-	parentDag      string
-	iterationIndex string // optional, when this is an iteration task
-	exitHandler    bool
+	component        string
+	task             string
+	taskDef          *pipelinespec.PipelineTaskSpec
+	container        string
+	containerDef     *pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec
+	parentDag        string
+	iterationIndex   string // optional, when this is an iteration task
+	exitHandler      bool
+	kubernetesConfig string
 }
 
 func (i *containerDriverInputs) getParentDagID(isExitHandler bool) string {
@@ -168,6 +180,11 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 			{
 				Name:  paramNameIterationIndex,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.iterationIndex},
+			},
+			// "--kubernetes_config"
+			{
+				Name:  paramKubernetesConfig,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.kubernetesConfig},
 			},
 			// produce the following outputs:
 			// - execution-id

@@ -44,7 +44,7 @@ type Options struct {
 	// TODO(Bobgy): add an option -- dev mode, ImagePullPolicy should only be Always in dev mode.
 }
 
-func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.PipelineRun, error) {
+func Compile(jobArg *pipelinespec.PipelineJob, kubernetesSpecArg *pipelinespec.SinglePlatformSpec, opts *Options) (*pipelineapi.PipelineRun, error) {
 	// clone jobArg, because we don't want to change it
 	jobMsg := proto.Clone(jobArg)
 	job, ok := jobMsg.(*pipelinespec.PipelineJob)
@@ -75,6 +75,16 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 		_, ok := job.RuntimeConfig.ParameterValues[name]
 		if !ok && param.GetDefaultValue() != nil {
 			job.RuntimeConfig.ParameterValues[name] = param.GetDefaultValue()
+		}
+	}
+
+	var kubernetesSpec *pipelinespec.SinglePlatformSpec
+	if kubernetesSpecArg != nil {
+		// clone kubernetesSpecArg, because we don't want to change it
+		kubernetesSpecMsg := proto.Clone(kubernetesSpecArg)
+		kubernetesSpec, ok = kubernetesSpecMsg.(*pipelinespec.SinglePlatformSpec)
+		if !ok {
+			return nil, fmt.Errorf("bug: cloned Kubernetes spec message does not have expected type")
 		}
 	}
 
@@ -120,7 +130,7 @@ func Compile(jobArg *pipelinespec.PipelineJob, opts *Options) (*pipelineapi.Pipe
 	}
 
 	// compile
-	err = Accept(job, c)
+	err = Accept(job, kubernetesSpec, c)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +173,8 @@ type TektonVisitor interface {
 		component *pipelinespec.ComponentSpec,
 		dag *pipelinespec.DagSpec) error
 
+	AddKubernetesSpec(name string, kubernetesSpec *structpb.Struct) error
+
 	// put the current DAG into the stack. when processing tasks inside a DAG, this could be used
 	// to know which DAG they belong to
 	PushDagStack(dag string)
@@ -183,14 +195,15 @@ type TektonVisitor interface {
 }
 
 type pipelinerunDFS struct {
-	spec    *pipelinespec.PipelineSpec
-	deploy  *pipelinespec.PipelineDeploymentConfig
-	visitor TektonVisitor
+	spec           *pipelinespec.PipelineSpec
+	deploy         *pipelinespec.PipelineDeploymentConfig
+	kubernetesSpec *pipelinespec.SinglePlatformSpec
+	visitor        TektonVisitor
 	// Records which DAG components are visited, map key is component name.
 	visited map[string]bool
 }
 
-func Accept(job *pipelinespec.PipelineJob, v TektonVisitor) error {
+func Accept(job *pipelinespec.PipelineJob, kubernetesSpec *pipelinespec.SinglePlatformSpec, v TektonVisitor) error {
 	if job == nil {
 		return nil
 	}
@@ -204,10 +217,11 @@ func Accept(job *pipelinespec.PipelineJob, v TektonVisitor) error {
 		return err
 	}
 	state := &pipelinerunDFS{
-		spec:    spec,
-		deploy:  deploy,
-		visitor: v,
-		visited: make(map[string]bool),
+		spec:           spec,
+		deploy:         deploy,
+		kubernetesSpec: kubernetesSpec,
+		visitor:        v,
+		visited:        make(map[string]bool),
 	}
 	// start to traverse the DAG, starting from the root node
 	return state.dfs(compiler.RootComponentName, compiler.RootComponentName, nil, spec.GetRoot())
@@ -241,6 +255,15 @@ func (state *pipelinerunDFS) dfs(taskName, compRef string, task *pipelinespec.Pi
 		if !ok {
 			return componentError(fmt.Errorf("executor(label=%q) not found in deployment config", executorLabel))
 		}
+
+		// Add kubernetes spec to annotation
+		if state.kubernetesSpec != nil {
+			kubernetesExecSpec, ok := state.kubernetesSpec.DeploymentSpec.Executors[executorLabel]
+			if ok {
+				state.visitor.AddKubernetesSpec(taskName, kubernetesExecSpec)
+			}
+		}
+
 		container := executor.GetContainer()
 		if container != nil {
 			return state.visitor.Container(taskName, compRef, task, component, container)
@@ -351,6 +374,7 @@ type pipelinerunCompiler struct {
 	conditionScope   bool
 	componentSpecs   map[string]string
 	containerSpecs   map[string]string
+	kuberneteSpecs   map[string]string
 }
 
 // if the dependency is a component with DAG, then replace the dependency with DAG's leaf nodes
@@ -549,33 +573,38 @@ func (c *pipelinerunCompiler) Finalize() error {
 	return nil
 }
 
-// WIP: store component spec, task spec and executor spec in annotations
-
-const (
-	prefixComponents = "components-"
-	prefixContainers = "implementations-"
-)
-
 func (c *pipelinerunCompiler) saveComponentSpec(name string, spec *pipelinespec.ComponentSpec) error {
 	if c.componentSpecs == nil {
 		c.componentSpecs = make(map[string]string)
 	}
-	return c.putValueToMap(prefixComponents+name, spec, c.componentSpecs)
+	return c.putValueToMap(name, spec, c.componentSpecs)
 }
 
 func (c *pipelinerunCompiler) useComponentSpec(name string) (string, error) {
-	return c.getValueFromMap(prefixComponents+name, c.componentSpecs)
+	return c.getValueFromMap(name, c.componentSpecs)
+}
+
+func (c *pipelinerunCompiler) saveKubernetesSpec(name string, spec *structpb.Struct) error {
+	if c.kuberneteSpecs == nil {
+		c.kuberneteSpecs = make(map[string]string)
+	}
+
+	return c.putValueToMap(name, spec, c.kuberneteSpecs)
+}
+
+func (c *pipelinerunCompiler) useKubernetesImpl(name string) (string, error) {
+	return c.getValueFromMap(name, c.kuberneteSpecs)
 }
 
 func (c *pipelinerunCompiler) saveComponentImpl(name string, msg proto.Message) error {
 	if c.containerSpecs == nil {
 		c.containerSpecs = make(map[string]string)
 	}
-	return c.putValueToMap(prefixContainers+name, msg, c.containerSpecs)
+	return c.putValueToMap(name, msg, c.containerSpecs)
 }
 
 func (c *pipelinerunCompiler) useComponentImpl(name string) (string, error) {
-	return c.getValueFromMap(prefixContainers+name, c.containerSpecs)
+	return c.getValueFromMap(name, c.containerSpecs)
 }
 
 func (c *pipelinerunCompiler) putValueToMap(name string, msg proto.Message, maps map[string]string) error {
@@ -629,6 +658,7 @@ const (
 	paramNameCachedDecision   = "cached_decision"
 	paramNamePodSpecPatchPath = "pod_spec_patch_path"
 	paramNameExecutorInput    = "executor_input"
+	paramKubernetesConfig     = "kubernetes_config" // stores Kubernetes config
 
 	kindPipelineLoop   = "PipelineLoop"
 	subfixPipelineLoop = "-pipelineloop"

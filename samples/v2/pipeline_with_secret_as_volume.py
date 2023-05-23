@@ -20,6 +20,7 @@ from kfp import compiler
 @dsl.component
 def comp():
     import os
+    import sys
 
     secret_key = "type"
     secret_path = os.path.join('/mnt/my_vol', secret_key)
@@ -40,7 +41,6 @@ def comp():
 
     if secret_data == "service_account":
         print("Success")
-        return 0
     else:
         sys.exit("Failure: cannot access secret as volume variable")
 
