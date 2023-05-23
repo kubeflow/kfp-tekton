@@ -49,6 +49,7 @@ var (
 	numWorker                     int
 	clientQPS                     float64
 	clientBurst                   int
+	legacyStatusUpdate            bool
 	configPath                    = flag.String("config", "", "Path to JSON file containing config")
 )
 
@@ -66,11 +67,14 @@ const (
 	numWorkerName                         = "numWorker"
 	clientQPSFlagName                     = "clientQPS"
 	clientBurstFlagName                   = "clientBurst"
+	legacyStatusUpdateName                = "legacyStatusUpdate"
 )
 
 func main() {
 	flag.Parse()
-	initConfig()
+	if !legacyStatusUpdate {
+		initConfig()
+	}
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
 
@@ -107,7 +111,8 @@ func main() {
 		mlPipelineAPIServerBasePath,
 		mlPipelineAPIServerName,
 		mlPipelineServiceHttpPort,
-		mlPipelineServiceGRPCPort)
+		mlPipelineServiceGRPCPort,
+		legacyStatusUpdate)
 	if err != nil {
 		log.Fatalf("Error creating ML pipeline API Server client: %v", err)
 	}
@@ -144,6 +149,7 @@ func init() {
 	// k8s.io/client-go/rest/config.go#RESTClientFor
 	flag.Float64Var(&clientQPS, clientQPSFlagName, 5, "The maximum QPS to the master from this client.")
 	flag.IntVar(&clientBurst, clientBurstFlagName, 10, "Maximum burst for throttle from this client.")
+	flag.BoolVar(&legacyStatusUpdate, legacyStatusUpdateName, false, "Use legacy status update method to pass update via apiserver")
 }
 
 func initConfig() {

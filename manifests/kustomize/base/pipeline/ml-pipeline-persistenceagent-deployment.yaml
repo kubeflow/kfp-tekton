@@ -27,6 +27,8 @@ spec:
             value: "2"
           - name: CHILDREFERENCES_KINDS
             value: "PipelineLoop"
+          - name: LEGACY_STATUS_UPDATE
+            value: "false"
           - name: POD_NAMESPACE
             valueFrom:
               fieldRef:

@@ -52,4 +52,7 @@ ENV NUM_WORKERS 2
 #CHILDREFERENCESKIND kind of runs to search for the childReferences
 ENV CHILDREFERENCES_KINDS ""
 
-CMD persistence_agent --logtostderr=true --namespace=${NAMESPACE} --ttlSecondsAfterWorkflowFinish=${TTL_SECONDS_AFTER_WORKFLOW_FINISH} --numWorker ${NUM_WORKERS} --childReferencesKinds ${CHILDREFERENCES_KINDS} --config=/config
+#LEGACY_STATUS_UPDATE legacy status update method to pass update via apiserver
+ENV LEGACY_STATUS_UPDATE "false"
+
+CMD persistence_agent --logtostderr=true --namespace=${NAMESPACE} --ttlSecondsAfterWorkflowFinish=${TTL_SECONDS_AFTER_WORKFLOW_FINISH} --numWorker=${NUM_WORKERS} --childReferencesKinds=${CHILDREFERENCES_KINDS} --legacyStatusUpdate=${LEGACY_STATUS_UPDATE} --config=/config
