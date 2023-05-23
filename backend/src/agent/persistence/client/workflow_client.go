@@ -15,7 +15,6 @@
 package client
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -23,12 +22,13 @@ import (
 	"strings"
 
 	"github.com/kubeflow/pipelines/backend/src/common/util"
+	log "github.com/sirupsen/logrus"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	wfapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	customRun "github.com/tektoncd/pipeline/pkg/apis/run/v1beta1"
 	wfclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	"github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/cache"
 )
@@ -70,36 +70,47 @@ type WorkflowClientInterface interface {
 	Get(namespace string, name string) (wf *util.Workflow, err error)
 }
 
+type Informers struct {
+	TRInformer v1beta1.TaskRunInformer
+	PRInformer v1beta1.PipelineRunInformer
+	CRInformer v1beta1.CustomRunInformer
+}
+
 // WorkflowClient is a client to call the Workflow API.
 type WorkflowClient struct {
-	informer  v1beta1.PipelineRunInformer
+	informers Informers
 	clientset *wfclientset.Clientset
 }
 
 // NewWorkflowClient creates an instance of the WorkflowClient.
-func NewWorkflowClient(informer v1beta1.PipelineRunInformer,
+func NewWorkflowClient(informers Informers,
 	clientset *wfclientset.Clientset) *WorkflowClient {
 
 	return &WorkflowClient{
-		informer:  informer,
+		informers: informers,
 		clientset: clientset,
 	}
 }
 
 // AddEventHandler adds an event handler.
 func (c *WorkflowClient) AddEventHandler(funcs *cache.ResourceEventHandlerFuncs) {
-	c.informer.Informer().AddEventHandler(funcs)
+	c.informers.PRInformer.Informer().AddEventHandler(funcs)
 }
 
 // HasSynced returns true if the shared informer's store has synced.
 func (c *WorkflowClient) HasSynced() func() bool {
-	return c.informer.Informer().HasSynced
+	return func() bool {
+		log.Infof("cache sync: PR: %t, TR: %t, CR: %t", c.informers.PRInformer.Informer().HasSynced(),
+			c.informers.TRInformer.Informer().HasSynced(), c.informers.TRInformer.Informer().HasSynced())
+		return c.informers.PRInformer.Informer().HasSynced() &&
+			c.informers.TRInformer.Informer().HasSynced() && c.informers.TRInformer.Informer().HasSynced()
+	}
 }
 
 // Get returns a Workflow, given a namespace and name.
 func (c *WorkflowClient) Get(namespace string, name string) (
 	wf *util.Workflow, err error) {
-	workflow, err := c.informer.Lister().PipelineRuns(namespace).Get(name)
+	workflow, err := c.informers.PRInformer.Lister().PipelineRuns(namespace).Get(name)
 	if err != nil {
 		var code util.CustomCode
 		if util.IsNotFound(err) {
@@ -110,43 +121,44 @@ func (c *WorkflowClient) Get(namespace string, name string) (
 		return nil, util.NewCustomError(err, code,
 			"Error retrieving workflow (%v) in namespace (%v): %v", name, namespace, err)
 	}
-	if err := c.getStatusFromChildReferences(namespace,
-		fmt.Sprintf("%s=%s", util.LabelKeyWorkflowRunId, workflow.Labels[util.LabelKeyWorkflowRunId]),
-		&workflow.Status); err != nil {
 
+	s, err := labels.ConvertSelectorToLabelsMap(fmt.Sprintf("%s=%s", util.LabelKeyWorkflowRunId, workflow.Labels[util.LabelKeyWorkflowRunId]))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := c.getStatusFromChildReferences(namespace, labels.SelectorFromSet(s), &workflow.Status); err != nil {
 		return nil, err
 	}
 
 	return util.NewWorkflow(workflow), nil
 }
 
-func (c *WorkflowClient) getStatusFromChildReferences(namespace, selector string, status *wfapi.PipelineRunStatus) error {
+func (c *WorkflowClient) getStatusFromChildReferences(namespace string, selector labels.Selector, status *wfapi.PipelineRunStatus) error {
 	if status.ChildReferences != nil {
-		hasTaskRun, hasRun, hasCustomRun := false, false, false
+		hasTaskRun, hasCustomRun := false, false
 		for _, child := range status.ChildReferences {
 			switch child.Kind {
 			case "TaskRun":
 				hasTaskRun = true
-			case "Run":
-				hasRun = true
 			case "CustomRun":
 				hasCustomRun = true
 			default:
 			}
 		}
+
 		// TODO: restruct the workflow to contain taskrun/run status, these 2 field
 		// will be removed in the future
 		if hasTaskRun {
 			// fetch taskrun status and insert into Status.TaskRuns
-			taskruns, err := c.clientset.TektonV1beta1().TaskRuns(namespace).List(context.Background(), v1.ListOptions{
-				LabelSelector: selector,
-			})
+			taskruns, err := c.informers.TRInformer.Lister().TaskRuns(namespace).List(selector)
 			if err != nil {
 				return util.NewInternalServerError(err, "can't fetch taskruns")
 			}
 
-			taskrunStatuses := make(map[string]*wfapi.PipelineRunTaskRunStatus, len(taskruns.Items))
-			for _, taskrun := range taskruns.Items {
+			taskrunStatuses := make(map[string]*wfapi.PipelineRunTaskRunStatus, len(taskruns))
+			for _, taskrun := range taskruns {
+				log.Infof("handle childreference(TaskRun): %s", taskrun.Name)
 				taskrunStatuses[taskrun.Name] = &wfapi.PipelineRunTaskRunStatus{
 					PipelineTaskName: taskrun.Labels["tekton.dev/pipelineTask"],
 					Status:           taskrun.Status.DeepCopy(),
@@ -154,49 +166,23 @@ func (c *WorkflowClient) getStatusFromChildReferences(namespace, selector string
 			}
 			status.TaskRuns = taskrunStatuses
 		}
-		if hasRun {
-			runs, err := c.clientset.TektonV1alpha1().Runs(namespace).List(context.Background(), v1.ListOptions{
-				LabelSelector: selector,
-			})
-			if err != nil {
-				return util.NewInternalServerError(err, "can't fetch runs")
-			}
-			runStatuses := make(map[string]*wfapi.PipelineRunRunStatus, len(runs.Items))
-			for _, run := range runs.Items {
-				runStatus := run.Status.DeepCopy()
-				runStatuses[run.Name] = &wfapi.PipelineRunRunStatus{
-					PipelineTaskName: run.Labels["tekton.dev/pipelineTask"],
-					Status:           FromRunStatus(runStatus),
-				}
-				// handle nested status
-				c.handleNestedStatus(&run, runStatus, namespace)
-			}
-			status.Runs = runStatuses
-		}
 		if hasCustomRun {
-			customRuns, err := c.clientset.TektonV1beta1().CustomRuns(namespace).List(context.Background(), v1.ListOptions{
-				LabelSelector: selector,
-			})
+			customRuns, err := c.informers.CRInformer.Lister().CustomRuns(namespace).List(selector)
 			if err != nil {
 				return util.NewInternalServerError(err, "can't fetch runs")
 			}
-			customRunStatuses := make(map[string]*wfapi.PipelineRunRunStatus, len(customRuns.Items))
-			for _, customRun := range customRuns.Items {
+			customRunStatuses := make(map[string]*wfapi.PipelineRunRunStatus, len(customRuns))
+			for _, customRun := range customRuns {
+				log.Infof("handle childreference(CustomRun): %s", customRun.Name)
 				customRunStatus := customRun.Status.DeepCopy()
 				customRunStatuses[customRun.Name] = &wfapi.PipelineRunRunStatus{
 					PipelineTaskName: customRun.Labels["tekton.dev/pipelineTask"],
 					Status:           customRunStatus,
 				}
 				// handle nested status
-				c.handleNestedStatusV1beta1(&customRun, customRunStatus, namespace)
+				c.handleNestedStatusV1beta1(customRun, customRunStatus, namespace)
 			}
-			if status.Runs == nil {
-				status.Runs = customRunStatuses
-			} else {
-				for n, v := range customRunStatuses {
-					status.Runs[n] = v
-				}
-			}
+			status.Runs = customRunStatuses
 		}
 	}
 	return nil
@@ -294,7 +280,8 @@ func (c *WorkflowClient) updateExtraFields(obj map[string]interface{}, namespace
 					kind := fmt.Sprintf("%v", kindI)
 					name := fmt.Sprintf("%v", nameI)
 					if kind == "TaskRun" {
-						if taskrunCR, err := c.clientset.TektonV1beta1().TaskRuns(namespace).Get(context.Background(), name, v1.GetOptions{}); err == nil {
+
+						if taskrunCR, err := c.informers.TRInformer.Lister().TaskRuns(namespace).Get(name); err == nil {
 							taskruns, ok := statusobj["taskRuns"]
 							if !ok {
 								taskruns = make(map[string]*wfapi.PipelineRunTaskRunStatus)
@@ -308,27 +295,10 @@ func (c *WorkflowClient) updateExtraFields(obj map[string]interface{}, namespace
 								updated = true
 							}
 						}
-					} else if kind == "Run" {
-						if runCR, err := c.clientset.TektonV1alpha1().Runs(namespace).Get(context.Background(), name, v1.GetOptions{}); err == nil {
-							runs, ok := statusobj["runs"]
-							if !ok {
-								runs = make(map[string]*wfapi.PipelineRunRunStatus)
-							}
-							if runStatus, ok := runs.(map[string]*wfapi.PipelineRunRunStatus); ok {
-								runStatusStatus := runCR.Status.DeepCopy()
-								runStatus[name] = &wfapi.PipelineRunRunStatus{
-									PipelineTaskName: runCR.Labels["tekton.dev/pipelineTask"],
-									Status:           FromRunStatus(runStatusStatus),
-								}
-								statusobj["runs"] = runStatus
-								// handle nested status recursively
-								c.handleNestedStatus(runCR, runStatusStatus, namespace)
-								updated = true
-							}
-						}
 					} else if kind == "CustomRun" {
-						if customRunsCR, err := c.clientset.TektonV1beta1().CustomRuns(namespace).Get(context.Background(), name, v1.GetOptions{}); err == nil {
-							customRuns, ok := statusobj["customRuns"]
+						if customRunsCR, err := c.informers.CRInformer.Lister().CustomRuns(namespace).Get(name); err == nil {
+							// still using "runs", cause there is no customRun in status object
+							customRuns, ok := statusobj["runs"]
 							if !ok {
 								customRuns = make(map[string]*wfapi.PipelineRunRunStatus)
 							}
@@ -338,7 +308,7 @@ func (c *WorkflowClient) updateExtraFields(obj map[string]interface{}, namespace
 									PipelineTaskName: customRunsCR.Labels["tekton.dev/pipelineTask"],
 									Status:           customRunStatusStatus,
 								}
-								statusobj["customRuns"] = customRunStatus
+								statusobj["runs"] = customRunStatus
 								// handle nested status recursively
 								c.handleNestedStatusV1beta1(customRunsCR, customRunStatusStatus, namespace)
 								updated = true
