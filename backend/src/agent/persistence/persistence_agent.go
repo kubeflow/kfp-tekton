@@ -52,21 +52,31 @@ func NewPersistenceAgent(
 	time util.TimeInterface) *PersistenceAgent {
 	// obtain references to shared informers
 	swfInformer := swfInformerFactory.Scheduledworkflow().V1beta1().ScheduledWorkflows()
-	informer := workflowInformerFactory.Tekton().V1beta1().PipelineRuns()
+	prInformer := workflowInformerFactory.Tekton().V1beta1().PipelineRuns()
+	trInformer := workflowInformerFactory.Tekton().V1beta1().TaskRuns()
+	crInformer := workflowInformerFactory.Tekton().V1beta1().CustomRuns()
 
 	// Add controller types to the default Kubernetes Scheme so Events can be
 	// logged for controller types.
 	swfScheme.AddToScheme(scheme.Scheme)
 
 	swfClient := client.NewScheduledWorkflowClient(swfInformer)
-	workflowClient := client.NewWorkflowClient(informer, clientset)
+	workflowClient := client.NewWorkflowClient(client.Informers{
+		PRInformer: prInformer,
+		TRInformer: trInformer,
+		CRInformer: crInformer,
+	}, clientset)
 
 	swfWorker := worker.NewPersistenceWorker(time, swfregister.Kind, swfInformer.Informer(), true,
 		worker.NewScheduledWorkflowSaver(swfClient, pipelineClient))
 
 	workflowWorker := worker.NewPersistenceWorker(time, workflowregister.PipelineRunControllerName,
-		informer.Informer(), true,
+		prInformer.Informer(), true,
 		worker.NewWorkflowSaver(workflowClient, pipelineClient, ttlSecondsAfterWorkflowFinish))
+
+	// register TaskRun and CustomRun Informers
+	trInformer.Informer()
+	crInformer.Informer()
 
 	agent := &PersistenceAgent{
 		swfClient:      swfClient,
