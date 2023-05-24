@@ -14,6 +14,7 @@
 
 from typing import Dict
 
+from google_cloud_pipeline_components import _image
 from google_cloud_pipeline_components.types.artifact_types import VertexModel
 from kfp.dsl import ConcatPlaceholder
 from kfp.dsl import container_component
@@ -40,15 +41,12 @@ def model_export(
   https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.models/export.
 
   Args:
-      model (google.VertexModel):
-        Required. The model to be exported.
-      export_format_id (str):
-        The ID of the format in which the Model must be
+      model: The model to be exported.
+      export_format_id: The ID of the format in which the Model must be
         exported. Each Model lists the export formats it supports. If no value
         is provided here, then the first from the list of the Model's
         supported formats is used by default.
-      artifact_destination (Optional[str]):
-        The Cloud Storage location where
+      artifact_destination: The Cloud Storage location where
         the Model artifact is to be written to. Under the directory given as
         the destination a new one with name
         "``model-export-<model-display-name>-<timestamp-of-export-call>``",
@@ -57,31 +55,29 @@ def model_export(
         written.  This field should only be set when, in
         [Model.supported_export_formats], the value for the key given in
         `export_format_id` contains ``ARTIFACT``.
-      image_destination (Optional[str]):
-        The Google Container Registry or
+      image_destination: The Google Container Registry or
         Artifact Registry URI where the Model container image will be copied
         to. Accepted forms:  -  Google Container Registry path. For example:
-        ``gcr.io/projectId/imageName:tag``.  -  Artifact Registry path. For
-        example:
-          ``us-central1-docker.pkg.dev/projectId/repoName/imageName:tag``.
-          This field should only be set when, in
-          [Model.supported_export_formats], the value for the key given in
-          `export_format_id` contains ``IMAGE``.
+        ``gcr.io/projectId/imageName:tag``.
+        -  Artifact Registry path.
+
+        For example:
+
+        ``us-central1-docker.pkg.dev/projectId/repoName/imageName:tag``.
+        This field should only be set when, in
+        [Model.supported_export_formats], the value for the key given in
+        `export_format_id` contains ``IMAGE``.
 
   Returns:
-      output_info (str):
-          Details of the completed export with output destination paths to
+      output_info: Details of the completed export with output destination paths to
           the artifacts or container image.
-      gcp_resources (str):
-          Serialized gcp_resources proto tracking the export model's long
-          running operation.
-
-          For more details, see
+      gcp_resources: Serialized gcp_resources proto tracking the export model's long
+          running operation. For more details, see
           https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/proto/README.md.
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
+      image=_image.GCPC_IMAGE_TAG,
       command=[
           'python3',
           '-u',

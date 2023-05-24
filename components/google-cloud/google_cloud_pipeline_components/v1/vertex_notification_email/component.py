@@ -14,6 +14,7 @@
 
 from typing import List
 
+from google_cloud_pipeline_components import _image
 from kfp.dsl import container_component
 from kfp.dsl import ContainerSpec
 from kfp.dsl import PipelineTaskFinalStatus
@@ -25,22 +26,21 @@ def vertex_pipelines_notification_email(
     pipeline_task_final_status: PipelineTaskFinalStatus,
 ):
   # fmt: off
-  """When this component is included as an exit handler, sends a notification email with the status of the upstream DAG to the specified recipients.
+  """When this component is included as an exit handler, sends a notification
+  email with the status of the upstream DAG to the specified recipients.
 
   This component works only on Vertex Pipelines. This component raises an
   exception when run on Kubeflow Pipelines.
 
   Args:
-    recipients (List[str]):
-      A list of email addresses to send this notification
+    recipients: A list of email addresses to send this notification
       to.
-    pipeline_task_final_status (PipelineTaskFinalStatus):
-      The task final status
+    pipeline_task_final_status: The task final status
       of the upstream DAG that this component will use in the notification.
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
+      image=_image.GCPC_IMAGE_TAG,
       command=[
           'python3',
           '-u',

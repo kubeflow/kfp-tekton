@@ -48,7 +48,7 @@ require (
 	google.golang.org/grpc v1.54.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.30.0
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.25.9
 	k8s.io/apimachinery v0.26.4
 	k8s.io/client-go v0.25.9
@@ -184,7 +184,7 @@ require (
 	gopkg.in/jcmturner/goidentity.v2 v2.0.0 // indirect
 	gopkg.in/jcmturner/gokrb5.v5 v5.3.0 // indirect
 	gopkg.in/jcmturner/rpc.v0 v0.0.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/apiextensions-apiserver v0.25.4 // indirect
 	k8s.io/component-base v0.25.4 // indirect
 	k8s.io/gengo v0.0.0-20221011193443-fad74ee6edd9 // indirect

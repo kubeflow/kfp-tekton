@@ -13,39 +13,12 @@
 # limitations under the License.
 """Model evaluation error analysis components."""
 
-import os
-
-from google_cloud_pipeline_components.experimental.evaluation.error_analysis.feature_extractor import component as feature_extractor
-from google_cloud_pipeline_components.experimental.evaluation.error_analysis.dataset_preprocessor import component as dataset_preprocessor
-from google_cloud_pipeline_components.experimental.evaluation.error_analysis.error_analysis_annotation import component as error_analysis_annotation
-
-from kfp.components import load_component_from_file
+from google_cloud_pipeline_components.experimental.evaluation.error_analysis.dataset_preprocessor.component import dataset_preprocessor_error_analysis as EvaluationDatasetPreprocessorOp
+from google_cloud_pipeline_components.experimental.evaluation.error_analysis.evaluated_annotation.component import evaluated_annotation as EvaluatedAnnotationOp
+from google_cloud_pipeline_components.experimental.evaluation.error_analysis.import_evaluated_annotation.component import evaluated_annotation_import as ModelImportEvaluatedAnnotationOp
 
 __all__ = [
     'EvaluationDatasetPreprocessorOp',
     'EvaluatedAnnotationOp',
-    'FeatureExtractorOp',
-    'ErrorAnalysisAnnotationOp',
     'ModelImportEvaluatedAnnotationOp',
 ]
-
-EvaluationDatasetPreprocessorOp = (
-    dataset_preprocessor.dataset_preprocessor_error_analysis
-)
-
-EvaluatedAnnotationOp = load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__),
-        'evaluated_annotation/component.yaml',
-    )
-)
-
-FeatureExtractorOp = feature_extractor.feature_extractor_error_analysis
-
-ErrorAnalysisAnnotationOp = error_analysis_annotation.error_analysis_annotation
-
-ModelImportEvaluatedAnnotationOp = load_component_from_file(
-    os.path.join(
-        os.path.dirname(__file__), 'import_evaluated_annotation/component.yaml'
-    )
-)

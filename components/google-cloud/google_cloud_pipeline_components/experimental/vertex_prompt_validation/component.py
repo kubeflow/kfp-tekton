@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from google_cloud_pipeline_components import _image
 from kfp.dsl import container_component
 from kfp.dsl import ContainerSpec
 
@@ -33,18 +34,14 @@ def vertex_pipelines_prompt_validation(
   exception when run on Kubeflow Pipelines.
 
   Args:
-    prompt_dataset (str):
-      GCS path to the file containing the prompt tuning data.
-    model_id (str):
-      Large Language Model to tune.
-    rai_validation_enabled (bool):
-      If enabled, validates prompt data for harmful content.
-    fail_on_warning (bool):
-      If enabled, fails the component on warnings.
+    prompt_dataset: GCS path to the file containing the prompt tuning data.
+    model_id: Large Language Model to tune.
+    rai_validation_enabled: If enabled, validates prompt data for harmful content.
+    fail_on_warning: If enabled, fails the component on warnings.
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
+      image=_image.GCPC_IMAGE_TAG,
       command=[
           'python3',
           '-u',

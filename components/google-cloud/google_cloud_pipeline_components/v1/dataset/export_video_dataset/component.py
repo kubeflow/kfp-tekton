@@ -14,6 +14,7 @@
 
 from typing import Optional
 
+from google_cloud_pipeline_components import _image
 from google_cloud_pipeline_components.types.artifact_types import VertexDataset
 from kfp import dsl
 from kfp.dsl import Input
@@ -29,11 +30,10 @@ def video_dataset_export(
     location: Optional[str] = 'us-central1',
 ):
   # fmt: off
-  """
-  Exports data to output dir to GCS.
+  """Exports data to output dir to GCS.
+
   Args:
-      output_dir (String):
-          Required. The Google Cloud Storage location where the output is to
+      output_dir: The Google Cloud Storage location where the output is to
           be written to. In the given directory a new directory will be
           created with name:
           ``export-data-<dataset-display-name>-<timestamp-of-export-call>``
@@ -45,23 +45,20 @@ def video_dataset_export(
           schema.yaml will be created to describe the output format.
           If the uri doesn't end with '/', a '/' will be automatically
           appended. The directory is created if it doesn't exist.
-      project (String):
-          Required. project to retrieve dataset from.
-      location (String):
-          Optional location to retrieve dataset from.
-  Returns:
-      exported_files (Sequence[str]):
-          All of the files that are exported in this export operation.
+      project: project to retrieve dataset from.
+      location: Optional location to retrieve dataset from.
 
+  Returns:
+      exported_files: All of the files that are exported in this export operation.
   """
   # fmt: on
 
   return dsl.ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
+      image=_image.GCPC_IMAGE_TAG,
       command=[
           'python3',
           '-m',
-          'google_cloud_pipeline_components.container.aiplatform.remote_runner',
+          'google_cloud_pipeline_components.container.v1.aiplatform.remote_runner',
           '--cls_name',
           'VideoDataset',
           '--method_name',

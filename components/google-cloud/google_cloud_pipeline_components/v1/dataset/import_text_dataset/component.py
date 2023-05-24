@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from typing import Optional
 
+from google_cloud_pipeline_components import _image
 from google_cloud_pipeline_components import utils
 from google_cloud_pipeline_components.types.artifact_types import VertexDataset
 from kfp import dsl
@@ -22,7 +22,7 @@ from kfp.dsl import Input
 from kfp.dsl import Output
 
 
-@utils.gcpc_output_name_converter('output__dataset', 'dataset')
+@utils.gcpc_output_name_converter('dataset')
 @dsl.container_component
 def text_dataset_import(
     project: str,
@@ -34,31 +34,24 @@ def text_dataset_import(
     import_schema_uri: Optional[str] = None,
 ):
   # fmt: off
-  """
-  Upload data to existing managed dataset.
+  """Upload data to existing managed dataset.
+
   Args:
-      project (String):
-          Required. project to retrieve dataset from.
-      location (String):
-          Optional location to retrieve dataset from.
-      dataset (Dataset):
-          Required. The dataset to be updated.
-      gcs_source (Union[str, Sequence[str]]):
-          Required. Google Cloud Storage URI(-s) to the
+      project: project to retrieve dataset from.
+      location: Optional location to retrieve dataset from.
+      dataset: The dataset to be updated.
+      gcs_source:
+          Google Cloud Storage URI(-s) to the
           input file(s). May contain wildcards. For more
           information on wildcards, see
           https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames.
-          examples:
-              str: "gs://bucket/file.csv"
-              Sequence[str]: ["gs://bucket/file1.csv", "gs://bucket/file2.csv"]
-      import_schema_uri (String):
-          Required. Points to a YAML file stored on Google Cloud
+          For example, "gs://bucket/file.csv" or ["gs://bucket/file1.csv", "gs://bucket/file2.csv"].
+      import_schema_uri: Points to a YAML file stored on Google Cloud
           Storage describing the import format. Validation will be
           done against the schema. The schema is defined as an
           `OpenAPI 3.0.2 Schema
           Object <https://tinyurl.com/y538mdwt>`__.
-      data_item_labels (JsonObject):
-          Labels that will be applied to newly imported DataItems. If
+      data_item_labels: Labels that will be applied to newly imported DataItems. If
           an identical DataItem as one being imported already exists
           in the Dataset, then these labels will be appended to these
           of the already existing one, and if labels with identical
@@ -72,19 +65,18 @@ def text_dataset_import(
           labels specified inside index file refenced by
           ``import_schema_uri``,
           e.g. jsonl file.
-  Returns:
-      dataset (Dataset):
-          Instantiated representation of the managed dataset resource.
 
+  Returns:
+      dataset: Instantiated representation of the managed dataset resource.
   """
   # fmt: on
 
   return dsl.ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
+      image=_image.GCPC_IMAGE_TAG,
       command=[
           'python3',
           '-m',
-          'google_cloud_pipeline_components.container.aiplatform.remote_runner',
+          'google_cloud_pipeline_components.container.v1.aiplatform.remote_runner',
           '--cls_name',
           'TextDataset',
           '--method_name',

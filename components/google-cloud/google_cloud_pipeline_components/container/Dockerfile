@@ -13,7 +13,8 @@
 # limitations under the License.
 
 # Base image to use for this docker
-FROM gcr.io/ml-pipeline/ubuntu-py37:gcpc-stable
+FROM marketplace.gcr.io/google/ubuntu2004:latest
+RUN apt update && apt -y install python3 python3-pip git
 
 WORKDIR /root
 
@@ -40,4 +41,4 @@ RUN pip3 install -U google-cloud-notebooks
 RUN pip3 install "git+https://github.com/kubeflow/pipelines.git@google-cloud-pipeline-components-2.0.0b3#egg=google-cloud-pipeline-components&subdirectory=components/google-cloud"
 
 # Note that components can override the container entry ponint.
-ENTRYPOINT ["python3","-m","google_cloud_pipeline_components.container.aiplatform.remote_runner"]
+ENTRYPOINT ["python3","-m","google_cloud_pipeline_components.container.v1.aiplatform.remote_runner"]

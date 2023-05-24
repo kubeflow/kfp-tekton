@@ -7,6 +7,22 @@
 ## Deprecations
 
 ## Bug fixes and other changes
+* Fix integer value not allowed as float-typed return [\#9481](https://github.com/kubeflow/pipelines/pull/9481)
+
+## Documentation updates
+
+# 2.0.0-rc.1
+
+## Features
+* Support compiling primitive components with `dsl.PipelineTaskFinalStatus` input [\#9080](https://github.com/kubeflow/pipelines/pull/9080), [\#9082](https://github.com/kubeflow/pipelines/pull/9082)
+
+## Breaking changes
+
+## Deprecations
+
+## Bug fixes and other changes
+* Fix compilation of boolean constant passed to component [\#9390](https://github.com/kubeflow/pipelines/pull/9390)
+
 
 ## Documentation updates
 

@@ -15,6 +15,7 @@
 
 from typing import Optional
 
+from google_cloud_pipeline_components import _image
 from kfp import dsl
 
 
@@ -28,30 +29,23 @@ def tensorboard_experiment_creator(
     tensorboard_experiment_labels: Optional[dict] = None,
 ):
   # fmt: off
-  """
-    Create a TensorboardExperiment for Pipeline usage.
+  """Create a TensorboardExperiment for Pipeline usage.
 
   Args:
-      tensorboad_resource_name (str):
-          Required. Resource name used to retrieve tensorboard instances. Format example: projects/{project_number}/locations/{location}/tensorboards/{tensorboard_id}
-      tensorboard_experiment_id (Optional[str]):
-          The tensorboard experiment id.
+      tensorboad_resource_name: Resource name used to retrieve tensorboard instances. Format example: projects/{project_number}/locations/{location}/tensorboards/{tensorboard_id}
+      tensorboard_experiment_id: The tensorboard experiment id.
           If not set, default to task name.
-      tensorboard_experiment_display_name (Optional[str]):
-          The display name of the tensorboard experiment. If not set, default to None.
-      tensorboard_experiment_description (Optional[str]):
-          The description of the tensorboard experiment. If not set, default to None.
-      tensorboard_experiment_labels (Optional[dict]):
-          The labels of the tensorboard experiment. If not set, default to None.
-  Returns:
-      gcp_resources (str):
-          Gcp_resource with Full resource name of the TensorboardExperiment as uri. Format example: projects/{project_number}/locations/{location}/tensorboards/{tensorboard_id}/experiments/{experiment}
+      tensorboard_experiment_display_name: The display name of the tensorboard experiment. If not set, default to None.
+      tensorboard_experiment_description: The description of the tensorboard experiment. If not set, default to None.
+      tensorboard_experiment_labels: The labels of the tensorboard experiment. If not set, default to None.
 
+  Returns:
+      gcp_resources: Gcp_resource with Full resource name of the TensorboardExperiment as uri. Format example: projects/{project_number}/locations/{location}/tensorboards/{tensorboard_id}/experiments/{experiment}
   """
   # fmt: on
 
   return dsl.ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
+      image=_image.GCPC_IMAGE_TAG,
       command=[
           'python3',
           '-u',

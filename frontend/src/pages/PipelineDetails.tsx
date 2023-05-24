@@ -60,6 +60,7 @@ interface PipelineDetailsState {
   graph: dagre.graphlib.Graph | null;
   reducedGraph: dagre.graphlib.Graph | null;
   graphV2: PipelineFlowElement[] | null;
+  graphIsLoading: boolean;
   v1Pipeline: ApiPipeline | null;
   v2Pipeline: V2beta1Pipeline | null;
   selectedNodeInfo: JSX.Element | null;
@@ -89,6 +90,7 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
       graph: null,
       reducedGraph: null,
       graphV2: null,
+      graphIsLoading: true,
       v1Pipeline: null,
       v2Pipeline: null,
       selectedNodeInfo: null,
@@ -178,14 +180,15 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
       }
       const pipelineSpec = convertYamlToV2PipelineSpec(templateString!);
       const newElements = convertSubDagToFlowElements(pipelineSpec!, layers);
-      this.setStateSafe({ graphV2: newElements });
+      this.setStateSafe({ graphV2: newElements, graphIsLoading: false });
     };
 
     const showV2Pipeline =
       isFeatureEnabled(FeatureKey.V2_ALPHA) && graphV2 && graphV2.length > 0 && !graph;
     return (
       <div className={classes(commonCss.page, padding(20, 't'))}>
-        {showV2Pipeline && (
+        {this.state.graphIsLoading && <div>Currently loading pipeline information</div>}
+        {!this.state.graphIsLoading && showV2Pipeline && (
           <PipelineDetailsV2
             templateString={templateString}
             pipelineFlowElements={graphV2!}
@@ -196,7 +199,7 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
             handleVersionSelected={this.handleVersionSelectedV2.bind(this)}
           />
         )}
-        {!showV2Pipeline && (
+        {!this.state.graphIsLoading && !showV2Pipeline && (
           <PipelineDetailsV1
             pipeline={v1Pipeline}
             templateString={templateString}
@@ -521,31 +524,35 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
 
     const [graph, reducedGraph, graphV2] = await this._createGraph(templateString);
 
-    // TBD(jlyaoyuli): If we allow upload v1 version to v2 pipeline or vice versa,
-    // v1 and v2 field should change to "non-exclusive".
+    // Currently, we allow upload v1 version to v2 pipeline or vice versa,
+    // so v1 and v2 field is "non-exclusive".
+    // TODO(jlyaoyuli): If we decide not to support "mix versions",
+    // v1 and v2 should be "exclusive"
     if (isFeatureEnabled(FeatureKey.V2_ALPHA) && graphV2.length > 0) {
       this.setStateSafe({
-        v1Pipeline: undefined,
+        v1Pipeline,
         v2Pipeline,
-        v1SelectedVersion: undefined,
+        v1SelectedVersion,
         v2SelectedVersion,
-        v1Versions: undefined,
+        v1Versions,
         v2Versions,
         graph: undefined,
         graphV2,
+        graphIsLoading: false,
         reducedGraph: undefined,
         templateString,
       });
     } else {
       this.setStateSafe({
         v1Pipeline,
-        v2Pipeline: undefined,
+        v2Pipeline,
         v1SelectedVersion,
-        v2SelectedVersion: undefined,
+        v2SelectedVersion,
         v1Versions,
-        v2Versions: undefined,
+        v2Versions,
         graph,
         graphV2: undefined,
+        graphIsLoading: false,
         reducedGraph,
         templateString,
       });
@@ -555,6 +562,9 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
   public async handleVersionSelected(versionId: string): Promise<void> {
     if (this.state.v1Pipeline) {
       const selectedVersion = (this.state.v1Versions || []).find(v => v.id === versionId);
+      const pageTitle = this.state.v1Pipeline.name?.concat(' (', selectedVersion?.name!, ')');
+      this.props.updateToolbar({ pageTitle });
+
       const selectedVersionPipelineTemplate = await this._getTemplateString(
         this.state.v1Pipeline.id!,
         versionId,
@@ -571,6 +581,7 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
           graph: undefined,
           reducedGraph: undefined,
           graphV2,
+          graphIsLoading: false,
           v1SelectedVersion: selectedVersion,
           templateString: selectedVersionPipelineTemplate,
         });
@@ -579,6 +590,7 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
           graph,
           reducedGraph,
           graphV2: undefined,
+          graphIsLoading: false,
           v1SelectedVersion: selectedVersion,
           templateString: selectedVersionPipelineTemplate,
         });
@@ -591,6 +603,13 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
       const selectedVersion = (this.state.v2Versions || []).find(
         v => v.pipeline_version_id === versionId,
       );
+      const pageTitle = this.state.v2Pipeline.display_name?.concat(
+        ' (',
+        selectedVersion?.display_name!,
+        ')',
+      );
+      this.props.updateToolbar({ pageTitle });
+
       const selectedVersionPipelineTemplate = await this._getTemplateString(
         this.state.v2Pipeline.pipeline_id!,
         versionId,
@@ -607,6 +626,7 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
           graph: undefined,
           reducedGraph: undefined,
           graphV2,
+          graphIsLoading: false,
           v2SelectedVersion: selectedVersion,
           templateString: selectedVersionPipelineTemplate,
         });
@@ -615,6 +635,7 @@ class PipelineDetails extends Page<{}, PipelineDetailsState> {
           graph,
           reducedGraph,
           graphV2: undefined,
+          graphIsLoading: false,
           v2SelectedVersion: selectedVersion,
           templateString: selectedVersionPipelineTemplate,
         });

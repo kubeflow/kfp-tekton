@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from google_cloud_pipeline_components import _image
 from google_cloud_pipeline_components.types.artifact_types import VertexModel
 from kfp.dsl import container_component
 from kfp.dsl import ContainerSpec
@@ -28,25 +29,22 @@ def get_vertex_model(
   """Gets a model artifact or string inputs to an existing Vertex model.
 
   Args:
-    model_name (str): Vertex model resource name in the format of
+    model_name: Vertex model resource name in the format of
       projects/{project}/locations/{location}/models/{model} or
       projects/{project}/locations/{location}/models/{model}@{model_version_id
       or model_version_alias}.
-    model_version (Optional[str]): The desired Vertex Model version to get.
-      If model_name and model_version are provided, model_version will override
-      any version or alias if present in model_name.
+    model_version: The desired Vertex Model version to get. If model_name and
+      model_version are provided, model_version will override any version or
+      alias if present in model_name.
 
   Returns:
-      model (google.VertexModel):
-          Artifact of the Vertex Model.
-      gcp_resources (str):
-          Serialized gcp_resources proto tracking the Vertex model.
-
-          For more details, see
-          https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/proto/README.md.
+      model: Artifact of the Vertex Model.
+      gcp_resources: Serialized gcp_resources proto tracking the Vertex model.
+      For more details, see
+      https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/proto/README.md.
   """
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:latest',
+      image=_image.GCPC_IMAGE_TAG,
       command=[
           'python3',
           '-u',

@@ -16,6 +16,7 @@ from kfp.dsl import container_component
 from kfp.dsl import ContainerSpec
 from kfp.dsl import OutputPath
 from kfp.dsl import PIPELINE_JOB_ID_PLACEHOLDER
+from kfp.dsl import PIPELINE_ROOT_PLACEHOLDER
 from kfp.dsl import PIPELINE_TASK_ID_PLACEHOLDER
 
 
@@ -25,7 +26,6 @@ def target_field_data_remover(
     bigquery_output_table: OutputPath(str),
     gcs_output_directory: OutputPath(list),
     project: str,
-    root_dir: str,
     location: str = 'us-central1',
     gcs_source_uris: list = [],
     bigquery_source_uri: str = '',
@@ -35,7 +35,9 @@ def target_field_data_remover(
     dataflow_subnetwork: str = '',
     dataflow_use_public_ips: bool = True,
     encryption_spec_key_name: str = '',
+    force_direct_runner: bool = False,
 ):
+  # fmt: off
   """Removes the target field from the input dataset.
 
   Used for supporting unstructured AutoML models and custom models for Vertex
@@ -43,50 +45,49 @@ def target_field_data_remover(
   target field.
 
   Args:
-      project (str): Project to retrieve dataset from.
-      location (Optional[str]): Location to retrieve dataset from. If not set,
+      project: Project to retrieve dataset from.
+      location: Location to retrieve dataset from. If not set,
         defaulted to `us-central1`.
-      root_dir (str): The GCS directory for keeping staging files. A random
-        subdirectory will be created under the directory to keep job info for
-        resuming the job in case of failure.
-      gcs_source_uris ([Sequence[str]): Google Cloud Storage URI(-s) to your
+      gcs_source_uris: Google Cloud Storage URI(-s) to your
         instances to run the target field data remover on. They must match
         `instances_format`. May contain wildcards. For more information on
         wildcards, see
             https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames.
-      bigquery_source_uri (Optional[str]): Google BigQuery Table URI to your
+      bigquery_source_uri: Google BigQuery Table URI to your
         instances to run target field data remover on.
-      instances_format (Optional[str]): The format in which instances are given,
+      instances_format: The format in which instances are given,
         must be one of the model's supported input storage formats. If not set,
         default to "jsonl".
-      target_field_name (str): The name of the features target field in the
+      target_field_name: The name of the features target field in the
         predictions file. Formatted to be able to find nested columns for
         "jsonl", delimited by `.`. Alternatively referred to as the
         ground_truth_column field. If not set, defaulted to `ground_truth`.
-      dataflow_service_account (Optional[str]): Service account to run the
+      dataflow_service_account: Service account to run the
         dataflow job. If not set, dataflow will use the default worker service
         account. For more details, see
         https://cloud.google.com/dataflow/docs/concepts/security-and-permissions#default_worker_service_account
-      dataflow_subnetwork (Optional[str]): Dataflow's fully qualified subnetwork
+      dataflow_subnetwork: Dataflow's fully qualified subnetwork
         name, when empty the default subnetwork will be used. More details:
-          https://cloud.google.com/dataflow/docs/guides/specifying-networks#example_network_and_subnetwork_specifications
-      dataflow_use_public_ips (Optional[bool]): Specifies whether Dataflow
+        https://cloud.google.com/dataflow/docs/guides/specifying-networks#example_network_and_subnetwork_specifications
+      dataflow_use_public_ips: Specifies whether Dataflow
         workers use public IP addresses.
-      encryption_spec_key_name (Optional[str]): Customer-managed encryption key
+      encryption_spec_key_name: Customer-managed encryption key
         for the Dataflow job. If this is set, then all resources created by the
         Dataflow job will be encrypted with the provided encryption key.
+      force_direct_runner: Flag to use Beam DirectRunner. If set to true,
+        use Apache Beam DirectRunner to execute the task locally instead of
+        launching a Dataflow job.
 
   Returns:
-      gcs_output_directory (JsonArray): JsonArray of the downsampled dataset GCS
+      gcs_output_directory: JsonArray of the downsampled dataset GCS
         output.
-      bigquery_output_table (str): String of the downsampled dataset BigQuery
+      bigquery_output_table: String of the downsampled dataset BigQuery
         output.
-      gcp_resources (str): Serialized gcp_resources proto tracking the dataflow
-        job.
-
-        For more details, see
+      gcp_resources: Serialized gcp_resources proto tracking the dataflow
+        job. For more details, see
         https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/proto/README.md.
   """
+  # fmt: on
   return ContainerSpec(
       image='gcr.io/ml-pipeline/model-evaluation:v0.9',
       command=[
@@ -103,7 +104,7 @@ def target_field_data_remover(
           '--location',
           location,
           '--root_dir',
-          f'{root_dir}/{PIPELINE_JOB_ID_PLACEHOLDER}-{PIPELINE_TASK_ID_PLACEHOLDER}',
+          f'{PIPELINE_ROOT_PLACEHOLDER}/{PIPELINE_JOB_ID_PLACEHOLDER}-{PIPELINE_TASK_ID_PLACEHOLDER}',
           '--gcs_source_uris',
           gcs_source_uris,
           '--bigquery_source_uri',
@@ -122,6 +123,8 @@ def target_field_data_remover(
           dataflow_use_public_ips,
           '--kms_key_name',
           encryption_spec_key_name,
+          '--force_direct_runner',
+          force_direct_runner,
           '--gcs_directory_for_gcs_output_uris',
           gcs_output_directory,
           '--gcs_directory_for_bigquery_output_table_uri',

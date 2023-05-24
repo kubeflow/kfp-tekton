@@ -15,6 +15,7 @@
 
 from typing import Optional
 
+from google_cloud_pipeline_components import _image
 from google_cloud_pipeline_components.types.artifact_types import VertexDataset
 from kfp import dsl
 from kfp.dsl import Output
@@ -33,30 +34,25 @@ def video_dataset_create(
     encryption_spec_key_name: Optional[str] = None,
 ):
   # fmt: off
-  """
-  Creates a new video dataset and optionally imports data into dataset
-  when source and import_schema_uri are passed.
+  """Creates a new video dataset and optionally imports data into dataset when
+  source and import_schema_uri are passed.
+
   Args:
-      display_name (String):
-          Required. The user-defined name of the Dataset.
+      display_name: The user-defined name of the Dataset.
           The name can be up to 128 characters long and can be consist
           of any UTF-8 characters.
-      gcs_source (Union[str, Sequence[str]]):
+      gcs_source:
           Google Cloud Storage URI(-s) to the
           input file(s). May contain wildcards. For more
           information on wildcards, see
           https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames.
-          examples:
-              str: "gs://bucket/file.csv"
-              Sequence[str]: ["gs://bucket/file1.csv", "gs://bucket/file2.csv"]
-      import_schema_uri (String):
-          Points to a YAML file stored on Google Cloud
+          For example, "gs://bucket/file.csv" or ["gs://bucket/file1.csv", "gs://bucket/file2.csv"].
+      import_schema_uri: Points to a YAML file stored on Google Cloud
           Storage describing the import format. Validation will be
           done against the schema. The schema is defined as an
           `OpenAPI 3.0.2 Schema
           Object <https://tinyurl.com/y538mdwt>`__.
-      data_item_labels (JsonObject):
-          Labels that will be applied to newly imported DataItems. If
+      data_item_labels: Labels that will be applied to newly imported DataItems. If
           an identical DataItem as one being imported already exists
           in the Dataset, then these labels will be appended to these
           of the already existing one, and if labels with identical
@@ -69,12 +65,9 @@ def video_dataset_create(
           pdf bytes). These labels will be overridden by Annotation
           labels specified inside index file refenced by
           ``import_schema_uri``,
-      project (String):
-          Required. project to retrieve dataset from.
-      location (String):
-          Optional location to retrieve dataset from.
-      labels (JsonObject):
-          Optional. Labels with user-defined metadata to organize your Tensorboards.
+      project: project to retrieve dataset from.
+      location: Optional location to retrieve dataset from.
+      labels: Labels with user-defined metadata to organize your Tensorboards.
           Label keys and values can be no longer than 64 characters
           (Unicode codepoints), can only contain lowercase letters, numeric
           characters, underscores and dashes. International characters are allowed.
@@ -83,8 +76,7 @@ def video_dataset_create(
           See https://goo.gl/xmQnxf for more information and examples of labels.
           System reserved label keys are prefixed with "aiplatform.googleapis.com/"
           and are immutable.
-      encryption_spec_key_name (Optional[String]):
-          Optional. The Cloud KMS resource identifier of the customer
+      encryption_spec_key_name: The Cloud KMS resource identifier of the customer
           managed encryption key used to protect the dataset. Has the
           form:
           ``projects/my-project/locations/my-region/keyRings/my-kr/cryptoKeys/my-key``.
@@ -92,19 +84,18 @@ def video_dataset_create(
           resource is created.
           If set, this Dataset and all sub-resources of this Dataset will be secured by this key.
           Overrides encryption_spec_key_name set in aiplatform.init.
-  Returns:
-      video_dataset (VideoDataset):
-          Instantiated representation of the managed video dataset resource.
 
+  Returns:
+      video_dataset: Instantiated representation of the managed video dataset resource.
   """
   # fmt: on
 
   return dsl.ContainerSpec(
-      image='gcr.io/ml-pipeline/google-cloud-pipeline-components:2.0.0b3',
+      image=_image.GCPC_IMAGE_TAG,
       command=[
           'python3',
           '-m',
-          'google_cloud_pipeline_components.container.aiplatform.remote_runner',
+          'google_cloud_pipeline_components.container.v1.aiplatform.remote_runner',
           '--cls_name',
           'VideoDataset',
           '--method_name',
