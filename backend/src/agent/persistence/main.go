@@ -16,14 +16,18 @@ package main
 
 import (
 	"flag"
+	"strings"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
+	"github.com/golang/glog"
 	"github.com/kubeflow/pipelines/backend/src/agent/persistence/client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	swfclientset "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned"
 	swfinformers "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/informers/externalversions"
 	"github.com/kubeflow/pipelines/backend/src/crd/pkg/signals"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	workflowclientSet "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	workflowinformers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -45,6 +49,8 @@ var (
 	numWorker                     int
 	clientQPS                     float64
 	clientBurst                   int
+	legacyStatusUpdate            bool
+	configPath                    = flag.String("config", "", "Path to JSON file containing config")
 )
 
 const (
@@ -61,11 +67,14 @@ const (
 	numWorkerName                         = "numWorker"
 	clientQPSFlagName                     = "clientQPS"
 	clientBurstFlagName                   = "clientBurst"
+	legacyStatusUpdateName                = "legacyStatusUpdate"
 )
 
 func main() {
 	flag.Parse()
-
+	if !legacyStatusUpdate {
+		initConfig()
+	}
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
 
@@ -102,7 +111,8 @@ func main() {
 		mlPipelineAPIServerBasePath,
 		mlPipelineAPIServerName,
 		mlPipelineServiceHttpPort,
-		mlPipelineServiceGRPCPort)
+		mlPipelineServiceGRPCPort,
+		legacyStatusUpdate)
 	if err != nil {
 		log.Fatalf("Error creating ML pipeline API Server client: %v", err)
 	}
@@ -139,4 +149,29 @@ func init() {
 	// k8s.io/client-go/rest/config.go#RESTClientFor
 	flag.Float64Var(&clientQPS, clientQPSFlagName, 5, "The maximum QPS to the master from this client.")
 	flag.IntVar(&clientBurst, clientBurstFlagName, 10, "Maximum burst for throttle from this client.")
+	flag.BoolVar(&legacyStatusUpdate, legacyStatusUpdateName, false, "Use legacy status update method to pass update via apiserver")
+}
+
+func initConfig() {
+	// Import environment variable, support nested vars e.g. OBJECTSTORECONFIG_ACCESSKEY
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	viper.AutomaticEnv()
+	// We need empty string env var for e.g. KUBEFLOW_USERID_PREFIX.
+	viper.AllowEmptyEnv(true)
+
+	// Set configuration file name. The format is auto detected in this case.
+	viper.SetConfigName("config")
+	viper.AddConfigPath(*configPath)
+	err := viper.ReadInConfig()
+	if err != nil {
+		glog.Fatalf("Fatal error config file: %s", err)
+	}
+
+	// Watch for configuration change
+	viper.WatchConfig()
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		// Read in config again
+		viper.ReadInConfig()
+	})
 }
