@@ -5,3 +5,54 @@ resources:
   - ../tekton-custom-task
 
 namespace: openshift-pipelines
+
+patches:
+- patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/securityContext/runAsUser
+  target:
+    group: apps
+    kind: Deployment
+    name: tekton-pipelineloop-controller
+- patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/securityContext/runAsUser
+  target:
+    group: apps
+    kind: Deployment
+    name: tekton-pipelineloop-webhook
+- patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/securityContext/runAsUser
+  target:
+    group: apps
+    kind: Deployment
+    name: kfp-driver
+- patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/securityContext/runAsUser
+  target:
+    group: apps
+    kind: Deployment
+    name: kfp-exithandler-controller
+- patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/securityContext/runAsUser
+  target:
+    group: apps
+    kind: Deployment
+    name: kfp-exithandler-webhook
+- patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/securityContext/runAsUser
+  target:
+    group: apps
+    kind: Deployment
+    name: kfptask-controller
+- patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/securityContext/runAsUser
+  target:
+    group: apps
+    kind: Deployment
+    name: kfptask-webhook

@@ -29,6 +29,7 @@ rules:
   - tekton.dev
   resources:
   - pipelineruns
+  - customruns
   - taskruns
   - conditions
   - runs
