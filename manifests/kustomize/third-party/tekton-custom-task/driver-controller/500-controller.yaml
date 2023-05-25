@@ -53,7 +53,7 @@ spec:
               drop:
               - ALL
             runAsNonRoot: true
-            runAsUser: 1000680001
-            runAsGroup: 1000680001
+            runAsUser: 65532
+            runAsGroup: 65532
             seccompProfile:
               type: RuntimeDefault
