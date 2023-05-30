@@ -7,6 +7,7 @@
   * [OpenShift](#openshift)
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
   * [Alternative KIND deployment](#alternative-kind-deployment)
+  * [Compatibility Map](#compatibility-map)
 - [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
 - [Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment](#standalone-kubeflow-pipelines-with-openshift-pipelines-backend-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
@@ -35,6 +36,16 @@ A Kubernetes cluster `v1.24` that has least 8 vCPU and 16 GB memory.
 ### Alternative KIND deployment
 
    If you want to deploy locally, you can [deploy MLX on KIND](https://github.com/machine-learning-exchange/mlx/blob/main/docs/install-mlx-on-kind.md). MLX in build on top of kfp-tekton, so you will have Kubeflow Pipeline with Tekton installed after finish deploy MLX on KIND.
+   
+### Compatibility Map
+
+Each new KFP-Tekton version is based on the long-term support of the Tekton Pipeline version and the major release of the Openshift pipeline version. Below is the list of compatible KFP-Tekton version to the Tekton/Openshift pipelines version.
+   
+| KFP-Tekton Version    | Tekton Pipeline Version | OpenShift Pipelines Version |
+| -------- | ------- | ------- |
+| 1.5.x    | 0.41.x  | 1.9     |
+| 1.6.x    | 0.44.x  | 1.10    |
+| 1.7.x    | 0.47.x  | 1.11    |
 
 ## Standalone Kubeflow Pipelines with Tekton Backend Deployment
 
