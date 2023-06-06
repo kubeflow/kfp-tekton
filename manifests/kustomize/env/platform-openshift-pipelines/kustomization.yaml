@@ -49,6 +49,19 @@ patches:
               env:
               - name: EXECUTIONTYPE
                 value: PipelineRun
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: ml-pipeline-ui
+    spec:
+      template:
+        spec:
+          containers:
+            - name: ml-pipeline-ui
+              env:
+              - name: POD_LOG_CONTAINER_NAME
+                value: step-user-main
 
 
 images:

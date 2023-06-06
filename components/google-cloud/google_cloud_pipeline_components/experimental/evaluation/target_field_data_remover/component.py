@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from google_cloud_pipeline_components.experimental.evaluation.version import EVAL_IMAGE_TAG
 from kfp.dsl import container_component
 from kfp.dsl import ContainerSpec
 from kfp.dsl import OutputPath
@@ -35,7 +36,7 @@ def target_field_data_remover(
     dataflow_subnetwork: str = '',
     dataflow_use_public_ips: bool = True,
     encryption_spec_key_name: str = '',
-    force_direct_runner: bool = False,
+    force_runner_mode: str = '',
 ):
   # fmt: off
   """Removes the target field from the input dataset.
@@ -74,9 +75,8 @@ def target_field_data_remover(
       encryption_spec_key_name: Customer-managed encryption key
         for the Dataflow job. If this is set, then all resources created by the
         Dataflow job will be encrypted with the provided encryption key.
-      force_direct_runner: Flag to use Beam DirectRunner. If set to true,
-        use Apache Beam DirectRunner to execute the task locally instead of
-        launching a Dataflow job.
+      force_runner_mode: Flag to choose Beam runner. Valid options are `DirectRunner`
+        and `Dataflow`.
 
   Returns:
       gcs_output_directory: JsonArray of the downsampled dataset GCS
@@ -89,7 +89,7 @@ def target_field_data_remover(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/model-evaluation:v0.9',
+      image=EVAL_IMAGE_TAG,
       command=[
           'python3',
           '/main.py',
@@ -123,8 +123,8 @@ def target_field_data_remover(
           dataflow_use_public_ips,
           '--kms_key_name',
           encryption_spec_key_name,
-          '--force_direct_runner',
-          force_direct_runner,
+          '--force_runner_mode',
+          force_runner_mode,
           '--gcs_directory_for_gcs_output_uris',
           gcs_output_directory,
           '--gcs_directory_for_bigquery_output_table_uri',
