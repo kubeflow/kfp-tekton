@@ -17,6 +17,7 @@ package tektoncompiler
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
@@ -30,9 +31,73 @@ import (
 )
 
 const (
-	volumeNameKFPLauncher = "kfp-launcher"
-	kfpLauncherPath       = "/tekton/home/launch"
+	volumeNameKFPLauncher   = "kfp-launcher"
+	kfpLauncherPath         = "/tekton/home/launch"
+	MetadataGRPCServiceHost = "metadata-grpc-service.kubeflow.svc.cluster.local"
+	MetadataGPRCServicePort = "8080"
+	MLPipelineServiceHost   = "ml-pipeline.kubeflow.svc.cluster.local"
+	MLPipelineServicePort   = "8887"
 )
+
+var (
+	envVarInit              = false
+	metadataGRPCServiceHost = MetadataGRPCServiceHost
+	metadataGRPCServicePort = MetadataGPRCServicePort
+	mlPipelineServiceHost   = MLPipelineServiceHost
+	mlPipelineServicePort   = MLPipelineServicePort
+)
+
+func initEnvVars() {
+	// fill in the Env vars we support
+	// assuming:
+	// 1. MLMD is deployed in the same namespace as ml-pipeline
+	// 2. using `ml-pipeline` and `metadata-grpc-service` as service names
+	mlPipelineServiceHost = os.Getenv("ML_PIPELINE_SERVICE_HOST")
+	if mlPipelineServiceHost == "" {
+		mlPipelineServiceHost = MLPipelineServiceHost
+	}
+	mlPipelineServicePort = os.Getenv("ML_PIPELINE_SERVICE_PORT_GRPC")
+	if mlPipelineServicePort == "" {
+		mlPipelineServicePort = MLPipelineServicePort
+	}
+	metadataGRPCServiceHost = os.Getenv("METADATA_GRPC_SERVICE_SERVICE_HOST")
+	if metadataGRPCServiceHost == "" {
+		metadataGRPCServiceHost = MetadataGRPCServiceHost
+	}
+	metadataGRPCServicePort = os.Getenv("METADATA_GRPC_SERVICE_SERVICE_PORT")
+	if metadataGRPCServicePort == "" {
+		metadataGRPCServicePort = MetadataGPRCServicePort
+	}
+	envVarInit = true
+}
+
+func GetMLMDHost() string {
+	if !envVarInit {
+		initEnvVars()
+	}
+	return metadataGRPCServiceHost
+}
+
+func GetMLMDPort() string {
+	if !envVarInit {
+		initEnvVars()
+	}
+	return metadataGRPCServicePort
+}
+
+func GetMLPipelineHost() string {
+	if !envVarInit {
+		initEnvVars()
+	}
+	return mlPipelineServiceHost
+}
+
+func GetMLPipelinePort() string {
+	if !envVarInit {
+		initEnvVars()
+	}
+	return mlPipelineServicePort
+}
 
 // add KubernetesSpec for the container of the component
 func (c *pipelinerunCompiler) AddKubernetesSpec(name string, kubernetesSpec *structpb.Struct) error {
@@ -337,10 +402,18 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 						},
 					}, {
 						Name:  "METADATA_GRPC_SERVICE_HOST",
-						Value: "metadata-grpc-service.kubeflow.svc.cluster.local",
+						Value: GetMLMDHost(),
 					}, {
 						Name:  "METADATA_GRPC_SERVICE_PORT",
-						Value: "8080",
+						Value: GetMLMDPort(),
+					}, {
+						// override the k8s envs for the following two envs
+						// to make sure launcher can find the ml-pipeline host properly
+						Name:  "ML_PIPELINE_SERVICE_HOST",
+						Value: GetMLPipelineHost(),
+					}, {
+						Name:  "ML_PIPELINE_SERVICE_PORT_GRPC",
+						Value: GetMLPipelinePort(),
 					}},
 				},
 			},
