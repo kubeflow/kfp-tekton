@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from google_cloud_pipeline_components.experimental.evaluation.version import EVAL_IMAGE_TAG
 from google_cloud_pipeline_components.types.artifact_types import BQTable
 from kfp.dsl import Artifact
 from kfp.dsl import ConcatPlaceholder
@@ -60,9 +61,26 @@ def detect_model_bias(
       predictions_bigquery_source (Optional[google.BQTable]): BigQuery table
         with prediction or explanation data to be used for this evaluation. For
         prediction results, the table column should be named "predicted_*".
-      bias_configs (Sequence[BiasConfig]): A list of BiasConfig protos, with
-        each BiasConfig in the list formatted with json_format.MessageToJson or
-        json_format.MessageToDict.
+      bias_configs (Sequence[BiasConfig]): A list of
+        google.cloud.aiplatform_v1.types.ModelEvaluation.BiasConfig. When
+        provided, compute model bias metrics for each defined slice. Below is an
+        example of how to format this input.
+        1: First, create a BiasConfig. ```from
+          google.cloud.aiplatform_v1.types.ModelEvaluation import BiasConfig
+          from google.cloud.aiplatform_v1.types.ModelEvaluationSlice.Slice
+          import SliceSpec from
+          google.cloud.aiplatform_v1.types.ModelEvaluationSlice.Slice.SliceSpec
+          import SliceConfig bias_config = BiasConfig(bias_slices=SliceSpec(
+          configs={ 'feature_a': SliceConfig(SliceSpec.Value(string_value=
+          'label_a') ) }))```
+        2: Create a list to store the bias configs into. `bias_configs = []`.
+        3: Format each BiasConfig into a JSON or Dict. `bias_config_json =
+          json_format.MessageToJson(bias_config` or `bias_config_dict =
+          json_format.MessageToDict(bias_config).
+        4: Combine each bias_config JSON into a list.
+          `bias_configs.append(bias_config_json)`.
+        5: Finally, pass bias_configs as an parameter for this component.
+          `DetectModelBiasOp(bias_configs=bias_configs)`
       thresholds (Optional[Sequence[float]]): A list of float values to be used
         as prediction decision thresholds. Defaulted to [0.5f] in the container.
       encryption_spec_key_name (Optional[str]): Customer-managed encryption key
@@ -78,7 +96,7 @@ def detect_model_bias(
           https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/proto/README.md.
   """
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/model-evaluation:v0.9.1',
+      image=EVAL_IMAGE_TAG,
       command=[
           'python3',
           '/main.py',

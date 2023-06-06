@@ -2,7 +2,11 @@ API Reference
 ==========================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    v1/index
-   experimental/index
+
+.. toctree::
+   :maxdepth: 2
+
+   artifact_types

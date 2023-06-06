@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from google_cloud_pipeline_components.types.artifact_types import _ForecastingMetrics
+from google_cloud_pipeline_components.experimental.evaluation.version import EVAL_IMAGE_TAG
 from google_cloud_pipeline_components.types.artifact_types import BQTable
+from google_cloud_pipeline_components.types.artifact_types import ForecastingMetrics
 from google_cloud_pipeline_components.types.artifact_types import VertexModel
 from kfp.dsl import Artifact
 from kfp.dsl import ConcatPlaceholder
@@ -31,7 +31,7 @@ from kfp.dsl import PIPELINE_TASK_ID_PLACEHOLDER
 @container_component
 def model_evaluation_forecasting(
     gcp_resources: OutputPath(str),
-    evaluation_metrics: Output[_ForecastingMetrics],
+    evaluation_metrics: Output[ForecastingMetrics],
     project: str,
     target_field_name: str,
     model: Input[VertexModel] = None,
@@ -54,7 +54,7 @@ def model_evaluation_forecasting(
     dataflow_subnetwork: str = '',
     dataflow_use_public_ips: bool = True,
     encryption_spec_key_name: str = '',
-    force_direct_runner: bool = False,
+    force_runner_mode: str = '',
 ):
   # fmt: off
   """Computes a google.ForecastingMetrics Artifact, containing evaluation
@@ -131,9 +131,8 @@ def model_evaluation_forecasting(
       dataflow_use_public_ips: Specifies whether Dataflow
         workers use public IP addresses.
       encryption_spec_key_name: Customer-managed encryption key.
-      force_direct_runner: Flag to use Beam DirectRunner. If set to true,
-        use Apache Beam DirectRunner to execute the task locally instead of
-        launching a Dataflow job.
+      force_runner_mode: Flag to choose Beam runner. Valid options are `DirectRunner`
+        and `Dataflow`.
 
   Returns:
       evaluation_metrics:
@@ -145,7 +144,7 @@ def model_evaluation_forecasting(
   """
   # fmt: off
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/model-evaluation:v0.9',
+      image=EVAL_IMAGE_TAG,
       command=[
           'python3',
           '/main.py',
@@ -227,8 +226,8 @@ def model_evaluation_forecasting(
           dataflow_use_public_ips,
           '--kms_key_name',
           encryption_spec_key_name,
-          '--force_direct_runner',
-          force_direct_runner,
+          '--force_runner_mode',
+          force_runner_mode,
           '--output_metrics_gcs_path',
           evaluation_metrics.path,
           '--gcp_resources',

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { graphlib } from 'dagre';
 import { ReactWrapper, shallow, ShallowWrapper } from 'enzyme';
 import * as React from 'react';
@@ -419,6 +419,17 @@ describe('PipelineDetails', () => {
     );
   });
 
+  it('renders "No graph to show" if it is empty pipeline', async () => {
+    TestUtils.makeErrorResponse(getV2PipelineVersionSpy, 'No pipeline version is found');
+    render(<PipelineDetails {...generateProps()} />);
+
+    await waitFor(() => {
+      expect(getV2PipelineVersionSpy).toHaveBeenCalled();
+    });
+
+    screen.getByText('No graph to show');
+  });
+
   it('use pipeline_version_id in recurring run to get pipeline template string (v2)', async () => {
     jest.spyOn(features, 'isFeatureEnabled').mockReturnValue(true);
     testV2RecurringRun.pipeline_version_reference.pipeline_id = 'test-pipeline-id';
@@ -590,33 +601,61 @@ describe('PipelineDetails', () => {
     expect(newExperimentBtn).toBeDefined();
   });
 
-  it("has 'create run' toolbar button if viewing an embedded pipeline", async () => {
+  it("has 'clone run' toolbar button if viewing an embedded pipeline", async () => {
     tree = shallow(<PipelineDetails {...generateProps(true)} />);
     await getPipelineVersionTemplateSpy;
     await TestUtils.flushPromises();
     const instance = tree.instance() as PipelineDetails;
     /* create run and create pipeline version, so 2 */
-    expect(Object.keys(instance.getInitialToolbarState().actions)).toHaveLength(2);
-    const newRunBtn = instance.getInitialToolbarState().actions[
-      (ButtonKeys.NEW_RUN_FROM_PIPELINE_VERSION, ButtonKeys.NEW_PIPELINE_VERSION)
+    expect(Object.keys(instance.getInitialToolbarState().actions)).toHaveLength(1);
+    const cloneRunBtn = instance.getInitialToolbarState().actions[ButtonKeys.CLONE_RUN];
+    expect(cloneRunBtn).toBeDefined();
+  });
+
+  it("has 'clone recurring run' toolbar button if viewing an embedded pipeline from recurring run", async () => {
+    tree = shallow(<PipelineDetails {...generateProps(false, true)} />);
+    await getPipelineVersionTemplateSpy;
+    await TestUtils.flushPromises();
+    const instance = tree.instance() as PipelineDetails;
+    /* create run and create pipeline version, so 2 */
+    expect(Object.keys(instance.getInitialToolbarState().actions)).toHaveLength(1);
+    const cloneRecurringRunBtn = instance.getInitialToolbarState().actions[
+      ButtonKeys.CLONE_RECURRING_RUN
     ];
-    expect(newRunBtn).toBeDefined();
+    expect(cloneRecurringRunBtn).toBeDefined();
   });
 
   it(
-    'clicking new run button when viewing embedded pipeline navigates to ' +
-      'the new run page with run ID',
+    'clicking clone run button when viewing embedded pipeline navigates to ' +
+      'the new run page (clone a run) with run ID',
     async () => {
       tree = shallow(<PipelineDetails {...generateProps(true)} />);
       await TestUtils.flushPromises();
       const instance = tree.instance() as PipelineDetails;
-      const newRunBtn = instance.getInitialToolbarState().actions[
-        ButtonKeys.NEW_RUN_FROM_PIPELINE_VERSION
-      ];
-      newRunBtn!.action();
+      const cloneRunBtn = instance.getInitialToolbarState().actions[ButtonKeys.CLONE_RUN];
+      cloneRunBtn!.action();
       expect(historyPushSpy).toHaveBeenCalledTimes(1);
       expect(historyPushSpy).toHaveBeenLastCalledWith(
-        RoutePage.NEW_RUN + `?${QUERY_PARAMS.fromRunId}=${testV1Run.run!.id}`,
+        RoutePage.NEW_RUN + `?${QUERY_PARAMS.cloneFromRun}=${testV1Run.run!.id}`,
+      );
+    },
+  );
+
+  it(
+    'clicking clone recurring run button when viewing embedded pipeline from recurring run' +
+      'navigates to the new run page (clone a recurring run) with recurring run ID',
+    async () => {
+      tree = shallow(<PipelineDetails {...generateProps(false, true)} />);
+      await TestUtils.flushPromises();
+      const instance = tree.instance() as PipelineDetails;
+      const cloneRecurringRunBtn = instance.getInitialToolbarState().actions[
+        ButtonKeys.CLONE_RECURRING_RUN
+      ];
+      cloneRecurringRunBtn!.action();
+      expect(historyPushSpy).toHaveBeenCalledTimes(1);
+      expect(historyPushSpy).toHaveBeenLastCalledWith(
+        RoutePage.NEW_RUN +
+          `?${QUERY_PARAMS.cloneFromRecurringRun}=${testV1RecurringRun.id}&recurring=1`,
       );
     },
   );

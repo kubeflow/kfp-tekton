@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from google_cloud_pipeline_components.experimental.evaluation.version import EVAL_IMAGE_TAG
 from google_cloud_pipeline_components.types.artifact_types import BQTable
 from kfp.dsl import Artifact
 from kfp.dsl import ConcatPlaceholder
@@ -32,6 +32,7 @@ def feature_attribution(
     gcp_resources: OutputPath(str),
     feature_attributions: Output[Metrics],
     project: str,
+    problem_type: str,
     location: str = 'us-central1',
     predictions_format: str = 'jsonl',
     predictions_gcs_source: Input[Artifact] = None,
@@ -44,7 +45,7 @@ def feature_attribution(
     dataflow_subnetwork: str = '',
     dataflow_use_public_ips: bool = True,
     encryption_spec_key_name: str = '',
-    force_direct_runner: bool = False,
+    force_runner_mode: str = '',
 ):
   # fmt: off
   """Compute feature attribution on a trained model's batch explanation
@@ -58,6 +59,8 @@ def feature_attribution(
       project: Project to run feature attribution container.
       location: Location running feature attribution. If not
         set, defaulted to `us-central1`.
+      problem_type: Problem type of the pipeline: one of `classification`,
+      `regression` and `forecasting`.
       predictions_format: The file format for the batch
         prediction results. `jsonl`, `csv`, and `bigquery` are the allowed
         formats, from Vertex Batch Prediction. If not set, defaulted to `jsonl`.
@@ -89,9 +92,8 @@ def feature_attribution(
       encryption_spec_key_name: Customer-managed encryption key
         for the Dataflow job. If this is set, then all resources created by the
         Dataflow job will be encrypted with the provided encryption key.
-      force_direct_runner: Flag to use Beam DirectRunner. If set to true,
-        use Apache Beam DirectRunner to execute the task locally instead of
-        launching a Dataflow job.
+      force_runner_mode: Flag to choose Beam runner. Valid options are `DirectRunner`
+        and `Dataflow`.
 
   Returns:
       gcs_output_directory: JsonArray of the downsampled dataset GCS
@@ -104,7 +106,7 @@ def feature_attribution(
   """
   # fmt: on
   return ContainerSpec(
-      image='gcr.io/ml-pipeline/model-evaluation:v0.9',
+      image=EVAL_IMAGE_TAG,
       command=[
           'python3',
           '/main.py',
@@ -118,6 +120,8 @@ def feature_attribution(
           project,
           '--location',
           location,
+          '--problem_type',
+          problem_type,
           '--root_dir',
           f'{PIPELINE_ROOT_PLACEHOLDER}/{PIPELINE_JOB_ID_PLACEHOLDER}-{PIPELINE_TASK_ID_PLACEHOLDER}',
           '--batch_prediction_format',
@@ -161,8 +165,8 @@ def feature_attribution(
           dataflow_use_public_ips,
           '--kms_key_name',
           encryption_spec_key_name,
-          '--force_direct_runner',
-          force_direct_runner,
+          '--force_runner_mode',
+          force_runner_mode,
           '--gcs_output_path',
           feature_attributions.path,
           '--gcp_resources',
