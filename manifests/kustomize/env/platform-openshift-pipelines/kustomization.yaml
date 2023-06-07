@@ -67,13 +67,13 @@ patches:
 images:
 - name: gcr.io/ml-pipeline/api-server
   newName: docker.io/aipipeline/apiserver-dev
-  newTag: 47c9dc29e
+  newTag: ffca08e6d
 - name: gcr.io/ml-pipeline/persistenceagent
   newName: docker.io/aipipeline/persistenceagent-dev
-  newTag: 47c9dc29e
+  newTag: ffca08e6d
 - name: gcr.io/ml-pipeline/scheduledworkflow
   newName: docker.io/aipipeline/swf-dev
-  newTag: 47c9dc29e
+  newTag: ffca08e6d
 
 labels:
 - includeSelectors: true
