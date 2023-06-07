@@ -27,7 +27,7 @@ A Kubernetes cluster `v1.24` that has least 8 vCPU and 16 GB memory.
 
    Depending on your situation, you can choose between the two approaches to set up the pipeline engine on Openshift:
    1. Using [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.12/cicd/pipelines/installing-pipelines.html) (built on Tekton), follow the [Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment](#standalone-kubeflow-pipelines-with-openshift-pipelines-backend-deployment)
-   2. Using [Tekton on Openshift](https://github.com/tektoncd/pipeline/blob/v0.47.0/docs/install.md#installing-tekton-pipelines-on-openshift), follow the [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment) to install the Kubeflow Pipeline Stack. Note the current Tekton Open Source deployment for [Openshift doesn't work out of the box](https://github.com/tektoncd/pipeline/issues/3452), so we strongly recommend to deploy with Opneshift Pipelines (see above) if you want to run Kubeflow Pipelines on Openshift.
+   2. Using [Tekton on Openshift](https://github.com/tektoncd/pipeline/blob/v0.47.1/docs/install.md#installing-tekton-pipelines-on-openshift), follow the [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment) to install the Kubeflow Pipeline Stack. Note the current Tekton Open Source deployment for [Openshift doesn't work out of the box](https://github.com/tektoncd/pipeline/issues/3452), so we strongly recommend to deploy with Opneshift Pipelines (see above) if you want to run Kubeflow Pipelines on Openshift.
 
 ### Other Cloud Providers or On-Prem Kubernetes Deployment
 
@@ -51,10 +51,10 @@ Each new KFP-Tekton version is based on the long-term support of the Tekton Pipe
 
 To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
 
-1. Install [Tekton v0.47.0](https://github.com/tektoncd/pipeline/blob/v0.47.0/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton pipelines version is not v0.41.0+.
+1. Install [Tekton v0.47.1](https://github.com/tektoncd/pipeline/blob/v0.47.1/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton pipelines version is not v0.41.0+.
 
    ```shell
-   kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.47.0/release.yaml
+   kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.47.1/release.yaml
    ```
 
 2. Enable necessary Tekton configurations for kfp-tekton
