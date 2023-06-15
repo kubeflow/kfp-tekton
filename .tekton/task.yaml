@@ -284,8 +284,8 @@ spec:
         - mountPath: /certs/client
           name: dind-certs
   sidecars:
-    - image: icr.io/continuous-delivery/pipeline/docker:19.03.15-dind
-      name: server
+    - name: server
+      image: icr.io/continuous-delivery/pipeline/docker:20.10.22-dind
       securityContext:
         privileged: true
       command: ["sh", "-c"]
