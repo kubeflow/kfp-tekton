@@ -113,12 +113,11 @@ func Compile(jobArg *pipelinespec.PipelineJob, kubernetesSpecArg *pipelinespec.S
 	c := &pipelinerunCompiler{
 		pr: pr,
 		// TODO(chensun): release process and update the images.
-		launcherImage: "gcr.io/ml-pipeline-test/kfp-launcher-v2@sha256:f47f50553c1385032d0056e066699818a00377639f7032626637278aa9241e2e",
-		// launcherImage: "docker.io/aipipeline/kfp-launcher-v2:11e04400f",
-		job:       job,
-		spec:      spec,
-		dagStack:  make([]string, 0, 10),
-		executors: deploy.GetExecutors(),
+		launcherImage: "gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4",
+		job:           job,
+		spec:          spec,
+		dagStack:      make([]string, 0, 10),
+		executors:     deploy.GetExecutors(),
 	}
 	if opts != nil {
 		if opts.LauncherImage != "" {
