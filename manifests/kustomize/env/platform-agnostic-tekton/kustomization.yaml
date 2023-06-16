@@ -16,13 +16,13 @@ resources:
 images:
 - name: gcr.io/ml-pipeline/api-server
   newName: docker.io/aipipeline/apiserver-dev
-  newTag: ffca08e6d
+  newTag: 6b8723529
 - name: gcr.io/ml-pipeline/persistenceagent
   newName: docker.io/aipipeline/persistenceagent-dev
-  newTag: ffca08e6d
+  newTag: 6b8723529
 - name: gcr.io/ml-pipeline/scheduledworkflow
   newName: docker.io/aipipeline/swf-dev
-  newTag: ffca08e6d
+  newTag: 6b8723529
 
 labels:
 - includeSelectors: true
