@@ -1,0 +1,15 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: peft-demo
+  annotations:
+    serving.kserve.io/deploymentMode: ModelMesh
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: peft-model
+      runtime: peft-model-server
+      storage:
+        key: localMinIO
+        path: sklearn/mnist-svm.joblib
