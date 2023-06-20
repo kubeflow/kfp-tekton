@@ -1,0 +1,47 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: peft-model-server
+  namespace: modelmesh-serving
+spec:
+  supportedModelFormats:
+    - name: peft-model
+      version: "1"
+      autoSelect: true
+  multiModel: true
+  grpcDataEndpoint: port:8001
+  grpcEndpoint: port:8085
+  containers:
+    - name: mlserver
+      image: quay.io/aipipeline/peft-model-server:latest
+      env:
+        - name: MLSERVER_MODELS_DIR
+          value: "/models/_mlserver_models/"
+        - name: MLSERVER_GRPC_PORT
+          value: "8001"
+        - name: MLSERVER_HTTP_PORT
+          value: "8002"
+        - name: MLSERVER_LOAD_MODELS_AT_STARTUP
+          value: "true"
+        - name: MLSERVER_MODEL_NAME
+          value: peft-model
+        - name: MLSERVER_HOST
+          value: "127.0.0.1"
+        - name: MLSERVER_GRPC_MAX_MESSAGE_LENGTH
+          value: "-1"
+        - name: PRETRAINED_MODEL_PATH
+          value: "bigscience/bloomz-560m"
+        - name: PEFT_MODEL_ID
+          value: "aipipeline/bloomz-560m_PROMPT_TUNING_CAUSAL_LM"
+      resources:
+        requests:
+          cpu: 500m
+          memory: 4Gi
+        limits:
+          cpu: "5"
+          memory: 5Gi
+  builtInAdapter:
+    serverType: mlserver
+    runtimeManagementPort: 8001
+    memBufferBytes: 134217728
+    modelLoadingTimeoutMillis: 90000
