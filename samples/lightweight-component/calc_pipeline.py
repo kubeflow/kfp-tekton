@@ -1,4 +1,4 @@
-import kfp
+import kfp.dsl as dsl
 import kfp.components as comp
 
 #Define a Python function
@@ -6,18 +6,13 @@ def add(a: float, b: float) -> float:
    """Calculates sum of two arguments"""
    return a + b
 
-add_op = comp.func_to_container_op(add)
+add_op = comp.create_component_from_func(add)
 
 #Advanced function
 #Demonstrates imports, helper functions and multiple outputs
 from typing import NamedTuple
 def my_divmod(dividend: float, divisor:float) -> NamedTuple('MyDivmodOutput', [('quotient', float), ('remainder', float), ('mlpipeline_ui_metadata', 'UI_metadata'), ('mlpipeline_metrics', 'Metrics')]):
-    """Divides two numbers and calculate  the quotient and remainder"""
-    #Pip installs inside a component function.
-    #NOTE: installs should be placed right at the beginning to avoid upgrading a package
-    # after it has already been imported and cached by python
-    import sys, subprocess;
-    subprocess.run([sys.executable, '-m', 'pip', 'install', 'tensorflow==1.8.0'])
+    """Divides two numbers and calculate the quotient and remainder"""
 
     #Imports inside a component function:
     import numpy as np
@@ -53,9 +48,9 @@ def my_divmod(dividend: float, divisor:float) -> NamedTuple('MyDivmodOutput', [(
     divmod_output = namedtuple('MyDivmodOutput', ['quotient', 'remainder', 'mlpipeline_ui_metadata', 'mlpipeline_metrics'])
     return divmod_output(quotient, remainder, json.dumps(metadata), json.dumps(metrics))
 
-divmod_op = comp.func_to_container_op(my_divmod, base_image='tensorflow/tensorflow:1.11.0-py3')
+divmod_op = comp.create_component_from_func(my_divmod, base_image='tensorflow/tensorflow:2.10.0', packages_to_install=['tensorflow==2.12.0'])
 
-import kfp.dsl as dsl
+
 @dsl.pipeline(
    name='calculation-pipeline',
    description='A toy pipeline that performs arithmetic calculations.'
