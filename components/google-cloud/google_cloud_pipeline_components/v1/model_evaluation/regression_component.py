@@ -11,10 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from google_cloud_pipeline_components.experimental.evaluation.version import EVAL_IMAGE_TAG
+
 from google_cloud_pipeline_components.types.artifact_types import BQTable
 from google_cloud_pipeline_components.types.artifact_types import RegressionMetrics
 from google_cloud_pipeline_components.types.artifact_types import VertexModel
+from google_cloud_pipeline_components.v1.model_evaluation.version import EVAL_IMAGE_TAG
 from kfp import dsl
 from kfp.dsl import container_component
 
@@ -33,7 +34,7 @@ def model_evaluation_regression(
     ground_truth_format: str = 'jsonl',
     ground_truth_gcs_source: list = [],
     ground_truth_bigquery_source: str = '',
-    prediction_score_column: str = 'prediction.scores',
+    prediction_score_column: str = 'prediction.value',
     dataflow_service_account: str = '',
     dataflow_disk_size_gb: int = 50,
     dataflow_machine_type: str = 'n1-standard-4',

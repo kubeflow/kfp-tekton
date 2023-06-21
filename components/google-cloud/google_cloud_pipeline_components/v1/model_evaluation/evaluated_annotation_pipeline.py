@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import NamedTuple
-from google_cloud_pipeline_components.experimental.evaluation import ModelImportEvaluationOp
-from google_cloud_pipeline_components.experimental.evaluation.error_analysis import EvaluatedAnnotationOp
-from google_cloud_pipeline_components.experimental.evaluation.error_analysis import EvaluationDatasetPreprocessorOp as DatasetPreprocessorOp
-from google_cloud_pipeline_components.experimental.evaluation.error_analysis import ModelImportEvaluatedAnnotationOp
-from google_cloud_pipeline_components.experimental.model import GetVertexModelOp
+from google_cloud_pipeline_components._implementation.model import GetVertexModelOp
+from google_cloud_pipeline_components._implementation.model_evaluation import EvaluatedAnnotationOp
+from google_cloud_pipeline_components._implementation.model_evaluation import EvaluationDatasetPreprocessorOp as DatasetPreprocessorOp
+from google_cloud_pipeline_components._implementation.model_evaluation import ModelImportEvaluatedAnnotationOp
+from google_cloud_pipeline_components._implementation.model_evaluation import ModelImportEvaluationOp
 from google_cloud_pipeline_components.v1.batch_predict_job import ModelBatchPredictOp
 from google_cloud_pipeline_components.v1.dataset import GetVertexDatasetOp
 from google_cloud_pipeline_components.v1.model_evaluation.classification_component import model_evaluation_classification as ModelEvaluationClassificationOp
@@ -198,7 +197,7 @@ def evaluated_annotation_pipeline(
       ],
       dataflow_machine_type=dataflow_machine_type,
       dataflow_max_workers_num=dataflow_max_num_workers,
-      dataflow_disk_size=dataflow_disk_size_gb,
+      dataflow_disk_size_gb=dataflow_disk_size_gb,
       dataflow_service_account=dataflow_service_account,
       dataflow_subnetwork=dataflow_subnetwork,
       dataflow_use_public_ips=dataflow_use_public_ips,

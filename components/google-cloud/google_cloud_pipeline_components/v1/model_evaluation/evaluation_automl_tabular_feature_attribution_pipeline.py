@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import NamedTuple
-from google_cloud_pipeline_components.experimental.evaluation import EvaluationDataSamplerOp
-from google_cloud_pipeline_components.experimental.evaluation import ModelEvaluationFeatureAttributionOp
-from google_cloud_pipeline_components.experimental.evaluation import ModelImportEvaluationOp
-from google_cloud_pipeline_components.experimental.model import GetVertexModelOp
+from google_cloud_pipeline_components._implementation.model import GetVertexModelOp
+from google_cloud_pipeline_components._implementation.model_evaluation import EvaluationDataSamplerOp
+from google_cloud_pipeline_components._implementation.model_evaluation import ModelImportEvaluationOp
+from google_cloud_pipeline_components.preview.model_evaluation import ModelEvaluationFeatureAttributionOp
 from google_cloud_pipeline_components.v1.batch_predict_job import ModelBatchPredictOp
 from google_cloud_pipeline_components.v1.model_evaluation.classification_component import model_evaluation_classification as ModelEvaluationClassificationOp
 from google_cloud_pipeline_components.v1.model_evaluation.forecasting_component import model_evaluation_forecasting as ModelEvaluationForecastingOp
@@ -286,7 +285,7 @@ def evaluation_automl_tabular_feature_attribution_pipeline(  # pylint: disable=d
         ],
         dataflow_machine_type=dataflow_machine_type,
         dataflow_max_workers_num=dataflow_max_num_workers,
-        dataflow_disk_size=dataflow_disk_size_gb,
+        dataflow_disk_size_gb=dataflow_disk_size_gb,
         dataflow_service_account=dataflow_service_account,
         dataflow_subnetwork=dataflow_subnetwork,
         dataflow_use_public_ips=dataflow_use_public_ips,
@@ -340,7 +339,7 @@ def evaluation_automl_tabular_feature_attribution_pipeline(  # pylint: disable=d
         ],
         dataflow_machine_type=dataflow_machine_type,
         dataflow_max_workers_num=dataflow_max_num_workers,
-        dataflow_disk_size=dataflow_disk_size_gb,
+        dataflow_disk_size_gb=dataflow_disk_size_gb,
         dataflow_service_account=dataflow_service_account,
         dataflow_subnetwork=dataflow_subnetwork,
         dataflow_use_public_ips=dataflow_use_public_ips,
@@ -394,7 +393,7 @@ def evaluation_automl_tabular_feature_attribution_pipeline(  # pylint: disable=d
         ],
         dataflow_machine_type=dataflow_machine_type,
         dataflow_max_workers_num=dataflow_max_num_workers,
-        dataflow_disk_size=dataflow_disk_size_gb,
+        dataflow_disk_size_gb=dataflow_disk_size_gb,
         dataflow_service_account=dataflow_service_account,
         dataflow_subnetwork=dataflow_subnetwork,
         dataflow_use_public_ips=dataflow_use_public_ips,
