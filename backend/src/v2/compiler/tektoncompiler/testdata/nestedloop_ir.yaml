@@ -312,6 +312,8 @@ pipelineSpec:
                 taskOutputParameter:
                   outputParameterKey: Output
                   producerTask: flip-coin-op
+          iteratorPolicy:
+            parallelismLimit: 2
           parameterIterator:
             itemInput: pipelinechannel--loop-item-param-1
             items:

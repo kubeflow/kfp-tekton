@@ -58,6 +58,13 @@ func (c *pipelinerunCompiler) LoopDAG(taskName, compRef string, task *pipelinesp
 
 func (c *pipelinerunCompiler) EmbedLoopDAG(taskName, compRef string, task *pipelinespec.PipelineTaskSpec, componentSpec *pipelinespec.ComponentSpec, dagSpec *pipelinespec.DagSpec) (err error) {
 	loop := c.PopLoop()
+
+	// inject parallelism if it exists
+	parallel := task.GetIteratorPolicy().GetParallelismLimit()
+	if parallel > 0 {
+		loop.Spec.Parallelism = int(parallel)
+	}
+
 	raw, err := json.Marshal(loop.Spec)
 	if err != nil {
 		return fmt.Errorf("unable to Marshal pipelineSpec:%v", err)
