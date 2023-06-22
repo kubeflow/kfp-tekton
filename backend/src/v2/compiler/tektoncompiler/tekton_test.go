@@ -113,6 +113,11 @@ func TestMnist(t *testing.T) {
 			platformSpecPath: "",
 			tektonYAMLPath:   "testdata/loop_static.yaml",
 		},
+		{
+			yamlPath:         "testdata/nestedloop_ir.yaml",
+			platformSpecPath: "",
+			tektonYAMLPath:   "testdata/nestedloop.yaml",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%+v", tt), func(t *testing.T) {

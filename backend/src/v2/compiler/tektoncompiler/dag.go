@@ -81,6 +81,7 @@ func (c *pipelinerunCompiler) EmbedLoopDAG(taskName, compRef string, task *pipel
 				Raw: raw,
 			},
 		},
+		RunAfter: task.GetDependentTasks(),
 	}
 
 	c.addPipelineTask(&pipelinelooptask)
@@ -275,7 +276,7 @@ func (c *pipelinerunCompiler) dagDriverTask(
 			// - condition
 		},
 	}
-	if len(inputs.deps) > 0 && !(c.ExitHandlerScope() && inputs.parentDagID == compiler.RootComponentName) {
+	if len(inputs.deps) > 0 && !(c.ExitHandlerScope() && inputs.parentDagID == compiler.RootComponentName) && !inputs.loopDag {
 		t.RunAfter = inputs.deps
 	}
 
