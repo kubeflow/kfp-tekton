@@ -349,7 +349,7 @@ function makeProxyUrl(podAddress: string) {
   // We use this pod address without encoding since encoded pod address failed to open the
   // tensorboard instance on this pod.
   // TODO: figure out why the encoded pod address failed to open the tensorboard.
-  return 'apis/v1beta1/_proxy/' + podAddress.replace(/(^\w+:|^)\/\//, '');
+  return 'apis/v1/_proxy/' + podAddress.replace(/(^\w+:|^)\/\//, '');
 }
 
 export default TensorboardViewer;
