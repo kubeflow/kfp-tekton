@@ -66,9 +66,9 @@ metadata:
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
       \"w\")\nf.write(outcome)\nf.close()\n", "$(inputs.params.operand1)", "$(inputs.params.operand2)"],
       "command": ["sh", "-ec", "program_path=$(mktemp); printf \"%s\" \"$0\" > \"$program_path\";  python3
-      -u \"$program_path\" \"$1\" \"$2\""], "image": "python:alpine3.6", "name": "main"}]}},
-      {"name": "flip-component", "params": [{"name": "just_one_iteration", "value":
-      ["1"]}, {"name": "flip-coin-output", "value": "$(tasks.flip-coin-3.results.output)"},
+      -u \"$program_path\" \"$1\" \"$2\""], "image": "python:3.9.17-alpine3.18", "name":
+      "main"}]}}, {"name": "flip-component", "params": [{"name": "just_one_iteration",
+      "value": ["1"]}, {"name": "flip-coin-output", "value": "$(tasks.flip-coin-3.results.output)"},
       {"name": "maxVal", "value": "$(params.maxVal)"}], "taskRef": {"apiVersion":
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "nested-recursion-pipeline-flip-component-1"},
       "when": [{"input": "$(tasks.condition-4.results.outcome)", "operator": "in",
@@ -107,9 +107,9 @@ metadata:
       if (input1 $(inputs.params.operator) input2) else \"false\"\nf = open(\"/tekton/results/outcome\",
       \"w\")\nf.write(outcome)\nf.close()\n", "$(inputs.params.operand1)", "$(inputs.params.operand2)"],
       "command": ["sh", "-ec", "program_path=$(mktemp); printf \"%s\" \"$0\" > \"$program_path\";  python3
-      -u \"$program_path\" \"$1\" \"$2\""], "image": "python:alpine3.6", "name": "main"}]}},
-      {"name": "flip-component-b", "params": [{"name": "just_one_iteration", "value":
-      ["1"]}, {"name": "flip-coin-output", "value": "$(tasks.flip-coin-2.results.output)"},
+      -u \"$program_path\" \"$1\" \"$2\""], "image": "python:3.9.17-alpine3.18", "name":
+      "main"}]}}, {"name": "flip-component-b", "params": [{"name": "just_one_iteration",
+      "value": ["1"]}, {"name": "flip-coin-output", "value": "$(tasks.flip-coin-2.results.output)"},
       {"name": "maxVal", "value": "$(params.maxVal)"}], "taskRef": {"apiVersion":
       "custom.tekton.dev/v1alpha1", "kind": "PipelineLoop", "name": "nested-recursion-pipeline-ip-component-b-2"},
       "when": [{"input": "$(tasks.condition-3.results.outcome)", "operator": "in",
