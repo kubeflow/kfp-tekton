@@ -34,6 +34,7 @@ class TektonPipelineConf(dsl.PipelineConf):
         self.pipeline_env = {}
         self.pipeline_workspaces = {}
         self.generate_component_spec_annotations = True
+        self.condition_image_name = "python:3.9.17-alpine3.18"
         super().__init__(**kwargs)
 
     def copy(self):
@@ -93,4 +94,8 @@ class TektonPipelineConf(dsl.PipelineConf):
 
     def set_generate_component_spec_annotations(self, value: bool):
         self.generate_component_spec_annotations = value
+        return self
+
+    def set_condition_image_name(self, condition_image_name: str):
+        self.condition_image_name = condition_image_name
         return self
