@@ -119,7 +119,9 @@ class TestTektonCompiler(unittest.TestCase):
     Test dependency on Tekton conditional task.
     """
     from .testdata.condition_dependency import flipcoin
-    self._test_pipeline_workflow(flipcoin, 'condition_dependency.yaml', skip_noninlined=True)
+    pipeline_conf = TektonPipelineConf()
+    pipeline_conf.set_condition_image_name("python:alpine3.6")
+    self._test_pipeline_workflow(flipcoin, 'condition_dependency.yaml', skip_noninlined=True, tekton_pipeline_conf=pipeline_conf)
 
   def test_sequential_workflow(self):
     """
