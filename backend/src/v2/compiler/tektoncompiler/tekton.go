@@ -658,6 +658,8 @@ const (
 	paramNameCachedDecision   = "cached_decision"
 	paramNamePodSpecPatchPath = "pod_spec_patch_path"
 	paramNameExecutorInput    = "executor_input"
+	paramNameMLMDServerHost   = "mlmd_server_address"
+	paramNameMLMDServerPort   = "mlmd_server_port"
 	paramKubernetesConfig     = "kubernetes_config" // stores Kubernetes config
 
 	kindPipelineLoop   = "PipelineLoop"
