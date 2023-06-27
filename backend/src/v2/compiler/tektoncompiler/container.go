@@ -251,6 +251,16 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 				Name:  paramKubernetesConfig,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.kubernetesConfig},
 			},
+			// "--mlmd_server_address"
+			{
+				Name:  paramNameMLMDServerHost,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDHost()},
+			},
+			// "--mlmd_server_port"
+			{
+				Name:  paramNameMLMDServerPort,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDPort()},
+			},
 			// produce the following outputs:
 			// - execution-id
 			// - executor-input

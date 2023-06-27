@@ -277,6 +277,16 @@ func (c *pipelinerunCompiler) dagDriverTask(
 				Name:  paramNameIterationIndex,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getIterationIndex()},
 			},
+			// "--mlmd_server_address"
+			{
+				Name:  paramNameMLMDServerHost,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDHost()},
+			},
+			// "--mlmd_server_port"
+			{
+				Name:  paramNameMLMDServerPort,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDPort()},
+			},
 			// produce the following outputs:
 			// - execution-id
 			// - iteration-count
@@ -322,6 +332,16 @@ func (c *pipelinerunCompiler) dagPubDriverTask(
 			{
 				Name:  paramNameDagExecutionId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope() || rootDagPub)},
+			},
+			// "--mlmd_server_address"
+			{
+				Name:  paramNameMLMDServerHost,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDHost()},
+			},
+			// "--mlmd_server_port"
+			{
+				Name:  paramNameMLMDServerPort,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDPort()},
 			},
 		},
 	}
