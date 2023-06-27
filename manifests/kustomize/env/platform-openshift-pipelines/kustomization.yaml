@@ -67,7 +67,7 @@ patches:
 images:
 - name: gcr.io/ml-pipeline/api-server
   newName: docker.io/aipipeline/apiserver-dev
-  newTag: 89d657d2a
+  newTag: 35628146f
 - name: gcr.io/ml-pipeline/persistenceagent
   newName: docker.io/aipipeline/persistenceagent-dev
   newTag: 4a9a4eaf1
