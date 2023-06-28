@@ -24,11 +24,13 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler/tektoncompiler"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-var update = flag.Bool("update", true, "update golden files")
+var update = flag.Bool("update", false, "update golden files")
 
 func Test_tekton_compiler(t *testing.T) {
 	tests := []struct {
@@ -92,70 +94,96 @@ func Test_tekton_compiler(t *testing.T) {
 
 }
 
-func TestMnist(t *testing.T) {
-	tests := []struct {
-		yamlPath         string // path of input PipelineJob to compile
-		platformSpecPath string // path of platform spec
-		tektonYAMLPath   string // path of expected output argo workflow YAML
-	}{
-		{
-			yamlPath:         "testdata/mnist_pipeline_ir.yaml",
-			platformSpecPath: "",
-			tektonYAMLPath:   "testdata/mnist_pipeline.yaml",
-		},
-		{
-			yamlPath:         "testdata/exit_handler_ir.yaml",
-			platformSpecPath: "",
-			tektonYAMLPath:   "testdata/exit_handler.yaml",
-		},
-		{
-			yamlPath:         "testdata/loop_static_ir.yaml",
-			platformSpecPath: "",
-			tektonYAMLPath:   "testdata/loop_static.yaml",
-		},
-		{
-			yamlPath:         "testdata/nestedloop_ir.yaml",
-			platformSpecPath: "",
-			tektonYAMLPath:   "testdata/nestedloop.yaml",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(fmt.Sprintf("%+v", tt), func(t *testing.T) {
+type testInputs struct {
+	yamlPath         string
+	platformSpecPath string
+	tektonYAMLPath   string
+}
 
-			job, platformSpec := load(t, tt.yamlPath, tt.platformSpecPath, "yaml")
-			if *update {
-				pr, err := tektoncompiler.Compile(job, platformSpec, nil)
-				if err != nil {
-					t.Fatal(err)
-				}
-				got, err := yaml.Marshal(pr)
-				if err != nil {
-					t.Fatal(err)
-				}
-				err = ioutil.WriteFile(tt.tektonYAMLPath, got, 0644)
-				if err != nil {
-					t.Fatal(err)
-				}
-			}
-			tektonYAML, err := ioutil.ReadFile(tt.tektonYAMLPath)
-			if err != nil {
-				t.Fatal(err)
-			}
+func TestMnist(t *testing.T) {
+
+	testCompile(t, testInputs{
+		yamlPath:         "testdata/mnist_pipeline_ir.yaml",
+		platformSpecPath: "",
+		tektonYAMLPath:   "testdata/mnist_pipeline.yaml",
+	})
+}
+
+func TestExitHandler(t *testing.T) {
+
+	testCompile(t, testInputs{
+		yamlPath:         "testdata/exit_handler_ir.yaml",
+		platformSpecPath: "",
+		tektonYAMLPath:   "testdata/exit_handler.yaml",
+	})
+}
+
+func TestLoopStatic(t *testing.T) {
+	testCompile(t, testInputs{
+		yamlPath:         "testdata/loop_static_ir.yaml",
+		platformSpecPath: "",
+		tektonYAMLPath:   "testdata/loop_static.yaml",
+	})
+}
+
+func TestNestedLoop(t *testing.T) {
+	testCompile(t, testInputs{
+		yamlPath:         "testdata/nestedloop_ir.yaml",
+		platformSpecPath: "",
+		tektonYAMLPath:   "testdata/nestedloop.yaml",
+	})
+}
+
+func comparePipelineTask() cmp.Option {
+	return cmp.Comparer(func(a, b v1beta1.PipelineTask) bool {
+		ya, err := yaml.Marshal(a)
+		if err != nil {
+			return false
+		}
+		yb, err := yaml.Marshal(b)
+		if err != nil {
+			return false
+		}
+		return string(ya) == string(yb)
+	})
+}
+
+func testCompile(t *testing.T, test testInputs) {
+	t.Run(fmt.Sprintf("%+v", test), func(t *testing.T) {
+
+		job, platformSpec := load(t, test.yamlPath, test.platformSpecPath, "yaml")
+		if *update {
 			pr, err := tektoncompiler.Compile(job, platformSpec, nil)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
-			var expected pipelineapi.PipelineRun
-			err = yaml.Unmarshal(tektonYAML, &expected)
+			got, err := yaml.Marshal(pr)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !cmp.Equal(pr, &expected) {
-				t.Errorf("compiler.Compile(%s)!=expected, diff: %s\n", tt.yamlPath, cmp.Diff(pr, &expected))
+			err = ioutil.WriteFile(test.tektonYAMLPath, got, 0644)
+			if err != nil {
+				t.Fatal(err)
 			}
-		})
+		}
+		tektonYAML, err := ioutil.ReadFile(test.tektonYAMLPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pr, err := tektoncompiler.Compile(job, platformSpec, nil)
+		if err != nil {
+			t.Error(err)
+		}
+		var expected pipelineapi.PipelineRun
+		err = yaml.Unmarshal(tektonYAML, &expected)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !cmp.Equal(pr, &expected, comparePipelineTask()) {
+			t.Errorf("compiler.Compile(%s)!=expected, diff: %s\n", test.yamlPath, cmp.Diff(pr, &expected))
+		}
+	})
 
-	}
 }
 
 func load(t *testing.T, path string, platformSpecPath string, fileType string) (*pipelinespec.PipelineJob, *pipelinespec.SinglePlatformSpec) {
