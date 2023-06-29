@@ -36,10 +36,15 @@ spec:
           = vars(_parser.parse_args())\n\n_outputs = hello_world(**_parsed_args)\n"],"image":"python:3.7"}'
       - name: iteration_index
         value: ""
+      - name: kubernetes_config
+        value: ""
+      - name: mlmd_server_address
+        value: metadata-grpc-service.kubeflow.svc.cluster.local
+      - name: mlmd_server_port
+        value: "8080"
       taskRef:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver
-        name: kfp-driver
     - name: hello-world
       params:
       - name: executor-input
@@ -50,92 +55,101 @@ spec:
         value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-hello-world","inputDefinitions":{"parameters":{"text":{"type":"STRING"}}}}'
+      - name: pod-spec-patch
+        value: $(tasks.hello-world-driver.results.pod-spec-patch)
       taskSpec:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
         metadata:
           annotations:
             pipelines.kubeflow.org/v2_pipeline: "true"
           labels:
             pipelines.kubeflow.org/v2_component: "true"
-        params:
-        - name: executor-input
-          type: string
-        - name: execution-id
-          type: string
-        - name: run-id
-          type: string
-        - name: component-spec
-          type: string
-        spec: null
-        steps:
-        - command:
-          - launcher-v2
-          - --copy
-          - /tekton/home/launch
-          image: gcr.io/ml-pipeline-test/dev/kfp-launcher-v2@sha256:4513cf5c10c252d94f383ce51a890514799c200795e3de5e90f91b98b2e2f959
-          imagePullPolicy: Always
-          name: kfp-launcher
-          resources: {}
-        - args:
-          - sh
-          - -ec
-          - |
-            program_path=$(mktemp)
-            printf "%s" "$0" > "$program_path"
-            python3 -u "$program_path" "$@"
-          - |
-            def hello_world(text):
-                print(text)
-                return text
+        spec:
+          taskSpec:
+            params:
+            - name: executor-input
+              type: string
+            - name: execution-id
+              type: string
+            - name: run-id
+              type: string
+            - name: component-spec
+              type: string
+            steps:
+            - command:
+              - launcher-v2
+              - --copy
+              - /tekton/home/launch
+              image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
+              imagePullPolicy: Always
+              name: kfp-launcher
+              resources: {}
+            - args:
+              - sh
+              - -ec
+              - |
+                program_path=$(mktemp)
+                printf "%s" "$0" > "$program_path"
+                python3 -u "$program_path" "$@"
+              - |
+                def hello_world(text):
+                    print(text)
+                    return text
 
-            import argparse
-            _parser = argparse.ArgumentParser(prog='Hello world', description='')
-            _parser.add_argument("--text", dest="text", type=str, required=True, default=argparse.SUPPRESS)
-            _parsed_args = vars(_parser.parse_args())
+                import argparse
+                _parser = argparse.ArgumentParser(prog='Hello world', description='')
+                _parser.add_argument("--text", dest="text", type=str, required=True, default=argparse.SUPPRESS)
+                _parsed_args = vars(_parser.parse_args())
 
-            _outputs = hello_world(**_parsed_args)
-          - --text
-          - '{{$.inputs.parameters[''text'']}}'
-          command:
-          - /tekton/home/launch
-          - --pipeline_name
-          - namespace/n1/pipeline/hello-world
-          - --run_id
-          - $(params.run-id)
-          - --execution_id
-          - $(params.execution-id)
-          - --executor_input
-          - $(params.executor-input)
-          - --component_spec
-          - $(params.component-spec)
-          - --pod_name
-          - $(KFP_POD_NAME)
-          - --pod_uid
-          - $(KFP_POD_UID)
-          - --mlmd_server_address
-          - $(METADATA_GRPC_SERVICE_HOST)
-          - --mlmd_server_port
-          - $(METADATA_GRPC_SERVICE_PORT)
-          - --
-          env:
-          - name: KFP_POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: KFP_POD_UID
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.uid
-          - name: METADATA_GRPC_SERVICE_HOST
-            value: metadata-grpc-service.kubeflow.svc.cluster.local
-          - name: METADATA_GRPC_SERVICE_PORT
-            value: "8080"
-          envFrom:
-          - configMapRef:
-              name: metadata-grpc-configmap
-              optional: true
-          image: python:3.7
-          name: user-main
-          resources: {}
+                _outputs = hello_world(**_parsed_args)
+              - --text
+              - '{{$.inputs.parameters[''text'']}}'
+              command:
+              - /tekton/home/launch
+              - --pipeline_name
+              - namespace/n1/pipeline/hello-world
+              - --run_id
+              - $(params.run-id)
+              - --execution_id
+              - $(params.execution-id)
+              - --executor_input
+              - $(params.executor-input)
+              - --component_spec
+              - $(params.component-spec)
+              - --pod_name
+              - $(KFP_POD_NAME)
+              - --pod_uid
+              - $(KFP_POD_UID)
+              - --mlmd_server_address
+              - $(METADATA_GRPC_SERVICE_HOST)
+              - --mlmd_server_port
+              - $(METADATA_GRPC_SERVICE_PORT)
+              - --
+              env:
+              - name: KFP_POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+              - name: KFP_POD_UID
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.uid
+              - name: METADATA_GRPC_SERVICE_HOST
+                value: metadata-grpc-service.kubeflow.svc.cluster.local
+              - name: METADATA_GRPC_SERVICE_PORT
+                value: "8080"
+              - name: ML_PIPELINE_SERVICE_HOST
+                value: ml-pipeline.kubeflow.svc.cluster.local
+              - name: ML_PIPELINE_SERVICE_PORT_GRPC
+                value: "8887"
+              envFrom:
+              - configMapRef:
+                  name: metadata-grpc-configmap
+                  optional: true
+              image: python:3.7
+              name: user-main
+              resources: {}
       when:
       - input: $(tasks.hello-world-driver.results.cached-decision)
         operator: in
@@ -159,10 +173,13 @@ spec:
         value: '{"parameters":{"text":{"stringValue":"hi there"}}}'
       - name: iteration_index
         value: "-1"
+      - name: mlmd_server_address
+        value: metadata-grpc-service.kubeflow.svc.cluster.local
+      - name: mlmd_server_port
+        value: "8080"
       taskRef:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver
-        name: kfp-driver
     - name: root-system-dag-pub-driver
       params:
       - name: type
@@ -173,10 +190,13 @@ spec:
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
+      - name: mlmd_server_address
+        value: metadata-grpc-service.kubeflow.svc.cluster.local
+      - name: mlmd_server_port
+        value: "8080"
       runAfter:
       - hello-world
       taskRef:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver
-        name: kfp-driver
 status: {}
