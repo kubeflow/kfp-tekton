@@ -75,3 +75,7 @@ func NewFakeExecClientWithBadWorkflow() *FakeExecClientWithBadWorkflow {
 func (c *FakeExecClientWithBadWorkflow) Execution(namespace string) util.ExecutionInterface {
 	return c.workflowClientFake
 }
+
+func (c *FakeExecClientWithBadWorkflow) Compare(old, new interface{}) bool {
+	return false
+}

@@ -18,14 +18,16 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"testing"
 
 	"github.com/ghodss/yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler/tektoncompiler"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -67,7 +69,7 @@ func Test_tekton_compiler(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				err = ioutil.WriteFile(tt.tektonYAMLPath, got, 0x664)
+				err = ioutil.WriteFile(tt.tektonYAMLPath, got, 0664)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -85,7 +87,7 @@ func Test_tekton_compiler(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !cmp.Equal(pr, &expected) {
+			if !cmp.Equal(pr, &expected, compareRawExtension(), cmpopts.EquateEmpty()) {
 				t.Errorf("compiler.Compile(%s)!=expected, diff: %s\n", tt.jobPath, cmp.Diff(&expected, pr))
 			}
 		})
@@ -134,23 +136,35 @@ func TestNestedLoop(t *testing.T) {
 	})
 }
 
-func comparePipelineTask() cmp.Option {
-	return cmp.Comparer(func(a, b v1beta1.PipelineTask) bool {
-		ya, err := yaml.Marshal(a)
+func compareRawExtension() cmp.Option {
+	return cmp.Comparer(func(a, b runtime.RawExtension) bool {
+		var src, target interface{}
+		err := yaml.Unmarshal([]byte(a.Raw), &src)
 		if err != nil {
 			return false
 		}
-		yb, err := yaml.Marshal(b)
+		err = yaml.Unmarshal([]byte(b.Raw), &target)
 		if err != nil {
 			return false
 		}
-		return string(ya) == string(yb)
+		rev := cmp.Equal(src, target, sortedStrings(), cmpopts.EquateEmpty())
+		if !rev {
+			fmt.Println(cmp.Diff(src, target))
+		}
+		return rev
+	})
+}
+
+func sortedStrings() cmp.Option {
+	return cmp.Transformer("Sort", func(in []string) []string {
+		out := append([]string(nil), in...) // Copy input to avoid mutating it
+		sort.Strings(out)
+		return out
 	})
 }
 
 func testCompile(t *testing.T, test testInputs) {
 	t.Run(fmt.Sprintf("%+v", test), func(t *testing.T) {
-
 		job, platformSpec := load(t, test.yamlPath, test.platformSpecPath, "yaml")
 		if *update {
 			pr, err := tektoncompiler.Compile(job, platformSpec, nil)
@@ -179,7 +193,7 @@ func testCompile(t *testing.T, test testInputs) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !cmp.Equal(pr, &expected, comparePipelineTask()) {
+		if !cmp.Equal(pr, &expected, compareRawExtension(), cmpopts.EquateEmpty()) {
 			t.Errorf("compiler.Compile(%s)!=expected, diff: %s\n", test.yamlPath, cmp.Diff(pr, &expected))
 		}
 	})

@@ -87,7 +87,7 @@ spec:
           - configMapRef:
               name: metadata-grpc-configmap
               optional: true
-          image: gcr.io/ml-pipeline-test/dev/kfp-launcher-v2@sha256:4513cf5c10c252d94f383ce51a890514799c200795e3de5e90f91b98b2e2f959
+          image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
           name: importer-main
           resources: {}
     - name: root-system-dag-driver
@@ -108,10 +108,13 @@ spec:
         value: '{}'
       - name: iteration_index
         value: "-1"
+      - name: mlmd_server_address
+        value: metadata-grpc-service.kubeflow.svc.cluster.local
+      - name: mlmd_server_port
+        value: "8080"
       taskRef:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver
-        name: kfp-driver
     - name: root-system-dag-pub-driver
       params:
       - name: type
@@ -122,10 +125,13 @@ spec:
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
+      - name: mlmd_server_address
+        value: metadata-grpc-service.kubeflow.svc.cluster.local
+      - name: mlmd_server_port
+        value: "8080"
       runAfter:
       - importer
       taskRef:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver
-        name: kfp-driver
 status: {}

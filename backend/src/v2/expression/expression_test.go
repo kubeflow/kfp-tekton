@@ -155,7 +155,9 @@ func TestCondition(t *testing.T) {
 		input:     input,
 		condition: "inputs.parameter_values['num'] == 1",
 		// Note, inputs.parameter_values['num'] is double type, but 1 is integer type.
-		err: "no such overload",
+		// https://github.com/google/cel-spec/blob/master/doc/langdef.md#numbers
+		// in order to support JSON and match user expectation, the result is true
+		output: true,
 	}, {
 		input:     input,
 		condition: "inputs.parameter_values['type']=='foo' && inputs.parameter_values['num'] == 1.0",
