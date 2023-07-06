@@ -147,19 +147,38 @@ func compareRawExtension() cmp.Option {
 		if err != nil {
 			return false
 		}
-		rev := cmp.Equal(src, target, sortedStrings(), cmpopts.EquateEmpty())
+		rev := cmp.Equal(src, target, sortedRunAfter(), cmpopts.EquateEmpty())
 		if !rev {
-			fmt.Println(cmp.Diff(src, target))
+			fmt.Printf("RawExtension: %s\n", cmp.Diff(src, target))
 		}
 		return rev
 	})
 }
 
-func sortedStrings() cmp.Option {
-	return cmp.Transformer("Sort", func(in []string) []string {
-		out := append([]string(nil), in...) // Copy input to avoid mutating it
-		sort.Strings(out)
-		return out
+func comparePipelineTask() cmp.Option {
+	return cmp.Comparer(func(a, b pipelineapi.PipelineTask) bool {
+		sort.Strings(a.RunAfter)
+		sort.Strings(b.RunAfter)
+		return cmp.Equal(a, b, compareRawExtension(), cmpopts.EquateEmpty())
+	})
+}
+
+func sortedRunAfter() cmp.Option {
+	return cmp.Transformer("Sort", func(in map[string]any) map[string]any {
+		v, ok := in["runAfter"]
+		if ok {
+			runAfter, ok := v.([]any)
+			if len(runAfter) == 0 || !ok {
+				return in
+			}
+			sorted := make([]string, 0, len(runAfter))
+			for _, i := range runAfter {
+				sorted = append(sorted, i.(string))
+			}
+			sort.Strings(sorted)
+			in["runAfter"] = sorted
+		}
+		return in
 	})
 }
 
@@ -193,7 +212,7 @@ func testCompile(t *testing.T, test testInputs) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !cmp.Equal(pr, &expected, compareRawExtension(), cmpopts.EquateEmpty()) {
+		if !cmp.Equal(pr, &expected, comparePipelineTask(), cmpopts.EquateEmpty()) {
 			t.Errorf("compiler.Compile(%s)!=expected, diff: %s\n", test.yamlPath, cmp.Diff(pr, &expected))
 		}
 	})
