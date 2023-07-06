@@ -1,0 +1,72 @@
+name: KFP Tekton backend unit tests
+
+on:
+  push:
+    branches: [v2-integration]
+
+  # Run tests for any PRs.
+  pull_request:
+    paths:
+      - 'go.mod'
+      - 'backend/**'
+
+env:
+  GITHUB_ACTION: "true"
+  SETUPTOOLS_USE_DISTUTILS: "stdlib"
+
+jobs:
+  run-go-unittests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.20.x
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: "run go unit tests"
+      run: go test -v -cover ./backend/...
+  # backend-integration:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+  #     - id: changes
+  #       uses: jitterbit/get-changed-files@v1
+  #       with:
+  #         format: 'json'
+  #     - name: backend changes
+  #       id: backend-changes
+  #       run: |
+  #         readarray -t backend_files <<<"$(jq -r '.[]|select(startswith("backend") or startswith("go.mod"))|select(endswith("README.md")|not)' <<<'${{ steps.changes.outputs.all }}')"
+  #         echo "::set-output name=all::"
+  #         if [[ ${#backend_files[@]} -gt 0 ]]; then
+  #           if [[ -n "${backend_files[0]}" ]]; then
+  #             echo "::set-output name=all::yes"
+  #           fi
+  #         fi
+  #     - name: Create k8s Kind Cluster
+  #       if: ${{ steps.backend-changes.outputs.all }}
+  #       uses: container-tools/kind-action@v1
+  #       with:
+  #         cluster_name: kfp-tekton
+  #         kubectl_version: v1.26.1
+  #         version: v0.17.0
+  #         node_image: kindest/node:v1.26.0
+  #     - name: build images
+  #       if: ${{ steps.backend-changes.outputs.all }}
+  #       run: ./scripts/deploy/github/build-images.sh
+  #     - name: Set up Python 3.9
+  #       if: ${{ steps.backend-changes.outputs.all }}
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.9
+  #     - name: "deploy kfp-tekton"
+  #       if: ${{ steps.backend-changes.outputs.all }}
+  #       run: ./scripts/deploy/github/deploy-kfp.sh
+  #     - name: Install sdk
+  #       if: ${{ steps.backend-changes.outputs.all }}
+  #       run: python -m pip install -e sdk/python
+  #     - name: "flip coin test"
+  #       if: ${{ steps.backend-changes.outputs.all }}
+  #       run: ./scripts/deploy/github/e2e-test.sh
