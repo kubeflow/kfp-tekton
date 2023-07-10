@@ -104,19 +104,21 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 To install the standalone Kubeflow Pipelines with Openshift Pipelines, run the following steps:
 
-1. Install openshift pipelines (v1.10) from openshift operatorhub:
+1. Install openshift pipelines (v1.11) from openshift operatorhub:
 
 ![openshift-pipelines](/images/openshift-pipelines.png)
 
-2. Enable necessary Openshift pipelines configurations for kfp-tekton
+2. Enable necessary Openshift pipelines configurations for kfp-tekton to enable high performance pipelines.
    ```shell
+   oc patch cm feature-flags -n tekton-pipelines \
+         -p '{"data":{"running-in-environment-with-injected-sidecars": "false"}}'
    oc patch cm config-defaults -n openshift-pipelines \
          -p '{"data":{"default-timeout-minutes": "0"}}'
    ```
 
-3. Install Kubeflow Pipelines with Openshift pipelines backend (`kfp-tekton`) `v1.6.6` deployment
+3. Install Kubeflow Pipelines with Openshift pipelines backend (`kfp-tekton`) `v1.7.0` deployment
    ```shell
-   oc apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/kfp-template-openshift-pipelines\?ref\=v1.6.6
+   oc apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/kfp-template-openshift-pipelines\?ref\=v1.7.0
    ```
 
 4. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
