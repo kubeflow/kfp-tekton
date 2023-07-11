@@ -4,7 +4,7 @@ on:
   push:
     branches: [v2-integration]
 
-  # Run tests for any PRs.
+  # Run tests for any PRs which change the backend code
   pull_request:
     paths:
       - 'go.mod'
@@ -26,47 +26,32 @@ jobs:
       uses: actions/checkout@v2
     - name: "run go unit tests"
       run: go test -v -cover ./backend/...
-  # backend-integration:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v2
-  #     - id: changes
-  #       uses: jitterbit/get-changed-files@v1
-  #       with:
-  #         format: 'json'
-  #     - name: backend changes
-  #       id: backend-changes
-  #       run: |
-  #         readarray -t backend_files <<<"$(jq -r '.[]|select(startswith("backend") or startswith("go.mod"))|select(endswith("README.md")|not)' <<<'${{ steps.changes.outputs.all }}')"
-  #         echo "::set-output name=all::"
-  #         if [[ ${#backend_files[@]} -gt 0 ]]; then
-  #           if [[ -n "${backend_files[0]}" ]]; then
-  #             echo "::set-output name=all::yes"
-  #           fi
-  #         fi
-  #     - name: Create k8s Kind Cluster
-  #       if: ${{ steps.backend-changes.outputs.all }}
-  #       uses: container-tools/kind-action@v1
-  #       with:
-  #         cluster_name: kfp-tekton
-  #         kubectl_version: v1.26.1
-  #         version: v0.17.0
-  #         node_image: kindest/node:v1.26.0
-  #     - name: build images
-  #       if: ${{ steps.backend-changes.outputs.all }}
-  #       run: ./scripts/deploy/github/build-images.sh
-  #     - name: Set up Python 3.9
-  #       if: ${{ steps.backend-changes.outputs.all }}
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: 3.9
-  #     - name: "deploy kfp-tekton"
-  #       if: ${{ steps.backend-changes.outputs.all }}
-  #       run: ./scripts/deploy/github/deploy-kfp.sh
-  #     - name: Install sdk
-  #       if: ${{ steps.backend-changes.outputs.all }}
-  #       run: python -m pip install -e sdk/python
-  #     - name: "flip coin test"
-  #       if: ${{ steps.backend-changes.outputs.all }}
-  #       run: ./scripts/deploy/github/e2e-test.sh
+  backend-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create k8s Kind Cluster
+        uses: container-tools/kind-action@v2
+        with:
+          cluster_name: kfp-tekton
+          kubectl_version: v1.26.3
+          version: v0.17.0
+          node_image: kindest/node:v1.26.3
+      - name: build images
+        run: ./scripts/deploy/github/build-images.sh
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+      - name: "deploy kfp-tekton"
+        run: ./scripts/deploy/github/deploy-kfp.sh
+      - name: Install sdk
+        run: |
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install -e sdk/python
+      - name: "flip coin test"
+        run: |
+          . .venv/bin/activate
+          ./scripts/deploy/github/e2e-test.sh
