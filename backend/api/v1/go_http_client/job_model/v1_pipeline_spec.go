@@ -6,15 +6,16 @@ package job_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
 // V1PipelineSpec v1 pipeline spec
+//
 // swagger:model v1PipelineSpec
 type V1PipelineSpec struct {
 
@@ -24,21 +25,21 @@ type V1PipelineSpec struct {
 	Parameters []*V1Parameter `json:"parameters"`
 
 	// Optional input field. The ID of the pipeline user uploaded before.
-	PipelineID string `json:"pipeline_id,omitempty"`
+	PipelineID string `json:"pipelineId,omitempty"`
 
 	// Optional input field. The raw pipeline JSON spec.
-	PipelineManifest string `json:"pipeline_manifest,omitempty"`
+	PipelineManifest string `json:"pipelineManifest,omitempty"`
 
 	// Optional output field. The name of the pipeline.
 	// Not empty if the pipeline id is not empty.
-	PipelineName string `json:"pipeline_name,omitempty"`
+	PipelineName string `json:"pipelineName,omitempty"`
 
 	// Runtime config of the pipeline. V2 only
-	RuntimeConfig *PipelineSpecRuntimeConfig `json:"runtime_config,omitempty"`
+	RuntimeConfig *PipelineSpecRuntimeConfig `json:"runtimeConfig,omitempty"`
 
 	// Optional input field. The marshalled raw argo JSON workflow.
 	// This will be deprecated when pipeline_manifest is in use.
-	WorkflowManifest string `json:"workflow_manifest,omitempty"`
+	WorkflowManifest string `json:"workflowManifest,omitempty"`
 }
 
 // Validate validates this v1 pipeline spec
@@ -60,7 +61,6 @@ func (m *V1PipelineSpec) Validate(formats strfmt.Registry) error {
 }
 
 func (m *V1PipelineSpec) validateParameters(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Parameters) { // not required
 		return nil
 	}
@@ -74,6 +74,8 @@ func (m *V1PipelineSpec) validateParameters(formats strfmt.Registry) error {
 			if err := m.Parameters[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("parameters" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("parameters" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -85,7 +87,6 @@ func (m *V1PipelineSpec) validateParameters(formats strfmt.Registry) error {
 }
 
 func (m *V1PipelineSpec) validateRuntimeConfig(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.RuntimeConfig) { // not required
 		return nil
 	}
@@ -93,7 +94,63 @@ func (m *V1PipelineSpec) validateRuntimeConfig(formats strfmt.Registry) error {
 	if m.RuntimeConfig != nil {
 		if err := m.RuntimeConfig.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("runtime_config")
+				return ve.ValidateName("runtimeConfig")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("runtimeConfig")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this v1 pipeline spec based on the context it is used
+func (m *V1PipelineSpec) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateParameters(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRuntimeConfig(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *V1PipelineSpec) contextValidateParameters(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Parameters); i++ {
+
+		if m.Parameters[i] != nil {
+			if err := m.Parameters[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("parameters" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("parameters" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *V1PipelineSpec) contextValidateRuntimeConfig(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.RuntimeConfig != nil {
+		if err := m.RuntimeConfig.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("runtimeConfig")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("runtimeConfig")
 			}
 			return err
 		}

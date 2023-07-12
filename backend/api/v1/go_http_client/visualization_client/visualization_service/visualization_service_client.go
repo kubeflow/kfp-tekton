@@ -7,12 +7,11 @@ package visualization_service
 
 import (
 	"github.com/go-openapi/runtime"
-
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 )
 
 // New creates a new visualization service API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
+func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
@@ -24,33 +23,52 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
+// ClientService is the interface for Client methods
+type ClientService interface {
+	VisualizationServiceCreateVisualization(params *VisualizationServiceCreateVisualizationParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*VisualizationServiceCreateVisualizationOK, error)
+
+	SetTransport(transport runtime.ClientTransport)
+}
+
 /*
-CreateVisualization create visualization API
+VisualizationServiceCreateVisualization visualization service create visualization API
 */
-func (a *Client) CreateVisualization(params *CreateVisualizationParams, authInfo runtime.ClientAuthInfoWriter) (*CreateVisualizationOK, error) {
+func (a *Client) VisualizationServiceCreateVisualization(params *VisualizationServiceCreateVisualizationParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*VisualizationServiceCreateVisualizationOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewCreateVisualizationParams()
+		params = NewVisualizationServiceCreateVisualizationParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "CreateVisualization",
+	op := &runtime.ClientOperation{
+		ID:                 "VisualizationService_CreateVisualization",
 		Method:             "POST",
 		PathPattern:        "/apis/v1/visualizations/{namespace}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http", "https"},
+		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &CreateVisualizationReader{formats: a.formats},
+		Reader:             &VisualizationServiceCreateVisualizationReader{formats: a.formats},
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*CreateVisualizationOK), nil
-
+	success, ok := result.(*VisualizationServiceCreateVisualizationOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*VisualizationServiceCreateVisualizationDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 // SetTransport changes the transport on the client

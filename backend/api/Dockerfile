@@ -14,10 +14,10 @@
 
 # Generate client code (go & json) from API protocol buffers
 FROM golang:1.15.10 as generator
-ENV GRPC_GATEWAY_VERSION v1.9.0
-ENV GO_SWAGGER_VERSION v0.18.0
-ENV GOLANG_PROTOBUF_VERSION v1.5.1
-ENV GRPC_VERSION v1.23.0
+ENV GRPC_GATEWAY_VERSION v2.11.3
+ENV GO_SWAGGER_VERSION v0.30.4
+ENV GOLANG_PROTOBUF_VERSION v1.5.2
+ENV GRPC_VERSION v1.48.0
 ENV PROTOC_VERSION 3.17.3
 ENV GOBIN=/go/bin
 
@@ -38,9 +38,10 @@ RUN mkdir grpc && git clone --depth 1 --branch $GRPC_VERSION https://github.com/
 # Install protoc-gen-rpc-gateway && protoc-gen-swagger.
 RUN cd grpc-ecosystem/grpc-gateway && GO111MODULE=on go mod vendor
 RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-openapiv2
 
 # Download go-swagger binary.
+# swagger doesn't exist for openapiv2 yet
 RUN curl -LO "https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_amd64"
 RUN chmod +x swagger_linux_amd64 && mv swagger_linux_amd64 /usr/bin/swagger
 

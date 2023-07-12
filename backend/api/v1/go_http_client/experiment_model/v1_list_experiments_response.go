@@ -6,15 +6,16 @@ package experiment_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
 // V1ListExperimentsResponse v1 list experiments response
+//
 // swagger:model v1ListExperimentsResponse
 type V1ListExperimentsResponse struct {
 
@@ -22,10 +23,10 @@ type V1ListExperimentsResponse struct {
 	Experiments []*V1Experiment `json:"experiments"`
 
 	// The token to list the next page of experiments.
-	NextPageToken string `json:"next_page_token,omitempty"`
+	NextPageToken string `json:"nextPageToken,omitempty"`
 
 	// The total number of experiments for the given query.
-	TotalSize int32 `json:"total_size,omitempty"`
+	TotalSize int32 `json:"totalSize,omitempty"`
 }
 
 // Validate validates this v1 list experiments response
@@ -43,7 +44,6 @@ func (m *V1ListExperimentsResponse) Validate(formats strfmt.Registry) error {
 }
 
 func (m *V1ListExperimentsResponse) validateExperiments(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Experiments) { // not required
 		return nil
 	}
@@ -57,6 +57,42 @@ func (m *V1ListExperimentsResponse) validateExperiments(formats strfmt.Registry)
 			if err := m.Experiments[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("experiments" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("experiments" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this v1 list experiments response based on the context it is used
+func (m *V1ListExperimentsResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateExperiments(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *V1ListExperimentsResponse) contextValidateExperiments(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Experiments); i++ {
+
+		if m.Experiments[i] != nil {
+			if err := m.Experiments[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("experiments" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("experiments" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

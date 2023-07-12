@@ -6,17 +6,27 @@ package run_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"encoding/json"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 )
 
 // V1ResourceType v1 resource type
+//
 // swagger:model v1ResourceType
 type V1ResourceType string
+
+func NewV1ResourceType(value V1ResourceType) *V1ResourceType {
+	return &value
+}
+
+// Pointer returns a pointer to a freshly-allocated V1ResourceType.
+func (m V1ResourceType) Pointer() *V1ResourceType {
+	return &m
+}
 
 const (
 
@@ -53,7 +63,7 @@ func init() {
 }
 
 func (m V1ResourceType) validateV1ResourceTypeEnum(path, location string, value V1ResourceType) error {
-	if err := validate.Enum(path, location, value, v1ResourceTypeEnum); err != nil {
+	if err := validate.EnumCase(path, location, value, v1ResourceTypeEnum, true); err != nil {
 		return err
 	}
 	return nil
@@ -71,5 +81,10 @@ func (m V1ResourceType) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// ContextValidate validates this v1 resource type based on context it is used
+func (m V1ResourceType) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }

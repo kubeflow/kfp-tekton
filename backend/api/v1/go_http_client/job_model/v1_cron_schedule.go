@@ -6,14 +6,16 @@ package job_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
+	"context"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // V1CronSchedule CronSchedule allow scheduling the job with unix-like cron
+//
 // swagger:model v1CronSchedule
 type V1CronSchedule struct {
 
@@ -23,11 +25,11 @@ type V1CronSchedule struct {
 
 	// The end time of the cron job
 	// Format: date-time
-	EndTime strfmt.DateTime `json:"end_time,omitempty"`
+	EndTime strfmt.DateTime `json:"endTime,omitempty"`
 
 	// The start time of the cron job
 	// Format: date-time
-	StartTime strfmt.DateTime `json:"start_time,omitempty"`
+	StartTime strfmt.DateTime `json:"startTime,omitempty"`
 }
 
 // Validate validates this v1 cron schedule
@@ -49,12 +51,11 @@ func (m *V1CronSchedule) Validate(formats strfmt.Registry) error {
 }
 
 func (m *V1CronSchedule) validateEndTime(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.EndTime) { // not required
 		return nil
 	}
 
-	if err := validate.FormatOf("end_time", "body", "date-time", m.EndTime.String(), formats); err != nil {
+	if err := validate.FormatOf("endTime", "body", "date-time", m.EndTime.String(), formats); err != nil {
 		return err
 	}
 
@@ -62,15 +63,19 @@ func (m *V1CronSchedule) validateEndTime(formats strfmt.Registry) error {
 }
 
 func (m *V1CronSchedule) validateStartTime(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.StartTime) { // not required
 		return nil
 	}
 
-	if err := validate.FormatOf("start_time", "body", "date-time", m.StartTime.String(), formats); err != nil {
+	if err := validate.FormatOf("startTime", "body", "date-time", m.StartTime.String(), formats); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this v1 cron schedule based on context it is used
+func (m *V1CronSchedule) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

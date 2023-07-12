@@ -8,8 +8,7 @@ package job_client
 import (
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
-
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/kubeflow/pipelines/backend/api/v1/go_http_client/job_client/job_service"
 )
@@ -27,7 +26,7 @@ const (
 )
 
 // DefaultSchemes are the default schemes found in Meta (info) section of spec file
-var DefaultSchemes = []string{"http", "https"}
+var DefaultSchemes = []string{"http"}
 
 // NewHTTPClient creates a new job HTTP client.
 func NewHTTPClient(formats strfmt.Registry) *Job {
@@ -56,9 +55,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *Job {
 
 	cli := new(Job)
 	cli.Transport = transport
-
 	cli.JobService = job_service.New(transport, formats)
-
 	return cli
 }
 
@@ -103,7 +100,7 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // Job is a client for job
 type Job struct {
-	JobService *job_service.Client
+	JobService job_service.ClientService
 
 	Transport runtime.ClientTransport
 }
@@ -111,7 +108,5 @@ type Job struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *Job) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
-
 	c.JobService.SetTransport(transport)
-
 }

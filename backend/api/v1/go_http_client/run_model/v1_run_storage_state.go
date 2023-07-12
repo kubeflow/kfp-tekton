@@ -6,17 +6,27 @@ package run_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"encoding/json"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 )
 
 // V1RunStorageState v1 run storage state
+//
 // swagger:model v1RunStorageState
 type V1RunStorageState string
+
+func NewV1RunStorageState(value V1RunStorageState) *V1RunStorageState {
+	return &value
+}
+
+// Pointer returns a pointer to a freshly-allocated V1RunStorageState.
+func (m V1RunStorageState) Pointer() *V1RunStorageState {
+	return &m
+}
 
 const (
 
@@ -41,7 +51,7 @@ func init() {
 }
 
 func (m V1RunStorageState) validateV1RunStorageStateEnum(path, location string, value V1RunStorageState) error {
-	if err := validate.Enum(path, location, value, v1RunStorageStateEnum); err != nil {
+	if err := validate.EnumCase(path, location, value, v1RunStorageStateEnum, true); err != nil {
 		return err
 	}
 	return nil
@@ -59,5 +69,10 @@ func (m V1RunStorageState) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// ContextValidate validates this v1 run storage state based on context it is used
+func (m V1RunStorageState) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }

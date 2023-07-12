@@ -4,9 +4,10 @@
     "title": "backend/api/v1/run.proto",
     "version": "version not set"
   },
-  "schemes": [
-    "http",
-    "https"
+  "tags": [
+    {
+      "name": "RunService"
+    }
   ],
   "consumes": [
     "application/json"
@@ -18,7 +19,7 @@
     "/apis/v1/runs": {
       "get": {
         "summary": "Finds all runs.",
-        "operationId": "ListRuns",
+        "operationId": "RunService_ListRuns",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -27,22 +28,22 @@
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
         "parameters": [
           {
-            "name": "page_token",
+            "name": "pageToken",
             "description": "A page token to request the next page of results. The token is acquried\nfrom the nextPageToken field of the response from the previous\nListRuns call or can be omitted when fetching the first page.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "page_size",
+            "name": "pageSize",
             "description": "The number of runs to be listed per page. If there are more runs than this\nnumber, the response message will contain a nextPageToken field you can use\nto fetch the next page.",
             "in": "query",
             "required": false,
@@ -50,14 +51,14 @@
             "format": "int32"
           },
           {
-            "name": "sort_by",
+            "name": "sortBy",
             "description": "Can be format of \"field_name\", \"field_name asc\" or \"field_name desc\"\n(Example, \"name asc\" or \"id desc\"). Ascending by default.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "resource_reference_key.type",
+            "name": "resourceReferenceKey.type",
             "description": "The type of the resource that referred to.",
             "in": "query",
             "required": false,
@@ -73,7 +74,7 @@
             "default": "UNKNOWN_RESOURCE_TYPE"
           },
           {
-            "name": "resource_reference_key.id",
+            "name": "resourceReferenceKey.id",
             "description": "The ID of the resource that referred to.",
             "in": "query",
             "required": false,
@@ -93,7 +94,7 @@
       },
       "post": {
         "summary": "Creates a new run.",
-        "operationId": "CreateRun",
+        "operationId": "RunService_CreateRun",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -102,15 +103,15 @@
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
         "parameters": [
           {
-            "name": "body",
+            "name": "run",
             "in": "body",
             "required": true,
             "schema": {
@@ -126,18 +127,19 @@
     "/apis/v1/runs/{id}": {
       "delete": {
         "summary": "Deletes a run.",
-        "operationId": "DeleteRun",
+        "operationId": "RunService_DeleteRun",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -158,18 +160,19 @@
     "/apis/v1/runs/{id}:archive": {
       "post": {
         "summary": "Archives a run.",
-        "operationId": "ArchiveRun",
+        "operationId": "RunService_ArchiveRun",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -190,18 +193,19 @@
     "/apis/v1/runs/{id}:unarchive": {
       "post": {
         "summary": "Restores an archived run.",
-        "operationId": "UnarchiveRun",
+        "operationId": "RunService_UnarchiveRun",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -219,10 +223,10 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}": {
+    "/apis/v1/runs/{runId}": {
       "get": {
         "summary": "Finds a specific run by ID.",
-        "operationId": "GetRun",
+        "operationId": "RunService_GetRun",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -231,15 +235,15 @@
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
         "parameters": [
           {
-            "name": "run_id",
+            "name": "runId",
             "description": "The ID of the run to be retrieved.",
             "in": "path",
             "required": true,
@@ -251,10 +255,10 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read": {
+    "/apis/v1/runs/{runId}/nodes/{nodeId}/artifacts/{artifactName}:read": {
       "get": {
         "summary": "Finds a run's artifact data.",
-        "operationId": "ReadArtifact",
+        "operationId": "RunService_ReadArtifact",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -263,29 +267,29 @@
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
         "parameters": [
           {
-            "name": "run_id",
+            "name": "runId",
             "description": "The ID of the run.",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
-            "name": "node_id",
+            "name": "nodeId",
             "description": "The ID of the running node.",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
-            "name": "artifact_name",
+            "name": "artifactName",
             "description": "The name of the artifact.",
             "in": "path",
             "required": true,
@@ -297,27 +301,28 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}/retry": {
+    "/apis/v1/runs/{runId}/retry": {
       "post": {
         "summary": "Re-initiates a failed or terminated run.",
-        "operationId": "RetryRun",
+        "operationId": "RunService_RetryRun",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
         "parameters": [
           {
-            "name": "run_id",
+            "name": "runId",
             "description": "The ID of the run to be retried.",
             "in": "path",
             "required": true,
@@ -329,27 +334,28 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}/terminate": {
+    "/apis/v1/runs/{runId}/terminate": {
       "post": {
         "summary": "Terminates an active run.",
-        "operationId": "TerminateRun",
+        "operationId": "RunService_TerminateRun",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
         "parameters": [
           {
-            "name": "run_id",
+            "name": "runId",
             "description": "The ID of the run to be terminated.",
             "in": "path",
             "required": true,
@@ -361,10 +367,10 @@
         ]
       }
     },
-    "/apis/v1/runs/{run_id}:reportMetrics": {
+    "/apis/v1/runs/{runId}:reportMetrics": {
       "post": {
         "summary": "ReportRunMetrics reports metrics of a run. Each metric is reported in its\nown transaction, so this API accepts partial failures. Metric can be\nuniquely identified by (run_id, node_id, name). Duplicate reporting will be\nignored by the API. First reporting wins.",
-        "operationId": "ReportRunMetrics",
+        "operationId": "RunService_ReportRunMetrics",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -373,15 +379,15 @@
             }
           },
           "default": {
-            "description": "",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1Status"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
         "parameters": [
           {
-            "name": "run_id",
+            "name": "runId",
             "description": "Required. The parent run ID of the metric.",
             "in": "path",
             "required": true,
@@ -392,7 +398,16 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1ReportRunMetricsRequest"
+              "type": "object",
+              "properties": {
+                "metrics": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/v1RunMetric"
+                  },
+                  "description": "List of metrics to report."
+                }
+              }
             }
           }
         ],
@@ -413,7 +428,7 @@
           },
           "description": "The runtime parameters of the PipelineSpec. The parameters will be\nused to replace the placeholders\nat runtime."
         },
-        "pipeline_root": {
+        "pipelineRoot": {
           "type": "string",
           "title": "A path in a object store bucket which will be treated as the root\noutput directory of the pipeline. It is used by the system to\ngenerate the paths of output artifacts. Ref:(https://www.kubeflow.org/docs/components/pipelines/pipeline-root/)"
         }
@@ -423,11 +438,11 @@
     "ReportRunMetricsResponseReportRunMetricResult": {
       "type": "object",
       "properties": {
-        "metric_name": {
+        "metricName": {
           "type": "string",
           "description": "Output. The name of the metric."
         },
-        "metric_node_id": {
+        "metricNodeId": {
           "type": "string",
           "description": "Output. The ID of the node which reports the metric."
         },
@@ -463,19 +478,33 @@
       "default": "UNSPECIFIED",
       "description": " - UNSPECIFIED: Default value if not present.\n - RAW: Display value as its raw format.\n - PERCENTAGE: Display value in percentage format."
     },
+    "googlerpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
     "protobufAny": {
       "type": "object",
       "properties": {
-        "type_url": {
+        "@type": {
           "type": "string",
           "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
-        },
-        "value": {
-          "type": "string",
-          "format": "byte",
-          "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
+      "additionalProperties": {},
       "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     },
     "v1ListRunsResponse": {
@@ -487,12 +516,12 @@
             "$ref": "#/definitions/v1Run"
           }
         },
-        "total_size": {
+        "totalSize": {
           "type": "integer",
           "format": "int32",
           "description": "The total number of runs for the given query."
         },
-        "next_page_token": {
+        "nextPageToken": {
           "type": "string",
           "description": "The token to list the next page of runs."
         }
@@ -512,11 +541,11 @@
     "v1PipelineRuntime": {
       "type": "object",
       "properties": {
-        "pipeline_manifest": {
+        "pipelineManifest": {
           "type": "string",
           "description": "Output. The runtime JSON manifest of the pipeline, including the status\nof pipeline steps and fields need for UI visualization etc."
         },
-        "workflow_manifest": {
+        "workflowManifest": {
           "type": "string",
           "description": "Output. The runtime JSON manifest of the argo workflow.\nThis is deprecated after pipeline_runtime_manifest is in use."
         }
@@ -525,19 +554,19 @@
     "v1PipelineSpec": {
       "type": "object",
       "properties": {
-        "pipeline_id": {
+        "pipelineId": {
           "type": "string",
           "description": "Optional input field. The ID of the pipeline user uploaded before."
         },
-        "pipeline_name": {
+        "pipelineName": {
           "type": "string",
           "description": "Optional output field. The name of the pipeline.\nNot empty if the pipeline id is not empty."
         },
-        "workflow_manifest": {
+        "workflowManifest": {
           "type": "string",
           "description": "Optional input field. The marshalled raw argo JSON workflow.\nThis will be deprecated when pipeline_manifest is in use."
         },
-        "pipeline_manifest": {
+        "pipelineManifest": {
           "type": "string",
           "description": "Optional input field. The raw pipeline JSON spec."
         },
@@ -548,7 +577,7 @@
           },
           "title": "The parameter user provide to inject to the pipeline JSON.\nIf a default value of a parameter exist in the JSON,\nthe value user provided here will replace. V1 only"
         },
-        "runtime_config": {
+        "runtimeConfig": {
           "$ref": "#/definitions/PipelineSpecRuntimeConfig",
           "title": "Runtime config of the pipeline. V2 only"
         }
@@ -572,22 +601,6 @@
         "CREATOR"
       ],
       "default": "UNKNOWN_RELATIONSHIP"
-    },
-    "v1ReportRunMetricsRequest": {
-      "type": "object",
-      "properties": {
-        "run_id": {
-          "type": "string",
-          "description": "Required. The parent run ID of the metric."
-        },
-        "metrics": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1RunMetric"
-          },
-          "description": "List of metrics to report."
-        }
-      }
     },
     "v1ReportRunMetricsResponse": {
       "type": "object",
@@ -652,7 +665,7 @@
           "type": "string",
           "description": "Required input field. Name provided by user,\nor auto generated if run is created by scheduled job. Not unique."
         },
-        "storage_state": {
+        "storageState": {
           "$ref": "#/definitions/v1RunStorageState",
           "description": "Output. Specify whether this run is in archived or available mode."
         },
@@ -660,32 +673,32 @@
           "type": "string",
           "title": "Optional input field. Describing the purpose of the run"
         },
-        "pipeline_spec": {
+        "pipelineSpec": {
           "$ref": "#/definitions/v1PipelineSpec",
           "description": "Required input field.\nDescribing what the pipeline manifest and parameters to use for the run."
         },
-        "resource_references": {
+        "resourceReferences": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1ResourceReference"
           },
           "description": "Optional input field. Specify which resource this run belongs to.\nWhen creating a run from a particular pipeline version, the pipeline\nversion can be specified here."
         },
-        "service_account": {
+        "serviceAccount": {
           "type": "string",
           "description": "Optional input field. Specify which Kubernetes service account this run uses."
         },
-        "created_at": {
+        "createdAt": {
           "type": "string",
           "format": "date-time",
           "description": "Output. The time that the run created."
         },
-        "scheduled_at": {
+        "scheduledAt": {
           "type": "string",
           "format": "date-time",
           "description": "Output. When this run is scheduled to run. This could be different from\ncreated_at. For example, if a run is from a backfilling job that was\nsupposed to run 2 month ago, the scheduled_at is 2 month ago,\nv.s. created_at is the current time."
         },
-        "finished_at": {
+        "finishedAt": {
           "type": "string",
           "format": "date-time",
           "description": "Output. The time this run is finished."
@@ -713,7 +726,7 @@
         "run": {
           "$ref": "#/definitions/v1Run"
         },
-        "pipeline_runtime": {
+        "pipelineRuntime": {
           "$ref": "#/definitions/v1PipelineRuntime"
         }
       }
@@ -725,11 +738,11 @@
           "type": "string",
           "description": "Required. The user defined name of the metric. It must between 1 and 63\ncharacters long and must conform to the following regular expression:\n`[a-z]([-a-z0-9]*[a-z0-9])?`."
         },
-        "node_id": {
+        "nodeId": {
           "type": "string",
           "description": "Required. The runtime node ID which reports the metric. The node ID can be\nfound in the RunDetail.workflow.Status. Metric with same (node_id, name)\nare considerd as duplicate. Only the first reporting will be recorded. Max\nlength is 128."
         },
-        "number_value": {
+        "numberValue": {
           "type": "number",
           "format": "double",
           "description": "The number value of the metric."
@@ -748,38 +761,20 @@
       ],
       "default": "STORAGESTATE_AVAILABLE"
     },
-    "v1Status": {
-      "type": "object",
-      "properties": {
-        "error": {
-          "type": "string"
-        },
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "details": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protobufAny"
-          }
-        }
-      }
-    },
     "v1Value": {
       "type": "object",
       "properties": {
-        "int_value": {
+        "intValue": {
           "type": "string",
           "format": "int64",
           "title": "An integer value"
         },
-        "double_value": {
+        "doubleValue": {
           "type": "number",
           "format": "double",
           "title": "A double value"
         },
-        "string_value": {
+        "stringValue": {
           "type": "string",
           "title": "A string value"
         }

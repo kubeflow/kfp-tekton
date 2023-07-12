@@ -6,14 +6,16 @@ package run_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
+	"context"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // PipelineSpecRuntimeConfig The runtime config of a PipelineSpec.
+//
 // swagger:model PipelineSpecRuntimeConfig
 type PipelineSpecRuntimeConfig struct {
 
@@ -25,7 +27,7 @@ type PipelineSpecRuntimeConfig struct {
 	// A path in a object store bucket which will be treated as the root
 	// output directory of the pipeline. It is used by the system to
 	// generate the paths of output artifacts. Ref:(https://www.kubeflow.org/docs/components/pipelines/pipeline-root/)
-	PipelineRoot string `json:"pipeline_root,omitempty"`
+	PipelineRoot string `json:"pipelineRoot,omitempty"`
 }
 
 // Validate validates this pipeline spec runtime config
@@ -43,7 +45,6 @@ func (m *PipelineSpecRuntimeConfig) Validate(formats strfmt.Registry) error {
 }
 
 func (m *PipelineSpecRuntimeConfig) validateParameters(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Parameters) { // not required
 		return nil
 	}
@@ -55,6 +56,40 @@ func (m *PipelineSpecRuntimeConfig) validateParameters(formats strfmt.Registry) 
 		}
 		if val, ok := m.Parameters[k]; ok {
 			if err := val.Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("parameters" + "." + k)
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("parameters" + "." + k)
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this pipeline spec runtime config based on the context it is used
+func (m *PipelineSpecRuntimeConfig) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateParameters(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *PipelineSpecRuntimeConfig) contextValidateParameters(ctx context.Context, formats strfmt.Registry) error {
+
+	for k := range m.Parameters {
+
+		if val, ok := m.Parameters[k]; ok {
+			if err := val.ContextValidate(ctx, formats); err != nil {
 				return err
 			}
 		}

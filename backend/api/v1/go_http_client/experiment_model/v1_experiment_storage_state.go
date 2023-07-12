@@ -6,17 +6,27 @@ package experiment_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"encoding/json"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 )
 
 // V1ExperimentStorageState v1 experiment storage state
+//
 // swagger:model v1ExperimentStorageState
 type V1ExperimentStorageState string
+
+func NewV1ExperimentStorageState(value V1ExperimentStorageState) *V1ExperimentStorageState {
+	return &value
+}
+
+// Pointer returns a pointer to a freshly-allocated V1ExperimentStorageState.
+func (m V1ExperimentStorageState) Pointer() *V1ExperimentStorageState {
+	return &m
+}
 
 const (
 
@@ -44,7 +54,7 @@ func init() {
 }
 
 func (m V1ExperimentStorageState) validateV1ExperimentStorageStateEnum(path, location string, value V1ExperimentStorageState) error {
-	if err := validate.Enum(path, location, value, v1ExperimentStorageStateEnum); err != nil {
+	if err := validate.EnumCase(path, location, value, v1ExperimentStorageStateEnum, true); err != nil {
 		return err
 	}
 	return nil
@@ -62,5 +72,10 @@ func (m V1ExperimentStorageState) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// ContextValidate validates this v1 experiment storage state based on context it is used
+func (m V1ExperimentStorageState) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
