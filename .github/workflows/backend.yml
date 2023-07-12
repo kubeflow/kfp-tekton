@@ -9,6 +9,7 @@ on:
     paths:
       - 'go.mod'
       - 'backend/**'
+      - 'scripts/deploy/github/**'
 
 env:
   GITHUB_ACTION: "true"
@@ -54,4 +55,8 @@ jobs:
       - name: "flip coin test"
         run: |
           . .venv/bin/activate
-          ./scripts/deploy/github/e2e-test.sh
+          TEST_SCRIPT="test-flip-coin.sh" ./scripts/deploy/github/e2e-test.sh
+      - name: "static loop test"
+        run: |
+          . .venv/bin/activate
+          TEST_SCRIPT="test-static-loop.sh" ./scripts/deploy/github/e2e-test.sh
