@@ -22,7 +22,7 @@ func getDefaultUploadedPipeline() *model.V1Pipeline {
 		CreatedAt:   strfmt.NewDateTime(),
 		Name:        "PIPELINE_NAME",
 		Description: "PIPELINE_DESCRIPTION",
-		Parameters: []*model.V1Parameter{&model.V1Parameter{
+		Parameters: []*model.V1Parameter{{
 			Name:  "PARAM_NAME",
 			Value: "PARAM_VALUE",
 		}},
