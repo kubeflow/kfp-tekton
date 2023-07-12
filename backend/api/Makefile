@@ -23,7 +23,7 @@ PREBUILT_REMOTE_IMAGE=aipipeline/api-generator:openapiv2.11.3
 # Generate clients using a pre-built api-generator image.
 .PHONY: generate
 generate: hack/generator.sh $(API_VERSION)/*.proto
-	podman run --interactive --rm \
+	docker run --interactive --rm \
 		-e API_VERSION=$(API_VERSION) \
 		--user $$(id -u):$$(id -g) \
 		--mount type=bind,source="$$(pwd)/../..",target=/go/src/github.com/kubeflow/pipelines \

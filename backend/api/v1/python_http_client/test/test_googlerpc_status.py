@@ -16,11 +16,11 @@ import unittest
 import datetime
 
 import kfp_tekton_server_api
-from kfp_tekton_server_api.models.v1_resource_key import V1ResourceKey  # noqa: E501
+from kfp_tekton_server_api.models.googlerpc_status import GooglerpcStatus  # noqa: E501
 from kfp_tekton_server_api.rest import ApiException
 
-class TestV1ResourceKey(unittest.TestCase):
-    """V1ResourceKey unit test stubs"""
+class TestGooglerpcStatus(unittest.TestCase):
+    """GooglerpcStatus unit test stubs"""
 
     def setUp(self):
         pass
@@ -29,22 +29,27 @@ class TestV1ResourceKey(unittest.TestCase):
         pass
 
     def make_instance(self, include_optional):
-        """Test V1ResourceKey
+        """Test GooglerpcStatus
             include_option is a boolean, when False only required
             params are included, when True both required and
             optional params are included """
-        # model = kfp_tekton_server_api.models.v1_resource_key.V1ResourceKey()  # noqa: E501
+        # model = kfp_tekton_server_api.models.googlerpc_status.GooglerpcStatus()  # noqa: E501
         if include_optional :
-            return V1ResourceKey(
-                type = 'UNKNOWN_RESOURCE_TYPE', 
-                id = '0'
+            return GooglerpcStatus(
+                code = 56, 
+                message = '0', 
+                details = [
+                    {
+                        'key' : None
+                        }
+                    ]
             )
         else :
-            return V1ResourceKey(
+            return GooglerpcStatus(
         )
 
-    def testV1ResourceKey(self):
-        """Test V1ResourceKey"""
+    def testGooglerpcStatus(self):
+        """Test GooglerpcStatus"""
         inst_req_only = self.make_instance(include_optional=False)
         inst_req_and_optional = self.make_instance(include_optional=True)
 

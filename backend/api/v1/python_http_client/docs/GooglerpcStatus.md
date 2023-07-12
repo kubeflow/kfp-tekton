@@ -1,10 +1,11 @@
-# V1Url
+# GooglerpcStatus
 
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**pipeline_url** | **str** | URL of the pipeline definition or the pipeline version definition. | [optional] 
-**pipeline_url** | **str** |  | [optional] 
+**code** | **int** |  | [optional] 
+**message** | **str** |  | [optional] 
+**details** | [**list[ProtobufAny]**](ProtobufAny.md) |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

@@ -13,7 +13,7 @@
 from setuptools import setup, find_packages  # noqa: H301
 
 NAME = "kfp-tekton-server-api"
-VERSION = "1.5.0"
+VERSION = "1.8.0rc1"
 # To install the library, run the following
 #
 # python setup.py install
