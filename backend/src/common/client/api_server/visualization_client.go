@@ -14,7 +14,7 @@ import (
 )
 
 type VisualizationInterface interface {
-	Create(params *params.CreateVisualizationParams) (*model.V1Visualization, error)
+	Create(params *params.VisualizationServiceCreateVisualizationParams) (*model.V1Visualization, error)
 }
 
 type VisualizationClient struct {
@@ -37,7 +37,7 @@ func NewVisualizationClient(clientConfig clientcmd.ClientConfig, debug bool) (
 	}, nil
 }
 
-func (c *VisualizationClient) Create(parameters *params.CreateVisualizationParams) (*model.V1Visualization,
+func (c *VisualizationClient) Create(parameters *params.VisualizationServiceCreateVisualizationParams) (*model.V1Visualization,
 	error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
@@ -45,17 +45,17 @@ func (c *VisualizationClient) Create(parameters *params.CreateVisualizationParam
 
 	// Make service call
 	parameters.Context = ctx
-	response, err := c.apiClient.VisualizationService.CreateVisualization(parameters, PassThroughAuth)
+	response, err := c.apiClient.VisualizationService.VisualizationServiceCreateVisualization(parameters, PassThroughAuth)
 	if err != nil {
-		if defaultError, ok := err.(*params.CreateVisualizationDefault); ok {
-			err = CreateErrorFromAPIStatus(defaultError.Payload.Error, defaultError.Payload.Code)
+		if defaultError, ok := err.(*params.VisualizationServiceCreateVisualizationDefault); ok {
+			err = CreateErrorFromAPIStatus(defaultError.Payload.Message, defaultError.Payload.Code)
 		} else {
 			err = CreateErrorCouldNotRecoverAPIStatus(err)
 		}
 
 		return nil, util.NewUserError(err,
-			fmt.Sprintf("Failed to create visualizaiton. Params: '%+v'. Body: '%+v'", parameters, parameters.Body),
-			fmt.Sprintf("Failed to create visualization '%v'", parameters.Body.Type))
+			fmt.Sprintf("Failed to create visualizaiton. Params: '%+v'. Body: '%+v'", parameters, parameters.Visualization),
+			fmt.Sprintf("Failed to create visualization '%v'", parameters.Visualization.Type))
 	}
 
 	return response.Payload, nil

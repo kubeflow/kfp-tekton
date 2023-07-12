@@ -14,13 +14,13 @@ import (
 )
 
 type JobInterface interface {
-	Create(params *params.CreateJobParams) (*model.V1Job, error)
-	Get(params *params.GetJobParams) (*model.V1Job, error)
-	Delete(params *params.DeleteJobParams) error
-	Enable(params *params.EnableJobParams) error
-	Disable(params *params.DisableJobParams) error
-	List(params *params.ListJobsParams) ([]*model.V1Job, int, string, error)
-	ListAll(params *params.ListJobsParams, maxResultSize int) ([]*model.V1Job, error)
+	Create(params *params.JobServiceCreateJobParams) (*model.V1Job, error)
+	Get(params *params.JobServiceGetJobParams) (*model.V1Job, error)
+	Delete(params *params.JobServiceDeleteJobParams) error
+	Enable(params *params.JobServiceEnableJobParams) error
+	Disable(params *params.JobServiceDisableJobParams) error
+	List(params *params.JobServiceListJobsParams) ([]*model.V1Job, int, string, error)
+	ListAll(params *params.JobServiceListJobsParams, maxResultSize int) ([]*model.V1Job, error)
 }
 
 type JobClient struct {
@@ -43,7 +43,7 @@ func NewJobClient(clientConfig clientcmd.ClientConfig, debug bool) (
 	}, nil
 }
 
-func (c *JobClient) Create(parameters *params.CreateJobParams) (*model.V1Job,
+func (c *JobClient) Create(parameters *params.JobServiceCreateJobParams) (*model.V1Job,
 	error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
@@ -51,23 +51,23 @@ func (c *JobClient) Create(parameters *params.CreateJobParams) (*model.V1Job,
 
 	// Make service call
 	parameters.Context = ctx
-	response, err := c.apiClient.JobService.CreateJob(parameters, PassThroughAuth)
+	response, err := c.apiClient.JobService.JobServiceCreateJob(parameters, PassThroughAuth)
 	if err != nil {
-		if defaultError, ok := err.(*params.CreateJobDefault); ok {
-			err = CreateErrorFromAPIStatus(defaultError.Payload.Error, defaultError.Payload.Code)
+		if defaultError, ok := err.(*params.JobServiceCreateJobDefault); ok {
+			err = CreateErrorFromAPIStatus(defaultError.Payload.Message, defaultError.Payload.Code)
 		} else {
 			err = CreateErrorCouldNotRecoverAPIStatus(err)
 		}
 
 		return nil, util.NewUserError(err,
-			fmt.Sprintf("Failed to create job. Params: '%+v'. Body: '%+v'", parameters, parameters.Body),
-			fmt.Sprintf("Failed to create job '%v'", parameters.Body.Name))
+			fmt.Sprintf("Failed to create job. Params: '%+v'. Body: '%+v'", parameters, parameters.Job),
+			fmt.Sprintf("Failed to create job '%v'", parameters.Job.Name))
 	}
 
 	return response.Payload, nil
 }
 
-func (c *JobClient) Get(parameters *params.GetJobParams) (*model.V1Job,
+func (c *JobClient) Get(parameters *params.JobServiceGetJobParams) (*model.V1Job,
 	error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
@@ -75,10 +75,10 @@ func (c *JobClient) Get(parameters *params.GetJobParams) (*model.V1Job,
 
 	// Make service call
 	parameters.Context = ctx
-	response, err := c.apiClient.JobService.GetJob(parameters, PassThroughAuth)
+	response, err := c.apiClient.JobService.JobServiceGetJob(parameters, PassThroughAuth)
 	if err != nil {
-		if defaultError, ok := err.(*params.GetJobDefault); ok {
-			err = CreateErrorFromAPIStatus(defaultError.Payload.Error, defaultError.Payload.Code)
+		if defaultError, ok := err.(*params.JobServiceGetJobDefault); ok {
+			err = CreateErrorFromAPIStatus(defaultError.Payload.Message, defaultError.Payload.Code)
 		} else {
 			err = CreateErrorCouldNotRecoverAPIStatus(err)
 		}
@@ -91,17 +91,17 @@ func (c *JobClient) Get(parameters *params.GetJobParams) (*model.V1Job,
 	return response.Payload, nil
 }
 
-func (c *JobClient) Delete(parameters *params.DeleteJobParams) error {
+func (c *JobClient) Delete(parameters *params.JobServiceDeleteJobParams) error {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
 	defer cancel()
 
 	// Make service call
 	parameters.Context = ctx
-	_, err := c.apiClient.JobService.DeleteJob(parameters, PassThroughAuth)
+	_, err := c.apiClient.JobService.JobServiceDeleteJob(parameters, PassThroughAuth)
 	if err != nil {
-		if defaultError, ok := err.(*params.DeleteJobDefault); ok {
-			err = CreateErrorFromAPIStatus(defaultError.Payload.Error, defaultError.Payload.Code)
+		if defaultError, ok := err.(*params.JobServiceDeleteJobDefault); ok {
+			err = CreateErrorFromAPIStatus(defaultError.Payload.Message, defaultError.Payload.Code)
 		} else {
 			err = CreateErrorCouldNotRecoverAPIStatus(err)
 		}
@@ -114,17 +114,17 @@ func (c *JobClient) Delete(parameters *params.DeleteJobParams) error {
 	return nil
 }
 
-func (c *JobClient) Enable(parameters *params.EnableJobParams) error {
+func (c *JobClient) Enable(parameters *params.JobServiceEnableJobParams) error {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
 	defer cancel()
 
 	// Make service call
 	parameters.Context = ctx
-	_, err := c.apiClient.JobService.EnableJob(parameters, PassThroughAuth)
+	_, err := c.apiClient.JobService.JobServiceEnableJob(parameters, PassThroughAuth)
 	if err != nil {
-		if defaultError, ok := err.(*params.EnableJobDefault); ok {
-			err = CreateErrorFromAPIStatus(defaultError.Payload.Error, defaultError.Payload.Code)
+		if defaultError, ok := err.(*params.JobServiceEnableJobDefault); ok {
+			err = CreateErrorFromAPIStatus(defaultError.Payload.Message, defaultError.Payload.Code)
 		} else {
 			err = CreateErrorCouldNotRecoverAPIStatus(err)
 		}
@@ -137,17 +137,17 @@ func (c *JobClient) Enable(parameters *params.EnableJobParams) error {
 	return nil
 }
 
-func (c *JobClient) Disable(parameters *params.DisableJobParams) error {
+func (c *JobClient) Disable(parameters *params.JobServiceDisableJobParams) error {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
 	defer cancel()
 
 	// Make service call
 	parameters.Context = ctx
-	_, err := c.apiClient.JobService.DisableJob(parameters, PassThroughAuth)
+	_, err := c.apiClient.JobService.JobServiceDisableJob(parameters, PassThroughAuth)
 	if err != nil {
-		if defaultError, ok := err.(*params.DisableJobDefault); ok {
-			err = CreateErrorFromAPIStatus(defaultError.Payload.Error, defaultError.Payload.Code)
+		if defaultError, ok := err.(*params.JobServiceDisableJobDefault); ok {
+			err = CreateErrorFromAPIStatus(defaultError.Payload.Message, defaultError.Payload.Code)
 		} else {
 			err = CreateErrorCouldNotRecoverAPIStatus(err)
 		}
@@ -160,7 +160,7 @@ func (c *JobClient) Disable(parameters *params.DisableJobParams) error {
 	return nil
 }
 
-func (c *JobClient) List(parameters *params.ListJobsParams) (
+func (c *JobClient) List(parameters *params.JobServiceListJobsParams) (
 	[]*model.V1Job, int, string, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
@@ -168,10 +168,10 @@ func (c *JobClient) List(parameters *params.ListJobsParams) (
 
 	// Make service call
 	parameters.Context = ctx
-	response, err := c.apiClient.JobService.ListJobs(parameters, PassThroughAuth)
+	response, err := c.apiClient.JobService.JobServiceListJobs(parameters, PassThroughAuth)
 	if err != nil {
-		if defaultError, ok := err.(*params.ListJobsDefault); ok {
-			err = CreateErrorFromAPIStatus(defaultError.Payload.Error, defaultError.Payload.Code)
+		if defaultError, ok := err.(*params.JobServiceListJobsDefault); ok {
+			err = CreateErrorFromAPIStatus(defaultError.Payload.Message, defaultError.Payload.Code)
 		} else {
 			err = CreateErrorCouldNotRecoverAPIStatus(err)
 		}
@@ -184,12 +184,12 @@ func (c *JobClient) List(parameters *params.ListJobsParams) (
 	return response.Payload.Jobs, int(response.Payload.TotalSize), response.Payload.NextPageToken, nil
 }
 
-func (c *JobClient) ListAll(parameters *params.ListJobsParams, maxResultSize int) (
+func (c *JobClient) ListAll(parameters *params.JobServiceListJobsParams, maxResultSize int) (
 	[]*model.V1Job, error) {
 	return listAllForJob(c, parameters, maxResultSize)
 }
 
-func listAllForJob(client JobInterface, parameters *params.ListJobsParams,
+func listAllForJob(client JobInterface, parameters *params.JobServiceListJobsParams,
 	maxResultSize int) ([]*model.V1Job, error) {
 	if maxResultSize < 0 {
 		maxResultSize = 0
