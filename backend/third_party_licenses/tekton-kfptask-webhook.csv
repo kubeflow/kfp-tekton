@@ -46,7 +46,7 @@ github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg,https://github.
 github.com/prometheus/procfs,https://github.com/prometheus/procfs/blob/v0.8.0/LICENSE,Apache-2.0
 github.com/prometheus/statsd_exporter/pkg/mapper,https://github.com/prometheus/statsd_exporter/blob/v0.21.0/LICENSE,Apache-2.0
 github.com/spf13/pflag,https://github.com/spf13/pflag/blob/v1.0.5/LICENSE,BSD-3-Clause
-github.com/tektoncd/pipeline/pkg,https://github.com/tektoncd/pipeline/blob/v0.47.0/LICENSE,Apache-2.0
+github.com/tektoncd/pipeline/pkg,https://github.com/tektoncd/pipeline/blob/v0.47.3/LICENSE,Apache-2.0
 go.opencensus.io,https://github.com/census-instrumentation/opencensus-go/blob/v0.24.0/LICENSE,Apache-2.0
 go.uber.org/atomic,https://github.com/uber-go/atomic/blob/v1.10.0/LICENSE.txt,MIT
 go.uber.org/automaxprocs,https://github.com/uber-go/automaxprocs/blob/v1.4.0/LICENSE,MIT

@@ -40,7 +40,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.8.2
-	github.com/tektoncd/pipeline v0.47.0
+	github.com/tektoncd/pipeline v0.47.3
 	go.uber.org/zap v1.24.0
 	gocloud.dev v0.22.0
 	golang.org/x/net v0.9.0
