@@ -1,0 +1,10 @@
+{
+    "inputs": [
+        {
+          "name": "content",
+          "shape": [1],
+          "datatype": "BYTES",
+          "data": ["@nationalgridus I have no water and the bill is current and paid. Can you do something about this?"]
+        }
+    ]
+}

@@ -188,7 +188,7 @@ used as a root OpsGroup in a pipeline. It can't be under other OpsGroup.
 
 
 ## Tekton Pipeline Config for PodTemplate
-Currently users can explicitly setup Security Context and Auto Mount Service Account Token at the pipeline level using Tekton Pipleine Config.
+Currently users can explicitly setup pipeline level configurations such as Security Context and Auto Mount Service Account Token using Tekton Pipleine Config.
 Below are the usages and input types:
 - set_security_context() - InputType: `V1SecurityContext`
 - set_automount_service_account_token() - InputType: `Bool`
@@ -196,6 +196,7 @@ Below are the usages and input types:
 - set_pipeline_env() - InputType: `Dict`
 - add_pipeline_workspace() - InputType: workspace_name `str`, volume `V1Volume` (optional), volume_claim_template_spec `V1PersistentVolumeClaimSpec` (optional), path_prefix `str`
 - set_generate_component_spec_annotations() - InputType: `Bool`
+- set_condition_image_name() - InputType: `str`
 
 ```python
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf

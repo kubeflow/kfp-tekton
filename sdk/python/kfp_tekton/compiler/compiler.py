@@ -58,7 +58,7 @@ DISABLE_CEL_CONDITION = True
 DEFAULT_FINALLY_SECONDS = 300
 
 
-def _get_super_condition_template():
+def _get_super_condition_template(image_name="python:3.9.17-alpine3.18"):
 
   python_script = textwrap.dedent('''\
     import sys
@@ -92,7 +92,7 @@ def _get_super_condition_template():
       'name': 'main',
       'command': ['sh', '-ec', 'program_path=$(mktemp); printf "%s" "$0" > "$program_path";  python3 -u "$program_path" "$1" "$2"'],
       'args': [python_script, '$(inputs.params.operand1)', '$(inputs.params.operand2)'],
-      'image': 'python:alpine3.6',
+      'image': image_name,
     }]
   }
 
@@ -151,6 +151,7 @@ class TektonCompiler(Compiler):
     self.pipeline_workspaces = {}
     self.task_workspaces = {}
     self.generate_component_spec_annotations = True
+    self.condition_image_name = "python:3.9.17-alpine3.18"
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -166,6 +167,7 @@ class TektonCompiler(Compiler):
     self.pipeline_env = tekton_pipeline_conf.pipeline_env
     self.pipeline_workspaces = tekton_pipeline_conf.pipeline_workspaces
     self.generate_component_spec_annotations = tekton_pipeline_conf.generate_component_spec_annotations
+    self.condition_image_name = tekton_pipeline_conf.condition_image_name
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -974,7 +976,7 @@ class TektonCompiler(Compiler):
     for template in raw_templates:
       if template['kind'] == 'Condition':
         if DISABLE_CEL_CONDITION:
-          condition_task_spec = _get_super_condition_template()
+          condition_task_spec = _get_super_condition_template(self.condition_image_name)
         else:
           condition_task_spec = _get_cel_condition_template()
 
