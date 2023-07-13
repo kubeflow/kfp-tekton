@@ -42,7 +42,7 @@ class V1Url(object):
         'pipeline_url': 'pipeline_url'
     }
 
-    def __init__(self, pipeline_url=None, pipeline_url=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, pipeline_url=None, local_vars_configuration=None):  # noqa: E501
         """V1Url - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration()
@@ -73,27 +73,6 @@ class V1Url(object):
         """Sets the pipeline_url of this V1Url.
 
         URL of the pipeline definition or the pipeline version definition.  # noqa: E501
-
-        :param pipeline_url: The pipeline_url of this V1Url.  # noqa: E501
-        :type pipeline_url: str
-        """
-
-        self._pipeline_url = pipeline_url
-
-    @property
-    def pipeline_url(self):
-        """Gets the pipeline_url of this V1Url.  # noqa: E501
-
-
-        :return: The pipeline_url of this V1Url.  # noqa: E501
-        :rtype: str
-        """
-        return self._pipeline_url
-
-    @pipeline_url.setter
-    def pipeline_url(self, pipeline_url):
-        """Sets the pipeline_url of this V1Url.
-
 
         :param pipeline_url: The pipeline_url of this V1Url.  # noqa: E501
         :type pipeline_url: str

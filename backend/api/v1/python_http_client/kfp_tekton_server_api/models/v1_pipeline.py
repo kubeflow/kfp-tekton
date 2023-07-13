@@ -58,7 +58,7 @@ class V1Pipeline(object):
         'created_at': 'created_at'
     }
 
-    def __init__(self, id=None, created_at=None, name=None, description=None, parameters=None, url=None, error=None, default_version=None, resource_references=None, created_at=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, id=None, created_at=None, name=None, description=None, parameters=None, url=None, error=None, default_version=None, resource_references=None, local_vars_configuration=None):  # noqa: E501
         """V1Pipeline - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration()
@@ -73,7 +73,6 @@ class V1Pipeline(object):
         self._error = None
         self._default_version = None
         self._resource_references = None
-        self._created_at = None
         self.discriminator = None
 
         if id is not None:
@@ -94,8 +93,6 @@ class V1Pipeline(object):
             self.default_version = default_version
         if resource_references is not None:
             self.resource_references = resource_references
-        if created_at is not None:
-            self.created_at = created_at
 
     @property
     def id(self):
@@ -299,27 +296,6 @@ class V1Pipeline(object):
         """
 
         self._resource_references = resource_references
-
-    @property
-    def created_at(self):
-        """Gets the created_at of this V1Pipeline.  # noqa: E501
-
-
-        :return: The created_at of this V1Pipeline.  # noqa: E501
-        :rtype: datetime
-        """
-        return self._created_at
-
-    @created_at.setter
-    def created_at(self, created_at):
-        """Sets the created_at of this V1Pipeline.
-
-
-        :param created_at: The created_at of this V1Pipeline.  # noqa: E501
-        :type created_at: datetime
-        """
-
-        self._created_at = created_at
 
     def to_dict(self):
         """Returns the model properties as a dict"""

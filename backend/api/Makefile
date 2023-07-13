@@ -18,12 +18,13 @@ IMAGE_TAG=kfp-api-generator
 # Contact one of Bobgy, or zijianjoy if this remote image needs an update.
 REMOTE_IMAGE=gcr.io/ml-pipeline-test/api-generator
 PREBUILT_REMOTE_IMAGE=aipipeline/api-generator:openapiv2.11.3
-# API_VERSION=v1
+# PREBUILT_REMOTE_IMAGE=aipipeline/api-generator:test
+API_VERSION=v1
 
 # Generate clients using a pre-built api-generator image.
 .PHONY: generate
 generate: hack/generator.sh $(API_VERSION)/*.proto
-	docker run --interactive --rm \
+	podman run --interactive --rm \
 		-e API_VERSION=$(API_VERSION) \
 		--user $$(id -u):$$(id -g) \
 		--mount type=bind,source="$$(pwd)/../..",target=/go/src/github.com/kubeflow/pipelines \
@@ -52,5 +53,5 @@ push: image
 
 # .image-built is a local token file to help Make determine the latest successful build.
 .image-built: Dockerfile
-	docker build ../.. -t $(IMAGE_TAG) -f Dockerfile
+	podman build ../.. -t $(IMAGE_TAG) -f Dockerfile
 	touch .image-built
