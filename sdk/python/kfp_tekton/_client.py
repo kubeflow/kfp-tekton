@@ -870,7 +870,7 @@ class TektonClient(kfp.Client):
           Server response object containing pipleine id and other information.
         """
 
-        response = self._upload_api.pipeline_service_upload_pipeline(
+        response = self._upload_api.upload_pipeline(
             pipeline_package_path, name=pipeline_name, description=description)
         if self._is_ipython():
             import IPython
@@ -919,7 +919,7 @@ class TektonClient(kfp.Client):
         if description:
             kwargs['description'] = description
         try:
-            response = self._upload_api.pipeline_service_upload_pipeline_version(
+            response = self._upload_api.upload_pipeline_version(
                 pipeline_package_path, **kwargs)
         except kfp_server_api.exceptions.ApiTypeError as e:
             # ToDo: Remove this once we drop support for kfp_server_api < 1.7.1
@@ -979,3 +979,26 @@ class TektonClient(kfp.Client):
         """
         return self._pipelines_api.pipeline_service_delete_pipeline_version(
             version_id=version_id)
+
+    def list_pipelines(self,
+                       page_token='',
+                       page_size=10,
+                       sort_by='',
+                       filter=None) -> kfp_server_api.ApiListPipelinesResponse:
+        """List pipelines.
+
+        Args:
+          page_token: Token for starting of the page.
+          page_size: Size of the page.
+          sort_by: one of 'field_name', 'field_name desc'. For example, 'name desc'.
+          filter: A url-encoded, JSON-serialized Filter protocol buffer
+            (see [filter.proto](https://github.com/kubeflow/pipelines/blob/master/backend/api/filter.proto)).
+
+        Returns:
+          A response object including a list of pipelines and next page token.
+        """
+        return self._pipelines_api.pipeline_service_list_pipelines(
+            page_token=page_token,
+            page_size=page_size,
+            sort_by=sort_by,
+            filter=filter)
