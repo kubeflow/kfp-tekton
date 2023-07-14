@@ -33,13 +33,11 @@ class V1Url(object):
                             and the value is json key in definition.
     """
     openapi_types = {
-        'pipeline_url': 'str',
         'pipeline_url': 'str'
     }
 
     attribute_map = {
-        'pipeline_url': 'pipelineUrl',
-        'pipeline_url': 'pipeline_url'
+        'pipeline_url': 'pipelineUrl'
     }
 
     def __init__(self, pipeline_url=None, local_vars_configuration=None):  # noqa: E501
@@ -49,11 +47,8 @@ class V1Url(object):
         self.local_vars_configuration = local_vars_configuration
 
         self._pipeline_url = None
-        self._pipeline_url = None
         self.discriminator = None
 
-        if pipeline_url is not None:
-            self.pipeline_url = pipeline_url
         if pipeline_url is not None:
             self.pipeline_url = pipeline_url
 

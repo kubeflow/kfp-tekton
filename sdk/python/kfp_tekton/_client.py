@@ -872,6 +872,7 @@ class TektonClient(kfp.Client):
 
         response = self._upload_api.upload_pipeline(
             pipeline_package_path, name=pipeline_name, description=description)
+        print(response)
         if self._is_ipython():
             import IPython
             html = '<a href=%s/#/pipelines/details/%s>Pipeline details</a>.' % (

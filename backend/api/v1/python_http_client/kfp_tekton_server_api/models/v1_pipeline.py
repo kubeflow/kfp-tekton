@@ -41,8 +41,7 @@ class V1Pipeline(object):
         'url': 'V1Url',
         'error': 'str',
         'default_version': 'V1PipelineVersion',
-        'resource_references': 'list[V1ResourceReference]',
-        'created_at': 'datetime'
+        'resource_references': 'list[V1ResourceReference]'
     }
 
     attribute_map = {
@@ -54,8 +53,7 @@ class V1Pipeline(object):
         'url': 'url',
         'error': 'error',
         'default_version': 'defaultVersion',
-        'resource_references': 'resourceReferences',
-        'created_at': 'created_at'
+        'resource_references': 'resourceReferences'
     }
 
     def __init__(self, id=None, created_at=None, name=None, description=None, parameters=None, url=None, error=None, default_version=None, resource_references=None, local_vars_configuration=None):  # noqa: E501

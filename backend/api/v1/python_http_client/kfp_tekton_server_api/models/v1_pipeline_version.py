@@ -40,11 +40,7 @@ class V1PipelineVersion(object):
         'code_source_url': 'str',
         'package_url': 'V1Url',
         'resource_references': 'list[V1ResourceReference]',
-        'description': 'str',
-        'created_at': 'datetime',
-        'code_source_url': 'str',
-        'package_url': 'V1Url',
-        'resource_references': 'list[V1ResourceReference]'
+        'description': 'str'
     }
 
     attribute_map = {
@@ -55,11 +51,7 @@ class V1PipelineVersion(object):
         'code_source_url': 'codeSourceUrl',
         'package_url': 'packageUrl',
         'resource_references': 'resourceReferences',
-        'description': 'description',
-        'created_at': 'created_at',
-        'code_source_url': 'code_source_url',
-        'package_url': 'package_url',
-        'resource_references': 'resource_references'
+        'description': 'description'
     }
 
     def __init__(self, id=None, name=None, created_at=None, parameters=None, code_source_url=None, package_url=None, resource_references=None, description=None, local_vars_configuration=None):  # noqa: E501
