@@ -26,20 +26,6 @@ TEST_SCRIPT="${TEST_SCRIPT:="test-flip-coin.sh"}"
 C_DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$C_DIR" ]]; then C_DIR="$PWD"; fi
 
-retry() {
-  local max=$1; shift
-  local interval=$1; shift
-
-  until "$@"; do
-    echo "trying.."
-    max=$((max-1))
-    if [[ "$max" -eq 0 ]]; then
-      return 1
-    fi
-    sleep "$interval"
-  done
-}
-
 POD_NAME=$(kubectl get pod -n kubeflow -l app=ml-pipeline -o json | jq -r '.items[] | .metadata.name ')
 kubectl port-forward -n "$KUBEFLOW_NS" "$POD_NAME" 8888:8888 &
 # wait for the port-forward
