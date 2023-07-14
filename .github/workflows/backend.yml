@@ -60,3 +60,8 @@ jobs:
         run: |
           . .venv/bin/activate
           TEST_SCRIPT="test-static-loop.sh" ./scripts/deploy/github/e2e-test.sh
+      - name: "dynamic loop test"
+        run: |
+          . .venv/bin/activate
+          TEST_SCRIPT="test-dynamic-loop.sh" ./scripts/deploy/github/e2e-test.sh
+
