@@ -271,6 +271,32 @@ class TektonClient(kfp.Client):
                 % (self._get_url_prefix(), experiment.id))
             IPython.display.display(IPython.display.HTML(html))
         return experiment
+    
+    def get_kfp_healthz(self) -> kfp_server_api.V1GetHealthzResponse:
+        """Gets healthz info of KFP deployment.
+
+        Returns:
+          response: json formatted response from the healtz endpoint.
+        """
+        count = 0
+        response = None
+        max_attempts = 5
+        while not response:
+            count += 1
+            if count > max_attempts:
+                raise TimeoutError(
+                    'Failed getting healthz endpoint after {} attempts.'.format(
+                        max_attempts))
+            try:
+                response = self._healthz_api.healthz_service_get_healthz()
+                return response
+            # ApiException, including network errors, is the only type that may
+            # recover after retry.
+            except kfp_server_api.ApiException:
+                # logging.exception also logs detailed info about the ApiException
+                logging.exception(
+                    'Failed to get healthz info attempt {} of 5.'.format(count))
+                time.sleep(5)
 
     def list_experiments(
             self,
