@@ -197,7 +197,7 @@ class TektonClient(kfp.Client):
                                     'invalidtaskresultreference'}
         while True:
             try:
-                get_run_response = self._run_api.get_run(run_id=run_id)
+                get_run_response = self._run_api.run_service_get_run(run_id=run_id)
                 is_valid_token = True
             except ApiException as api_ex:
                 # if the token is valid but receiving 401 Unauthorized error
@@ -262,7 +262,7 @@ class TektonClient(kfp.Client):
                 name=name,
                 description=description,
                 resource_references=resource_references)
-            experiment = self._experiment_api.create_experiment(body=experiment)
+            experiment = self._experiment_api.experiment_service_create_experiment(body=experiment)
 
         if self._is_ipython():
             import IPython
@@ -321,7 +321,7 @@ class TektonClient(kfp.Client):
           A response object including a list of experiments and next page token.
         """
         namespace = namespace or self.get_user_namespace()
-        response = self._experiment_api.list_experiment(
+        response = self._experiment_api.experiment_service_list_experiment(
             page_token=page_token,
             page_size=page_size,
             sort_by=sort_by,
@@ -357,7 +357,7 @@ class TektonClient(kfp.Client):
             raise ValueError(
                 'Either experiment_id or experiment_name is required')
         if experiment_id is not None:
-            return self._experiment_api.get_experiment(id=experiment_id)
+            return self._experiment_api.experiment_service_get_experiment(id=experiment_id)
         experiment_filter = json.dumps({
             'predicates': [{
                 'op': _FILTER_OPERATIONS['EQUALS'],
@@ -366,13 +366,13 @@ class TektonClient(kfp.Client):
             }]
         })
         if namespace:
-            result = self._experiment_api.list_experiment(
+            result = self._experiment_api.experiment_service_list_experiment(
                 filter=experiment_filter,
                 resource_reference_key_type=kfp_server_api.models
                 .v1_resource_type.V1ResourceType.NAMESPACE,
                 resource_reference_key_id=namespace)
         else:
-            result = self._experiment_api.list_experiment(
+            result = self._experiment_api.experiment_service_list_experiment(
                 filter=experiment_filter)
         if not result.experiments:
             raise ValueError(
@@ -445,7 +445,7 @@ class TektonClient(kfp.Client):
             name=job_name,
             service_account=service_account)
 
-        response = self._run_api.create_run(body=run_body)
+        response = self._run_api.run_service_create_run(body=run_body)
 
         if self._is_ipython():
             import IPython
@@ -554,7 +554,7 @@ class TektonClient(kfp.Client):
             trigger=trigger,
             max_concurrency=max_concurrency,
             service_account=service_account)
-        return self._job_api.create_job(body=job_body)
+        return self._job_api.job_service_create_job(body=job_body)
 
     def _create_job_config(
         self,
@@ -658,7 +658,7 @@ class TektonClient(kfp.Client):
         """
         namespace = namespace or self.get_user_namespace()
         if experiment_id is not None:
-            response = self._run_api.list_runs(
+            response = self._run_api.run_service_list_runs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
@@ -667,7 +667,7 @@ class TektonClient(kfp.Client):
                 resource_reference_key_id=experiment_id,
                 filter=filter)
         elif namespace:
-            response = self._run_api.list_runs(
+            response = self._run_api.run_service_list_runs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
@@ -676,7 +676,7 @@ class TektonClient(kfp.Client):
                 resource_reference_key_id=namespace,
                 filter=filter)
         else:
-            response = self._run_api.list_runs(
+            response = self._run_api.run_service_list_runs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
@@ -703,7 +703,7 @@ class TektonClient(kfp.Client):
           A response object including a list of recurring_runs and next page token.
         """
         if experiment_id is not None:
-            response = self._job_api.list_jobs(
+            response = self._job_api.job_service_list_jobs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
@@ -712,7 +712,7 @@ class TektonClient(kfp.Client):
                 resource_reference_key_id=experiment_id,
                 filter=filter)
         else:
-            response = self._job_api.list_jobs(
+            response = self._job_api.job_service_list_jobs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
@@ -741,7 +741,7 @@ class TektonClient(kfp.Client):
           kfp_server_api.ApiException: If pipeline is not found.
         """
 
-        return self._pipelines_api.list_pipeline_versions(
+        return self._pipelines_api.pipeline_service_list_pipeline_versions(
             page_token=page_token,
             page_size=page_size,
             sort_by=sort_by,
