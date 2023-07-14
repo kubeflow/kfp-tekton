@@ -984,7 +984,7 @@ class TektonClient(kfp.Client):
                        page_token='',
                        page_size=10,
                        sort_by='',
-                       filter=None) -> kfp_server_api.ApiListPipelinesResponse:
+                       filter=None) -> kfp_server_api.V1ListPipelinesResponse:
         """List pipelines.
 
         Args:
