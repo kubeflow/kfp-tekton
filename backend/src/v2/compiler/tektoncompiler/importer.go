@@ -36,6 +36,15 @@ func (c *pipelinerunCompiler) Importer(name string,
 		return err
 	}
 
+	if err := c.saveComponentImpl(name, importer); err != nil {
+		return err
+	}
+
+	componentImplStr, err := c.useComponentImpl(name)
+	if err != nil {
+		return err
+	}
+
 	taskSpecJson, err := stablyMarshalJSON(task)
 	if err != nil {
 		return err
@@ -53,12 +62,11 @@ func (c *pipelinerunCompiler) Importer(name string,
 		"$(KFP_POD_NAME)",
 		"--pod_uid",
 		"$(KFP_POD_UID)",
-		"--mlmd_server_address", // METADATA_GRPC_SERVICE_* come from metadata-grpc-configmap
+		"--mlmd_server_address",
 		"$(METADATA_GRPC_SERVICE_HOST)",
 		"--mlmd_server_port",
 		"$(METADATA_GRPC_SERVICE_PORT)",
 	}
-	mlmdConfigOptional := true
 
 	pipelineTask := &pipelineapi.PipelineTask{
 		Name: name,
@@ -88,14 +96,6 @@ func (c *pipelinerunCompiler) Importer(name string,
 						Image:   c.launcherImage,
 						Command: []string{"launcher-v2"},
 						Args:    launcherArgs,
-						EnvFrom: []k8score.EnvFromSource{{
-							ConfigMapRef: &k8score.ConfigMapEnvSource{
-								LocalObjectReference: k8score.LocalObjectReference{
-									Name: "metadata-grpc-configmap",
-								},
-								Optional: &mlmdConfigOptional,
-							},
-						}},
 						Env: []k8score.EnvVar{{
 							Name: "KFP_POD_NAME",
 							ValueFrom: &k8score.EnvVarSource{
@@ -110,6 +110,12 @@ func (c *pipelinerunCompiler) Importer(name string,
 									FieldPath: "metadata.uid",
 								},
 							},
+						}, {
+							Name:  "METADATA_GRPC_SERVICE_HOST",
+							Value: GetMLMDHost(),
+						}, {
+							Name:  "METADATA_GRPC_SERVICE_PORT",
+							Value: GetMLMDPort(),
 						}},
 					},
 				},
@@ -119,23 +125,23 @@ func (c *pipelinerunCompiler) Importer(name string,
 		Params: []pipelineapi.Param{
 			{
 				Name:  paramTask,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: taskSpecJson},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: taskSpecJson},
 			},
 			{
 				Name:  paramComponent,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: componentSpecStr},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: componentSpecStr},
 			},
 			{
 				Name:  paramImporter,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: componentSpecStr},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: componentImplStr},
 			},
 			{
 				Name:  paramParentDagID,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: taskOutputParameter(getDAGDriverTaskName(c.CurrentDag()), paramExecutionID)},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: taskOutputParameter(getDAGDriverTaskName(c.CurrentDag()), paramExecutionID)},
 			},
 			{
 				Name:  paramRunId,
-				Value: pipelineapi.ArrayOrString{Type: "string", StringVal: runID()},
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 		},
 	}
