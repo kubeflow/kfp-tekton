@@ -20,7 +20,7 @@ spec:
       - name: component
         value: '{"executorLabel":"exec-importer","inputDefinitions":{"parameters":{"uri":{"type":"STRING"}}},"outputDefinitions":{"artifacts":{"artifact":{"artifactType":{"schemaTitle":"system.Dataset"}}}}}'
       - name: importer
-        value: '{"executorLabel":"exec-importer","inputDefinitions":{"parameters":{"uri":{"type":"STRING"}}},"outputDefinitions":{"artifacts":{"artifact":{"artifactType":{"schemaTitle":"system.Dataset"}}}}}'
+        value: '{"artifactUri":{"constantValue":{"stringValue":"gs://ml-pipeline-playground/shakespeare1.txt"}},"typeSchema":{"schemaTitle":"system.Dataset"}}'
       - name: parent-dag-id
         value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: run-id
@@ -83,10 +83,10 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.uid
-          envFrom:
-          - configMapRef:
-              name: metadata-grpc-configmap
-              optional: true
+          - name: METADATA_GRPC_SERVICE_HOST
+            value: metadata-grpc-service.kubeflow.svc.cluster.local
+          - name: METADATA_GRPC_SERVICE_PORT
+            value: "8080"
           image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
           name: importer-main
           resources: {}
