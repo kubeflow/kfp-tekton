@@ -110,7 +110,7 @@ To install the standalone Kubeflow Pipelines with Openshift Pipelines, run the f
 
 2. Enable necessary Openshift pipelines configurations for kfp-tekton to enable high performance pipelines.
    ```shell
-   oc patch cm feature-flags -n tekton-pipelines \
+   oc patch cm feature-flags -n openshift-pipelines \
          -p '{"data":{"running-in-environment-with-injected-sidecars": "false"}}'
    oc patch cm config-defaults -n openshift-pipelines \
          -p '{"data":{"default-timeout-minutes": "0"}}'
