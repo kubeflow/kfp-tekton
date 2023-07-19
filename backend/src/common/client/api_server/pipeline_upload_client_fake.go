@@ -36,7 +36,7 @@ func NewPipelineUploadClientFake() *PipelineUploadClientFake {
 }
 
 func (c *PipelineUploadClientFake) UploadFile(filePath string,
-	parameters *params.UploadPipelineParams) (*model.V1Pipeline, error) {
+	parameters *params.PipelineServiceUploadPipelineParams) (*model.V1Pipeline, error) {
 	switch filePath {
 	case FileForClientErrorTest:
 		return nil, fmt.Errorf(ClientErrorString)

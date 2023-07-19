@@ -60,7 +60,7 @@ logger.setLevel(logging.INFO)
 # accordingly.
 REQUIRES = [
     "kfp>=1.8.10,<1.8.23",
-    "kfp-tekton-server-api==1.8.0rc5"
+    "kfp-tekton-server-api==1.8.0rc7"
 ]
 
 TESTS_REQUIRE = [

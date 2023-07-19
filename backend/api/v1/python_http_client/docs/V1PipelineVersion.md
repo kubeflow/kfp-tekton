@@ -9,12 +9,8 @@ Name | Type | Description | Notes
 **parameters** | [**list[V1Parameter]**](V1Parameter.md) | Output. The input parameters for this pipeline. | [optional] 
 **code_source_url** | **str** | Input. Optional. Pipeline version code source. | [optional] 
 **package_url** | [**V1Url**](V1Url.md) |  | [optional] 
-**resource_references** | [**list[V1ResourceReference]**](V1ResourceReference.md) | Input field. Specify which resource this pipeline version belongs to. For Experiment, the only valid resource reference is a single Namespace. | [optional] 
-**description** | **str** | Input. Optional. Description for the pipeline version. | [optional] 
-**created_at** | **datetime** | Output. The time this pipeline version is created. | [optional] 
-**code_source_url** | **str** | Input. Optional. Pipeline version code source. | [optional] 
-**package_url** | [**V1Url**](V1Url.md) |  | [optional] 
 **resource_references** | [**list[V1ResourceReference]**](V1ResourceReference.md) | Input. Required. E.g., specify which pipeline this pipeline version belongs to. | [optional] 
+**description** | **str** | Input. Optional. Description for the pipeline version. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

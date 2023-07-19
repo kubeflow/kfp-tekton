@@ -46,7 +46,6 @@ class TestV1PipelineVersion(unittest.TestCase):
                     ], 
                 code_source_url = '0', 
                 package_url = kfp_tekton_server_api.models.v1_url.v1Url(
-                    pipeline_url = '0', 
                     pipeline_url = '0', ), 
                 resource_references = [
                     kfp_tekton_server_api.models.v1_resource_reference.v1ResourceReference(
@@ -56,20 +55,7 @@ class TestV1PipelineVersion(unittest.TestCase):
                         name = '0', 
                         relationship = 'UNKNOWN_RELATIONSHIP', )
                     ], 
-                description = '0', 
-                created_at = datetime.datetime.strptime('2013-10-20 19:20:30.00', '%Y-%m-%d %H:%M:%S.%f'), 
-                code_source_url = '0', 
-                package_url = kfp_tekton_server_api.models.v1_url.v1Url(
-                    pipeline_url = '0', 
-                    pipeline_url = '0', ), 
-                resource_references = [
-                    kfp_tekton_server_api.models.v1_resource_reference.v1ResourceReference(
-                        key = kfp_tekton_server_api.models.v1_resource_key.v1ResourceKey(
-                            type = 'UNKNOWN_RESOURCE_TYPE', 
-                            id = '0', ), 
-                        name = '0', 
-                        relationship = 'UNKNOWN_RELATIONSHIP', )
-                    ]
+                description = '0'
             )
         else :
             return V1PipelineVersion(

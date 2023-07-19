@@ -63,10 +63,10 @@ func TestUploadPipeline(t *testing.T) {
 
 			// Verify time format is RFC3339.
 			parsedResponse := struct {
-				CreatedAt      string `json:"created_at"`
+				CreatedAt      string `json:"createdAt"`
 				DefaultVersion struct {
-					CreatedAt string `json:"created_at"`
-				} `json:"default_version"`
+					CreatedAt string `json:"createdAt"`
+				} `json:"defaultVersion"`
 			}{}
 			json.Unmarshal(response.Body.Bytes(), &parsedResponse)
 			assert.Equal(t, "1970-01-01T00:00:01Z", parsedResponse.CreatedAt)
@@ -111,7 +111,7 @@ func TestUploadPipeline(t *testing.T) {
 			response = uploadPipeline("/apis/v1beta1/pipelines/upload_version?name="+fakeVersionName+"&pipelineid="+resource.DefaultFakeUUID+"&description="+fakeDescription,
 				bytes.NewReader(bytesBuffer.Bytes()), writer, server.UploadPipelineVersion)
 			assert.Equal(t, 200, response.Code)
-			assert.Contains(t, response.Body.String(), `"created_at":"1970-01-01T00:00:02Z"`)
+			assert.Contains(t, response.Body.String(), `"createdAt":"1970-01-01T00:00:02Z"`)
 
 			// Verify stored in object store
 			objStore = clientManager.ObjectStore()

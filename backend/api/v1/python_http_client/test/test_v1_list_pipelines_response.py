@@ -48,7 +48,6 @@ class TestV1ListPipelinesResponse(unittest.TestCase):
                                 value = '0', )
                             ], 
                         url = kfp_tekton_server_api.models.v1_url.v1Url(
-                            pipeline_url = '0', 
                             pipeline_url = '0', ), 
                         error = '0', 
                         default_version = kfp_tekton_server_api.models.v1_pipeline_version.v1PipelineVersion(
@@ -57,7 +56,6 @@ class TestV1ListPipelinesResponse(unittest.TestCase):
                             created_at = datetime.datetime.strptime('2013-10-20 19:20:30.00', '%Y-%m-%d %H:%M:%S.%f'), 
                             code_source_url = '0', 
                             package_url = kfp_tekton_server_api.models.v1_url.v1Url(
-                                pipeline_url = '0', 
                                 pipeline_url = '0', ), 
                             resource_references = [
                                 kfp_tekton_server_api.models.v1_resource_reference.v1ResourceReference(
@@ -67,21 +65,11 @@ class TestV1ListPipelinesResponse(unittest.TestCase):
                                     name = '0', 
                                     relationship = 'UNKNOWN_RELATIONSHIP', )
                                 ], 
-                            description = '0', 
-                            created_at = datetime.datetime.strptime('2013-10-20 19:20:30.00', '%Y-%m-%d %H:%M:%S.%f'), 
-                            code_source_url = '0', 
-                            package_url = kfp_tekton_server_api.models.v1_url.v1Url(
-                                pipeline_url = '0', 
-                                pipeline_url = '0', ), 
-                            resource_references = [
-                                kfp_tekton_server_api.models.v1_resource_reference.v1ResourceReference(
-                                    name = '0', )
-                                ], ), 
+                            description = '0', ), 
                         resource_references = [
                             kfp_tekton_server_api.models.v1_resource_reference.v1ResourceReference(
                                 name = '0', )
-                            ], 
-                        created_at = datetime.datetime.strptime('2013-10-20 19:20:30.00', '%Y-%m-%d %H:%M:%S.%f'), )
+                            ], )
                     ], 
                 total_size = 56, 
                 next_page_token = '0'

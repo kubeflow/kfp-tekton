@@ -49,7 +49,6 @@ from kfp_tekton_server_api.models.v1_run import V1Run
 from kfp_tekton_server_api.models.v1_run_detail import V1RunDetail
 from kfp_tekton_server_api.models.v1_run_metric import V1RunMetric
 from kfp_tekton_server_api.models.v1_run_storage_state import V1RunStorageState
-from kfp_tekton_server_api.models.v1_status import V1Status
 from kfp_tekton_server_api.models.v1_trigger import V1Trigger
 from kfp_tekton_server_api.models.v1_url import V1Url
 from kfp_tekton_server_api.models.v1_value import V1Value

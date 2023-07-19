@@ -28,30 +28,30 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	UploadPipeline(params *UploadPipelineParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*UploadPipelineOK, error)
+	PipelineServiceUploadPipeline(params *PipelineServiceUploadPipelineParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PipelineServiceUploadPipelineOK, error)
 
-	UploadPipelineVersion(params *UploadPipelineVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*UploadPipelineVersionOK, error)
+	PipelineServiceUploadPipelineVersion(params *PipelineServiceUploadPipelineVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PipelineServiceUploadPipelineVersionOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
 
 /*
-UploadPipeline upload pipeline API
+PipelineServiceUploadPipeline pipeline service upload pipeline API
 */
-func (a *Client) UploadPipeline(params *UploadPipelineParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*UploadPipelineOK, error) {
+func (a *Client) PipelineServiceUploadPipeline(params *PipelineServiceUploadPipelineParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PipelineServiceUploadPipelineOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewUploadPipelineParams()
+		params = NewPipelineServiceUploadPipelineParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "UploadPipeline",
+		ID:                 "PipelineService_UploadPipeline",
 		Method:             "POST",
 		PathPattern:        "/apis/v1/pipelines/upload",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"multipart/form-data"},
-		Schemes:            []string{"http", "https"},
+		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &UploadPipelineReader{formats: a.formats},
+		Reader:             &PipelineServiceUploadPipelineReader{formats: a.formats},
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
@@ -64,32 +64,32 @@ func (a *Client) UploadPipeline(params *UploadPipelineParams, authInfo runtime.C
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*UploadPipelineOK)
+	success, ok := result.(*PipelineServiceUploadPipelineOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UploadPipelineDefault)
+	unexpectedSuccess := result.(*PipelineServiceUploadPipelineDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
-UploadPipelineVersion upload pipeline version API
+PipelineServiceUploadPipelineVersion pipeline service upload pipeline version API
 */
-func (a *Client) UploadPipelineVersion(params *UploadPipelineVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*UploadPipelineVersionOK, error) {
+func (a *Client) PipelineServiceUploadPipelineVersion(params *PipelineServiceUploadPipelineVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PipelineServiceUploadPipelineVersionOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewUploadPipelineVersionParams()
+		params = NewPipelineServiceUploadPipelineVersionParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "UploadPipelineVersion",
+		ID:                 "PipelineService_UploadPipelineVersion",
 		Method:             "POST",
 		PathPattern:        "/apis/v1/pipelines/upload_version",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"multipart/form-data"},
-		Schemes:            []string{"http", "https"},
+		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &UploadPipelineVersionReader{formats: a.formats},
+		Reader:             &PipelineServiceUploadPipelineVersionReader{formats: a.formats},
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
@@ -102,12 +102,12 @@ func (a *Client) UploadPipelineVersion(params *UploadPipelineVersionParams, auth
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*UploadPipelineVersionOK)
+	success, ok := result.(*PipelineServiceUploadPipelineVersionOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UploadPipelineVersionDefault)
+	unexpectedSuccess := result.(*PipelineServiceUploadPipelineVersionDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

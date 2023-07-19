@@ -63,7 +63,7 @@ func (p *Pipeline) DefaultSortField() string {
 var pipelineAPIToModelFieldMap = map[string]string{
 	"id":          "UUID",
 	"name":        "Name",
-	"created_at":  "CreatedAtInSec",
+	"createdAt":   "CreatedAtInSec",
 	"description": "Description",
 	"namespace":   "Namespace",
 	// TODO(jingzhang36): uncomment this field when we expose it to API

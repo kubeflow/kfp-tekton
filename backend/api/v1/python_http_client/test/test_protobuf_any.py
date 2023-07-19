@@ -36,9 +36,7 @@ class TestProtobufAny(unittest.TestCase):
         # model = kfp_tekton_server_api.models.protobuf_any.ProtobufAny()  # noqa: E501
         if include_optional :
             return ProtobufAny(
-                type = '0', 
-                type_url = '0', 
-                value = 'YQ=='
+                type = '0'
             )
         else :
             return ProtobufAny(

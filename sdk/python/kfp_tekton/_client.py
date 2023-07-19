@@ -870,9 +870,8 @@ class TektonClient(kfp.Client):
           Server response object containing pipleine id and other information.
         """
 
-        response = self._upload_api.upload_pipeline(
+        response = self._upload_api.pipeline_service_upload_pipeline(
             pipeline_package_path, name=pipeline_name, description=description)
-        print(response)
         if self._is_ipython():
             import IPython
             html = '<a href=%s/#/pipelines/details/%s>Pipeline details</a>.' % (
@@ -920,7 +919,7 @@ class TektonClient(kfp.Client):
         if description:
             kwargs['description'] = description
         try:
-            response = self._upload_api.upload_pipeline_version(
+            response = self._upload_api.pipeline_service_upload_pipeline_version(
                 pipeline_package_path, **kwargs)
         except kfp_server_api.exceptions.ApiTypeError as e:
             # ToDo: Remove this once we drop support for kfp_server_api < 1.7.1

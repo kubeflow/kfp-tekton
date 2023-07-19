@@ -12,7 +12,6 @@ Name | Type | Description | Notes
 **error** | **str** | In case any error happens retrieving a pipeline field, only pipeline ID and the error message is returned. Client has the flexibility of choosing how to handle error. This is especially useful during listing call. | [optional] 
 **default_version** | [**V1PipelineVersion**](V1PipelineVersion.md) |  | [optional] 
 **resource_references** | [**list[V1ResourceReference]**](V1ResourceReference.md) | Input field. Specify which resource this pipeline belongs to. For Pipeline, the only valid resource reference is a single Namespace. | [optional] 
-**created_at** | **datetime** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

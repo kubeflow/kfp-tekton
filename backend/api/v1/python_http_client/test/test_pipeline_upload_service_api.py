@@ -28,14 +28,14 @@ class TestPipelineUploadServiceApi(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_upload_pipeline(self):
-        """Test case for upload_pipeline
+    def test_pipeline_service_upload_pipeline(self):
+        """Test case for pipeline_service_upload_pipeline
 
         """
         pass
 
-    def test_upload_pipeline_version(self):
-        """Test case for upload_pipeline_version
+    def test_pipeline_service_upload_pipeline_version(self):
+        """Test case for pipeline_service_upload_pipeline_version
 
         """
         pass

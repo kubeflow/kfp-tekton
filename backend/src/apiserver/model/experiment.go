@@ -28,12 +28,12 @@ func (e *Experiment) DefaultSortField() string {
 }
 
 var experimentAPIToModelFieldMap = map[string]string{
-	"id":            "UUID",
-	"name":          "Name",
-	"created_at":    "CreatedAtInSec",
-	"description":   "Description",
-	"namespace":     "Namespace",
-	"storage_state": "StorageState",
+	"id":           "UUID",
+	"name":         "Name",
+	"createdAt":    "CreatedAtInSec",
+	"description":  "Description",
+	"namespace":    "Namespace",
+	"storageState": "StorageState",
 }
 
 // APIToModelFieldMap returns a map from API names to field names for model

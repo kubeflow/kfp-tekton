@@ -36,7 +36,6 @@ class TestV1Url(unittest.TestCase):
         # model = kfp_tekton_server_api.models.v1_url.V1Url()  # noqa: E501
         if include_optional :
             return V1Url(
-                pipeline_url = '0', 
                 pipeline_url = '0'
             )
         else :
