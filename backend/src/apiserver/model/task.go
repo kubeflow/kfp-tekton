@@ -41,8 +41,8 @@ var taskAPIToModelFieldMap = map[string]string{
 	"pipelineName":    "PipelineName",
 	"runId":           "RunUUID ",
 	"mlmdExecutionID": "MLMDExecutionID",
-	"createdAt":       "CreatedTimestamp",
-	"finishedAt":      "FinishedTimestamp",
+	"created_at":      "CreatedTimestamp",
+	"finished_at":     "FinishedTimestamp",
 	"fingerprint":     "Fingerprint",
 }
 

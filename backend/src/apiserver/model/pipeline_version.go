@@ -63,16 +63,16 @@ func (p *PipelineVersion) DefaultSortField() string {
 // PipelineVersion.
 func (p *PipelineVersion) APIToModelFieldMap() map[string]string {
 	return map[string]string{
-		"id":        "UUID",
-		"name":      "Name",
-		"createdAt": "CreatedAtInSec",
-		"status":    "Status",
+		"id":         "UUID",
+		"name":       "Name",
+		"created_at": "CreatedAtInSec",
+		"status":     "Status",
 	}
 }
 
 // GetModelName returns table name used as sort field prefix
 func (p *PipelineVersion) GetModelName() string {
-	return "pipelineVersions"
+	return "pipeline_versions"
 }
 
 func (p *PipelineVersion) GetField(name string) (string, bool) {
@@ -98,9 +98,9 @@ func (p *PipelineVersion) GetFieldValue(name string) interface{} {
 }
 
 func (p *PipelineVersion) GetSortByFieldPrefix(name string) string {
-	return "pipelineVersions."
+	return "pipeline_versions."
 }
 
 func (p *PipelineVersion) GetKeyFieldPrefix() string {
-	return "pipelineVersions."
+	return "pipeline_versions."
 }
