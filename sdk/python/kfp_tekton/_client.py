@@ -289,7 +289,7 @@ class TektonClient(kfp.Client):
                 name=name,
                 description=description,
                 resource_references=resource_references)
-            experiment = self._experiment_api.experiment_service_create_experiment(body=experiment)
+            experiment = self._experiment_api.experiment_service_create_experiment(experiment=experiment)
 
         if self._is_ipython():
             import IPython
@@ -472,7 +472,7 @@ class TektonClient(kfp.Client):
             name=job_name,
             service_account=service_account)
 
-        response = self._run_api.run_service_create_run(body=run_body)
+        response = self._run_api.run_service_create_run(run=run_body)
 
         if self._is_ipython():
             import IPython
@@ -581,7 +581,7 @@ class TektonClient(kfp.Client):
             trigger=trigger,
             max_concurrency=max_concurrency,
             service_account=service_account)
-        return self._job_api.job_service_create_job(body=job_body)
+        return self._job_api.job_service_create_job(job=job_body)
 
     def _create_job_config(
         self,
