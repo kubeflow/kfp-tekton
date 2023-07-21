@@ -65,15 +65,15 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
          -p '{"data":{"default-timeout-minutes": "0"}}'
    ```
 
-3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.7.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
+3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.7.1` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
    > Note: You can ignore the error `no matches for kind "Application" in version "app.k8s.io/v1beta1"` since it's a warning saying `application` CRD is not yet ready.
     ```shell
-    kubectl apply --selector kubeflow/crd-install=true -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.7.0/kfp-tekton.yaml
+    kubectl apply --selector kubeflow/crd-install=true -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.7.1/kfp-tekton.yaml
     ```
 
-4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.7.0` deployment
+4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.7.1` deployment
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.7.0/kfp-tekton.yaml
+    kubectl apply -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.7.1/kfp-tekton.yaml
     ```
 
 5. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
@@ -94,7 +94,7 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
 
 7. (OpenShift only) If you are running the standalone KFP-Tekton on OpenShift, apply the necessary security context constraint below
    ```shell
-   curl -L https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.7.0/kfp-tekton.yaml | yq 'del(.spec.template.spec.containers[].securityContext.runAsUser, .spec.template.spec.containers[].securityContext.runAsGroup)' | oc apply -f -
+   curl -L https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.7.1/kfp-tekton.yaml | yq 'del(.spec.template.spec.containers[].securityContext.runAsUser, .spec.template.spec.containers[].securityContext.runAsGroup)' | oc apply -f -
    oc apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/third-party/openshift/standalone
    oc adm policy add-scc-to-user anyuid -z tekton-pipelines-controller
    oc adm policy add-scc-to-user anyuid -z tekton-pipelines-webhook
@@ -116,9 +116,9 @@ To install the standalone Kubeflow Pipelines with Openshift Pipelines, run the f
          -p '{"data":{"default-timeout-minutes": "0"}}'
    ```
 
-3. Install Kubeflow Pipelines with Openshift pipelines backend (`kfp-tekton`) `v1.7.0` deployment
+3. Install Kubeflow Pipelines with Openshift pipelines backend (`kfp-tekton`) `v1.7.1` deployment
    ```shell
-   oc apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/kfp-template-openshift-pipelines\?ref\=v1.7.0
+   oc apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/kfp-template-openshift-pipelines\?ref\=v1.7.1
    ```
 
 4. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
