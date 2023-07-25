@@ -64,4 +64,8 @@ jobs:
         run: |
           . .venv/bin/activate
           TEST_SCRIPT="test-dynamic-loop.sh" ./scripts/deploy/github/e2e-test.sh
+      - name: "secret as volume test"
+        run: |
+          . .venv/bin/activate
+          TEST_SCRIPT="test-secret-as-volume.sh" ./scripts/deploy/github/e2e-test.sh
 
