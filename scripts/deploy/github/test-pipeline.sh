@@ -78,16 +78,20 @@ run_test_case() {
       break;
     fi
     echo "  Status of ${TEST_CASE} run: $RUN_STATUS"
+    if [[ "$RUN_STATUS" == "FAILED" ]]; then
+      REV=1
+      break;
+    fi
     sleep 10
   done
-
-  echo 'y' | $KFP_COMMAND --endpoint http://localhost:8888 run delete "$RUN_ID" || :
 
   if [[ "$REV" -eq 0 ]]; then
     echo " =====   ${TEST_CASE} PASSED ====="
   else
     echo " =====   ${TEST_CASE} FAILED ====="
   fi
+
+  echo 'y' | $KFP_COMMAND --endpoint http://localhost:8888 run delete "$RUN_ID" || :
 
   return "$REV"
 }
