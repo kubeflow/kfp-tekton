@@ -35,8 +35,9 @@ func NewFakeEventHandler() *FakeEventHandler {
 	return &FakeEventHandler{}
 }
 
-func (h *FakeEventHandler) AddEventHandler(handler cache.ResourceEventHandler) {
+func (h *FakeEventHandler) AddEventHandler(handler cache.ResourceEventHandler) (cache.ResourceEventHandlerRegistration, error) {
 	h.handler = handler
+	return nil, nil
 }
 
 func TestPersistenceWorker_Success(t *testing.T) {
@@ -65,7 +66,7 @@ func TestPersistenceWorker_Success(t *testing.T) {
 		saver)
 
 	// Test
-	eventHandler.handler.OnAdd(workflow)
+	eventHandler.handler.OnAdd(workflow, false)
 	worker.processNextWorkItem()
 	assert.Equal(t, workflow, pipelineClient.GetWorkflow("MY_NAMESPACE", "MY_NAME"))
 	assert.Equal(t, 0, worker.Len())
@@ -95,7 +96,7 @@ func TestPersistenceWorker_NotFoundError(t *testing.T) {
 		saver)
 
 	// Test
-	eventHandler.handler.OnAdd(workflow)
+	eventHandler.handler.OnAdd(workflow, false)
 	worker.processNextWorkItem()
 	assert.Nil(t, pipelineClient.GetWorkflow("MY_NAMESPACE", "MY_NAME"))
 	assert.Equal(t, 0, worker.Len())
@@ -126,7 +127,7 @@ func TestPersistenceWorker_GetWorklowError(t *testing.T) {
 		saver)
 
 	// Test
-	eventHandler.handler.OnAdd(workflow)
+	eventHandler.handler.OnAdd(workflow, false)
 	worker.processNextWorkItem()
 	assert.Nil(t, pipelineClient.GetWorkflow("MY_NAMESPACE", "MY_NAME"))
 	assert.Equal(t, 1, worker.Len())
@@ -160,7 +161,7 @@ func TestPersistenceWorker_ReportWorkflowRetryableError(t *testing.T) {
 		saver)
 
 	// Test
-	eventHandler.handler.OnAdd(workflow)
+	eventHandler.handler.OnAdd(workflow, false)
 	worker.processNextWorkItem()
 	assert.Nil(t, pipelineClient.GetWorkflow("MY_NAMESPACE", "MY_NAME"))
 	assert.Equal(t, 1, worker.Len())
@@ -193,7 +194,7 @@ func TestPersistenceWorker_ReportWorkflowNonRetryableError(t *testing.T) {
 		saver)
 
 	// Test
-	eventHandler.handler.OnAdd(workflow)
+	eventHandler.handler.OnAdd(workflow, false)
 	worker.processNextWorkItem()
 	assert.Nil(t, pipelineClient.GetWorkflow("MY_NAMESPACE", "MY_NAME"))
 	assert.Equal(t, 0, worker.Len())
