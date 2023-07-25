@@ -27,7 +27,7 @@ C_DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$C_DIR" ]]; then C_DIR="$PWD"; fi
 
 POD_NAME=$(kubectl get pod -n kubeflow -l app=ml-pipeline -o json | jq -r '.items[] | .metadata.name ')
-kubectl port-forward -n "$KUBEFLOW_NS" "$POD_NAME" 8888:8888 &
+kubectl port-forward -n "$KUBEFLOW_NS" "$POD_NAME" 8888:8888 2>&1 > /dev/null &
 # wait for the port-forward
 sleep 5
 

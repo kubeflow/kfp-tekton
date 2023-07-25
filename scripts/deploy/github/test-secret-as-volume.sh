@@ -26,7 +26,7 @@ pip install kfp-kubernetes
 kubectl create secret generic "user-gcp-sa" --from-literal="type=service_account" || true
 
 RESULT=0
-run_test_case "secret-volume" "samples/v2/pipeline_with_secret_as_volume.py" "SUCCEEDED" 20 || RESULT=$?
+run_test_case "secret-volume" "samples/v2/pipeline_with_secret_as_volume.py" "SUCCEEDED" 5 || RESULT=$?
 
 # remove secret after the test finishes
 kubectl delete secret "user-gcp-sa"
