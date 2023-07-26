@@ -66,4 +66,3 @@ need to be regenerated and checked-in. Refer to [backend/api](./api/README.md) f
 dependencies. To update dependencies, edit [requirements.in](requirements.in)
 and run `./update_requirements.sh` to update and pin the transitive
 and pin the transitive dependencies.
-
