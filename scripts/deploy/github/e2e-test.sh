@@ -44,7 +44,6 @@ check_kfp_pipeline() {
   kubectl get pod -n "$KUBEFLOW_NS"
   until kubectl get pod -l app=ml-pipeline -n "$KUBEFLOW_NS" | grep -q  '1/1'; do
     sleep 10; echo 'wait for 10s';
-    kubectl get pod -l app=ml-pipeline -n "$KUBEFLOW_NS"
   done
 }
 

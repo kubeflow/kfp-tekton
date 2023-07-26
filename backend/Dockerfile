@@ -90,4 +90,3 @@ EXPOSE 8888
 
 # Start the apiserver
 CMD /bin/apiserver --config=/config --sampleconfig=/config/sample_config.json -logtostderr=true
-
