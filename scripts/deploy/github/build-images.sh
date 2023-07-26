@@ -27,3 +27,6 @@ docker build -t "${REGISTRY}/kfp-tekton/scheduledworkflow:latest" -f backend/Doc
 docker build -t "${REGISTRY}/kfp-tekton/cache-server:latest" -f backend/Dockerfile.cacheserver . && docker push "${REGISTRY}/kfp-tekton/cache-server:latest" &
 docker build -t "${REGISTRY}/kfp-tekton/frontend:latest" -f frontend/Dockerfile . && docker push "${REGISTRY}/kfp-tekton/frontend:latest" &
 wait
+
+# Remove image space due to github action disk limit
+docker system prune -a -f
