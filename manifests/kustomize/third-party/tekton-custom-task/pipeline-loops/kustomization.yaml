@@ -9,6 +9,9 @@ resources:
   - 202-clusterrolebinding.yaml
   - 203-object-store-config.yaml
   - 204-cache-config.yaml
+  - 205-config-artifact-pvc.yaml
+  - 206-config-artifact-bucket.yaml
+  - 207-config-trusted-resources.yaml
   - 300-pipelineloop.yaml
   - 301-breaktask.yaml
   - 500-controller.yaml
