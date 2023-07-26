@@ -20,14 +20,16 @@ set -e
 
 REGISTRY="${REGISTRY:-kind-registry:5000}"
 
-docker build -t "${REGISTRY}/apiserver:latest" -f backend/Dockerfile . && docker push "${REGISTRY}/apiserver:latest"
-docker build -t "${REGISTRY}/persistenceagent:latest" -f backend/Dockerfile.persistenceagent . && docker push "${REGISTRY}/persistenceagent:latest"
-docker build -t "${REGISTRY}/scheduledworkflow:latest" -f backend/Dockerfile.scheduledworkflow . && docker push "${REGISTRY}/scheduledworkflow:latest"
-docker build -t "${REGISTRY}/tekton-driver:latest" -f backend/Dockerfile.tektondriver . && docker push "${REGISTRY}/tekton-driver:latest" &
-docker build -t "${REGISTRY}/tekton-exithandler-controller:latest" -f backend/Dockerfile.tekton-exithandler.controller . && docker push "${REGISTRY}/tekton-exithandler-controller:latest" &
-docker build -t "${REGISTRY}/tekton-exithandler-webhook:latest" -f backend/Dockerfile.tekton-exithandler.webhook . && docker push "${REGISTRY}/tekton-exithandler-webhook:latest"
-docker build -t "${REGISTRY}/tekton-kfptask-controller:latest" -f backend/Dockerfile.tekton-kfptask.controller . && docker push "${REGISTRY}/tekton-kfptask-controller:latest" &
-docker build -t "${REGISTRY}/tekton-kfptask-webhook:latest" -f backend/Dockerfile.tekton-kfptask.webhook . && docker push "${REGISTRY}/tekton-kfptask-webhook:latest" &
+docker system prune -a -f
+
+docker build -q -t "${REGISTRY}/apiserver:latest" -f backend/Dockerfile . && docker push "${REGISTRY}/apiserver:latest"
+docker build -q -t "${REGISTRY}/persistenceagent:latest" -f backend/Dockerfile.persistenceagent . && docker push "${REGISTRY}/persistenceagent:latest"
+docker build -q -t "${REGISTRY}/scheduledworkflow:latest" -f backend/Dockerfile.scheduledworkflow . && docker push "${REGISTRY}/scheduledworkflow:latest"
+docker build -q -t "${REGISTRY}/tekton-driver:latest" -f backend/Dockerfile.tektondriver . && docker push "${REGISTRY}/tekton-driver:latest" &
+docker build -q -t "${REGISTRY}/tekton-exithandler-controller:latest" -f backend/Dockerfile.tekton-exithandler.controller . && docker push "${REGISTRY}/tekton-exithandler-controller:latest" &
+docker build -q -t "${REGISTRY}/tekton-exithandler-webhook:latest" -f backend/Dockerfile.tekton-exithandler.webhook . && docker push "${REGISTRY}/tekton-exithandler-webhook:latest"
+docker build -q -t "${REGISTRY}/tekton-kfptask-controller:latest" -f backend/Dockerfile.tekton-kfptask.controller . && docker push "${REGISTRY}/tekton-kfptask-controller:latest" &
+docker build -q -t "${REGISTRY}/tekton-kfptask-webhook:latest" -f backend/Dockerfile.tekton-kfptask.webhook . && docker push "${REGISTRY}/tekton-kfptask-webhook:latest" &
 
 wait
 

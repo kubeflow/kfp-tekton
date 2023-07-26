@@ -59,7 +59,7 @@ run_test_case() {
     echo "Failed to upload pipeline"
     return "$REV"
   fi
-  VERSION_ID=$($KFP_COMMAND --endpoint http://localhost:8888 pipeline list-version "${PIPELINE_ID}" 2>&1| grep "$PIPELINE_NAME" | awk '{print $1}')
+  VERSION_ID=$($KFP_COMMAND --endpoint http://localhost:8888 pipeline list-versions "${PIPELINE_ID}" 2>&1| grep "$PIPELINE_NAME" | awk '{print $1}')
 
   local RUN_NAME="${PIPELINE_NAME}-run"
   retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 run create -e "exp-${TEST_CASE}" -r "$RUN_NAME" -p "$PIPELINE_ID" -v "$VERSION_ID" 2>&1 || :
@@ -78,6 +78,10 @@ run_test_case() {
       break;
     fi
     echo "  Status of ${TEST_CASE} run: $RUN_STATUS"
+    if [[ "$RUN_STATUS" == "FAILED" ]]; then
+      REV=1
+      break;
+    fi
     sleep 10
   done
 
@@ -86,6 +90,8 @@ run_test_case() {
   else
     echo " =====   ${TEST_CASE} FAILED ====="
   fi
+
+  echo 'y' | $KFP_COMMAND --endpoint http://localhost:8888 run delete "$RUN_ID" || :
 
   return "$REV"
 }

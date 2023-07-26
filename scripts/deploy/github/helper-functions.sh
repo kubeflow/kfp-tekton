@@ -75,8 +75,8 @@ wait_for_pods () {
         local num_pods
         local num_running
         pods=$(kubectl get pod -n "$namespace")
-        echo "$pods"
-        kubectl get pvc -n "$namespace"
+        # echo "$pods"
+        # kubectl get pvc -n "$namespace"
 
         if [[ -z $pods ]]
         then

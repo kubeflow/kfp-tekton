@@ -14,33 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Remove the x if you need no print out of each command
-set -e
-
-# Need the following env
-# - KUBEFLOW_NS:                            kubeflow namespace
-
 KUBEFLOW_NS="${KUBEFLOW_NS:-kubeflow}"
-TEST_SCRIPT="${TEST_SCRIPT:="test-flip-coin.sh"}"
 
 C_DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$C_DIR" ]]; then C_DIR="$PWD"; fi
+source "${C_DIR}/test-pipeline.sh"
 
-POD_NAME=$(kubectl get pod -n kubeflow -l app=ml-pipeline -o json | jq -r '.items[] | .metadata.name ')
-kubectl port-forward -n "$KUBEFLOW_NS" "$POD_NAME" 8888:8888 2>&1 > /dev/null &
-# wait for the port-forward
-sleep 5
+# need kfp-kubernetes for this test case
+# unfortunately, we can't install it from kubernetes_platform/python
+pip install kfp-kubernetes
 
-if [ -n "$TEST_SCRIPT" ]; then
-  source "${C_DIR}/${TEST_SCRIPT}"
-fi
+# create the secret
+kubectl create secret -n "$KUBEFLOW_NS" generic "user-gcp-sa" --from-literal="type=service_account" || true
 
-kill %1
+RESULT=0
+run_test_case "secret-env" "samples/v2/pipeline_with_secret_as_env.py" "SUCCEEDED" 5 || RESULT=$?
 
+# remove secret after the test finishes
+kubectl delete secret -n "$KUBEFLOW_NS" "user-gcp-sa"
+
+STATUS_MSG=PASSED
 if [[ "$RESULT" -ne 0 ]]; then
-  echo "e2e test ${STATUS_MSG}"
-  exit 1
+  STATUS_MSG=FAILED
 fi
-
-echo "e2e test ${STATUS_MSG}"
-
