@@ -68,4 +68,7 @@ jobs:
         run: |
           . .venv/bin/activate
           TEST_SCRIPT="test-secret-as-env.sh" ./scripts/deploy/github/e2e-test.sh
-
+      - name: "secret as volume"
+        run: |
+          . .venv/bin/activate
+          TEST_SCRIPT="test-secret-as-volume.sh" ./scripts/deploy/github/e2e-test.sh
