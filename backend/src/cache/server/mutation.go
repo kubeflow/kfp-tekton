@@ -62,7 +62,8 @@ const (
 	PipelineRun                string = "tekton.dev/pipelineRun"
 	CachedPipeline             string = "pipelines.kubeflow.org/cached_pipeline_run"
 
-	TektonGroup        string = "tekton.dev/v1beta1"
+	TektonBetaGroup    string = "tekton.dev/v1beta1"
+	TektonGroup        string = "tekton.dev/v1"
 	TektonTaskKind     string = "TaskRun"
 	ToolInitContainner string = "prepare"
 )
@@ -425,7 +426,7 @@ func isTFXPod(pod *corev1.Pod, logger *zap.SugaredLogger) bool {
 
 func isTaskrunOwn(pod *corev1.Pod) (string, bool) {
 	for _, ref := range pod.GetOwnerReferences() {
-		if ref.Kind == TektonTaskKind && ref.APIVersion == TektonGroup {
+		if ref.Kind == TektonTaskKind && (ref.APIVersion == TektonGroup || ref.APIVersion == TektonBetaGroup) {
 			return ref.Name, true
 		}
 	}
