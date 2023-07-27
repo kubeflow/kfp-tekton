@@ -76,4 +76,7 @@ jobs:
         run: |
           . .venv/bin/activate
           TEST_SCRIPT="test-env.sh" ./scripts/deploy/github/e2e-test.sh
-
+      - name: "use volume"
+        run: |
+          . .venv/bin/activate
+          TEST_SCRIPT="test-volume.sh" ./scripts/deploy/github/e2e-test.sh
