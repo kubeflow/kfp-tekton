@@ -12,6 +12,9 @@ rules:
     resources: ["runs", "customruns", "runs/finalizers", "customruns/finalizers",
       "runs/status", "customruns/status", "pipelineruns", "task", "taskruns", "conditions"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes", "persistentvolumeclaims"]
+    verbs: ["*"]
 
   # Controller needs cluster access to leases for leader election.
   - apiGroups: ["coordination.k8s.io"]
