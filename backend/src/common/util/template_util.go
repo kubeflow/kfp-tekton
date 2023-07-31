@@ -15,11 +15,13 @@
 package util
 
 import (
+	"context"
 	"encoding/json"
 
 	"sigs.k8s.io/yaml"
 
 	tektonV1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	workflowapiV1beta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 const (
@@ -82,6 +84,15 @@ func ValidatePipelineRun(template []byte) (*Workflow, error) {
 	err := yaml.Unmarshal(template, &wf)
 	if err != nil {
 		return nil, NewInvalidInputErrorWithDetails(err, "Failed to parse the parameter.")
+	}
+	if wf.APIVersion == TektonBetaGroup {
+		var prV1beta1 workflowapiV1beta.PipelineRun
+		err := yaml.Unmarshal(template, &prV1beta1)
+		if err != nil {
+			return nil, NewInvalidInputErrorWithDetails(err, "Failed to parse the V1beta1 PipelineRun template.")
+		}
+		ctx := context.Background()
+		prV1beta1.ConvertTo(ctx, &wf)
 	}
 	if wf.APIVersion != tektonVersion {
 		return nil, NewInvalidInputError("Unsupported tekton version. Expected: %v. Received: %v", tektonVersion, wf.APIVersion)

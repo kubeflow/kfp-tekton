@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	workflowapiV1beta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"sigs.k8s.io/yaml"
 
 	api "github.com/kubeflow/pipelines/backend/api/v1/go_client"
@@ -236,8 +237,17 @@ func ValidatePipelineRun(template []byte) (*util.Workflow, error) {
 	if err != nil {
 		return nil, util.NewInvalidInputErrorWithDetails(err, "Failed to parse the PipelineRun template.")
 	}
+	if pr.APIVersion == TektonBetaGroup {
+		var prV1beta1 workflowapiV1beta.PipelineRun
+		err := yaml.Unmarshal(template, &prV1beta1)
+		if err != nil {
+			return nil, util.NewInvalidInputErrorWithDetails(err, "Failed to parse the V1beta1 PipelineRun template.")
+		}
+		ctx := context.Background()
+		prV1beta1.ConvertTo(ctx, &pr)
+	}
 	if pr.APIVersion != TektonVersion {
-		return nil, util.NewInvalidInputError("Unsupported argo version. Expected: %v. Received: %v", TektonVersion, pr.APIVersion)
+		return nil, util.NewInvalidInputError("Unsupported argo or old Tekton version. Expected: %v. Received: %v", TektonVersion, pr.APIVersion)
 	}
 	if pr.Kind != TektonK8sResource {
 		return nil, util.NewInvalidInputError("Unexpected resource type. Expected: %v. Received: %v", TektonK8sResource, pr.Kind)
