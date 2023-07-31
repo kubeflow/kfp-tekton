@@ -29,13 +29,13 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonV1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"google.golang.org/grpc/codes"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
+// Converted argo v1alpha1.workflow to tekton tektonV1.pipelinerun
 // Rename argo fake client to tekton fake client
 
 // Removed all the run and create tests since the Tekton client spec is constantly changing
@@ -130,8 +130,8 @@ func (m *FakeBadObjectStore) GetFromYamlFile(o interface{}, filePath string) err
 	return util.NewInternalServerError(errors.New("Error"), "bad object store")
 }
 
-var testWorkflow = util.NewWorkflow(&v1beta1.PipelineRun{
-	TypeMeta:   v1.TypeMeta{APIVersion: "tekton.dev/v1beta1", Kind: "PipelineRun"},
+var testWorkflow = util.NewWorkflow(&tektonV1.PipelineRun{
+	TypeMeta:   v1.TypeMeta{APIVersion: "tekton.dev/v1", Kind: "PipelineRun"},
 	ObjectMeta: v1.ObjectMeta{Name: "workflow-name", UID: "workflow1", Namespace: "ns1"},
 })
 

@@ -15,19 +15,19 @@
 package client
 
 import (
-	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type FakeTektonClient struct {
 }
 
-func (c *FakeTektonClient) GetTaskRun(namespace, name string, queryOptions metav1.GetOptions) (*v1beta1.TaskRun, error) {
-	tr := &v1beta1.TaskRun{
-		Spec: v1beta1.TaskRunSpec{
-			Status: v1beta1.TaskRunSpecStatusCancelled,
+func (c *FakeTektonClient) GetTaskRun(namespace, name string, queryOptions metav1.GetOptions) (*v1.TaskRun, error) {
+	tr := &v1.TaskRun{
+		Spec: v1.TaskRunSpec{
+			Status: v1.TaskRunSpecStatusCancelled,
 		},
-		Status: v1beta1.TaskRunStatus{},
+		Status: v1.TaskRunStatus{},
 	}
 
 	return tr, nil

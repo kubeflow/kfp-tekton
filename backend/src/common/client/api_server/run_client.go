@@ -8,7 +8,7 @@ import (
 	params "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
 	model "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"golang.org/x/net/context"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"

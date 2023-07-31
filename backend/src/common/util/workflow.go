@@ -20,7 +20,7 @@ import (
 	"github.com/golang/glog"
 	swfregister "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -49,14 +49,14 @@ func (w *Workflow) GetWorkflowParametersAsMap() map[string]string {
 
 // SetServiceAccount Set the service account to run the workflow.
 func (w *Workflow) SetServiceAccount(serviceAccount string) {
-	w.Spec.ServiceAccountName = serviceAccount
+	w.Spec.TaskRunTemplate.ServiceAccountName = serviceAccount
 }
 
 // OverrideParameters overrides some of the parameters of a Workflow.
 func (w *Workflow) OverrideParameters(desiredParams map[string]string) {
 	desiredSlice := make([]workflowapi.Param, 0)
 	for _, currentParam := range w.Spec.Params {
-		var desiredValue workflowapi.ArrayOrString = workflowapi.ArrayOrString{
+		var desiredValue workflowapi.ParamValue = workflowapi.ParamValue{
 			Type:      "string",
 			StringVal: "",
 		}

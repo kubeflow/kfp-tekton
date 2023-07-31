@@ -52,8 +52,8 @@ func NewPersistenceAgent(
 	time util.TimeInterface) *PersistenceAgent {
 	// obtain references to shared informers
 	swfInformer := swfInformerFactory.Scheduledworkflow().V1beta1().ScheduledWorkflows()
-	prInformer := workflowInformerFactory.Tekton().V1beta1().PipelineRuns()
-	trInformer := workflowInformerFactory.Tekton().V1beta1().TaskRuns()
+	prInformer := workflowInformerFactory.Tekton().V1().PipelineRuns()
+	trInformer := workflowInformerFactory.Tekton().V1().TaskRuns()
 	crInformer := workflowInformerFactory.Tekton().V1beta1().CustomRuns()
 
 	// Add controller types to the default Kubernetes Scheme so Events can be

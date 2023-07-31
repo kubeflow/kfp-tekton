@@ -27,7 +27,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/cache/client"
 	"github.com/kubeflow/pipelines/backend/src/cache/model"
 	"github.com/kubeflow/pipelines/backend/src/cache/storage"
-	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"go.uber.org/zap"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -79,7 +79,7 @@ type ClientManagerInterface interface {
 }
 
 type Template struct {
-	Spec         tektonv1beta1.TaskRunSpec
+	Spec         tektonv1.TaskRunSpec
 	TaskName     string
 	PipelineName string
 	Generation   string
@@ -290,7 +290,7 @@ func prepareMainContainer(pod *corev1.Pod, result string, logger *zap.SugaredLog
 	return dummyContainers, nil
 }
 
-func mutateContainer(results map[string][]*tektonv1beta1.TaskRunResult, originalContainer corev1.Container) (corev1.Container, error) {
+func mutateContainer(results map[string][]*tektonv1.TaskRunResult, originalContainer corev1.Container) (corev1.Container, error) {
 	outputs, found := results[originalContainer.Name]
 	if !found {
 		return originalContainer, fmt.Errorf("could not find cached output for container %s", originalContainer.Name)
@@ -330,8 +330,8 @@ func mutateContainer(results map[string][]*tektonv1beta1.TaskRunResult, original
 	return originalContainer, nil
 }
 
-func unmarshalResult(taskResult string) (map[string][]*tektonv1beta1.TaskRunResult, error) {
-	var results map[string][]*tektonv1beta1.TaskRunResult
+func unmarshalResult(taskResult string) (map[string][]*tektonv1.TaskRunResult, error) {
+	var results map[string][]*tektonv1.TaskRunResult
 	err := json.Unmarshal([]byte(taskResult), &results)
 	if err != nil {
 		return nil, err
@@ -339,7 +339,7 @@ func unmarshalResult(taskResult string) (map[string][]*tektonv1beta1.TaskRunResu
 	return results, nil
 }
 
-func generateCacheKeyFromTemplate(taskRun *tektonv1beta1.TaskRun, pod *corev1.Pod) (string, string, error) {
+func generateCacheKeyFromTemplate(taskRun *tektonv1.TaskRun, pod *corev1.Pod) (string, string, error) {
 	template := Template{}
 	template.Spec = taskRun.Spec
 	template.Spec.Timeout = nil //clear timeout

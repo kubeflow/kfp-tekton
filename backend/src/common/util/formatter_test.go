@@ -20,11 +20,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonV1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Replaced Argo v1alpha1.Workflow and spec to Tekton v1beta1.PipelineRun and spec
+// Replaced Argo v1alpha1.Workflow and spec to Tekton tektonV1.PipelineRun and spec
 // Replaced Argo parameters to Tekton ArrayorString
 
 const (
@@ -121,16 +121,16 @@ func TestFormatParameter(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	param := v1beta1.Param{
+	param := tektonV1.Param{
 		Name: "PARAM_NAME",
-		Value: v1beta1.ArrayOrString{
+		Value: tektonV1.ParamValue{
 			Type:      "string",
 			StringVal: "PARAM_PREFIX_[[uuid]]_SUFFIX",
 		}}
 
-	expected := v1beta1.Param{
+	expected := tektonV1.Param{
 		Name: "PARAM_NAME",
-		Value: v1beta1.ArrayOrString{
+		Value: tektonV1.ParamValue{
 			Type:      "string",
 			StringVal: "PARAM_PREFIX_" + defaultUUID + "_SUFFIX",
 		}}
@@ -146,9 +146,9 @@ func TestFormatParameterError(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	param := v1beta1.Param{
+	param := tektonV1.Param{
 		Name: "PARAM_NAME",
-		Value: v1beta1.ArrayOrString{
+		Value: tektonV1.ParamValue{
 			Type:      "string",
 			StringVal: "PARAM_PREFIX_[[uuid]]_SUFFIX",
 		}}
@@ -164,13 +164,13 @@ func TestFormatNothingToDoExceptAddUUID(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	workflow := &v1beta1.PipelineRun{
+	workflow := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{Name: "workflow-name"},
-		Spec:       v1beta1.PipelineRunSpec{}}
+		Spec:       tektonV1.PipelineRunSpec{}}
 
-	expected := &v1beta1.PipelineRun{
+	expected := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{GenerateName: "workflow-name-"},
-		Spec:       v1beta1.PipelineRunSpec{}}
+		Spec:       tektonV1.PipelineRunSpec{}}
 
 	err := formatter.Format(workflow)
 	assert.Nil(t, err)
@@ -183,13 +183,13 @@ func TestFormatEverytingToChange(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	workflow := &v1beta1.PipelineRun{
+	workflow := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{Name: "workflow-[[schedule]]-name"},
-		Spec:       v1beta1.PipelineRunSpec{}}
+		Spec:       tektonV1.PipelineRunSpec{}}
 
-	expected := &v1beta1.PipelineRun{
+	expected := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{GenerateName: "workflow-20170706050403-name-"},
-		Spec:       v1beta1.PipelineRunSpec{}}
+		Spec:       tektonV1.PipelineRunSpec{}}
 
 	err := formatter.Format(workflow)
 	assert.Nil(t, err)
@@ -202,10 +202,10 @@ func TestFormatOnlyWorkflowName(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	workflow := &v1beta1.PipelineRun{
+	workflow := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{Name: "workflow-[[schedule]]-name"}}
 
-	expected := &v1beta1.PipelineRun{
+	expected := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{GenerateName: "workflow-20170706050403-name-"}}
 
 	err := formatter.Format(workflow)
@@ -219,10 +219,10 @@ func TestFormatOnlyWorkflowGeneratedName(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	workflow := &v1beta1.PipelineRun{
+	workflow := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{GenerateName: "workflow-[[schedule]]-name-"}}
 
-	expected := &v1beta1.PipelineRun{
+	expected := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{GenerateName: "workflow-20170706050403-name-"}}
 
 	err := formatter.Format(workflow)
@@ -236,9 +236,9 @@ func TestFormatNoWorkflowNames(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	workflow := &v1beta1.PipelineRun{}
+	workflow := &tektonV1.PipelineRun{}
 
-	expected := &v1beta1.PipelineRun{
+	expected := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{GenerateName: "workflow-"}}
 
 	err := formatter.Format(workflow)
@@ -252,12 +252,12 @@ func TestFormat2WorkflowNames(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	workflow := &v1beta1.PipelineRun{
+	workflow := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{
 			Name:         "workflow-[[schedule]]-name",
 			GenerateName: "workflow-[[schedule]]-generated-name-"}}
 
-	expected := &v1beta1.PipelineRun{
+	expected := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{GenerateName: "workflow-20170706050403-generated-name-"}}
 
 	err := formatter.Format(workflow)
@@ -271,12 +271,12 @@ func TestFormatOnlyWorkflowParameters(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	workflow := &v1beta1.PipelineRun{
-		Spec: v1beta1.PipelineRunSpec{}}
+	workflow := &tektonV1.PipelineRun{
+		Spec: tektonV1.PipelineRunSpec{}}
 
-	expected := &v1beta1.PipelineRun{
+	expected := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{GenerateName: "workflow-"},
-		Spec:       v1beta1.PipelineRunSpec{}}
+		Spec:       tektonV1.PipelineRunSpec{}}
 
 	err := formatter.Format(workflow)
 	assert.Nil(t, err)
@@ -289,9 +289,9 @@ func TestFormatEmptyWorkflow(t *testing.T) {
 		getDefaultScheduledAtSec(),
 		getDefaultCreatedAtSec())
 
-	workflow := &v1beta1.PipelineRun{}
+	workflow := &tektonV1.PipelineRun{}
 
-	expected := &v1beta1.PipelineRun{
+	expected := &tektonV1.PipelineRun{
 		ObjectMeta: v1.ObjectMeta{GenerateName: "workflow-"}}
 
 	err := formatter.Format(workflow)

@@ -23,11 +23,13 @@ import (
 
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	log "github.com/sirupsen/logrus"
+	wfapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
-	wfapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	wfapiV1Beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	customRun "github.com/tektoncd/pipeline/pkg/apis/run/v1beta1"
 	wfclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
-	"github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
+	tektonV1 "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1"
+	tektonV1Beta1 "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
 	"k8s.io/apimachinery/pkg/labels"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/cache"
@@ -71,9 +73,9 @@ type WorkflowClientInterface interface {
 }
 
 type Informers struct {
-	TRInformer v1beta1.TaskRunInformer
-	PRInformer v1beta1.PipelineRunInformer
-	CRInformer v1beta1.CustomRunInformer
+	TRInformer tektonV1.TaskRunInformer
+	PRInformer tektonV1.PipelineRunInformer
+	CRInformer tektonV1Beta1.CustomRunInformer
 }
 
 // WorkflowClient is a client to call the Workflow API.
@@ -127,14 +129,14 @@ func (c *WorkflowClient) Get(namespace string, name string) (
 		return nil, err
 	}
 
-	if err := c.getStatusFromChildReferences(namespace, labels.SelectorFromSet(s), &workflow.Status); err != nil {
+	if err := c.getStatusFromChildReferences(namespace, labels.SelectorFromSet(s), &workflow.Status, workflow.Labels); err != nil {
 		return nil, err
 	}
 
 	return util.NewWorkflow(workflow), nil
 }
 
-func (c *WorkflowClient) getStatusFromChildReferences(namespace string, selector labels.Selector, status *wfapi.PipelineRunStatus) error {
+func (c *WorkflowClient) getStatusFromChildReferences(namespace string, selector labels.Selector, status *wfapi.PipelineRunStatus, labels map[string]string) error {
 	if status.ChildReferences != nil {
 		hasTaskRun, hasCustomRun := false, false
 		for _, child := range status.ChildReferences {
@@ -164,7 +166,8 @@ func (c *WorkflowClient) getStatusFromChildReferences(namespace string, selector
 					Status:           taskrun.Status.DeepCopy(),
 				}
 			}
-			status.TaskRuns = taskrunStatuses
+			taskrunStatusesMarshal, err := json.Marshal(taskrunStatuses)
+			labels["taskrunStatuses"] = string(taskrunStatusesMarshal)
 		}
 		if hasCustomRun {
 			customRuns, err := c.informers.CRInformer.Lister().CustomRuns(namespace).List(selector)
@@ -182,7 +185,8 @@ func (c *WorkflowClient) getStatusFromChildReferences(namespace string, selector
 				// handle nested status
 				c.handleNestedStatusV1beta1(customRun, customRunStatus, namespace)
 			}
-			status.Runs = customRunStatuses
+			customRunStatusesMarshal, err := json.Marshal(customRunStatuses)
+			labels["customRunStatuses"] = string(customRunStatusesMarshal)
 		}
 	}
 	return nil
@@ -213,7 +217,7 @@ func (c *WorkflowClient) handleNestedStatus(run *v1alpha1.Run, runStatus *v1alph
 }
 
 // handle nested status case for specific types of Run
-func (c *WorkflowClient) handleNestedStatusV1beta1(customRun *wfapi.CustomRun, customRunStatus *customRun.CustomRunStatus, namespace string) {
+func (c *WorkflowClient) handleNestedStatusV1beta1(customRun *wfapiV1Beta1.CustomRun, customRunStatus *customRun.CustomRunStatus, namespace string) {
 	var kind string
 	if customRun.Spec.CustomSpec != nil {
 		kind = customRun.Spec.CustomSpec.Kind
