@@ -18,6 +18,10 @@ We are currently using [Kubeflow Pipelines 1.8.4](https://github.com/kubeflow/pi
 [Tekton >= 0.50.0](https://github.com/tektoncd/pipeline/releases/tag/v0.50.0)
 for this project.
 
+For [Kubeflow Pipelines 2.0.0](https://github.com/kubeflow/pipelines/releases/tag/2.0.0) and
+[Tekton >= 0.47.3](https://github.com/tektoncd/pipeline/releases/tag/v0.47.3)
+integration, please check out the [kfp-tekton v2-integration](https://github.com/kubeflow/kfp-tekton/tree/v2-integration) branch instead.
+
 ![kfp-tekton](images/kfp-tekton.png)
 
 

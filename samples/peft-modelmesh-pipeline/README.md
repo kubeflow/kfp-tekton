@@ -1,0 +1,3 @@
+# Serve large language models (LLMs) with custom prompt tuning configuration using Kubeflow Pipelines
+
+This sample is from the IBM developer tutorial [Serve large language models (LLMs) with custom prompt tuning configuration using Kubeflow Pipelines](https://developer.ibm.com/learningpaths/kubeflow-pipelines/serve-llms-custom-prompt-tuning/). Please visit the tutorial for more details and instructions.
