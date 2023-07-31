@@ -40,7 +40,7 @@ spec:
       serviceAccountName: tekton-pipelineloop-controller
       containers:
       - name: tekton-pipelineloop-controller
-        image: docker.io/aipipeline/pipelineloop-controller:nightly
+        image: quay.io/aipipeline/pipelineloop-controller:nightly
         env:
         - name: SYSTEM_NAMESPACE
           valueFrom:
