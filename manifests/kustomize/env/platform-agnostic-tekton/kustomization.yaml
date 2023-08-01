@@ -15,14 +15,14 @@ resources:
 
 images:
 - name: gcr.io/ml-pipeline/api-server
-  newName: docker.io/aipipeline/apiserver-dev
-  newTag: e8f6bb3a6
+  newName: quay.io/aipipeline/apiserver
+  newTag: 2.0.0
 - name: gcr.io/ml-pipeline/persistenceagent
-  newName: docker.io/aipipeline/persistenceagent-dev
-  newTag: ba1029b6b
+  newName: quay.io/aipipeline/persistenceagent
+  newTag: 2.0.0
 - name: gcr.io/ml-pipeline/scheduledworkflow
-  newName: docker.io/aipipeline/swf-dev
-  newTag: ba1029b6b
+  newName: quay.io/aipipeline/scheduledworkflow
+  newTag: 2.0.0
 
 labels:
 - includeSelectors: true
