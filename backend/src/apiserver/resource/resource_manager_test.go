@@ -131,7 +131,12 @@ func (m *FakeBadObjectStore) GetFromYamlFile(o interface{}, filePath string) err
 }
 
 var testWorkflow = util.NewWorkflow(&tektonV1.PipelineRun{
-	TypeMeta:   v1.TypeMeta{APIVersion: "tekton.dev/v1", Kind: "PipelineRun"},
+	TypeMeta:   v1.TypeMeta{APIVersion: "tekton.dev/v1beta1", Kind: "PipelineRun"},
+	ObjectMeta: v1.ObjectMeta{Name: "workflow-name", UID: "workflow1", Namespace: "ns1"},
+})
+
+var testV1beta1Workflow = util.NewWorkflow(&tektonV1.PipelineRun{
+	TypeMeta:   v1.TypeMeta{APIVersion: "tekton.dev/v1beta1", Kind: "PipelineRun"},
 	ObjectMeta: v1.ObjectMeta{Name: "workflow-name", UID: "workflow1", Namespace: "ns1"},
 })
 
@@ -142,6 +147,7 @@ func initWithPipeline(t *testing.T) (*FakeClientManager, *ResourceManager, *mode
 	manager := NewResourceManager(store)
 	p, err := manager.CreatePipeline("p1", "", "", []byte(testWorkflow.ToStringForStore()))
 	assert.Nil(t, err)
+	manager.CreatePipeline("p1", "", "", []byte(testV1beta1Workflow.ToStringForStore()))
 	return store, manager, p
 }
 
@@ -270,6 +276,7 @@ func TestGetPipelineTemplate(t *testing.T) {
 	actualTemplate, err := manager.GetPipelineTemplate(p.UUID)
 	assert.Nil(t, err)
 	assert.Equal(t, []byte(testWorkflow.ToStringForStore()), actualTemplate)
+	assert.Equal(t, []byte(testV1beta1Workflow.ToStringForStore()), actualTemplate)
 }
 
 func TestGetPipelineTemplate_PipelineMetadataNotFound(t *testing.T) {

@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	TektonBetaGroup   = "tekton.dev/v1beta1"
+	tektonBetaGroup   = "tekton.dev/v1beta1"
 	tektonVersion     = "tekton.dev/v1"
 	tektonK8sResource = "PipelineRun"
 )
@@ -85,7 +85,7 @@ func ValidatePipelineRun(template []byte) (*Workflow, error) {
 	if err != nil {
 		return nil, NewInvalidInputErrorWithDetails(err, "Failed to parse the parameter.")
 	}
-	if wf.APIVersion == TektonBetaGroup {
+	if wf.APIVersion == tektonBetaGroup {
 		var prV1beta1 workflowapiV1beta.PipelineRun
 		err := yaml.Unmarshal(template, &prV1beta1)
 		if err != nil {
@@ -93,6 +93,7 @@ func ValidatePipelineRun(template []byte) (*Workflow, error) {
 		}
 		ctx := context.Background()
 		prV1beta1.ConvertTo(ctx, &wf)
+		wf.APIVersion = tektonVersion
 	}
 	if wf.APIVersion != tektonVersion {
 		return nil, NewInvalidInputError("Unsupported tekton version. Expected: %v. Received: %v", tektonVersion, wf.APIVersion)
