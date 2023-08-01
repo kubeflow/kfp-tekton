@@ -20,6 +20,8 @@ set -e
 
 REGISTRY="${REGISTRY:-kind-registry:5000}"
 
+docker system prune -a -f
+
 docker build -t "${REGISTRY}/kfp-tekton/apiserver:latest" -f backend/Dockerfile . && docker push "${REGISTRY}/kfp-tekton/apiserver:latest" &
 docker build -t "${REGISTRY}/kfp-tekton/persistenceagent:latest" -f backend/Dockerfile.persistenceagent . && docker push "${REGISTRY}/kfp-tekton/persistenceagent:latest" &
 docker build -t "${REGISTRY}/kfp-tekton/metadata-writer:latest" -f backend/metadata_writer/Dockerfile . && docker push "${REGISTRY}/kfp-tekton/metadata-writer:latest" &
