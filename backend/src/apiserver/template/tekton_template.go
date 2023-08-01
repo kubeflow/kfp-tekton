@@ -244,7 +244,9 @@ func ValidatePipelineRun(template []byte) (*util.Workflow, error) {
 			return nil, util.NewInvalidInputErrorWithDetails(err, "Failed to parse the V1beta1 PipelineRun template.")
 		}
 		ctx := context.Background()
-		prV1beta1.ConvertTo(ctx, &pr)
+		var prTem workflowapi.PipelineRun
+		prV1beta1.ConvertTo(ctx, &prTem)
+		pr = prTem
 	}
 	if pr.APIVersion != TektonVersion {
 		return nil, util.NewInvalidInputError("Unsupported argo or old Tekton version. Expected: %v. Received: %v", TektonVersion, pr.APIVersion)
