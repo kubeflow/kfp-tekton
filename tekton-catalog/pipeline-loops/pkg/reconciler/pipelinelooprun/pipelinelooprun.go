@@ -43,10 +43,13 @@ import (
 	"github.com/tektoncd/pipeline/pkg/apis/config"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+
+	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	customRunReconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
-	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
+	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1"
+	listersV1beta1 "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/pkg/names"
 	"github.com/tektoncd/pipeline/pkg/reconciler/events"
 	tkstatus "github.com/tektoncd/pipeline/pkg/status"
@@ -98,14 +101,14 @@ type Reconciler struct {
 	KubeClientSet         kubernetes.Interface
 	pipelineClientSet     clientset.Interface
 	pipelineloopClientSet pipelineloopclientset.Interface
-	customRunLister       listers.CustomRunLister
+	customRunLister       listersV1beta1.CustomRunLister
 	pipelineLoopLister    listerspipelineloop.PipelineLoopLister
 	pipelineRunLister     listers.PipelineRunLister
 	cacheStore            *cache.TaskCacheStore
 	clock                 clock.RealClock
 }
 type CacheKey struct {
-	Params           []tektonv1beta1.Param                  `json:"params"`
+	Params           []tektonv1.Param                       `json:"params"`
 	PipelineLoopSpec *pipelineloopv1alpha1.PipelineLoopSpec `json:"pipelineSpec"`
 }
 
@@ -121,7 +124,7 @@ func init() {
 	patches := []jsonpatch.JsonPatchOperation{{
 		Operation: "add",
 		Path:      "/spec/status",
-		Value:     tektonv1beta1.PipelineRunSpecStatusCancelled,
+		Value:     tektonv1.PipelineRunSpecStatusCancelled,
 	}}
 	cancelPatchBytes, err = json.Marshal(patches)
 	if err != nil {
@@ -138,6 +141,30 @@ func init() {
 
 func isCachingEnabled(run *tektonv1beta1.CustomRun) bool {
 	return run.ObjectMeta.Labels["pipelines.kubeflow.org/cache_enabled"] == "true"
+}
+
+func paramConvertTo(ctx context.Context, p *tektonv1beta1.Param, sink *tektonv1.Param) {
+	sink.Name = p.Name
+	newValue := tektonv1.ParamValue{}
+	if p.Value.Type != "" {
+		newValue.Type = tektonv1.ParamType(p.Value.Type)
+	} else {
+		newValue.Type = tektonv1.ParamType(v1beta1.ParamTypeString)
+	}
+	newValue.StringVal = p.Value.StringVal
+	newValue.ArrayVal = p.Value.ArrayVal
+	newValue.ObjectVal = p.Value.ObjectVal
+	sink.Value = newValue
+}
+
+func v1ParamsConversion(ctx context.Context, v1beta1Params tektonv1beta1.Params) []tektonv1.Param {
+	v1Params := []tektonv1.Param{}
+	for _, param := range v1beta1Params {
+		v1Param := tektonv1.Param{}
+		paramConvertTo(ctx, &param, &v1Param)
+		v1Params = append(v1Params, v1Param)
+	}
+	return v1Params
 }
 
 // ReconcileKind compares the actual state with the desired, and attempts to converge the two.
@@ -212,7 +239,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, customRun *tektonv1beta1
 		if customRun.IsSuccessful() && !c.cacheStore.Disabled && isCachingEnabled(customRun) {
 			marshal, err := json.Marshal(CacheKey{
 				PipelineLoopSpec: status.PipelineLoopSpec,
-				Params:           customRun.Spec.Params,
+				Params:           v1ParamsConversion(ctx, customRun.Spec.Params),
 			})
 			if err == nil {
 				hashSum := fmt.Sprintf("%x", md5.Sum(marshal))
@@ -375,7 +402,7 @@ func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.Cus
 	if !c.cacheStore.Disabled && isCachingEnabled(customRun) {
 		marshal, err := json.Marshal(CacheKey{
 			PipelineLoopSpec: pipelineLoopSpec,
-			Params:           customRun.Spec.Params,
+			Params:           v1ParamsConversion(ctx, customRun.Spec.Params),
 		})
 		if marshal != nil && err == nil {
 			hashSum = fmt.Sprintf("%x", md5.Sum(marshal))
@@ -465,7 +492,7 @@ func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.Cus
 			if err != nil {
 				return err
 			}
-			_, _ = c.pipelineClientSet.TektonV1beta1().PipelineRuns(failedPr.Namespace).
+			_, _ = c.pipelineClientSet.TektonV1().PipelineRuns(failedPr.Namespace).
 				Patch(ctx, failedPr.Name, types.MergePatchType, patch, metav1.PatchOptions{})
 			pr, err := c.createPipelineRun(ctx, logger, pipelineLoopSpec, customRun, highestIteration, iterationElements)
 			if err != nil {
@@ -636,7 +663,7 @@ func updateRunStatus(customRun *tektonv1beta1.CustomRun, resultName string, resu
 	return true
 }
 
-func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, customRun *tektonv1beta1.CustomRun, iteration int, iterationElements []interface{}) (*v1beta1.PipelineRun, error) {
+func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredLogger, tls *pipelineloopv1alpha1.PipelineLoopSpec, customRun *tektonv1beta1.CustomRun, iteration int, iterationElements []interface{}) (*tektonv1.PipelineRun, error) {
 
 	// Create name for PipelineRun from CustomRun name plus iteration number.
 	prName := names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("%s-%s", customRun.Name, fmt.Sprintf("%05d", iteration)))
@@ -647,8 +674,7 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 	}
 	currentIterationItemBytes, _ := json.Marshal(iterationElements[currentIndex])
 	pipelineRunAnnotations[pipelineloop.GroupName+pipelineLoopCurrentIterationItemAnnotationKey] = string(currentIterationItemBytes)
-
-	pr := &tektonv1beta1.PipelineRun{
+	pr := &tektonv1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      prName,
 			Namespace: customRun.Namespace,
@@ -657,17 +683,21 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 			Labels:      getPipelineRunLabels(customRun, strconv.Itoa(iteration)),
 			Annotations: pipelineRunAnnotations,
 		},
-		Spec: tektonv1beta1.PipelineRunSpec{
-			Params:             getParameters(customRun, tls, iteration, string(currentIterationItemBytes)),
-			Timeout:            tls.Timeout,
-			ServiceAccountName: tls.ServiceAccountName,
-			PodTemplate:        tls.PodTemplate,
-			Workspaces:         tls.Workspaces,
-			TaskRunSpecs:       tls.TaskRunSpecs,
+		Spec: tektonv1.PipelineRunSpec{
+			Params:   getParameters(customRun, tls, iteration, string(currentIterationItemBytes)),
+			Timeouts: nil,
+			TaskRunTemplate: tektonv1.PipelineTaskRunTemplate{
+				ServiceAccountName: tls.ServiceAccountName,
+				PodTemplate:        tls.PodTemplate,
+			},
+			Workspaces:   tls.Workspaces,
+			TaskRunSpecs: tls.TaskRunSpecs,
 		}}
-
+	if tls.Timeout != nil {
+		pr.Spec.Timeouts = &tektonv1.TimeoutFields{Pipeline: tls.Timeout}
+	}
 	if tls.PipelineRef != nil {
-		pr.Spec.PipelineRef = &tektonv1beta1.PipelineRef{
+		pr.Spec.PipelineRef = &tektonv1.PipelineRef{
 			Name: tls.PipelineRef.Name,
 			// Kind: tls.PipelineRef.Kind,
 		}
@@ -676,7 +706,7 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 	}
 
 	logger.Infof("Creating a new PipelineRun object %s", prName)
-	return c.pipelineClientSet.TektonV1beta1().PipelineRuns(customRun.Namespace).Create(ctx, pr, metav1.CreateOptions{})
+	return c.pipelineClientSet.TektonV1().PipelineRuns(customRun.Namespace).Create(ctx, pr, metav1.CreateOptions{})
 
 }
 
@@ -712,7 +742,7 @@ func (c *Reconciler) cancelAllPipelineRuns(ctx context.Context, customRun *tekto
 	for _, currentRunningPr := range currentRunningPrs {
 		if !currentRunningPr.IsDone() && !currentRunningPr.IsCancelled() {
 			logger.Infof("Cancelling PipelineRun %s.", currentRunningPr.Name)
-			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(customRun.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
+			if _, err := c.pipelineClientSet.TektonV1().PipelineRuns(customRun.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
 				customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
 					"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
 				return nil
@@ -722,11 +752,11 @@ func (c *Reconciler) cancelAllPipelineRuns(ctx context.Context, customRun *tekto
 	return nil
 }
 
-func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationElements []interface{}, customRun *tektonv1beta1.CustomRun, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*v1beta1.PipelineRun, []*v1beta1.PipelineRun, error) {
+func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationElements []interface{}, customRun *tektonv1beta1.CustomRun, status *pipelineloopv1alpha1.PipelineLoopRunStatus) (int, []*tektonv1.PipelineRun, []*tektonv1.PipelineRun, error) {
 	logger := logging.FromContext(ctx)
 	highestIteration := 0
-	var currentRunningPrs []*tektonv1beta1.PipelineRun
-	var failedPrs []*tektonv1beta1.PipelineRun
+	var currentRunningPrs []*tektonv1.PipelineRun
+	var failedPrs []*tektonv1.PipelineRun
 	if status.PipelineRuns == nil {
 		status.PipelineRuns = make(map[string]*pipelineloopv1alpha1.PipelineLoopPipelineRunStatus)
 	}
@@ -790,6 +820,8 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 		if iteration > highestIteration {
 			highestIteration = iteration
 		}
+		taskrunstatuses := make(map[string]*tektonv1.PipelineRunTaskRunStatus)
+		runstatuses := make(map[string]*tektonv1.PipelineRunRunStatus)
 		if pr.Status.ChildReferences != nil {
 			//fetch taskruns/runs status specifically for pipelineloop-break-operation first
 			for _, child := range pr.Status.ChildReferences {
@@ -802,10 +834,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 							return 0, nil, nil, fmt.Errorf("could not get TaskRun %s."+
 								" %#v", child.Name, err)
 						}
-						if pr.Status.TaskRuns == nil {
-							pr.Status.TaskRuns = make(map[string]*tektonv1beta1.PipelineRunTaskRunStatus)
-						}
-						pr.Status.TaskRuns[child.Name] = &tektonv1beta1.PipelineRunTaskRunStatus{
+						taskrunstatuses[child.Name] = &tektonv1.PipelineRunTaskRunStatus{
 							PipelineTaskName: child.PipelineTaskName,
 							WhenExpressions:  child.WhenExpressions,
 							Status:           tr.DeepCopy(),
@@ -817,11 +846,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 							return 0, nil, nil, fmt.Errorf("could not get Run %s."+
 								" %#v", child.Name, err)
 						}
-						if pr.Status.Runs == nil {
-							pr.Status.Runs = make(map[string]*tektonv1beta1.PipelineRunRunStatus)
-						}
-
-						pr.Status.Runs[child.Name] = &tektonv1beta1.PipelineRunRunStatus{
+						runstatuses[child.Name] = &tektonv1.PipelineRunRunStatus{
 							PipelineTaskName: child.PipelineTaskName,
 							WhenExpressions:  child.WhenExpressions,
 							Status:           run.DeepCopy(),
@@ -833,11 +858,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 							return 0, nil, nil, fmt.Errorf("could not get CustomRun %s."+
 								" %#v", child.Name, err)
 						}
-						if pr.Status.Runs == nil {
-							pr.Status.Runs = make(map[string]*tektonv1beta1.PipelineRunRunStatus)
-						}
-
-						pr.Status.Runs[child.Name] = &tektonv1beta1.PipelineRunRunStatus{
+						runstatuses[child.Name] = &tektonv1.PipelineRunRunStatus{
 							PipelineTaskName: child.PipelineTaskName,
 							WhenExpressions:  child.WhenExpressions,
 							Status:           run.DeepCopy(),
@@ -848,7 +869,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 				}
 			}
 		}
-		for _, runStatus := range pr.Status.Runs {
+		for _, runStatus := range runstatuses {
 			if strings.HasPrefix(runStatus.PipelineTaskName, "pipelineloop-break-operation") {
 				if runStatus.Status != nil && !runStatus.Status.GetCondition(apis.ConditionSucceeded).IsUnknown() {
 					err = c.cancelAllPipelineRuns(ctx, customRun)
@@ -864,7 +885,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 				}
 			}
 		}
-		for _, taskRunStatus := range pr.Status.TaskRuns {
+		for _, taskRunStatus := range taskrunstatuses {
 			if strings.HasPrefix(taskRunStatus.PipelineTaskName, "pipelineloop-break-operation") {
 				if !taskRunStatus.Status.GetCondition(apis.ConditionSucceeded).IsUnknown() {
 					err = c.cancelAllPipelineRuns(ctx, customRun)
@@ -1029,8 +1050,8 @@ func computeIterations(run *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1.P
 	return numberOfIterations, iterationElements, err
 }
 
-func getParameters(customRun *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int, currentIterationItem string) []v1beta1.Param {
-	var out []v1beta1.Param
+func getParameters(customRun *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1.PipelineLoopSpec, iteration int, currentIterationItem string) []tektonv1.Param {
+	var out []tektonv1.Param
 	if tls.IterateParam != "" {
 		// IterateParam defined
 		var iterationParam, iterationParamStrSeparator *v1beta1.Param
@@ -1038,9 +1059,9 @@ func getParameters(customRun *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1
 		for i, p := range customRun.Spec.Params {
 			if p.Name == tls.IterateParam {
 				if p.Value.Type == v1beta1.ParamTypeArray {
-					out = append(out, v1beta1.Param{
+					out = append(out, tektonv1.Param{
 						Name:  p.Name,
-						Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: p.Value.ArrayVal[iteration-1]},
+						Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: p.Value.ArrayVal[iteration-1]},
 					})
 				}
 				if p.Value.Type == v1beta1.ParamTypeString {
@@ -1051,16 +1072,19 @@ func getParameters(customRun *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1
 				separator = p
 				iterationParamStrSeparator = &separator
 			} else {
-				out = append(out, customRun.Spec.Params[i])
+				v1Param := tektonv1.Param{}
+				ctx := context.Background()
+				paramConvertTo(ctx, &customRun.Spec.Params[i], &v1Param)
+				out = append(out, v1Param)
 			}
 		}
 		if iterationParam != nil {
 			if iterationParamStrSeparator != nil && iterationParamStrSeparator.Value.StringVal != "" {
 				iterationParamStr := iterationParam.Value.StringVal
 				stringArr := strings.Split(iterationParamStr, iterationParamStrSeparator.Value.StringVal)
-				out = append(out, v1beta1.Param{
+				out = append(out, tektonv1.Param{
 					Name:  iterationParam.Name,
-					Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: stringArr[iteration-1]},
+					Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: stringArr[iteration-1]},
 				})
 
 			} else {
@@ -1074,36 +1098,36 @@ func getParameters(customRun *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1
 				errDictString := json.Unmarshal([]byte(iterationParamStr), &dictsString)
 				errDictInt := json.Unmarshal([]byte(iterationParamStr), &dictsInt)
 				if errString == nil {
-					out = append(out, v1beta1.Param{
+					out = append(out, tektonv1.Param{
 						Name:  iterationParam.Name,
-						Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: stringArr[iteration-1]},
+						Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: stringArr[iteration-1]},
 					})
 				} else if errInt == nil {
-					out = append(out, v1beta1.Param{
+					out = append(out, tektonv1.Param{
 						Name:  iterationParam.Name,
-						Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(ints[iteration-1])},
+						Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: strconv.Itoa(ints[iteration-1])},
 					})
 				} else if errDictString == nil {
 					for dictParam := range dictsString[iteration-1] {
-						out = append(out, v1beta1.Param{
+						out = append(out, tektonv1.Param{
 							Name:  iterationParam.Name + "-subvar-" + dictParam,
-							Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: dictsString[iteration-1][dictParam]},
+							Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: dictsString[iteration-1][dictParam]},
 						})
 					}
 				} else if errDictInt == nil {
 					for dictParam := range dictsInt[iteration-1] {
-						out = append(out, v1beta1.Param{
+						out = append(out, tektonv1.Param{
 							Name:  iterationParam.Name + "-subvar-" + dictParam,
-							Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(dictsInt[iteration-1][dictParam])},
+							Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: strconv.Itoa(dictsInt[iteration-1][dictParam])},
 						})
 					}
 				} else {
 					//try the default separator ","
 					if strings.Contains(iterationParamStr, defaultIterationParamStrSeparator) {
 						stringArr := strings.Split(iterationParamStr, defaultIterationParamStrSeparator)
-						out = append(out, v1beta1.Param{
+						out = append(out, tektonv1.Param{
 							Name:  iterationParam.Name,
-							Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: stringArr[iteration-1]},
+							Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: stringArr[iteration-1]},
 						})
 					}
 				}
@@ -1114,20 +1138,23 @@ func getParameters(customRun *tektonv1beta1.CustomRun, tls *pipelineloopv1alpha1
 		IterateStrings := []string{"from", "step", "to"}
 		for i, p := range customRun.Spec.Params {
 			if _, found := Find(IterateStrings, p.Name); !found {
-				out = append(out, customRun.Spec.Params[i])
+				v1Param := tektonv1.Param{}
+				ctx := context.Background()
+				paramConvertTo(ctx, &customRun.Spec.Params[i], &v1Param)
+				out = append(out, v1Param)
 			}
 		}
 	}
 	if tls.IterationNumberParam != "" {
-		out = append(out, v1beta1.Param{
+		out = append(out, tektonv1.Param{
 			Name:  tls.IterationNumberParam,
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: strconv.Itoa(iteration)},
+			Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: strconv.Itoa(iteration)},
 		})
 	}
 	if tls.IterateNumeric != "" {
-		out = append(out, v1beta1.Param{
+		out = append(out, tektonv1.Param{
 			Name:  tls.IterateNumeric,
-			Value: v1beta1.ArrayOrString{Type: v1beta1.ParamTypeString, StringVal: currentIterationItem},
+			Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: currentIterationItem},
 		})
 	}
 	return out
@@ -1214,13 +1241,8 @@ func storePipelineLoopSpec(status *pipelineloopv1alpha1.PipelineLoopRunStatus, t
 // Additionally, performance of status update in customRun reconciler is impacted.
 // PipelineSpec and TaskSpec seems to be redundant in this place.
 // See issue: https://github.com/kubeflow/kfp-tekton/issues/962
-func getPipelineRunStatusWithoutPipelineSpec(status *v1beta1.PipelineRunStatus) *v1beta1.PipelineRunStatus {
+func getPipelineRunStatusWithoutPipelineSpec(status *tektonv1.PipelineRunStatus) *tektonv1.PipelineRunStatus {
 	s := status.DeepCopy()
 	s.PipelineSpec = nil
-	if s.TaskRuns != nil {
-		for _, taskRun := range s.TaskRuns {
-			taskRun.Status.TaskSpec = nil
-		}
-	}
 	return s
 }
