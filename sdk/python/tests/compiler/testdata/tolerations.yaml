@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   name: tolerations
@@ -59,7 +59,7 @@ spec:
               [{"name": "downloaded", "type": "String"}], "version": "download@sha256=efb8f7672208579e11f74f184af68742c8d27421ef95f4db23a3b5f55641d850"}'
   taskRunSpecs:
   - pipelineTaskName: download
-    taskPodTemplate:
+    podTemplate:
       tolerations:
       - effect: NoSchedule
         key: gpu

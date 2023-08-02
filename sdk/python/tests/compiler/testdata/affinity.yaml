@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   name: affinity
@@ -54,7 +54,7 @@ spec:
               [], "version": "echo@sha256=7a01fe307dc14789e461b2122f62bb8bc694f3f2eec35fa3239cf971034e2504"}'
   taskRunSpecs:
   - pipelineTaskName: echo
-    taskPodTemplate:
+    podTemplate:
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   name: echo
@@ -60,13 +60,14 @@ spec:
     workspaces:
     - name: new-ws
     - name: new-ws-template
-  podTemplate:
-    securityContext:
-      runAsUser: 0
-    automountServiceAccountToken: false
-    env:
-    - name: WATSON_CRED
-      value: ABCD1234
+  taskRunTemplate:
+    podTemplate:
+      securityContext:
+        runAsUser: 0
+      automountServiceAccountToken: false
+      env:
+      - name: WATSON_CRED
+        value: ABCD1234
   workspaces:
   - name: new-ws
     persistentVolumeClaim:

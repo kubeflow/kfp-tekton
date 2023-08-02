@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   name: resourceop-basic
@@ -106,7 +106,6 @@ spec:
           - --set-ownerreference=$(params.set-ownerreference)
           image: $(params.image)
           name: main
-          resources: {}
           env:
           - name: POD_NAME
             valueFrom:
