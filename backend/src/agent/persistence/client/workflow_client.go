@@ -129,14 +129,14 @@ func (c *WorkflowClient) Get(namespace string, name string) (
 		return nil, err
 	}
 
-	if err := c.getStatusFromChildReferences(namespace, labels.SelectorFromSet(s), &workflow.Status, workflow.Labels); err != nil {
+	if err := c.getStatusFromChildReferences(namespace, labels.SelectorFromSet(s), &workflow.Status, workflow); err != nil {
 		return nil, err
 	}
 
 	return util.NewWorkflow(workflow), nil
 }
 
-func (c *WorkflowClient) getStatusFromChildReferences(namespace string, selector labels.Selector, status *wfapi.PipelineRunStatus, labels map[string]string) error {
+func (c *WorkflowClient) getStatusFromChildReferences(namespace string, selector labels.Selector, status *wfapi.PipelineRunStatus, workflow *wfapi.PipelineRun) error {
 	if status.ChildReferences != nil {
 		hasTaskRun, hasCustomRun := false, false
 		for _, child := range status.ChildReferences {
@@ -166,8 +166,9 @@ func (c *WorkflowClient) getStatusFromChildReferences(namespace string, selector
 					Status:           taskrun.Status.DeepCopy(),
 				}
 			}
+			// TODO: maybe change it to another struct to have backward compatibility
 			taskrunStatusesMarshal, err := json.Marshal(taskrunStatuses)
-			labels["taskrunStatuses"] = string(taskrunStatusesMarshal)
+			workflow.Annotations["taskrunStatuses"] = string(taskrunStatusesMarshal)
 		}
 		if hasCustomRun {
 			customRuns, err := c.informers.CRInformer.Lister().CustomRuns(namespace).List(selector)
@@ -185,8 +186,9 @@ func (c *WorkflowClient) getStatusFromChildReferences(namespace string, selector
 				// handle nested status
 				c.handleNestedStatusV1beta1(customRun, customRunStatus, namespace)
 			}
+			// TODO: maybe change it to another struct to have backward compatibility
 			customRunStatusesMarshal, err := json.Marshal(customRunStatuses)
-			labels["customRunStatuses"] = string(customRunStatusesMarshal)
+			workflow.Annotations["customRunStatuses"] = string(customRunStatusesMarshal)
 		}
 	}
 	return nil
