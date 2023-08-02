@@ -22,9 +22,9 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/crd/controller/scheduledworkflow/util"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	wraperror "github.com/pkg/errors"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	workflowclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
-	"github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
+	tektonV1 "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -34,12 +34,12 @@ import (
 // WorkflowClient is a client to call the Workflow API.
 type WorkflowClient struct {
 	clientSet workflowclientset.Interface
-	informer  v1beta1.PipelineRunInformer
+	informer  tektonV1.PipelineRunInformer
 }
 
 // NewWorkflowClient creates an instance of the WorkflowClient.
 func NewWorkflowClient(clientSet workflowclientset.Interface,
-	informer v1beta1.PipelineRunInformer) *WorkflowClient {
+	informer tektonV1.PipelineRunInformer) *WorkflowClient {
 	return &WorkflowClient{
 		clientSet: clientSet,
 		informer:  informer,
@@ -132,7 +132,7 @@ func retrieveIndex(workflow *workflowapi.PipelineRun) int64 {
 // Create creates a workflow given a namespace and its specification.
 func (p *WorkflowClient) Create(ctx context.Context, namespace string, workflow *commonutil.Workflow) (
 	*commonutil.Workflow, error) {
-	result, err := p.clientSet.TektonV1beta1().PipelineRuns(namespace).Create(ctx, workflow.Get(), metav1.CreateOptions{})
+	result, err := p.clientSet.TektonV1().PipelineRuns(namespace).Create(ctx, workflow.Get(), metav1.CreateOptions{})
 	if err != nil {
 		return nil, wraperror.Wrapf(err, "Error creating workflow in namespace (%v): %v: %+v", namespace,
 			err, workflow.Get())

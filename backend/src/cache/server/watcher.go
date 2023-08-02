@@ -11,7 +11,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/cache/client"
 	"github.com/kubeflow/pipelines/backend/src/cache/model"
 	"github.com/peterhellberg/duration"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonV1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"github.com/tektoncd/pipeline/pkg/result"
 	"github.com/tektoncd/pipeline/pkg/termination"
 	"go.uber.org/zap"
@@ -118,7 +118,7 @@ func WatchPods(ctx context.Context, namespaceToWatch string, clientManager Clien
 func parseResult(pod *corev1.Pod, logger *zap.SugaredLogger) (string, error) {
 	logger.Info("Start parse result from pod.")
 
-	outputs := make(map[string][]*v1beta1.TaskRunResult)
+	outputs := make(map[string][]*tektonV1.TaskRunResult)
 
 	containersState := pod.Status.ContainerStatuses
 	if containersState == nil || len(containersState) == 0 {
@@ -133,12 +133,12 @@ func parseResult(pod *corev1.Pod, logger *zap.SugaredLogger) (string, error) {
 				logger.Errorf("termination message could not be parsed as JSON: %v", err)
 				return "", fmt.Errorf("termination message could not be parsed as JSON: %v", err)
 			}
-			output := []*v1beta1.TaskRunResult{}
+			output := []*tektonV1.TaskRunResult{}
 			for _, r := range results {
 				if r.ResultType == result.TaskRunResultType {
-					itemRes := v1beta1.TaskRunResult{}
+					itemRes := tektonV1.TaskRunResult{}
 					itemRes.Name = r.Key
-					itemRes.Value = *v1beta1.NewArrayOrString(r.Value)
+					itemRes.Value = *tektonV1.NewStructuredValues(r.Value)
 					output = append(output, &itemRes)
 				}
 			}

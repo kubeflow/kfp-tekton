@@ -10,22 +10,22 @@ import (
 
 	// "k8s.io/client-go/kubernetes"
 	// v1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	tektoncdclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
 
 type TektonInterface interface {
-	GetTaskRun(namespace, name string, queryOptions metav1.GetOptions) (*v1beta1.TaskRun, error)
+	GetTaskRun(namespace, name string, queryOptions metav1.GetOptions) (*v1.TaskRun, error)
 }
 
 type TektonClient struct {
-	tektonV1beta1Client *tektoncdclientset.Clientset
+	tektonV1Client *tektoncdclientset.Clientset
 }
 
-func (c TektonClient) GetTaskRun(namespace, name string, queryOptions metav1.GetOptions) (*v1beta1.TaskRun, error) {
-	return c.tektonV1beta1Client.TektonV1beta1().TaskRuns(namespace).Get(context.Background(), name, queryOptions)
+func (c TektonClient) GetTaskRun(namespace, name string, queryOptions metav1.GetOptions) (*v1.TaskRun, error) {
+	return c.tektonV1Client.TektonV1().TaskRuns(namespace).Get(context.Background(), name, queryOptions)
 }
 
 func createTektonClient() (TektonInterface, error) {

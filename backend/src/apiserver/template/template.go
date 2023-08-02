@@ -24,7 +24,7 @@ import (
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	api "github.com/kubeflow/pipelines/backend/api/v1/go_client"
 
-	wfv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	wfv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"sigs.k8s.io/yaml"
 
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
@@ -42,7 +42,8 @@ const (
 	Unknown TemplateType = "Unknown"
 
 	TektonGroup       = "tekton.dev/"
-	TektonVersion     = "tekton.dev/v1beta1"
+	TektonBetaGroup   = "tekton.dev/v1beta1"
+	TektonVersion     = "tekton.dev/v1"
 	TektonK8sResource = "PipelineRun"
 )
 
@@ -168,7 +169,7 @@ func OverrideParameterWithSystemDefault(workflow *util.Workflow) error {
 				}
 				patchedSlice = append(patchedSlice, wfv1.Param{
 					Name: currentParam.Name,
-					Value: wfv1.ArrayOrString{
+					Value: wfv1.ParamValue{
 						Type:      "string",
 						StringVal: *util.StringPointer(desiredValue),
 					},
@@ -185,7 +186,7 @@ func setDefaultServiceAccount(workflow *util.Workflow, serviceAccount string) {
 		workflow.SetServiceAccount(serviceAccount)
 		return
 	}
-	workflowServiceAccount := workflow.Spec.ServiceAccountName
+	workflowServiceAccount := workflow.Spec.TaskRunTemplate.ServiceAccountName
 	if len(workflowServiceAccount) == 0 || workflowServiceAccount == common.DefaultPipelineRunnerServiceAccount {
 		// To reserve SDK backward compatibility, the backend only replaces
 		// serviceaccount when it is empty or equal to default value set by SDK.

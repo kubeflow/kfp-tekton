@@ -20,7 +20,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 const (

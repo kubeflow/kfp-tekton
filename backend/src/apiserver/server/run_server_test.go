@@ -35,7 +35,7 @@ func TestCreateRun(t *testing.T) {
 	expectedRuntimeWorkflow := testWorkflow.DeepCopy()
 	expectedRuntimeWorkflow.Labels = map[string]string{util.LabelKeyWorkflowRunId: "123e4567-e89b-12d3-a456-426655440000"}
 	expectedRuntimeWorkflow.Annotations = map[string]string{util.AnnotationKeyRunName: "run1"}
-	expectedRuntimeWorkflow.Spec.ServiceAccountName = "pipeline-runner"
+	expectedRuntimeWorkflow.Spec.TaskRunTemplate.ServiceAccountName = "pipeline-runner"
 }
 
 func TestCreateRunPatch(t *testing.T) {
@@ -55,7 +55,7 @@ func TestCreateRunPatch(t *testing.T) {
 	expectedRuntimeWorkflow := testWorkflowPatch.DeepCopy()
 	expectedRuntimeWorkflow.Labels = map[string]string{util.LabelKeyWorkflowRunId: "123e4567-e89b-12d3-a456-426655440000"}
 	expectedRuntimeWorkflow.Annotations = map[string]string{util.AnnotationKeyRunName: "run1"}
-	expectedRuntimeWorkflow.Spec.ServiceAccountName = "pipeline-runner"
+	expectedRuntimeWorkflow.Spec.TaskRunTemplate.ServiceAccountName = "pipeline-runner"
 }
 
 func TestCreateRun_Unauthorized(t *testing.T) {
@@ -121,7 +121,7 @@ func TestCreateRun_Multiuser(t *testing.T) {
 	expectedRuntimeWorkflow := testWorkflow.DeepCopy()
 	expectedRuntimeWorkflow.Labels = map[string]string{util.LabelKeyWorkflowRunId: "123e4567-e89b-12d3-a456-426655440000"}
 	expectedRuntimeWorkflow.Annotations = map[string]string{util.AnnotationKeyRunName: "run1"}
-	expectedRuntimeWorkflow.Spec.ServiceAccountName = "default-editor" // In multi-user mode, we use default service account.
+	expectedRuntimeWorkflow.Spec.TaskRunTemplate.ServiceAccountName = "default-editor" // In multi-user mode, we use default service account.
 }
 
 func TestListRun(t *testing.T) {
