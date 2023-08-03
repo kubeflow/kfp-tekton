@@ -122,13 +122,14 @@ func startRpcServer(resourceManager *resource.ResourceManager) {
 	)
 	sharedJobServer := server.NewJobServer(resourceManager, &server.JobServerOptions{CollectMetrics: *collectMetricsFlag})
 	sharedRunServer := server.NewRunServer(resourceManager, &server.RunServerOptions{CollectMetrics: *collectMetricsFlag})
+	sharedReportServer := server.NewReportServer(resourceManager)
 
 	apiv1beta1.RegisterExperimentServiceServer(s, sharedExperimentServer)
 	apiv1beta1.RegisterPipelineServiceServer(s, sharedPipelineServer)
 	apiv1beta1.RegisterJobServiceServer(s, sharedJobServer)
 	apiv1beta1.RegisterRunServiceServer(s, sharedRunServer)
 	apiv1beta1.RegisterTaskServiceServer(s, server.NewTaskServer(resourceManager))
-	apiv1beta1.RegisterReportServiceServer(s, server.NewReportServer(resourceManager))
+	apiv1beta1.RegisterReportServiceServer(s, sharedReportServer)
 
 	apiv1beta1.RegisterVisualizationServiceServer(
 		s,
@@ -143,6 +144,7 @@ func startRpcServer(resourceManager *resource.ResourceManager) {
 	apiv2beta1.RegisterPipelineServiceServer(s, sharedPipelineServer)
 	apiv2beta1.RegisterRecurringRunServiceServer(s, sharedJobServer)
 	apiv2beta1.RegisterRunServiceServer(s, sharedRunServer)
+	apiv2beta1.RegisterReportServiceServer(s, sharedReportServer)
 
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
@@ -175,6 +177,7 @@ func startHttpProxy(resourceManager *resource.ResourceManager) {
 	registerHttpHandlerFromEndpoint(apiv2beta1.RegisterPipelineServiceHandlerFromEndpoint, "PipelineService", ctx, runtimeMux)
 	registerHttpHandlerFromEndpoint(apiv2beta1.RegisterRecurringRunServiceHandlerFromEndpoint, "RecurringRunService", ctx, runtimeMux)
 	registerHttpHandlerFromEndpoint(apiv2beta1.RegisterRunServiceHandlerFromEndpoint, "RunService", ctx, runtimeMux)
+	registerHttpHandlerFromEndpoint(apiv2beta1.RegisterReportServiceHandlerFromEndpoint, "ReportService", ctx, runtimeMux)
 
 	// Create a top level mux to include both pipeline upload server and gRPC servers.
 	topMux := mux.NewRouter()
