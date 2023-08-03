@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	api "github.com/kubeflow/pipelines/backend/api/v1beta1/go_client"
+	apiv2 "github.com/kubeflow/pipelines/backend/api/v2beta1/go_client"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -44,7 +45,7 @@ type PipelineClientInterface interface {
 type PipelineClient struct {
 	initializeTimeout   time.Duration
 	timeout             time.Duration
-	reportServiceClient api.ReportServiceClient
+	reportServiceClient apiv2.ReportServiceClient
 	runServiceClient    api.RunServiceClient
 }
 
@@ -71,7 +72,7 @@ func NewPipelineClient(
 	return &PipelineClient{
 		initializeTimeout:   initializeTimeout,
 		timeout:             timeout,
-		reportServiceClient: api.NewReportServiceClient(connection),
+		reportServiceClient: apiv2.NewReportServiceClient(connection),
 		runServiceClient:    api.NewRunServiceClient(connection),
 	}, nil
 }
@@ -80,7 +81,7 @@ func (p *PipelineClient) ReportWorkflow(workflow util.ExecutionSpec) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	_, err := p.reportServiceClient.ReportWorkflowV1(ctx, &api.ReportWorkflowRequest{
+	_, err := p.reportServiceClient.ReportWorkflow(ctx, &apiv2.ReportWorkflowRequest{
 		Workflow: workflow.ToStringForStore(),
 	})
 
@@ -113,8 +114,8 @@ func (p *PipelineClient) ReportScheduledWorkflow(swf *util.ScheduledWorkflow) er
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	_, err := p.reportServiceClient.ReportScheduledWorkflowV1(ctx,
-		&api.ReportScheduledWorkflowRequest{
+	_, err := p.reportServiceClient.ReportScheduledWorkflow(ctx,
+		&apiv2.ReportScheduledWorkflowRequest{
 			ScheduledWorkflow: swf.ToStringForStore(),
 		})
 
