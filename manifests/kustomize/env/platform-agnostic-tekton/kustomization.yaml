@@ -8,7 +8,7 @@ resources:
 - ../../third-party/tekton-custom-task
 - ../../third-party/minio/base
 - ../../third-party/mysql/base
-- ../../third-party/kfp-csi-s3
+# - ../../third-party/kfp-csi-s3
 
 # Identifier for application manager to apply ownerReference.
 # The ownerReference ensures the resources get garbage collected
