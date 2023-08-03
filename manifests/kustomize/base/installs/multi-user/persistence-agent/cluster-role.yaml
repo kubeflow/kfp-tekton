@@ -25,3 +25,20 @@ rules:
   - namespaces
   verbs:
   - get
+- apiGroups:
+  - tekton.dev
+  resources:
+  - pipelineruns
+  - taskruns
+  - conditions
+  - runs
+  - customruns
+  - tasks
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - patch
+  - delete
