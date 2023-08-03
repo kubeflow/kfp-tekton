@@ -23,7 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"github.com/tektoncd/pipeline/test/diff"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis"
@@ -38,7 +38,7 @@ func TestPipelineLoop_Validate_Success(t *testing.T) {
 		tl: &pipelineloopv1alpha1.PipelineLoop{
 			ObjectMeta: metav1.ObjectMeta{Name: "pipelineloop"},
 			Spec: pipelineloopv1alpha1.PipelineLoopSpec{
-				PipelineRef: &v1beta1.PipelineRef{Name: "mypipeline"},
+				PipelineRef: &tektonv1.PipelineRef{Name: "mypipeline"},
 			},
 		},
 	}, {
@@ -47,12 +47,12 @@ func TestPipelineLoop_Validate_Success(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{Name: "pipelineloop"},
 			Spec: pipelineloopv1alpha1.PipelineLoopSpec{
 				IterateParam: "messages",
-				PipelineSpec: &v1beta1.PipelineSpec{
-					Tasks: []v1beta1.PipelineTask{{
+				PipelineSpec: &tektonv1.PipelineSpec{
+					Tasks: []tektonv1.PipelineTask{{
 						Name: "mytask",
-						TaskSpec: &v1beta1.EmbeddedTask{
-							TaskSpec: v1beta1.TaskSpec{
-								Steps: []v1beta1.Step{{
+						TaskSpec: &tektonv1.EmbeddedTask{
+							TaskSpec: tektonv1.TaskSpec{
+								Steps: []tektonv1.Step{{
 									Name: "foo", Image: "bar",
 								}},
 							},
@@ -67,33 +67,33 @@ func TestPipelineLoop_Validate_Success(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{Name: "pipelineloop"},
 			Spec: pipelineloopv1alpha1.PipelineLoopSpec{
 				IterateParam: "messages",
-				PipelineSpec: &v1beta1.PipelineSpec{
-					Params: []v1beta1.ParamSpec{{
+				PipelineSpec: &tektonv1.PipelineSpec{
+					Params: []tektonv1.ParamSpec{{
 						Name: "messages",
-						Type: v1beta1.ParamTypeString,
+						Type: tektonv1.ParamTypeString,
 					}, {
 						Name: "additional-parameter",
-						Type: v1beta1.ParamTypeString,
+						Type: tektonv1.ParamTypeString,
 					}},
-					Tasks: []v1beta1.PipelineTask{{
+					Tasks: []tektonv1.PipelineTask{{
 						Name: "mytask",
-						Params: []v1beta1.Param{{
+						Params: []tektonv1.Param{{
 							Name:  "messages",
-							Value: v1beta1.ArrayOrString{},
+							Value: tektonv1.ParamValue{},
 						}, {
 							Name:  "additional-parameter",
-							Value: v1beta1.ArrayOrString{},
+							Value: tektonv1.ParamValue{},
 						}},
-						TaskSpec: &v1beta1.EmbeddedTask{
-							TaskSpec: v1beta1.TaskSpec{
-								Params: []v1beta1.ParamSpec{{
+						TaskSpec: &tektonv1.EmbeddedTask{
+							TaskSpec: tektonv1.TaskSpec{
+								Params: []tektonv1.ParamSpec{{
 									Name: "messages",
-									Type: v1beta1.ParamTypeString,
+									Type: tektonv1.ParamTypeString,
 								}, {
 									Name: "additional-parameter",
-									Type: v1beta1.ParamTypeString,
+									Type: tektonv1.ParamTypeString,
 								}},
-								Steps: []v1beta1.Step{{
+								Steps: []tektonv1.Step{{
 									Name: "foo", Image: "bar",
 								}},
 							},
@@ -135,13 +135,13 @@ func TestPipelineLoop_Validate_Error(t *testing.T) {
 		tl: &pipelineloopv1alpha1.PipelineLoop{
 			ObjectMeta: metav1.ObjectMeta{Name: "pipelineloop"},
 			Spec: pipelineloopv1alpha1.PipelineLoopSpec{
-				PipelineRef: &v1beta1.PipelineRef{Name: "mypipeline"},
-				PipelineSpec: &v1beta1.PipelineSpec{
-					Tasks: []v1beta1.PipelineTask{{
+				PipelineRef: &tektonv1.PipelineRef{Name: "mypipeline"},
+				PipelineSpec: &tektonv1.PipelineSpec{
+					Tasks: []tektonv1.PipelineTask{{
 						Name: "mytask",
-						TaskSpec: &v1beta1.EmbeddedTask{
-							TaskSpec: v1beta1.TaskSpec{
-								Steps: []v1beta1.Step{{
+						TaskSpec: &tektonv1.EmbeddedTask{
+							TaskSpec: tektonv1.TaskSpec{
+								Steps: []tektonv1.Step{{
 									Name: "foo", Image: "bar",
 								}},
 							},
@@ -159,7 +159,7 @@ func TestPipelineLoop_Validate_Error(t *testing.T) {
 		tl: &pipelineloopv1alpha1.PipelineLoop{
 			ObjectMeta: metav1.ObjectMeta{Name: "pipelineloop"},
 			Spec: pipelineloopv1alpha1.PipelineLoopSpec{
-				PipelineRef: &v1beta1.PipelineRef{Name: "_bad"},
+				PipelineRef: &tektonv1.PipelineRef{Name: "_bad"},
 			},
 		},
 		expectedError: apis.FieldError{
@@ -173,12 +173,12 @@ func TestPipelineLoop_Validate_Error(t *testing.T) {
 		tl: &pipelineloopv1alpha1.PipelineLoop{
 			ObjectMeta: metav1.ObjectMeta{Name: "pipelineloop"},
 			Spec: pipelineloopv1alpha1.PipelineLoopSpec{
-				PipelineSpec: &v1beta1.PipelineSpec{
-					Tasks: []v1beta1.PipelineTask{{
+				PipelineSpec: &tektonv1.PipelineSpec{
+					Tasks: []tektonv1.PipelineTask{{
 						Name: "mytask",
-						TaskSpec: &v1beta1.EmbeddedTask{
-							TaskSpec: v1beta1.TaskSpec{
-								Steps: []v1beta1.Step{{
+						TaskSpec: &tektonv1.EmbeddedTask{
+							TaskSpec: tektonv1.TaskSpec{
+								Steps: []tektonv1.Step{{
 									Name: "bad@name!", Image: "bar",
 								}},
 							},
