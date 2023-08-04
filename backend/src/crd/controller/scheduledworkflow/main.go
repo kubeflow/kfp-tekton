@@ -16,14 +16,17 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"strings"
 	"time"
 
+	apiv2 "github.com/kubeflow/pipelines/backend/api/v2beta1/go_client"
 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/kubeflow/pipelines/backend/src/crd/controller/scheduledworkflow/util"
 	swfclientset "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/clientset/versioned"
 	swfinformers "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/informers/externalversions"
 	"github.com/kubeflow/pipelines/backend/src/crd/pkg/signals"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
@@ -32,13 +35,30 @@ import (
 )
 
 var (
-	masterURL     string
-	kubeconfig    string
-	namespace     string
-	location      *time.Location
-	clientQPS     float64
-	clientBurst   int
-	executionType string
+	masterURL                   string
+	kubeconfig                  string
+	namespace                   string
+	location                    *time.Location
+	clientQPS                   float64
+	clientBurst                 int
+	executionType               string
+	initializeTimeout           time.Duration
+	timeout                     time.Duration
+	mlPipelineAPIServerName     string
+	mlPipelineAPIServerPort     string
+	mlPipelineAPIServerBasePath string
+	mlPipelineServiceHttpPort   string
+	mlPipelineServiceGRPCPort   string
+)
+
+const (
+	initializationTimeoutFlagName       = "initializeTimeout"
+	timeoutFlagName                     = "timeout"
+	mlPipelineAPIServerBasePathFlagName = "mlPipelineAPIServerBasePath"
+	mlPipelineAPIServerNameFlagName     = "mlPipelineAPIServerName"
+	mlPipelineAPIServerHttpPortFlagName = "mlPipelineServiceHttpPort"
+	mlPipelineAPIServerGRPCPortFlagName = "mlPipelineServiceGRPCPort"
+	addressTemp                         = "%s:%s"
 )
 
 func main() {
@@ -67,6 +87,11 @@ func main() {
 		log.Fatalf("Error building schedule clientset: %s", err.Error())
 	}
 
+	runServiceClient, err := NewRunServiceclient()
+	if err != nil {
+		log.Fatalf("Error connecting to apiserver: %s", err.Error())
+	}
+
 	clientParam := commonutil.ClientParameters{QPS: float64(cfg.QPS), Burst: cfg.Burst}
 	execClient := commonutil.NewExecutionClientOrFatal(commonutil.CurrentExecutionType(), time.Second*30, clientParam)
 
@@ -84,6 +109,7 @@ func main() {
 		execClient,
 		scheduleInformerFactory,
 		execInformer,
+		runServiceClient,
 		commonutil.NewRealTime(),
 		location)
 
@@ -93,6 +119,23 @@ func main() {
 	if err = controller.Run(2, stopCh); err != nil {
 		log.Fatalf("Error running controller: %s", err.Error())
 	}
+}
+
+func NewRunServiceclient() (apiv2.RunServiceClient, error) {
+
+	httpAddress := fmt.Sprintf(addressTemp, mlPipelineAPIServerName, mlPipelineServiceHttpPort)
+	grpcAddress := fmt.Sprintf(addressTemp, mlPipelineAPIServerName, mlPipelineServiceGRPCPort)
+	err := commonutil.WaitForAPIAvailable(initializeTimeout, mlPipelineAPIServerBasePath, httpAddress)
+	if err != nil {
+		return nil, errors.Wrapf(err,
+			"Failed to initialize pipeline client. Error: %s", err.Error())
+	}
+	connection, err := commonutil.GetRpcConnection(grpcAddress)
+	if err != nil {
+		return nil, errors.Wrapf(err,
+			"Failed to get RPC connection. Error: %s", err.Error())
+	}
+	return apiv2.NewRunServiceClient(connection), nil
 }
 
 func initEnv() {
@@ -114,6 +157,14 @@ func init() {
 	flag.Float64Var(&clientQPS, "clientQPS", 5, "The maximum QPS to the master from this client.")
 	flag.IntVar(&clientBurst, "clientBurst", 10, "Maximum burst for throttle from this client.")
 	flag.StringVar(&executionType, "executionType", "Workflow", "Custom Resource's name of the backend Orchestration Engine")
+	flag.DurationVar(&initializeTimeout, initializationTimeoutFlagName, 2*time.Minute, "Duration to wait for initialization of the ML pipeline API server.")
+	flag.DurationVar(&timeout, timeoutFlagName, 1*time.Minute, "Duration to wait for calls to complete.")
+	flag.StringVar(&mlPipelineAPIServerName, mlPipelineAPIServerNameFlagName, "ml-pipeline", "Name of the ML pipeline API server.")
+	flag.StringVar(&mlPipelineServiceHttpPort, mlPipelineAPIServerHttpPortFlagName, "8888", "Http Port of the ML pipeline API server.")
+	flag.StringVar(&mlPipelineServiceGRPCPort, mlPipelineAPIServerGRPCPortFlagName, "8887", "GRPC Port of the ML pipeline API server.")
+	flag.StringVar(&mlPipelineAPIServerBasePath, mlPipelineAPIServerBasePathFlagName,
+		"/apis/v2beta1", "The base path for the ML pipeline API server.")
+
 	var err error
 	location, err = util.GetLocation()
 	if err != nil {

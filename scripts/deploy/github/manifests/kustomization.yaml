@@ -14,19 +14,19 @@ resources:
 # when application is deleted.
 
 images:
-- name: '*/aipipeline/tekton-driver-dev'
+- name: '*/aipipeline/tekton-driver'
   newName: kind-registry:5000/tekton-driver
   newTag: latest
-- name: '*/aipipeline/tekton-exithandler-controller-dev'
+- name: '*/aipipeline/tekton-exithandler-controller'
   newName: kind-registry:5000/tekton-exithandler-controller
   newTag: latest
-- name: '*/aipipeline/tekton-exithandler-webhook-dev'
+- name: '*/aipipeline/tekton-exithandler-webhook'
   newName: kind-registry:5000/tekton-exithandler-webhook
   newTag: latest
-- name: '*/aipipeline/tekton-kfptask-controller-dev'
+- name: '*/aipipeline/tekton-kfptask-controller'
   newName: kind-registry:5000/tekton-kfptask-controller
   newTag: latest
-- name: '*/aipipeline/tekton-kfptask-webhook-dev'
+- name: '*/aipipeline/tekton-kfptask-webhook'
   newName: kind-registry:5000/tekton-kfptask-webhook
   newTag: latest
 - name: gcr.io/ml-pipeline/api-server
