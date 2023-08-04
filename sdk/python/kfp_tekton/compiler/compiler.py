@@ -52,6 +52,7 @@ from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPU
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
+DEFAULT_STEP_IMAGE = env.get('DEFAULT_STEP_IMAGE', 'python:alpine3.6')
 # DISABLE_CEL_CONDITION should be True until CEL is officially merged into Tekton main API.
 DISABLE_CEL_CONDITION = True
 # Default finally extension is 5 minutes
@@ -92,7 +93,7 @@ def _get_super_condition_template():
       'name': 'main',
       'command': ['sh', '-ec', 'program_path=$(mktemp); printf "%s" "$0" > "$program_path";  python3 -u "$program_path" "$1" "$2"'],
       'args': [python_script, '$(inputs.params.operand1)', '$(inputs.params.operand2)'],
-      'image': 'python:alpine3.6',
+      'image': DEFAULT_STEP_IMAGE,
     }]
   }
 
