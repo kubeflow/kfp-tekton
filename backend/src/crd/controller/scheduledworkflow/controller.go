@@ -20,6 +20,7 @@ import (
 	"time"
 
 	apiv2 "github.com/kubeflow/pipelines/backend/api/v2beta1/go_client"
+	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	commonutil "github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/kubeflow/pipelines/backend/src/crd/controller/scheduledworkflow/client"
 	"github.com/kubeflow/pipelines/backend/src/crd/controller/scheduledworkflow/util"
@@ -30,6 +31,7 @@ import (
 	swfinformers "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/informers/externalversions"
 	wraperror "github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc/metadata"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -514,6 +516,16 @@ func (c *Controller) submitNewWorkflowIfNotAlreadySubmitted(
 			RecurringRunId: string(swf.GetObjectMeta().GetUID()),
 		},
 	}
+
+	owner, err := c.kubeClient.GetNamespaceOwner(ctx, swf.Namespace)
+	if err != nil {
+		return false, "", err
+	}
+	if owner != "" {
+		ctx = metadata.AppendToOutgoingContext(ctx, common.GetKubeflowUserIDHeader(),
+			common.GetKubeflowUserIDPrefix()+owner)
+	}
+
 	newRun, err := c.runServiceclient.CreateRun(ctx, run)
 
 	if err != nil {
