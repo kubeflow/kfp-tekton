@@ -36,6 +36,12 @@ rules:
   - create
   - patch
 - apiGroups:
+  - ''
+  resources:
+  - namespaces
+  verbs:
+  - get
+- apiGroups:
   - tekton.dev
   resources:
   - pipelineruns

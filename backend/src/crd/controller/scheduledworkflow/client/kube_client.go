@@ -15,10 +15,14 @@
 package client
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/record"
@@ -57,4 +61,19 @@ func (k *KubeClient) RecordSyncSuccess(swf *swfapi.ScheduledWorkflow, message st
 func (k *KubeClient) RecordSyncFailure(swf *swfapi.ScheduledWorkflow, message string) {
 	k.recorder.Event(swf, corev1.EventTypeWarning, failedSynced,
 		fmt.Sprintf("%v: %v", messageResourceFailedSynced, message))
+}
+
+func (c *KubeClient) GetNamespaceOwner(ctx context.Context, namespace string) (string, error) {
+	if !common.IsMultiUserMode() {
+		return "", nil
+	}
+	ns, err := c.kubeClientSet.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get namespace '%v'", namespace)
+	}
+	owner, ok := ns.Annotations["owner"]
+	if !ok {
+		return "", errors.New(fmt.Sprintf("namespace '%v' has no owner in the annotations", namespace))
+	}
+	return owner, nil
 }
