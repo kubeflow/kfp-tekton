@@ -27,7 +27,7 @@
 #
 #   ... or:
 #
-#    $ make distribution KFP_TEKTON_VERSION=1.5.4-rc1
+#    $ make distribution KFP_TEKTON_VERSION=1.5.5-rc1
 #
 # =============================================================================
 
