@@ -64,7 +64,7 @@ spec:
         name: pipelineloop-inner
   iterateParam: message
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   annotations:

@@ -70,6 +70,9 @@ spec:
     - name: images
       description: a image list for publishing
       default: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend pipelineloop-controller pipelineloop-webhook kubeclient"
+    - name: many-edge-duration
+      description: duration threshold for many edge pipeline
+      value: "7"
   workspaces:
   - name: pipeline-pvc
   tasks:
@@ -678,6 +681,8 @@ spec:
           value: $(params.slack-channel)
         - name: test-script
           value: "scripts/deploy/iks/test-many-edges.sh"
+        - name: many-edge-duration
+          value: $(params.many-edge-duration)
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
