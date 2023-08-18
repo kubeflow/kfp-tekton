@@ -442,7 +442,7 @@ func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.Cus
 
 		for _, currentRunningPr := range currentRunningPrs {
 			logger.Infof("CustomRun %s/%s is cancelled.  Cancelling PipelineRun %s.", customRun.Namespace, customRun.Name, currentRunningPr.Name)
-			if _, err := c.pipelineClientSet.TektonV1beta1().PipelineRuns(customRun.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
+			if _, err := c.pipelineClientSet.TektonV1().PipelineRuns(customRun.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
 				customRun.Status.MarkCustomRunRunning(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntCancel.String(),
 					"Failed to patch PipelineRun `%s` with cancellation: %v", currentRunningPr.Name, err)
 				return nil
