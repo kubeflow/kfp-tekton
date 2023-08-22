@@ -34,9 +34,9 @@ can be found in the [SDK README](/sdk/README.md)
 ## Development Prerequisites
 
 1. [`Python`](https://www.python.org/downloads/): version `3.8` or later (new code must maintain compatibility with `3.8`)
-2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.24` ([required by Kubeflow](https://www.kubeflow.org/docs/started/kubeflow-overview/) and Tekton `0.47.0`)
+2. [`Kubernetes` Cluster](https://kubernetes.io/): version `1.25` ([required by Kubeflow](https://www.kubeflow.org/docs/started/kubeflow-overview/) and Tekton `0.50.1`)
 3. [`kubectl` CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/): required to deploy Tekton pipelines to Kubernetes cluster
-4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.47.0/): version `0.47.0` or greater, required for end-to-end testing
+4. [`Tekton` Deployment](https://github.com/tektoncd/pipeline/releases/tag/v0.50.1/): version `0.50.1` or greater, required for end-to-end testing
 5. [`tkn` CLI](https://github.com/tektoncd/cli#installing-tkn): version `0.30.1` or greater, required for end-to-end testing of Tekton pipelines
 6. [`Kubeflow Pipelines` Deployment](https://www.kubeflow.org/docs/pipelines/installation/overview/): required for some end-to-end tests
 
@@ -102,7 +102,7 @@ the Tekton YAML instead of Argo YAML. Since the KFP SDK was not designed and imp
 _monkey-patching_ was used to replace non-class methods and functions at runtime.
 
 In order for the _monkey patch_ to work properly, the `kfp-tekton` compiler source code has to be aligned with a
-specific version of the `kfp` SDK compiler. As of now the `kfp-tekton` SDK version is `1.7.1` which is aligned with KFP
+specific version of the `kfp` SDK compiler. As of now the `kfp-tekton` SDK version is `1.8.0` which is aligned with KFP
 SDK version [`1.8.22`](https://pypi.org/project/kfp/1.8.22/).
 
 
