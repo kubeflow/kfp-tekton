@@ -15,7 +15,6 @@ If you would like to do it in development mode, or if you already have a Kubeflo
     - [Frontend](#frontend)
     - [Backend](#backend)
     - [Minikube](#minikube)
-  - [Python based visualizations](#python-based-visualizations)
   - [Unit test](#unit-test)
     - [API server](#api-server)
     - [Frontend](#frontend)
