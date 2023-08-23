@@ -58,6 +58,3 @@ image_swf:
 .PHONY: image_viewer
 image_viewer:
 	cd $(MOD_ROOT) && docker build -t viewercontroller -f backend/Dockerfile.viewercontroller .
-.PHONY: image_visualization
-image_visualization:
-	cd $(MOD_ROOT) && docker build -t visualization -f backend/Dockerfile.visualization .
