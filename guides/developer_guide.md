@@ -15,7 +15,6 @@ If you would like to do it in development mode, or if you already have a Kubeflo
     - [Frontend](#frontend)
     - [Backend](#backend)
     - [Minikube](#minikube)
-  - [Python based visualizations](#python-based-visualizations)
   - [Unit test](#unit-test)
     - [API server](#api-server)
     - [Frontend](#frontend)
@@ -128,13 +127,6 @@ For example, to build API server image
 ```bash
 $ docker build -t ml-pipeline-api-server -f backend/Dockerfile .
 ```
-
-## Python based visualizations
-
-Python based visualizations are a new method to visualize results within the
-Kubeflow Pipelines UI. For more information about Python based visualizations
-please visit the [documentation page](https://www.kubeflow.org/docs/pipelines/sdk/python-based-visualizations).
-To create predefine visualizations please check the [developer guide](/backend/src/apiserver/visualization/README.md).
 
 ## Unit test
 
