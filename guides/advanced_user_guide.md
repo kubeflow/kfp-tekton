@@ -197,6 +197,7 @@ Below are the usages and input types:
 - add_pipeline_workspace() - InputType: workspace_name `str`, volume `V1Volume` (optional), volume_claim_template_spec `V1PersistentVolumeClaimSpec` (optional), path_prefix `str`
 - set_generate_component_spec_annotations() - InputType: `Bool`
 - set_condition_image_name() - InputType: `str`
+- set_bash_image_name() -  InputType: `str`
 
 ```python
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
