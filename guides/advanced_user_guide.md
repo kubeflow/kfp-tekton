@@ -196,6 +196,11 @@ Below are the usages and input types:
 - set_pipeline_env() - InputType: `Dict`
 - add_pipeline_workspace() - InputType: workspace_name `str`, volume `V1Volume` (optional), volume_claim_template_spec `V1PersistentVolumeClaimSpec` (optional), path_prefix `str`
 - set_generate_component_spec_annotations() - InputType: `Bool`
+<<<<<<< HEAD
+=======
+- set_condition_image_name() - InputType: `str`
+- set_bash_image_name() -  InputType: `str`
+>>>>>>> 972c8817f (feat(sdk): add bash script name config (#1334))
 
 ```python
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
