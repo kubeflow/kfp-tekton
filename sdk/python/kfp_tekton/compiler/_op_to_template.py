@@ -39,7 +39,7 @@ TEKTON_COPY_RESULTS_STEP_IMAGE = 'library/bash'
 GENERATE_COMPONENT_SPEC_ANNOTATIONS = env.get('GENERATE_COMPONENT_SPEC_ANNOTATIONS', True)
 
 
-def _get_base_step(name: str):
+def _get_base_step(name: str, tekton_bash_image_name: str = TEKTON_BASH_STEP_IMAGE):
     """Base image step for running bash commands.
 
     Return a busybox base step for running bash commands.
@@ -51,7 +51,7 @@ def _get_base_step(name: str):
         Dict[Text, Any]
     """
     return {
-        'image': TEKTON_BASH_STEP_IMAGE,
+        'image': tekton_bash_image_name,
         'name': name,
         'command': ['sh', '-ec']
     }
@@ -244,7 +244,8 @@ def _process_parameters(processed_op: BaseOp,
                         volume_template: List[Dict[Text, Any]],
                         replaced_param_list: List[Text],
                         artifact_to_result_mapping: Dict[Text, Any],
-                        mounted_param_paths: List[Text]):
+                        mounted_param_paths: List[Text],
+                        tekton_bash_image_name: str = TEKTON_BASH_STEP_IMAGE):
     """Process output parameters to replicate the same behavior as Argo.
 
     Since Tekton results need to be under /tekton/results. If file output paths cannot be
@@ -275,7 +276,7 @@ def _process_parameters(processed_op: BaseOp,
     """
     if outputs_dict.get('parameters'):
         template['spec']['results'] = []
-        copy_results_step = _get_base_step('copy-results')
+        copy_results_step = _get_base_step('copy-results', tekton_bash_image_name)
         script = "set -exo pipefail\n"
         for name, path in processed_op.file_outputs.items():
             template['spec']['results'].append({
@@ -397,7 +398,8 @@ def _process_base_ops(op: BaseOp):
 def _op_to_template(op: BaseOp,
                     pipelinerun_output_artifacts={},
                     artifact_items={},
-                    generate_component_spec_annotations=True):
+                    generate_component_spec_annotations=True,
+                    tekton_bash_image_name=TEKTON_BASH_STEP_IMAGE):
     """Generate template given an operator inherited from BaseOp."""
 
     # Display name
@@ -517,7 +519,8 @@ def _op_to_template(op: BaseOp,
                                                 volume_template,
                                                 replaced_param_list,
                                                 artifact_to_result_mapping,
-                                                mounted_param_paths)
+                                                mounted_param_paths,
+                                                tekton_bash_image_name)
         _process_output_artifacts(outputs_dict,
                                   volume_mount_step_template,
                                   volume_template,
