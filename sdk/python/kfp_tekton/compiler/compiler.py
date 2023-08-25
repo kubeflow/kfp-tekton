@@ -42,7 +42,7 @@ from kfp.dsl._metadata import _extract_pipeline_metadata
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing, fix_big_data_passing_using_volume, BIG_DATA_PATH_FORMAT
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
-from kfp_tekton.compiler._op_to_template import _op_to_template
+from kfp_tekton.compiler._op_to_template import _op_to_template, TEKTON_BASH_STEP_IMAGE
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task, _process_argo_vars
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler.yaml_utils import dump_yaml
@@ -152,6 +152,7 @@ class TektonCompiler(Compiler):
     self.task_workspaces = {}
     self.generate_component_spec_annotations = True
     self.condition_image_name = "python:3.9.17-alpine3.18"
+    self.bash_image_name = TEKTON_BASH_STEP_IMAGE
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -168,6 +169,7 @@ class TektonCompiler(Compiler):
     self.pipeline_workspaces = tekton_pipeline_conf.pipeline_workspaces
     self.generate_component_spec_annotations = tekton_pipeline_conf.generate_component_spec_annotations
     self.condition_image_name = tekton_pipeline_conf.condition_image_name
+    self.bash_image_name = tekton_pipeline_conf.bash_image_name
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -615,7 +617,8 @@ class TektonCompiler(Compiler):
     op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op,
                                                                   self.output_artifacts,
                                                                   self.artifact_items,
-                                                                  self.generate_component_spec_annotations)])
+                                                                  self.generate_component_spec_annotations,
+                                                                  self.bash_image_name)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise

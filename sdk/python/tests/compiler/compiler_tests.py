@@ -354,7 +354,10 @@ class TestTektonCompiler(unittest.TestCase):
     Test compiling a nested custom conditions workflow.
     """
     from .testdata.nested_custom_conditions import nested_condition_test
-    self._test_pipeline_workflow(nested_condition_test, 'nested_custom_conditions.yaml', skip_noninlined=True)
+    pipeline_conf = TektonPipelineConf()
+    pipeline_conf.set_bash_image_name("busybox:latest")
+    self._test_pipeline_workflow(nested_condition_test, 'nested_custom_conditions.yaml',
+                                 skip_noninlined=True, tekton_pipeline_conf=pipeline_conf)
 
   def test_custom_task_recur_with_cond_workflow(self):
     """
@@ -853,6 +856,7 @@ class TestTektonCompiler(unittest.TestCase):
           resources=V1ResourceRequirements(requests={"storage": "30Gi"})
     ))
     pipeline_conf.set_generate_component_spec_annotations(False)
+    pipeline_conf.set_bash_image_name("busybox:latest")
     self._test_pipeline_workflow(echo_pipeline, 'tekton_pipeline_conf.yaml',
                                  tekton_pipeline_conf=pipeline_conf,
                                  skip_noninlined=True)

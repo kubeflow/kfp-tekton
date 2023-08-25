@@ -14,6 +14,7 @@
 
 from kfp import dsl
 from kubernetes.client.models import V1SecurityContext, V1Volume, V1PersistentVolumeClaimSpec
+from kfp_tekton.compiler._op_to_template import TEKTON_BASH_STEP_IMAGE
 from typing import Dict
 
 TEKTON_PIPELINE_ANNOTATIONS = ['sidecar.istio.io/inject', 'tekton.dev/artifact_bucket',
@@ -35,6 +36,7 @@ class TektonPipelineConf(dsl.PipelineConf):
         self.pipeline_workspaces = {}
         self.generate_component_spec_annotations = True
         self.condition_image_name = "python:3.9.17-alpine3.18"
+        self.bash_image_name = TEKTON_BASH_STEP_IMAGE
         super().__init__(**kwargs)
 
     def copy(self):
@@ -98,4 +100,8 @@ class TektonPipelineConf(dsl.PipelineConf):
 
     def set_condition_image_name(self, condition_image_name: str):
         self.condition_image_name = condition_image_name
+        return self
+
+    def set_bash_image_name(self, bash_image_name: str):
+        self.bash_image_name = bash_image_name
         return self

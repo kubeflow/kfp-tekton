@@ -71,7 +71,7 @@ spec:
           command:
           - echo $(inputs.params.a) < $(inputs.params.b) < $(inputs.params.c)
           image: alpine:3.6
-        - image: busybox
+        - image: busybox:latest
           name: copy-results
           command:
           - sh
