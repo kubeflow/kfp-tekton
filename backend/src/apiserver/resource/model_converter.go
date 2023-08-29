@@ -26,7 +26,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/apiserver/template"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
-	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonV1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 func (r *ResourceManager) ToModelExperiment(apiExperiment *api.Experiment) (*model.Experiment, error) {
@@ -84,7 +84,7 @@ func (r *ResourceManager) ToModelRunDetail(run *api.Run, runId string, workflow 
 			DisplayName:        run.Name,
 			Name:               workflow.Name,
 			Namespace:          workflow.Namespace,
-			ServiceAccount:     workflow.Spec.ServiceAccountName,
+			ServiceAccount:     workflow.Spec.TaskRunTemplate.ServiceAccountName,
 			Conditions:         workflow.Condition(),
 			Description:        run.Description,
 			ResourceReferences: resourceReferences,
@@ -133,7 +133,7 @@ func (r *ResourceManager) ToModelJob(job *api.Job, swf *util.ScheduledWorkflow, 
 	}
 	serviceAccount := ""
 	if swf.Spec.Workflow != nil {
-		serviceAccount = swf.Spec.Workflow.Spec.ServiceAccountName
+		serviceAccount = swf.Spec.Workflow.Spec.TaskRunTemplate.ServiceAccountName
 	}
 	modelJob := &model.Job{
 		UUID:               string(swf.UID),
@@ -235,11 +235,11 @@ func apiParametersToModelParameters(apiParams []*api.Parameter) (string, error) 
 	}
 
 	// for Tekton
-	var params []v1beta1.Param
+	var params []tektonV1.Param
 	for _, apiParam := range apiParams {
-		param := v1beta1.Param{
+		param := tektonV1.Param{
 			Name: apiParam.Name,
-			Value: v1beta1.ArrayOrString{
+			Value: tektonV1.ParamValue{
 				Type:      "string",
 				StringVal: apiParam.Value,
 			},
@@ -257,9 +257,9 @@ func runtimeConfigToModelParameters(runtimeConfig *api.PipelineSpec_RuntimeConfi
 	if runtimeConfig == nil {
 		return "", nil
 	}
-	var params []v1beta1.Param
+	var params []tektonV1.Param
 	for k, v := range runtimeConfig.GetParameters() {
-		param := v1beta1.Param{
+		param := tektonV1.Param{
 			Name: k,
 		}
 		switch t := v.Value.(type) {

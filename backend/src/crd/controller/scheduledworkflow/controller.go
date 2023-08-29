@@ -29,7 +29,7 @@ import (
 	swfinformers "github.com/kubeflow/pipelines/backend/src/crd/pkg/client/informers/externalversions"
 	wraperror "github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	workflowclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	workflowinformers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
 	corev1 "k8s.io/api/core/v1"
@@ -89,7 +89,7 @@ func NewController(
 
 	// obtain references to shared informers
 	swfInformer := swfInformerFactory.Scheduledworkflow().V1beta1().ScheduledWorkflows()
-	workflowInformer := workflowInformerFactory.Tekton().V1beta1().PipelineRuns()
+	workflowInformer := workflowInformerFactory.Tekton().V1().PipelineRuns()
 
 	// Add controller types to the default Kubernetes Scheme so Events can be
 	// logged for controller types.

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   name: node-selector
@@ -53,6 +53,6 @@ spec:
               [], "version": "echo@sha256=e351a00f59eb0eb8d614bb41816020b768770ba7513a5b3c0c7ea5c2efa9c6d6"}'
   taskRunSpecs:
   - pipelineTaskName: echo
-    taskPodTemplate:
+    podTemplate:
       nodeSelector:
         kubernetes.io/os: linux

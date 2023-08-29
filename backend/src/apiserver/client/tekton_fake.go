@@ -17,7 +17,7 @@ package client
 import (
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
-	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1beta1"
+	tektonv1 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1"
 )
 
 type FakeTektonClient struct {
@@ -28,14 +28,14 @@ func NewFakeTektonClient() *FakeTektonClient {
 	return &FakeTektonClient{NewWorkflowClientFake()}
 }
 
-func (c *FakeTektonClient) Workflow(namespace string) tektonv1beta1.PipelineRunInterface {
+func (c *FakeTektonClient) Workflow(namespace string) tektonv1.PipelineRunInterface {
 	if len(namespace) == 0 {
 		panic(util.NewResourceNotFoundError("Namespace", namespace))
 	}
 	return c.workflowClientFake
 }
 
-func (c *FakeTektonClient) PipelineRun(namespace string) tektonv1beta1.PipelineRunInterface {
+func (c *FakeTektonClient) PipelineRun(namespace string) tektonv1.PipelineRunInterface {
 	if len(namespace) == 0 {
 		panic(util.NewResourceNotFoundError("Namespace", namespace))
 	}
@@ -72,6 +72,6 @@ func NewFakeTektonClientWithBadWorkflow() *FakeTektonClientWithBadWorkflow {
 	return &FakeTektonClientWithBadWorkflow{&FakeBadWorkflowClient{}}
 }
 
-func (c *FakeTektonClientWithBadWorkflow) Workflow(namespace string) tektonv1beta1.PipelineRunInterface {
+func (c *FakeTektonClientWithBadWorkflow) Workflow(namespace string) tektonv1.PipelineRunInterface {
 	return c.workflowClientFake
 }

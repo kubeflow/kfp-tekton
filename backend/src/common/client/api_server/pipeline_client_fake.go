@@ -10,11 +10,11 @@ import (
 	pipelineparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_client/pipeline_service"
 	pipelinemodel "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/pipeline_model"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/template"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Replaced Argo v1alpha1.Workflow to Tekton v1beta1.PipelineRun
+// Replaced Argo v1alpha1.Workflow to Tekton v1.PipelineRun
 
 const (
 	PipelineForDefaultTest     = "PIPELINE_ID_10"

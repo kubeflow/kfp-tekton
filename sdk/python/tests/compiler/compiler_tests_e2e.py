@@ -299,9 +299,9 @@ def _verify_tekton_cluster():
     tkn_ver_out = exit_on_error("tkn version")
     tkn_pipeline_ver = re.search(r"^Pipeline version: (.*)$", tkn_ver_out, re.MULTILINE).group(1)
     tkn_client_ver = re.search(r"^Client version: (.*)$", tkn_ver_out, re.MULTILINE).group(1)
-    assert version.parse(TKN_PIPELINE_MIN_VERSION) <= version.parse(tkn_pipeline_ver),\
+    assert version.parse(TKN_PIPELINE_MIN_VERSION) <= version.parse(tkn_pipeline_ver), \
         "Tekton Pipeline version must be >= {}, found '{}'".format(TKN_PIPELINE_MIN_VERSION, tkn_pipeline_ver)
-    assert version.parse(TKN_CLIENT_MIN_VERSION) <= version.parse(tkn_client_ver),\
+    assert version.parse(TKN_CLIENT_MIN_VERSION) <= version.parse(tkn_client_ver), \
         "Tekton CLI version must be >= {}, found '{}'".format(TKN_CLIENT_MIN_VERSION, tkn_client_ver)
 
 

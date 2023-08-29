@@ -18,13 +18,12 @@ import (
 	"context"
 	"encoding/json"
 
-	// workflow "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/golang/protobuf/ptypes/empty"
 	api "github.com/kubeflow/pipelines/backend/api/v1/go_client"
 	"github.com/kubeflow/pipelines/backend/src/apiserver/resource"
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	scheduledworkflow "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
-	workflow "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflow "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 type ReportServer struct {

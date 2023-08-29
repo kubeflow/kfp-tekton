@@ -20,7 +20,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 const (
@@ -48,8 +48,11 @@ const (
 	TerminateStatus                         string = "TERMINATE_STATUS"
 	MoveResultsImage                        string = "MOVERESULTS_IMAGE"
 	Path4InternalResults                    string = "PATH_FOR_INTERNAL_RESULTS"
+	ObjectStoreCredentialsSecret            string = "OBJECTSTORECONFIG_CREDENTIALSSECRET"
+	ObjectStoreCredentialsAccessKeyKey      string = "OBJECTSTORECONFIG_CREDENTIALSACCESSKEYKEY"
+	ObjectStoreCredentialsSecretKeyKey      string = "OBJECTSTORECONFIG_CREDENTIALSSECRETKEYKEY"
 	ObjectStoreAccessKey                    string = "OBJECTSTORECONFIG_ACCESSKEY"
-	ObjectStoreSecretKey                    string = "OBJECTSTORECONFIG_SECRETKEY"
+	ObjectStoreSecretKey                    string = "OBJECTSTORECONFIG_SECRETACCESSKEY"
 )
 
 func IsPipelineVersionUpdatedByDefault() bool {
@@ -144,6 +147,26 @@ func GetPodNamespace() string {
 
 func GetArtifactImage() string {
 	return GetStringConfigWithDefault(ArtifactImage, DefaultArtifactImage)
+}
+
+func GetObjectStoreAccessKey() string {
+	return GetStringConfig(ObjectStoreAccessKey)
+}
+
+func GetObjectStoreSecretKey() string {
+	return GetStringConfig(ObjectStoreSecretKey)
+}
+
+func GetObjectStoreCredentialsSecretName() string {
+	return GetStringConfigWithDefault(ObjectStoreCredentialsSecret, DefaultObjectStoreCredentialsSecret)
+}
+
+func GetObjectStoreCredentialsAccessKeyKey() string {
+	return GetStringConfigWithDefault(ObjectStoreCredentialsAccessKeyKey, DefaultObjectStoreCredentialsAccessKeyKey)
+}
+
+func GetObjectStoreCredentialsSecretKeyKey() string {
+	return GetStringConfigWithDefault(ObjectStoreCredentialsSecretKeyKey, DefaultObjectStoreCredentialsSecretKeyKey)
 }
 
 func GetMoveResultsImage() string {

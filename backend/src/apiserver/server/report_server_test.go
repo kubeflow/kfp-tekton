@@ -8,14 +8,13 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	"github.com/stretchr/testify/assert"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"google.golang.org/grpc/codes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// Converted argo v1alpha1.workflow to tekton v1beta1.pipelinerun
+// Converted argo v1alpha1.workflow to tekton workflowapi.pipelinerun
 // removed tests: "TestReportWorkflow"
 
 func TestReportWorkflow_ValidationFailed(t *testing.T) {
@@ -23,7 +22,7 @@ func TestReportWorkflow_ValidationFailed(t *testing.T) {
 	defer clientManager.Close()
 	reportServer := NewReportServer(resourceManager)
 
-	workflow := util.NewWorkflow(&v1beta1.PipelineRun{
+	workflow := util.NewWorkflow(&workflowapi.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "default",
 			UID:       types.UID(run.UUID),
@@ -45,7 +44,7 @@ func TestValidateReportWorkflowRequest(t *testing.T) {
 			Namespace: "MY_NAMESPACE",
 			UID:       "1",
 			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion: "kubeflow.org/v1beta1",
+				APIVersion: "kubeflow.org/workflowapi",
 				Kind:       "ScheduledWorkflow",
 				Name:       "SCHEDULE_NAME",
 				UID:        types.UID("1"),
@@ -72,7 +71,7 @@ func TestValidateReportWorkflowRequest_MissingField(t *testing.T) {
 			Namespace: "MY_NAMESPACE",
 			UID:       "1",
 			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion: "kubeflow.org/v1beta1",
+				APIVersion: "kubeflow.org/workflowapi",
 				Kind:       "ScheduledWorkflow",
 				Name:       "SCHEDULE_NAME",
 				UID:        types.UID("1"),
@@ -90,7 +89,7 @@ func TestValidateReportWorkflowRequest_MissingField(t *testing.T) {
 			Name: "MY_NAME",
 			UID:  "1",
 			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion: "kubeflow.org/v1beta1",
+				APIVersion: "kubeflow.org/workflowapi",
 				Kind:       "ScheduledWorkflow",
 				Name:       "SCHEDULE_NAME",
 				UID:        types.UID("1"),
@@ -109,7 +108,7 @@ func TestValidateReportWorkflowRequest_MissingField(t *testing.T) {
 			Name:      "MY_NAME",
 			Namespace: "MY_NAMESPACE",
 			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion: "kubeflow.org/v1beta1",
+				APIVersion: "kubeflow.org/workflowapi",
 				Kind:       "ScheduledWorkflow",
 				Name:       "SCHEDULE_NAME",
 				UID:        types.UID("1"),

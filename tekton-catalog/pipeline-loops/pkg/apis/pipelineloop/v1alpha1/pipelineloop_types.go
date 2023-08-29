@@ -18,8 +18,7 @@ package v1alpha1
 
 import (
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
-	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -43,12 +42,12 @@ type PipelineLoop struct {
 type PipelineLoopSpec struct {
 	// TaskRef is a reference to a task definition.
 	// +optional
-	// TaskRef     *v1beta1.TaskRef     `json:"taskRef,omitempty"`
-	PipelineRef *tektonv1beta1.PipelineRef `json:"pipelineRef,omitempty"`
+	// TaskRef     *tektonv1.TaskRef     `json:"taskRef,omitempty"`
+	PipelineRef *tektonv1.PipelineRef `json:"pipelineRef,omitempty"`
 
 	// TaskSpec is a specification of a task
 	// +optional
-	PipelineSpec *tektonv1beta1.PipelineSpec `json:"pipelineSpec,omitempty"`
+	PipelineSpec *tektonv1.PipelineSpec `json:"pipelineSpec,omitempty"`
 
 	// IterateParam is the name of the task parameter that is iterated upon.
 	IterateParam string `json:"iterateParam"`
@@ -83,11 +82,11 @@ type PipelineLoopSpec struct {
 
 	// Workspace to a volume mapping to be consumed by a PipelineRun.
 	// +optional
-	Workspaces []v1beta1.WorkspaceBinding `json:"workspaces,omitempty"`
+	Workspaces []tektonv1.WorkspaceBinding `json:"workspaces,omitempty"`
 
 	// TaskRunSpecs holds a set of runtime specs
 	// +optional
-	TaskRunSpecs []v1beta1.PipelineTaskRunSpec `json:"taskRunSpecs,omitempty"`
+	TaskRunSpecs []tektonv1.PipelineTaskRunSpec `json:"taskRunSpecs,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -164,5 +163,5 @@ type PipelineLoopPipelineRunStatus struct {
 	IterationItem interface{} `json:"iterationItem,omitempty"`
 	// Status is the TaskRunStatus for the corresponding TaskRun
 	// +optional
-	Status *v1beta1.PipelineRunStatus `json:"status,omitempty"`
+	Status *tektonv1.PipelineRunStatus `json:"status,omitempty"`
 }

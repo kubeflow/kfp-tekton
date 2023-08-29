@@ -20,7 +20,7 @@ import (
 	"github.com/golang/glog"
 	swfregister "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -29,12 +29,23 @@ import (
 // Workflow is a type to help manipulate Workflow objects.
 type Workflow struct {
 	*workflowapi.PipelineRun
+	// +optional
+	Status TektonStatus `json:"status,omitempty"`
+}
+
+type TektonStatus struct {
+	*workflowapi.PipelineRunStatus
+	// +optional
+	TaskRuns map[string]*workflowapi.PipelineRunTaskRunStatus `json:"taskRuns,omitempty"`
+	// +optional
+	Runs map[string]*workflowapi.PipelineRunRunStatus `json:"runs,omitempty"`
 }
 
 // NewWorkflow creates a Workflow.
 func NewWorkflow(workflow *workflowapi.PipelineRun) *Workflow {
 	return &Workflow{
 		workflow,
+		TektonStatus{&workflow.Status, map[string]*workflowapi.PipelineRunTaskRunStatus{}, map[string]*workflowapi.PipelineRunRunStatus{}},
 	}
 }
 
@@ -49,14 +60,14 @@ func (w *Workflow) GetWorkflowParametersAsMap() map[string]string {
 
 // SetServiceAccount Set the service account to run the workflow.
 func (w *Workflow) SetServiceAccount(serviceAccount string) {
-	w.Spec.ServiceAccountName = serviceAccount
+	w.Spec.TaskRunTemplate.ServiceAccountName = serviceAccount
 }
 
 // OverrideParameters overrides some of the parameters of a Workflow.
 func (w *Workflow) OverrideParameters(desiredParams map[string]string) {
 	desiredSlice := make([]workflowapi.Param, 0)
 	for _, currentParam := range w.Spec.Params {
-		var desiredValue workflowapi.ArrayOrString = workflowapi.ArrayOrString{
+		var desiredValue workflowapi.ParamValue = workflowapi.ParamValue{
 			Type:      "string",
 			StringVal: "",
 		}
@@ -171,9 +182,9 @@ func (w *Workflow) Condition() string {
 }
 
 func (w *Workflow) ToStringForStore() string {
-	workflow, err := json.Marshal(w.PipelineRun)
+	workflow, err := json.Marshal(w)
 	if err != nil {
-		glog.Errorf("Could not marshal the workflow: %v", w.PipelineRun)
+		glog.Errorf("Could not marshal the workflow: %v", w)
 		return ""
 	}
 	return string(workflow)

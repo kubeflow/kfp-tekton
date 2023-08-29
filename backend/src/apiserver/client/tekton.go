@@ -22,24 +22,24 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/common/util"
 	"github.com/pkg/errors"
 	tektonclient "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
-	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1beta1"
+	tektonv1 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1"
 	"k8s.io/client-go/rest"
 )
 
 type TektonClientInterface interface {
-	PipelineRun(namespace string) tektonv1beta1.PipelineRunInterface
+	PipelineRun(namespace string) tektonv1.PipelineRunInterface
 }
 
 type TektonClient struct {
-	tektonClient tektonv1beta1.TektonV1beta1Interface
+	tektonClient tektonv1.TektonV1Interface
 }
 
-func (tektonClient *TektonClient) PipelineRun(namespace string) tektonv1beta1.PipelineRunInterface {
+func (tektonClient *TektonClient) PipelineRun(namespace string) tektonv1.PipelineRunInterface {
 	return tektonClient.tektonClient.PipelineRuns(namespace)
 }
 
 func NewTektonClientOrFatal(initConnectionTimeout time.Duration, clientParams util.ClientParameters) *TektonClient {
-	var tektonClient tektonv1beta1.TektonV1beta1Interface
+	var tektonClient tektonv1.TektonV1Interface
 	var operation = func() error {
 		restConfig, err := rest.InClusterConfig()
 		if err != nil {
@@ -47,7 +47,7 @@ func NewTektonClientOrFatal(initConnectionTimeout time.Duration, clientParams ut
 		}
 		restConfig.QPS = float32(clientParams.QPS)
 		restConfig.Burst = clientParams.Burst
-		tektonClient = tektonclient.NewForConfigOrDie(restConfig).TektonV1beta1()
+		tektonClient = tektonclient.NewForConfigOrDie(restConfig).TektonV1()
 		return nil
 	}
 

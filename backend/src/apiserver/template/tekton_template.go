@@ -10,7 +10,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	workflowapiV1beta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"sigs.k8s.io/yaml"
 
 	api "github.com/kubeflow/pipelines/backend/api/v1/go_client"
@@ -236,8 +237,18 @@ func ValidatePipelineRun(template []byte) (*util.Workflow, error) {
 	if err != nil {
 		return nil, util.NewInvalidInputErrorWithDetails(err, "Failed to parse the PipelineRun template.")
 	}
+	if pr.APIVersion == TektonBetaGroup {
+		var prV1beta1 workflowapiV1beta.PipelineRun
+		err := yaml.Unmarshal(template, &prV1beta1)
+		if err != nil {
+			return nil, util.NewInvalidInputErrorWithDetails(err, "Failed to parse the V1beta1 PipelineRun template.")
+		}
+		ctx := context.Background()
+		prV1beta1.ConvertTo(ctx, &pr)
+		pr.APIVersion = TektonVersion
+	}
 	if pr.APIVersion != TektonVersion {
-		return nil, util.NewInvalidInputError("Unsupported argo version. Expected: %v. Received: %v", TektonVersion, pr.APIVersion)
+		return nil, util.NewInvalidInputError("Unsupported argo or old Tekton version. Expected: %v. Received: %v", TektonVersion, pr.APIVersion)
 	}
 	if pr.Kind != TektonK8sResource {
 		return nil, util.NewInvalidInputError("Unexpected resource type. Expected: %v. Received: %v", TektonK8sResource, pr.Kind)
@@ -272,6 +283,9 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 		artifacts, hasArtifacts := artifactItemsJSON[task.Name]
 		archiveLogs := common.IsArchiveLogs()
 		trackArtifacts := common.IsTrackArtifacts()
+		objectStoreCredentialsSecretName := common.GetObjectStoreCredentialsSecretName()
+		objectStoreCredentialsSecretAccessKeyKey := common.GetObjectStoreCredentialsAccessKeyKey()
+		objectStoreCredentialsSecretSecretKeyKey := common.GetObjectStoreCredentialsSecretKeyKey()
 		stripEOF := common.IsStripEOF()
 		injectDefaultScript := common.IsInjectDefaultScript()
 		copyStepTemplate := common.GetCopyStepTemplate()
@@ -354,8 +368,8 @@ func (t *Tekton) injectArchivalStep(workflow util.Workflow, artifactItemsJSON ma
 					t.getObjectFieldSelector("PIPELINERUN", "metadata.labels['tekton.dev/pipelineRun']"),
 					t.getObjectFieldSelector("PODNAME", "metadata.name"),
 					t.getObjectFieldSelector("NAMESPACE", "metadata.namespace"),
-					t.getSecretKeySelector("AWS_ACCESS_KEY_ID", "mlpipeline-minio-artifact", "accesskey"),
-					t.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", "mlpipeline-minio-artifact", "secretkey"),
+					t.getSecretKeySelector("AWS_ACCESS_KEY_ID", objectStoreCredentialsSecretName, objectStoreCredentialsSecretAccessKeyKey),
+					t.getSecretKeySelector("AWS_SECRET_ACCESS_KEY", objectStoreCredentialsSecretName, objectStoreCredentialsSecretSecretKeyKey),
 					t.getEnvVar("ARCHIVE_LOGS", strconv.FormatBool(archiveLogs)),
 					t.getEnvVar("TRACK_ARTIFACTS", strconv.FormatBool(trackArtifacts)),
 					t.getEnvVar("STRIP_EOF", strconv.FormatBool(stripEOF)),

@@ -19,12 +19,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"github.com/kubeflow/pipelines/backend/src/common/util"
-	"github.com/stretchr/testify/assert"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 	"time"
+
+	"github.com/kubeflow/pipelines/backend/src/common/util"
+	"github.com/stretchr/testify/assert"
+	tektonV1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func compressInput(t *testing.T, content string) []byte {
@@ -61,7 +62,7 @@ func initLogArchive() *LogArchive {
 
 func TestGetLogObjectKey(t *testing.T) {
 	logArchive := initLogArchive()
-	workflow := util.NewWorkflow(&v1beta1.PipelineRun{
+	workflow := util.NewWorkflow(&tektonV1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "MY_NAMESPACE",
 			Name:      "MY_NAME",

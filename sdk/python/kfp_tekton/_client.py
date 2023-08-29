@@ -26,6 +26,7 @@ import kfp_tekton_server_api as kfp_server_api
 from kfp_tekton_server_api import ApiException
 
 from .compiler import TektonCompiler
+from .compiler.pipeline_utils import TektonPipelineConf
 
 import json
 import logging
@@ -810,6 +811,7 @@ class TektonClient(kfp.Client):
                                       run_name=None,
                                       experiment_name=None,
                                       pipeline_conf: kfp.dsl.PipelineConf = None,
+                                      tekton_pipeline_conf: TektonPipelineConf = None,
                                       namespace=None):
       """Runs pipeline on Kubernetes cluster with Kubeflow Pipelines Tekton backend.
 
@@ -833,7 +835,10 @@ class TektonClient(kfp.Client):
       run_name = run_name or pipeline_name + ' ' + datetime.now().strftime('%Y-%m-%d %H-%M-%S')
       try:
           (_, pipeline_package_path) = tempfile.mkstemp(suffix='.zip')
-          TektonCompiler().compile(pipeline_func, pipeline_package_path, pipeline_conf=pipeline_conf)
+          TektonCompiler().compile(pipeline_func,
+                                   pipeline_package_path,
+                                   pipeline_conf=pipeline_conf,
+                                   tekton_pipeline_conf=tekton_pipeline_conf)
           return self.create_run_from_pipeline_package(pipeline_package_path, arguments,
                                                       run_name, experiment_name, namespace)
       finally:
