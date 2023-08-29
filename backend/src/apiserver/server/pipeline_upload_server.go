@@ -123,7 +123,7 @@ func (s *PipelineUploadServer) UploadPipeline(w http.ResponseWriter, r *http.Req
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	marshaler := &jsonpb.Marshaler{EnumsAsInts: false, OrigName: false}
+	marshaler := &jsonpb.Marshaler{EnumsAsInts: false, OrigName: true}
 	err = marshaler.Marshal(w, ToApiPipeline(newPipeline))
 	if err != nil {
 		s.writeErrorToResponse(w, http.StatusInternalServerError, util.Wrap(err, "Error creating pipeline"))
@@ -204,7 +204,7 @@ func (s *PipelineUploadServer) UploadPipelineVersion(w http.ResponseWriter, r *h
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	marshaler := &jsonpb.Marshaler{EnumsAsInts: false, OrigName: false}
+	marshaler := &jsonpb.Marshaler{EnumsAsInts: false, OrigName: true}
 	createdPipelineVersion, err := ToApiPipelineVersion(newPipelineVersion)
 	if err != nil {
 		s.writeErrorToResponse(w, http.StatusInternalServerError, util.Wrap(err, "Error creating pipeline version"))
