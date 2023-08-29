@@ -495,7 +495,7 @@ class RunServiceApi(object):
 
         path_params = {}
         if 'run_id' in local_var_params:
-            path_params['runId'] = local_var_params['run_id']  # noqa: E501
+            path_params['run_id'] = local_var_params['run_id']  # noqa: E501
 
         query_params = []
 
@@ -513,7 +513,7 @@ class RunServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1/runs/{runId}', 'GET',
+            '/apis/v1/runs/{run_id}', 'GET',
             path_params,
             query_params,
             header_params,
@@ -640,15 +640,15 @@ class RunServiceApi(object):
 
         query_params = []
         if 'page_token' in local_var_params and local_var_params['page_token'] is not None:  # noqa: E501
-            query_params.append(('pageToken', local_var_params['page_token']))  # noqa: E501
+            query_params.append(('page_token', local_var_params['page_token']))  # noqa: E501
         if 'page_size' in local_var_params and local_var_params['page_size'] is not None:  # noqa: E501
-            query_params.append(('pageSize', local_var_params['page_size']))  # noqa: E501
+            query_params.append(('page_size', local_var_params['page_size']))  # noqa: E501
         if 'sort_by' in local_var_params and local_var_params['sort_by'] is not None:  # noqa: E501
-            query_params.append(('sortBy', local_var_params['sort_by']))  # noqa: E501
+            query_params.append(('sort_by', local_var_params['sort_by']))  # noqa: E501
         if 'resource_reference_key_type' in local_var_params and local_var_params['resource_reference_key_type'] is not None:  # noqa: E501
-            query_params.append(('resourceReferenceKey.type', local_var_params['resource_reference_key_type']))  # noqa: E501
+            query_params.append(('resource_reference_key.type', local_var_params['resource_reference_key_type']))  # noqa: E501
         if 'resource_reference_key_id' in local_var_params and local_var_params['resource_reference_key_id'] is not None:  # noqa: E501
-            query_params.append(('resourceReferenceKey.id', local_var_params['resource_reference_key_id']))  # noqa: E501
+            query_params.append(('resource_reference_key.id', local_var_params['resource_reference_key_id']))  # noqa: E501
         if 'filter' in local_var_params and local_var_params['filter'] is not None:  # noqa: E501
             query_params.append(('filter', local_var_params['filter']))  # noqa: E501
 
@@ -788,11 +788,11 @@ class RunServiceApi(object):
 
         path_params = {}
         if 'run_id' in local_var_params:
-            path_params['runId'] = local_var_params['run_id']  # noqa: E501
+            path_params['run_id'] = local_var_params['run_id']  # noqa: E501
         if 'node_id' in local_var_params:
-            path_params['nodeId'] = local_var_params['node_id']  # noqa: E501
+            path_params['node_id'] = local_var_params['node_id']  # noqa: E501
         if 'artifact_name' in local_var_params:
-            path_params['artifactName'] = local_var_params['artifact_name']  # noqa: E501
+            path_params['artifact_name'] = local_var_params['artifact_name']  # noqa: E501
 
         query_params = []
 
@@ -810,7 +810,7 @@ class RunServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1/runs/{runId}/nodes/{nodeId}/artifacts/{artifactName}:read', 'GET',
+            '/apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read', 'GET',
             path_params,
             query_params,
             header_params,
@@ -923,7 +923,7 @@ class RunServiceApi(object):
 
         path_params = {}
         if 'run_id' in local_var_params:
-            path_params['runId'] = local_var_params['run_id']  # noqa: E501
+            path_params['run_id'] = local_var_params['run_id']  # noqa: E501
 
         query_params = []
 
@@ -947,7 +947,7 @@ class RunServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1/runs/{runId}:reportMetrics', 'POST',
+            '/apis/v1/runs/{run_id}:reportMetrics', 'POST',
             path_params,
             query_params,
             header_params,
@@ -1051,7 +1051,7 @@ class RunServiceApi(object):
 
         path_params = {}
         if 'run_id' in local_var_params:
-            path_params['runId'] = local_var_params['run_id']  # noqa: E501
+            path_params['run_id'] = local_var_params['run_id']  # noqa: E501
 
         query_params = []
 
@@ -1069,7 +1069,7 @@ class RunServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1/runs/{runId}/retry', 'POST',
+            '/apis/v1/runs/{run_id}/retry', 'POST',
             path_params,
             query_params,
             header_params,
@@ -1173,7 +1173,7 @@ class RunServiceApi(object):
 
         path_params = {}
         if 'run_id' in local_var_params:
-            path_params['runId'] = local_var_params['run_id']  # noqa: E501
+            path_params['run_id'] = local_var_params['run_id']  # noqa: E501
 
         query_params = []
 
@@ -1191,7 +1191,7 @@ class RunServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1/runs/{runId}/terminate', 'POST',
+            '/apis/v1/runs/{run_id}/terminate', 'POST',
             path_params,
             query_params,
             header_params,

@@ -22,7 +22,7 @@ type V1Experiment struct {
 
 	// Output. The time that the experiment created.
 	// Format: date-time
-	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
+	CreatedAt strfmt.DateTime `json:"created_at,omitempty"`
 
 	// Optional input field. Describing the purpose of the experiment
 	Description string `json:"description,omitempty"`
@@ -35,10 +35,10 @@ type V1Experiment struct {
 
 	// Optional input field. Specify which resource this run belongs to.
 	// For Experiment, the only valid resource reference is a single Namespace.
-	ResourceReferences []*V1ResourceReference `json:"resourceReferences"`
+	ResourceReferences []*V1ResourceReference `json:"resource_references"`
 
 	// Output. Specifies whether this experiment is in archived or available state.
-	StorageState *V1ExperimentStorageState `json:"storageState,omitempty"`
+	StorageState *V1ExperimentStorageState `json:"storage_state,omitempty"`
 }
 
 // Validate validates this v1 experiment
@@ -68,7 +68,7 @@ func (m *V1Experiment) validateCreatedAt(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("createdAt", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
+	if err := validate.FormatOf("created_at", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
 		return err
 	}
 
@@ -88,9 +88,9 @@ func (m *V1Experiment) validateResourceReferences(formats strfmt.Registry) error
 		if m.ResourceReferences[i] != nil {
 			if err := m.ResourceReferences[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -109,9 +109,9 @@ func (m *V1Experiment) validateStorageState(formats strfmt.Registry) error {
 	if m.StorageState != nil {
 		if err := m.StorageState.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("storageState")
+				return ve.ValidateName("storage_state")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("storageState")
+				return ce.ValidateName("storage_state")
 			}
 			return err
 		}
@@ -145,9 +145,9 @@ func (m *V1Experiment) contextValidateResourceReferences(ctx context.Context, fo
 		if m.ResourceReferences[i] != nil {
 			if err := m.ResourceReferences[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -163,9 +163,9 @@ func (m *V1Experiment) contextValidateStorageState(ctx context.Context, formats 
 	if m.StorageState != nil {
 		if err := m.StorageState.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("storageState")
+				return ve.ValidateName("storage_state")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("storageState")
+				return ce.ValidateName("storage_state")
 			}
 			return err
 		}

@@ -19,7 +19,7 @@ import (
 type V1RunDetail struct {
 
 	// pipeline runtime
-	PipelineRuntime *V1PipelineRuntime `json:"pipelineRuntime,omitempty"`
+	PipelineRuntime *V1PipelineRuntime `json:"pipeline_runtime,omitempty"`
 
 	// run
 	Run *V1Run `json:"run,omitempty"`
@@ -51,9 +51,9 @@ func (m *V1RunDetail) validatePipelineRuntime(formats strfmt.Registry) error {
 	if m.PipelineRuntime != nil {
 		if err := m.PipelineRuntime.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("pipelineRuntime")
+				return ve.ValidateName("pipeline_runtime")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("pipelineRuntime")
+				return ce.ValidateName("pipeline_runtime")
 			}
 			return err
 		}
@@ -104,9 +104,9 @@ func (m *V1RunDetail) contextValidatePipelineRuntime(ctx context.Context, format
 	if m.PipelineRuntime != nil {
 		if err := m.PipelineRuntime.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("pipelineRuntime")
+				return ve.ValidateName("pipeline_runtime")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("pipelineRuntime")
+				return ce.ValidateName("pipeline_runtime")
 			}
 			return err
 		}

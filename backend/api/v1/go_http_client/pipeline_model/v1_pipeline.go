@@ -22,13 +22,13 @@ type V1Pipeline struct {
 
 	// Output. The time this pipeline is created.
 	// Format: date-time
-	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
+	CreatedAt strfmt.DateTime `json:"created_at,omitempty"`
 
 	// Output only. The default version of the pipeline. As of now, the latest
 	// version is used as default. (In the future, if desired by customers, we
 	// can allow them to set default version.)
 	// Read Only: true
-	DefaultVersion *V1PipelineVersion `json:"defaultVersion,omitempty"`
+	DefaultVersion *V1PipelineVersion `json:"default_version,omitempty"`
 
 	// Optional input field. Describing the purpose of the job.
 	Description string `json:"description,omitempty"`
@@ -53,7 +53,7 @@ type V1Pipeline struct {
 
 	// Input field. Specify which resource this pipeline belongs to.
 	// For Pipeline, the only valid resource reference is a single Namespace.
-	ResourceReferences []*V1ResourceReference `json:"resourceReferences"`
+	ResourceReferences []*V1ResourceReference `json:"resource_references"`
 
 	// The URL to the source of the pipeline. This is required when creating the
 	// pipeine through CreatePipeline API.
@@ -98,7 +98,7 @@ func (m *V1Pipeline) validateCreatedAt(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("createdAt", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
+	if err := validate.FormatOf("created_at", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
 		return err
 	}
 
@@ -113,9 +113,9 @@ func (m *V1Pipeline) validateDefaultVersion(formats strfmt.Registry) error {
 	if m.DefaultVersion != nil {
 		if err := m.DefaultVersion.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("defaultVersion")
+				return ve.ValidateName("default_version")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("defaultVersion")
+				return ce.ValidateName("default_version")
 			}
 			return err
 		}
@@ -163,9 +163,9 @@ func (m *V1Pipeline) validateResourceReferences(formats strfmt.Registry) error {
 		if m.ResourceReferences[i] != nil {
 			if err := m.ResourceReferences[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -226,9 +226,9 @@ func (m *V1Pipeline) contextValidateDefaultVersion(ctx context.Context, formats 
 	if m.DefaultVersion != nil {
 		if err := m.DefaultVersion.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("defaultVersion")
+				return ve.ValidateName("default_version")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("defaultVersion")
+				return ce.ValidateName("default_version")
 			}
 			return err
 		}
@@ -264,9 +264,9 @@ func (m *V1Pipeline) contextValidateResourceReferences(ctx context.Context, form
 		if m.ResourceReferences[i] != nil {
 			if err := m.ResourceReferences[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

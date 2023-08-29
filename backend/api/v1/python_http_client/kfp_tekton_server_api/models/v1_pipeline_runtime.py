@@ -38,8 +38,8 @@ class V1PipelineRuntime(object):
     }
 
     attribute_map = {
-        'pipeline_manifest': 'pipelineManifest',
-        'workflow_manifest': 'workflowManifest'
+        'pipeline_manifest': 'pipeline_manifest',
+        'workflow_manifest': 'workflow_manifest'
     }
 
     def __init__(self, pipeline_manifest=None, workflow_manifest=None, local_vars_configuration=None):  # noqa: E501

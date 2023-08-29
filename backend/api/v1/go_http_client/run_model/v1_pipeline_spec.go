@@ -25,21 +25,21 @@ type V1PipelineSpec struct {
 	Parameters []*V1Parameter `json:"parameters"`
 
 	// Optional input field. The ID of the pipeline user uploaded before.
-	PipelineID string `json:"pipelineId,omitempty"`
+	PipelineID string `json:"pipeline_id,omitempty"`
 
 	// Optional input field. The raw pipeline JSON spec.
-	PipelineManifest string `json:"pipelineManifest,omitempty"`
+	PipelineManifest string `json:"pipeline_manifest,omitempty"`
 
 	// Optional output field. The name of the pipeline.
 	// Not empty if the pipeline id is not empty.
-	PipelineName string `json:"pipelineName,omitempty"`
+	PipelineName string `json:"pipeline_name,omitempty"`
 
 	// Runtime config of the pipeline. V2 only
-	RuntimeConfig *PipelineSpecRuntimeConfig `json:"runtimeConfig,omitempty"`
+	RuntimeConfig *PipelineSpecRuntimeConfig `json:"runtime_config,omitempty"`
 
 	// Optional input field. The marshalled raw argo JSON workflow.
 	// This will be deprecated when pipeline_manifest is in use.
-	WorkflowManifest string `json:"workflowManifest,omitempty"`
+	WorkflowManifest string `json:"workflow_manifest,omitempty"`
 }
 
 // Validate validates this v1 pipeline spec
@@ -94,9 +94,9 @@ func (m *V1PipelineSpec) validateRuntimeConfig(formats strfmt.Registry) error {
 	if m.RuntimeConfig != nil {
 		if err := m.RuntimeConfig.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("runtimeConfig")
+				return ve.ValidateName("runtime_config")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("runtimeConfig")
+				return ce.ValidateName("runtime_config")
 			}
 			return err
 		}
@@ -148,9 +148,9 @@ func (m *V1PipelineSpec) contextValidateRuntimeConfig(ctx context.Context, forma
 	if m.RuntimeConfig != nil {
 		if err := m.RuntimeConfig.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("runtimeConfig")
+				return ve.ValidateName("runtime_config")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("runtimeConfig")
+				return ce.ValidateName("runtime_config")
 			}
 			return err
 		}

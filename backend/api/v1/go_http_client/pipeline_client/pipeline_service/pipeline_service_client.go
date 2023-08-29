@@ -178,7 +178,7 @@ func (a *Client) PipelineServiceDeletePipelineVersion(params *PipelineServiceDel
 	op := &runtime.ClientOperation{
 		ID:                 "PipelineService_DeletePipelineVersion",
 		Method:             "DELETE",
-		PathPattern:        "/apis/v1/pipeline_versions/{versionId}",
+		PathPattern:        "/apis/v1/pipeline_versions/{version_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -254,7 +254,7 @@ func (a *Client) PipelineServiceGetPipelineVersion(params *PipelineServiceGetPip
 	op := &runtime.ClientOperation{
 		ID:                 "PipelineService_GetPipelineVersion",
 		Method:             "GET",
-		PathPattern:        "/apis/v1/pipeline_versions/{versionId}",
+		PathPattern:        "/apis/v1/pipeline_versions/{version_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -292,7 +292,7 @@ func (a *Client) PipelineServiceGetPipelineVersionTemplate(params *PipelineServi
 	op := &runtime.ClientOperation{
 		ID:                 "PipelineService_GetPipelineVersionTemplate",
 		Method:             "GET",
-		PathPattern:        "/apis/v1/pipeline_versions/{versionId}/templates",
+		PathPattern:        "/apis/v1/pipeline_versions/{version_id}/templates",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -444,7 +444,7 @@ func (a *Client) PipelineServiceUpdatePipelineDefaultVersion(params *PipelineSer
 	op := &runtime.ClientOperation{
 		ID:                 "PipelineService_UpdatePipelineDefaultVersion",
 		Method:             "POST",
-		PathPattern:        "/apis/v1/pipelines/{pipelineId}/default_version/{versionId}",
+		PathPattern:        "/apis/v1/pipelines/{pipeline_id}/default_version/{version_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

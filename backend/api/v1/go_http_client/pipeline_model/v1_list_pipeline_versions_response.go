@@ -20,10 +20,10 @@ import (
 type V1ListPipelineVersionsResponse struct {
 
 	// The token to list the next page of pipeline versions.
-	NextPageToken string `json:"nextPageToken,omitempty"`
+	NextPageToken string `json:"next_page_token,omitempty"`
 
 	// The total number of pipeline versions for the given query.
-	TotalSize int32 `json:"totalSize,omitempty"`
+	TotalSize int32 `json:"total_size,omitempty"`
 
 	// versions
 	Versions []*V1PipelineVersion `json:"versions"`

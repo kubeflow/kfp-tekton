@@ -40,8 +40,8 @@ class V1ListPipelineVersionsResponse(object):
 
     attribute_map = {
         'versions': 'versions',
-        'next_page_token': 'nextPageToken',
-        'total_size': 'totalSize'
+        'next_page_token': 'next_page_token',
+        'total_size': 'total_size'
     }
 
     def __init__(self, versions=None, next_page_token=None, total_size=None, local_vars_configuration=None):  # noqa: E501

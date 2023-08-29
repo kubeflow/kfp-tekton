@@ -20,13 +20,13 @@ import (
 type V1ListRunsResponse struct {
 
 	// The token to list the next page of runs.
-	NextPageToken string `json:"nextPageToken,omitempty"`
+	NextPageToken string `json:"next_page_token,omitempty"`
 
 	// runs
 	Runs []*V1Run `json:"runs"`
 
 	// The total number of runs for the given query.
-	TotalSize int32 `json:"totalSize,omitempty"`
+	TotalSize int32 `json:"total_size,omitempty"`
 }
 
 // Validate validates this v1 list runs response

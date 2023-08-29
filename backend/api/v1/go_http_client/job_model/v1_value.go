@@ -18,13 +18,13 @@ import (
 type V1Value struct {
 
 	// A double value
-	DoubleValue float64 `json:"doubleValue,omitempty"`
+	DoubleValue float64 `json:"double_value,omitempty"`
 
 	// An integer value
-	IntValue string `json:"intValue,omitempty"`
+	IntValue string `json:"int_value,omitempty"`
 
 	// A string value
-	StringValue string `json:"stringValue,omitempty"`
+	StringValue string `json:"string_value,omitempty"`
 }
 
 // Validate validates this v1 value

@@ -40,8 +40,8 @@ class V1ListExperimentsResponse(object):
 
     attribute_map = {
         'experiments': 'experiments',
-        'total_size': 'totalSize',
-        'next_page_token': 'nextPageToken'
+        'total_size': 'total_size',
+        'next_page_token': 'next_page_token'
     }
 
     def __init__(self, experiments=None, total_size=None, next_page_token=None, local_vars_configuration=None):  # noqa: E501

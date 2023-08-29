@@ -19,11 +19,11 @@ type V1PipelineRuntime struct {
 
 	// Output. The runtime JSON manifest of the pipeline, including the status
 	// of pipeline steps and fields need for UI visualization etc.
-	PipelineManifest string `json:"pipelineManifest,omitempty"`
+	PipelineManifest string `json:"pipeline_manifest,omitempty"`
 
 	// Output. The runtime JSON manifest of the argo workflow.
 	// This is deprecated after pipeline_runtime_manifest is in use.
-	WorkflowManifest string `json:"workflowManifest,omitempty"`
+	WorkflowManifest string `json:"workflow_manifest,omitempty"`
 }
 
 // Validate validates this v1 pipeline runtime

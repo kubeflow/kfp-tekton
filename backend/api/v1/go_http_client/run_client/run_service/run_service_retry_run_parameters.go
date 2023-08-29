@@ -139,8 +139,8 @@ func (o *RunServiceRetryRunParams) WriteToRequest(r runtime.ClientRequest, reg s
 	}
 	var res []error
 
-	// path param runId
-	if err := r.SetPathParam("runId", o.RunID); err != nil {
+	// path param run_id
+	if err := r.SetPathParam("run_id", o.RunID); err != nil {
 		return err
 	}
 

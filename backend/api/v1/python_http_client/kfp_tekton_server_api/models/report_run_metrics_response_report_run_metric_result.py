@@ -40,8 +40,8 @@ class ReportRunMetricsResponseReportRunMetricResult(object):
     }
 
     attribute_map = {
-        'metric_name': 'metricName',
-        'metric_node_id': 'metricNodeId',
+        'metric_name': 'metric_name',
+        'metric_node_id': 'metric_node_id',
         'status': 'status',
         'message': 'message'
     }

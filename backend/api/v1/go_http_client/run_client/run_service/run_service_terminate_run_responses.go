@@ -86,11 +86,11 @@ func (o *RunServiceTerminateRunOK) Code() int {
 }
 
 func (o *RunServiceTerminateRunOK) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}/terminate][%d] runServiceTerminateRunOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}/terminate][%d] runServiceTerminateRunOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceTerminateRunOK) String() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}/terminate][%d] runServiceTerminateRunOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}/terminate][%d] runServiceTerminateRunOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceTerminateRunOK) GetPayload() interface{} {
@@ -156,11 +156,11 @@ func (o *RunServiceTerminateRunDefault) Code() int {
 }
 
 func (o *RunServiceTerminateRunDefault) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}/terminate][%d] RunService_TerminateRun default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}/terminate][%d] RunService_TerminateRun default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceTerminateRunDefault) String() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}/terminate][%d] RunService_TerminateRun default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}/terminate][%d] RunService_TerminateRun default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceTerminateRunDefault) GetPayload() *run_model.GooglerpcStatus {

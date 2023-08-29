@@ -39,7 +39,7 @@ class PipelineSpecRuntimeConfig(object):
 
     attribute_map = {
         'parameters': 'parameters',
-        'pipeline_root': 'pipelineRoot'
+        'pipeline_root': 'pipeline_root'
     }
 
     def __init__(self, parameters=None, pipeline_root=None, local_vars_configuration=None):  # noqa: E501

@@ -21,14 +21,14 @@ type V1PeriodicSchedule struct {
 
 	// The end time of the periodic job
 	// Format: date-time
-	EndTime strfmt.DateTime `json:"endTime,omitempty"`
+	EndTime strfmt.DateTime `json:"end_time,omitempty"`
 
 	// The time interval between the starting time of consecutive jobs
-	IntervalSecond string `json:"intervalSecond,omitempty"`
+	IntervalSecond int64 `json:"interval_second,omitempty,string"`
 
 	// The start time of the periodic job
 	// Format: date-time
-	StartTime strfmt.DateTime `json:"startTime,omitempty"`
+	StartTime strfmt.DateTime `json:"start_time,omitempty"`
 }
 
 // Validate validates this v1 periodic schedule
@@ -54,7 +54,7 @@ func (m *V1PeriodicSchedule) validateEndTime(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("endTime", "body", "date-time", m.EndTime.String(), formats); err != nil {
+	if err := validate.FormatOf("end_time", "body", "date-time", m.EndTime.String(), formats); err != nil {
 		return err
 	}
 
@@ -66,7 +66,7 @@ func (m *V1PeriodicSchedule) validateStartTime(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("startTime", "body", "date-time", m.StartTime.String(), formats); err != nil {
+	if err := validate.FormatOf("start_time", "body", "date-time", m.StartTime.String(), formats); err != nil {
 		return err
 	}
 

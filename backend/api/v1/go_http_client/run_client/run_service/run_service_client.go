@@ -176,7 +176,7 @@ func (a *Client) RunServiceGetRun(params *RunServiceGetRunParams, authInfo runti
 	op := &runtime.ClientOperation{
 		ID:                 "RunService_GetRun",
 		Method:             "GET",
-		PathPattern:        "/apis/v1/runs/{runId}",
+		PathPattern:        "/apis/v1/runs/{run_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -252,7 +252,7 @@ func (a *Client) RunServiceReadArtifact(params *RunServiceReadArtifactParams, au
 	op := &runtime.ClientOperation{
 		ID:                 "RunService_ReadArtifact",
 		Method:             "GET",
-		PathPattern:        "/apis/v1/runs/{runId}/nodes/{nodeId}/artifacts/{artifactName}:read",
+		PathPattern:        "/apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -290,7 +290,7 @@ func (a *Client) RunServiceReportRunMetrics(params *RunServiceReportRunMetricsPa
 	op := &runtime.ClientOperation{
 		ID:                 "RunService_ReportRunMetrics",
 		Method:             "POST",
-		PathPattern:        "/apis/v1/runs/{runId}:reportMetrics",
+		PathPattern:        "/apis/v1/runs/{run_id}:reportMetrics",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -328,7 +328,7 @@ func (a *Client) RunServiceRetryRun(params *RunServiceRetryRunParams, authInfo r
 	op := &runtime.ClientOperation{
 		ID:                 "RunService_RetryRun",
 		Method:             "POST",
-		PathPattern:        "/apis/v1/runs/{runId}/retry",
+		PathPattern:        "/apis/v1/runs/{run_id}/retry",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -366,7 +366,7 @@ func (a *Client) RunServiceTerminateRun(params *RunServiceTerminateRunParams, au
 	op := &runtime.ClientOperation{
 		ID:                 "RunService_TerminateRun",
 		Method:             "POST",
-		PathPattern:        "/apis/v1/runs/{runId}/terminate",
+		PathPattern:        "/apis/v1/runs/{run_id}/terminate",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

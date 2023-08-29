@@ -173,18 +173,18 @@ func (o *RunServiceReadArtifactParams) WriteToRequest(r runtime.ClientRequest, r
 	}
 	var res []error
 
-	// path param artifactName
-	if err := r.SetPathParam("artifactName", o.ArtifactName); err != nil {
+	// path param artifact_name
+	if err := r.SetPathParam("artifact_name", o.ArtifactName); err != nil {
 		return err
 	}
 
-	// path param nodeId
-	if err := r.SetPathParam("nodeId", o.NodeID); err != nil {
+	// path param node_id
+	if err := r.SetPathParam("node_id", o.NodeID); err != nil {
 		return err
 	}
 
-	// path param runId
-	if err := r.SetPathParam("runId", o.RunID); err != nil {
+	// path param run_id
+	if err := r.SetPathParam("run_id", o.RunID); err != nil {
 		return err
 	}
 

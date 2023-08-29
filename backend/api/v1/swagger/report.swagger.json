@@ -36,7 +36,7 @@
         },
         "parameters": [
           {
-            "name": "scheduledWorkflow",
+            "name": "scheduled_workflow",
             "description": "ScheduledWorkflow a ScheduledWorkflow resource marshalled into a json string.",
             "in": "body",
             "required": true,

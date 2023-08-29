@@ -86,11 +86,11 @@ func (o *RunServiceRetryRunOK) Code() int {
 }
 
 func (o *RunServiceRetryRunOK) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}/retry][%d] runServiceRetryRunOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}/retry][%d] runServiceRetryRunOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceRetryRunOK) String() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}/retry][%d] runServiceRetryRunOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}/retry][%d] runServiceRetryRunOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceRetryRunOK) GetPayload() interface{} {
@@ -156,11 +156,11 @@ func (o *RunServiceRetryRunDefault) Code() int {
 }
 
 func (o *RunServiceRetryRunDefault) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}/retry][%d] RunService_RetryRun default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}/retry][%d] RunService_RetryRun default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceRetryRunDefault) String() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}/retry][%d] RunService_RetryRun default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}/retry][%d] RunService_RetryRun default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceRetryRunDefault) GetPayload() *run_model.GooglerpcStatus {

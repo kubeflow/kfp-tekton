@@ -86,11 +86,11 @@ func (o *PipelineServiceDeletePipelineVersionOK) Code() int {
 }
 
 func (o *PipelineServiceDeletePipelineVersionOK) Error() string {
-	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{versionId}][%d] pipelineServiceDeletePipelineVersionOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{version_id}][%d] pipelineServiceDeletePipelineVersionOK  %+v", 200, o.Payload)
 }
 
 func (o *PipelineServiceDeletePipelineVersionOK) String() string {
-	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{versionId}][%d] pipelineServiceDeletePipelineVersionOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{version_id}][%d] pipelineServiceDeletePipelineVersionOK  %+v", 200, o.Payload)
 }
 
 func (o *PipelineServiceDeletePipelineVersionOK) GetPayload() interface{} {
@@ -156,11 +156,11 @@ func (o *PipelineServiceDeletePipelineVersionDefault) Code() int {
 }
 
 func (o *PipelineServiceDeletePipelineVersionDefault) Error() string {
-	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{versionId}][%d] PipelineService_DeletePipelineVersion default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{version_id}][%d] PipelineService_DeletePipelineVersion default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *PipelineServiceDeletePipelineVersionDefault) String() string {
-	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{versionId}][%d] PipelineService_DeletePipelineVersion default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[DELETE /apis/v1/pipeline_versions/{version_id}][%d] PipelineService_DeletePipelineVersion default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *PipelineServiceDeletePipelineVersionDefault) GetPayload() *pipeline_model.GooglerpcStatus {

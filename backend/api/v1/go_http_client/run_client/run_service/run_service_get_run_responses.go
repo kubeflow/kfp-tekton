@@ -86,11 +86,11 @@ func (o *RunServiceGetRunOK) Code() int {
 }
 
 func (o *RunServiceGetRunOK) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/runs/{runId}][%d] runServiceGetRunOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/runs/{run_id}][%d] runServiceGetRunOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceGetRunOK) String() string {
-	return fmt.Sprintf("[GET /apis/v1/runs/{runId}][%d] runServiceGetRunOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/runs/{run_id}][%d] runServiceGetRunOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceGetRunOK) GetPayload() *run_model.V1RunDetail {
@@ -158,11 +158,11 @@ func (o *RunServiceGetRunDefault) Code() int {
 }
 
 func (o *RunServiceGetRunDefault) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/runs/{runId}][%d] RunService_GetRun default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/runs/{run_id}][%d] RunService_GetRun default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceGetRunDefault) String() string {
-	return fmt.Sprintf("[GET /apis/v1/runs/{runId}][%d] RunService_GetRun default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/runs/{run_id}][%d] RunService_GetRun default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceGetRunDefault) GetPayload() *run_model.GooglerpcStatus {

@@ -18,7 +18,7 @@ import (
 type V1GetHealthzResponse struct {
 
 	// Returns if KFP in multi-user mode
-	MultiUser bool `json:"multiUser,omitempty"`
+	MultiUser bool `json:"multi_user,omitempty"`
 }
 
 // Validate validates this v1 get healthz response

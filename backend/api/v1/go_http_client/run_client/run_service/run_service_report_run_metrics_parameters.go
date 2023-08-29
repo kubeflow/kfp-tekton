@@ -156,8 +156,8 @@ func (o *RunServiceReportRunMetricsParams) WriteToRequest(r runtime.ClientReques
 		return err
 	}
 
-	// path param runId
-	if err := r.SetPathParam("runId", o.RunID); err != nil {
+	// path param run_id
+	if err := r.SetPathParam("run_id", o.RunID); err != nil {
 		return err
 	}
 

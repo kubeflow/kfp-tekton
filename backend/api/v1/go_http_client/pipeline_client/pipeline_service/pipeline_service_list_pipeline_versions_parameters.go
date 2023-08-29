@@ -265,7 +265,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 
 	if o.PageSize != nil {
 
-		// query param pageSize
+		// query param page_size
 		var qrPageSize int32
 
 		if o.PageSize != nil {
@@ -274,7 +274,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 		qPageSize := swag.FormatInt32(qrPageSize)
 		if qPageSize != "" {
 
-			if err := r.SetQueryParam("pageSize", qPageSize); err != nil {
+			if err := r.SetQueryParam("page_size", qPageSize); err != nil {
 				return err
 			}
 		}
@@ -282,7 +282,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 
 	if o.PageToken != nil {
 
-		// query param pageToken
+		// query param page_token
 		var qrPageToken string
 
 		if o.PageToken != nil {
@@ -291,7 +291,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 		qPageToken := qrPageToken
 		if qPageToken != "" {
 
-			if err := r.SetQueryParam("pageToken", qPageToken); err != nil {
+			if err := r.SetQueryParam("page_token", qPageToken); err != nil {
 				return err
 			}
 		}
@@ -299,7 +299,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 
 	if o.ResourceKeyID != nil {
 
-		// query param resourceKey.id
+		// query param resource_key.id
 		var qrResourceKeyID string
 
 		if o.ResourceKeyID != nil {
@@ -308,7 +308,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 		qResourceKeyID := qrResourceKeyID
 		if qResourceKeyID != "" {
 
-			if err := r.SetQueryParam("resourceKey.id", qResourceKeyID); err != nil {
+			if err := r.SetQueryParam("resource_key.id", qResourceKeyID); err != nil {
 				return err
 			}
 		}
@@ -316,7 +316,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 
 	if o.ResourceKeyType != nil {
 
-		// query param resourceKey.type
+		// query param resource_key.type
 		var qrResourceKeyType string
 
 		if o.ResourceKeyType != nil {
@@ -325,7 +325,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 		qResourceKeyType := qrResourceKeyType
 		if qResourceKeyType != "" {
 
-			if err := r.SetQueryParam("resourceKey.type", qResourceKeyType); err != nil {
+			if err := r.SetQueryParam("resource_key.type", qResourceKeyType); err != nil {
 				return err
 			}
 		}
@@ -333,7 +333,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 
 	if o.SortBy != nil {
 
-		// query param sortBy
+		// query param sort_by
 		var qrSortBy string
 
 		if o.SortBy != nil {
@@ -342,7 +342,7 @@ func (o *PipelineServiceListPipelineVersionsParams) WriteToRequest(r runtime.Cli
 		qSortBy := qrSortBy
 		if qSortBy != "" {
 
-			if err := r.SetQueryParam("sortBy", qSortBy); err != nil {
+			if err := r.SetQueryParam("sort_by", qSortBy); err != nil {
 				return err
 			}
 		}

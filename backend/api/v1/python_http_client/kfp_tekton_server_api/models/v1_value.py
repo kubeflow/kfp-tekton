@@ -39,9 +39,9 @@ class V1Value(object):
     }
 
     attribute_map = {
-        'int_value': 'intValue',
-        'double_value': 'doubleValue',
-        'string_value': 'stringValue'
+        'int_value': 'int_value',
+        'double_value': 'double_value',
+        'string_value': 'string_value'
     }
 
     def __init__(self, int_value=None, double_value=None, string_value=None, local_vars_configuration=None):  # noqa: E501

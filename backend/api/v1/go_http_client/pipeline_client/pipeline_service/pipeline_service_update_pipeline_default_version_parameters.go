@@ -156,13 +156,13 @@ func (o *PipelineServiceUpdatePipelineDefaultVersionParams) WriteToRequest(r run
 	}
 	var res []error
 
-	// path param pipelineId
-	if err := r.SetPathParam("pipelineId", o.PipelineID); err != nil {
+	// path param pipeline_id
+	if err := r.SetPathParam("pipeline_id", o.PipelineID); err != nil {
 		return err
 	}
 
-	// path param versionId
-	if err := r.SetPathParam("versionId", o.VersionID); err != nil {
+	// path param version_id
+	if err := r.SetPathParam("version_id", o.VersionID); err != nil {
 		return err
 	}
 

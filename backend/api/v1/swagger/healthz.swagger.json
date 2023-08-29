@@ -73,7 +73,7 @@
     "v1GetHealthzResponse": {
       "type": "object",
       "properties": {
-        "multiUser": {
+        "multi_user": {
           "type": "boolean",
           "title": "Returns if KFP in multi-user mode"
         }

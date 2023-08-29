@@ -86,11 +86,11 @@ func (o *RunServiceReadArtifactOK) Code() int {
 }
 
 func (o *RunServiceReadArtifactOK) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/runs/{runId}/nodes/{nodeId}/artifacts/{artifactName}:read][%d] runServiceReadArtifactOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read][%d] runServiceReadArtifactOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceReadArtifactOK) String() string {
-	return fmt.Sprintf("[GET /apis/v1/runs/{runId}/nodes/{nodeId}/artifacts/{artifactName}:read][%d] runServiceReadArtifactOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read][%d] runServiceReadArtifactOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceReadArtifactOK) GetPayload() *run_model.V1ReadArtifactResponse {
@@ -158,11 +158,11 @@ func (o *RunServiceReadArtifactDefault) Code() int {
 }
 
 func (o *RunServiceReadArtifactDefault) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/runs/{runId}/nodes/{nodeId}/artifacts/{artifactName}:read][%d] RunService_ReadArtifact default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read][%d] RunService_ReadArtifact default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceReadArtifactDefault) String() string {
-	return fmt.Sprintf("[GET /apis/v1/runs/{runId}/nodes/{nodeId}/artifacts/{artifactName}:read][%d] RunService_ReadArtifact default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read][%d] RunService_ReadArtifact default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceReadArtifactDefault) GetPayload() *run_model.GooglerpcStatus {

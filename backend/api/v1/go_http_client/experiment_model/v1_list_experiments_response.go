@@ -23,10 +23,10 @@ type V1ListExperimentsResponse struct {
 	Experiments []*V1Experiment `json:"experiments"`
 
 	// The token to list the next page of experiments.
-	NextPageToken string `json:"nextPageToken,omitempty"`
+	NextPageToken string `json:"next_page_token,omitempty"`
 
 	// The total number of experiments for the given query.
-	TotalSize int32 `json:"totalSize,omitempty"`
+	TotalSize int32 `json:"total_size,omitempty"`
 }
 
 // Validate validates this v1 list experiments response

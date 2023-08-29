@@ -86,11 +86,11 @@ func (o *PipelineServiceGetPipelineVersionTemplateOK) Code() int {
 }
 
 func (o *PipelineServiceGetPipelineVersionTemplateOK) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{versionId}/templates][%d] pipelineServiceGetPipelineVersionTemplateOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{version_id}/templates][%d] pipelineServiceGetPipelineVersionTemplateOK  %+v", 200, o.Payload)
 }
 
 func (o *PipelineServiceGetPipelineVersionTemplateOK) String() string {
-	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{versionId}/templates][%d] pipelineServiceGetPipelineVersionTemplateOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{version_id}/templates][%d] pipelineServiceGetPipelineVersionTemplateOK  %+v", 200, o.Payload)
 }
 
 func (o *PipelineServiceGetPipelineVersionTemplateOK) GetPayload() *pipeline_model.V1GetTemplateResponse {
@@ -158,11 +158,11 @@ func (o *PipelineServiceGetPipelineVersionTemplateDefault) Code() int {
 }
 
 func (o *PipelineServiceGetPipelineVersionTemplateDefault) Error() string {
-	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{versionId}/templates][%d] PipelineService_GetPipelineVersionTemplate default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{version_id}/templates][%d] PipelineService_GetPipelineVersionTemplate default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *PipelineServiceGetPipelineVersionTemplateDefault) String() string {
-	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{versionId}/templates][%d] PipelineService_GetPipelineVersionTemplate default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /apis/v1/pipeline_versions/{version_id}/templates][%d] PipelineService_GetPipelineVersionTemplate default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *PipelineServiceGetPipelineVersionTemplateDefault) GetPayload() *pipeline_model.GooglerpcStatus {

@@ -54,18 +54,18 @@ class V1Job(object):
         'id': 'id',
         'name': 'name',
         'description': 'description',
-        'pipeline_spec': 'pipelineSpec',
-        'resource_references': 'resourceReferences',
-        'service_account': 'serviceAccount',
-        'max_concurrency': 'maxConcurrency',
+        'pipeline_spec': 'pipeline_spec',
+        'resource_references': 'resource_references',
+        'service_account': 'service_account',
+        'max_concurrency': 'max_concurrency',
         'trigger': 'trigger',
         'mode': 'mode',
-        'created_at': 'createdAt',
-        'updated_at': 'updatedAt',
+        'created_at': 'created_at',
+        'updated_at': 'updated_at',
         'status': 'status',
         'error': 'error',
         'enabled': 'enabled',
-        'no_catchup': 'noCatchup'
+        'no_catchup': 'no_catchup'
     }
 
     def __init__(self, id=None, name=None, description=None, pipeline_spec=None, resource_references=None, service_account=None, max_concurrency=None, trigger=None, mode=None, created_at=None, updated_at=None, status=None, error=None, enabled=None, no_catchup=None, local_vars_configuration=None):  # noqa: E501

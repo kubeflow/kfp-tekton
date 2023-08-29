@@ -19,10 +19,10 @@ import (
 type V1Trigger struct {
 
 	// cron schedule
-	CronSchedule *V1CronSchedule `json:"cronSchedule,omitempty"`
+	CronSchedule *V1CronSchedule `json:"cron_schedule,omitempty"`
 
 	// periodic schedule
-	PeriodicSchedule *V1PeriodicSchedule `json:"periodicSchedule,omitempty"`
+	PeriodicSchedule *V1PeriodicSchedule `json:"periodic_schedule,omitempty"`
 }
 
 // Validate validates this v1 trigger
@@ -51,9 +51,9 @@ func (m *V1Trigger) validateCronSchedule(formats strfmt.Registry) error {
 	if m.CronSchedule != nil {
 		if err := m.CronSchedule.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("cronSchedule")
+				return ve.ValidateName("cron_schedule")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("cronSchedule")
+				return ce.ValidateName("cron_schedule")
 			}
 			return err
 		}
@@ -70,9 +70,9 @@ func (m *V1Trigger) validatePeriodicSchedule(formats strfmt.Registry) error {
 	if m.PeriodicSchedule != nil {
 		if err := m.PeriodicSchedule.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("periodicSchedule")
+				return ve.ValidateName("periodic_schedule")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("periodicSchedule")
+				return ce.ValidateName("periodic_schedule")
 			}
 			return err
 		}
@@ -104,9 +104,9 @@ func (m *V1Trigger) contextValidateCronSchedule(ctx context.Context, formats str
 	if m.CronSchedule != nil {
 		if err := m.CronSchedule.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("cronSchedule")
+				return ve.ValidateName("cron_schedule")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("cronSchedule")
+				return ce.ValidateName("cron_schedule")
 			}
 			return err
 		}
@@ -120,9 +120,9 @@ func (m *V1Trigger) contextValidatePeriodicSchedule(ctx context.Context, formats
 	if m.PeriodicSchedule != nil {
 		if err := m.PeriodicSchedule.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("periodicSchedule")
+				return ve.ValidateName("periodic_schedule")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("periodicSchedule")
+				return ce.ValidateName("periodic_schedule")
 			}
 			return err
 		}

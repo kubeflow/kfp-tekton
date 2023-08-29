@@ -41,8 +41,8 @@ class V1RunMetric(object):
 
     attribute_map = {
         'name': 'name',
-        'node_id': 'nodeId',
-        'number_value': 'numberValue',
+        'node_id': 'node_id',
+        'number_value': 'number_value',
         'format': 'format'
     }
 

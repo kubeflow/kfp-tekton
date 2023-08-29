@@ -36,14 +36,14 @@
         },
         "parameters": [
           {
-            "name": "pageToken",
+            "name": "page_token",
             "description": "A page token to request the next page of results. The token is acquried\nfrom the nextPageToken field of the response from the previous\nListRuns call or can be omitted when fetching the first page.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "description": "The number of runs to be listed per page. If there are more runs than this\nnumber, the response message will contain a nextPageToken field you can use\nto fetch the next page.",
             "in": "query",
             "required": false,
@@ -51,14 +51,14 @@
             "format": "int32"
           },
           {
-            "name": "sortBy",
+            "name": "sort_by",
             "description": "Can be format of \"field_name\", \"field_name asc\" or \"field_name desc\"\n(Example, \"name asc\" or \"id desc\"). Ascending by default.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "resourceReferenceKey.type",
+            "name": "resource_reference_key.type",
             "description": "The type of the resource that referred to.",
             "in": "query",
             "required": false,
@@ -74,7 +74,7 @@
             "default": "UNKNOWN_RESOURCE_TYPE"
           },
           {
-            "name": "resourceReferenceKey.id",
+            "name": "resource_reference_key.id",
             "description": "The ID of the resource that referred to.",
             "in": "query",
             "required": false,
@@ -223,7 +223,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{runId}": {
+    "/apis/v1/runs/{run_id}": {
       "get": {
         "summary": "Finds a specific run by ID.",
         "operationId": "RunService_GetRun",
@@ -243,7 +243,7 @@
         },
         "parameters": [
           {
-            "name": "runId",
+            "name": "run_id",
             "description": "The ID of the run to be retrieved.",
             "in": "path",
             "required": true,
@@ -255,7 +255,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{runId}/nodes/{nodeId}/artifacts/{artifactName}:read": {
+    "/apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read": {
       "get": {
         "summary": "Finds a run's artifact data.",
         "operationId": "RunService_ReadArtifact",
@@ -275,21 +275,21 @@
         },
         "parameters": [
           {
-            "name": "runId",
+            "name": "run_id",
             "description": "The ID of the run.",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
-            "name": "nodeId",
+            "name": "node_id",
             "description": "The ID of the running node.",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
-            "name": "artifactName",
+            "name": "artifact_name",
             "description": "The name of the artifact.",
             "in": "path",
             "required": true,
@@ -301,7 +301,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{runId}/retry": {
+    "/apis/v1/runs/{run_id}/retry": {
       "post": {
         "summary": "Re-initiates a failed or terminated run.",
         "operationId": "RunService_RetryRun",
@@ -322,7 +322,7 @@
         },
         "parameters": [
           {
-            "name": "runId",
+            "name": "run_id",
             "description": "The ID of the run to be retried.",
             "in": "path",
             "required": true,
@@ -334,7 +334,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{runId}/terminate": {
+    "/apis/v1/runs/{run_id}/terminate": {
       "post": {
         "summary": "Terminates an active run.",
         "operationId": "RunService_TerminateRun",
@@ -355,7 +355,7 @@
         },
         "parameters": [
           {
-            "name": "runId",
+            "name": "run_id",
             "description": "The ID of the run to be terminated.",
             "in": "path",
             "required": true,
@@ -367,7 +367,7 @@
         ]
       }
     },
-    "/apis/v1/runs/{runId}:reportMetrics": {
+    "/apis/v1/runs/{run_id}:reportMetrics": {
       "post": {
         "summary": "ReportRunMetrics reports metrics of a run. Each metric is reported in its\nown transaction, so this API accepts partial failures. Metric can be\nuniquely identified by (run_id, node_id, name). Duplicate reporting will be\nignored by the API. First reporting wins.",
         "operationId": "RunService_ReportRunMetrics",
@@ -387,7 +387,7 @@
         },
         "parameters": [
           {
-            "name": "runId",
+            "name": "run_id",
             "description": "Required. The parent run ID of the metric.",
             "in": "path",
             "required": true,
@@ -428,7 +428,7 @@
           },
           "description": "The runtime parameters of the PipelineSpec. The parameters will be\nused to replace the placeholders\nat runtime."
         },
-        "pipelineRoot": {
+        "pipeline_root": {
           "type": "string",
           "title": "A path in a object store bucket which will be treated as the root\noutput directory of the pipeline. It is used by the system to\ngenerate the paths of output artifacts. Ref:(https://www.kubeflow.org/docs/components/pipelines/pipeline-root/)"
         }
@@ -438,11 +438,11 @@
     "ReportRunMetricsResponseReportRunMetricResult": {
       "type": "object",
       "properties": {
-        "metricName": {
+        "metric_name": {
           "type": "string",
           "description": "Output. The name of the metric."
         },
-        "metricNodeId": {
+        "metric_node_id": {
           "type": "string",
           "description": "Output. The ID of the node which reports the metric."
         },
@@ -516,12 +516,12 @@
             "$ref": "#/definitions/v1Run"
           }
         },
-        "totalSize": {
+        "total_size": {
           "type": "integer",
           "format": "int32",
           "description": "The total number of runs for the given query."
         },
-        "nextPageToken": {
+        "next_page_token": {
           "type": "string",
           "description": "The token to list the next page of runs."
         }
@@ -541,11 +541,11 @@
     "v1PipelineRuntime": {
       "type": "object",
       "properties": {
-        "pipelineManifest": {
+        "pipeline_manifest": {
           "type": "string",
           "description": "Output. The runtime JSON manifest of the pipeline, including the status\nof pipeline steps and fields need for UI visualization etc."
         },
-        "workflowManifest": {
+        "workflow_manifest": {
           "type": "string",
           "description": "Output. The runtime JSON manifest of the argo workflow.\nThis is deprecated after pipeline_runtime_manifest is in use."
         }
@@ -554,19 +554,19 @@
     "v1PipelineSpec": {
       "type": "object",
       "properties": {
-        "pipelineId": {
+        "pipeline_id": {
           "type": "string",
           "description": "Optional input field. The ID of the pipeline user uploaded before."
         },
-        "pipelineName": {
+        "pipeline_name": {
           "type": "string",
           "description": "Optional output field. The name of the pipeline.\nNot empty if the pipeline id is not empty."
         },
-        "workflowManifest": {
+        "workflow_manifest": {
           "type": "string",
           "description": "Optional input field. The marshalled raw argo JSON workflow.\nThis will be deprecated when pipeline_manifest is in use."
         },
-        "pipelineManifest": {
+        "pipeline_manifest": {
           "type": "string",
           "description": "Optional input field. The raw pipeline JSON spec."
         },
@@ -577,7 +577,7 @@
           },
           "title": "The parameter user provide to inject to the pipeline JSON.\nIf a default value of a parameter exist in the JSON,\nthe value user provided here will replace. V1 only"
         },
-        "runtimeConfig": {
+        "runtime_config": {
           "$ref": "#/definitions/PipelineSpecRuntimeConfig",
           "title": "Runtime config of the pipeline. V2 only"
         }
@@ -665,7 +665,7 @@
           "type": "string",
           "description": "Required input field. Name provided by user,\nor auto generated if run is created by scheduled job. Not unique."
         },
-        "storageState": {
+        "storage_state": {
           "$ref": "#/definitions/v1RunStorageState",
           "description": "Output. Specify whether this run is in archived or available mode."
         },
@@ -673,32 +673,32 @@
           "type": "string",
           "title": "Optional input field. Describing the purpose of the run"
         },
-        "pipelineSpec": {
+        "pipeline_spec": {
           "$ref": "#/definitions/v1PipelineSpec",
           "description": "Required input field.\nDescribing what the pipeline manifest and parameters to use for the run."
         },
-        "resourceReferences": {
+        "resource_references": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1ResourceReference"
           },
           "description": "Optional input field. Specify which resource this run belongs to.\nWhen creating a run from a particular pipeline version, the pipeline\nversion can be specified here."
         },
-        "serviceAccount": {
+        "service_account": {
           "type": "string",
           "description": "Optional input field. Specify which Kubernetes service account this run uses."
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time",
           "description": "Output. The time that the run created."
         },
-        "scheduledAt": {
+        "scheduled_at": {
           "type": "string",
           "format": "date-time",
           "description": "Output. When this run is scheduled to run. This could be different from\ncreated_at. For example, if a run is from a backfilling job that was\nsupposed to run 2 month ago, the scheduled_at is 2 month ago,\nv.s. created_at is the current time."
         },
-        "finishedAt": {
+        "finished_at": {
           "type": "string",
           "format": "date-time",
           "description": "Output. The time this run is finished."
@@ -726,7 +726,7 @@
         "run": {
           "$ref": "#/definitions/v1Run"
         },
-        "pipelineRuntime": {
+        "pipeline_runtime": {
           "$ref": "#/definitions/v1PipelineRuntime"
         }
       }
@@ -738,11 +738,11 @@
           "type": "string",
           "description": "Required. The user defined name of the metric. It must between 1 and 63\ncharacters long and must conform to the following regular expression:\n`[a-z]([-a-z0-9]*[a-z0-9])?`."
         },
-        "nodeId": {
+        "node_id": {
           "type": "string",
           "description": "Required. The runtime node ID which reports the metric. The node ID can be\nfound in the RunDetail.workflow.Status. Metric with same (node_id, name)\nare considerd as duplicate. Only the first reporting will be recorded. Max\nlength is 128."
         },
-        "numberValue": {
+        "number_value": {
           "type": "number",
           "format": "double",
           "description": "The number value of the metric."
@@ -764,17 +764,17 @@
     "v1Value": {
       "type": "object",
       "properties": {
-        "intValue": {
+        "int_value": {
           "type": "string",
           "format": "int64",
           "title": "An integer value"
         },
-        "doubleValue": {
+        "double_value": {
           "type": "number",
           "format": "double",
           "title": "A double value"
         },
-        "stringValue": {
+        "string_value": {
           "type": "string",
           "title": "A string value"
         }

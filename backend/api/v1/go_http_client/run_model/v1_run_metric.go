@@ -30,10 +30,10 @@ type V1RunMetric struct {
 	// found in the RunDetail.workflow.Status. Metric with same (node_id, name)
 	// are considerd as duplicate. Only the first reporting will be recorded. Max
 	// length is 128.
-	NodeID string `json:"nodeId,omitempty"`
+	NodeID string `json:"node_id,omitempty"`
 
 	// The number value of the metric.
-	NumberValue float64 `json:"numberValue,omitempty"`
+	NumberValue float64 `json:"number_value,omitempty"`
 }
 
 // Validate validates this v1 run metric

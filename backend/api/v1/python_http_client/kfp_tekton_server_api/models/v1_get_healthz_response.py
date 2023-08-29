@@ -37,7 +37,7 @@ class V1GetHealthzResponse(object):
     }
 
     attribute_map = {
-        'multi_user': 'multiUser'
+        'multi_user': 'multi_user'
     }
 
     def __init__(self, multi_user=None, local_vars_configuration=None):  # noqa: E501

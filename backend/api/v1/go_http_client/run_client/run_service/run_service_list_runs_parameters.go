@@ -265,7 +265,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 
 	if o.PageSize != nil {
 
-		// query param pageSize
+		// query param page_size
 		var qrPageSize int32
 
 		if o.PageSize != nil {
@@ -274,7 +274,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 		qPageSize := swag.FormatInt32(qrPageSize)
 		if qPageSize != "" {
 
-			if err := r.SetQueryParam("pageSize", qPageSize); err != nil {
+			if err := r.SetQueryParam("page_size", qPageSize); err != nil {
 				return err
 			}
 		}
@@ -282,7 +282,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 
 	if o.PageToken != nil {
 
-		// query param pageToken
+		// query param page_token
 		var qrPageToken string
 
 		if o.PageToken != nil {
@@ -291,7 +291,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 		qPageToken := qrPageToken
 		if qPageToken != "" {
 
-			if err := r.SetQueryParam("pageToken", qPageToken); err != nil {
+			if err := r.SetQueryParam("page_token", qPageToken); err != nil {
 				return err
 			}
 		}
@@ -299,7 +299,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 
 	if o.ResourceReferenceKeyID != nil {
 
-		// query param resourceReferenceKey.id
+		// query param resource_reference_key.id
 		var qrResourceReferenceKeyID string
 
 		if o.ResourceReferenceKeyID != nil {
@@ -308,7 +308,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 		qResourceReferenceKeyID := qrResourceReferenceKeyID
 		if qResourceReferenceKeyID != "" {
 
-			if err := r.SetQueryParam("resourceReferenceKey.id", qResourceReferenceKeyID); err != nil {
+			if err := r.SetQueryParam("resource_reference_key.id", qResourceReferenceKeyID); err != nil {
 				return err
 			}
 		}
@@ -316,7 +316,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 
 	if o.ResourceReferenceKeyType != nil {
 
-		// query param resourceReferenceKey.type
+		// query param resource_reference_key.type
 		var qrResourceReferenceKeyType string
 
 		if o.ResourceReferenceKeyType != nil {
@@ -325,7 +325,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 		qResourceReferenceKeyType := qrResourceReferenceKeyType
 		if qResourceReferenceKeyType != "" {
 
-			if err := r.SetQueryParam("resourceReferenceKey.type", qResourceReferenceKeyType); err != nil {
+			if err := r.SetQueryParam("resource_reference_key.type", qResourceReferenceKeyType); err != nil {
 				return err
 			}
 		}
@@ -333,7 +333,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 
 	if o.SortBy != nil {
 
-		// query param sortBy
+		// query param sort_by
 		var qrSortBy string
 
 		if o.SortBy != nil {
@@ -342,7 +342,7 @@ func (o *RunServiceListRunsParams) WriteToRequest(r runtime.ClientRequest, reg s
 		qSortBy := qrSortBy
 		if qSortBy != "" {
 
-			if err := r.SetQueryParam("sortBy", qSortBy); err != nil {
+			if err := r.SetQueryParam("sort_by", qSortBy); err != nil {
 				return err
 			}
 		}

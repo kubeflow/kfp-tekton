@@ -86,11 +86,11 @@ func (o *PipelineServiceUpdatePipelineDefaultVersionOK) Code() int {
 }
 
 func (o *PipelineServiceUpdatePipelineDefaultVersionOK) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/pipelines/{pipelineId}/default_version/{versionId}][%d] pipelineServiceUpdatePipelineDefaultVersionOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/pipelines/{pipeline_id}/default_version/{version_id}][%d] pipelineServiceUpdatePipelineDefaultVersionOK  %+v", 200, o.Payload)
 }
 
 func (o *PipelineServiceUpdatePipelineDefaultVersionOK) String() string {
-	return fmt.Sprintf("[POST /apis/v1/pipelines/{pipelineId}/default_version/{versionId}][%d] pipelineServiceUpdatePipelineDefaultVersionOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/pipelines/{pipeline_id}/default_version/{version_id}][%d] pipelineServiceUpdatePipelineDefaultVersionOK  %+v", 200, o.Payload)
 }
 
 func (o *PipelineServiceUpdatePipelineDefaultVersionOK) GetPayload() interface{} {
@@ -156,11 +156,11 @@ func (o *PipelineServiceUpdatePipelineDefaultVersionDefault) Code() int {
 }
 
 func (o *PipelineServiceUpdatePipelineDefaultVersionDefault) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/pipelines/{pipelineId}/default_version/{versionId}][%d] PipelineService_UpdatePipelineDefaultVersion default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/pipelines/{pipeline_id}/default_version/{version_id}][%d] PipelineService_UpdatePipelineDefaultVersion default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *PipelineServiceUpdatePipelineDefaultVersionDefault) String() string {
-	return fmt.Sprintf("[POST /apis/v1/pipelines/{pipelineId}/default_version/{versionId}][%d] PipelineService_UpdatePipelineDefaultVersion default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/pipelines/{pipeline_id}/default_version/{version_id}][%d] PipelineService_UpdatePipelineDefaultVersion default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *PipelineServiceUpdatePipelineDefaultVersionDefault) GetPayload() *pipeline_model.GooglerpcStatus {

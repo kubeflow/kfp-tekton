@@ -39,9 +39,9 @@ class V1PeriodicSchedule(object):
     }
 
     attribute_map = {
-        'start_time': 'startTime',
-        'end_time': 'endTime',
-        'interval_second': 'intervalSecond'
+        'start_time': 'start_time',
+        'end_time': 'end_time',
+        'interval_second': 'interval_second'
     }
 
     def __init__(self, start_time=None, end_time=None, interval_second=None, local_vars_configuration=None):  # noqa: E501

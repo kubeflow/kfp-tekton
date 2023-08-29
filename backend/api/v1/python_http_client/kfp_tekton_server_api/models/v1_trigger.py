@@ -38,8 +38,8 @@ class V1Trigger(object):
     }
 
     attribute_map = {
-        'cron_schedule': 'cronSchedule',
-        'periodic_schedule': 'periodicSchedule'
+        'cron_schedule': 'cron_schedule',
+        'periodic_schedule': 'periodic_schedule'
     }
 
     def __init__(self, cron_schedule=None, periodic_schedule=None, local_vars_configuration=None):  # noqa: E501

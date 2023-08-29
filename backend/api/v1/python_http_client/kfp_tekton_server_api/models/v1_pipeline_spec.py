@@ -42,12 +42,12 @@ class V1PipelineSpec(object):
     }
 
     attribute_map = {
-        'pipeline_id': 'pipelineId',
-        'pipeline_name': 'pipelineName',
-        'workflow_manifest': 'workflowManifest',
-        'pipeline_manifest': 'pipelineManifest',
+        'pipeline_id': 'pipeline_id',
+        'pipeline_name': 'pipeline_name',
+        'workflow_manifest': 'workflow_manifest',
+        'pipeline_manifest': 'pipeline_manifest',
         'parameters': 'parameters',
-        'runtime_config': 'runtimeConfig'
+        'runtime_config': 'runtime_config'
     }
 
     def __init__(self, pipeline_id=None, pipeline_name=None, workflow_manifest=None, pipeline_manifest=None, parameters=None, runtime_config=None, local_vars_configuration=None):  # noqa: E501

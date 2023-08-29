@@ -45,9 +45,9 @@ class V1Experiment(object):
         'id': 'id',
         'name': 'name',
         'description': 'description',
-        'created_at': 'createdAt',
-        'resource_references': 'resourceReferences',
-        'storage_state': 'storageState'
+        'created_at': 'created_at',
+        'resource_references': 'resource_references',
+        'storage_state': 'storage_state'
     }
 
     def __init__(self, id=None, name=None, description=None, created_at=None, resource_references=None, storage_state=None, local_vars_configuration=None):  # noqa: E501

@@ -57,7 +57,7 @@ ${PROTOCCOMPILER} -I. -Ibackend/api/${API_VERSION} \
     -I/go/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-openapiv2/options/ \
     -I//usr/include/ \
     --plugin=protoc-gen-swagger=/go/bin/protoc-gen-openapiv2 \
-    --swagger_out=logtostderr=true:${TMP_OUTPUT} \
+    --swagger_out=logtostderr=true,json_names_for_fields=false:${TMP_OUTPUT} \
     backend/api/${API_VERSION}/*.proto
 # Move *.swagger.json files into swagger folder.
 cp -a ${TMP_OUTPUT}/backend/api/${API_VERSION}/*.swagger.json ./backend/api/${API_VERSION}/swagger

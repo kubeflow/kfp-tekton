@@ -22,7 +22,7 @@ type V1Job struct {
 
 	// Output. The time this job is created.
 	// Format: date-time
-	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
+	CreatedAt strfmt.DateTime `json:"created_at,omitempty"`
 
 	// Optional input field. Describing the purpose of the job
 	Description string `json:"description,omitempty"`
@@ -40,7 +40,7 @@ type V1Job struct {
 
 	// Required input field.
 	// Specify how many runs can be executed concurrently. Rage [1-10]
-	MaxConcurrency string `json:"maxConcurrency,omitempty"`
+	MaxConcurrency string `json:"max_concurrency,omitempty"`
 
 	// mode
 	Mode *JobMode `json:"mode,omitempty"`
@@ -51,18 +51,18 @@ type V1Job struct {
 	// Optional input field. Whether the job should catch up if behind schedule.
 	// If true, the job will only schedule the latest interval if behind schedule.
 	// If false, the job will catch up on each past interval.
-	NoCatchup bool `json:"noCatchup,omitempty"`
+	NoCatchup bool `json:"no_catchup,omitempty"`
 
 	// Required input field.
 	// Describing what the pipeline manifest and parameters to use
 	// for the scheduled job.
-	PipelineSpec *V1PipelineSpec `json:"pipelineSpec,omitempty"`
+	PipelineSpec *V1PipelineSpec `json:"pipeline_spec,omitempty"`
 
 	// Optional input field. Specify which resource this job belongs to.
-	ResourceReferences []*V1ResourceReference `json:"resourceReferences"`
+	ResourceReferences []*V1ResourceReference `json:"resource_references"`
 
 	// Optional input field. Specify which Kubernetes service account this job uses.
-	ServiceAccount string `json:"serviceAccount,omitempty"`
+	ServiceAccount string `json:"service_account,omitempty"`
 
 	// Output. The status of the job.
 	// One of [Enable, Disable, Error]
@@ -74,7 +74,7 @@ type V1Job struct {
 
 	// Output. The last time this job is updated.
 	// Format: date-time
-	UpdatedAt strfmt.DateTime `json:"updatedAt,omitempty"`
+	UpdatedAt strfmt.DateTime `json:"updated_at,omitempty"`
 }
 
 // Validate validates this v1 job
@@ -116,7 +116,7 @@ func (m *V1Job) validateCreatedAt(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("createdAt", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
+	if err := validate.FormatOf("created_at", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
 		return err
 	}
 
@@ -150,9 +150,9 @@ func (m *V1Job) validatePipelineSpec(formats strfmt.Registry) error {
 	if m.PipelineSpec != nil {
 		if err := m.PipelineSpec.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("pipelineSpec")
+				return ve.ValidateName("pipeline_spec")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("pipelineSpec")
+				return ce.ValidateName("pipeline_spec")
 			}
 			return err
 		}
@@ -174,9 +174,9 @@ func (m *V1Job) validateResourceReferences(formats strfmt.Registry) error {
 		if m.ResourceReferences[i] != nil {
 			if err := m.ResourceReferences[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -211,7 +211,7 @@ func (m *V1Job) validateUpdatedAt(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("updatedAt", "body", "date-time", m.UpdatedAt.String(), formats); err != nil {
+	if err := validate.FormatOf("updated_at", "body", "date-time", m.UpdatedAt.String(), formats); err != nil {
 		return err
 	}
 
@@ -265,9 +265,9 @@ func (m *V1Job) contextValidatePipelineSpec(ctx context.Context, formats strfmt.
 	if m.PipelineSpec != nil {
 		if err := m.PipelineSpec.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("pipelineSpec")
+				return ve.ValidateName("pipeline_spec")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("pipelineSpec")
+				return ce.ValidateName("pipeline_spec")
 			}
 			return err
 		}
@@ -283,9 +283,9 @@ func (m *V1Job) contextValidateResourceReferences(ctx context.Context, formats s
 		if m.ResourceReferences[i] != nil {
 			if err := m.ResourceReferences[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

@@ -37,7 +37,7 @@ class V1Url(object):
     }
 
     attribute_map = {
-        'pipeline_url': 'pipelineUrl'
+        'pipeline_url': 'pipeline_url'
     }
 
     def __init__(self, pipeline_url=None, local_vars_configuration=None):  # noqa: E501

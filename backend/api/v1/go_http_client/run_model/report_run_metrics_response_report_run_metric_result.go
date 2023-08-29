@@ -22,10 +22,10 @@ type ReportRunMetricsResponseReportRunMetricResult struct {
 	Message string `json:"message,omitempty"`
 
 	// Output. The name of the metric.
-	MetricName string `json:"metricName,omitempty"`
+	MetricName string `json:"metric_name,omitempty"`
 
 	// Output. The ID of the node which reports the metric.
-	MetricNodeID string `json:"metricNodeId,omitempty"`
+	MetricNodeID string `json:"metric_node_id,omitempty"`
 
 	// Output. The status of the metric reporting.
 	Status *ReportRunMetricsResponseReportRunMetricResultStatus `json:"status,omitempty"`

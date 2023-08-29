@@ -139,8 +139,8 @@ func (o *PipelineServiceDeletePipelineVersionParams) WriteToRequest(r runtime.Cl
 	}
 	var res []error
 
-	// path param versionId
-	if err := r.SetPathParam("versionId", o.VersionID); err != nil {
+	// path param version_id
+	if err := r.SetPathParam("version_id", o.VersionID); err != nil {
 		return err
 	}
 

@@ -23,10 +23,10 @@ type V1ListJobsResponse struct {
 	Jobs []*V1Job `json:"jobs"`
 
 	// The token to list the next page of jobs.
-	NextPageToken string `json:"nextPageToken,omitempty"`
+	NextPageToken string `json:"next_page_token,omitempty"`
 
 	// The total number of jobs for the given query.
-	TotalSize int32 `json:"totalSize,omitempty"`
+	TotalSize int32 `json:"total_size,omitempty"`
 }
 
 // Validate validates this v1 list jobs response

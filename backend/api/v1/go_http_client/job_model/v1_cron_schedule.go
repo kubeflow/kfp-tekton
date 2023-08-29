@@ -25,11 +25,11 @@ type V1CronSchedule struct {
 
 	// The end time of the cron job
 	// Format: date-time
-	EndTime strfmt.DateTime `json:"endTime,omitempty"`
+	EndTime strfmt.DateTime `json:"end_time,omitempty"`
 
 	// The start time of the cron job
 	// Format: date-time
-	StartTime strfmt.DateTime `json:"startTime,omitempty"`
+	StartTime strfmt.DateTime `json:"start_time,omitempty"`
 }
 
 // Validate validates this v1 cron schedule
@@ -55,7 +55,7 @@ func (m *V1CronSchedule) validateEndTime(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("endTime", "body", "date-time", m.EndTime.String(), formats); err != nil {
+	if err := validate.FormatOf("end_time", "body", "date-time", m.EndTime.String(), formats); err != nil {
 		return err
 	}
 
@@ -67,7 +67,7 @@ func (m *V1CronSchedule) validateStartTime(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("startTime", "body", "date-time", m.StartTime.String(), formats); err != nil {
+	if err := validate.FormatOf("start_time", "body", "date-time", m.StartTime.String(), formats); err != nil {
 		return err
 	}
 

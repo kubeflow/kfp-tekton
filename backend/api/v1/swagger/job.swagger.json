@@ -36,14 +36,14 @@
         },
         "parameters": [
           {
-            "name": "pageToken",
+            "name": "page_token",
             "description": "A page token to request the next page of results. The token is acquried\nfrom the nextPageToken field of the response from the previous\nListJobs call or can be omitted when fetching the first page.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "description": "The number of jobs to be listed per page. If there are more jobs than this\nnumber, the response message will contain a nextPageToken field you can use\nto fetch the next page.",
             "in": "query",
             "required": false,
@@ -51,14 +51,14 @@
             "format": "int32"
           },
           {
-            "name": "sortBy",
+            "name": "sort_by",
             "description": "Can be format of \"field_name\", \"field_name asc\" or \"field_name desc\".\nAscending by default.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "resourceReferenceKey.type",
+            "name": "resource_reference_key.type",
             "description": "The type of the resource that referred to.",
             "in": "query",
             "required": false,
@@ -74,7 +74,7 @@
             "default": "UNKNOWN_RESOURCE_TYPE"
           },
           {
-            "name": "resourceReferenceKey.id",
+            "name": "resource_reference_key.id",
             "description": "The ID of the resource that referred to.",
             "in": "query",
             "required": false,
@@ -276,7 +276,7 @@
           },
           "description": "The runtime parameters of the PipelineSpec. The parameters will be\nused to replace the placeholders\nat runtime."
         },
-        "pipelineRoot": {
+        "pipeline_root": {
           "type": "string",
           "title": "A path in a object store bucket which will be treated as the root\noutput directory of the pipeline. It is used by the system to\ngenerate the paths of output artifacts. Ref:(https://www.kubeflow.org/docs/components/pipelines/pipeline-root/)"
         }
@@ -315,12 +315,12 @@
     "v1CronSchedule": {
       "type": "object",
       "properties": {
-        "startTime": {
+        "start_time": {
           "type": "string",
           "format": "date-time",
           "title": "The start time of the cron job"
         },
-        "endTime": {
+        "end_time": {
           "type": "string",
           "format": "date-time",
           "title": "The end time of the cron job"
@@ -347,22 +347,22 @@
           "type": "string",
           "title": "Optional input field. Describing the purpose of the job"
         },
-        "pipelineSpec": {
+        "pipeline_spec": {
           "$ref": "#/definitions/v1PipelineSpec",
           "description": "Required input field.\nDescribing what the pipeline manifest and parameters to use\nfor the scheduled job."
         },
-        "resourceReferences": {
+        "resource_references": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1ResourceReference"
           },
           "description": "Optional input field. Specify which resource this job belongs to."
         },
-        "serviceAccount": {
+        "service_account": {
           "type": "string",
           "description": "Optional input field. Specify which Kubernetes service account this job uses."
         },
-        "maxConcurrency": {
+        "max_concurrency": {
           "type": "string",
           "format": "int64",
           "title": "Required input field.\nSpecify how many runs can be executed concurrently. Rage [1-10]"
@@ -374,12 +374,12 @@
         "mode": {
           "$ref": "#/definitions/JobMode"
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time",
           "description": "Output. The time this job is created."
         },
-        "updatedAt": {
+        "updated_at": {
           "type": "string",
           "format": "date-time",
           "description": "Output. The last time this job is updated."
@@ -396,7 +396,7 @@
           "type": "boolean",
           "description": "Input. Whether the job is enabled or not."
         },
-        "noCatchup": {
+        "no_catchup": {
           "type": "boolean",
           "description": "Optional input field. Whether the job should catch up if behind schedule.\nIf true, the job will only schedule the latest interval if behind schedule.\nIf false, the job will catch up on each past interval."
         }
@@ -412,12 +412,12 @@
           },
           "description": "A list of jobs returned."
         },
-        "totalSize": {
+        "total_size": {
           "type": "integer",
           "format": "int32",
           "description": "The total number of jobs for the given query."
         },
-        "nextPageToken": {
+        "next_page_token": {
           "type": "string",
           "description": "The token to list the next page of jobs."
         }
@@ -437,17 +437,17 @@
     "v1PeriodicSchedule": {
       "type": "object",
       "properties": {
-        "startTime": {
+        "start_time": {
           "type": "string",
           "format": "date-time",
           "title": "The start time of the periodic job"
         },
-        "endTime": {
+        "end_time": {
           "type": "string",
           "format": "date-time",
           "title": "The end time of the periodic job"
         },
-        "intervalSecond": {
+        "interval_second": {
           "type": "string",
           "format": "int64",
           "title": "The time interval between the starting time of consecutive jobs"
@@ -458,19 +458,19 @@
     "v1PipelineSpec": {
       "type": "object",
       "properties": {
-        "pipelineId": {
+        "pipeline_id": {
           "type": "string",
           "description": "Optional input field. The ID of the pipeline user uploaded before."
         },
-        "pipelineName": {
+        "pipeline_name": {
           "type": "string",
           "description": "Optional output field. The name of the pipeline.\nNot empty if the pipeline id is not empty."
         },
-        "workflowManifest": {
+        "workflow_manifest": {
           "type": "string",
           "description": "Optional input field. The marshalled raw argo JSON workflow.\nThis will be deprecated when pipeline_manifest is in use."
         },
-        "pipelineManifest": {
+        "pipeline_manifest": {
           "type": "string",
           "description": "Optional input field. The raw pipeline JSON spec."
         },
@@ -481,7 +481,7 @@
           },
           "title": "The parameter user provide to inject to the pipeline JSON.\nIf a default value of a parameter exist in the JSON,\nthe value user provided here will replace. V1 only"
         },
-        "runtimeConfig": {
+        "runtime_config": {
           "$ref": "#/definitions/PipelineSpecRuntimeConfig",
           "title": "Runtime config of the pipeline. V2 only"
         }
@@ -540,10 +540,10 @@
     "v1Trigger": {
       "type": "object",
       "properties": {
-        "cronSchedule": {
+        "cron_schedule": {
           "$ref": "#/definitions/v1CronSchedule"
         },
-        "periodicSchedule": {
+        "periodic_schedule": {
           "$ref": "#/definitions/v1PeriodicSchedule"
         }
       },
@@ -552,17 +552,17 @@
     "v1Value": {
       "type": "object",
       "properties": {
-        "intValue": {
+        "int_value": {
           "type": "string",
           "format": "int64",
           "title": "An integer value"
         },
-        "doubleValue": {
+        "double_value": {
           "type": "number",
           "format": "double",
           "title": "A double value"
         },
-        "stringValue": {
+        "string_value": {
           "type": "string",
           "title": "A string value"
         }

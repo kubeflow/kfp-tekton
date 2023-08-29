@@ -499,7 +499,7 @@ class PipelineServiceApi(object):
 
         path_params = {}
         if 'version_id' in local_var_params:
-            path_params['versionId'] = local_var_params['version_id']  # noqa: E501
+            path_params['version_id'] = local_var_params['version_id']  # noqa: E501
 
         query_params = []
 
@@ -517,7 +517,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1/pipeline_versions/{versionId}', 'DELETE',
+            '/apis/v1/pipeline_versions/{version_id}', 'DELETE',
             path_params,
             query_params,
             header_params,
@@ -743,7 +743,7 @@ class PipelineServiceApi(object):
 
         path_params = {}
         if 'version_id' in local_var_params:
-            path_params['versionId'] = local_var_params['version_id']  # noqa: E501
+            path_params['version_id'] = local_var_params['version_id']  # noqa: E501
 
         query_params = []
 
@@ -761,7 +761,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1/pipeline_versions/{versionId}', 'GET',
+            '/apis/v1/pipeline_versions/{version_id}', 'GET',
             path_params,
             query_params,
             header_params,
@@ -865,7 +865,7 @@ class PipelineServiceApi(object):
 
         path_params = {}
         if 'version_id' in local_var_params:
-            path_params['versionId'] = local_var_params['version_id']  # noqa: E501
+            path_params['version_id'] = local_var_params['version_id']  # noqa: E501
 
         query_params = []
 
@@ -883,7 +883,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1/pipeline_versions/{versionId}/templates', 'GET',
+            '/apis/v1/pipeline_versions/{version_id}/templates', 'GET',
             path_params,
             query_params,
             header_params,
@@ -1132,15 +1132,15 @@ class PipelineServiceApi(object):
 
         query_params = []
         if 'resource_key_type' in local_var_params and local_var_params['resource_key_type'] is not None:  # noqa: E501
-            query_params.append(('resourceKey.type', local_var_params['resource_key_type']))  # noqa: E501
+            query_params.append(('resource_key.type', local_var_params['resource_key_type']))  # noqa: E501
         if 'resource_key_id' in local_var_params and local_var_params['resource_key_id'] is not None:  # noqa: E501
-            query_params.append(('resourceKey.id', local_var_params['resource_key_id']))  # noqa: E501
+            query_params.append(('resource_key.id', local_var_params['resource_key_id']))  # noqa: E501
         if 'page_size' in local_var_params and local_var_params['page_size'] is not None:  # noqa: E501
-            query_params.append(('pageSize', local_var_params['page_size']))  # noqa: E501
+            query_params.append(('page_size', local_var_params['page_size']))  # noqa: E501
         if 'page_token' in local_var_params and local_var_params['page_token'] is not None:  # noqa: E501
-            query_params.append(('pageToken', local_var_params['page_token']))  # noqa: E501
+            query_params.append(('page_token', local_var_params['page_token']))  # noqa: E501
         if 'sort_by' in local_var_params and local_var_params['sort_by'] is not None:  # noqa: E501
-            query_params.append(('sortBy', local_var_params['sort_by']))  # noqa: E501
+            query_params.append(('sort_by', local_var_params['sort_by']))  # noqa: E501
         if 'filter' in local_var_params and local_var_params['filter'] is not None:  # noqa: E501
             query_params.append(('filter', local_var_params['filter']))  # noqa: E501
 
@@ -1285,17 +1285,17 @@ class PipelineServiceApi(object):
 
         query_params = []
         if 'page_token' in local_var_params and local_var_params['page_token'] is not None:  # noqa: E501
-            query_params.append(('pageToken', local_var_params['page_token']))  # noqa: E501
+            query_params.append(('page_token', local_var_params['page_token']))  # noqa: E501
         if 'page_size' in local_var_params and local_var_params['page_size'] is not None:  # noqa: E501
-            query_params.append(('pageSize', local_var_params['page_size']))  # noqa: E501
+            query_params.append(('page_size', local_var_params['page_size']))  # noqa: E501
         if 'sort_by' in local_var_params and local_var_params['sort_by'] is not None:  # noqa: E501
-            query_params.append(('sortBy', local_var_params['sort_by']))  # noqa: E501
+            query_params.append(('sort_by', local_var_params['sort_by']))  # noqa: E501
         if 'filter' in local_var_params and local_var_params['filter'] is not None:  # noqa: E501
             query_params.append(('filter', local_var_params['filter']))  # noqa: E501
         if 'resource_reference_key_type' in local_var_params and local_var_params['resource_reference_key_type'] is not None:  # noqa: E501
-            query_params.append(('resourceReferenceKey.type', local_var_params['resource_reference_key_type']))  # noqa: E501
+            query_params.append(('resource_reference_key.type', local_var_params['resource_reference_key_type']))  # noqa: E501
         if 'resource_reference_key_id' in local_var_params and local_var_params['resource_reference_key_id'] is not None:  # noqa: E501
-            query_params.append(('resourceReferenceKey.id', local_var_params['resource_reference_key_id']))  # noqa: E501
+            query_params.append(('resource_reference_key.id', local_var_params['resource_reference_key_id']))  # noqa: E501
 
         header_params = {}
 
@@ -1424,9 +1424,9 @@ class PipelineServiceApi(object):
 
         path_params = {}
         if 'pipeline_id' in local_var_params:
-            path_params['pipelineId'] = local_var_params['pipeline_id']  # noqa: E501
+            path_params['pipeline_id'] = local_var_params['pipeline_id']  # noqa: E501
         if 'version_id' in local_var_params:
-            path_params['versionId'] = local_var_params['version_id']  # noqa: E501
+            path_params['version_id'] = local_var_params['version_id']  # noqa: E501
 
         query_params = []
 
@@ -1444,7 +1444,7 @@ class PipelineServiceApi(object):
         auth_settings = ['Bearer']  # noqa: E501
 
         return self.api_client.call_api(
-            '/apis/v1/pipelines/{pipelineId}/default_version/{versionId}', 'POST',
+            '/apis/v1/pipelines/{pipeline_id}/default_version/{version_id}', 'POST',
             path_params,
             query_params,
             header_params,

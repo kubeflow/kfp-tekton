@@ -39,7 +39,7 @@ class V1RunDetail(object):
 
     attribute_map = {
         'run': 'run',
-        'pipeline_runtime': 'pipelineRuntime'
+        'pipeline_runtime': 'pipeline_runtime'
     }
 
     def __init__(self, run=None, pipeline_runtime=None, local_vars_configuration=None):  # noqa: E501

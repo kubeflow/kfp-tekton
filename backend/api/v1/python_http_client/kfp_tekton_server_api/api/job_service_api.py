@@ -762,15 +762,15 @@ class JobServiceApi(object):
 
         query_params = []
         if 'page_token' in local_var_params and local_var_params['page_token'] is not None:  # noqa: E501
-            query_params.append(('pageToken', local_var_params['page_token']))  # noqa: E501
+            query_params.append(('page_token', local_var_params['page_token']))  # noqa: E501
         if 'page_size' in local_var_params and local_var_params['page_size'] is not None:  # noqa: E501
-            query_params.append(('pageSize', local_var_params['page_size']))  # noqa: E501
+            query_params.append(('page_size', local_var_params['page_size']))  # noqa: E501
         if 'sort_by' in local_var_params and local_var_params['sort_by'] is not None:  # noqa: E501
-            query_params.append(('sortBy', local_var_params['sort_by']))  # noqa: E501
+            query_params.append(('sort_by', local_var_params['sort_by']))  # noqa: E501
         if 'resource_reference_key_type' in local_var_params and local_var_params['resource_reference_key_type'] is not None:  # noqa: E501
-            query_params.append(('resourceReferenceKey.type', local_var_params['resource_reference_key_type']))  # noqa: E501
+            query_params.append(('resource_reference_key.type', local_var_params['resource_reference_key_type']))  # noqa: E501
         if 'resource_reference_key_id' in local_var_params and local_var_params['resource_reference_key_id'] is not None:  # noqa: E501
-            query_params.append(('resourceReferenceKey.id', local_var_params['resource_reference_key_id']))  # noqa: E501
+            query_params.append(('resource_reference_key.id', local_var_params['resource_reference_key_id']))  # noqa: E501
         if 'filter' in local_var_params and local_var_params['filter'] is not None:  # noqa: E501
             query_params.append(('filter', local_var_params['filter']))  # noqa: E501
 

@@ -46,11 +46,11 @@ class V1PipelineVersion(object):
     attribute_map = {
         'id': 'id',
         'name': 'name',
-        'created_at': 'createdAt',
+        'created_at': 'created_at',
         'parameters': 'parameters',
-        'code_source_url': 'codeSourceUrl',
-        'package_url': 'packageUrl',
-        'resource_references': 'resourceReferences',
+        'code_source_url': 'code_source_url',
+        'package_url': 'package_url',
+        'resource_references': 'resource_references',
         'description': 'description'
     }
 

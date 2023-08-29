@@ -108,30 +108,30 @@
         "key": {
           "type": "string"
         },
-        "intValue": {
+        "int_value": {
           "type": "integer",
           "format": "int32"
         },
-        "longValue": {
+        "long_value": {
           "type": "string",
           "format": "int64"
         },
-        "stringValue": {
+        "string_value": {
           "type": "string"
         },
-        "timestampValue": {
+        "timestamp_value": {
           "type": "string",
           "format": "date-time",
           "description": "Timestamp values will be converted to Unix time (seconds since the epoch)\nprior to being used in a filtering operation."
         },
-        "intValues": {
+        "int_values": {
           "$ref": "#/definitions/v1IntValues",
           "description": "Array values below are only meant to be used by the IN operator."
         },
-        "longValues": {
+        "long_values": {
           "$ref": "#/definitions/v1LongValues"
         },
-        "stringValues": {
+        "string_values": {
           "$ref": "#/definitions/v1StringValues"
         }
       },

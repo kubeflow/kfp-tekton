@@ -7,12 +7,12 @@ Method | HTTP request | Description
 [**run_service_archive_run**](RunServiceApi.md#run_service_archive_run) | **POST** /apis/v1/runs/{id}:archive | Archives a run.
 [**run_service_create_run**](RunServiceApi.md#run_service_create_run) | **POST** /apis/v1/runs | Creates a new run.
 [**run_service_delete_run**](RunServiceApi.md#run_service_delete_run) | **DELETE** /apis/v1/runs/{id} | Deletes a run.
-[**run_service_get_run**](RunServiceApi.md#run_service_get_run) | **GET** /apis/v1/runs/{runId} | Finds a specific run by ID.
+[**run_service_get_run**](RunServiceApi.md#run_service_get_run) | **GET** /apis/v1/runs/{run_id} | Finds a specific run by ID.
 [**run_service_list_runs**](RunServiceApi.md#run_service_list_runs) | **GET** /apis/v1/runs | Finds all runs.
-[**run_service_read_artifact**](RunServiceApi.md#run_service_read_artifact) | **GET** /apis/v1/runs/{runId}/nodes/{nodeId}/artifacts/{artifactName}:read | Finds a run&#39;s artifact data.
-[**run_service_report_run_metrics**](RunServiceApi.md#run_service_report_run_metrics) | **POST** /apis/v1/runs/{runId}:reportMetrics | ReportRunMetrics reports metrics of a run. Each metric is reported in its own transaction, so this API accepts partial failures. Metric can be uniquely identified by (run_id, node_id, name). Duplicate reporting will be ignored by the API. First reporting wins.
-[**run_service_retry_run**](RunServiceApi.md#run_service_retry_run) | **POST** /apis/v1/runs/{runId}/retry | Re-initiates a failed or terminated run.
-[**run_service_terminate_run**](RunServiceApi.md#run_service_terminate_run) | **POST** /apis/v1/runs/{runId}/terminate | Terminates an active run.
+[**run_service_read_artifact**](RunServiceApi.md#run_service_read_artifact) | **GET** /apis/v1/runs/{run_id}/nodes/{node_id}/artifacts/{artifact_name}:read | Finds a run&#39;s artifact data.
+[**run_service_report_run_metrics**](RunServiceApi.md#run_service_report_run_metrics) | **POST** /apis/v1/runs/{run_id}:reportMetrics | ReportRunMetrics reports metrics of a run. Each metric is reported in its own transaction, so this API accepts partial failures. Metric can be uniquely identified by (run_id, node_id, name). Duplicate reporting will be ignored by the API. First reporting wins.
+[**run_service_retry_run**](RunServiceApi.md#run_service_retry_run) | **POST** /apis/v1/runs/{run_id}/retry | Re-initiates a failed or terminated run.
+[**run_service_terminate_run**](RunServiceApi.md#run_service_terminate_run) | **POST** /apis/v1/runs/{run_id}/terminate | Terminates an active run.
 [**run_service_unarchive_run**](RunServiceApi.md#run_service_unarchive_run) | **POST** /apis/v1/runs/{id}:unarchive | Restores an archived run.
 
 

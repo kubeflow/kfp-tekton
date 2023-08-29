@@ -90,11 +90,11 @@ func (o *RunServiceReportRunMetricsOK) Code() int {
 }
 
 func (o *RunServiceReportRunMetricsOK) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}:reportMetrics][%d] runServiceReportRunMetricsOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}:reportMetrics][%d] runServiceReportRunMetricsOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceReportRunMetricsOK) String() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}:reportMetrics][%d] runServiceReportRunMetricsOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}:reportMetrics][%d] runServiceReportRunMetricsOK  %+v", 200, o.Payload)
 }
 
 func (o *RunServiceReportRunMetricsOK) GetPayload() *run_model.V1ReportRunMetricsResponse {
@@ -162,11 +162,11 @@ func (o *RunServiceReportRunMetricsDefault) Code() int {
 }
 
 func (o *RunServiceReportRunMetricsDefault) Error() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}:reportMetrics][%d] RunService_ReportRunMetrics default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}:reportMetrics][%d] RunService_ReportRunMetrics default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceReportRunMetricsDefault) String() string {
-	return fmt.Sprintf("[POST /apis/v1/runs/{runId}:reportMetrics][%d] RunService_ReportRunMetrics default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[POST /apis/v1/runs/{run_id}:reportMetrics][%d] RunService_ReportRunMetrics default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *RunServiceReportRunMetricsDefault) GetPayload() *run_model.GooglerpcStatus {

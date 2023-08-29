@@ -27,7 +27,7 @@ type PipelineSpecRuntimeConfig struct {
 	// A path in a object store bucket which will be treated as the root
 	// output directory of the pipeline. It is used by the system to
 	// generate the paths of output artifacts. Ref:(https://www.kubeflow.org/docs/components/pipelines/pipeline-root/)
-	PipelineRoot string `json:"pipelineRoot,omitempty"`
+	PipelineRoot string `json:"pipeline_root,omitempty"`
 }
 
 // Validate validates this pipeline spec runtime config

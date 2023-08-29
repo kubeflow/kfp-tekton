@@ -133,7 +133,7 @@
           "id": {
             "type": "string"
           },
-          "createdAt": {
+          "created_at": {
             "type": "string",
             "format": "date-time"
           },
@@ -166,7 +166,7 @@
             "type": "string",
             "description": "Optional input field. Version name provided by user."
           },
-          "createdAt": {
+          "created_at": {
             "type": "string",
             "format": "date-time",
             "description": "Output. The time this pipeline version is created."
@@ -178,15 +178,15 @@
             },
             "description": "Output. The input parameters for this pipeline."
           },
-          "codeSourceUrl": {
+          "code_source_url": {
             "type": "string",
             "description": "Input. Optional. Pipeline version code source."
           },
-          "packageUrl": {
+          "package_url": {
             "$ref": "#/definitions/v1Url",
             "description": "Input. Required. Pipeline version package url.\nWhe calling CreatePipelineVersion API method, need to provide one package\nfile location."
           },
-          "resourceReferences": {
+          "resource_references": {
             "type": "array",
             "items": {
               "$ref": "#/definitions/v1ResourceReference"
@@ -248,7 +248,7 @@
       "v1Url": {
         "type": "object",
         "properties": {
-          "pipelineUrl": {
+          "pipeline_url": {
             "type": "string"
           }
         }

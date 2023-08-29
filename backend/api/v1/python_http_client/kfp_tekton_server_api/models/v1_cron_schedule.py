@@ -39,8 +39,8 @@ class V1CronSchedule(object):
     }
 
     attribute_map = {
-        'start_time': 'startTime',
-        'end_time': 'endTime',
+        'start_time': 'start_time',
+        'end_time': 'end_time',
         'cron': 'cron'
     }
 

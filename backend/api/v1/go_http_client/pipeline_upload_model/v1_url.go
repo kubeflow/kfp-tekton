@@ -17,8 +17,8 @@ import (
 // swagger:model v1Url
 type V1URL struct {
 
-	// pipeline Url
-	PipelineURL string `json:"pipelineUrl,omitempty"`
+	// pipeline url
+	PipelineURL string `json:"pipeline_url,omitempty"`
 }
 
 // Validate validates this v1 Url

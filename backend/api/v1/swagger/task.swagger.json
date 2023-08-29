@@ -36,14 +36,14 @@
         },
         "parameters": [
           {
-            "name": "pageToken",
+            "name": "page_token",
             "description": "A page token to request the next page of results. The token is acquried\nfrom the nextPageToken field of the response from the previous\nListExperiment call or can be omitted when fetching the first page.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "description": "The number of experiments to be listed per page. If there are more\nexperiments than this number, the response message will contain a\nnextPageToken field you can use to fetch the next page.",
             "in": "query",
             "required": false,
@@ -51,14 +51,14 @@
             "format": "int32"
           },
           {
-            "name": "sortBy",
+            "name": "sort_by",
             "description": "Can be format of \"field_name\", \"field_name asc\" or \"field_name desc\"\nAscending by default.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "resourceReferenceKey.type",
+            "name": "resource_reference_key.type",
             "description": "The type of the resource that referred to.",
             "in": "query",
             "required": false,
@@ -74,7 +74,7 @@
             "default": "UNKNOWN_RESOURCE_TYPE"
           },
           {
-            "name": "resourceReferenceKey.id",
+            "name": "resource_reference_key.id",
             "description": "The ID of the resource that referred to.",
             "in": "query",
             "required": false,
@@ -165,11 +165,11 @@
           },
           "description": "A list of tasks returned."
         },
-        "nextPageToken": {
+        "next_page_token": {
           "type": "string",
           "description": "The token to list the next page of experiments."
         },
-        "totalSize": {
+        "total_size": {
           "type": "integer",
           "format": "int32",
           "description": "The total number of experiments for the given query."
@@ -224,12 +224,12 @@
           "type": "string",
           "description": "Required input field. The ID of the MLMD execution associated with the PipelineTask."
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time",
           "description": "Required input field. The time this task is created."
         },
-        "finishedAt": {
+        "finished_at": {
           "type": "string",
           "format": "date-time",
           "description": "Optional input field. The time this task is finished."

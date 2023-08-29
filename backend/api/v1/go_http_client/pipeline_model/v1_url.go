@@ -18,7 +18,7 @@ import (
 type V1URL struct {
 
 	// URL of the pipeline definition or the pipeline version definition.
-	PipelineURL string `json:"pipelineUrl,omitempty"`
+	PipelineURL string `json:"pipeline_url,omitempty"`
 }
 
 // Validate validates this v1 Url

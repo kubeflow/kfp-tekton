@@ -21,11 +21,11 @@ import (
 type V1PipelineVersion struct {
 
 	// Input. Optional. Pipeline version code source.
-	CodeSourceURL string `json:"codeSourceUrl,omitempty"`
+	CodeSourceURL string `json:"code_source_url,omitempty"`
 
 	// Output. The time this pipeline version is created.
 	// Format: date-time
-	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
+	CreatedAt strfmt.DateTime `json:"created_at,omitempty"`
 
 	// Input. Optional. Description for the pipeline version.
 	Description string `json:"description,omitempty"`
@@ -39,14 +39,14 @@ type V1PipelineVersion struct {
 	// Input. Required. Pipeline version package url.
 	// Whe calling CreatePipelineVersion API method, need to provide one package
 	// file location.
-	PackageURL *V1URL `json:"packageUrl,omitempty"`
+	PackageURL *V1URL `json:"package_url,omitempty"`
 
 	// Output. The input parameters for this pipeline.
 	Parameters []*V1Parameter `json:"parameters"`
 
 	// Input field. Specify which resource this pipeline version belongs to.
 	// For Experiment, the only valid resource reference is a single Namespace.
-	ResourceReferences []*V1ResourceReference `json:"resourceReferences"`
+	ResourceReferences []*V1ResourceReference `json:"resource_references"`
 }
 
 // Validate validates this v1 pipeline version
@@ -80,7 +80,7 @@ func (m *V1PipelineVersion) validateCreatedAt(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("createdAt", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
+	if err := validate.FormatOf("created_at", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
 		return err
 	}
 
@@ -95,9 +95,9 @@ func (m *V1PipelineVersion) validatePackageURL(formats strfmt.Registry) error {
 	if m.PackageURL != nil {
 		if err := m.PackageURL.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("packageUrl")
+				return ve.ValidateName("package_url")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("packageUrl")
+				return ce.ValidateName("package_url")
 			}
 			return err
 		}
@@ -145,9 +145,9 @@ func (m *V1PipelineVersion) validateResourceReferences(formats strfmt.Registry) 
 		if m.ResourceReferences[i] != nil {
 			if err := m.ResourceReferences[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -185,9 +185,9 @@ func (m *V1PipelineVersion) contextValidatePackageURL(ctx context.Context, forma
 	if m.PackageURL != nil {
 		if err := m.PackageURL.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("packageUrl")
+				return ve.ValidateName("package_url")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("packageUrl")
+				return ce.ValidateName("package_url")
 			}
 			return err
 		}
@@ -223,9 +223,9 @@ func (m *V1PipelineVersion) contextValidateResourceReferences(ctx context.Contex
 		if m.ResourceReferences[i] != nil {
 			if err := m.ResourceReferences[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("resourceReferences" + "." + strconv.Itoa(i))
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

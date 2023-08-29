@@ -20,13 +20,13 @@ import (
 type V1ListPipelinesResponse struct {
 
 	// The token to list the next page of pipelines.
-	NextPageToken string `json:"nextPageToken,omitempty"`
+	NextPageToken string `json:"next_page_token,omitempty"`
 
 	// pipelines
 	Pipelines []*V1Pipeline `json:"pipelines"`
 
 	// The total number of pipelines for the given query.
-	TotalSize int32 `json:"totalSize,omitempty"`
+	TotalSize int32 `json:"total_size,omitempty"`
 }
 
 // Validate validates this v1 list pipelines response
