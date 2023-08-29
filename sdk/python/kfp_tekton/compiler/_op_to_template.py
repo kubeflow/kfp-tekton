@@ -34,8 +34,8 @@ RESOURCE_OP_IMAGE = ":".join(["quay.io/aipipeline/kubectl-wrapper", "latest"])
 TEKTON_HOME_RESULT_PATH = "/tekton/home/tep-results/"
 
 # The image to use in basic bash steps such as copying results in multi-step.
-TEKTON_BASH_STEP_IMAGE = 'busybox'
-TEKTON_COPY_RESULTS_STEP_IMAGE = 'library/bash'
+TEKTON_BASH_STEP_IMAGE = env.get('TEKTON_BASH_STEP_IMAGE', 'busybox')
+TEKTON_COPY_RESULTS_STEP_IMAGE = env.get('TEKTON_COPY_RESULTS_STEP_IMAGE', 'library/bash')
 GENERATE_COMPONENT_SPEC_ANNOTATIONS = env.get('GENERATE_COMPONENT_SPEC_ANNOTATIONS', True)
 
 
