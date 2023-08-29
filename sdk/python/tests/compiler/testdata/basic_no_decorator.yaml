@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   name: save-most-frequent-word
@@ -129,6 +129,6 @@ spec:
               "outputs": [], "version": "exit-handler@sha256=f602919c39b5b69833987b005c4e28a099a234d24e004890803e3de1900525bf"}'
   taskRunSpecs:
   - pipelineTaskName: save-message
-    taskPodTemplate:
+    podTemplate:
       nodeSelector:
         kubernetes.io/os: linux

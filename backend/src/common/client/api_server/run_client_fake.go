@@ -6,10 +6,10 @@ import (
 	"github.com/go-openapi/strfmt"
 	runparams "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_client/run_service"
 	runmodel "github.com/kubeflow/pipelines/backend/api/v1/go_http_client/run_model"
-	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	workflowapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
-// Replaced Argo v1alpha1.Workflow to Tekton v1beta1.PipelineRun
+// Replaced Argo v1alpha1.Workflow to Tekton v1.PipelineRun
 
 const (
 	RunForDefaultTest     = "RUN_DEFAULT"

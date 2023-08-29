@@ -23,7 +23,7 @@ spec:
   accessModes:
     - ReadWriteOnce
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: print-data
@@ -38,7 +38,7 @@ spec:
       image: ubuntu
       script: cat $(workspaces.storage.path)/$(params.filename)
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: fetch-store-data
@@ -55,7 +55,7 @@ spec:
       script: |
         cp $(workspaces.recipe-ws.path)/$(params.src-filename) $(workspaces.storage.path)/$(params.dst-filename)
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: fetch-and-print-recipe
@@ -111,7 +111,7 @@ spec:
         claimName: shared-task-storage
   iterateParam: dst-filename
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   name: pr-ws-loop-example

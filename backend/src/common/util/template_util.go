@@ -15,23 +15,26 @@
 package util
 
 import (
+	"context"
 	"encoding/json"
 
 	"sigs.k8s.io/yaml"
 
-	tektonV1Beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonV1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	workflowapiV1beta "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 const (
-	tektonVersion     = "tekton.dev/v1beta1"
+	tektonBetaGroup   = "tekton.dev/v1beta1"
+	tektonVersion     = "tekton.dev/v1"
 	tektonK8sResource = "PipelineRun"
 )
 
-func UnmarshalParameters(paramsString string) ([]tektonV1Beta1.Param, error) {
+func UnmarshalParameters(paramsString string) ([]tektonV1.Param, error) {
 	if paramsString == "" {
 		return nil, nil
 	}
-	var params []tektonV1Beta1.Param
+	var params []tektonV1.Param
 	err := json.Unmarshal([]byte(paramsString), &params)
 	if err != nil {
 		return nil, NewInternalServerError(err, "Parameters have wrong format")
@@ -39,7 +42,7 @@ func UnmarshalParameters(paramsString string) ([]tektonV1Beta1.Param, error) {
 	return params, nil
 }
 
-func MarshalParameters(params []tektonV1Beta1.Param) (string, error) {
+func MarshalParameters(params []tektonV1.Param) (string, error) {
 	if params == nil {
 		return "[]", nil
 	}
@@ -77,10 +80,20 @@ func GetTektonParameters(template []byte) (string, error) {
 }
 
 func ValidatePipelineRun(template []byte) (*Workflow, error) {
-	var wf tektonV1Beta1.PipelineRun
+	var wf tektonV1.PipelineRun
 	err := yaml.Unmarshal(template, &wf)
 	if err != nil {
 		return nil, NewInvalidInputErrorWithDetails(err, "Failed to parse the parameter.")
+	}
+	if wf.APIVersion == tektonBetaGroup {
+		var prV1beta1 workflowapiV1beta.PipelineRun
+		err := yaml.Unmarshal(template, &prV1beta1)
+		if err != nil {
+			return nil, NewInvalidInputErrorWithDetails(err, "Failed to parse the V1beta1 PipelineRun template.")
+		}
+		ctx := context.Background()
+		prV1beta1.ConvertTo(ctx, &wf)
+		wf.APIVersion = tektonVersion
 	}
 	if wf.APIVersion != tektonVersion {
 		return nil, NewInvalidInputError("Unsupported tekton version. Expected: %v. Received: %v", tektonVersion, wf.APIVersion)

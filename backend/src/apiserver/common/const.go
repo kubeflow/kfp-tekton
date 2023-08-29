@@ -77,6 +77,12 @@ const (
 )
 
 const (
+	DefaultObjectStoreCredentialsSecret       string = "mlpipeline-minio-artifact"
+	DefaultObjectStoreCredentialsAccessKeyKey string = "accesskey"
+	DefaultObjectStoreCredentialsSecretKeyKey string = "secretkey"
+)
+
+const (
 	ArtifactItemsAnnotation          string = "tekton.dev/artifact_items"
 	ArtifactBucketAnnotation         string = "tekton.dev/artifact_bucket"
 	ArtifactEndpointAnnotation       string = "tekton.dev/artifact_endpoint"

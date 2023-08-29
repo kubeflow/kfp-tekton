@@ -36,7 +36,7 @@ run_many_edges() {
   local RUN_NAME="${PIPELINE_NAME}-run"
   local ENDTIME
 
-  ENDTIME=$(date -ud "5 second" +%s)
+  ENDTIME=$(date -ud "$DURATION second" +%s)
   retry 3 3 $KFP_COMMAND --endpoint http://localhost:8888 run submit -e exp-many-edges -r "$RUN_NAME" -p "$PIPELINE_ID" || :
   RUN_ID=$($KFP_COMMAND --endpoint http://localhost:8888  run list | grep "$RUN_NAME" | awk '{print $2}')
   if [[ -z "$RUN_ID" ]]; then
@@ -45,7 +45,7 @@ run_many_edges() {
   fi
 
   if [[ "$(date -u +%s)" -gt "$ENDTIME" ]]; then
-    echo "validation duration is longer then 5 seconds"
+    echo "validation duration is longer than $DURATION seconds"
     return "$REV"
   fi
 
@@ -56,7 +56,7 @@ run_many_edges() {
 }
 
 RESULT=0
-run_many_edges 20 || RESULT=$?
+run_many_edges ${MANY_EDGE_DURATION} || RESULT=$?
 
 STATUS_MSG=PASSED
 if [[ "$RESULT" -ne 0 ]]; then

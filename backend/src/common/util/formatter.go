@@ -20,8 +20,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 type WorkflowFormatter struct {
@@ -44,7 +43,7 @@ func NewWorkflowFormatter(uuid UUIDGeneratorInterface, scheduledAtInSec int64,
 	}
 }
 
-func (p *WorkflowFormatter) Format(workflow *v1beta1.PipelineRun) error {
+func (p *WorkflowFormatter) Format(workflow *v1.PipelineRun) error {
 	workflowName := getWorkflowName(workflow)
 	formattedWorkflowName, err := p.formatString(workflowName)
 	if err != nil {
@@ -60,7 +59,7 @@ func (p *WorkflowFormatter) Format(workflow *v1beta1.PipelineRun) error {
 	return nil
 }
 
-func getWorkflowName(workflow *v1beta1.PipelineRun) string {
+func getWorkflowName(workflow *v1.PipelineRun) string {
 
 	const (
 		defaultWorkflowName = "workflow-"
@@ -75,12 +74,12 @@ func getWorkflowName(workflow *v1beta1.PipelineRun) string {
 	return defaultWorkflowName
 }
 
-func (p *WorkflowFormatter) formatWorkflowParameters(workflow *v1beta1.PipelineRun) error {
+func (p *WorkflowFormatter) formatWorkflowParameters(workflow *v1.PipelineRun) error {
 	if workflow.Spec.Params == nil {
 		return nil
 	}
 
-	newParams := make([]v1beta1.Param, 0)
+	newParams := make([]v1.Param, 0)
 
 	for _, param := range workflow.Spec.Params {
 		newParam, err := p.formatParameter(param)
@@ -94,18 +93,18 @@ func (p *WorkflowFormatter) formatWorkflowParameters(workflow *v1beta1.PipelineR
 	return nil
 }
 
-func (p *WorkflowFormatter) formatParameter(param v1beta1.Param) (*v1beta1.Param, error) {
+func (p *WorkflowFormatter) formatParameter(param v1.Param) (*v1.Param, error) {
 	formatted, err := p.formatString(param.Value.StringVal)
 	if err != nil {
 		return nil, err
 	}
 
-	tektonFormatted := v1beta1.ArrayOrString{
+	tektonFormatted := v1.ParamValue{
 		Type:      "string",
 		StringVal: formatted,
 	}
 
-	return &v1beta1.Param{
+	return &v1.Param{
 		Name:  param.Name,
 		Value: tektonFormatted,
 	}, nil

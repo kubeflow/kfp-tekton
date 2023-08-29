@@ -400,6 +400,9 @@ spec:
     - name: test-script
       description: a shell script to run the test case
       default: ""
+    - name: many-edge-duration
+      description: duration threshold for pipeline
+      default: "5"
   workspaces:
   - name: task-pvc
     mountPath: /artifacts
@@ -429,6 +432,8 @@ spec:
               fieldPath: metadata.annotations['devops.cloud.ibm.com/build-number']
         - name: TEST_SCRIPT
           value: $(params.test-script)
+        - name: MANY_EDGE_DURATION
+          value: $(params.many-edge-duration)
       command: ["/bin/bash", "-c"]
       args:
         - set -ex;

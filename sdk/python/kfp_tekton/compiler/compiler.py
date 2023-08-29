@@ -42,7 +42,7 @@ from kfp.dsl._metadata import _extract_pipeline_metadata
 from kfp_tekton.compiler import __tekton_api_version__ as tekton_api_version
 from kfp_tekton.compiler._data_passing_rewriter import fix_big_data_passing, fix_big_data_passing_using_volume, BIG_DATA_PATH_FORMAT
 from kfp_tekton.compiler._k8s_helper import convert_k8s_obj_to_json, sanitize_k8s_name, sanitize_k8s_object
-from kfp_tekton.compiler._op_to_template import _op_to_template
+from kfp_tekton.compiler._op_to_template import _op_to_template, TEKTON_BASH_STEP_IMAGE
 from kfp_tekton.compiler._tekton_handler import _handle_tekton_pipeline_variables, _handle_tekton_custom_task, _process_argo_vars
 from kfp_tekton.compiler.pipeline_utils import TektonPipelineConf
 from kfp_tekton.compiler.yaml_utils import dump_yaml
@@ -152,6 +152,7 @@ class TektonCompiler(Compiler):
     self.task_workspaces = {}
     self.generate_component_spec_annotations = True
     self.condition_image_name = "python:3.9.17-alpine3.18"
+    self.bash_image_name = TEKTON_BASH_STEP_IMAGE
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -168,6 +169,7 @@ class TektonCompiler(Compiler):
     self.pipeline_workspaces = tekton_pipeline_conf.pipeline_workspaces
     self.generate_component_spec_annotations = tekton_pipeline_conf.generate_component_spec_annotations
     self.condition_image_name = tekton_pipeline_conf.condition_image_name
+    self.bash_image_name = tekton_pipeline_conf.bash_image_name
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
@@ -624,7 +626,8 @@ class TektonCompiler(Compiler):
     op_to_steps_handler = op_to_templates_handler or (lambda op: [_op_to_template(op,
                                                                   self.output_artifacts,
                                                                   self.artifact_items,
-                                                                  self.generate_component_spec_annotations)])
+                                                                  self.generate_component_spec_annotations,
+                                                                  self.bash_image_name)])
     root_group = pipeline.groups[0]
 
     # Call the transformation functions before determining the inputs/outputs, otherwise
@@ -1424,20 +1427,23 @@ class TektonCompiler(Compiler):
       return re.sub(r'_([a-z])', lambda x: x.group(1).upper(), name)
 
     if self.security_context:
-      pipeline_run['spec'].setdefault('podTemplate', {})
+      pipeline_run['spec'].setdefault('taskRunTemplate', {})
+      pipeline_run['spec']['taskRunTemplate'].setdefault('podTemplate', {})
       for key, value in self.security_context.to_dict().items():
         if value is not None:
-          pipeline_run['spec']['podTemplate']['securityContext'] = \
-            pipeline_run['spec']['podTemplate'].setdefault('securityContext', {})
-          pipeline_run['spec']['podTemplate']['securityContext'][python_name_to_yaml_name(key)] = value
+          pipeline_run['spec']['taskRunTemplate']['podTemplate']['securityContext'] = \
+            pipeline_run['spec']['taskRunTemplate']['podTemplate'].setdefault('securityContext', {})
+          pipeline_run['spec']['taskRunTemplate']['podTemplate']['securityContext'][python_name_to_yaml_name(key)] = value
     if self.automount_service_account_token is not None:
-      pipeline_run['spec'].setdefault('podTemplate', {})
-      pipeline_run['spec']['podTemplate']['automountServiceAccountToken'] = self.automount_service_account_token
+      pipeline_run['spec'].setdefault('taskRunTemplate', {})
+      pipeline_run['spec']['taskRunTemplate'].setdefault('podTemplate', {})
+      pipeline_run['spec']['taskRunTemplate']['podTemplate']['automountServiceAccountToken'] = self.automount_service_account_token
     if self.pipeline_env:
-      pipeline_run['spec'].setdefault('podTemplate', {})
-      pipeline_run['spec']['podTemplate'].setdefault('env', [])
+      pipeline_run['spec'].setdefault('taskRunTemplate', {})
+      pipeline_run['spec']['taskRunTemplate'].setdefault('podTemplate', {})
+      pipeline_run['spec']['taskRunTemplate']['podTemplate'].setdefault('env', [])
       for key, value in self.pipeline_env.items():
-        pipeline_run['spec']['podTemplate']['env'].append({'name': key, 'value': value})
+        pipeline_run['spec']['taskRunTemplate']['podTemplate']['env'].append({'name': key, 'value': value})
 
     # Generate TaskRunSpec PodTemplate:s
     task_run_spec = []
@@ -1453,18 +1459,18 @@ class TektonCompiler(Compiler):
         raise RuntimeError("unable to find op with name '%s'" % task["name"])
 
       task_spec = {"pipelineTaskName": task['name'],
-                   "taskPodTemplate": {}}
+                   "podTemplate": {}}
       if op.affinity:
-        task_spec["taskPodTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
+        task_spec["podTemplate"]["affinity"] = convert_k8s_obj_to_json(op.affinity)
       if op.tolerations:
-        task_spec["taskPodTemplate"]['tolerations'] = op.tolerations
+        task_spec["podTemplate"]['tolerations'] = op.tolerations
       # process op level node_selector
       if op.node_selector:
-        if task_spec["taskPodTemplate"].get('nodeSelector'):
-          task_spec["taskPodTemplate"]['nodeSelector'].update(op.node_selector)
+        if task_spec["podTemplate"].get('nodeSelector'):
+          task_spec["podTemplate"]['nodeSelector'].update(op.node_selector)
         else:
-          task_spec["taskPodTemplate"]['nodeSelector'] = op.node_selector
-      if bool(task_spec["taskPodTemplate"]):
+          task_spec["podTemplate"]['nodeSelector'] = op.node_selector
+      if bool(task_spec["podTemplate"]):
         task_run_spec.append(task_spec)
     if len(task_run_spec) > 0:
       pipeline_run['spec']['taskRunSpecs'] = task_run_spec
@@ -1476,14 +1482,16 @@ class TektonCompiler(Compiler):
       pipeline_run['spec']['timeouts']['pipeline'] = '%ds' % (pipeline.conf.timeout + DEFAULT_FINALLY_SECONDS)
     # generate the Tekton podTemplate for image pull secret
     if len(pipeline.conf.image_pull_secrets) > 0:
-      pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
-      pipeline_run['spec']['podTemplate']['imagePullSecrets'] = [
+      pipeline_run['spec']['taskRunTemplate'] = pipeline_run['spec'].get('taskRunTemplate', {})
+      pipeline_run['spec']['taskRunTemplate']['podTemplate'] = pipeline_run['spec']['taskRunTemplate'].get('podTemplate', {})
+      pipeline_run['spec']['taskRunTemplate']['podTemplate']['imagePullSecrets'] = [
         {"name": s.name} for s in pipeline.conf.image_pull_secrets]
     # process pipeline level node_selector
     if pipeline_conf and hasattr(pipeline_conf, 'default_pod_node_selector') \
         and len(pipeline_conf.default_pod_node_selector) > 0:
-      pipeline_run['spec']['podTemplate'] = pipeline_run['spec'].get('podTemplate', {})
-      pipeline_run['spec']['podTemplate']['nodeSelector'] = copy.deepcopy(pipeline_conf.default_pod_node_selector)
+      pipeline_run['spec']['taskRunTemplate'] = pipeline_run['spec'].get('taskRunTemplate', {})
+      pipeline_run['spec']['taskRunTemplate']['podTemplate'] = pipeline_run['spec']['taskRunTemplate'].get('podTemplate', {})
+      pipeline_run['spec']['taskRunTemplate']['podTemplate']['nodeSelector'] = copy.deepcopy(pipeline_conf.default_pod_node_selector)
     workflow = pipeline_run
 
     # populate dependend condition for all the runafter tasks

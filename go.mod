@@ -6,14 +6,14 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/denisenkom/go-mssqldb v0.9.0 // indirect
 	github.com/eapache/go-resiliency v1.2.0
-	github.com/fsnotify/fsnotify v1.5.4
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-openapi/errors v0.20.2
 	github.com/go-openapi/runtime v0.21.1
 	github.com/go-openapi/strfmt v0.21.1
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-openapi/validate v0.20.3
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/golang/glog v1.0.0
+	github.com/golang/glog v1.1.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/addlicense v0.0.0-20200906110928-a0294312aa76
 	github.com/google/go-cmp v0.5.9
@@ -27,24 +27,24 @@ require (
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/peterhellberg/duration v0.0.0-20191119133758-ec6baeebcd10
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.13.0
+	github.com/prometheus/client_golang v1.15.1
 	github.com/robfig/cron v1.2.0
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.1
 	github.com/spf13/viper v1.10.1
-	github.com/stretchr/testify v1.8.2
-	github.com/tektoncd/pipeline v0.47.1
+	github.com/stretchr/testify v1.8.4
+	github.com/tektoncd/pipeline v0.50.1
 	github.com/tidwall/pretty v1.1.0 // indirect
 	go.uber.org/zap v1.24.0
-	golang.org/x/net v0.9.0
-	google.golang.org/genproto v0.0.0-20230331144136-dcfb400f0633
-	google.golang.org/grpc v1.54.0
+	golang.org/x/net v0.11.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc
+	google.golang.org/grpc v1.56.2
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.30.0
-	k8s.io/api v0.25.9
-	k8s.io/apimachinery v0.26.4
-	k8s.io/client-go v0.25.9
-	k8s.io/code-generator v0.25.9
-	sigs.k8s.io/controller-runtime v0.11.2
+	k8s.io/api v0.27.2
+	k8s.io/apimachinery v0.27.2
+	k8s.io/client-go v0.27.2
+	k8s.io/code-generator v0.27.2
+	sigs.k8s.io/controller-runtime v0.15.0
 	sigs.k8s.io/yaml v1.3.0
 )
 
