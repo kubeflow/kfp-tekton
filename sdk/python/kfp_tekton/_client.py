@@ -232,7 +232,7 @@ class TektonClient(kfp.Client):
             'predicates': [{
                 'op': _FILTER_OPERATIONS['EQUALS'],
                 'key': 'name',
-                'stringValue': name,
+                'string_value': name,
             }]
         })
         result = self._pipelines_api.pipeline_service_list_pipelines(filter=pipeline_filter)
@@ -390,7 +390,7 @@ class TektonClient(kfp.Client):
             'predicates': [{
                 'op': _FILTER_OPERATIONS['EQUALS'],
                 'key': 'name',
-                'stringValue': experiment_name,
+                'string_value': experiment_name,
             }]
         })
         if namespace:
