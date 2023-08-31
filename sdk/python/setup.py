@@ -55,6 +55,8 @@ development stage. Contributions are welcome: {}
 # accordingly.
 REQUIRES = [
     "kfp>=1.8.10,<1.8.23",
+    "kfp-tekton-server-api>=1.5.0",
+    "PyYAML>=6,<7"
 ]
 
 TESTS_REQUIRE = [
