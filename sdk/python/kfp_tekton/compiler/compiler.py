@@ -52,13 +52,14 @@ from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPU
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
+CONDITION_IMAGE_NAME = env.get('CONDITION_IMAGE_NAME', 'python:3.9.17-alpine3.18')
 # DISABLE_CEL_CONDITION should be True until CEL is officially merged into Tekton main API.
 DISABLE_CEL_CONDITION = True
 # Default finally extension is 5 minutes
 DEFAULT_FINALLY_SECONDS = 300
 
 
-def _get_super_condition_template(image_name="python:3.9.17-alpine3.18"):
+def _get_super_condition_template(image_name=CONDITION_IMAGE_NAME):
 
   python_script = textwrap.dedent('''\
     import sys
@@ -151,7 +152,7 @@ class TektonCompiler(Compiler):
     self.pipeline_workspaces = {}
     self.task_workspaces = {}
     self.generate_component_spec_annotations = True
-    self.condition_image_name = "python:3.9.17-alpine3.18"
+    self.condition_image_name = CONDITION_IMAGE_NAME
     self.bash_image_name = TEKTON_BASH_STEP_IMAGE
     super().__init__(**kwargs)
 
