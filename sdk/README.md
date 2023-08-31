@@ -164,6 +164,7 @@ If you want to change the input and output copy artifact images, please modify t
 ```shell
 export TEKTON_BASH_STEP_IMAGE=busybox  # input and output copy artifact images
 export TEKTON_COPY_RESULTS_STEP_IMAGE=library/bash # output copy results images
+export CONDITION_IMAGE_NAME=python:3.9.17-alpine3.18 # condition task default image name
 ```
 
 ## Running the Compiled Pipeline on a Tekton Cluster
