@@ -67,5 +67,5 @@ service HealthzService {
 
 message GetHealthzResponse {
   // Returns if KFP in multi-user mode
-  bool multi_user = 3;
+  bool multi_user = 3 [json_name = "multi_user"];
 }

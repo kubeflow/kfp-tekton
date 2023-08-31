@@ -24,7 +24,7 @@ API_VERSION=v1
 # Generate clients using a pre-built api-generator image.
 .PHONY: generate
 generate: hack/generator.sh $(API_VERSION)/*.proto
-	podman run --interactive --rm \
+	docker run --interactive --rm \
 		-e API_VERSION=$(API_VERSION) \
 		--user $$(id -u):$$(id -g) \
 		--mount type=bind,source="$$(pwd)/../..",target=/go/src/github.com/kubeflow/pipelines \
@@ -53,5 +53,5 @@ push: image
 
 # .image-built is a local token file to help Make determine the latest successful build.
 .image-built: Dockerfile
-	podman build ../.. -t $(IMAGE_TAG) -f Dockerfile
+	docker build ../.. -t $(IMAGE_TAG) -f Dockerfile
 	touch .image-built
