@@ -52,13 +52,14 @@ from kfp_tekton.tekton import TEKTON_CUSTOM_TASK_IMAGES, DEFAULT_CONDITION_OUTPU
 DEFAULT_ARTIFACT_BUCKET = env.get('DEFAULT_ARTIFACT_BUCKET', 'mlpipeline')
 DEFAULT_ARTIFACT_ENDPOINT = env.get('DEFAULT_ARTIFACT_ENDPOINT', 'minio-service.kubeflow:9000')
 DEFAULT_ARTIFACT_ENDPOINT_SCHEME = env.get('DEFAULT_ARTIFACT_ENDPOINT_SCHEME', 'http://')
+CONDITION_IMAGE_NAME = env.get('CONDITION_IMAGE_NAME', 'python:3.9.17-alpine3.18')
 # DISABLE_CEL_CONDITION should be True until CEL is officially merged into Tekton main API.
 DISABLE_CEL_CONDITION = True
 # Default finally extension is 5 minutes
 DEFAULT_FINALLY_SECONDS = 300
 
 
-def _get_super_condition_template():
+def _get_super_condition_template(image_name=CONDITION_IMAGE_NAME):
 
   python_script = textwrap.dedent('''\
     import sys
@@ -92,7 +93,7 @@ def _get_super_condition_template():
       'name': 'main',
       'command': ['sh', '-ec', 'program_path=$(mktemp); printf "%s" "$0" > "$program_path";  python3 -u "$program_path" "$1" "$2"'],
       'args': [python_script, '$(inputs.params.operand1)', '$(inputs.params.operand2)'],
-      'image': 'python:alpine3.6',
+      'image': image_name,
     }]
   }
 
@@ -151,11 +152,8 @@ class TektonCompiler(Compiler):
     self.pipeline_workspaces = {}
     self.task_workspaces = {}
     self.generate_component_spec_annotations = True
-<<<<<<< HEAD
-=======
-    self.condition_image_name = "python:3.9.17-alpine3.18"
+    self.condition_image_name = CONDITION_IMAGE_NAME
     self.bash_image_name = TEKTON_BASH_STEP_IMAGE
->>>>>>> 972c8817f (feat(sdk): add bash script name config (#1334))
     super().__init__(**kwargs)
 
   def _set_pipeline_conf(self, tekton_pipeline_conf: TektonPipelineConf):
@@ -171,11 +169,8 @@ class TektonCompiler(Compiler):
     self.pipeline_env = tekton_pipeline_conf.pipeline_env
     self.pipeline_workspaces = tekton_pipeline_conf.pipeline_workspaces
     self.generate_component_spec_annotations = tekton_pipeline_conf.generate_component_spec_annotations
-<<<<<<< HEAD
-=======
     self.condition_image_name = tekton_pipeline_conf.condition_image_name
     self.bash_image_name = tekton_pipeline_conf.bash_image_name
->>>>>>> 972c8817f (feat(sdk): add bash script name config (#1334))
 
   def _resolve_value_or_reference(self, value_or_reference, potential_references):
     """_resolve_value_or_reference resolves values and PipelineParams, which could be task parameters or input parameters.
