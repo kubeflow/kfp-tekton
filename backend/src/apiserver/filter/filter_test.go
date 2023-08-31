@@ -2,8 +2,9 @@ package filter
 
 import (
 	"encoding/json"
-	"google.golang.org/protobuf/testing/protocmp"
 	"testing"
+
+	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/golang/protobuf/proto"
@@ -323,7 +324,7 @@ func TestMarshalJSON(t *testing.T) {
 		eq: map[string][]interface{}{"name": {"SomeName"}},
 	}
 
-	want := `{"FilterProto":"{\"predicates\":[{\"op\":\"EQUALS\",\"key\":\"Name\",\"stringValue\":\"SomeName\"}]}","EQ":{"name":["SomeName"]},"NEQ":null,"GT":null,"GTE":null,"LT":null,"LTE":null,"IN":null,"SUBSTRING":null}`
+	want := `{"FilterProto":"{\"predicates\":[{\"op\":\"EQUALS\",\"key\":\"Name\",\"string_value\":\"SomeName\"}]}","EQ":{"name":["SomeName"]},"NEQ":null,"GT":null,"GTE":null,"LT":null,"LTE":null,"IN":null,"SUBSTRING":null}`
 
 	got, err := json.Marshal(f)
 	if err != nil || string(got) != want {
@@ -332,7 +333,7 @@ func TestMarshalJSON(t *testing.T) {
 }
 
 func TestUnmarshalJSON(t *testing.T) {
-	in := `{"FilterProto":"{\"predicates\":[{\"op\":\"EQUALS\",\"key\":\"Name\",\"stringValue\":\"SomeName\"}]}","EQ":{"name":["SomeName"]},"NEQ":null,"GT":null,"GTE":null,"LT":null,"LTE":null,"IN":null,"SUBSTRING":null}`
+	in := `{"FilterProto":"{\"predicates\":[{\"op\":\"EQUALS\",\"key\":\"Name\",\"string_value\":\"SomeName\"}]}","EQ":{"name":["SomeName"]},"NEQ":null,"GT":null,"GTE":null,"LT":null,"LTE":null,"IN":null,"SUBSTRING":null}`
 
 	want := &Filter{
 		filterProto: &api.Filter{
@@ -348,7 +349,7 @@ func TestUnmarshalJSON(t *testing.T) {
 
 	got := &Filter{}
 	err := json.Unmarshal([]byte(in), got)
-	if err != nil || !cmp.Equal(got, want, cmpopts.EquateEmpty(), protocmp.Transform(),cmp.AllowUnexported(Filter{})) {
+	if err != nil || !cmp.Equal(got, want, cmpopts.EquateEmpty(), protocmp.Transform(), cmp.AllowUnexported(Filter{})) {
 		t.Errorf("json.Unmarshal(%+v):\nGot: %v, Error: %v\nWant:\n%+v, Error: nil\nDiff:%s\n", in, got, err, want, cmp.Diff(want, got, cmp.AllowUnexported(Filter{})))
 	}
 }
