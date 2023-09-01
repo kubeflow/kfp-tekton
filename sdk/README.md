@@ -159,6 +159,13 @@ To pass big data using cloud provider volumes, it's recommended to use the
 [volume_based_data_passing_method](/sdk/python/tests/compiler/testdata/artifact_passing_using_volume.py)
 for both Tekton and Argo runtime.
 
+If you want to change the input and output copy artifact images, please modify the following environment variables:
+
+```shell
+export TEKTON_BASH_STEP_IMAGE=busybox  # input and output copy artifact images
+export TEKTON_COPY_RESULTS_STEP_IMAGE=library/bash # output copy results images
+export CONDITION_IMAGE_NAME=python:3.9.17-alpine3.18 # condition task default image name
+```
 
 ## Running the Compiled Pipeline on a Tekton Cluster
 
