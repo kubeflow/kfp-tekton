@@ -198,7 +198,7 @@ class TektonClient(kfp.Client):
                                     'invalidtaskresultreference'}
         while True:
             try:
-                get_run_response = self._run_api.get_run(run_id=run_id)
+                get_run_response = self._run_api.run_service_get_run(run_id=run_id)
                 is_valid_token = True
             except ApiException as api_ex:
                 # if the token is valid but receiving 401 Unauthorized error
@@ -218,6 +218,33 @@ class TektonClient(kfp.Client):
             if status is not None and status.lower() in tekton_completion_status:
                 return get_run_response
             time.sleep(5)
+
+    def get_pipeline_id(self, name) -> Optional[str]:
+        """Find the id of a pipeline by name.
+
+        Args:
+          name: Pipeline name.
+
+        Returns:
+          Returns the pipeline id if a pipeline with the name exists.
+        """
+        pipeline_filter = json.dumps({
+            'predicates': [{
+                'op': _FILTER_OPERATIONS['EQUALS'],
+                'key': 'name',
+                'string_value': name,
+            }]
+        })
+        result = self._pipelines_api.pipeline_service_list_pipelines(filter=pipeline_filter)
+        if result.pipelines is None:
+            return None
+        if len(result.pipelines) == 1:
+            return result.pipelines[0].id
+        elif len(result.pipelines) > 1:
+            raise ValueError(
+                'Multiple pipelines with the name: {} found, the name needs to be unique'
+                .format(name))
+        return None
 
     def create_experiment(
             self,
@@ -263,7 +290,7 @@ class TektonClient(kfp.Client):
                 name=name,
                 description=description,
                 resource_references=resource_references)
-            experiment = self._experiment_api.create_experiment(body=experiment)
+            experiment = self._experiment_api.experiment_service_create_experiment(experiment=experiment)
 
         if self._is_ipython():
             import IPython
@@ -272,6 +299,32 @@ class TektonClient(kfp.Client):
                 % (self._get_url_prefix(), experiment.id))
             IPython.display.display(IPython.display.HTML(html))
         return experiment
+    
+    def get_kfp_healthz(self) -> kfp_server_api.V1GetHealthzResponse:
+        """Gets healthz info of KFP deployment.
+
+        Returns:
+          response: json formatted response from the healtz endpoint.
+        """
+        count = 0
+        response = None
+        max_attempts = 5
+        while not response:
+            count += 1
+            if count > max_attempts:
+                raise TimeoutError(
+                    'Failed getting healthz endpoint after {} attempts.'.format(
+                        max_attempts))
+            try:
+                response = self._healthz_api.healthz_service_get_healthz()
+                return response
+            # ApiException, including network errors, is the only type that may
+            # recover after retry.
+            except kfp_server_api.ApiException:
+                # logging.exception also logs detailed info about the ApiException
+                logging.exception(
+                    'Failed to get healthz info attempt {} of 5.'.format(count))
+                time.sleep(5)
 
     def list_experiments(
             self,
@@ -296,7 +349,7 @@ class TektonClient(kfp.Client):
           A response object including a list of experiments and next page token.
         """
         namespace = namespace or self.get_user_namespace()
-        response = self._experiment_api.list_experiment(
+        response = self._experiment_api.experiment_service_list_experiment(
             page_token=page_token,
             page_size=page_size,
             sort_by=sort_by,
@@ -332,22 +385,22 @@ class TektonClient(kfp.Client):
             raise ValueError(
                 'Either experiment_id or experiment_name is required')
         if experiment_id is not None:
-            return self._experiment_api.get_experiment(id=experiment_id)
+            return self._experiment_api.experiment_service_get_experiment(id=experiment_id)
         experiment_filter = json.dumps({
             'predicates': [{
                 'op': _FILTER_OPERATIONS['EQUALS'],
                 'key': 'name',
-                'stringValue': experiment_name,
+                'string_value': experiment_name,
             }]
         })
         if namespace:
-            result = self._experiment_api.list_experiment(
+            result = self._experiment_api.experiment_service_list_experiment(
                 filter=experiment_filter,
                 resource_reference_key_type=kfp_server_api.models
                 .v1_resource_type.V1ResourceType.NAMESPACE,
                 resource_reference_key_id=namespace)
         else:
-            result = self._experiment_api.list_experiment(
+            result = self._experiment_api.experiment_service_list_experiment(
                 filter=experiment_filter)
         if not result.experiments:
             raise ValueError(
@@ -420,7 +473,7 @@ class TektonClient(kfp.Client):
             name=job_name,
             service_account=service_account)
 
-        response = self._run_api.create_run(body=run_body)
+        response = self._run_api.run_service_create_run(run=run_body)
 
         if self._is_ipython():
             import IPython
@@ -529,7 +582,7 @@ class TektonClient(kfp.Client):
             trigger=trigger,
             max_concurrency=max_concurrency,
             service_account=service_account)
-        return self._job_api.create_job(body=job_body)
+        return self._job_api.job_service_create_job(job=job_body)
 
     def _create_job_config(
         self,
@@ -633,7 +686,7 @@ class TektonClient(kfp.Client):
         """
         namespace = namespace or self.get_user_namespace()
         if experiment_id is not None:
-            response = self._run_api.list_runs(
+            response = self._run_api.run_service_list_runs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
@@ -642,7 +695,7 @@ class TektonClient(kfp.Client):
                 resource_reference_key_id=experiment_id,
                 filter=filter)
         elif namespace:
-            response = self._run_api.list_runs(
+            response = self._run_api.run_service_list_runs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
@@ -651,7 +704,7 @@ class TektonClient(kfp.Client):
                 resource_reference_key_id=namespace,
                 filter=filter)
         else:
-            response = self._run_api.list_runs(
+            response = self._run_api.run_service_list_runs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
@@ -678,7 +731,7 @@ class TektonClient(kfp.Client):
           A response object including a list of recurring_runs and next page token.
         """
         if experiment_id is not None:
-            response = self._job_api.list_jobs(
+            response = self._job_api.job_service_list_jobs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
@@ -687,12 +740,40 @@ class TektonClient(kfp.Client):
                 resource_reference_key_id=experiment_id,
                 filter=filter)
         else:
-            response = self._job_api.list_jobs(
+            response = self._job_api.job_service_list_jobs(
                 page_token=page_token,
                 page_size=page_size,
                 sort_by=sort_by,
                 filter=filter)
         return response
+    
+    def get_recurring_run(self, job_id: str) -> kfp_server_api.V1Job:
+        """Get recurring_run details.
+
+        Args:
+          job_id: id of the recurring_run.
+
+        Returns:
+          A response object including details of a recurring_run.
+
+        Raises:
+          kfp_server_api.ApiException: If recurring_run is not found.
+        """
+        return self._job_api.job_service_get_job(id=job_id)
+
+    def get_run(self, run_id: str) -> kfp_server_api.V1Run:
+        """Get run details.
+
+        Args:
+          run_id: id of the run.
+
+        Returns:
+          A response object including details of a run.
+
+        Raises:
+          kfp_server_api.ApiException: If run is not found.
+        """
+        return self._run_api.run_service_get_run(run_id=run_id)
 
     def list_pipeline_versions(
             self,
@@ -716,7 +797,7 @@ class TektonClient(kfp.Client):
           kfp_server_api.ApiException: If pipeline is not found.
         """
 
-        return self._pipelines_api.list_pipeline_versions(
+        return self._pipelines_api.pipeline_service_list_pipeline_versions(
             page_token=page_token,
             page_size=page_size,
             sort_by=sort_by,
@@ -762,3 +843,167 @@ class TektonClient(kfp.Client):
                                                       run_name, experiment_name, namespace)
       finally:
           os.remove(pipeline_package_path)
+
+    def _get_workflow_json(self, run_id):
+        """Get the workflow json.
+
+        Args:
+          run_id: run id, returned from run_pipeline.
+
+        Returns:
+          workflow: Json workflow
+        """
+        get_run_response = self._run_api.run_service_get_run(run_id=run_id)
+        workflow = get_run_response.pipeline_runtime.workflow_manifest
+        workflow_json = json.loads(workflow)
+        return workflow_json
+
+    def upload_pipeline(
+        self,
+        pipeline_package_path: str = None,
+        pipeline_name: str = None,
+        description: str = None,
+    ) -> kfp_server_api.V1Pipeline:
+        """Uploads the pipeline to the Kubeflow Pipelines cluster.
+
+        Args:
+          pipeline_package_path: Local path to the pipeline package.
+          pipeline_name: Optional. Name of the pipeline to be shown in the UI.
+          description: Optional. Description of the pipeline to be shown in the UI.
+
+        Returns:
+          Server response object containing pipleine id and other information.
+        """
+
+        response = self._upload_api.pipeline_service_upload_pipeline(
+            pipeline_package_path, name=pipeline_name, description=description)
+        if self._is_ipython():
+            import IPython
+            html = '<a href=%s/#/pipelines/details/%s>Pipeline details</a>.' % (
+                self._get_url_prefix(), response.id)
+            IPython.display.display(IPython.display.HTML(html))
+        return response
+
+    def upload_pipeline_version(
+        self,
+        pipeline_package_path,
+        pipeline_version_name: str,
+        pipeline_id: Optional[str] = None,
+        pipeline_name: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> kfp_server_api.V1PipelineVersion:
+        """Uploads a new version of the pipeline to the Kubeflow Pipelines
+        cluster.
+
+        Args:
+          pipeline_package_path: Local path to the pipeline package.
+          pipeline_version_name:  Name of the pipeline version to be shown in the UI.
+          pipeline_id: Optional. Id of the pipeline.
+          pipeline_name: Optional. Name of the pipeline.
+          description: Optional. Description of the pipeline version to be shown in the UI.
+
+        Returns:
+          Server response object containing pipleine id and other information.
+
+        Raises:
+          ValueError when none or both of pipeline_id or pipeline_name are specified
+          kfp_server_api.ApiException: If pipeline id is not found.
+        """
+
+        if all([pipeline_id, pipeline_name
+               ]) or not any([pipeline_id, pipeline_name]):
+            raise ValueError('Either pipeline_id or pipeline_name is required')
+
+        if pipeline_name:
+            pipeline_id = self.get_pipeline_id(pipeline_name)
+        kwargs = dict(
+            name=pipeline_version_name,
+            pipelineid=pipeline_id,
+        )
+
+        if description:
+            kwargs['description'] = description
+        try:
+            response = self._upload_api.pipeline_service_upload_pipeline_version(
+                pipeline_package_path, **kwargs)
+        except kfp_server_api.exceptions.ApiTypeError as e:
+            # ToDo: Remove this once we drop support for kfp_server_api < 1.7.1
+            if 'description' in e.message and 'unexpected keyword argument' in e.message:
+                raise NotImplementedError(
+                    'Pipeline version description is not supported in current kfp-server-api pypi package. Upgrade to 1.7.1 or above'
+                )
+            else:
+                raise e
+
+        if self._is_ipython():
+            import IPython
+            html = '<a href=%s/#/pipelines/details/%s>Pipeline details</a>.' % (
+                self._get_url_prefix(), response.id)
+            IPython.display.display(IPython.display.HTML(html))
+        return response
+
+    def get_pipeline(self, pipeline_id: str) -> kfp_server_api.V1Pipeline:
+        """Get pipeline details.
+
+        Args:
+          pipeline_id: id of the pipeline.
+
+        Returns:
+          A response object including details of a pipeline.
+
+        Raises:
+          kfp_server_api.ApiException: If pipeline is not found.
+        """
+        return self._pipelines_api.pipeline_service_get_pipeline(id=pipeline_id)
+
+    def delete_pipeline(self, pipeline_id):
+        """Delete pipeline.
+
+        Args:
+          pipeline_id: id of the pipeline.
+
+        Returns:
+          Object. If the method is called asynchronously, returns the request thread.
+
+        Raises:
+          kfp_server_api.ApiException: If pipeline is not found.
+        """
+        return self._pipelines_api.pipeline_service_delete_pipeline(id=pipeline_id)
+    
+    def delete_pipeline_version(self, version_id: str):
+        """Delete pipeline version.
+
+        Args:
+          version_id: id of the pipeline version.
+
+        Returns:
+          Object. If the method is called asynchronously, returns the request thread.
+
+        Raises:
+          Exception if pipeline version is not found.
+        """
+        return self._pipelines_api.pipeline_service_delete_pipeline_version(
+            version_id=version_id)
+
+    def list_pipelines(self,
+                       page_token='',
+                       page_size=10,
+                       sort_by='',
+                       filter=None) -> kfp_server_api.V1ListPipelinesResponse:
+        """List pipelines.
+
+        Args:
+          page_token: Token for starting of the page.
+          page_size: Size of the page.
+          sort_by: one of 'field_name', 'field_name desc'. For example, 'name desc'.
+          filter: A url-encoded, JSON-serialized Filter protocol buffer
+            (see [filter.proto](https://github.com/kubeflow/pipelines/blob/master/backend/api/filter.proto)).
+
+        Returns:
+          A response object including a list of pipelines and next page token.
+        """
+        return self._pipelines_api.pipeline_service_list_pipelines(
+            page_token=page_token,
+            page_size=page_size,
+            sort_by=sort_by,
+            filter=filter)

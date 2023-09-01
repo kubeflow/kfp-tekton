@@ -4,12 +4,12 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**upload_pipeline**](PipelineUploadServiceApi.md#upload_pipeline) | **POST** /apis/v1/pipelines/upload | 
-[**upload_pipeline_version**](PipelineUploadServiceApi.md#upload_pipeline_version) | **POST** /apis/v1/pipelines/upload_version | 
+[**pipeline_service_upload_pipeline**](PipelineUploadServiceApi.md#pipeline_service_upload_pipeline) | **POST** /apis/v1/pipelines/upload | 
+[**pipeline_service_upload_pipeline_version**](PipelineUploadServiceApi.md#pipeline_service_upload_pipeline_version) | **POST** /apis/v1/pipelines/upload_version | 
 
 
-# **upload_pipeline**
-> V1Pipeline upload_pipeline(uploadfile, name=name, description=description)
+# **pipeline_service_upload_pipeline**
+> V1Pipeline pipeline_service_upload_pipeline(uploadfile, name=name, description=description)
 
 
 
@@ -52,10 +52,10 @@ name = 'name_example' # str |  (optional)
 description = 'description_example' # str |  (optional)
 
     try:
-        api_response = api_instance.upload_pipeline(uploadfile, name=name, description=description)
+        api_response = api_instance.pipeline_service_upload_pipeline(uploadfile, name=name, description=description)
         pprint(api_response)
     except ApiException as e:
-        print("Exception when calling PipelineUploadServiceApi->upload_pipeline: %s\n" % e)
+        print("Exception when calling PipelineUploadServiceApi->pipeline_service_upload_pipeline: %s\n" % e)
 ```
 
 ### Parameters
@@ -83,12 +83,12 @@ Name | Type | Description  | Notes
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** |  |  -  |
-**0** |  |  -  |
+**0** | An unexpected error response. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **upload_pipeline_version**
-> V1PipelineVersion upload_pipeline_version(uploadfile, name=name, pipelineid=pipelineid, description=description)
+# **pipeline_service_upload_pipeline_version**
+> V1PipelineVersion pipeline_service_upload_pipeline_version(uploadfile, name=name, pipelineid=pipelineid, description=description)
 
 
 
@@ -132,10 +132,10 @@ pipelineid = 'pipelineid_example' # str |  (optional)
 description = 'description_example' # str |  (optional)
 
     try:
-        api_response = api_instance.upload_pipeline_version(uploadfile, name=name, pipelineid=pipelineid, description=description)
+        api_response = api_instance.pipeline_service_upload_pipeline_version(uploadfile, name=name, pipelineid=pipelineid, description=description)
         pprint(api_response)
     except ApiException as e:
-        print("Exception when calling PipelineUploadServiceApi->upload_pipeline_version: %s\n" % e)
+        print("Exception when calling PipelineUploadServiceApi->pipeline_service_upload_pipeline_version: %s\n" % e)
 ```
 
 ### Parameters
@@ -164,7 +164,7 @@ Name | Type | Description  | Notes
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** |  |  -  |
-**0** |  |  -  |
+**0** | An unexpected error response. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

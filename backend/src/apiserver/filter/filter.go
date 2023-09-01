@@ -64,7 +64,7 @@ type filterForMarshaling struct {
 
 // MarshalJSON implements JSON Marshaler for Filter.
 func (f *Filter) MarshalJSON() ([]byte, error) {
-	m := &jsonpb.Marshaler{}
+	m := &jsonpb.Marshaler{EnumsAsInts: false, OrigName: true}
 	s, err := m.MarshalToString(f.filterProto)
 	if err != nil {
 		return nil, err

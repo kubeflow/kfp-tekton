@@ -6,12 +6,14 @@ package pipeline_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
+	"context"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
 // V1URL v1 Url
+//
 // swagger:model v1Url
 type V1URL struct {
 
@@ -21,6 +23,11 @@ type V1URL struct {
 
 // Validate validates this v1 Url
 func (m *V1URL) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this v1 Url based on context it is used
+func (m *V1URL) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

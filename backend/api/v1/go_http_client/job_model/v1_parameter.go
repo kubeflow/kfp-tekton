@@ -6,12 +6,14 @@ package job_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
+	"context"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
 // V1Parameter v1 parameter
+//
 // swagger:model v1Parameter
 type V1Parameter struct {
 
@@ -24,6 +26,11 @@ type V1Parameter struct {
 
 // Validate validates this v1 parameter
 func (m *V1Parameter) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this v1 parameter based on context it is used
+func (m *V1Parameter) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

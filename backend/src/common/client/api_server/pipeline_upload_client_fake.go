@@ -22,7 +22,7 @@ func getDefaultUploadedPipeline() *model.V1Pipeline {
 		CreatedAt:   strfmt.NewDateTime(),
 		Name:        "PIPELINE_NAME",
 		Description: "PIPELINE_DESCRIPTION",
-		Parameters: []*model.V1Parameter{&model.V1Parameter{
+		Parameters: []*model.V1Parameter{{
 			Name:  "PARAM_NAME",
 			Value: "PARAM_VALUE",
 		}},
@@ -36,7 +36,7 @@ func NewPipelineUploadClientFake() *PipelineUploadClientFake {
 }
 
 func (c *PipelineUploadClientFake) UploadFile(filePath string,
-	parameters *params.UploadPipelineParams) (*model.V1Pipeline, error) {
+	parameters *params.PipelineServiceUploadPipelineParams) (*model.V1Pipeline, error) {
 	switch filePath {
 	case FileForClientErrorTest:
 		return nil, fmt.Errorf(ClientErrorString)

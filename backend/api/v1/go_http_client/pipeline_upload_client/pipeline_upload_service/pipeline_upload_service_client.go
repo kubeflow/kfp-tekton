@@ -7,12 +7,11 @@ package pipeline_upload_service
 
 import (
 	"github.com/go-openapi/runtime"
-
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 )
 
 // New creates a new pipeline upload service API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
+func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
@@ -24,62 +23,92 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
+// ClientService is the interface for Client methods
+type ClientService interface {
+	PipelineServiceUploadPipeline(params *PipelineServiceUploadPipelineParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PipelineServiceUploadPipelineOK, error)
+
+	PipelineServiceUploadPipelineVersion(params *PipelineServiceUploadPipelineVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PipelineServiceUploadPipelineVersionOK, error)
+
+	SetTransport(transport runtime.ClientTransport)
+}
+
 /*
-UploadPipeline upload pipeline API
+PipelineServiceUploadPipeline pipeline service upload pipeline API
 */
-func (a *Client) UploadPipeline(params *UploadPipelineParams, authInfo runtime.ClientAuthInfoWriter) (*UploadPipelineOK, error) {
+func (a *Client) PipelineServiceUploadPipeline(params *PipelineServiceUploadPipelineParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PipelineServiceUploadPipelineOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewUploadPipelineParams()
+		params = NewPipelineServiceUploadPipelineParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "UploadPipeline",
+	op := &runtime.ClientOperation{
+		ID:                 "PipelineService_UploadPipeline",
 		Method:             "POST",
 		PathPattern:        "/apis/v1/pipelines/upload",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"multipart/form-data"},
-		Schemes:            []string{"http", "https"},
+		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &UploadPipelineReader{formats: a.formats},
+		Reader:             &PipelineServiceUploadPipelineReader{formats: a.formats},
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*UploadPipelineOK), nil
-
+	success, ok := result.(*PipelineServiceUploadPipelineOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PipelineServiceUploadPipelineDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
-UploadPipelineVersion upload pipeline version API
+PipelineServiceUploadPipelineVersion pipeline service upload pipeline version API
 */
-func (a *Client) UploadPipelineVersion(params *UploadPipelineVersionParams, authInfo runtime.ClientAuthInfoWriter) (*UploadPipelineVersionOK, error) {
+func (a *Client) PipelineServiceUploadPipelineVersion(params *PipelineServiceUploadPipelineVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PipelineServiceUploadPipelineVersionOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewUploadPipelineVersionParams()
+		params = NewPipelineServiceUploadPipelineVersionParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "UploadPipelineVersion",
+	op := &runtime.ClientOperation{
+		ID:                 "PipelineService_UploadPipelineVersion",
 		Method:             "POST",
 		PathPattern:        "/apis/v1/pipelines/upload_version",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"multipart/form-data"},
-		Schemes:            []string{"http", "https"},
+		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &UploadPipelineVersionReader{formats: a.formats},
+		Reader:             &PipelineServiceUploadPipelineVersionReader{formats: a.formats},
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*UploadPipelineVersionOK), nil
-
+	success, ok := result.(*PipelineServiceUploadPipelineVersionOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PipelineServiceUploadPipelineVersionDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 // SetTransport changes the transport on the client

@@ -6,16 +6,17 @@ package experiment_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // V1Experiment v1 experiment
+//
 // swagger:model v1Experiment
 type V1Experiment struct {
 
@@ -37,7 +38,7 @@ type V1Experiment struct {
 	ResourceReferences []*V1ResourceReference `json:"resource_references"`
 
 	// Output. Specifies whether this experiment is in archived or available state.
-	StorageState V1ExperimentStorageState `json:"storage_state,omitempty"`
+	StorageState *V1ExperimentStorageState `json:"storage_state,omitempty"`
 }
 
 // Validate validates this v1 experiment
@@ -63,7 +64,6 @@ func (m *V1Experiment) Validate(formats strfmt.Registry) error {
 }
 
 func (m *V1Experiment) validateCreatedAt(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.CreatedAt) { // not required
 		return nil
 	}
@@ -76,7 +76,6 @@ func (m *V1Experiment) validateCreatedAt(formats strfmt.Registry) error {
 }
 
 func (m *V1Experiment) validateResourceReferences(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ResourceReferences) { // not required
 		return nil
 	}
@@ -90,6 +89,8 @@ func (m *V1Experiment) validateResourceReferences(formats strfmt.Registry) error
 			if err := m.ResourceReferences[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -101,16 +102,73 @@ func (m *V1Experiment) validateResourceReferences(formats strfmt.Registry) error
 }
 
 func (m *V1Experiment) validateStorageState(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.StorageState) { // not required
 		return nil
 	}
 
-	if err := m.StorageState.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("storage_state")
+	if m.StorageState != nil {
+		if err := m.StorageState.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("storage_state")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("storage_state")
+			}
+			return err
 		}
-		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this v1 experiment based on the context it is used
+func (m *V1Experiment) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateResourceReferences(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateStorageState(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *V1Experiment) contextValidateResourceReferences(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.ResourceReferences); i++ {
+
+		if m.ResourceReferences[i] != nil {
+			if err := m.ResourceReferences[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *V1Experiment) contextValidateStorageState(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.StorageState != nil {
+		if err := m.StorageState.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("storage_state")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("storage_state")
+			}
+			return err
+		}
 	}
 
 	return nil

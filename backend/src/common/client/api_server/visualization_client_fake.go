@@ -18,15 +18,15 @@ func NewVisualizationClientFake() *VisualizationClientFake {
 	return &VisualizationClientFake{}
 }
 
-func (c *VisualizationClientFake) Create(params *params.CreateVisualizationParams) (
+func (c *VisualizationClientFake) Create(params *params.VisualizationServiceCreateVisualizationParams) (
 	*model.V1Visualization, error) {
 	var arguments VisualizationArguments
-	err := json.Unmarshal([]byte(params.Body.Arguments), &arguments)
+	err := json.Unmarshal([]byte(params.Visualization.Arguments), &arguments)
 	if err != nil {
 		return nil, err
 	}
 	if arguments.fail {
 		return nil, fmt.Errorf(ClientErrorString)
 	}
-	return params.Body, nil
+	return params.Visualization, nil
 }

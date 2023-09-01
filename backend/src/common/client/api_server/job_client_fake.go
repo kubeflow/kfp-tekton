@@ -28,17 +28,17 @@ func NewJobClientFake() *JobClientFake {
 	return &JobClientFake{}
 }
 
-func (c *JobClientFake) Create(params *jobparams.CreateJobParams) (
+func (c *JobClientFake) Create(params *jobparams.JobServiceCreateJobParams) (
 	*jobmodel.V1Job, error) {
-	switch params.Body.Name {
+	switch params.Job.Name {
 	case JobForClientErrorTest:
 		return nil, fmt.Errorf(ClientErrorString)
 	default:
-		return getDefaultJob("500", params.Body.Name), nil
+		return getDefaultJob("500", params.Job.Name), nil
 	}
 }
 
-func (c *JobClientFake) Get(params *jobparams.GetJobParams) (
+func (c *JobClientFake) Get(params *jobparams.JobServiceGetJobParams) (
 	*jobmodel.V1Job, error) {
 	switch params.ID {
 	case JobForClientErrorTest:
@@ -48,7 +48,7 @@ func (c *JobClientFake) Get(params *jobparams.GetJobParams) (
 	}
 }
 
-func (c *JobClientFake) Delete(params *jobparams.DeleteJobParams) error {
+func (c *JobClientFake) Delete(params *jobparams.JobServiceDeleteJobParams) error {
 	switch params.ID {
 	case JobForClientErrorTest:
 		return fmt.Errorf(ClientErrorString)
@@ -57,7 +57,7 @@ func (c *JobClientFake) Delete(params *jobparams.DeleteJobParams) error {
 	}
 }
 
-func (c *JobClientFake) Enable(params *jobparams.EnableJobParams) error {
+func (c *JobClientFake) Enable(params *jobparams.JobServiceEnableJobParams) error {
 	switch params.ID {
 	case JobForClientErrorTest:
 		return fmt.Errorf(ClientErrorString)
@@ -66,7 +66,7 @@ func (c *JobClientFake) Enable(params *jobparams.EnableJobParams) error {
 	}
 }
 
-func (c *JobClientFake) Disable(params *jobparams.DisableJobParams) error {
+func (c *JobClientFake) Disable(params *jobparams.JobServiceDisableJobParams) error {
 	switch params.ID {
 	case JobForClientErrorTest:
 		return fmt.Errorf(ClientErrorString)
@@ -75,7 +75,7 @@ func (c *JobClientFake) Disable(params *jobparams.DisableJobParams) error {
 	}
 }
 
-func (c *JobClientFake) List(params *jobparams.ListJobsParams) (
+func (c *JobClientFake) List(params *jobparams.JobServiceListJobsParams) (
 	[]*jobmodel.V1Job, int, string, error) {
 	const (
 		FirstToken  = ""
@@ -103,7 +103,7 @@ func (c *JobClientFake) List(params *jobparams.ListJobsParams) (
 	}
 }
 
-func (c *JobClientFake) ListAll(params *jobparams.ListJobsParams,
+func (c *JobClientFake) ListAll(params *jobparams.JobServiceListJobsParams,
 	maxResultSize int) ([]*jobmodel.V1Job, error) {
 	return listAllForJob(c, params, maxResultSize)
 }

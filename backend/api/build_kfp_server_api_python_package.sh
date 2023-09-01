@@ -34,6 +34,8 @@ if [ -z "$VERSION" ]; then
     echo "ERROR: $REPO_ROOT/VERSION is empty"
     exit 1
 fi
+API_VERSION=v1
+
 
 codegen_file=/tmp/openapi-generator-cli.jar
 # Browse all versions in: https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/

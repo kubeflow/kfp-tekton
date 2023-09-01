@@ -74,7 +74,7 @@ kfp-pipeline-spec==0.1.16
     # via kfp
 kfp-server-api==1.3.0
     # via kfp
-kfp-tekton-server-api==1.5.0
+kfp-tekton-server-api==1.8.0rc8
     # via -r requirements.in
 kubernetes==12.0.1
     # via kfp

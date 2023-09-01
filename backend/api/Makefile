@@ -17,7 +17,9 @@
 IMAGE_TAG=kfp-api-generator
 # Contact one of Bobgy, or zijianjoy if this remote image needs an update.
 REMOTE_IMAGE=gcr.io/ml-pipeline-test/api-generator
-PREBUILT_REMOTE_IMAGE=gcr.io/ml-pipeline-test/api-generator@sha256:10a09669794180b91c8b0fffb803db81eb458372e6ab669051f40d4979cdf43c
+PREBUILT_REMOTE_IMAGE=aipipeline/api-generator:openapiv2.11.3
+# PREBUILT_REMOTE_IMAGE=aipipeline/api-generator:test
+API_VERSION=v1
 
 # Generate clients using a pre-built api-generator image.
 .PHONY: generate

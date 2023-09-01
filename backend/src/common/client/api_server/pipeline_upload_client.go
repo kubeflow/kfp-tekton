@@ -24,7 +24,7 @@ const (
 )
 
 type PipelineUploadInterface interface {
-	UploadFile(filePath string, parameters *params.UploadPipelineParams) (*model.V1Pipeline, error)
+	UploadFile(filePath string, parameters *params.PipelineServiceUploadPipelineParams) (*model.V1Pipeline, error)
 }
 
 type PipelineUploadClient struct {
@@ -47,7 +47,7 @@ func NewPipelineUploadClient(clientConfig clientcmd.ClientConfig, debug bool) (
 	}, nil
 }
 
-func (c *PipelineUploadClient) UploadFile(filePath string, parameters *params.UploadPipelineParams) (
+func (c *PipelineUploadClient) UploadFile(filePath string, parameters *params.PipelineServiceUploadPipelineParams) (
 	*model.V1Pipeline, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -60,7 +60,7 @@ func (c *PipelineUploadClient) UploadFile(filePath string, parameters *params.Up
 	return c.Upload(parameters)
 }
 
-func (c *PipelineUploadClient) Upload(parameters *params.UploadPipelineParams) (*model.V1Pipeline,
+func (c *PipelineUploadClient) Upload(parameters *params.PipelineServiceUploadPipelineParams) (*model.V1Pipeline,
 	error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), apiServerDefaultTimeout)
@@ -68,11 +68,11 @@ func (c *PipelineUploadClient) Upload(parameters *params.UploadPipelineParams) (
 
 	// Make service call
 	parameters.Context = ctx
-	response, err := c.apiClient.PipelineUploadService.UploadPipeline(parameters, PassThroughAuth)
+	response, err := c.apiClient.PipelineUploadService.PipelineServiceUploadPipeline(parameters, PassThroughAuth)
 
 	if err != nil {
-		if defaultError, ok := err.(*params.UploadPipelineDefault); ok {
-			err = CreateErrorFromAPIStatus(defaultError.Payload.Error, defaultError.Payload.Code)
+		if defaultError, ok := err.(*params.PipelineServiceUploadPipelineDefault); ok {
+			err = CreateErrorFromAPIStatus(defaultError.Payload.Message, defaultError.Payload.Code)
 		} else {
 			err = CreateErrorCouldNotRecoverAPIStatus(err)
 		}
@@ -86,7 +86,7 @@ func (c *PipelineUploadClient) Upload(parameters *params.UploadPipelineParams) (
 }
 
 // UploadPipelineVersion uploads pipeline version from local file.
-func (c *PipelineUploadClient) UploadPipelineVersion(filePath string, parameters *params.UploadPipelineVersionParams) (*model.V1PipelineVersion,
+func (c *PipelineUploadClient) UploadPipelineVersion(filePath string, parameters *params.PipelineServiceUploadPipelineVersionParams) (*model.V1PipelineVersion,
 	error) {
 	// Get file
 	file, err := os.Open(filePath)
@@ -103,11 +103,11 @@ func (c *PipelineUploadClient) UploadPipelineVersion(filePath string, parameters
 
 	// Make service call
 	parameters.Context = ctx
-	response, err := c.apiClient.PipelineUploadService.UploadPipelineVersion(parameters, PassThroughAuth)
+	response, err := c.apiClient.PipelineUploadService.PipelineServiceUploadPipelineVersion(parameters, PassThroughAuth)
 
 	if err != nil {
-		if defaultError, ok := err.(*params.UploadPipelineVersionDefault); ok {
-			err = CreateErrorFromAPIStatus(defaultError.Payload.Error, defaultError.Payload.Code)
+		if defaultError, ok := err.(*params.PipelineServiceUploadPipelineVersionDefault); ok {
+			err = CreateErrorFromAPIStatus(defaultError.Payload.Message, defaultError.Payload.Code)
 		} else {
 			err = CreateErrorCouldNotRecoverAPIStatus(err)
 		}

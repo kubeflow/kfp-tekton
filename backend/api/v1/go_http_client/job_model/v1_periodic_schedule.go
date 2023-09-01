@@ -6,14 +6,16 @@ package job_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
+	"context"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // V1PeriodicSchedule PeriodicSchedule allow scheduling the job periodically with certain interval
+//
 // swagger:model v1PeriodicSchedule
 type V1PeriodicSchedule struct {
 
@@ -48,7 +50,6 @@ func (m *V1PeriodicSchedule) Validate(formats strfmt.Registry) error {
 }
 
 func (m *V1PeriodicSchedule) validateEndTime(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.EndTime) { // not required
 		return nil
 	}
@@ -61,7 +62,6 @@ func (m *V1PeriodicSchedule) validateEndTime(formats strfmt.Registry) error {
 }
 
 func (m *V1PeriodicSchedule) validateStartTime(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.StartTime) { // not required
 		return nil
 	}
@@ -70,6 +70,11 @@ func (m *V1PeriodicSchedule) validateStartTime(formats strfmt.Registry) error {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this v1 periodic schedule based on context it is used
+func (m *V1PeriodicSchedule) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

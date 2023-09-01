@@ -6,17 +6,27 @@ package experiment_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"encoding/json"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 )
 
 // V1Relationship v1 relationship
+//
 // swagger:model v1Relationship
 type V1Relationship string
+
+func NewV1Relationship(value V1Relationship) *V1Relationship {
+	return &value
+}
+
+// Pointer returns a pointer to a freshly-allocated V1Relationship.
+func (m V1Relationship) Pointer() *V1Relationship {
+	return &m
+}
 
 const (
 
@@ -44,7 +54,7 @@ func init() {
 }
 
 func (m V1Relationship) validateV1RelationshipEnum(path, location string, value V1Relationship) error {
-	if err := validate.Enum(path, location, value, v1RelationshipEnum); err != nil {
+	if err := validate.EnumCase(path, location, value, v1RelationshipEnum, true); err != nil {
 		return err
 	}
 	return nil
@@ -62,5 +72,10 @@ func (m V1Relationship) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// ContextValidate validates this v1 relationship based on context it is used
+func (m V1Relationship) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }

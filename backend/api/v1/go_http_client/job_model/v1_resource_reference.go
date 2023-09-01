@@ -6,13 +6,15 @@ package job_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
+	"context"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
 // V1ResourceReference v1 resource reference
+//
 // swagger:model v1ResourceReference
 type V1ResourceReference struct {
 
@@ -23,7 +25,7 @@ type V1ResourceReference struct {
 	Name string `json:"name,omitempty"`
 
 	// Required field. The relationship from referred resource to the object.
-	Relationship V1Relationship `json:"relationship,omitempty"`
+	Relationship *V1Relationship `json:"relationship,omitempty"`
 }
 
 // Validate validates this v1 resource reference
@@ -45,7 +47,6 @@ func (m *V1ResourceReference) Validate(formats strfmt.Registry) error {
 }
 
 func (m *V1ResourceReference) validateKey(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Key) { // not required
 		return nil
 	}
@@ -54,6 +55,8 @@ func (m *V1ResourceReference) validateKey(formats strfmt.Registry) error {
 		if err := m.Key.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("key")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("key")
 			}
 			return err
 		}
@@ -63,16 +66,69 @@ func (m *V1ResourceReference) validateKey(formats strfmt.Registry) error {
 }
 
 func (m *V1ResourceReference) validateRelationship(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Relationship) { // not required
 		return nil
 	}
 
-	if err := m.Relationship.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("relationship")
+	if m.Relationship != nil {
+		if err := m.Relationship.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("relationship")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("relationship")
+			}
+			return err
 		}
-		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this v1 resource reference based on the context it is used
+func (m *V1ResourceReference) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateKey(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRelationship(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *V1ResourceReference) contextValidateKey(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Key != nil {
+		if err := m.Key.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("key")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("key")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *V1ResourceReference) contextValidateRelationship(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Relationship != nil {
+		if err := m.Relationship.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("relationship")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("relationship")
+			}
+			return err
+		}
 	}
 
 	return nil

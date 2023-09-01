@@ -19,7 +19,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3
 	github.com/jinzhu/gorm v1.9.12
 	github.com/kubeflow/pipelines/api v0.0.0-20211026071850-2e3fb5efff56
 	github.com/lestrrat-go/strftime v1.0.4

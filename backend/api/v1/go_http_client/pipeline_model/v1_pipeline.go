@@ -6,16 +6,17 @@ package pipeline_model
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // V1Pipeline v1 pipeline
+//
 // swagger:model v1Pipeline
 type V1Pipeline struct {
 
@@ -93,7 +94,6 @@ func (m *V1Pipeline) Validate(formats strfmt.Registry) error {
 }
 
 func (m *V1Pipeline) validateCreatedAt(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.CreatedAt) { // not required
 		return nil
 	}
@@ -106,7 +106,6 @@ func (m *V1Pipeline) validateCreatedAt(formats strfmt.Registry) error {
 }
 
 func (m *V1Pipeline) validateDefaultVersion(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.DefaultVersion) { // not required
 		return nil
 	}
@@ -115,6 +114,8 @@ func (m *V1Pipeline) validateDefaultVersion(formats strfmt.Registry) error {
 		if err := m.DefaultVersion.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("default_version")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("default_version")
 			}
 			return err
 		}
@@ -124,7 +125,6 @@ func (m *V1Pipeline) validateDefaultVersion(formats strfmt.Registry) error {
 }
 
 func (m *V1Pipeline) validateParameters(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Parameters) { // not required
 		return nil
 	}
@@ -138,6 +138,8 @@ func (m *V1Pipeline) validateParameters(formats strfmt.Registry) error {
 			if err := m.Parameters[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("parameters" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("parameters" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -149,7 +151,6 @@ func (m *V1Pipeline) validateParameters(formats strfmt.Registry) error {
 }
 
 func (m *V1Pipeline) validateResourceReferences(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ResourceReferences) { // not required
 		return nil
 	}
@@ -163,6 +164,8 @@ func (m *V1Pipeline) validateResourceReferences(formats strfmt.Registry) error {
 			if err := m.ResourceReferences[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -174,7 +177,6 @@ func (m *V1Pipeline) validateResourceReferences(formats strfmt.Registry) error {
 }
 
 func (m *V1Pipeline) validateURL(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.URL) { // not required
 		return nil
 	}
@@ -183,6 +185,106 @@ func (m *V1Pipeline) validateURL(formats strfmt.Registry) error {
 		if err := m.URL.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("url")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("url")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this v1 pipeline based on the context it is used
+func (m *V1Pipeline) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateDefaultVersion(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateParameters(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateResourceReferences(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateURL(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *V1Pipeline) contextValidateDefaultVersion(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.DefaultVersion != nil {
+		if err := m.DefaultVersion.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("default_version")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("default_version")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *V1Pipeline) contextValidateParameters(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Parameters); i++ {
+
+		if m.Parameters[i] != nil {
+			if err := m.Parameters[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("parameters" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("parameters" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *V1Pipeline) contextValidateResourceReferences(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.ResourceReferences); i++ {
+
+		if m.ResourceReferences[i] != nil {
+			if err := m.ResourceReferences[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("resource_references" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("resource_references" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *V1Pipeline) contextValidateURL(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.URL != nil {
+		if err := m.URL.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("url")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("url")
 			}
 			return err
 		}
