@@ -16,6 +16,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"hash/fnv"
 	"math"
 	"sort"
@@ -152,7 +153,7 @@ func (s *ScheduledWorkflow) getWorkflowParametersAsMap() map[string]string {
 // the appropriate OwnerReferences on the resource so handleObject can discover
 // the Schedule resource that 'owns' it.
 func (s *ScheduledWorkflow) NewWorkflow(
-	nextScheduledEpoch int64, nowEpoch int64) (*commonutil.Workflow, error) {
+	nextScheduledEpoch int64, nowEpoch int64, workflowName string) (*commonutil.Workflow, error) {
 
 	const (
 		workflowKind       = "PipelineRun"
@@ -185,6 +186,12 @@ func (s *ScheduledWorkflow) NewWorkflow(
 	result.OverrideParameters(formattedParams)
 
 	result.SetCannonicalLabels(s.Name, nextScheduledEpoch, s.nextIndex())
+	result.SetLabels(commonutil.LabelOriginalPipelineRunName, workflowName)
+	err = result.ReplaceOrignalPipelineRunName(workflow.Name)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to replace workflow original pipelineRun name")
+	}
+
 	// Pod pipeline/runid label is used by v2 compatible mode.
 	result.SetLabels(commonutil.LabelKeyWorkflowRunId, uuid.String())
 	// Replace {{workflow.uid}} with runId

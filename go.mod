@@ -36,6 +36,7 @@ require (
 	github.com/tidwall/pretty v1.1.0 // indirect
 	go.uber.org/zap v1.24.0
 	golang.org/x/net v0.11.0
+	google.golang.org/api v0.128.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc
 	google.golang.org/grpc v1.56.2
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
