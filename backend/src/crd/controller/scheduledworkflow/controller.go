@@ -504,7 +504,7 @@ func (c *Controller) submitNewWorkflowIfNotAlreadySubmitted(
 	}
 
 	// If the workflow is not found, we need to create it.
-	newWorkflow, err := swf.NewWorkflow(nextScheduledEpoch, nowEpoch)
+	newWorkflow, err := swf.NewWorkflow(nextScheduledEpoch, nowEpoch, workflowName)
 	createdWorkflow, err := c.workflowClient.Create(ctx, swf.Namespace, newWorkflow)
 	if err != nil {
 		return false, "", err
