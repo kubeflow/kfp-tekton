@@ -20,14 +20,14 @@
 #
 # To create a distribution for PyPi run:
 #
-#    $ export KFP_TEKTON_VERSION=1.5.8-rc1
+#    $ export KFP_TEKTON_VERSION=1.5.9-rc1
 #    $ python3 setup.py sdist
 #    $ twine check dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #    $ twine upload --repository pypi dist/kfp-tekton-${KFP_TEKTON_VERSION/-rc/rc}.tar.gz
 #
 #   ... or:
 #
-#    $ make distribution KFP_TEKTON_VERSION=1.5.8-rc1
+#    $ make distribution KFP_TEKTON_VERSION=1.5.9-rc1
 #
 # =============================================================================
 
@@ -55,7 +55,6 @@ development stage. Contributions are welcome: {}
 # accordingly.
 REQUIRES = [
     "kfp>=1.8.10,<1.8.23",
-    "kfp-tekton-server-api>=1.5.0",
     "PyYAML>=6,<7"
 ]
 
