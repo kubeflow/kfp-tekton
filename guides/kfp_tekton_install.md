@@ -41,12 +41,12 @@ A Kubernetes cluster `v1.25` that has least 8 vCPU and 16 GB memory.
 
 Each new KFP-Tekton version is based on the long-term support of the Tekton Pipeline version and the major release of the Openshift pipeline version. Below is the list of compatible KFP-Tekton version to the Tekton/Openshift pipelines version.
    
-| KFP-Tekton Version    | Tekton Pipeline Version | OpenShift Pipelines Version | Tekton Core API Version |
-| -------- | ------- | ------- | ------- |
-| 1.5.x    | 0.41.x  | 1.9     | V1beta1 |
-| 1.6.x    | 0.44.x  | 1.10    | V1beta1 |
-| 1.7.x    | 0.47.x  | 1.11    | V1beta1 |
-| 1.8.x    | 0.50.x  | 1.12    | V1      |
+| KFP-Tekton Version    | Tekton Pipeline Version | OpenShift Pipelines Version | Tekton Core API Version | KFP GRPC Gateway Version |
+| -------- | ------- | ------- | ------- | ------- |
+| 1.5.x    | 0.41.x  | 1.9     | V1beta1 | 1.16.0  |
+| 1.6.x    | 0.44.x  | 1.10    | V1beta1 | 1.16.0  |
+| 1.7.x    | 0.47.x  | 1.11    | V1beta1 | 1.16.0  |
+| 1.8.x    | 0.50.x  | 1.12    | V1      | 2.11.3  |
 
 ## Standalone Kubeflow Pipelines with Tekton Backend Deployment
 
