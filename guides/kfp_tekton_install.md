@@ -6,7 +6,7 @@
   * [IBM Cloud Kubernetes Service (IKS)](#ibm-cloud-kubernetes-service-iks)
   * [OpenShift](#openshift)
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
-  * [Alternative KIND deployment](#alternative-kind-deployment)
+  * [KIND deployment](#kind-deployment)
   * [Compatibility Map](#compatibility-map)
 - [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
 - [Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment](#standalone-kubeflow-pipelines-with-openshift-pipelines-backend-deployment)
@@ -33,9 +33,12 @@ A Kubernetes cluster `v1.25` that has least 8 vCPU and 16 GB memory.
 
    Visit [Kubeflow Installation](https://www.kubeflow.org/docs/started/) for setting up the preferred environment to deploy Kubeflow.
 
-### Alternative KIND deployment
+### KIND deployment
 
-   If you want to deploy locally, you can [deploy MLX on KIND](https://github.com/machine-learning-exchange/mlx/blob/main/docs/install-mlx-on-kind.md). MLX in build on top of kfp-tekton, so you will have Kubeflow Pipeline with Tekton installed after finish deploy MLX on KIND.
+   If you want to deploy locally on [KIND](https://kind.sigs.k8s.io/docs/user/quick-start/#installation), you can run the kubectl Kustomization command below
+   ```bash
+   kubectl apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/platform-agnostic-kind\?ref\=v1.8.0
+   ```
    
 ### Compatibility Map
 
