@@ -16,7 +16,7 @@ package tektoncompiler
 
 import (
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
-	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	k8score "k8s.io/api/core/v1"
 )
 

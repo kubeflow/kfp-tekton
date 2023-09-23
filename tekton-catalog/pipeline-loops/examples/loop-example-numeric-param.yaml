@@ -33,7 +33,7 @@ spec:
               #!/usr/bin/env bash
               echo "$(params.message-index)) $(params.message)"
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   annotations:

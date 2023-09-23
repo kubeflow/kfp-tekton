@@ -20,7 +20,7 @@ import (
 
 	workflowapi "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
-	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -303,7 +303,7 @@ func ScheduleSpecToExecutionSpec(
 		pr := &pipelineapi.PipelineRun{
 			Spec: spec,
 		}
-		pr.APIVersion = "tekton.dev/v1beta1"
+		pr.APIVersion = "tekton.dev/v1"
 		pr.Kind = "PipelineRun"
 		return NewPipelineRun(pr), nil
 	default:

@@ -45,7 +45,7 @@ type ExecutionClient interface {
 // ExecutionInformerEventHandler only has AddEventHandler function
 // ExecutionInformer has all functions we need in current code base
 type ExecutionInformerEventHandler interface {
-	AddEventHandler(funcs cache.ResourceEventHandler)
+	AddEventHandler(funcs cache.ResourceEventHandler) (cache.ResourceEventHandlerRegistration, error)
 }
 type ExecutionInformer interface {
 	ExecutionInformerEventHandler
@@ -192,7 +192,7 @@ func NewExecutionInformerOrFatal(execType ExecutionType, namespace string,
 			glog.Fatalf("Failed to create ExecutionInformer for Argo. Error: %v", err)
 		}
 		return &PipelineRunInformer{
-			informer: prInformer.Tekton().V1beta1().PipelineRuns(), factory: prInformer, clientset: prClient}
+			informer: prInformer.Tekton().V1().PipelineRuns(), factory: prInformer, clientset: prClient}
 	default:
 		glog.Fatalf("Not supported type of Execution")
 	}

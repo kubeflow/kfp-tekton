@@ -20,7 +20,7 @@
 package v1alpha1
 
 import (
-	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -105,12 +105,12 @@ func (in *KfpTaskSpec) DeepCopyInto(out *KfpTaskSpec) {
 	*out = *in
 	if in.TaskRef != nil {
 		in, out := &in.TaskRef, &out.TaskRef
-		*out = new(v1beta1.TaskRef)
+		*out = new(v1.TaskRef)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.TaskSpec != nil {
 		in, out := &in.TaskSpec, &out.TaskSpec
-		*out = new(v1beta1.TaskSpec)
+		*out = new(v1.TaskSpec)
 		(*in).DeepCopyInto(*out)
 	}
 	return

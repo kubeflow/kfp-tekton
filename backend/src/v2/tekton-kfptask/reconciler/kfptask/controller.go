@@ -23,10 +23,11 @@ import (
 	kfptaskv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/apis/kfptask/v1alpha1"
 	kfptaskClient "github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/client/injection/client"
 	kfptaskInformer "github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/client/injection/informers/kfptask/v1alpha1/kfptask"
+	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	pipelinev1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	pipelineClient "github.com/tektoncd/pipeline/pkg/client/injection/client"
+	taskRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1/taskrun"
 	customRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/customrun"
-	taskRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/taskrun"
 	runReconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
 	pipelineController "github.com/tektoncd/pipeline/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -40,12 +41,12 @@ import (
 
 // A RunEventHandler which only handles Add and specific Update events
 type RunEventHandler struct {
-	AddFunc    func(obj interface{})
+	AddFunc    func(obj interface{}, isInInitialList bool)
 	UpdateFunc func(oldObj, newObj interface{})
 }
 
-func (r RunEventHandler) OnAdd(obj interface{}) {
-	r.AddFunc(obj)
+func (r RunEventHandler) OnAdd(obj interface{}, isInInitialList bool) {
+	r.AddFunc(obj, isInInitialList)
 }
 
 // OnUpdate ensures the proper handler is called depending on whether the filter matches
@@ -63,18 +64,18 @@ func (r RunEventHandler) OnDelete(obj interface{}) {
 
 // A RunEventHandler which only handles Add and specific Update events
 type TaskRunEventHandler struct {
-	AddFunc    func(obj interface{})
+	AddFunc    func(obj interface{}, isInInitialList bool)
 	UpdateFunc func(oldObj, newObj interface{})
 }
 
-func (r TaskRunEventHandler) OnAdd(obj interface{}) {
-	r.AddFunc(obj)
+func (r TaskRunEventHandler) OnAdd(obj interface{}, isInInitialList bool) {
+	r.AddFunc(obj, isInInitialList)
 }
 
 // OnUpdate ensures the proper handler is called depending on whether the filter matches
 func (r TaskRunEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	// only care if the taskrun is done, either succeeded or failed
-	run, ok := newObj.(*pipelinev1beta1.TaskRun)
+	run, ok := newObj.(*pipelinev1.TaskRun)
 	if ok && run.HasStarted() && (run.IsDone() || run.IsCancelled() || run.IsSuccessful()) {
 		r.UpdateFunc(oldObj, newObj)
 	}
@@ -120,7 +121,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			Handler: RunEventHandler{
 				// Only handle add and update event, because of finalizer, a deletion creates
 				// an update event followed by a delete event
-				AddFunc:    impl.Enqueue,
+				AddFunc:    composeAddFunc(impl.Enqueue),
 				UpdateFunc: controller.PassNew(impl.Enqueue),
 			},
 		})
@@ -130,11 +131,17 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			Handler: TaskRunEventHandler{
 				// Only handle add and update event, because of finalizer, a deletion creates
 				// an update event followed by a delete event
-				AddFunc:    impl.Enqueue,
+				AddFunc:    composeAddFunc(impl.Enqueue),
 				UpdateFunc: controller.PassNew(impl.EnqueueControllerOf),
 			},
 		})
 
 		return impl
+	}
+}
+
+func composeAddFunc(f func(interface{})) func(interface{}, bool) {
+	return func(obj interface{}, isInInitialList bool) {
+		f(obj)
 	}
 }

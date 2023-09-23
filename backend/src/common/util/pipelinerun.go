@@ -31,14 +31,15 @@ import (
 	swfapi "github.com/kubeflow/pipelines/backend/src/crd/pkg/apis/scheduledworkflow/v1beta1"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	pipelineapiv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
-	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	pipelineapiv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/pkg/apis/run/v1alpha1"
 	customRun "github.com/tektoncd/pipeline/pkg/apis/run/v1beta1"
 	prclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
-	prclientv1beta1 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1beta1"
+	prclientv1 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1"
 	prsinformers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
-	prinformer "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
+	prinformer "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis"
 
@@ -52,6 +53,16 @@ import (
 // PipelineRun is a type to help manipulate PipelineRun objects.
 type PipelineRun struct {
 	*pipelineapi.PipelineRun
+	// +optional
+	Status TektonStatus `json:"status,omitempty"`
+}
+
+type TektonStatus struct {
+	*pipelineapi.PipelineRunStatus
+	// +optional
+	TaskRuns map[string]*pipelineapi.PipelineRunTaskRunStatus `json:"taskRuns,omitempty"`
+	// +optional
+	Runs map[string]*pipelineapi.PipelineRunRunStatus `json:"runs,omitempty"`
 }
 
 type runKinds []string
@@ -140,7 +151,7 @@ func MarshalParametersPipelineRun(params SpecParameters) (string, error) {
 	for _, param := range params {
 		newParam := pipelineapi.Param{
 			Name:  param.Name,
-			Value: pipelineapi.ArrayOrString{Type: "string", StringVal: *param.Value},
+			Value: pipelineapi.ParamValue{Type: "string", StringVal: *param.Value},
 		}
 		inputParams = append(inputParams, newParam)
 	}
@@ -160,7 +171,7 @@ func NewPipelineRunFromScheduleWorkflowSpecBytesJSON(bytes []byte) (*PipelineRun
 	if err != nil {
 		return nil, NewInvalidInputErrorWithDetails(err, "Failed to unmarshal the inputs")
 	}
-	pr.APIVersion = "tekton.dev/v1beta1"
+	pr.APIVersion = "tekton.dev/v1"
 	pr.Kind = "PipelineRun"
 	return NewPipelineRun(&pr), nil
 }
@@ -169,6 +180,7 @@ func NewPipelineRunFromScheduleWorkflowSpecBytesJSON(bytes []byte) (*PipelineRun
 func NewPipelineRun(pr *pipelineapi.PipelineRun) *PipelineRun {
 	return &PipelineRun{
 		pr,
+		TektonStatus{&pr.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
 	}
 }
 
@@ -183,14 +195,14 @@ func (w *PipelineRun) GetWorkflowParametersAsMap() map[string]string {
 
 // SetServiceAccount Set the service account to run the workflow.
 func (pr *PipelineRun) SetServiceAccount(serviceAccount string) {
-	pr.Spec.ServiceAccountName = serviceAccount
+	pr.Spec.TaskRunTemplate.ServiceAccountName = serviceAccount
 }
 
 // OverrideParameters overrides some of the parameters of a Workflow.
 func (pr *PipelineRun) OverrideParameters(desiredParams map[string]string) {
 	desiredSlice := make([]pipelineapi.Param, 0)
 	for _, currentParam := range pr.Spec.Params {
-		var desiredValue pipelineapi.ArrayOrString = pipelineapi.ArrayOrString{
+		var desiredValue pipelineapi.ParamValue = pipelineapi.ParamValue{
 			Type:      "string",
 			StringVal: "",
 		}
@@ -309,9 +321,9 @@ func (pr *PipelineRun) Condition() exec.ExecutionPhase {
 }
 
 func (pr *PipelineRun) ToStringForStore() string {
-	workflow, err := json.Marshal(pr.PipelineRun)
+	workflow, err := json.Marshal(pr)
 	if err != nil {
-		glog.Errorf("Could not marshal the workflow: %v", pr.PipelineRun)
+		glog.Errorf("Could not marshal the workflow: %v", pr)
 		return ""
 	}
 	return string(workflow)
@@ -413,7 +425,7 @@ func (pr *PipelineRun) FindObjectStoreArtifactKeyOrEmpty(nodeID string, artifact
 	// TODO: The below artifact keys are only for parameter artifacts. Will need to also implement
 	//       metric and raw input artifacts once we finallized the big data passing in our compiler.
 
-	if pr.Status.PipelineRunStatusFields.TaskRuns == nil {
+	if pr.Status.TaskRuns == nil {
 		return ""
 	}
 	return "artifacts/" + pr.ObjectMeta.Name + "/" + nodeID + "/" + artifactName + ".tgz"
@@ -518,7 +530,7 @@ func (pr *PipelineRun) ExecutionUID() string {
 }
 
 func (pr *PipelineRun) HasMetrics() bool {
-	return pr.Status.PipelineRunStatusFields.TaskRuns != nil
+	return pr.Status.TaskRuns != nil
 }
 
 func (pr *PipelineRun) Message() string {
@@ -537,7 +549,7 @@ func (pr *PipelineRun) IsTerminating() bool {
 }
 
 func (pr *PipelineRun) ServiceAccount() string {
-	return pr.Spec.ServiceAccountName
+	return pr.Spec.TaskRunTemplate.ServiceAccountName
 }
 
 func (pr *PipelineRun) SetPodMetadataLabels(key string, value string) {
@@ -552,7 +564,7 @@ func (pr *PipelineRun) SetSpecParameters(params SpecParameters) {
 	for _, currentParam := range params {
 		newParam := pipelineapi.Param{
 			Name: currentParam.Name,
-			Value: pipelineapi.ArrayOrString{
+			Value: pipelineapi.ParamValue{
 				Type:      "string",
 				StringVal: *currentParam.Value,
 			},
@@ -659,7 +671,7 @@ func (pr *PipelineRun) CollectionMetrics(retrieveArtifact RetrieveArtifact, user
 	runID := pr.ObjectMeta.Labels[LabelKeyWorkflowRunId]
 	runMetrics := []*api.RunMetric{}
 	partialFailures := []error{}
-	for _, taskrunStatus := range pr.Status.PipelineRunStatusFields.TaskRuns {
+	for _, taskrunStatus := range pr.Status.TaskRuns {
 		nodeMetrics, err := collectTaskRunMetricsOrNil(runID, *taskrunStatus, retrieveArtifact, user)
 		if err != nil {
 			partialFailures = append(partialFailures, err)
@@ -816,14 +828,14 @@ func (prc *PipelineRunClient) Execution(namespace string) ExecutionInterface {
 	var informer prinformer.PipelineRunInformer
 	if namespace == "" {
 		informer = prsinformers.NewSharedInformerFactory(prc.client, time.Second*30).
-			Tekton().V1beta1().PipelineRuns()
+			Tekton().V1().PipelineRuns()
 	} else {
 		informer = prsinformers.NewFilteredSharedInformerFactory(prc.client, time.Second*30, namespace, nil).
-			Tekton().V1beta1().PipelineRuns()
+			Tekton().V1().PipelineRuns()
 	}
 
 	return &PipelineRunInterface{
-		pipelinerunInterface: prc.client.TektonV1beta1().PipelineRuns(namespace),
+		pipelinerunInterface: prc.client.TektonV1().PipelineRuns(namespace),
 		informer:             informer,
 	}
 }
@@ -837,7 +849,7 @@ func (prc *PipelineRunClient) Compare(old, new interface{}) bool {
 }
 
 type PipelineRunInterface struct {
-	pipelinerunInterface prclientv1beta1.PipelineRunInterface
+	pipelinerunInterface prclientv1.PipelineRunInterface
 	informer             prinformer.PipelineRunInformer
 }
 
@@ -910,8 +922,9 @@ type PipelineRunInformer struct {
 	factory   prsinformers.SharedInformerFactory
 }
 
-func (pri *PipelineRunInformer) AddEventHandler(funcs cache.ResourceEventHandler) {
+func (pri *PipelineRunInformer) AddEventHandler(funcs cache.ResourceEventHandler) (cache.ResourceEventHandlerRegistration, error) {
 	pri.informer.Informer().AddEventHandler(funcs)
+	return nil, nil
 }
 
 func (pri *PipelineRunInformer) HasSynced() func() bool {
@@ -924,14 +937,15 @@ func (pri *PipelineRunInformer) Get(namespace string, name string) (ExecutionSpe
 		return nil, IsNotFound(err), errors.Wrapf(err,
 			"Error retrieving PipelineRun (%v) in namespace (%v): %v", name, namespace, err)
 	}
+	newWorkflow := NewPipelineRun(pipelinerun)
 	if err := pri.getStatusFromChildReferences(namespace,
 		fmt.Sprintf("%s=%s", LabelKeyWorkflowRunId, pipelinerun.Labels[LabelKeyWorkflowRunId]),
-		&pipelinerun.Status); err != nil {
+		&newWorkflow.Status); err != nil {
 
 		return nil, IsNotFound(err), errors.Wrapf(err,
 			"Error retrieving the Status of the PipelineRun (%v) in namespace (%v): %v", name, namespace, err)
 	}
-	return NewPipelineRun(pipelinerun), false, nil
+	return newWorkflow, false, nil
 }
 
 func (pri *PipelineRunInformer) List(labels *labels.Selector) (ExecutionSpecList, error) {
@@ -951,7 +965,7 @@ func (pri *PipelineRunInformer) InformerFactoryStart(stopCh <-chan struct{}) {
 	pri.factory.Start(stopCh)
 }
 
-func (pri *PipelineRunInformer) getStatusFromChildReferences(namespace, selector string, status *pipelineapi.PipelineRunStatus) error {
+func (pri *PipelineRunInformer) getStatusFromChildReferences(namespace, selector string, status *TektonStatus) error {
 	if status.ChildReferences == nil {
 		return nil
 	}
@@ -972,7 +986,7 @@ func (pri *PipelineRunInformer) getStatusFromChildReferences(namespace, selector
 	// will be removed in the future
 	if hasTaskRun {
 		// fetch taskrun status and insert into Status.TaskRuns
-		taskruns, err := pri.clientset.TektonV1beta1().TaskRuns(namespace).List(context.Background(), metav1.ListOptions{
+		taskruns, err := pri.clientset.TektonV1().TaskRuns(namespace).List(context.Background(), metav1.ListOptions{
 			LabelSelector: selector,
 		})
 		if err != nil {
@@ -1061,7 +1075,7 @@ func (pri *PipelineRunInformer) handleNestedStatus(run *pipelineapiv1alpha1.Run,
 }
 
 // handle nested status case for specific types of Run
-func (pri *PipelineRunInformer) handleNestedStatusV1beta1(customRun *pipelineapi.CustomRun, customRunStatus *customRun.CustomRunStatus, namespace string) {
+func (pri *PipelineRunInformer) handleNestedStatusV1beta1(customRun *pipelineapiv1beta1.CustomRun, customRunStatus *customRun.CustomRunStatus, namespace string) {
 	var kind string
 	if customRun.Spec.CustomSpec != nil {
 		kind = customRun.Spec.CustomSpec.Kind
@@ -1127,7 +1141,7 @@ func (pri *PipelineRunInformer) updateExtraFields(obj map[string]interface{}, na
 					kind := fmt.Sprintf("%v", kindI)
 					name := fmt.Sprintf("%v", nameI)
 					if kind == "TaskRun" {
-						if taskrunCR, err := pri.clientset.TektonV1beta1().TaskRuns(namespace).Get(context.Background(), name, metav1.GetOptions{}); err == nil {
+						if taskrunCR, err := pri.clientset.TektonV1().TaskRuns(namespace).Get(context.Background(), name, metav1.GetOptions{}); err == nil {
 							taskruns, ok := statusobj["taskRuns"]
 							if !ok {
 								taskruns = make(map[string]*pipelineapi.PipelineRunTaskRunStatus)
