@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   annotations:
@@ -89,7 +89,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - sh
               - -c
@@ -168,7 +168,7 @@ spec:
                   optional: true
               image: python:3.7
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.flip-coin-op-driver.results.cached-decision)
         operator: in
@@ -329,7 +329,7 @@ spec:
                       image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
                       imagePullPolicy: Always
                       name: kfp-launcher
-                      resources: {}
+                      computeResources: {}
                     - args:
                       - sh
                       - -c
@@ -405,7 +405,7 @@ spec:
                           optional: true
                       image: python:3.7
                       name: user-main
-                      resources: {}
+                      computeResources: {}
               when:
               - input: $(tasks.print-op-driver.results.cached-decision)
                 operator: in
@@ -541,7 +541,7 @@ spec:
                       image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
                       imagePullPolicy: Always
                       name: kfp-launcher
-                      resources: {}
+                      computeResources: {}
                     - args:
                       - sh
                       - -c
@@ -617,7 +617,7 @@ spec:
                           optional: true
                       image: python:3.7
                       name: user-main
-                      resources: {}
+                      computeResources: {}
               when:
               - input: $(tasks.print-op-2-driver.results.cached-decision)
                 operator: in
@@ -754,7 +754,7 @@ spec:
                       image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
                       imagePullPolicy: Always
                       name: kfp-launcher
-                      resources: {}
+                      computeResources: {}
                     - args:
                       - sh
                       - -c
@@ -833,7 +833,7 @@ spec:
                           optional: true
                       image: python:3.7
                       name: user-main
-                      resources: {}
+                      computeResources: {}
               when:
               - input: $(tasks.get-random-int-op-driver.results.cached-decision)
                 operator: in

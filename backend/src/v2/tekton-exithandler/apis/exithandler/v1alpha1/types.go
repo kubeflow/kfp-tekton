@@ -41,7 +41,7 @@ type ExitHandler struct {
 type ExitHandlerSpec struct {
 	// TaskRef is a reference to a task definition.
 	// +optional
-	// TaskRef     *v1beta1.TaskRef     `json:"taskRef,omitempty"`
+	// TaskRef     *v1.TaskRef     `json:"taskRef,omitempty"`
 	PipelineRef *tektonv1.PipelineRef `json:"pipelineRef,omitempty"`
 
 	// TaskSpec is a specification of a task

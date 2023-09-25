@@ -91,7 +91,7 @@ func Compile(jobArg *pipelinespec.PipelineJob, kubernetesSpecArg *pipelinespec.S
 	// initialization
 	pr := &pipelineapi.PipelineRun{
 		TypeMeta: k8smeta.TypeMeta{
-			APIVersion: "tekton.dev/v1beta1",
+			APIVersion: "tekton.dev/v1",
 			Kind:       "PipelineRun",
 		},
 		ObjectMeta: k8smeta.ObjectMeta{

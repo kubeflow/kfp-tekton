@@ -39,7 +39,7 @@ type KfpTask struct {
 type KfpTaskSpec struct {
 	// TaskRef is a reference to a task definition.
 	// +optional
-	// TaskRef     *v1beta1.TaskRef     `json:"taskRef,omitempty"`
+	// TaskRef     *v1.TaskRef     `json:"taskRef,omitempty"`
 	TaskRef *tektonv1.TaskRef `json:"taskRef,omitempty"`
 
 	// TaskSpec is a specification of a task
