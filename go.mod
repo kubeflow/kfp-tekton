@@ -56,7 +56,7 @@ require (
 	k8s.io/kubernetes v1.13.0
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106
 	knative.dev/pkg v0.0.0-20230418073056-dfad48eaa5d0
-	sigs.k8s.io/controller-runtime v0.15.0
+	sigs.k8s.io/controller-runtime v0.11.1
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -202,6 +202,10 @@ require (
 replace (
 	github.com/kubeflow/kfp-tekton/tekton-catalog/cache => ./tekton-catalog/cache
 	github.com/kubeflow/kfp-tekton/tekton-catalog/objectstore => ./tekton-catalog/objectstore
+	k8s.io/api => k8s.io/api v0.25.9
+	k8s.io/apimachinery => k8s.io/apimachinery v0.26.5
+	k8s.io/client-go => k8s.io/client-go v0.25.9
+	k8s.io/code-generator => k8s.io/code-generator v0.25.9
 	k8s.io/kubernetes => k8s.io/kubernetes v1.11.1
 	sigs.k8s.io/controller-tools => sigs.k8s.io/controller-tools v0.2.9
 )

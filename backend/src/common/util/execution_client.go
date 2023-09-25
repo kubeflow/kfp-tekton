@@ -45,7 +45,7 @@ type ExecutionClient interface {
 // ExecutionInformerEventHandler only has AddEventHandler function
 // ExecutionInformer has all functions we need in current code base
 type ExecutionInformerEventHandler interface {
-	AddEventHandler(funcs cache.ResourceEventHandler) (cache.ResourceEventHandlerRegistration, error)
+	AddEventHandler(funcs cache.ResourceEventHandler)
 }
 type ExecutionInformer interface {
 	ExecutionInformerEventHandler

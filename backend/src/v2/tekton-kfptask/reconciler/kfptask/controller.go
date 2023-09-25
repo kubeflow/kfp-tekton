@@ -41,12 +41,12 @@ import (
 
 // A RunEventHandler which only handles Add and specific Update events
 type RunEventHandler struct {
-	AddFunc    func(obj interface{}, isInInitialList bool)
+	AddFunc    func(obj interface{})
 	UpdateFunc func(oldObj, newObj interface{})
 }
 
-func (r RunEventHandler) OnAdd(obj interface{}, isInInitialList bool) {
-	r.AddFunc(obj, isInInitialList)
+func (r RunEventHandler) OnAdd(obj interface{}) {
+	r.AddFunc(obj)
 }
 
 // OnUpdate ensures the proper handler is called depending on whether the filter matches
@@ -64,12 +64,12 @@ func (r RunEventHandler) OnDelete(obj interface{}) {
 
 // A RunEventHandler which only handles Add and specific Update events
 type TaskRunEventHandler struct {
-	AddFunc    func(obj interface{}, isInInitialList bool)
+	AddFunc    func(obj interface{})
 	UpdateFunc func(oldObj, newObj interface{})
 }
 
-func (r TaskRunEventHandler) OnAdd(obj interface{}, isInInitialList bool) {
-	r.AddFunc(obj, isInInitialList)
+func (r TaskRunEventHandler) OnAdd(obj interface{}) {
+	r.AddFunc(obj)
 }
 
 // OnUpdate ensures the proper handler is called depending on whether the filter matches
@@ -121,7 +121,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			Handler: RunEventHandler{
 				// Only handle add and update event, because of finalizer, a deletion creates
 				// an update event followed by a delete event
-				AddFunc:    composeAddFunc(impl.Enqueue),
+				AddFunc:    impl.Enqueue,
 				UpdateFunc: controller.PassNew(impl.Enqueue),
 			},
 		})
@@ -131,7 +131,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			Handler: TaskRunEventHandler{
 				// Only handle add and update event, because of finalizer, a deletion creates
 				// an update event followed by a delete event
-				AddFunc:    composeAddFunc(impl.Enqueue),
+				AddFunc:    impl.Enqueue,
 				UpdateFunc: controller.PassNew(impl.EnqueueControllerOf),
 			},
 		})
@@ -140,8 +140,9 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 	}
 }
 
-func composeAddFunc(f func(interface{})) func(interface{}, bool) {
-	return func(obj interface{}, isInInitialList bool) {
-		f(obj)
-	}
-}
+// For go-clinet 1.27+ in the future
+// func composeAddFunc(f func(interface{})) func(interface{}, bool) {
+// 	return func(obj interface{}, isInInitialList bool) {
+// 		f(obj)
+// 	}
+// }
