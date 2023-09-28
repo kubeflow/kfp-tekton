@@ -374,6 +374,17 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
         nested_custom_task['root_ct'] = relationships['root_ct']
 
     for nested_custom_task in nested_custom_tasks:
+        # Calculate root level tasks
+        root_tasks = []
+        root_task_tmp = [task["name"] for task in tasks]
+        for root_task in root_task_tmp:
+            append = True
+            for task_name in task_list:
+                if task_name in root_task:
+                    append = False
+                    break
+            if append:
+                root_tasks.append(root_task)
         nested_custom_task_spec = custom_task[nested_custom_task['nested_custom_task']]['spec']
         for custom_task_cr in custom_task_crs:
             if custom_task_cr['metadata']['name'] == nested_custom_task['father_ct']:
@@ -415,6 +426,7 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                     if not has_nested_task:
                         break
                 nested_loop_counter_params = []
+                nested_loop_counter_param_name = ''
                 # Fetch nested loop counter params so that it won't find the nested parameters from
                 # global param level.
                 for task in custom_task_crs:
@@ -424,6 +436,8 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                         for iterate_name in iterate_param_list:
                             if task['spec'].get(iterate_name):
                                 nested_loop_counter_params.append(task['spec'].get(iterate_name))
+                                if task['metadata']['name'] == nested_custom_task_spec['name']:
+                                    nested_loop_counter_param_name = task['spec'].get(iterate_name)
                         
                 for task in tasks:
                     if task['name'] == nested_custom_task['root_ct']:
@@ -435,30 +449,54 @@ def _handle_tekton_custom_task(custom_task: dict, workflow: dict, recursive_task
                         task['params'] = sorted(task['params'], key=lambda k: k['name'])
                         if task['name'] in all_nested_loop:
                             for param in task['params']:
-                                if '$(params.' in param['value'] and 'subvar-' not in param['value']:
+                                add_global = False
+                                search_param_results = re.findall('\$\(tasks.([^ \t\n.:,;\{\}]+).results.([^ \t\n.:,;\{\}]+)\)',
+                                    param['value']) if isinstance(param['value'], str) else []
+                                if search_param_results and search_param_results[0][0] in root_tasks:
+                                    add_global = True
+                                if ('$(params.' in param['value'] or add_global) and 'subvar-' not in param['value']:
                                     global_task_values.add(param['value'])
                 # Add any pipeline global params to the nested loop layers
                 all_params = []
                 for custom_param in custom_task_cr['spec']['pipelineSpec']['params']:
                     all_params.append(''.join(['$(params.', custom_param['name'], ')']))
                 for global_task_value in global_task_values:
-                    if global_task_value not in all_params and \
-                        re.findall('\$\(params.([^ \t\n.:,;\{\}]+)\)', global_task_value)[0] not in nested_loop_counter_params:
-                        all_params.append(global_task_value)
-                        custom_task_cr['spec']['pipelineSpec']['params'].append(
-                            {'name': re.findall('\$\(params.([^ \t\n.:,;\{\}]+)\)', global_task_value)[0],
-                             'type': 'string'}
-                        )
-                        for task in tasks:
-                            if task['name'] == nested_custom_task['father_ct']:
-                                task['params'].append(
-                                    {'name': re.findall('\$\(params.([^ \t\n.:,;\{\}]+)\)', global_task_value)[0],
-                                     'value': global_task_value}
+                    if global_task_value not in all_params:
+                        nested_counter_params = re.findall('\$\(params.([^ \t\n.:,;\{\}]+)\)', global_task_value)
+                        if not nested_counter_params:
+                            nested_counter_params = re.findall('\$\(tasks.([^ \t\n.:,;\{\}]+).results.([^ \t\n.:,;\{\}]+)\)',
+                                                               global_task_value)
+                            nested_counter_params = ["-".join(nested_param) for nested_param in nested_counter_params]
+                        if nested_counter_params[0] not in nested_loop_counter_params:
+                            all_params.append(global_task_value)
+                            inject_name = True
+                            for p in custom_task_cr['spec']['pipelineSpec']['params']:
+                                if nested_counter_params[0] == p['name']:
+                                    inject_name = False
+                                    break
+                            if inject_name:
+                                custom_task_cr['spec']['pipelineSpec']['params'].append(
+                                    {'name': nested_counter_params[0],
+                                    'type': 'string'}
                                 )
+                            for task in tasks:
+                                if task['name'] == nested_custom_task['father_ct']:
+                                    task['params'].append(
+                                        {'name': nested_counter_params[0],
+                                        'value': global_task_value}
+                                    )
                 for special_param in nested_custom_task_special_params:
                     for nested_param in nested_custom_task_spec['params']:
                         if nested_param['name'] == special_param['name']:
                             nested_param['value'] = '$(params.%s)' % nested_param['name']
+                for nested_param in nested_custom_task_spec['params']:
+                    if nested_param.get('value') in list(global_task_values) and \
+                        nested_param.get('name') == nested_loop_counter_param_name:
+                        nested_counter_params = re.findall('\$\(tasks.([^ \t\n.:,;\{\}]+).results.([^ \t\n.:,;\{\}]+)\)',
+                                                nested_param["value"])
+                        if nested_counter_params:
+                            nested_param["value"] = '$(params.%s)' % \
+                            ["-".join(nested_param) for nested_param in nested_counter_params][0]
                 # need process parameters to replace results
                 custom_task_cr_task_names = [cr_task['name'] for cr_task in custom_task_cr['spec']['pipelineSpec']['tasks']]
                 for nested_custom_task_param in nested_custom_task_spec['params']:
