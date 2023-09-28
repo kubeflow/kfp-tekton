@@ -235,6 +235,13 @@ class TestTektonCompiler(unittest.TestCase):
     from .testdata.nested_loop_counter import loop_3_range
     self._test_pipeline_workflow(loop_3_range, 'nested_loop_counter.yaml')
 
+  def test_nested_cel_outputs_workflow(self):
+    """
+    Test compiling nested cel outputs in workflow to verify parameters are generated correctly.
+    """
+    from .testdata.nested_cel_outputs import pipeline
+    self._test_pipeline_workflow(pipeline, 'nested_cel_outputs.yaml')
+
   def test_nested_loop_param_workflow(self):
     """
     Test compiling nested loop param in workflow to verify parameters are generated correctly.
