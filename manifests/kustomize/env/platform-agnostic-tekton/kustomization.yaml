@@ -16,14 +16,14 @@ resources:
 
 images:
 - name: gcr.io/ml-pipeline/api-server
-  newName: tomcli/apiserver
-  newTag: latest
+  newName: quay.io/aipipeline/apiserver
+  newTag: 2.0.0
 - name: gcr.io/ml-pipeline/persistenceagent
-  newName: tomcli/persistenceagent
-  newTag: latest
+  newName: quay.io/aipipeline/persistenceagent
+  newTag: 2.0.0
 - name: gcr.io/ml-pipeline/scheduledworkflow
-  newName: tomcli/scheduledworkflow
-  newTag: latest
+  newName: quay.io/aipipeline/scheduledworkflow
+  newTag: 2.0.0
 
 labels:
 - includeSelectors: true

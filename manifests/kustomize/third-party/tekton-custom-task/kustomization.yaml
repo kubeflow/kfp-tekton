@@ -15,17 +15,17 @@ images:
   - name: quay.io/aipipeline/pipelineloop-webhook
     newTag: 1.8.0
   - name: kfp-v2-dev-driver-controller
-    newName: tomcli/tekton-driver
-    newTag: latest
+    newName: quay.io/aipipeline/tekton-driver
+    newTag: 2.0.0
   - name: tekton-exithandler-controller
-    newName: tomcli/tekton-exithandler-controller
-    newTag: latest
+    newName: quay.io/aipipeline/tekton-exithandler-controller
+    newTag: 2.0.0
   - name: tekton-exithandler-webhook
-    newName: tomcli/tekton-exithandler-webhook
-    newTag: latest
+    newName: quay.io/aipipeline/tekton-exithandler-webhook
+    newTag: 2.0.0
   - name: tekton-kfptask-controller
-    newName: tomcli/tekton-kfptask-controller
-    newTag: latest
+    newName: quay.io/aipipeline/tekton-kfptask-controller
+    newTag: 2.0.0
   - name: tekton-kfptask-webhook
-    newName: tomcli/tekton-kfptask-webhook
-    newTag: latest
+    newName: quay.io/aipipeline/tekton-kfptask-webhook
+    newTag: 2.0.0

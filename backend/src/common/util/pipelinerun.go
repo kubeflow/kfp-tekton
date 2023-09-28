@@ -56,7 +56,7 @@ type PipelineRun struct {
 }
 
 type TektonStatus struct {
-	pipelineapi.PipelineRunStatus
+	*pipelineapi.PipelineRunStatus
 	// +optional
 	TaskRuns map[string]*pipelineapi.PipelineRunTaskRunStatus `json:"taskRuns,omitempty"`
 	// +optional
@@ -178,7 +178,7 @@ func NewPipelineRunFromScheduleWorkflowSpecBytesJSON(bytes []byte) (*PipelineRun
 func NewPipelineRun(pr *pipelineapi.PipelineRun) *PipelineRun {
 	return &PipelineRun{
 		pr,
-		TektonStatus{pr.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
+		TektonStatus{&pr.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
 	}
 }
 
@@ -232,9 +232,9 @@ func (pr *PipelineRun) VerifyParameters(desiredParams map[string]string) error {
 }
 
 // Get converts this object to a workflowapi.Workflow.
-func (pr *PipelineRun) Get() *pipelineapi.PipelineRun {
-	return pr.PipelineRun
-}
+// func (pr *PipelineRun) Get() *pipelineapi.PipelineRun {
+// 	return pr.PipelineRun
+// }
 
 func (pr *PipelineRun) ScheduledWorkflowUUIDAsStringOrEmpty() string {
 	if pr.OwnerReferences == nil {
@@ -282,8 +282,8 @@ func (pr *PipelineRun) FinishedAtTime() metav1.Time {
 }
 
 func (pr *PipelineRun) Condition() exec.ExecutionPhase {
-	if len(pr.Status.Status.Conditions) > 0 {
-		switch pr.Status.Status.Conditions[0].Reason {
+	if len(pr.Status.Conditions) > 0 {
+		switch pr.Status.Conditions[0].Reason {
 		case "Error":
 			return exec.ExecutionError
 		case "Failed":
@@ -314,7 +314,7 @@ func (pr *PipelineRun) Condition() exec.ExecutionPhase {
 			return exec.ExecutionUnknown
 		}
 	} else {
-		return ""
+		return exec.ExecutionUnknown
 	}
 }
 
@@ -443,7 +443,7 @@ func (pr *PipelineRun) FindTaskRunByPodName(podName string) (*pipelineapi.Pipeli
 func (pr *PipelineRun) IsInFinalState() bool {
 	// Workflows in the statuses other than pending or running are considered final.
 
-	if len(pr.Status.Status.Conditions) > 0 {
+	if len(pr.Status.Conditions) > 0 {
 		finalConditions := map[string]int{
 			"Succeeded":                  1,
 			"Failed":                     1,
@@ -456,7 +456,7 @@ func (pr *PipelineRun) IsInFinalState() bool {
 			"CancelledRunFinally":        1,
 			"InvalidTaskResultReference": 1,
 		}
-		phase := pr.Status.Status.Conditions[0].Reason
+		phase := pr.Status.Conditions[0].Reason
 		if _, ok := finalConditions[phase]; ok {
 			return true
 		}
@@ -528,7 +528,7 @@ func (pr *PipelineRun) ExecutionUID() string {
 }
 
 func (pr *PipelineRun) HasMetrics() bool {
-	return pr.Status.TaskRuns != nil
+	return pr.Status.TaskRuns != nil && pr.Status.Runs != nil
 }
 
 func (pr *PipelineRun) Message() string {
@@ -604,8 +604,8 @@ func (w *PipelineRun) Validate(lint, ignoreEntrypoint bool) error {
 }
 
 func (pr *PipelineRun) GenerateRetryExecution() (ExecutionSpec, []string, error) {
-	if len(pr.Status.Status.Conditions) > 0 {
-		switch pr.Status.Status.Conditions[0].Type {
+	if len(pr.Status.Conditions) > 0 {
+		switch pr.Status.Conditions[0].Type {
 		case "Failed", "Error":
 			break
 		default:
@@ -862,7 +862,7 @@ func (pri *PipelineRunInterface) Create(ctx context.Context, execution Execution
 		return nil, err
 	}
 	return &PipelineRun{PipelineRun: revPipelineRun,
-		Status: TektonStatus{revPipelineRun.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
+		Status: TektonStatus{&revPipelineRun.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
 	}, nil
 }
 
@@ -877,7 +877,7 @@ func (pri *PipelineRunInterface) Update(ctx context.Context, execution Execution
 		return nil, err
 	}
 	return &PipelineRun{PipelineRun: revPipelineRun,
-		Status: TektonStatus{revPipelineRun.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
+		Status: TektonStatus{&revPipelineRun.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
 	}, nil
 }
 
@@ -895,7 +895,7 @@ func (pri *PipelineRunInterface) Get(ctx context.Context, name string, opts meta
 		return nil, err
 	}
 	return &PipelineRun{PipelineRun: revPipelineRun,
-		Status: TektonStatus{revPipelineRun.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
+		Status: TektonStatus{&revPipelineRun.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
 	}, nil
 }
 
@@ -908,7 +908,7 @@ func (pri *PipelineRunInterface) List(ctx context.Context, opts metav1.ListOptio
 	rev := make(ExecutionSpecList, 0, len(prlist.Items))
 	for _, pr := range prlist.Items {
 		rev = append(rev, &PipelineRun{PipelineRun: &pr,
-			Status: TektonStatus{pr.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
+			Status: TektonStatus{&pr.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
 		})
 	}
 	return &rev, nil
@@ -920,7 +920,7 @@ func (pri *PipelineRunInterface) Patch(ctx context.Context, name string, pt type
 		return nil, err
 	}
 	return &PipelineRun{PipelineRun: revPipelineRun,
-		Status: TektonStatus{revPipelineRun.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
+		Status: TektonStatus{&revPipelineRun.Status, map[string]*pipelineapi.PipelineRunTaskRunStatus{}, map[string]*pipelineapi.PipelineRunRunStatus{}},
 	}, nil
 }
 
