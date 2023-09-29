@@ -19,5 +19,4 @@ package pipelineloop
 const (
 	// GroupName is the Kubernetes resource group name for PipelineLoop types.
 	GroupName = "custom.tekton.dev"
-	Kind      = "PipelineLoop"
 )

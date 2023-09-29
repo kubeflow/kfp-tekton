@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: simpletask
@@ -15,7 +15,7 @@ spec:
         #!/usr/bin/env bash
         echo "$(params.word)$(params.suffix)"
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: demo-pipeline

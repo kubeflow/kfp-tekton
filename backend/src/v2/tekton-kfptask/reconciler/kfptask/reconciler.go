@@ -28,10 +28,12 @@ import (
 	kfptaskListers "github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/client/listers/kfptask/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
+	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
-	listeners "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
+	listeners "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1"
+	listenersv1beta1 "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"go.uber.org/zap"
 	k8score "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,7 +54,7 @@ type Reconciler struct {
 	kubeClientSet     kubernetes.Interface
 	pipelineClientSet clientset.Interface
 	kfptaskClientSet  kfptaskClient.Interface
-	runLister         listeners.CustomRunLister
+	runLister         listenersv1beta1.CustomRunLister
 	kfptaskLister     kfptaskListers.KfpTaskLister
 	taskRunLister     listeners.TaskRunLister
 	clock             clock.RealClock
@@ -122,7 +124,7 @@ func (kts *kfptaskFS) next() error {
 			return err
 		}
 
-		if _, err := kts.reconciler.pipelineClientSet.TektonV1beta1().TaskRuns(kts.run.Namespace).Create(kts.ctx, tr, metav1.CreateOptions{}); err != nil {
+		if _, err := kts.reconciler.pipelineClientSet.TektonV1().TaskRuns(kts.run.Namespace).Create(kts.ctx, tr, metav1.CreateOptions{}); err != nil {
 			kts.run.Status.MarkCustomRunFailed(kfptaskv1alpha1.KfpTaskRunReasonFailed.String(), "Failed to create a TaskRun")
 			return err
 		}
@@ -170,7 +172,7 @@ func (kts *kfptaskFS) next() error {
 	return nil
 }
 
-func (kts *kfptaskFS) constructTaskRun() (*tektonv1beta1.TaskRun, error) {
+func (kts *kfptaskFS) constructTaskRun() (*tektonv1.TaskRun, error) {
 	ktSpec, err := kts.reconciler.getKfpTaskSpec(kts.ctx, kts.run)
 	if err != nil {
 		return nil, err
@@ -193,7 +195,7 @@ func (kts *kfptaskFS) constructTaskRun() (*tektonv1beta1.TaskRun, error) {
 		}
 	}
 
-	tr := &tektonv1beta1.TaskRun{
+	tr := &tektonv1.TaskRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("kt-%s", pruuid),
 			Namespace: kts.run.Namespace,
@@ -202,8 +204,8 @@ func (kts *kfptaskFS) constructTaskRun() (*tektonv1beta1.TaskRun, error) {
 			Labels:      dupStringMaps(kts.run.Labels, labelsToDrop),
 			Annotations: dupStringMaps(kts.run.Annotations, annotationToDrop),
 		},
-		Spec: tektonv1beta1.TaskRunSpec{
-			Params:             params,
+		Spec: tektonv1.TaskRunSpec{
+			Params:             v1ParamsConversion(context.Background(), params),
 			Timeout:            kts.run.Spec.Timeout,
 			ServiceAccountName: kts.run.Spec.ServiceAccountName,
 			TaskSpec:           ktSpec.TaskSpec,
@@ -235,7 +237,7 @@ func (kts *kfptaskFS) constructTaskRun() (*tektonv1beta1.TaskRun, error) {
 							taskSpec.Steps[i].VolumeMounts = append(taskSpec.Steps[i].VolumeMounts, container.VolumeMounts...)
 						}
 						if len(container.Resources.Limits) > 0 || len(container.Resources.Requests) > 0 {
-							taskSpec.Steps[i].Resources = container.Resources
+							taskSpec.Steps[i].ComputeResources = container.Resources
 						}
 						break
 					}
@@ -327,7 +329,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, run *tektonv1beta1.Custom
 
 func (r *Reconciler) deletePipelineRun(ctx context.Context, namespace, prName string) error {
 	// TODO: for safty, may need to break the chain and check return value.
-	return r.pipelineClientSet.TektonV1beta1().PipelineRuns(namespace).Delete(ctx, prName, metav1.DeleteOptions{})
+	return r.pipelineClientSet.TektonV1().PipelineRuns(namespace).Delete(ctx, prName, metav1.DeleteOptions{})
 }
 
 // double check run.Spec.Spec and run.Spec.Ref
@@ -379,3 +381,27 @@ func (r *Reconciler) getKfpTaskSpec(ctx context.Context, run *tektonv1beta1.Cust
 // 	}
 // 	return string(raw)
 // }
+
+func paramConvertTo(ctx context.Context, p *tektonv1beta1.Param, sink *tektonv1.Param) {
+	sink.Name = p.Name
+	newValue := tektonv1.ParamValue{}
+	if p.Value.Type != "" {
+		newValue.Type = tektonv1.ParamType(p.Value.Type)
+	} else {
+		newValue.Type = tektonv1.ParamType(tektonv1beta1.ParamTypeString)
+	}
+	newValue.StringVal = p.Value.StringVal
+	newValue.ArrayVal = p.Value.ArrayVal
+	newValue.ObjectVal = p.Value.ObjectVal
+	sink.Value = newValue
+}
+
+func v1ParamsConversion(ctx context.Context, v1beta1Params tektonv1beta1.Params) []tektonv1.Param {
+	v1Params := []tektonv1.Param{}
+	for _, param := range v1beta1Params {
+		v1Param := tektonv1.Param{}
+		paramConvertTo(ctx, &param, &v1Param)
+		v1Params = append(v1Params, v1Param)
+	}
+	return v1Params
+}

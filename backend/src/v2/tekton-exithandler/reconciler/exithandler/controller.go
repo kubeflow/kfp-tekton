@@ -23,10 +23,11 @@ import (
 	exithandlerv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis/exithandler/v1alpha1"
 	exithandlerClient "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client/injection/client"
 	exithandlerInformer "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client/injection/informers/exithandler/v1alpha1/exithandler"
+	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	pipelinev1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	pipelineClient "github.com/tektoncd/pipeline/pkg/client/injection/client"
+	pipelineRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1/pipelinerun"
 	customRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/customrun"
-	pipelineRunInformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/pipelinerun"
 	runReconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
 	pipelineController "github.com/tektoncd/pipeline/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -74,7 +75,7 @@ func (r PipelineRunEventHandler) OnAdd(obj interface{}) {
 // OnUpdate ensures the proper handler is called depending on whether the filter matches
 func (r PipelineRunEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	// only care if the pipelinerun is done, either succeeded or failed
-	run, ok := newObj.(*pipelinev1beta1.PipelineRun)
+	run, ok := newObj.(*pipelinev1.PipelineRun)
 	if ok && run.HasStarted() && (run.IsDone() || run.IsCancelled() || run.IsGracefullyCancelled() || run.IsGracefullyStopped()) {
 		r.UpdateFunc(oldObj, newObj)
 	}
@@ -138,3 +139,10 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 		return impl
 	}
 }
+
+// For go-clinet 1.27+ in the future
+// func composeAddFunc(f func(interface{})) func(interface{}, bool) {
+// 	return func(obj interface{}, isInInitialList bool) {
+// 		f(obj)
+// 	}
+// }

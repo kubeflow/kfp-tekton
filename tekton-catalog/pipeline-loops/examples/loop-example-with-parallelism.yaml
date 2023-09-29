@@ -26,7 +26,7 @@ spec:
   iterateParam: message
   parallelism: 2
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   annotations:

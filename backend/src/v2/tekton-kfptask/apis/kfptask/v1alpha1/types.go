@@ -17,7 +17,7 @@
 package v1alpha1
 
 import (
-	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -39,12 +39,12 @@ type KfpTask struct {
 type KfpTaskSpec struct {
 	// TaskRef is a reference to a task definition.
 	// +optional
-	// TaskRef     *v1beta1.TaskRef     `json:"taskRef,omitempty"`
-	TaskRef *tektonv1beta1.TaskRef `json:"taskRef,omitempty"`
+	// TaskRef     *v1.TaskRef     `json:"taskRef,omitempty"`
+	TaskRef *tektonv1.TaskRef `json:"taskRef,omitempty"`
 
 	// TaskSpec is a specification of a task
 	// +optional
-	TaskSpec *tektonv1beta1.TaskSpec `json:"taskSpec,omitempty"`
+	TaskSpec *tektonv1.TaskSpec `json:"taskSpec,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

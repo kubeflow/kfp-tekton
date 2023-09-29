@@ -22,7 +22,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -92,7 +92,7 @@ func (in *PipelineLoopPipelineRunStatus) DeepCopyInto(out *PipelineLoopPipelineR
 	*out = *in
 	if in.Status != nil {
 		in, out := &in.Status, &out.Status
-		*out = new(v1beta1.PipelineRunStatus)
+		*out = new(tektonv1.PipelineRunStatus)
 		(*in).DeepCopyInto(*out)
 	}
 	return
@@ -149,12 +149,12 @@ func (in *PipelineLoopSpec) DeepCopyInto(out *PipelineLoopSpec) {
 	*out = *in
 	if in.PipelineRef != nil {
 		in, out := &in.PipelineRef, &out.PipelineRef
-		*out = new(v1beta1.PipelineRef)
+		*out = new(tektonv1.PipelineRef)
 		**out = **in
 	}
 	if in.PipelineSpec != nil {
 		in, out := &in.PipelineSpec, &out.PipelineSpec
-		*out = new(v1beta1.PipelineSpec)
+		*out = new(tektonv1.PipelineSpec)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Timeout != nil {

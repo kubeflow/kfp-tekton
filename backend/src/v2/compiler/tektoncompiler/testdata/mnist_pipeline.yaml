@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   annotations:
@@ -92,7 +92,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - sh
               - -c
@@ -169,7 +169,7 @@ spec:
                   optional: true
               image: python:3.7
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.convert-experiment-spec-to-str-driver.results.cached-decision)
         operator: in
@@ -259,7 +259,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - sh
               - -c
@@ -349,7 +349,7 @@ spec:
                   optional: true
               image: python:3.7
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.convert-katib-results-driver.results.cached-decision)
         operator: in
@@ -423,7 +423,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - python
               - src/launch_experiment.py
@@ -483,7 +483,7 @@ spec:
                   optional: true
               image: docker.io/kubeflowkatib/kubeflow-pipelines-launcher
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.create-dataset-driver.results.cached-decision)
         operator: in
@@ -602,7 +602,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - sh
               - -c
@@ -821,7 +821,7 @@ spec:
                   optional: true
               image: python:3.8
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.create-katib-experiment-task-driver.results.cached-decision)
         operator: in
@@ -931,7 +931,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - sh
               - -c
@@ -1038,7 +1038,7 @@ spec:
                   optional: true
               image: python:3.7
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.create-tfjob-task-driver.results.cached-decision)
         operator: in
@@ -1122,7 +1122,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - sh
               - -c
@@ -1199,7 +1199,7 @@ spec:
                   optional: true
               image: python:3.7
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.convert-inference-service-to-artifact-driver.results.cached-decision)
         operator: in
@@ -1287,7 +1287,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - sh
               - -c
@@ -1385,7 +1385,7 @@ spec:
                   optional: true
               image: python:3.7
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.create-serving-task-driver.results.cached-decision)
         operator: in
@@ -1460,7 +1460,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - python
               - kservedeployer.py
@@ -1512,7 +1512,7 @@ spec:
                   optional: true
               image: quay.io/aipipeline/kserve-component:v0.7.0
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.serving-launcher-driver.results.cached-decision)
         operator: in
@@ -1633,7 +1633,7 @@ spec:
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
               imagePullPolicy: Always
               name: kfp-launcher
-              resources: {}
+              computeResources: {}
             - args:
               - python
               - /ml/launch_tfjob.py
@@ -1693,7 +1693,7 @@ spec:
                   optional: true
               image: nikenano/launchernew:latest
               name: user-main
-              resources: {}
+              computeResources: {}
       when:
       - input: $(tasks.tfjob-launcher-driver.results.cached-decision)
         operator: in

@@ -30,6 +30,7 @@ import (
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/reconciler/pipelinelooprun"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -123,14 +124,14 @@ func main() {
 }
 
 func validatePipeline(bytes []byte) error {
-	p := v1beta1.Pipeline{}
+	p := v1.Pipeline{}
 	if err := json.Unmarshal(bytes, &p); err != nil {
 		return err
 	}
 	return validatePipelineSpec(&p.Spec, p.Name)
 }
 
-func validatePipelineSpec(p *v1beta1.PipelineSpec, name string) error {
+func validatePipelineSpec(p *v1.PipelineSpec, name string) error {
 	errs := []string{}
 	// Here we validate those embedded spec, whose kind is pipelineLoop.
 	if p.Tasks != nil {
@@ -194,7 +195,7 @@ func validateCustomRun(bytes []byte) error {
 }
 
 func validatePipelineRun(bytes []byte) error {
-	pr := v1beta1.PipelineRun{}
+	pr := v1.PipelineRun{}
 	if err := json.Unmarshal(bytes, &pr); err != nil {
 		return fmt.Errorf("Error while unmarshal PipelineRun spec:%s\n", err.Error())
 	}

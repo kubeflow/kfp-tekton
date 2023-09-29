@@ -27,10 +27,12 @@ import (
 	exithandlerClient "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client/clientset/versioned"
 	exithandlerListers "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/client/listers/exithandler/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
+	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
-	listeners "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
+	listeners "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1"
+	listenersv1beta1 "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -50,7 +52,7 @@ type Reconciler struct {
 	kubeClientSet        kubernetes.Interface
 	pipelineClientSet    clientset.Interface
 	exitHandlerClientSet exithandlerClient.Interface
-	runLister            listeners.CustomRunLister
+	runLister            listenersv1beta1.CustomRunLister
 	exitHandlerLister    exithandlerListers.ExitHandlerLister
 	pipelineRunLister    listeners.PipelineRunLister
 	clock                clock.RealClock
@@ -120,7 +122,7 @@ func (ehs *exitHandlerFS) next() error {
 			return err
 		}
 
-		if _, err := ehs.reconciler.pipelineClientSet.TektonV1beta1().PipelineRuns(ehs.run.Namespace).Create(ehs.ctx, pr, metav1.CreateOptions{}); err != nil {
+		if _, err := ehs.reconciler.pipelineClientSet.TektonV1().PipelineRuns(ehs.run.Namespace).Create(ehs.ctx, pr, metav1.CreateOptions{}); err != nil {
 			ehs.run.Status.MarkCustomRunFailed(exithandlerv1alpha1.ExitHandlerRunReasonFailed.String(), "Failed to create a PipelineRun")
 			return err
 		}
@@ -168,7 +170,7 @@ func (ehs *exitHandlerFS) next() error {
 	return nil
 }
 
-func (ehs *exitHandlerFS) constructPipelineRun() (*tektonv1beta1.PipelineRun, error) {
+func (ehs *exitHandlerFS) constructPipelineRun() (*tektonv1.PipelineRun, error) {
 	ehSpec, err := ehs.reconciler.getExitHandlerSpec(ehs.ctx, ehs.run)
 	if err != nil {
 		return nil, err
@@ -179,7 +181,7 @@ func (ehs *exitHandlerFS) constructPipelineRun() (*tektonv1beta1.PipelineRun, er
 		return nil, err
 	}
 
-	pr := &tektonv1beta1.PipelineRun{
+	pr := &tektonv1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("eh-%s", pruuid),
 			Namespace: ehs.run.Namespace,
@@ -188,13 +190,15 @@ func (ehs *exitHandlerFS) constructPipelineRun() (*tektonv1beta1.PipelineRun, er
 			Labels:      dupStringMaps(ehs.run.Labels, labelsToDrop),
 			Annotations: dupStringMaps(ehs.run.Annotations, annotationToDrop),
 		},
-		Spec: tektonv1beta1.PipelineRunSpec{
-			Params:             ehs.run.Spec.Params,
-			Timeout:            ehs.run.Spec.Timeout,
-			ServiceAccountName: ehs.run.Spec.ServiceAccountName,
-			PodTemplate:        ehSpec.PodTemplate,
-			Workspaces:         ehs.run.Spec.Workspaces,
-			PipelineSpec:       ehSpec.PipelineSpec,
+		Spec: tektonv1.PipelineRunSpec{
+			Params:   v1ParamsConversion(context.Background(), ehs.run.Spec.Params),
+			Timeouts: nil,
+			TaskRunTemplate: tektonv1.PipelineTaskRunTemplate{
+				ServiceAccountName: ehs.run.Spec.ServiceAccountName,
+				PodTemplate:        ehSpec.PodTemplate,
+			},
+			Workspaces:   v1WorkspacesConversion(context.Background(), ehs.run.Spec.Workspaces),
+			PipelineSpec: ehSpec.PipelineSpec,
 		}}
 	return pr, nil
 }
@@ -259,7 +263,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, run *tektonv1beta1.Custom
 
 func (r *Reconciler) deletePipelineRun(ctx context.Context, namespace, prName string) error {
 	// TODO: for safty, may need to break the chain and check return value.
-	return r.pipelineClientSet.TektonV1beta1().PipelineRuns(namespace).Delete(ctx, prName, metav1.DeleteOptions{})
+	return r.pipelineClientSet.TektonV1().PipelineRuns(namespace).Delete(ctx, prName, metav1.DeleteOptions{})
 }
 
 // double check run.Spec.Spec and run.Spec.Ref
@@ -311,3 +315,49 @@ func (r *Reconciler) getExitHandlerSpec(ctx context.Context, run *tektonv1beta1.
 // 	}
 // 	return string(raw)
 // }
+
+func paramConvertTo(ctx context.Context, p *tektonv1beta1.Param, sink *tektonv1.Param) {
+	sink.Name = p.Name
+	newValue := tektonv1.ParamValue{}
+	if p.Value.Type != "" {
+		newValue.Type = tektonv1.ParamType(p.Value.Type)
+	} else {
+		newValue.Type = tektonv1.ParamType(tektonv1beta1.ParamTypeString)
+	}
+	newValue.StringVal = p.Value.StringVal
+	newValue.ArrayVal = p.Value.ArrayVal
+	newValue.ObjectVal = p.Value.ObjectVal
+	sink.Value = newValue
+}
+
+func v1ParamsConversion(ctx context.Context, v1beta1Params tektonv1beta1.Params) []tektonv1.Param {
+	v1Params := []tektonv1.Param{}
+	for _, param := range v1beta1Params {
+		v1Param := tektonv1.Param{}
+		paramConvertTo(ctx, &param, &v1Param)
+		v1Params = append(v1Params, v1Param)
+	}
+	return v1Params
+}
+
+func workspaceConvertTo(ctx context.Context, w *tektonv1beta1.WorkspaceBinding, sink *tektonv1.WorkspaceBinding) {
+	sink.Name = w.Name
+	sink.SubPath = w.SubPath
+	sink.VolumeClaimTemplate = w.VolumeClaimTemplate
+	sink.PersistentVolumeClaim = w.PersistentVolumeClaim
+	sink.EmptyDir = w.EmptyDir
+	sink.ConfigMap = w.ConfigMap
+	sink.Secret = w.Secret
+	sink.Projected = w.Projected
+	sink.CSI = w.CSI
+}
+
+func v1WorkspacesConversion(ctx context.Context, v1beta1Workspaces []tektonv1beta1.WorkspaceBinding) []tektonv1.WorkspaceBinding {
+	v1Workspaces := []tektonv1.WorkspaceBinding{}
+	for _, workspace := range v1beta1Workspaces {
+		v1Workspace := tektonv1.WorkspaceBinding{}
+		workspaceConvertTo(ctx, &workspace, &v1Workspace)
+		v1Workspaces = append(v1Workspaces, v1Workspace)
+	}
+	return v1Workspaces
+}

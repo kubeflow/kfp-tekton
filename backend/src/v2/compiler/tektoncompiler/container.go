@@ -23,7 +23,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
 	"github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/apis/kfptask"
 	ktv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/apis/kfptask/v1alpha1"
-	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"google.golang.org/protobuf/types/known/structpb"
 	k8score "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -275,7 +275,7 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 
 	// adding WhenExpress for condition only if the task belongs to a DAG had a condition TriggerPolicy
 	if c.ConditionScope() {
-		driverTask.WhenExpressions = pipelineapi.WhenExpressions{
+		driverTask.When = pipelineapi.WhenExpressions{
 			pipelineapi.WhenExpression{
 				Input:    inputs.getParentDagCondition(c.ExitHandlerScope()),
 				Operator: selection.NotIn,
@@ -304,7 +304,7 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 	executorTask := &pipelineapi.PipelineTask{
 		Name:     name,
 		TaskSpec: t,
-		WhenExpressions: pipelineapi.WhenExpressions{
+		When: pipelineapi.WhenExpressions{
 			{
 				Input:    containerDriverOutputs.cached,
 				Operator: "in",
