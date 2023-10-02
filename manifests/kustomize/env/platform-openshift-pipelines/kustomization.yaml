@@ -2,10 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- ../../base/installs/generic
-- ../../base/metadata/base
-- ../../third-party/minio/base
-- ../../third-party/mysql/base
+- ../plain
 - ../../third-party/openshift-pipelines-custom-task
 - ../../third-party/openshift/standalone
 
