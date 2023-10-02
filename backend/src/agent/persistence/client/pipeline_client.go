@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/kubeflow/pipelines/backend/src/apiserver/common"
@@ -47,11 +48,13 @@ type PipelineClient struct {
 	timeout             time.Duration
 	reportServiceClient apiv2.ReportServiceClient
 	runServiceClient    api.RunServiceClient
+	tokenRefresher      TokenRefresherInterface
 }
 
 func NewPipelineClient(
 	initializeTimeout time.Duration,
 	timeout time.Duration,
+	tokenRefresher TokenRefresherInterface,
 	basePath string,
 	mlPipelineServiceName string,
 	mlPipelineServiceHttpPort string,
@@ -73,12 +76,17 @@ func NewPipelineClient(
 		initializeTimeout:   initializeTimeout,
 		timeout:             timeout,
 		reportServiceClient: apiv2.NewReportServiceClient(connection),
+		tokenRefresher:      tokenRefresher,
 		runServiceClient:    api.NewRunServiceClient(connection),
 	}, nil
 }
 
 func (p *PipelineClient) ReportWorkflow(workflow util.ExecutionSpec) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	pctx := context.Background()
+	pctx = metadata.AppendToOutgoingContext(pctx, "Authorization",
+		"Bearer "+p.tokenRefresher.GetToken())
+
+	ctx, cancel := context.WithTimeout(pctx, time.Minute)
 	defer cancel()
 
 	_, err := p.reportServiceClient.ReportWorkflow(ctx, &apiv2.ReportWorkflowRequest{
@@ -92,6 +100,15 @@ func (p *PipelineClient) ReportWorkflow(workflow util.ExecutionSpec) error {
 			// * there is something wrong with the workflow
 			// * the workflow has been deleted by someone else
 			return util.NewCustomError(err, util.CUSTOM_CODE_PERMANENT,
+				"Error while reporting workflow resource (code: %v, message: %v): %v, %+v",
+				statusCode.Code(),
+				statusCode.Message(),
+				err.Error(),
+				workflow.ToStringForStore())
+		} else if statusCode.Code() == codes.Unauthenticated && strings.Contains(err.Error(), "service account token has expired") {
+			// If unauthenticated because SA token is expired, re-read/refresh the token and try again
+			p.tokenRefresher.RefreshToken()
+			return util.NewCustomError(err, util.CUSTOM_CODE_TRANSIENT,
 				"Error while reporting workflow resource (code: %v, message: %v): %v, %+v",
 				statusCode.Code(),
 				statusCode.Message(),
@@ -111,7 +128,11 @@ func (p *PipelineClient) ReportWorkflow(workflow util.ExecutionSpec) error {
 }
 
 func (p *PipelineClient) ReportScheduledWorkflow(swf *util.ScheduledWorkflow) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	pctx := context.Background()
+	pctx = metadata.AppendToOutgoingContext(pctx, "Authorization",
+		"Bearer "+p.tokenRefresher.GetToken())
+
+	ctx, cancel := context.WithTimeout(pctx, time.Minute)
 	defer cancel()
 
 	_, err := p.reportServiceClient.ReportScheduledWorkflow(ctx,
@@ -124,6 +145,15 @@ func (p *PipelineClient) ReportScheduledWorkflow(swf *util.ScheduledWorkflow) er
 		if statusCode.Code() == codes.InvalidArgument {
 			// Do not retry if there is something wrong with the workflow
 			return util.NewCustomError(err, util.CUSTOM_CODE_PERMANENT,
+				"Error while reporting workflow resource (code: %v, message: %v): %v, %+v",
+				statusCode.Code(),
+				statusCode.Message(),
+				err.Error(),
+				swf.ScheduledWorkflow)
+		} else if statusCode.Code() == codes.Unauthenticated && strings.Contains(err.Error(), "service account token has expired") {
+			// If unauthenticated because SA token is expired, re-read/refresh the token and try again
+			p.tokenRefresher.RefreshToken()
+			return util.NewCustomError(err, util.CUSTOM_CODE_TRANSIENT,
 				"Error while reporting workflow resource (code: %v, message: %v): %v, %+v",
 				statusCode.Code(),
 				statusCode.Message(),
