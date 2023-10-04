@@ -113,7 +113,7 @@ func Compile(jobArg *pipelinespec.PipelineJob, kubernetesSpecArg *pipelinespec.S
 	c := &pipelinerunCompiler{
 		pr: pr,
 		// TODO(chensun): release process and update the images.
-		launcherImage: "gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4",
+		launcherImage: GetLauncherImage(),
 		job:           job,
 		spec:          spec,
 		dagStack:      make([]string, 0, 10),
