@@ -8,7 +8,8 @@
   * [Other Cloud Providers or On-Prem Kubernetes Deployment](#other-cloud-providers-or-on-prem-kubernetes-deployment)
   * [KIND deployment](#kind-deployment)
   * [Compatibility Map](#compatibility-map)
-- [Standalone Kubeflow Pipelines with Tekton Backend Deployment](#standalone-kubeflow-pipelines-with-tekton-backend-deployment)
+- [Standalone Kubeflow Pipelines V1 with Tekton Backend Deployment](#standalone-kubeflow-pipelines-v1-with-tekton-backend-deployment)
+- [Standalone Kubeflow Pipelines V2 with Tekton Backend Deployment](#standalone-kubeflow-pipelines-v2-with-tekton-backend-deployment)
 - [Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment](#standalone-kubeflow-pipelines-with-openshift-pipelines-backend-deployment)
 - [Kubeflow installation including Kubeflow Pipelines with Tekton Backend](#kubeflow-installation-including-kubeflow-pipelines-with-tekton-backend)
 - [Upgrade to Multi-User KFP-Tekton on Kubeflow](#upgrade-to-multi-user-kfp-tekton-on-kubeflow)
@@ -50,10 +51,11 @@ Each new KFP-Tekton version is based on the long-term support of the Tekton Pipe
 | 1.6.x    | 0.44.x  | 1.10    | V1beta1 | 1.16.0  |
 | 1.7.x    | 0.47.x  | 1.11    | V1beta1 | 1.16.0  |
 | 1.8.x    | 0.50.x  | 1.12    | V1      | 2.11.3  |
+| 2.0.x    | 0.47.x  | 1.11    | V1      | 1.16.0  |
 
-## Standalone Kubeflow Pipelines with Tekton Backend Deployment
+## Standalone Kubeflow Pipelines V1 with Tekton Backend Deployment
 
-To install the standalone Kubeflow Pipelines with Tekton, run the following steps:
+To install the standalone Kubeflow Pipelines V1 with Tekton , run the following steps:
 
 1. Install [Tekton v0.50.1](https://github.com/tektoncd/pipeline/blob/v0.50.1/docs/install.md#installing-tekton-pipelines-on-kubernetes) if you don't have Tekton pipelines on the cluster. Please be aware that Tekton custom task, loop, and recursion will not work if Tekton pipelines version is not v0.50.0+.
 
@@ -102,6 +104,37 @@ To install the standalone Kubeflow Pipelines with Tekton, run the following step
    oc adm policy add-scc-to-user anyuid -z tekton-pipelines-controller
    oc adm policy add-scc-to-user anyuid -z tekton-pipelines-webhook
    ```
+
+## Standalone Kubeflow Pipelines V2 with Tekton Backend Deployment
+
+To install the standalone Kubeflow Pipelines V2 with Tekton, run the following steps:
+
+1. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v2.0.1` along with Tekton `v0.47.4`
+   ```shell
+   kubectl apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/platform-agnostic-tekton\?ref\=v2.0.1
+   ```
+
+2. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
+    ```shell
+    kubectl patch svc ml-pipeline-ui -n kubeflow -p '{"spec": {"type": "LoadBalancer"}}'
+    ```
+
+    To get the Kubeflow Pipelines UI public endpoint using command line, run:
+    ```shell
+    kubectl get svc ml-pipeline-ui -n kubeflow -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+    ```
+
+3. (GPU worker nodes only) If your Kubernetes cluster has a mixture of CPU and GPU worker nodes, it's recommended to disable the Tekton default affinity assistant so that Tekton won't schedule too many CPU workloads on the GPU nodes.
+    ```shell
+    kubectl patch cm feature-flags -n tekton-pipelines \
+      -p '{"data":{"disable-affinity-assistant": "true"}}'
+    ```
+
+Now, please use the [KFP V2 Python SDK](https://pypi.org/project/kfp/) to compile KFP-Tekton V2 pipelines because we are sharing the same pipeline spec starting from KFP V2.0.0. 
+
+```shell
+pip install "kfp>=2.0"
+```
 
 ## Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment
 
