@@ -133,7 +133,7 @@ To install the standalone Kubeflow Pipelines V2 with Tekton, run the following s
 Now, please use the [KFP V2 Python SDK](https://pypi.org/project/kfp/) to compile KFP-Tekton V2 pipelines because we are sharing the same pipeline spec starting from KFP V2.0.0. 
 
 ```shell
-pip install "kfp>=2.0"
+pip install "kfp>=2.0" "kfp-kubernetes>=1.0.0"
 ```
 
 ## Standalone Kubeflow Pipelines with Openshift Pipelines Backend Deployment
