@@ -226,7 +226,7 @@ build-cacheserver-image: ## Build cacheserver docker image
 
 .PHONY: build-tekton-exithandler-controller-image
 build-tekton-exithandler-controller-image: ## Build tekton-exithandler-controller docker image
-	@cd tekton-catalog/tekton-exithandler/ && podman build -t ${DOCKER_REGISTRY}/tekton-exithandler-controller -f Dockerfile.tekton-exithandler.controller .
+	@cd tekton-catalog/tekton-exithandler/ && docker build -t ${DOCKER_REGISTRY}/tekton-exithandler-controller -f Dockerfile.tekton-exithandler.controller .
 
 .PHONY: build-tekton-exithandler-webhook-image
 build-tekton-exithandler-webhook-image: ## Build tekton-exithandler-webhook docker image
