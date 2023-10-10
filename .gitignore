@@ -69,7 +69,7 @@ frontend/test/ui/visual-regression/screenshots/screen
 
 # go vendor
 vendor
-tekton-catalog/**/go.sum
+tekton-catalog/pipeline-loops/go.sum
 
 # Go module cache
 backend/pkg/mod/cache
