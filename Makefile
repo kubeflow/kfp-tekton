@@ -201,6 +201,8 @@ build-backend-images: \
 build-v2-custom-controller-images: \
      build-tekton-exithandler-controller-image \
 	 build-tekton-exithandler-webhook-image \
+     build-tekton-kfptask-controller-image \
+	 build-tekton-kfptask-webhook-image \
 	 ## Build V2 Tekton custom task controller images 
      @echo "$@: OK"
 
@@ -232,6 +234,14 @@ build-tekton-exithandler-controller-image: ## Build tekton-exithandler-controlle
 build-tekton-exithandler-webhook-image: ## Build tekton-exithandler-webhook docker image
 	@cd tekton-catalog/tekton-exithandler/ && docker build -t ${DOCKER_REGISTRY}/tekton-exithandler-webhook -f Dockerfile.tekton-exithandler.webhook .
 
+.PHONY: build-tekton-kfptask-controller-image
+build-tekton-kfptask-controller-image: ## Build tekton-kfptask-controller docker image
+	@cd tekton-catalog/tekton-kfptask/ && docker build -t ${DOCKER_REGISTRY}/tekton-kfptask-controller -f Dockerfile.tekton-kfptask.controller .
+
+.PHONY: build-tekton-kfptask-webhook-image
+build-tekton-kfptask-webhook-image: ## Build tekton-kfptask-webhook docker image
+	@cd tekton-catalog/tekton-kfptask/ && docker build -t ${DOCKER_REGISTRY}/tekton-kfptask-webhook -f Dockerfile.tekton-kfptask.webhook .
+
 .PHONY: run-go-unittests
 run-go-unittests: \
 	run-apiserver-unittests \
@@ -240,6 +250,7 @@ run-go-unittests: \
 	run-persistenceagent-unittests \
 	run-cacheserver-unittests \
 	run-tekton-exithandler-unittests \
+	run-tekton-kfptask-unittests \
 	## Verify go backend unit tests
 	@echo "$@: OK"
 
@@ -260,3 +271,6 @@ run-cacheserver-unittests: # cache golang unit tests
 
 run-tekton-exithandler-unittests: # tekton-exithandler golang unit tests
 	@cd tekton-catalog/tekton-exithandler/ && go test -v -cover ./...
+
+run-tekton-kfptask-unittests: # tekton-kfptask golang unit tests
+	@cd tekton-catalog/tekton-kfptask/ && go test -v -cover ./...
