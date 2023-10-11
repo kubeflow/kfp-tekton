@@ -115,6 +115,28 @@ jobs:
         uses: actions/checkout@v2
       - name: "run go pipelineLoop unit tests"
         run: cd tekton-catalog/pipeline-loops && make test-all
+  run-v2-custom-controller-image-builds:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - id: changes
+        uses: jitterbit/get-changed-files@v1
+        with:
+          format: 'json'
+      - name: backend changes
+        id: backend-changes
+        run: |
+          readarray -t backend_files <<<"$(jq -r '.[]|select(startswith("tekton-catalog"))|select(endswith("README.md")|not)' <<<'${{ steps.changes.outputs.all }}')"
+          echo "::set-output name=all::"
+          if [[ ${#backend_files[@]} -gt 0 ]]; then
+            if [[ -n "${backend_files[0]}" ]]; then
+              echo "::set-output name=all::yes"
+            fi
+          fi
+      - name: build images
+        if: ${{ steps.backend-changes.outputs.all }}
+        run: make build-v2-custom-controller-images
   backend-integration:
     runs-on: ubuntu-latest
     steps:

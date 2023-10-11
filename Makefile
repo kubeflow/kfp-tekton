@@ -197,6 +197,13 @@ build-backend-images: \
 	## Build backend docker images
 	@echo "$@: OK"
 
+.PHONY: build-v2-custom-controller-images
+build-v2-custom-controller-images: \
+     build-tekton-exithandler-controller-image \
+	 build-tekton-exithandler-webhook-image \
+	 ## Build V2 Tekton custom task controller images 
+     @echo "$@: OK"
+
 .PHONY: build-api-server-image
 build-api-server-image: ## Build api-server docker image
 	docker build -t ${DOCKER_REGISTRY}/api-server -f backend/Dockerfile .
@@ -217,6 +224,14 @@ build-scheduledworkflow-image: ## Build scheduledworkflow docker image
 build-cacheserver-image: ## Build cacheserver docker image
 	docker build -t ${DOCKER_REGISTRY}/cache-server -f backend/Dockerfile.cacheserver .
 
+.PHONY: build-tekton-exithandler-controller-image
+build-tekton-exithandler-controller-image: ## Build tekton-exithandler-controller docker image
+	@cd tekton-catalog/tekton-exithandler/ && docker build -t ${DOCKER_REGISTRY}/tekton-exithandler-controller -f Dockerfile.tekton-exithandler.controller .
+
+.PHONY: build-tekton-exithandler-webhook-image
+build-tekton-exithandler-webhook-image: ## Build tekton-exithandler-webhook docker image
+	@cd tekton-catalog/tekton-exithandler/ && docker build -t ${DOCKER_REGISTRY}/tekton-exithandler-webhook -f Dockerfile.tekton-exithandler.webhook .
+
 .PHONY: run-go-unittests
 run-go-unittests: \
 	run-apiserver-unittests \
@@ -224,6 +239,7 @@ run-go-unittests: \
 	run-crd-unittests \
 	run-persistenceagent-unittests \
 	run-cacheserver-unittests \
+	run-tekton-exithandler-unittests \
 	## Verify go backend unit tests
 	@echo "$@: OK"
 
@@ -241,3 +257,6 @@ run-persistenceagent-unittests: # persistence agent golang unit tests
 
 run-cacheserver-unittests: # cache golang unit tests
 	go test -v -cover ./backend/src/cache/...
+
+run-tekton-exithandler-unittests: # tekton-exithandler golang unit tests
+	@cd tekton-catalog/tekton-exithandler/ && go test -v -cover ./...
