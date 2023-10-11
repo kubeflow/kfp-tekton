@@ -21,7 +21,7 @@ COPY . .
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh gcc musl-dev patch
 
-RUN CGO_ENABLED=0 GO111MODULE=on go build -o /bin/webhook ./webhook/*.go
+RUN CGO_ENABLED=0 GO111MODULE=on go build -o /bin/webhook ./cmd/webhook/*.go
 
 FROM alpine:3.17
 WORKDIR /bin
