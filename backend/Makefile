@@ -5,7 +5,7 @@ CSV_PATH=backend/third_party_licenses
 # Whenever build command for any of the binaries change, we should update them both here and in backend/Dockerfiles.
 
 .PHONY: all
-all: license_apiserver license_persistence_agent license_cache_server license_swf license_viewer tekton_licenses
+all: license_apiserver license_persistence_agent license_cache_server license_swf license_viewer tekton_licenses license_driver license_launcher
 
 .PHONY: tekton_licenses
 tekton_licenses: license_tekton_driver license_tekton_ehc license_tekton_ehw license_tekton_ktc license_tekton_ktw
@@ -34,6 +34,10 @@ $(BUILD)/license_tekton_ktc:
 	GO111MODULE=on go build -o $(BUILD)/license_tekton_ktc github.com/kubeflow/pipelines/backend/src/v2/cmd/tekton-kfptask/controller
 $(BUILD)/license_tekton_ktw:
 	GO111MODULE=on go build -o $(BUILD)/license_tekton_ktw github.com/kubeflow/pipelines/backend/src/v2/cmd/tekton-kfptask/webhook
+$(BUILD)/driver:
+	GO111MODULE=on go build -o $(BUILD)/driver github.com/kubeflow/pipelines/backend/src/v2/cmd/driver
+$(BUILD)/launcher:
+	GO111MODULE=on go build -o $(BUILD)/launcher github.com/kubeflow/pipelines/backend/src/v2/cmd/launcher-v2
 
 # Update licenses info after dependencies changed.
 # See README.md#updating-licenses-info section for more details.
@@ -67,6 +71,12 @@ license_tekton_ktc: $(BUILD)/license_tekton_ktc
 .PHONY: license_tekton_ktw
 license_tekton_ktw: $(BUILD)/license_tekton_ktw
 	cd $(MOD_ROOT) && go-licenses csv ./backend/src/v2/cmd/tekton-kfptask/webhook > $(CSV_PATH)/tekton-kfptask-webhook.csv
+.PHONY: license_driver
+license_driver: $(BUILD)/driver
+	cd $(MOD_ROOT) && go-licenses csv ./backend/src/v2/cmd/driver > $(CSV_PATH)/driver.csv
+.PHONY: license_launcher
+license_launcher: $(BUILD)/launcher
+	cd $(MOD_ROOT) && go-licenses csv ./backend/src/v2/cmd/launcher-v2 > $(CSV_PATH)/launcher.csv
 
 .PHONY: image_all
 image_all: image_apiserver image_persistence_agent image_cache image_swf image_viewer image_visualization

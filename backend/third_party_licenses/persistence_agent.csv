@@ -18,7 +18,6 @@ github.com/davecgh/go-spew/spew,https://github.com/davecgh/go-spew/blob/v1.1.1/L
 github.com/doublerebel/bellows,https://github.com/doublerebel/bellows/blob/f177d92a03d3/LICENSE,MIT
 github.com/emicklei/go-restful/v3,https://github.com/emicklei/go-restful/blob/v3.10.2/LICENSE,MIT
 github.com/evanphx/json-patch/v5,https://github.com/evanphx/json-patch/blob/v5.6.0/v5/LICENSE,BSD-3-Clause
-github.com/fsnotify/fsnotify,https://github.com/fsnotify/fsnotify/blob/v1.6.0/LICENSE,BSD-3-Clause
 github.com/ghodss/yaml,https://github.com/ghodss/yaml/blob/25d852aebe32/LICENSE,MIT
 github.com/go-kit/log,https://github.com/go-kit/log/blob/v0.2.1/LICENSE,MIT
 github.com/go-logfmt/logfmt,https://github.com/go-logfmt/logfmt/blob/v0.5.1/LICENSE,MIT
@@ -45,7 +44,6 @@ github.com/grpc-ecosystem/grpc-gateway/v2,https://github.com/grpc-ecosystem/grpc
 github.com/hashicorp/errwrap,https://github.com/hashicorp/errwrap/blob/v1.1.0/LICENSE,MPL-2.0
 github.com/hashicorp/go-multierror,https://github.com/hashicorp/go-multierror/blob/v1.1.1/LICENSE,MPL-2.0
 github.com/hashicorp/go-uuid,https://github.com/hashicorp/go-uuid/blob/v1.0.3/LICENSE,MPL-2.0
-github.com/hashicorp/hcl,https://github.com/hashicorp/hcl/blob/v1.0.0/LICENSE,MPL-2.0
 github.com/huandu/xstrings,https://github.com/huandu/xstrings/blob/v1.3.2/LICENSE,MIT
 github.com/imdario/mergo,https://github.com/imdario/mergo/blob/v0.3.13/LICENSE,BSD-3-Clause
 github.com/jcmturner/gofork,https://github.com/jcmturner/gofork/blob/v1.0.0/LICENSE,BSD-3-Clause
@@ -55,7 +53,6 @@ github.com/klauspost/compress/flate,https://github.com/klauspost/compress/blob/v
 github.com/klauspost/pgzip,https://github.com/klauspost/pgzip/blob/v1.2.5/LICENSE,MIT
 github.com/kubeflow/pipelines/backend,https://github.com/kubeflow/pipelines/blob/HEAD/LICENSE,Apache-2.0
 github.com/lestrrat-go/strftime,https://github.com/lestrrat-go/strftime/blob/v1.0.4/LICENSE,MIT
-github.com/magiconair/properties,https://github.com/magiconair/properties/blob/v1.8.5/LICENSE.md,BSD-2-Clause
 github.com/mailru/easyjson,https://github.com/mailru/easyjson/blob/v0.7.7/LICENSE,MIT
 github.com/matttproud/golang_protobuf_extensions/pbutil,https://github.com/matttproud/golang_protobuf_extensions/blob/v1.0.4/LICENSE,Apache-2.0
 github.com/mitchellh/copystructure,https://github.com/mitchellh/copystructure/blob/v1.2.0/LICENSE,MIT
@@ -68,9 +65,8 @@ github.com/munnerz/goautoneg,https://github.com/munnerz/goautoneg/blob/a7dc8b61c
 github.com/oklog/ulid,https://github.com/oklog/ulid/blob/v1.3.1/LICENSE,Apache-2.0
 github.com/oliveagle/jsonpath,https://github.com/oliveagle/jsonpath/blob/2e52cf6e6852/LICENSE,MIT
 github.com/opencontainers/go-digest,https://github.com/opencontainers/go-digest/blob/v1.0.0/LICENSE,Apache-2.0
-github.com/pelletier/go-toml,https://github.com/pelletier/go-toml/blob/v1.9.5/LICENSE,Apache-2.0
 github.com/pkg/errors,https://github.com/pkg/errors/blob/v0.9.1/LICENSE,BSD-2-Clause
-github.com/prometheus/client_golang/prometheus,https://github.com/prometheus/client_golang/blob/v1.15.1/LICENSE,Apache-2.0
+github.com/prometheus/client_golang/prometheus,https://github.com/prometheus/client_golang/blob/v1.14.0/LICENSE,Apache-2.0
 github.com/prometheus/client_model/go,https://github.com/prometheus/client_model/blob/v0.4.0/LICENSE,Apache-2.0
 github.com/prometheus/common,https://github.com/prometheus/common/blob/v0.42.0/LICENSE,Apache-2.0
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg,https://github.com/prometheus/common/blob/v0.42.0/internal/bitbucket.org/ww/goautoneg/README.txt,BSD-3-Clause
@@ -79,12 +75,8 @@ github.com/prometheus/statsd_exporter/pkg/mapper,https://github.com/prometheus/s
 github.com/robfig/cron/v3,https://github.com/robfig/cron/blob/v3.0.1/LICENSE,MIT
 github.com/shopspring/decimal,https://github.com/shopspring/decimal/blob/v1.2.0/LICENSE,MIT
 github.com/sirupsen/logrus,https://github.com/sirupsen/logrus/blob/v1.9.1/LICENSE,MIT
-github.com/spf13/afero,https://github.com/spf13/afero/blob/v1.9.2/LICENSE.txt,Apache-2.0
 github.com/spf13/cast,https://github.com/spf13/cast/blob/v1.4.1/LICENSE,MIT
-github.com/spf13/jwalterweatherman,https://github.com/spf13/jwalterweatherman/blob/v1.1.0/LICENSE,MIT
 github.com/spf13/pflag,https://github.com/spf13/pflag/blob/v1.0.5/LICENSE,BSD-3-Clause
-github.com/spf13/viper,https://github.com/spf13/viper/blob/v1.10.1/LICENSE,MIT
-github.com/subosito/gotenv,https://github.com/subosito/gotenv/blob/v1.2.0/LICENSE,MIT
 github.com/tektoncd/pipeline/pkg,https://github.com/tektoncd/pipeline/blob/v0.50.1/LICENSE,Apache-2.0
 github.com/valyala/bytebufferpool,https://github.com/valyala/bytebufferpool/blob/v1.0.0/LICENSE,MIT
 github.com/valyala/fasttemplate,https://github.com/valyala/fasttemplate/blob/v1.2.1/LICENSE,MIT
@@ -110,7 +102,6 @@ google.golang.org/genproto/protobuf/field_mask,https://github.com/googleapis/go-
 google.golang.org/grpc,https://github.com/grpc/grpc-go/blob/v1.56.2/LICENSE,Apache-2.0
 google.golang.org/protobuf,https://github.com/protocolbuffers/protobuf-go/blob/v1.30.0/LICENSE,BSD-3-Clause
 gopkg.in/inf.v0,https://github.com/go-inf/inf/blob/v0.9.1/LICENSE,BSD-3-Clause
-gopkg.in/ini.v1,https://github.com/go-ini/ini/blob/v1.66.3/LICENSE,Apache-2.0
 gopkg.in/jcmturner/aescts.v1,https://github.com/jcmturner/aescts/blob/v1.0.1/LICENSE,Apache-2.0
 gopkg.in/jcmturner/dnsutils.v1,https://github.com/jcmturner/dnsutils/blob/v1.0.1/LICENSE,Apache-2.0
 gopkg.in/jcmturner/gokrb5.v5,https://github.com/jcmturner/gokrb5/blob/v5.3.0/LICENSE,Apache-2.0

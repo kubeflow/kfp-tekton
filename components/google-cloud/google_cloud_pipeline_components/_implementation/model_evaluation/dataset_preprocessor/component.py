@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
+from google_cloud_pipeline_components._implementation.model_evaluation import version
 from google_cloud_pipeline_components.types.artifact_types import VertexDataset
-from google_cloud_pipeline_components.v1.model_evaluation.version import EVAL_IMAGE_TAG
 from kfp.dsl import container_component
 from kfp.dsl import ContainerSpec
 from kfp.dsl import IfPresentPlaceholder
@@ -37,8 +39,8 @@ def dataset_preprocessor_error_analysis(
     test_dataset_annotation_set_name: str = '',
     training_dataset: Input[VertexDataset] = None,
     training_dataset_annotation_set_name: str = '',
-    test_dataset_storage_source_uris: list = [],
-    training_dataset_storage_source_uris: list = [],
+    test_dataset_storage_source_uris: List[str] = [],
+    training_dataset_storage_source_uris: List[str] = [],
 ):
   # fmt: off
   """Preprocesses datasets for Vision Error Analysis pipelines.
@@ -107,7 +109,7 @@ def dataset_preprocessor_error_analysis(
   """
   # fmt: on
   return ContainerSpec(
-      image=EVAL_IMAGE_TAG,
+      image=version.EVAL_IMAGE_TAG,
       command=['python3', '/main.py'],
       args=[
           '--task',
