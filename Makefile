@@ -199,12 +199,12 @@ build-backend-images: \
 
 .PHONY: build-v2-custom-controller-images
 build-v2-custom-controller-images: \
-     build-tekton-exithandler-controller-image \
-	 build-tekton-exithandler-webhook-image \
-     build-tekton-kfptask-controller-image \
-	 build-tekton-kfptask-webhook-image \
-	 ## Build V2 Tekton custom task controller images 
-     @echo "$@: OK"
+	build-tekton-exithandler-controller-image \
+	build-tekton-exithandler-webhook-image \
+	build-tekton-kfptask-controller-image \
+	build-tekton-kfptask-webhook-image \
+	## Build V2 Tekton custom task controller images 
+	@echo "$@: OK"
 
 .PHONY: build-api-server-image
 build-api-server-image: ## Build api-server docker image
