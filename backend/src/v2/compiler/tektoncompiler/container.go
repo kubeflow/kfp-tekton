@@ -38,6 +38,8 @@ const (
 	MLPipelineServiceHost   = "ml-pipeline.kubeflow.svc.cluster.local"
 	MLPipelineServicePort   = "8887"
 	LauncherImage           = "gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4"
+	MinioServiceHost        = "minio-service.kubeflow.svc.cluster.local"
+	MinioServicePort        = "9000"
 )
 
 var (
@@ -47,6 +49,8 @@ var (
 	mlPipelineServiceHost   = MLPipelineServiceHost
 	mlPipelineServicePort   = MLPipelineServicePort
 	launcherImage           = LauncherImage
+	minioServiceHost        = MinioServiceHost
+	minioServicePort        = MinioServicePort
 )
 
 func initEnvVars() {
@@ -70,10 +74,17 @@ func initEnvVars() {
 	if metadataGRPCServicePort == "" {
 		metadataGRPCServicePort = MetadataGPRCServicePort
 	}
-
 	launcherImage = os.Getenv("V2_LAUNCHER_IMAGE")
 	if launcherImage == "" {
 		launcherImage = LauncherImage
+	}
+	minioServiceHost = os.Getenv("MINIO_SERVICE_SERVICE_HOST")
+	if minioServiceHost == "" {
+		minioServiceHost = MinioServiceHost
+	}
+	minioServicePort = os.Getenv("MINIO_SERVICE_SERVICE_PORT")
+	if minioServicePort == "" {
+		minioServicePort = MinioServicePort
 	}
 	envVarInit = true
 }
@@ -111,6 +122,20 @@ func GetLauncherImage() string {
 		initEnvVars()
 	}
 	return launcherImage
+}
+
+func GetMinioHost() string {
+	if !envVarInit {
+		initEnvVars()
+	}
+	return minioServiceHost
+}
+
+func GetMinioPort() string {
+	if !envVarInit {
+		initEnvVars()
+	}
+	return minioServicePort
 }
 
 // add KubernetesSpec for the container of the component
@@ -438,6 +463,12 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 					}, {
 						Name:  "ML_PIPELINE_SERVICE_PORT_GRPC",
 						Value: GetMLPipelinePort(),
+					}, {
+						Name:  "MINIO_SERVICE_SERVICE_HOST",
+						Value: GetMinioHost(),
+					}, {
+						Name:  "MINIO_SERVICE_SERVICE_PORT",
+						Value: GetMinioPort(),
 					}},
 				},
 			},

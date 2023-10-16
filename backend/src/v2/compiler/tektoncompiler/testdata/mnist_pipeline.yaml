@@ -163,6 +163,10 @@ spec:
                 value: ml-pipeline.kubeflow.svc.cluster.local
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
+              - name: MINIO_SERVICE_SERVICE_HOST
+                value: "minio-service.kubeflow.svc.cluster.local"
+              - name: MINIO_SERVICE_SERVICE_PORT
+                value: "9000"
               envFrom:
               - configMapRef:
                   name: metadata-grpc-configmap
@@ -343,6 +347,10 @@ spec:
                 value: ml-pipeline.kubeflow.svc.cluster.local
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
+              - name: MINIO_SERVICE_SERVICE_HOST
+                value: "minio-service.kubeflow.svc.cluster.local"
+              - name: MINIO_SERVICE_SERVICE_PORT
+                value: "9000"
               envFrom:
               - configMapRef:
                   name: metadata-grpc-configmap
@@ -477,6 +485,10 @@ spec:
                 value: ml-pipeline.kubeflow.svc.cluster.local
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
+              - name: MINIO_SERVICE_SERVICE_HOST
+                value: "minio-service.kubeflow.svc.cluster.local"
+              - name: MINIO_SERVICE_SERVICE_PORT
+                value: "9000"
               envFrom:
               - configMapRef:
                   name: metadata-grpc-configmap
@@ -815,6 +827,10 @@ spec:
                 value: ml-pipeline.kubeflow.svc.cluster.local
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
+              - name: MINIO_SERVICE_SERVICE_HOST
+                value: "minio-service.kubeflow.svc.cluster.local"
+              - name: MINIO_SERVICE_SERVICE_PORT
+                value: "9000"
               envFrom:
               - configMapRef:
                   name: metadata-grpc-configmap
@@ -1032,6 +1048,10 @@ spec:
                 value: ml-pipeline.kubeflow.svc.cluster.local
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
+              - name: MINIO_SERVICE_SERVICE_HOST
+                value: "minio-service.kubeflow.svc.cluster.local"
+              - name: MINIO_SERVICE_SERVICE_PORT
+                value: "9000"
               envFrom:
               - configMapRef:
                   name: metadata-grpc-configmap
@@ -1193,6 +1213,10 @@ spec:
                 value: ml-pipeline.kubeflow.svc.cluster.local
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
+              - name: MINIO_SERVICE_SERVICE_HOST
+                value: "minio-service.kubeflow.svc.cluster.local"
+              - name: MINIO_SERVICE_SERVICE_PORT
+                value: "9000"
               envFrom:
               - configMapRef:
                   name: metadata-grpc-configmap
@@ -1379,6 +1403,10 @@ spec:
                 value: ml-pipeline.kubeflow.svc.cluster.local
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
+              - name: MINIO_SERVICE_SERVICE_HOST
+                value: "minio-service.kubeflow.svc.cluster.local"
+              - name: MINIO_SERVICE_SERVICE_PORT
+                value: "9000"
               envFrom:
               - configMapRef:
                   name: metadata-grpc-configmap
@@ -1506,6 +1534,10 @@ spec:
                 value: ml-pipeline.kubeflow.svc.cluster.local
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
+              - name: MINIO_SERVICE_SERVICE_HOST
+                value: "minio-service.kubeflow.svc.cluster.local"
+              - name: MINIO_SERVICE_SERVICE_PORT
+                value: "9000"
               envFrom:
               - configMapRef:
                   name: metadata-grpc-configmap
@@ -1687,6 +1719,10 @@ spec:
                 value: ml-pipeline.kubeflow.svc.cluster.local
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
+              - name: MINIO_SERVICE_SERVICE_HOST
+                value: "minio-service.kubeflow.svc.cluster.local"
+              - name: MINIO_SERVICE_SERVICE_PORT
+                value: "9000"
               envFrom:
               - configMapRef:
                   name: metadata-grpc-configmap
