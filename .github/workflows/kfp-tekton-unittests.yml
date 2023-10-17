@@ -18,9 +18,9 @@ jobs:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -31,12 +31,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: 1.19.x
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Install dependencies
@@ -52,9 +52,9 @@ jobs:
   progress-report:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.8
     - name: Install dependencies
@@ -64,9 +64,9 @@ jobs:
   python-lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.8
     - name: "Lint Python code with flake8"
@@ -75,31 +75,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: "Verify source files contain the license header"
       run: make check_license
   check-mdtoc:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: "Verify Markdown files have current table of contents"
       run: make check_mdtoc
   check-doc-links:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: "Verify Markdown files have valid links"
       run: make check_doc_links
   run-go-unittests:
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
         go-version: 1.19.x
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: "run go unit tests"
       run: make run-go-unittests
     - name: "Verify apiserver, agent, and workflow build"
@@ -108,18 +108,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: 1.19.x
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: "run go pipelineLoop unit tests"
         run: cd tekton-catalog/pipeline-loops && make test-all
   run-v2-custom-controller-image-builds:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - id: changes
         uses: jitterbit/get-changed-files@v1
         with:
@@ -141,7 +141,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - id: changes
         uses: jitterbit/get-changed-files@v1
         with:
@@ -158,7 +158,7 @@ jobs:
           fi
       - name: Create k8s Kind Cluster
         if: ${{ steps.backend-changes.outputs.all }}
-        uses: container-tools/kind-action@v1
+        uses: container-tools/kind-action@v2
         with:
           cluster_name: kfp-tekton
           kubectl_version: v1.26.1
@@ -169,7 +169,7 @@ jobs:
         run: ./scripts/deploy/github/build-images.sh
       - name: Set up Python 3.9
         if: ${{ steps.backend-changes.outputs.all }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.9
       - name: "deploy kfp-tekton"
