@@ -2,13 +2,13 @@ module github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-exithandler
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/tektoncd/pipeline v0.50.1
+	github.com/tektoncd/pipeline v0.50.2
 	go.uber.org/zap v1.24.0
 	k8s.io/api v0.27.1
 	k8s.io/apimachinery v0.27.2
 	k8s.io/client-go v0.27.2
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106
-	knative.dev/pkg v0.0.0-20230418073056-dfad48eaa5d0
+	knative.dev/pkg v0.0.0-20231011201526-df28feae6d34
 )
 
 require (
