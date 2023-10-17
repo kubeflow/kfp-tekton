@@ -87,7 +87,7 @@ spec:
             value: metadata-grpc-service.kubeflow.svc.cluster.local
           - name: METADATA_GRPC_SERVICE_PORT
             value: "8080"
-          image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
+          image: gcr.io/ml-pipeline/kfp-launcher@sha256:6641bf94acaeec03ee7e231241800fce2f0ad92eee25371bd5248ca800a086d7
           name: importer-main
           computeResources: {}
     - name: root-system-dag-driver
