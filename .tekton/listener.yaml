@@ -71,9 +71,15 @@ spec:
     - name: images
       description: a image list for publishing
       default: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend pipelineloop-controller pipelineloop-webhook kubeclient"
+    - name: v2-images
+      description: a v2 image list for publishing
+      default: "tekton-kfptask-controller tekton-kfptask-webhook tekton-exithandler-controller tekton-exithandler-webhook"
     - name: many-edge-duration
       description: duration threshold for many edge pipeline
       value: "7"
+    - name: v2-image-tag
+      description: v2 tekton catalog image tag
+      default: "nightly"
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -150,8 +156,12 @@ spec:
           value: $(params.skip-pipeline-loop)
         - name: images
           value: $(params.images)
+        - name: v2-images
+          value: $(params.v2-images)
         - name: many-edge-duration
           value: $(params.many-edge-duration)
+        - name: v2-image-tag
+          value: $(params.v2-image-tag)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: TriggerBinding
