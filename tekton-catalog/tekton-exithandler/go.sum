@@ -308,8 +308,8 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
-github.com/tektoncd/pipeline v0.50.1 h1:Asdfn1MxUSTlfzmr0PV4BPIEH7K4QLGym33nLgQlPCQ=
-github.com/tektoncd/pipeline v0.50.1/go.mod h1:OjhCfhPQbVvK6GUmIseL2ipjaQ8ILcUerMk4P4sCcHA=
+github.com/tektoncd/pipeline v0.50.2 h1:4uxwjXK71ai9U/ff2DZQ41rR8vObssjAxN8C1exI7cI=
+github.com/tektoncd/pipeline v0.50.2/go.mod h1:MRjZCAtVxzDYKvKjPkbtv6kw8TCujnSlFhl0u8JXOmE=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=
 github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415/go.mod h1:GwrjFmJcFw6At/Gs6z4yjiIwzuJ1/+UwLxMQDVQXShQ=
 github.com/xeipuuv/gojsonschema v1.2.0/go.mod h1:anYRn/JVcOK2ZgGU+IjEV4nwlhoK5sQluxsYJ78Id3Y=
@@ -691,8 +691,8 @@ k8s.io/kube-openapi v0.0.0-20230515203736-54b630e78af5 h1:azYPdzztXxPSa8wb+hksEK
 k8s.io/kube-openapi v0.0.0-20230515203736-54b630e78af5/go.mod h1:kzo02I3kQ4BTtEfVLaPbjvCkX97YqGve33wzlb3fofQ=
 k8s.io/utils v0.0.0-20230505201702-9f6742963106 h1:EObNQ3TW2D+WptiYXlApGNLVy0zm/JIBVY9i+M4wpAU=
 k8s.io/utils v0.0.0-20230505201702-9f6742963106/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
-knative.dev/pkg v0.0.0-20230418073056-dfad48eaa5d0 h1:EFQcoUo8I4bc+U3y6tR1B3ONYZSHWUdAfI7Vh7dae8g=
-knative.dev/pkg v0.0.0-20230418073056-dfad48eaa5d0/go.mod h1:2qWPP9Gjh9Q7ETti+WRHnBnGCSCq+6q7m3p/nmUQviE=
+knative.dev/pkg v0.0.0-20231011201526-df28feae6d34 h1:H+K37bEBZ2STSWMjCgrdilj38KKZGVxBbob22K99Y50=
+knative.dev/pkg v0.0.0-20231011201526-df28feae6d34/go.mod h1:ZRgzFBFmdBsARm6+Pkr9WRG8bXys8rYq64ELfLG6+9w=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=

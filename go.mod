@@ -32,7 +32,7 @@ require (
 	github.com/sirupsen/logrus v1.9.1
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.8.4
-	github.com/tektoncd/pipeline v0.50.1
+	github.com/tektoncd/pipeline v0.50.2
 	github.com/tidwall/pretty v1.1.0 // indirect
 	go.uber.org/zap v1.24.0
 	golang.org/x/net v0.17.0
