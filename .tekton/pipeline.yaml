@@ -70,9 +70,15 @@ spec:
     - name: images
       description: a image list for publishing
       default: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend pipelineloop-controller pipelineloop-webhook kubeclient"
+    - name: v2-images
+      description: a v2 image list for publishing
+      default: "tekton-kfptask-controller tekton-kfptask-webhook tekton-exithandler-controller tekton-exithandler-webhook"
     - name: many-edge-duration
       description: duration threshold for many edge pipeline
       value: "7"
+    - name: v2-image-tag
+      description: v2 tekton catalog image tag
+      default: "nightly"
   workspaces:
   - name: pipeline-pvc
   tasks:
@@ -368,6 +374,130 @@ spec:
           value: $(params.docker-password)
         - name: build-args
           value: "bin_name=pipelineloop-controller"
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: containerize-tekton-kfptask-controller
+      runAfter:
+        - test
+        - build-images-api-server
+        - build-images-persistenceagent
+        - build-images-cacheserver
+        - build-images-scheduledworkflow
+      taskRef:
+        name: build-images-dnd
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: tekton-kfptask-controller
+        - name: docker-root
+          value: tekton-catalog/tekton-kfptask
+        - name: docker-file
+          value: tekton-catalog/tekton-kfptask/Dockerfile.tekton-kfptask.controller
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: containerize-kfptask-webhook
+      runAfter:
+        - test
+        - build-images-api-server
+        - build-images-persistenceagent
+        - build-images-cacheserver
+        - build-images-scheduledworkflow
+      taskRef:
+        name: build-images-dnd
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: tekton-kfptask-webhook
+        - name: docker-root
+          value: tekton-catalog/tekton-kfptask
+        - name: docker-file
+          value: tekton-catalog/tekton-kfptask/Dockerfile.tekton-kfptask.webhook
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: containerize-tekton-exithandler-controller
+      runAfter:
+        - test
+        - build-images-api-server
+        - build-images-persistenceagent
+        - build-images-cacheserver
+        - build-images-scheduledworkflow
+      taskRef:
+        name: build-images-dnd
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: tekton-exithandler-controller
+        - name: docker-root
+          value: tekton-catalog/tekton-exithandler
+        - name: docker-file
+          value: tekton-catalog/tekton-exithandler/Dockerfile.tekton-exithandler.controller
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: containerize-exithandler-webhook
+      runAfter:
+        - test
+        - build-images-api-server
+        - build-images-persistenceagent
+        - build-images-cacheserver
+        - build-images-scheduledworkflow
+      taskRef:
+        name: build-images-dnd
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: tekton-exithandler-webhook
+        - name: docker-root
+          value: tekton-catalog/tekton-exithandler
+        - name: docker-file
+          value: tekton-catalog/tekton-exithandler/Dockerfile.tekton-exithandler.webhook
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
         - name: run-task
           value: image
       workspaces:
@@ -753,6 +883,10 @@ spec:
           value: $(params.public-cr)
         - name: images
           value: $(params.images)
+        - name: v2-images
+          value: $(params.v2-images)
+        - name: v2-image-tag
+          value: $(params.v2-image-tag)
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc

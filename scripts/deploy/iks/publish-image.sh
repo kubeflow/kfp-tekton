@@ -24,6 +24,8 @@ set -xe
 DIND_NS=${DIND_NS:-"docker-build"}
 IMAGES=${IMAGES:-"api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend"}
 PUBLISH_TAG=${PUBLISH_TAG:-"nightly"}
+V2_IMAGES=${IMAGES:-"tekton-kfptask-controller tekton-kfptask-webhook tekton-exithandler-controller tekton-exithandler-webhook"}
+V2_PUBLISH_TAG=${PUBLISH_TAG:-"nightly"}
 PUBLIC_CR_NAMESPACE=${PUBLIC_CR_NAMESPACE:-"aipipeline"}
 PUBLIC_CR=${PUBLIC_CR:-"quay.io"}
 
@@ -64,4 +66,10 @@ for one in $IMAGES; do
   docker pull "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}"
   docker tag "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}" "${PUBLIC_CR}/${PUBLIC_CR_NAMESPACE}/${one}:${PUBLISH_TAG}"
   docker push "${PUBLIC_CR}/${PUBLIC_CR_NAMESPACE}/${one}:${PUBLISH_TAG}"
+done
+
+for one in $V2_IMAGES; do
+  docker pull "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}"
+  docker tag "${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${one}:${IMAGE_TAG}" "${PUBLIC_CR}/${PUBLIC_CR_NAMESPACE}/${one}:${V2_PUBLISH_TAG}"
+  docker push "${PUBLIC_CR}/${PUBLIC_CR_NAMESPACE}/${one}:${V2_PUBLISH_TAG}"
 done

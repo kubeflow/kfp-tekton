@@ -474,6 +474,12 @@ spec:
     - name: image-tag
       description: image tag
       default: "nightly"
+    - name: v2-images
+      description: v2 image list to publish
+      default: "tekton-kfptask-controller tekton-kfptask-webhook tekton-exithandler-controller tekton-exithandler-webhook"
+    - name: v2-image-tag
+      description: v2 image tag
+      default: "nightly"
     - name: dind-ns
       description: dind namespace
       default: docker-build
@@ -513,6 +519,10 @@ spec:
           value: $(params.images)
         - name: PUBLISH_TAG
           value: $(params.image-tag)
+        - name: V2_IMAGES
+          value: $(params.v2-images)
+        - name: V2_PUBLISH_TAG
+          value: $(params.v2-image-tag)
         - name: DIND_NS
           value: $(params.dind-ns)
         - name: BUILD_NUMBER
