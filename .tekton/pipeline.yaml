@@ -410,7 +410,7 @@ spec:
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
-    - name: containerize-kfptask-webhook
+    - name: containerize-tekton-kfptask-webhook
       runAfter:
         - test
         - build-images-api-server
@@ -472,7 +472,7 @@ spec:
       workspaces:
       - name: task-pvc
         workspace: pipeline-pvc
-    - name: containerize-exithandler-webhook
+    - name: containerize-tekton-exithandler-webhook
       runAfter:
         - test
         - build-images-api-server
