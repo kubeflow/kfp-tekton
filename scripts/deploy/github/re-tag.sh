@@ -25,7 +25,7 @@ TAG2="${TAG2:-latest}"
 
 docker system prune -a -f
 
-declare -a IMAGES=(apiserver persistenceagent scheduledworkflow tekton-driver tekton-exithandler-controller tekton-exithandler-webhook tekton-kfptask-controller tekton-kfptask-webhook)
+declare -a IMAGES=(apiserver persistenceagent scheduledworkflow tekton-driver)
 
 for IMAGE in "${IMAGES[@]}"; do
     docker pull "${REGISTRY1}/${IMAGE}:${TAG1}"
