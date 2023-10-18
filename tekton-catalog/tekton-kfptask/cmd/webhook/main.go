@@ -20,8 +20,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-exithandler/pkg/apis/exithandler"
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-exithandler/pkg/apis/exithandler/v1alpha1"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/apis/kfptask"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/apis/kfptask/v1alpha1"
 	defaultconfig "github.com/tektoncd/pipeline/pkg/apis/config"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/configmap"
@@ -41,11 +41,11 @@ import (
 const (
 	// WebhookLogKey is the name of the logger for the webhook cmd.
 	// This name is also used to form lease names for the leader election of the webhook's controllers.
-	WebhookLogKey = "exithandler-webhook"
+	WebhookLogKey = "kfptask-webhook"
 )
 
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
-	v1alpha1.SchemeGroupVersion.WithKind(exithandler.Kind): &v1alpha1.ExitHandler{},
+	v1alpha1.SchemeGroupVersion.WithKind(kfptask.Kind): &v1alpha1.KfpTask{},
 }
 
 func newDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
@@ -56,7 +56,7 @@ func newDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher
 	return defaulting.NewAdmissionController(ctx,
 
 		// Name of the resource webhook.
-		"webhook.exithandler.custom.tekton.dev",
+		"webhook.kfptask.custom.tekton.dev",
 
 		// The path on which to serve the webhook.
 		"/defaulting",
@@ -81,7 +81,7 @@ func newValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 	return validation.NewAdmissionController(ctx,
 
 		// Name of the resource webhook.
-		"validation.webhook.exithandler.custom.tekton.dev",
+		"validation.webhook.kfptask.custom.tekton.dev",
 
 		// The path on which to serve the webhook.
 		"/resource-validation",
@@ -102,12 +102,12 @@ func newValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 func main() {
 	serviceName := os.Getenv("WEBHOOK_SERVICE_NAME")
 	if serviceName == "" {
-		serviceName = "kfp-exithandler-webhook"
+		serviceName = "kfptask-webhook"
 	}
 
 	secretName := os.Getenv("WEBHOOK_SECRET_NAME")
 	if secretName == "" {
-		secretName = "kfp-exithandler-webhook-certs" // #nosec
+		secretName = "kfptask-webhook-certs" // #nosec
 	}
 
 	// Scope informers to the webhook's namespace instead of cluster-wide
