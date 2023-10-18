@@ -48,5 +48,7 @@ then
   exit 1
 fi
 
+kubectl get pod -n tekton-pipelines
+
 echo "Finished kfp-tekton deployment."
 
