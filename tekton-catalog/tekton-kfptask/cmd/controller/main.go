@@ -19,7 +19,7 @@ package main
 import (
 	"flag"
 
-	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-exithandler/pkg/reconciler/exithandler"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/reconciler/kfptask"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/injection/sharedmain"
@@ -28,7 +28,7 @@ import (
 
 const (
 	// ControllerLogKey is the name of the logger for the controller cmd
-	ControllerLogKey = "exithandler-controller"
+	ControllerLogKey = "kfptask-controller"
 )
 
 var (
@@ -40,6 +40,6 @@ func main() {
 	sharedmain.MainWithContext(
 		injection.WithNamespaceScope(signals.NewContext(), *namespace),
 		ControllerLogKey,
-		exithandler.NewController(*namespace),
+		kfptask.NewController(*namespace),
 	)
 }
