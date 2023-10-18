@@ -37,7 +37,7 @@ const (
 	MetadataGPRCServicePort = "8080"
 	MLPipelineServiceHost   = "ml-pipeline.kubeflow.svc.cluster.local"
 	MLPipelineServicePort   = "8887"
-	LauncherImage           = "gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4"
+	LauncherImage           = "gcr.io/ml-pipeline/kfp-launcher@sha256:6641bf94acaeec03ee7e231241800fce2f0ad92eee25371bd5248ca800a086d7"
 	MinioServiceHost        = "minio-service.kubeflow.svc.cluster.local"
 	MinioServicePort        = "9000"
 )

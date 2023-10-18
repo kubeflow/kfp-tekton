@@ -23,14 +23,10 @@ TAG="${TAG:-latest}"
 
 docker system prune -a -f
 
-docker build -q -t "${REGISTRY}/apiserver:${TAG}" -f backend/Dockerfile . && docker push "${REGISTRY}/apiserver:${TAG}"
-docker build -q -t "${REGISTRY}/persistenceagent:${TAG}" -f backend/Dockerfile.persistenceagent . && docker push "${REGISTRY}/persistenceagent:${TAG}"
-docker build -q -t "${REGISTRY}/scheduledworkflow:${TAG}" -f backend/Dockerfile.scheduledworkflow . && docker push "${REGISTRY}/scheduledworkflow:${TAG}"
+docker build -q -t "${REGISTRY}/apiserver:${TAG}" -f backend/Dockerfile . && docker push "${REGISTRY}/apiserver:${TAG}" &
+docker build -q -t "${REGISTRY}/persistenceagent:${TAG}" -f backend/Dockerfile.persistenceagent . && docker push "${REGISTRY}/persistenceagent:${TAG}" &
+docker build -q -t "${REGISTRY}/scheduledworkflow:${TAG}" -f backend/Dockerfile.scheduledworkflow . && docker push "${REGISTRY}/scheduledworkflow:${TAG}" &
 docker build -q -t "${REGISTRY}/tekton-driver:${TAG}" -f backend/Dockerfile.tektondriver . && docker push "${REGISTRY}/tekton-driver:${TAG}" &
-docker build -q -t "${REGISTRY}/tekton-exithandler-controller:${TAG}" -f backend/Dockerfile.tekton-exithandler.controller . && docker push "${REGISTRY}/tekton-exithandler-controller:${TAG}" &
-docker build -q -t "${REGISTRY}/tekton-exithandler-webhook:${TAG}" -f backend/Dockerfile.tekton-exithandler.webhook . && docker push "${REGISTRY}/tekton-exithandler-webhook:${TAG}"
-docker build -q -t "${REGISTRY}/tekton-kfptask-controller:${TAG}" -f backend/Dockerfile.tekton-kfptask.controller . && docker push "${REGISTRY}/tekton-kfptask-controller:${TAG}" &
-docker build -q -t "${REGISTRY}/tekton-kfptask-webhook:${TAG}" -f backend/Dockerfile.tekton-kfptask.webhook . && docker push "${REGISTRY}/tekton-kfptask-webhook:${TAG}" &
 
 wait
 
