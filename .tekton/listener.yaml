@@ -73,7 +73,7 @@ spec:
       default: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend pipelineloop-controller pipelineloop-webhook kubeclient"
     - name: v2-images
       description: a v2 image list for publishing
-      default: "tekton-kfptask-controller tekton-kfptask-webhook tekton-exithandler-controller tekton-exithandler-webhook"
+      default: "tekton-kfptask-controller tekton-kfptask-webhook tekton-exithandler-controller tekton-exithandler-webhook tekton-driver"
     - name: many-edge-duration
       description: duration threshold for many edge pipeline
       value: "7"
