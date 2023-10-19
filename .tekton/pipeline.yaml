@@ -72,7 +72,7 @@ spec:
       default: "api-server persistenceagent metadata-writer scheduledworkflow cache-server frontend pipelineloop-controller pipelineloop-webhook kubeclient"
     - name: v2-images
       description: a v2 image list for publishing
-      default: "tekton-kfptask-controller tekton-kfptask-webhook tekton-exithandler-controller tekton-exithandler-webhook"
+      default: "tekton-kfptask-controller tekton-kfptask-webhook tekton-exithandler-controller tekton-exithandler-webhook tekton-driver"
     - name: many-edge-duration
       description: duration threshold for many edge pipeline
       value: "7"
@@ -490,6 +490,37 @@ spec:
           value: tekton-catalog/tekton-exithandler
         - name: docker-file
           value: tekton-catalog/tekton-exithandler/Dockerfile.tekton-exithandler.webhook
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: registry-namespace
+          value: $(params.registry-namespace)
+        - name: docker-username
+          value: iamapikey
+        - name: docker-password
+          value: $(params.docker-password)
+        - name: run-task
+          value: image
+      workspaces:
+      - name: task-pvc
+        workspace: pipeline-pvc
+    - name: containerize-tekton-driver
+      runAfter:
+        - test
+        - build-images-api-server
+        - build-images-persistenceagent
+        - build-images-cacheserver
+        - build-images-scheduledworkflow
+      taskRef:
+        name: build-images-dnd
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: image-name
+          value: tekton-driver
+        - name: docker-root
+          value: tekton-catalog/tekton-driver
+        - name: docker-file
+          value: tekton-catalog/tekton-driver/Dockerfile.tektondriver
         - name: registry-url
           value: $(params.registry-url)
         - name: registry-namespace

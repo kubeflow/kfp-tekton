@@ -203,6 +203,7 @@ build-v2-custom-controller-images: \
 	build-tekton-exithandler-webhook-image \
 	build-tekton-kfptask-controller-image \
 	build-tekton-kfptask-webhook-image \
+	build-tekton-driver-image \
 	## Build V2 Tekton custom task controller images 
 	@echo "$@: OK"
 
@@ -242,6 +243,10 @@ build-tekton-kfptask-controller-image: ## Build tekton-kfptask-controller docker
 build-tekton-kfptask-webhook-image: ## Build tekton-kfptask-webhook docker image
 	@cd tekton-catalog/tekton-kfptask/ && docker build -t ${DOCKER_REGISTRY}/tekton-kfptask-webhook -f Dockerfile.tekton-kfptask.webhook .
 
+.PHONY: build-tekton-driver-image
+build-tekton-driver-image: ## Build tekton-driver docker image
+	@cd tekton-catalog/tekton-driver/ && docker build -t ${DOCKER_REGISTRY}/tekton-driver -f Dockerfile.tektondriver .
+
 .PHONY: run-go-unittests
 run-go-unittests: \
 	run-apiserver-unittests \
@@ -251,6 +256,7 @@ run-go-unittests: \
 	run-cacheserver-unittests \
 	run-tekton-exithandler-unittests \
 	run-tekton-kfptask-unittests \
+	run-tekton-driver-unittests \
 	## Verify go backend unit tests
 	@echo "$@: OK"
 
@@ -274,3 +280,6 @@ run-tekton-exithandler-unittests: # tekton-exithandler golang unit tests
 
 run-tekton-kfptask-unittests: # tekton-kfptask golang unit tests
 	@cd tekton-catalog/tekton-kfptask/ && go test -v -cover ./...
+
+run-tekton-driver-unittests: # tekton-driver golang unit tests
+	@cd tekton-catalog/tekton-driver/ && go test -v -cover ./...
