@@ -43,6 +43,9 @@ const (
 	ArtifactScript                          string = "ARTIFACT_SCRIPT"
 	ArtifactImage                           string = "ARTIFACT_IMAGE"
 	ArtifactCopyStepTemplate                string = "ARTIFACT_COPY_STEP_TEMPLATE"
+	ArtifactCopyStepCABundleConfigMapName   string = "ARTIFACT_COPY_STEP_CABUNDLE_CONFIGMAP_NAME"
+	ArtifactCopyStepCABundleConfigMapKey    string = "ARTIFACT_COPY_STEP_CABUNDLE_CONFIGMAP_KEY"
+	ArtifactCopyStepCABundleMountPath       string = "ARTIFACT_COPY_STEP_CABUNDLE_MOUNTPATH"
 	InjectDefaultScript                     string = "INJECT_DEFAULT_SCRIPT"
 	ApplyTektonCustomResource               string = "APPLY_TEKTON_CUSTOM_RESOURCE"
 	TerminateStatus                         string = "TERMINATE_STATUS"
@@ -139,6 +142,18 @@ func IsInjectDefaultScript() bool {
 
 func IsApplyTektonCustomResource() string {
 	return GetStringConfigWithDefault(ApplyTektonCustomResource, "true")
+}
+
+func GetCABundleConfigMapName() string {
+	return GetStringConfigWithDefault(ArtifactCopyStepCABundleConfigMapName, "")
+}
+
+func GetCABundleConfigMapKey() string {
+	return GetStringConfigWithDefault(ArtifactCopyStepCABundleConfigMapKey, "")
+}
+
+func GetCABundleMountPath() string {
+	return GetStringConfigWithDefault(ArtifactCopyStepCABundleMountPath, "/etc/ssl/certs")
 }
 
 func GetPodNamespace() string {
