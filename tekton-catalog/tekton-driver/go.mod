@@ -3,9 +3,9 @@ module github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-driver
 require (
 	github.com/golang/glog v1.1.0
 	github.com/golang/protobuf v1.5.3
-	github.com/kubeflow/pipelines v0.0.0-20231011202727-efe630cf80e7
-	github.com/kubeflow/pipelines/api v0.0.0-20231011202727-efe630cf80e7
-	github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20231011202727-efe630cf80e7
+	github.com/kubeflow/pipelines v0.0.0-20231027040853-58ce09e07d03
+	github.com/kubeflow/pipelines/api v0.0.0-20231027040853-58ce09e07d03
+	github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20231027040853-58ce09e07d03
 	github.com/tektoncd/pipeline v0.50.2
 	k8s.io/api v0.27.1
 	k8s.io/client-go v0.27.2
