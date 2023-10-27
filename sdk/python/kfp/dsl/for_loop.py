@@ -77,7 +77,7 @@ class LoopArgument(pipeline_channel.PipelineParameterChannel):
 
 
     Attributes:
-        items_or_pipeline_channel: The raw items or the PipelineChannel object
+        items_or_pipeline_channel: The raw items or the PipelineParameterChannel object
             this LoopArgument is associated to.
     """
     LOOP_ITEM_NAME_BASE = 'loop-item'
@@ -85,7 +85,7 @@ class LoopArgument(pipeline_channel.PipelineParameterChannel):
 
     def __init__(
         self,
-        items: Union[ItemList, pipeline_channel.PipelineChannel],
+        items: Union[ItemList, pipeline_channel.PipelineParameterChannel],
         name_code: Optional[str] = None,
         name_override: Optional[str] = None,
         **kwargs,
@@ -99,8 +99,8 @@ class LoopArgument(pipeline_channel.PipelineParameterChannel):
             name_code: A unique code used to identify these loop arguments.
                 Should match the code for the ParallelFor ops_group which created
                 these LoopArguments. This prevents parameter name collisions.
-            name_override: The override name for PipelineChannel.
-            **kwargs: Any other keyword arguments passed down to PipelineChannel.
+            name_override: The override name for PipelineParameterChannel.
+            **kwargs: Any other keyword arguments passed down to PipelineParameterChannel.
         """
         if (name_code is None) == (name_override is None):
             raise ValueError(
@@ -112,17 +112,19 @@ class LoopArgument(pipeline_channel.PipelineParameterChannel):
         else:
             super().__init__(name=name_override, **kwargs)
 
-        if not isinstance(items,
-                          (list, tuple, pipeline_channel.PipelineChannel)):
+        if not isinstance(
+                items,
+            (list, tuple, pipeline_channel.PipelineParameterChannel)):
             raise TypeError(
-                f'Expected list, tuple, or PipelineChannel, got {items}.')
+                f'Expected list, tuple, or PipelineParameterChannel, got {items}.'
+            )
 
         if isinstance(items, tuple):
             items = list(items)
 
         self.items_or_pipeline_channel = items
         self.is_with_items_loop_argument = not isinstance(
-            items, pipeline_channel.PipelineChannel)
+            items, pipeline_channel.PipelineParameterChannel)
         self._referenced_subvars: Dict[str, LoopArgumentVariable] = {}
 
         if isinstance(items, list) and isinstance(items[0], dict):
@@ -154,9 +156,10 @@ class LoopArgument(pipeline_channel.PipelineParameterChannel):
     @classmethod
     def from_pipeline_channel(
         cls,
-        channel: pipeline_channel.PipelineChannel,
+        channel: pipeline_channel.PipelineParameterChannel,
     ) -> 'LoopArgument':
-        """Creates a LoopArgument object from a PipelineChannel object."""
+        """Creates a LoopArgument object from a PipelineParameterChannel
+        object."""
         return LoopArgument(
             items=channel,
             name_override=channel.name + '-' + cls.LOOP_ITEM_NAME_BASE,
@@ -191,7 +194,7 @@ class LoopArgument(pipeline_channel.PipelineParameterChannel):
           or (cls.LOOP_ITEM_PARAM_NAME_BASE + '-') in name
 
 
-class LoopArgumentVariable(pipeline_channel.PipelineChannel):
+class LoopArgumentVariable(pipeline_channel.PipelineParameterChannel):
     """Represents a subvariable for a loop argument.
 
     This is used for cases where we're looping over maps, each of which contains
@@ -246,7 +249,7 @@ class LoopArgumentVariable(pipeline_channel.PipelineChannel):
 
     @property
     def items_or_pipeline_channel(
-            self) -> Union[ItemList, pipeline_channel.PipelineChannel]:
+            self) -> Union[ItemList, pipeline_channel.PipelineParameterChannel]:
         """Returns the loop argument items."""
         return self.loop_argument.items_or_pipeline_chanenl
 
@@ -274,6 +277,7 @@ class LoopArgumentVariable(pipeline_channel.PipelineChannel):
         return f'{loop_arg_name}{self.SUBVAR_NAME_DELIMITER}{subvar_name}'
 
 
+# TODO: migrate Collected to OneOfMixin style implementation
 class Collected(pipeline_channel.PipelineChannel):
     """For collecting into a list the output from a task in dsl.ParallelFor
     loops.
@@ -313,3 +317,13 @@ class Collected(pipeline_channel.PipelineChannel):
             channel_type=channel_type,
             task_name=output.task_name,
         )
+        self._validate_no_oneof_channel(self.output)
+
+    def _validate_no_oneof_channel(
+        self, channel: Union[pipeline_channel.PipelineParameterChannel,
+                             pipeline_channel.PipelineArtifactChannel]
+    ) -> None:
+        if isinstance(channel, pipeline_channel.OneOfMixin):
+            raise ValueError(
+                f'dsl.{pipeline_channel.OneOf.__name__} cannot be used inside of dsl.{Collected.__name__}.'
+            )

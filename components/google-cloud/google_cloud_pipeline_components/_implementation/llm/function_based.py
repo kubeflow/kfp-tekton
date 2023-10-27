@@ -268,6 +268,15 @@ def resolve_reference_model_metadata(
           reward_model_path='gs://vertex-rlhf-restricted/pretrained_models/palm/t5x_otter_pretrain/',
           is_supported=True,
       ),
+      'chat-bison@001': reference_model_metadata(
+          large_model_reference='BISON',
+          reference_model_path=(
+              'gs://vertex-rlhf-restricted/pretrained_models/palm/t5x_bison/'
+          ),
+          reward_model_reference='OTTER',
+          reward_model_path='gs://vertex-rlhf-restricted/pretrained_models/palm/t5x_otter_pretrain/',
+          is_supported=True,
+      ),
       'elephant': reference_model_metadata(
           large_model_reference='ELEPHANT',
           reference_model_path=(
@@ -356,9 +365,14 @@ def generate_default_instruction(
   task = task.lower()
   if task == 'summarization':
     return f'Summarize in less than {target_sequence_length} words.'
+
+  elif task == 'question_answer':
+    return f'Answer the question in less than {target_sequence_length} words.'
+
   else:
     raise ValueError(
-        f'Task not recognized: {task}. Supported tasks are: summarization.'
+        f'Task not recognized: {task}. Supported tasks are: "summarization",'
+        ' "question_answer".'
     )
 
 
@@ -456,3 +470,22 @@ def resolve_upload_model(large_model_reference: str) -> bool:
   if large_model_reference in supported_models:
     return True
   return False
+
+
+@dsl.component(base_image=_image.GCPC_IMAGE_TAG, install_kfp_package=False)
+def resolve_instruction(
+    large_model_reference: str, instruction: Optional[str] = None
+) -> str:
+  """Resolves the instruction to use for a given reference model.
+
+  Args:
+    large_model_reference: Base model tuned by the pipeline.
+    instruction: Instruction provided at runtime.
+
+  Returns:
+    Instruction to use during tokenization based on model type. Returns an empty
+      string for chat models because the instruction is prepended as the default
+      context. Otherwise the original instruction is returned.
+  """
+  instruction = instruction or ''
+  return instruction if 'chat' not in large_model_reference.lower() else ''

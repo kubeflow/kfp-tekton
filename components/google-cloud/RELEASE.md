@@ -1,7 +1,19 @@
 ## Upcoming release
+
+## Release 2.5.0
 * Upload tensorboard metrics from `preview.llm.rlhf_pipeline` if a `tensorboard_resource_id` is provided at runtime.
 * Support `incremental_train_base_model`, `parent_model`, `is_default_version`, `model_version_aliases`, `model_version_description` in `AutoMLImageTrainingJobRunOp`.
 * Add `preview.automl.vision` and `DataConverterJobOp`.
+* Set display names for `preview.llm` pipelines.
+* Add sliced evaluation metrics support for custom and unstructured AutoML models in evaluation pipeline and evaluation pipeline with feature attribution.
+* Support `service_account` in `ModelBatchPredictOp`.
+* Release `DataflowFlexTemplateJobOp` to GA namespace (`v1.dataflow.DataflowFlexTemplateJobOp`).
+* Make `model_checkpoint` optional for `preview.llm.infer_pipeline`. If not provided, the base model associated with the `large_model_reference` will be used.
+* Bump `apache_beam[gcp]` version in GCPC container image from `<2.34.0` to `==2.50.0` for compatibility with `google-cloud-aiplatform`, which depends on `shapely<3.0.0dev`. Note: upgrades to `google-cloud-pipeline-components`>=2.5.0 and later may require using a Dataflow worker image with `apache_beam==2.50.0`.
+* Apply latest GCPC image vulnerability resolutions (base OS and software updates)
+* Add support for customizing model_parameters (maxOutputTokens, topK, topP, and
+ temperature) in LLM eval text generation and LLM eval text classification
+  pipelines.
 
 ## Release 2.4.1
 * Disable caching for LLM pipeline tasks that store temporary artifacts.

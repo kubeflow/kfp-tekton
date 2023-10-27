@@ -33,6 +33,7 @@ from kfp.compiler import compiler
 from kfp.compiler import compiler_utils
 from kfp.dsl import Artifact
 from kfp.dsl import ContainerSpec
+from kfp.dsl import Dataset
 from kfp.dsl import graph_component
 from kfp.dsl import Input
 from kfp.dsl import Model
@@ -148,8 +149,33 @@ def print_hello():
 
 
 @dsl.component
+def cleanup():
+    print('cleanup')
+
+
+@dsl.component
 def double(num: int) -> int:
     return 2 * num
+
+
+@dsl.component
+def print_and_return_as_artifact(text: str, a: Output[Artifact]):
+    print(text)
+    with open(a.path, 'w') as f:
+        f.write(text)
+
+
+@dsl.component
+def print_and_return_with_output_key(text: str, output_key: OutputPath(str)):
+    print(text)
+    with open(output_key, 'w') as f:
+        f.write(text)
+
+
+@dsl.component
+def print_artifact(a: Input[Artifact]):
+    with open(a.path) as f:
+        print(f.read())
 
 
 ###########
@@ -4140,6 +4166,44 @@ class ExtractInputOutputDescription(unittest.TestCase):
             'Component output artifact.')
 
 
+class TestCannotReturnFromWithinControlFlowGroup(unittest.TestCase):
+
+    def test_condition_raises(self):
+        with self.assertRaisesRegex(
+                compiler_utils.InvalidTopologyException,
+                r'Pipeline outputs may only be returned from the top level of the pipeline function scope\. Got pipeline output from within the control flow group dsl\.Condition\.'
+        ):
+
+            @dsl.pipeline
+            def my_pipeline(string: str = 'string') -> str:
+                with dsl.Condition(string == 'foo'):
+                    return print_and_return(text=string).output
+
+    def test_loop_raises(self):
+
+        with self.assertRaisesRegex(
+                compiler_utils.InvalidTopologyException,
+                r'Pipeline outputs may only be returned from the top level of the pipeline function scope\. Got pipeline output from within the control flow group dsl\.ParallelFor\.'
+        ):
+
+            @dsl.pipeline
+            def my_pipeline(string: str = 'string') -> str:
+                with dsl.ParallelFor([1, 2, 3]):
+                    return print_and_return(text=string).output
+
+    def test_exit_handler_raises(self):
+
+        with self.assertRaisesRegex(
+                compiler_utils.InvalidTopologyException,
+                r'Pipeline outputs may only be returned from the top level of the pipeline function scope\. Got pipeline output from within the control flow group dsl\.ExitHandler\.'
+        ):
+
+            @dsl.pipeline
+            def my_pipeline(string: str = 'string') -> str:
+                with dsl.ExitHandler(print_and_return(text='exit task')):
+                    return print_and_return(text=string).output
+
+
 class TestConditionLogic(unittest.TestCase):
 
     def test_if(self):
@@ -4478,6 +4542,1181 @@ class TestConditionLogic(unittest.TestCase):
                     print_and_return(text=item)
                 with dsl.Else():
                     print_and_return(text='Got tails!')
+
+
+class TestDslOneOf(unittest.TestCase):
+    # The space of possible tests is very large, so we test a representative set of cases covering the following styles of usage:
+    # - upstream conditions: if/else v if/elif/else
+    # - data consumed: parameters v artifacts
+    # - where dsl.OneOf goes: consumed by task v returned v both
+    # - when outputs have different keys: e.g., .output v .outputs[<key>]
+    # - how the if/elif/else are nested and at what level they are consumed
+
+    # Data type validation (e.g., dsl.OneOf(artifact, param) fails) and similar is covered in pipeline_channel_test.py.
+
+    # To help narrow the tests further (we already test lots of aspects in the following cases), we choose focus on the dsl.OneOf behavior, not the conditional logic if If/Elif/Else. This is more verbose, but more maintainable and the behavior under test is clearer.
+
+    def test_if_else_returned(self):
+        """Uses If and Else branches, parameters passed to dsl.OneOf, dsl.OneOf returned from a pipeline, and different output keys on dsl.OneOf channels."""
+
+        @dsl.pipeline
+        def roll_die_pipeline() -> str:
+            flip_coin_task = flip_coin()
+            with dsl.If(flip_coin_task.output == 'heads'):
+                t1 = print_and_return(text='Got heads!')
+            with dsl.Else():
+                t2 = print_and_return_with_output_key(text='Got tails!')
+            return dsl.OneOf(t1.output, t2.outputs['output_key'])
+
+        # hole punched through if
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-2']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-Output'].parameter_type,
+            type_utils.STRING,
+        )
+        # hole punched through else
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-3']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-with-output-key-output_key']
+            .parameter_type,
+            type_utils.STRING,
+        )
+        # condition-branches surfaces
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec
+            .components['comp-condition-branches-1'].output_definitions
+            .parameters['pipelinechannel--condition-branches-1-oneof-1']
+            .parameter_type,
+            type_utils.STRING,
+        )
+        parameter_selectors = roll_die_pipeline.pipeline_spec.components[
+            'comp-condition-branches-1'].dag.outputs.parameters[
+                'pipelinechannel--condition-branches-1-oneof-1'].value_from_oneof.parameter_selectors
+
+        self.assertEqual(
+            parameter_selectors[0],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-Output',
+                producer_subtask='condition-2',
+            ))
+        self.assertEqual(
+            parameter_selectors[1],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-with-output-key-output_key',
+                producer_subtask='condition-3',
+            ))
+        # surfaced as output
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.root.dag.outputs
+            .parameters['Output'].value_from_parameter,
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                producer_subtask='condition-branches-1',
+                output_parameter_key='pipelinechannel--condition-branches-1-oneof-1',
+            ),
+        )
+
+    def test_if_elif_else_returned(self):
+        """Uses If, Elif, and Else branches, parameters passed to dsl.OneOf, dsl.OneOf returned from a pipeline, and different output keys on dsl.OneOf channels."""
+
+        @dsl.pipeline
+        def roll_die_pipeline() -> str:
+            flip_coin_task = roll_three_sided_die()
+            with dsl.If(flip_coin_task.output == 'heads'):
+                t1 = print_and_return(text='Got heads!')
+            with dsl.Elif(flip_coin_task.output == 'tails'):
+                t2 = print_and_return(text='Got tails!')
+            with dsl.Else():
+                t3 = print_and_return_with_output_key(text='Draw!')
+            return dsl.OneOf(t1.output, t2.output, t3.outputs['output_key'])
+
+        # hole punched through if
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-2']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-Output'].parameter_type,
+            type_utils.STRING,
+        )
+        # hole punched through elif
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-3']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-2-Output'].parameter_type,
+            type_utils.STRING,
+        )
+        # hole punched through else
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-4']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-with-output-key-output_key']
+            .parameter_type,
+            type_utils.STRING,
+        )
+        # condition-branches surfaces
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec
+            .components['comp-condition-branches-1'].output_definitions
+            .parameters['pipelinechannel--condition-branches-1-oneof-1']
+            .parameter_type,
+            type_utils.STRING,
+        )
+        parameter_selectors = roll_die_pipeline.pipeline_spec.components[
+            'comp-condition-branches-1'].dag.outputs.parameters[
+                'pipelinechannel--condition-branches-1-oneof-1'].value_from_oneof.parameter_selectors
+        self.assertEqual(
+            parameter_selectors[0],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-Output',
+                producer_subtask='condition-2',
+            ))
+        self.assertEqual(
+            parameter_selectors[1],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-2-Output',
+                producer_subtask='condition-3',
+            ))
+        self.assertEqual(
+            parameter_selectors[2],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-with-output-key-output_key',
+                producer_subtask='condition-4',
+            ))
+        # surfaced as output
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.root.dag.outputs
+            .parameters['Output'].value_from_parameter,
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                producer_subtask='condition-branches-1',
+                output_parameter_key='pipelinechannel--condition-branches-1-oneof-1',
+            ),
+        )
+
+    def test_if_elif_else_consumed(self):
+        """Uses If, Elif, and Else branches, parameters passed to dsl.OneOf, dsl.OneOf passed to a consumer task, and different output keys on dsl.OneOf channels."""
+
+        @dsl.pipeline
+        def roll_die_pipeline():
+            flip_coin_task = roll_three_sided_die()
+            with dsl.If(flip_coin_task.output == 'heads'):
+                t1 = print_and_return(text='Got heads!')
+            with dsl.Elif(flip_coin_task.output == 'tails'):
+                t2 = print_and_return(text='Got tails!')
+            with dsl.Else():
+                t3 = print_and_return_with_output_key(text='Draw!')
+            print_and_return(
+                text=dsl.OneOf(t1.output, t2.output, t3.outputs['output_key']))
+
+        # hole punched through if
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-2']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-Output'].parameter_type,
+            type_utils.STRING,
+        )
+        # hole punched through elif
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-3']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-2-Output'].parameter_type,
+            type_utils.STRING,
+        )
+        # hole punched through else
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-4']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-with-output-key-output_key']
+            .parameter_type,
+            type_utils.STRING,
+        )
+        # condition-branches surfaces
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec
+            .components['comp-condition-branches-1'].output_definitions
+            .parameters['pipelinechannel--condition-branches-1-oneof-1']
+            .parameter_type,
+            type_utils.STRING,
+        )
+        parameter_selectors = roll_die_pipeline.pipeline_spec.components[
+            'comp-condition-branches-1'].dag.outputs.parameters[
+                'pipelinechannel--condition-branches-1-oneof-1'].value_from_oneof.parameter_selectors
+        self.assertEqual(
+            parameter_selectors[0],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-Output',
+                producer_subtask='condition-2',
+            ))
+        self.assertEqual(
+            parameter_selectors[1],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-2-Output',
+                producer_subtask='condition-3',
+            ))
+        self.assertEqual(
+            parameter_selectors[2],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-with-output-key-output_key',
+                producer_subtask='condition-4',
+            ))
+        # consumed from condition-branches
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.root.dag.tasks['print-and-return-3']
+            .inputs.parameters['text'].task_output_parameter,
+            pipeline_spec_pb2.TaskInputsSpec.InputParameterSpec
+            .TaskOutputParameterSpec(
+                producer_task='condition-branches-1',
+                output_parameter_key='pipelinechannel--condition-branches-1-oneof-1',
+            ),
+        )
+
+    def test_if_else_consumed_and_returned(self):
+        """Uses If, Elif, and Else branches, parameters passed to dsl.OneOf, and dsl.OneOf passed to a consumer task and returned from the pipeline."""
+
+        @dsl.pipeline
+        def flip_coin_pipeline() -> str:
+            flip_coin_task = flip_coin()
+            with dsl.If(flip_coin_task.output == 'heads'):
+                print_task_1 = print_and_return(text='Got heads!')
+            with dsl.Else():
+                print_task_2 = print_and_return(text='Got tails!')
+            x = dsl.OneOf(print_task_1.output, print_task_2.output)
+            print_and_return(text=x)
+            return x
+
+        # hole punched through if
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.components['comp-condition-2']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-Output'].parameter_type,
+            type_utils.STRING,
+        )
+        # hole punched through else
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.components['comp-condition-3']
+            .output_definitions.parameters[
+                'pipelinechannel--print-and-return-2-Output'].parameter_type,
+            type_utils.STRING,
+        )
+        # condition-branches surfaces
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec
+            .components['comp-condition-branches-1'].output_definitions
+            .parameters['pipelinechannel--condition-branches-1-oneof-1']
+            .parameter_type,
+            type_utils.STRING,
+        )
+        parameter_selectors = flip_coin_pipeline.pipeline_spec.components[
+            'comp-condition-branches-1'].dag.outputs.parameters[
+                'pipelinechannel--condition-branches-1-oneof-1'].value_from_oneof.parameter_selectors
+        self.assertEqual(
+            parameter_selectors[0],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-Output',
+                producer_subtask='condition-2',
+            ))
+        self.assertEqual(
+            parameter_selectors[1],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-2-Output',
+                producer_subtask='condition-3',
+            ))
+        # consumed from condition-branches
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.root.dag
+            .tasks['print-and-return-3'].inputs.parameters['text']
+            .task_output_parameter,
+            pipeline_spec_pb2.TaskInputsSpec.InputParameterSpec
+            .TaskOutputParameterSpec(
+                producer_task='condition-branches-1',
+                output_parameter_key='pipelinechannel--condition-branches-1-oneof-1',
+            ),
+        )
+
+        # surfaced as output
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.root.dag.outputs
+            .parameters['Output'].value_from_parameter,
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                producer_subtask='condition-branches-1',
+                output_parameter_key='pipelinechannel--condition-branches-1-oneof-1',
+            ),
+        )
+
+    def test_if_else_consumed_and_returned_artifacts(self):
+        """Uses If, Elif, and Else branches, artifacts passed to dsl.OneOf, and dsl.OneOf passed to a consumer task and returned from the pipeline."""
+
+        @dsl.pipeline
+        def flip_coin_pipeline() -> Artifact:
+            flip_coin_task = flip_coin()
+            with dsl.If(flip_coin_task.output == 'heads'):
+                print_task_1 = print_and_return_as_artifact(text='Got heads!')
+            with dsl.Else():
+                print_task_2 = print_and_return_as_artifact(text='Got tails!')
+            x = dsl.OneOf(print_task_1.outputs['a'], print_task_2.outputs['a'])
+            print_artifact(a=x)
+            return x
+
+        # hole punched through if
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.components['comp-condition-2']
+            .output_definitions
+            .artifacts['pipelinechannel--print-and-return-as-artifact-a']
+            .artifact_type.schema_title,
+            'system.Artifact',
+        )
+        # hole punched through else
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.components['comp-condition-3']
+            .output_definitions
+            .artifacts['pipelinechannel--print-and-return-as-artifact-2-a']
+            .artifact_type.schema_title,
+            'system.Artifact',
+        )
+        # condition-branches surfaces
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec
+            .components['comp-condition-branches-1'].output_definitions
+            .artifacts['pipelinechannel--condition-branches-1-oneof-1']
+            .artifact_type.schema_title,
+            'system.Artifact',
+        )
+        artifact_selectors = flip_coin_pipeline.pipeline_spec.components[
+            'comp-condition-branches-1'].dag.outputs.artifacts[
+                'pipelinechannel--condition-branches-1-oneof-1'].artifact_selectors
+        self.assertEqual(
+            artifact_selectors[0],
+            pipeline_spec_pb2.DagOutputsSpec.ArtifactSelectorSpec(
+                output_artifact_key='pipelinechannel--print-and-return-as-artifact-a',
+                producer_subtask='condition-2',
+            ))
+        self.assertEqual(
+            artifact_selectors[1],
+            pipeline_spec_pb2.DagOutputsSpec.ArtifactSelectorSpec(
+                output_artifact_key='pipelinechannel--print-and-return-as-artifact-2-a',
+                producer_subtask='condition-3',
+            ))
+
+        # consumed from condition-branches
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.root.dag.tasks['print-artifact']
+            .inputs.artifacts['a'].task_output_artifact,
+            pipeline_spec_pb2.TaskInputsSpec.InputArtifactSpec
+            .TaskOutputArtifactSpec(
+                producer_task='condition-branches-1',
+                output_artifact_key='pipelinechannel--condition-branches-1-oneof-1',
+            ),
+        )
+
+        # surfaced as output
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.root.dag.outputs
+            .artifacts['Output'].artifact_selectors[0],
+            pipeline_spec_pb2.DagOutputsSpec.ArtifactSelectorSpec(
+                producer_subtask='condition-branches-1',
+                output_artifact_key='pipelinechannel--condition-branches-1-oneof-1',
+            ),
+        )
+
+    def test_nested_under_condition_consumed(self):
+        """Uses If, Else, and OneOf nested under a parent If."""
+
+        @dsl.pipeline
+        def flip_coin_pipeline(execute_pipeline: bool):
+            with dsl.If(execute_pipeline == True):
+                flip_coin_task = flip_coin()
+                with dsl.If(flip_coin_task.output == 'heads'):
+                    print_task_1 = print_and_return_as_artifact(
+                        text='Got heads!')
+                with dsl.Else():
+                    print_task_2 = print_and_return_as_artifact(
+                        text='Got tails!')
+                x = dsl.OneOf(print_task_1.outputs['a'],
+                              print_task_2.outputs['a'])
+                print_artifact(a=x)
+
+        # hole punched through if
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.components['comp-condition-3']
+            .output_definitions
+            .artifacts['pipelinechannel--print-and-return-as-artifact-a']
+            .artifact_type.schema_title,
+            'system.Artifact',
+        )
+        # hole punched through else
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.components['comp-condition-4']
+            .output_definitions
+            .artifacts['pipelinechannel--print-and-return-as-artifact-2-a']
+            .artifact_type.schema_title,
+            'system.Artifact',
+        )
+        # condition-branches surfaces
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec
+            .components['comp-condition-branches-2'].output_definitions
+            .artifacts['pipelinechannel--condition-branches-2-oneof-1']
+            .artifact_type.schema_title,
+            'system.Artifact',
+        )
+        artifact_selectors = flip_coin_pipeline.pipeline_spec.components[
+            'comp-condition-branches-2'].dag.outputs.artifacts[
+                'pipelinechannel--condition-branches-2-oneof-1'].artifact_selectors
+        self.assertEqual(
+            artifact_selectors[0],
+            pipeline_spec_pb2.DagOutputsSpec.ArtifactSelectorSpec(
+                output_artifact_key='pipelinechannel--print-and-return-as-artifact-a',
+                producer_subtask='condition-3',
+            ))
+        self.assertEqual(
+            artifact_selectors[1],
+            pipeline_spec_pb2.DagOutputsSpec.ArtifactSelectorSpec(
+                output_artifact_key='pipelinechannel--print-and-return-as-artifact-2-a',
+                producer_subtask='condition-4',
+            ))
+        # consumed from condition-branches
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.components['comp-condition-1'].dag
+            .tasks['print-artifact'].inputs.artifacts['a'].task_output_artifact,
+            pipeline_spec_pb2.TaskInputsSpec.InputArtifactSpec
+            .TaskOutputArtifactSpec(
+                producer_task='condition-branches-2',
+                output_artifact_key='pipelinechannel--condition-branches-2-oneof-1',
+            ),
+        )
+
+    def test_nested_under_condition_returned_raises(self):
+        with self.assertRaisesRegex(
+                compiler_utils.InvalidTopologyException,
+                f'Pipeline outputs may only be returned from the top level of the pipeline function scope\. Got pipeline output dsl\.OneOf from within the control flow group dsl\.If\.'
+        ):
+
+            @dsl.pipeline
+            def flip_coin_pipeline(execute_pipeline: bool):
+                with dsl.If(execute_pipeline == True):
+                    flip_coin_task = flip_coin()
+                    with dsl.If(flip_coin_task.output == 'heads'):
+                        print_task_1 = print_and_return_as_artifact(
+                            text='Got heads!')
+                    with dsl.Else():
+                        print_task_2 = print_and_return_as_artifact(
+                            text='Got tails!')
+                    return dsl.OneOf(print_task_1.outputs['a'],
+                                     print_task_2.outputs['a'])
+
+    def test_deeply_nested_consumed(self):
+        """Uses If, Elif, Else, and OneOf deeply nested within multiple dub-DAGs."""
+
+        @dsl.pipeline
+        def flip_coin_pipeline(execute_pipeline: bool):
+            with dsl.ExitHandler(cleanup()):
+                with dsl.ParallelFor([1, 2, 3]):
+                    with dsl.If(execute_pipeline == True):
+                        flip_coin_task = flip_coin()
+                        with dsl.If(flip_coin_task.output == 'heads'):
+                            print_task_1 = print_and_return_as_artifact(
+                                text='Got heads!')
+                        with dsl.Else():
+                            print_task_2 = print_and_return_as_artifact(
+                                text='Got tails!')
+                        x = dsl.OneOf(print_task_1.outputs['a'],
+                                      print_task_2.outputs['a'])
+                        print_artifact(a=x)
+
+        self.assertIn(
+            'condition-branches-5', flip_coin_pipeline.pipeline_spec
+            .components['comp-condition-4'].dag.tasks)
+        # consumed from condition-branches
+        self.assertEqual(
+            flip_coin_pipeline.pipeline_spec.components['comp-condition-4'].dag
+            .tasks['print-artifact'].inputs.artifacts['a'].task_output_artifact,
+            pipeline_spec_pb2.TaskInputsSpec.InputArtifactSpec
+            .TaskOutputArtifactSpec(
+                producer_task='condition-branches-5',
+                output_artifact_key='pipelinechannel--condition-branches-5-oneof-1',
+            ),
+        )
+
+    def test_deeply_nested_returned_raises(self):
+
+        with self.assertRaisesRegex(
+                compiler_utils.InvalidTopologyException,
+                f'Pipeline outputs may only be returned from the top level of the pipeline function scope\. Got pipeline output dsl\.OneOf from within the control flow group dsl\.ParallelFor\.'
+        ):
+
+            @dsl.pipeline
+            def flip_coin_pipeline(execute_pipeline: bool) -> str:
+                with dsl.ExitHandler(cleanup()):
+                    with dsl.If(execute_pipeline == True):
+                        with dsl.ParallelFor([1, 2, 3]):
+                            flip_coin_task = flip_coin()
+                            with dsl.If(flip_coin_task.output == 'heads'):
+                                print_task_1 = print_and_return_as_artifact(
+                                    text='Got heads!')
+                            with dsl.Else():
+                                print_task_2 = print_and_return_as_artifact(
+                                    text='Got tails!')
+                            return dsl.OneOf(print_task_1.outputs['a'],
+                                             print_task_2.outputs['a'])
+
+    def test_consume_at_wrong_level(self):
+
+        with self.assertRaisesRegex(
+                compiler_utils.InvalidTopologyException,
+                f'Illegal task dependency across DSL context managers\. A downstream task cannot depend on an upstream task within a dsl\.If context unless the downstream is within that context too\. Found task print-artifact which depends on upstream task condition-branches-5 within an uncommon dsl\.If context\.'
+        ):
+
+            @dsl.pipeline
+            def flip_coin_pipeline(execute_pipeline: bool):
+                with dsl.ExitHandler(cleanup()):
+                    with dsl.ParallelFor([1, 2, 3]):
+                        with dsl.If(execute_pipeline == True):
+                            flip_coin_task = flip_coin()
+                            with dsl.If(flip_coin_task.output == 'heads'):
+                                print_task_1 = print_and_return_as_artifact(
+                                    text='Got heads!')
+                            with dsl.Else():
+                                print_task_2 = print_and_return_as_artifact(
+                                    text='Got tails!')
+                            x = dsl.OneOf(print_task_1.outputs['a'],
+                                          print_task_2.outputs['a'])
+                        # this is one level dedented from the permitted case
+                        print_artifact(a=x)
+
+    def test_return_at_wrong_level(self):
+        with self.assertRaisesRegex(
+                compiler_utils.InvalidTopologyException,
+                f'Pipeline outputs may only be returned from the top level of the pipeline function scope\. Got pipeline output dsl\.OneOf from within the control flow group dsl\.If\.'
+        ):
+
+            @dsl.pipeline
+            def flip_coin_pipeline(execute_pipeline: bool):
+                with dsl.If(execute_pipeline == True):
+                    flip_coin_task = flip_coin()
+                    with dsl.If(flip_coin_task.output == 'heads'):
+                        print_task_1 = print_and_return_as_artifact(
+                            text='Got heads!')
+                    with dsl.Else():
+                        print_task_2 = print_and_return_as_artifact(
+                            text='Got tails!')
+                # this is returned at the right level, but not permitted since it's still effectively returning from within the dsl.If group
+                return dsl.OneOf(print_task_1.outputs['a'],
+                                 print_task_2.outputs['a'])
+
+    def test_oneof_in_condition(self):
+        """Tests that dsl.OneOf's channel can be consumed in a downstream group nested one level"""
+
+        @dsl.pipeline
+        def roll_die_pipeline(repeat_on: str = 'Got heads!'):
+            flip_coin_task = roll_three_sided_die()
+            with dsl.If(flip_coin_task.output == 'heads'):
+                t1 = print_and_return(text='Got heads!')
+            with dsl.Elif(flip_coin_task.output == 'tails'):
+                t2 = print_and_return(text='Got tails!')
+            with dsl.Else():
+                t3 = print_and_return_with_output_key(text='Draw!')
+            x = dsl.OneOf(t1.output, t2.output, t3.outputs['output_key'])
+
+            with dsl.If(x == repeat_on):
+                print_and_return(text=x)
+
+        # condition-branches surfaces
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec
+            .components['comp-condition-branches-1'].output_definitions
+            .parameters['pipelinechannel--condition-branches-1-oneof-1']
+            .parameter_type,
+            type_utils.STRING,
+        )
+        parameter_selectors = roll_die_pipeline.pipeline_spec.components[
+            'comp-condition-branches-1'].dag.outputs.parameters[
+                'pipelinechannel--condition-branches-1-oneof-1'].value_from_oneof.parameter_selectors
+        self.assertEqual(
+            parameter_selectors[0],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-Output',
+                producer_subtask='condition-2',
+            ))
+        self.assertEqual(
+            parameter_selectors[1],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-2-Output',
+                producer_subtask='condition-3',
+            ))
+        self.assertEqual(
+            parameter_selectors[2],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-with-output-key-output_key',
+                producer_subtask='condition-4',
+            ))
+        # condition points to correct upstream output
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.root.dag.tasks['condition-5']
+            .trigger_policy.condition,
+            "inputs.parameter_values['pipelinechannel--condition-branches-1-pipelinechannel--condition-branches-1-oneof-1'] == inputs.parameter_values['pipelinechannel--repeat_on']"
+        )
+
+    def test_consumed_in_nested_groups(self):
+        """Tests that dsl.OneOf's channel can be consumed in a downstream group nested multiple levels"""
+
+        @dsl.pipeline
+        def roll_die_pipeline(
+            repeat: bool = True,
+            rounds: List[str] = ['a', 'b', 'c'],
+        ):
+            flip_coin_task = roll_three_sided_die()
+            with dsl.If(flip_coin_task.output == 'heads'):
+                t1 = print_and_return(text='Got heads!')
+            with dsl.Elif(flip_coin_task.output == 'tails'):
+                t2 = print_and_return(text='Got tails!')
+            with dsl.Else():
+                t3 = print_and_return_with_output_key(text='Draw!')
+            x = dsl.OneOf(t1.output, t2.output, t3.outputs['output_key'])
+
+            with dsl.ParallelFor(rounds):
+                with dsl.If(repeat == True):
+                    print_and_return(text=x)
+
+        # condition-branches surfaces
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec
+            .components['comp-condition-branches-1'].output_definitions
+            .parameters['pipelinechannel--condition-branches-1-oneof-1']
+            .parameter_type,
+            type_utils.STRING,
+        )
+        parameter_selectors = roll_die_pipeline.pipeline_spec.components[
+            'comp-condition-branches-1'].dag.outputs.parameters[
+                'pipelinechannel--condition-branches-1-oneof-1'].value_from_oneof.parameter_selectors
+        self.assertEqual(
+            parameter_selectors[0],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-Output',
+                producer_subtask='condition-2',
+            ))
+        self.assertEqual(
+            parameter_selectors[1],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-2-Output',
+                producer_subtask='condition-3',
+            ))
+        self.assertEqual(
+            parameter_selectors[2],
+            pipeline_spec_pb2.DagOutputsSpec.ParameterSelectorSpec(
+                output_parameter_key='pipelinechannel--print-and-return-with-output-key-output_key',
+                producer_subtask='condition-4',
+            ))
+        # condition points to correct upstream output
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-6']
+            .input_definitions.parameters[
+                'pipelinechannel--condition-branches-1-pipelinechannel--condition-branches-1-oneof-1']
+            .parameter_type, type_utils.STRING)
+        # inner task consumes from condition input parameter
+        self.assertEqual(
+            roll_die_pipeline.pipeline_spec.components['comp-condition-6'].dag
+            .tasks['print-and-return-3'].inputs.parameters['text']
+            .component_input_parameter,
+            'pipelinechannel--condition-branches-1-pipelinechannel--condition-branches-1-oneof-1'
+        )
+
+    def test_oneof_in_fstring(self):
+        with self.assertRaisesRegex(
+                NotImplementedError,
+                f'dsl\.OneOf does not support string interpolation\.'):
+
+            @dsl.pipeline
+            def roll_die_pipeline():
+                flip_coin_task = roll_three_sided_die()
+                with dsl.If(flip_coin_task.output == 'heads'):
+                    t1 = print_and_return(text='Got heads!')
+                with dsl.Elif(flip_coin_task.output == 'tails'):
+                    t2 = print_and_return(text='Got tails!')
+                with dsl.Else():
+                    t3 = print_and_return_with_output_key(text='Draw!')
+                print_and_return(
+                    text=f"Final result: {dsl.OneOf(t1.output, t2.output, t3.outputs['output_key'])}"
+                )
+
+    def test_type_checking_parameters(self):
+        with self.assertRaisesRegex(
+                type_utils.InconsistentTypeException,
+                "Incompatible argument passed to the input 'val' of component 'print-int': Argument type 'STRING' is incompatible with the input type 'NUMBER_INTEGER'",
+        ):
+
+            @dsl.component
+            def print_int(val: int):
+                print(val)
+
+            @dsl.pipeline
+            def roll_die_pipeline():
+                flip_coin_task = roll_three_sided_die()
+                with dsl.If(flip_coin_task.output == 'heads'):
+                    t1 = print_and_return(text='Got heads!')
+                with dsl.Elif(flip_coin_task.output == 'tails'):
+                    t2 = print_and_return(text='Got tails!')
+                with dsl.Else():
+                    t3 = print_and_return_with_output_key(text='Draw!')
+                print_int(
+                    val=dsl.OneOf(t1.output, t2.output,
+                                  t3.outputs['output_key']))
+
+    def test_oneof_of_oneof(self):
+        with self.assertRaisesRegex(
+                ValueError,
+                r'dsl.OneOf cannot be used inside of another dsl\.OneOf\.'):
+
+            @dsl.pipeline
+            def roll_die_pipeline() -> str:
+                outer_flip_coin_task = flip_coin()
+                with dsl.If(outer_flip_coin_task.output == 'heads'):
+                    inner_flip_coin_task = flip_coin()
+                    with dsl.If(inner_flip_coin_task.output == 'heads'):
+                        t1 = print_and_return(text='Got heads!')
+                    with dsl.Else():
+                        t2 = print_and_return(text='Got tails!')
+                    t3 = dsl.OneOf(t1.output, t2.output)
+                with dsl.Else():
+                    t4 = print_and_return(text='First flip was not heads!')
+                return dsl.OneOf(t3, t4.output)
+
+
+class TestPythonicArtifactAuthoring(unittest.TestCase):
+    # python component
+    def test_pythonic_input_artifact(self):
+
+        @dsl.component
+        def pythonic_style(in_artifact: Artifact):
+            print(in_artifact)
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+            'system.Artifact',
+        )
+
+        self.assertFalse(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.parameters)
+
+        @dsl.component
+        def standard_style(in_artifact: Input[Artifact]):
+            print(in_artifact)
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+            standard_style.pipeline_spec.components['comp-standard-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+        )
+
+    def test_pythonic_input_artifact_optional(self):
+
+        @dsl.component
+        def pythonic_style(in_artifact: Optional[Artifact] = None):
+            print(in_artifact)
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+            'system.Artifact',
+        )
+
+        self.assertFalse(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.parameters)
+
+        @dsl.component
+        def standard_style(in_artifact: Optional[Input[Artifact]] = None):
+            print(in_artifact)
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+            standard_style.pipeline_spec.components['comp-standard-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+        )
+
+    def test_pythonic_input_list_of_artifacts(self):
+
+        @dsl.component
+        def pythonic_style(in_artifact: List[Artifact]):
+            print(in_artifact)
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+            'system.Artifact',
+        )
+        self.assertTrue(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].is_artifact_list)
+
+        self.assertFalse(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.parameters)
+
+        @dsl.component
+        def standard_style(in_artifact: Input[List[Artifact]]):
+            print(in_artifact)
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+            standard_style.pipeline_spec.components['comp-standard-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+        )
+
+    def test_pythonic_input_list_of_artifacts_optional(self):
+
+        @dsl.component
+        def pythonic_style(in_artifact: Optional[List[Artifact]] = None):
+            print(in_artifact)
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+            'system.Artifact',
+        )
+        self.assertTrue(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].is_artifact_list)
+
+        self.assertFalse(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.parameters)
+
+        @dsl.component
+        def standard_style(in_artifact: Optional[Input[List[Artifact]]] = None):
+            print(in_artifact)
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+            standard_style.pipeline_spec.components['comp-standard-style']
+            .input_definitions.artifacts['in_artifact'].artifact_type
+            .schema_title,
+        )
+
+    def test_pythonic_output_artifact(self):
+
+        @dsl.component
+        def pythonic_style() -> Artifact:
+            return Artifact(uri='gs://my_bucket/foo')
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .output_definitions.artifacts['Output'].artifact_type.schema_title,
+            'system.Artifact',
+        )
+
+        self.assertFalse(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .output_definitions.parameters)
+
+        @dsl.component
+        def standard_style(named_output: Output[Artifact]):
+            return Artifact(uri='gs://my_bucket/foo')
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .output_definitions.artifacts['Output'].artifact_type.schema_title,
+            standard_style.pipeline_spec.components['comp-standard-style']
+            .output_definitions.artifacts['named_output'].artifact_type
+            .schema_title,
+        )
+
+    def test_pythonic_output_artifact_multiple_returns(self):
+
+        @dsl.component
+        def pythonic_style() -> NamedTuple('outputs', a=Artifact, d=Dataset):
+            a = Artifact(uri='gs://my_bucket/foo/artifact')
+            d = Artifact(uri='gs://my_bucket/foo/dataset')
+            outputs = NamedTuple('outputs', a=Artifact, d=Dataset)
+            return outputs(a=a, d=d)
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .output_definitions.artifacts['a'].artifact_type.schema_title,
+            'system.Artifact',
+        )
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .output_definitions.artifacts['d'].artifact_type.schema_title,
+            'system.Dataset',
+        )
+
+        self.assertFalse(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .output_definitions.parameters)
+
+        @dsl.component
+        def standard_style(a: Output[Artifact], d: Output[Dataset]):
+            a.uri = 'gs://my_bucket/foo/artifact'
+            d.uri = 'gs://my_bucket/foo/dataset'
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .output_definitions.artifacts['a'].artifact_type.schema_title,
+            standard_style.pipeline_spec.components['comp-standard-style']
+            .output_definitions.artifacts['a'].artifact_type.schema_title,
+        )
+
+        self.assertEqual(
+            pythonic_style.pipeline_spec.components['comp-pythonic-style']
+            .output_definitions.artifacts['d'].artifact_type.schema_title,
+            standard_style.pipeline_spec.components['comp-standard-style']
+            .output_definitions.artifacts['d'].artifact_type.schema_title,
+        )
+
+    def test_pythonic_output_list_artifacts(self):
+
+        with self.assertRaisesRegex(
+                ValueError,
+                r"Output lists of artifacts are only supported for pipelines\. Got output list of artifacts for output parameter 'Output' of component 'pythonic-style'\."
+        ):
+
+            @dsl.component
+            def pythonic_style() -> List[Artifact]:
+                pass
+
+    def test_mixed_component_authoring_styles(self):
+        # can be permitted, since the expected behavior is unambiguous
+
+        # in traditional; out pythonic
+        @dsl.component
+        def back_compat_style(in_artifact: Input[Artifact]) -> Artifact:
+            print(in_artifact)
+            return Artifact(uri='gs://my_bucket/foo')
+
+        self.assertTrue(back_compat_style.pipeline_spec)
+
+        # out traditional; in pythonic
+        @dsl.component
+        def mixed_style(in_artifact: Artifact, out_artifact: Output[Artifact]):
+            print(in_artifact)
+            out_artifact.uri = 'gs://my_bucket/foo'
+
+        self.assertTrue(mixed_style.pipeline_spec)
+
+    # pipeline
+    def test_pipeline_input_artifact(self):
+
+        @dsl.component
+        def pythonic_style(in_artifact: Artifact):
+            print(in_artifact)
+
+        @dsl.pipeline
+        def my_pipeline(in_artifact: Artifact):
+            pythonic_style(in_artifact=in_artifact)
+
+        self.assertEqual(
+            my_pipeline.pipeline_spec.root.input_definitions
+            .artifacts['in_artifact'].artifact_type.schema_title,
+            'system.Artifact',
+        )
+
+        self.assertFalse(
+            my_pipeline.pipeline_spec.root.input_definitions.parameters)
+
+    def test_pipeline_input_artifact_optional(self):
+
+        @dsl.component
+        def pythonic_style(in_artifact: Optional[Artifact] = None):
+            print(in_artifact)
+
+        @dsl.pipeline
+        def my_pipeline(in_artifact: Optional[Artifact] = None):
+            pythonic_style(in_artifact=in_artifact)
+
+        self.assertEqual(
+            my_pipeline.pipeline_spec.root.input_definitions
+            .artifacts['in_artifact'].artifact_type.schema_title,
+            'system.Artifact',
+        )
+
+        self.assertFalse(
+            my_pipeline.pipeline_spec.root.input_definitions.parameters)
+
+    def test_pipeline_input_list_of_artifacts(self):
+
+        @dsl.component
+        def pythonic_style(in_artifact: List[Artifact]):
+            print(in_artifact)
+
+        @dsl.pipeline
+        def my_pipeline(in_artifact: List[Artifact]):
+            pythonic_style(in_artifact=in_artifact)
+
+        self.assertEqual(
+            my_pipeline.pipeline_spec.root.input_definitions
+            .artifacts['in_artifact'].artifact_type.schema_title,
+            'system.Artifact',
+        )
+        self.assertTrue(my_pipeline.pipeline_spec.root.input_definitions
+                        .artifacts['in_artifact'].is_artifact_list)
+
+        self.assertFalse(
+            my_pipeline.pipeline_spec.root.input_definitions.parameters)
+
+    def test_pipeline_input_list_of_artifacts_optional(self):
+
+        @dsl.component
+        def pythonic_style(in_artifact: Optional[List[Artifact]] = None):
+            print(in_artifact)
+
+        @dsl.pipeline
+        def my_pipeline(in_artifact: Optional[List[Artifact]] = None):
+            pythonic_style(in_artifact=in_artifact)
+
+        self.assertEqual(
+            my_pipeline.pipeline_spec.root.input_definitions
+            .artifacts['in_artifact'].artifact_type.schema_title,
+            'system.Artifact',
+        )
+
+        self.assertFalse(
+            my_pipeline.pipeline_spec.root.input_definitions.parameters)
+
+    def test_pipeline_output_artifact(self):
+
+        @dsl.component
+        def pythonic_style() -> Artifact:
+            return Artifact(uri='gs://my_bucket/foo')
+
+        @dsl.pipeline
+        def my_pipeline() -> Artifact:
+            return pythonic_style().output
+
+        self.assertEqual(
+            my_pipeline.pipeline_spec.root.output_definitions
+            .artifacts['Output'].artifact_type.schema_title, 'system.Artifact')
+
+        self.assertFalse(
+            my_pipeline.pipeline_spec.root.output_definitions.parameters)
+
+    def test_pipeline_output_list_of_artifacts(self):
+
+        @dsl.component
+        def noop() -> Artifact:
+            # write artifact
+            return Artifact(uri='gs://my_bucket/foo/bar')
+
+        @dsl.pipeline
+        def my_pipeline() -> List[Artifact]:
+            with dsl.ParallelFor([1, 2, 3]):
+                t = noop()
+
+            return dsl.Collected(t.output)
+
+        self.assertEqual(
+            my_pipeline.pipeline_spec.root.output_definitions
+            .artifacts['Output'].artifact_type.schema_title, 'system.Artifact')
+        self.assertTrue(my_pipeline.pipeline_spec.root.output_definitions
+                        .artifacts['Output'].is_artifact_list)
+
+        self.assertFalse(
+            my_pipeline.pipeline_spec.root.output_definitions.parameters)
+
+    # container
+    def test_container_input_artifact(self):
+        with self.assertRaisesRegex(
+                TypeError,
+                r"Container Components must wrap input and output artifact annotations with Input/Output type markers \(Input\[<artifact>\] or Output\[<artifact>\]\)\. Got function input 'in_artifact' with annotation <class 'kfp\.dsl\.types\.artifact_types\.Artifact'>\."
+        ):
+
+            @dsl.container_component
+            def comp(in_artifact: Artifact):
+                return dsl.ContainerSpec(image='alpine', command=['pwd'])
+
+    def test_container_input_artifact_optional(self):
+        with self.assertRaisesRegex(
+                TypeError,
+                r"Container Components must wrap input and output artifact annotations with Input/Output type markers \(Input\[<artifact>\] or Output\[<artifact>\]\)\. Got function input 'in_artifact' with annotation <class 'kfp\.dsl\.types\.artifact_types\.Artifact'>\."
+        ):
+
+            @dsl.container_component
+            def comp(in_artifact: Optional[Artifact] = None):
+                return dsl.ContainerSpec(image='alpine', command=['pwd'])
+
+    def test_container_input_list_of_artifacts(self):
+        with self.assertRaisesRegex(
+                TypeError,
+                r"Container Components must wrap input and output artifact annotations with Input/Output type markers \(Input\[<artifact>\] or Output\[<artifact>\]\)\. Got function input 'in_artifact' with annotation typing\.List\[kfp\.dsl\.types\.artifact_types\.Artifact\]\."
+        ):
+
+            @dsl.container_component
+            def comp(in_artifact: List[Artifact]):
+                return dsl.ContainerSpec(image='alpine', command=['pwd'])
+
+    def test_container_input_list_of_artifacts_optional(self):
+        with self.assertRaisesRegex(
+                TypeError,
+                r"Container Components must wrap input and output artifact annotations with Input/Output type markers \(Input\[<artifact>\] or Output\[<artifact>\]\)\. Got function input 'in_artifact' with annotation typing\.List\[kfp\.dsl\.types\.artifact_types\.Artifact\]\."
+        ):
+
+            @dsl.container_component
+            def comp(in_artifact: Optional[List[Artifact]] = None):
+                return dsl.ContainerSpec(image='alpine', command=['pwd'])
+
+    def test_container_output_artifact(self):
+        with self.assertRaisesRegex(
+                TypeError,
+                r'Return annotation should be either ContainerSpec or omitted for container components\.'
+        ):
+
+            @dsl.container_component
+            def comp() -> Artifact:
+                return dsl.ContainerSpec(image='alpine', command=['pwd'])
+
+    def test_container_output_list_of_artifact(self):
+        with self.assertRaisesRegex(
+                TypeError,
+                r'Return annotation should be either ContainerSpec or omitted for container components\.'
+        ):
+
+            @dsl.container_component
+            def comp() -> List[Artifact]:
+                return dsl.ContainerSpec(image='alpine', command=['pwd'])
+
+
+class TestPipelineSpecAttributeUniqueError(unittest.TestCase):
+
+    def test_compiles(self):
+        # in a previous version of the KFP SDK there was an error when:
+        # - a component has a dsl.OutputPath parameter
+        # - the pipeline has an existing component by a different name
+        # - the user calls component.pipeline_spec inside their pipeline definition
+        # this was resolved coincidentally in
+        # https://github.com/kubeflow/pipelines/pull/10067, so test that it
+        # doesn't come back
+
+        @dsl.container_component
+        def existing_comp():
+            return dsl.ContainerSpec(
+                image='alpine', command=['echo'], args=['foo'])
+
+        @dsl.container_component
+        def issue_comp(v: dsl.OutputPath(str)):
+            return dsl.ContainerSpec(image='alpine', command=['echo'], args=[v])
+
+        @dsl.pipeline
+        def my_pipeline():
+            existing_comp()
+            issue_comp.pipeline_spec
+
+        # should compile without error
+        self.assertTrue(my_pipeline.pipeline_spec)
 
 
 if __name__ == '__main__':
