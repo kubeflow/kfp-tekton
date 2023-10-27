@@ -99,7 +99,7 @@ spec:
                       - launcher-v2
                       - --copy
                       - /tekton/home/launch
-                      image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
+                      image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
                       imagePullPolicy: Always
                       name: kfp-launcher
                       resources: {}
@@ -276,7 +276,7 @@ spec:
               - launcher-v2
               - --copy
               - /tekton/home/launch
-              image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
+              image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
               imagePullPolicy: Always
               name: kfp-launcher
               resources: {}
@@ -434,7 +434,7 @@ spec:
               - launcher-v2
               - --copy
               - /tekton/home/launch
-              image: gcr.io/ml-pipeline/kfp-launcher@sha256:80cf120abd125db84fa547640fd6386c4b2a26936e0c2b04a7d3634991a850a4
+              image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
               imagePullPolicy: Always
               name: kfp-launcher
               resources: {}
@@ -560,8 +560,8 @@ spec:
       - name: mlmd_server_port
         value: "8080"
       runAfter:
-      - fail-op
       - print-op-2
+      - fail-op
       taskRef:
         apiVersion: kfp-driver.tekton.dev/v1alpha1
         kind: KFPDriver

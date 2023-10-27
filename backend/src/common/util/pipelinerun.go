@@ -655,12 +655,12 @@ func (pr *PipelineRun) GenerateRetryExecution() (ExecutionSpec, []string, error)
 	return NewPipelineRun(newWF), podsToDelete, nil
 }
 
-func (pr *PipelineRun) CollectionMetrics(retrieveArtifact RetrieveArtifact, user string) ([]*api.RunMetric, []error) {
+func (pr *PipelineRun) CollectionMetrics(retrieveArtifact RetrieveArtifact) ([]*api.RunMetric, []error) {
 	runID := pr.ObjectMeta.Labels[LabelKeyWorkflowRunId]
 	runMetrics := []*api.RunMetric{}
 	partialFailures := []error{}
 	for _, taskrunStatus := range pr.Status.PipelineRunStatusFields.TaskRuns {
-		nodeMetrics, err := collectTaskRunMetricsOrNil(runID, *taskrunStatus, retrieveArtifact, user)
+		nodeMetrics, err := collectTaskRunMetricsOrNil(runID, *taskrunStatus, retrieveArtifact)
 		if err != nil {
 			partialFailures = append(partialFailures, err)
 			continue
@@ -680,7 +680,7 @@ func (pr *PipelineRun) CollectionMetrics(retrieveArtifact RetrieveArtifact, user
 }
 
 func collectTaskRunMetricsOrNil(
-	runID string, taskrunStatus pipelineapi.PipelineRunTaskRunStatus, retrieveArtifact RetrieveArtifact, user string) (
+	runID string, taskrunStatus pipelineapi.PipelineRunTaskRunStatus, retrieveArtifact RetrieveArtifact) (
 	[]*api.RunMetric, error) {
 
 	defer func() {
@@ -692,7 +692,7 @@ func collectTaskRunMetricsOrNil(
 		taskrunStatus.Status.TaskRunStatusFields.CompletionTime == nil {
 		return nil, nil
 	}
-	metricsJSON, err := readTaskRunMetricsJSONOrEmpty(runID, taskrunStatus, retrieveArtifact, user)
+	metricsJSON, err := readTaskRunMetricsJSONOrEmpty(runID, taskrunStatus, retrieveArtifact)
 	if err != nil || metricsJSON == "" {
 		return nil, err
 	}
@@ -726,7 +726,7 @@ func collectTaskRunMetricsOrNil(
 
 func readTaskRunMetricsJSONOrEmpty(
 	runID string, nodeStatus pipelineapi.PipelineRunTaskRunStatus,
-	retrieveArtifact RetrieveArtifact, user string) (string, error) {
+	retrieveArtifact RetrieveArtifact) (string, error) {
 	// Tekton doesn't support any artifact spec, artifact records are done by our custom metadata writers:
 	// 	if nodeStatus.Outputs == nil || nodeStatus.Outputs.Artifacts == nil {
 	// 		return "", nil // No output artifacts, skip the reporting
@@ -746,7 +746,7 @@ func readTaskRunMetricsJSONOrEmpty(
 		NodeId:       nodeStatus.PipelineTaskName,
 		ArtifactName: metricsArtifactName,
 	}
-	artifactResponse, err := retrieveArtifact(artifactRequest, user)
+	artifactResponse, err := retrieveArtifact(artifactRequest)
 	if err != nil {
 		return "", err
 	}

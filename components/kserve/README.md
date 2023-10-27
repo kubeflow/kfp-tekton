@@ -4,7 +4,7 @@ Organization: KServe
 
 Organization Description: KServe is a highly scalable and standards based Model Inference Platform on Kubernetes for Trusted AI
 
-Version information: KServe 0.10.1. Works for Kubeflow 1.7
+Version information: KServe 0.11.1. Works for Kubeflow 1.8
 
 **Note:** To use the KServe 0.7.0 version of this component which runs on Kubeflow 1.5, then change the load_component_from_url in the usage section with the following YAML instead:
 ```
@@ -14,7 +14,8 @@ https://raw.githubusercontent.com/kubeflow/pipelines/1.8.1/components/kserve/com
 Test status: Currently manual tests
 
 Owners information:
- - Animesh Singh (animeshsingh) - IBM, singhan@us.ibm.com
+ - Tommy Li (Tomcli) - IBM, tommy.chaoping.li@ibm.com
+ - Yi-Hong Wang (yhwang) - IBM, yh.wang@ibm.com
 
 ## Usage
 
@@ -38,6 +39,9 @@ kserve_op = components.load_component_from_url('https://raw.githubusercontent.co
 | canary_traffic_percent | `100` | The traffic split percentage between the candidate model and the last ready model |
 | namespace |  | Kubernetes namespace where the KServe service is deployed. If no namespace is provided, `anonymous` will be used unless a namespace is provided in the `inferenceservice_yaml` argument. |
 | framework |  | Machine learning framework for model serving. Currently the supported frameworks are  `tensorflow`, `pytorch`, `sklearn`, `xgboost`, `onnx`, `triton`, `pmml`, and `lightgbm`. |
+| runtime_version | `latest` | Runtime Version of Machine Learning Framework |
+| resource_requests | `{"cpu": "0.5", "memory": "512Mi"}` | CPU and Memory requests for Model Serving | 
+| resource_limits | `{"cpu": "1", "memory": "1Gi"}` | CPU and Memory limits for Model Serving | 
 | custom_model_spec | `{}` | Custom model runtime container spec in JSON. Sample spec: `{"image": "codait/max-object-detector", "port":5000, "name": "test-container"}` |
 | inferenceservice_yaml | `{}` | Raw InferenceService serialized YAML for deployment. Use this if you need additional configurations for your InferenceService. |
 | autoscaling_target | `0` | Autoscaling Target Number. If not 0, sets the following annotation on the InferenceService: `autoscaling.knative.dev/target` |
@@ -184,4 +188,3 @@ kserve_op(
     inferenceservice_yaml=isvc_yaml
 )
 ```
-

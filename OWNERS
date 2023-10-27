@@ -1,8 +1,15 @@
 approvers:
-  - chensun
-  - IronPan
-  - james-jwu
-  - zijianjoy
+ - ckadner
+ - Tomcli
+ - fenglixa
+ - pugangxa
+ - scrapcodes
+ - yhwang
 reviewers:
-  - chensun
-  - zijianjoy
+ - ckadner
+ - Tomcli
+ - fenglixa
+ - pugangxa
+ - jinchihe
+ - scrapcodes
+ - yhwang

@@ -31,16 +31,14 @@ except ImportError:
     _DOCKER_IS_PRESENT = False
 
 import kfp as kfp
-from kfp.components import component_factory
-from kfp.components import kfp_config
-from kfp.components import utils
+from kfp.dsl import component_factory
+from kfp.dsl import kfp_config
+from kfp.dsl import utils
 
 _REQUIREMENTS_TXT = 'runtime-requirements.txt'
 
 _DOCKERFILE = 'Dockerfile'
 
-# TODO: merge kfp_package_path into runtime-requirements.txt, once we have
-# kfp_runtime package that is dependency-free.
 _DOCKERFILE_TEMPLATE = '''
 FROM {base_image}
 
