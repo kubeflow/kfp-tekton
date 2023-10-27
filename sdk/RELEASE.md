@@ -3,12 +3,36 @@
 ## Features
 
 ## Breaking changes
+* Support collecting outputs from conditional branches using `dsl.OneOf` [\#10067](https://github.com/kubeflow/pipelines/pull/10067)
+
+## Deprecations
+* Add notice of Python 3.7 support removal on April 23, 2024 [\#10139](https://github.com/kubeflow/pipelines/pull/10139)
+
+## Bug fixes and other changes
+* Fix type on `dsl.ParallelFor` sub-DAG output when a `dsl.Collected` is used. Non-functional fix. [\#10069](https://github.com/kubeflow/pipelines/pull/10069)
+* Fix bug when `dsl.importer` argument is provided by a `dsl.ParallelFor` loop variable. [\#10116](https://github.com/kubeflow/pipelines/pull/10116)
+
+## Documentation updates
+
+# 2.3.0
+## Features
+* Support `PipelineTaskFinalStatus` in tasks that use `.ignore_upstream_failure()` [\#10010](https://github.com/kubeflow/pipelines/pull/10010)
+* Add support for a Pythonic artifact authoring style [\#9932](https://github.com/kubeflow/pipelines/pull/9932)
+
+
+## Breaking changes
 
 ## Deprecations
 
 ## Bug fixes and other changes
 
 ## Documentation updates
+# 2.2.0
+
+## Features
+* Add support for `dsl.If`, `dsl.Elif`, and `dsl.Else` control flow context managers; deprecate `dsl.Condition` in favor of `dsl.If` [\#9894](https://github.com/kubeflow/pipelines/pull/9894)
+* Create "dependency-free" runtime package (only `typing_extensions` required) for Lightweight Python Components to reduce runtime dependency resolution errors [\#9710](https://github.com/kubeflow/pipelines/pull/9710), [\#9886](https://github.com/kubeflow/pipelines/pull/9886)
+
 # 2.0.1
 
 ## Features

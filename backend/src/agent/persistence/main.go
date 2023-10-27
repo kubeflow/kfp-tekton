@@ -100,10 +100,6 @@ func main() {
 	} else {
 		swfInformerFactory = swfinformers.NewFilteredSharedInformerFactory(swfClient, time.Second*30, namespace, nil)
 	}
-	k8sCoreClient := client.CreateKubernetesCoreOrFatal(DefaultConnectionTimeout, util.ClientParameters{
-		QPS:   clientQPS,
-		Burst: clientBurst,
-	})
 
 	tokenRefresher := client.NewTokenRefresher(time.Duration(saTokenRefreshIntervalInSecs)*time.Second, nil)
 	err = tokenRefresher.StartTokenRefreshTicker()
@@ -127,7 +123,6 @@ func main() {
 		swfInformerFactory,
 		execInformer,
 		pipelineClient,
-		k8sCoreClient,
 		util.NewRealTime())
 
 	go swfInformerFactory.Start(stopCh)
@@ -159,4 +154,5 @@ func init() {
 	// TODO use viper/config file instead. Sync `saTokenRefreshIntervalFlagName` with the value from manifest file by using ENV var.
 	flag.Int64Var(&saTokenRefreshIntervalInSecs, saTokenRefreshIntervalFlagName, DefaultSATokenRefresherIntervalInSecs, "Persistence agent service account token read interval in seconds. "+
 		"Defines how often `/var/run/secrets/kubeflow/tokens/kubeflow-persistent_agent-api-token` to be read")
+
 }

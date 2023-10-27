@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google_cloud_pipeline_components.v1.model_evaluation.version import EVAL_IMAGE_TAG
+from typing import List
+
+from google_cloud_pipeline_components._implementation.model_evaluation import version
 from kfp.dsl import container_component
 from kfp.dsl import ContainerSpec
 from kfp.dsl import OutputPath
@@ -28,7 +30,7 @@ def target_field_data_remover(
     gcs_output_directory: OutputPath(list),
     project: str,
     location: str = 'us-central1',
-    gcs_source_uris: list = [],
+    gcs_source_uris: List[str] = [],
     bigquery_source_uri: str = '',
     instances_format: str = 'jsonl',
     target_field_name: str = 'ground_truth',
@@ -89,7 +91,7 @@ def target_field_data_remover(
   """
   # fmt: on
   return ContainerSpec(
-      image=EVAL_IMAGE_TAG,
+      image=version.EVAL_IMAGE_TAG,
       command=[
           'python3',
           '/main.py',

@@ -19,7 +19,7 @@ if [[ ! -d "$C_DIR" ]]; then C_DIR="$PWD"; fi
 source "${C_DIR}/test-pipeline.sh"
 
 RESULT=0
-run_test_case "dynamic-loop" "samples/core/loop_parameter/loop_parameter_v2.py" "SUCCEEDED" 20 || RESULT=$?
+run_test_case "dynamic-loop" "samples/core/loop_parameter/loop_parameter.py" "SUCCEEDED" 20 || RESULT=$?
 
 STATUS_MSG=PASSED
 if [[ "$RESULT" -ne 0 ]]; then

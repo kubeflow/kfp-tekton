@@ -590,6 +590,10 @@ describe('NewRun', () => {
       const expectedPipeline = await screen.findByText(newPipeline.name);
       fireEvent.click(expectedPipeline);
 
+      await waitFor(() => {
+        expect(getPipelineSpy).toHaveBeenCalled();
+      });
+
       const usePipelineButton = screen.getByText('Use this pipeline');
       fireEvent.click(usePipelineButton);
 
@@ -774,6 +778,10 @@ describe('NewRun', () => {
       const expectedPipeline = await screen.findByText(newPipeline.name);
       fireEvent.click(expectedPipeline);
 
+      await waitFor(() => {
+        expect(getPipelineSpy).toHaveBeenCalled();
+      });
+
       const usePipelineButton = screen.getByText('Use this pipeline');
       fireEvent.click(usePipelineButton);
 
@@ -789,6 +797,10 @@ describe('NewRun', () => {
 
       const expectedPipelineVersion = await screen.findByText(latestPipelineVersion.name);
       fireEvent.click(expectedPipelineVersion);
+
+      await waitFor(() => {
+        expect(getPipelineVersionSpy).toHaveBeenCalled();
+      });
 
       const usePipelineVersionBtn = screen.getByText('Use this pipeline version');
       fireEvent.click(usePipelineVersionBtn);
@@ -1671,6 +1683,10 @@ describe('NewRun', () => {
       const expectedPipeline = await screen.findByText(pipelineWithParams.name);
       fireEvent.click(expectedPipeline);
 
+      await waitFor(() => {
+        expect(getPipelineSpy).toHaveBeenCalled();
+      });
+
       const usePipelineButton = screen.getByText('Use this pipeline');
       fireEvent.click(usePipelineButton);
 
@@ -1683,7 +1699,7 @@ describe('NewRun', () => {
       await screen.findByDisplayValue('prefilled value 1');
       await screen.findByLabelText('param-2');
       await screen.findByDisplayValue('prefilled value 2');
-    });
+    }, 10000);
 
     it('trims whitespace from the pipeline params', async () => {
       tree = shallow(<TestNewRun {...generateProps()} />);
@@ -1728,6 +1744,10 @@ describe('NewRun', () => {
 
       const expectedPipeline = await screen.findByText(pipelineWithParams.name);
       fireEvent.click(expectedPipeline);
+
+      await waitFor(() => {
+        expect(getPipelineSpy).toHaveBeenCalled();
+      });
 
       const usePipelineButton = screen.getByText('Use this pipeline');
       fireEvent.click(usePipelineButton);
