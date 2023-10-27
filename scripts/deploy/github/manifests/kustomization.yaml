@@ -14,9 +14,6 @@ resources:
 # when application is deleted.
 
 images:
-- name: '*/aipipeline/tekton-driver'
-  newName: kind-registry:5000/tekton-driver
-  newTag: latest
 - name: gcr.io/ml-pipeline/api-server
   newName: kind-registry:5000/apiserver
   newTag: latest
@@ -38,6 +35,9 @@ images:
 #   newTag: latest
 # - name: '*/aipipeline/tekton-kfptask-webhook'
 #   newName: kind-registry:5000/tekton-kfptask-webhook
+#   newTag: latest
+# - name: '*/aipipeline/tekton-driver'
+#   newName: kind-registry:5000/tekton-driver
 #   newTag: latest
 
 labels:
