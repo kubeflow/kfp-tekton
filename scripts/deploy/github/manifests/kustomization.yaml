@@ -2,12 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- ../../../../manifests/kustomize/base/installs/generic
-- ../../../../manifests/kustomize/base/metadata/base
-- ../../../../manifests/kustomize/third-party/tekton/installs/cluster
-- ../../../../manifests/kustomize/third-party/tekton-custom-task
-- ../../../../manifests/kustomize/third-party/minio/base
-- ../../../../manifests/kustomize/third-party/mysql/base
+- ../../../../manifests/kustomize/env/platform-agnostic-tekton
 
 # Identifier for application manager to apply ownerReference.
 # The ownerReference ensures the resources get garbage collected
