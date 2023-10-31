@@ -237,7 +237,6 @@ func (i *containerDriverInputs) getParentDagCondition(isExitHandler bool) string
 
 func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *containerDriverInputs) error {
 
-	// containerDriverName := getContainerDriverTaskName(name)
 	t, err := c.containerExecutorTemplate(name, inputs.containerDef, c.spec.PipelineInfo.GetName())
 
 	if err != nil {
@@ -324,51 +323,6 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 	}
 
 	c.addPipelineTask(driverTask)
-
-	// // need container driver's output for executor
-	// containerDriverOutputs := containerDriverOutputs{
-	// 	executionId:    taskOutputParameter(containerDriverName, paramExecutionID),
-	// 	condition:      taskOutputParameter(containerDriverName, paramCondition),
-	// 	executiorInput: taskOutputParameter(containerDriverName, paramExecutorInput),
-	// 	cached:         taskOutputParameter(containerDriverName, paramCachedDecision),
-	// 	podSpecPatch:   taskOutputParameter(containerDriverName, paramPodSpecPatch),
-	// }
-
-	// executorTask := &pipelineapi.PipelineTask{
-	// 	Name:     name,
-	// 	TaskSpec: t,
-	// 	When: pipelineapi.WhenExpressions{
-	// 		{
-	// 			Input:    containerDriverOutputs.cached,
-	// 			Operator: "in",
-	// 			Values:   []string{"false"},
-	// 		},
-	// 	},
-	// 	Params: []pipelineapi.Param{
-	// 		{
-	// 			Name:  paramExecutorInput,
-	// 			Value: pipelineapi.ParamValue{Type: "string", StringVal: containerDriverOutputs.executiorInput},
-	// 		},
-	// 		{
-	// 			Name:  paramExecutionID,
-	// 			Value: pipelineapi.ParamValue{Type: "string", StringVal: containerDriverOutputs.executionId},
-	// 		},
-	// 		{
-	// 			Name:  paramRunId,
-	// 			Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
-	// 		},
-	// 		{
-	// 			Name:  paramComponentSpec,
-	// 			Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
-	// 		},
-	// 		{
-	// 			Name:  paramPodSpecPatch,
-	// 			Value: pipelineapi.ParamValue{Type: "string", StringVal: containerDriverOutputs.podSpecPatch},
-	// 		},
-	// 	},
-	// }
-
-	// c.addPipelineTask(executorTask)
 
 	return nil
 }
