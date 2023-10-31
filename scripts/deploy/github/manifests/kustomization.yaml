@@ -23,19 +23,15 @@ images:
 - name: gcr.io/ml-pipeline/scheduledworkflow
   newName: kind-registry:5000/scheduledworkflow
   newTag: latest
+- name: '*/aipipeline/tekton-exithandler-controller'
+  newTag: latest
+- name: '*/aipipeline/tekton-exithandler-webhook'
+  newTag: latest
+- name: '*/aipipeline/tekton-kfptask-controller'
+  newTag: latest
+- name: '*/aipipeline/tekton-kfptask-webhook'
+  newTag: latest
 # For Staging image build only
-# - name: '*/aipipeline/tekton-exithandler-controller'
-#   newName: kind-registry:5000/tekton-exithandler-controller
-#   newTag: latest
-# - name: '*/aipipeline/tekton-exithandler-webhook'
-#   newName: kind-registry:5000/tekton-exithandler-webhook
-#   newTag: latest
-# - name: '*/aipipeline/tekton-kfptask-controller'
-#   newName: kind-registry:5000/tekton-kfptask-controller
-#   newTag: latest
-# - name: '*/aipipeline/tekton-kfptask-webhook'
-#   newName: kind-registry:5000/tekton-kfptask-webhook
-#   newTag: latest
 # - name: '*/aipipeline/tekton-driver'
 #   newName: kind-registry:5000/tekton-driver
 #   newTag: latest

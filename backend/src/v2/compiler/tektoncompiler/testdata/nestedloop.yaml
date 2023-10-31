@@ -13,18 +13,16 @@ metadata:
 spec:
   pipelineSpec:
     tasks:
-    - name: flip-coin-op-driver
+    - name: flip-coin-op
       params:
       - name: type
         value: CONTAINER
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
-      - name: component
-        value: '{"executorLabel":"exec-flip-coin-op","outputDefinitions":{"parameters":{"Output":{"parameterType":"STRING"}}}}'
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-flip-coin-op"},"taskInfo":{"name":"flip-coin-op"}}'
       - name: container
@@ -47,21 +45,8 @@ spec:
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port
         value: "8080"
-      taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
-    - name: flip-coin-op
-      params:
-      - name: executor-input
-        value: $(tasks.flip-coin-op-driver.results.executor-input)
-      - name: execution-id
-        value: $(tasks.flip-coin-op-driver.results.execution-id)
-      - name: run-id
-        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-flip-coin-op","outputDefinitions":{"parameters":{"Output":{"parameterType":"STRING"}}}}'
-      - name: pod-spec-patch
-        value: $(tasks.flip-coin-op-driver.results.pod-spec-patch)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: KFPTask
@@ -86,10 +71,10 @@ spec:
               - launcher-v2
               - --copy
               - /tekton/home/launch
+              computeResources: {}
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
               imagePullPolicy: Always
               name: kfp-launcher
-              computeResources: {}
             - args:
               - sh
               - -c
@@ -145,6 +130,7 @@ spec:
               - --mlmd_server_port
               - $(METADATA_GRPC_SERVICE_PORT)
               - --
+              computeResources: {}
               env:
               - name: KFP_POD_NAME
                 valueFrom:
@@ -163,7 +149,7 @@ spec:
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
               - name: MINIO_SERVICE_SERVICE_HOST
-                value: "minio-service.kubeflow.svc.cluster.local"
+                value: minio-service.kubeflow.svc.cluster.local
               - name: MINIO_SERVICE_SERVICE_PORT
                 value: "9000"
               envFrom:
@@ -172,12 +158,6 @@ spec:
                   optional: true
               image: python:3.7
               name: user-main
-              computeResources: {}
-      when:
-      - input: $(tasks.flip-coin-op-driver.results.cached-decision)
-        operator: in
-        values:
-        - "false"
     - name: for-loop-2-pipelineloop
       params:
       - name: parent-dag-id
@@ -211,11 +191,11 @@ spec:
                 value: DAG
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(params.parent-dag-id)
-              - name: component
+              - name: component-spec
                 value: '{"dag":{"tasks":{"condition-3":{"componentRef":{"name":"comp-condition-3"},"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-3"},"triggerPolicy":{"condition":"inputs.parameter_values[''pipelinechannel--loop-item-param-1'']
                   == inputs.parameter_values[''pipelinechannel--flip-coin-op-Output'']"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
               - name: task
@@ -230,15 +210,15 @@ spec:
               - name: mlmd_server_port
                 value: "8080"
               taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: KFPTask
             - name: for-loop-2-loop-dag-pub-driver
               params:
               - name: type
                 value: DAG-PUB
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(params.parent-dag-id)
@@ -250,20 +230,18 @@ spec:
               - print-op
               - print-op-2
               taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
-            - name: print-op-driver
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: KFPTask
+            - name: print-op
               params:
               - name: type
                 value: CONTAINER
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(tasks.condition-4-dag-driver.results.execution-id)
-              - name: component
-                value: '{"executorLabel":"exec-print-op","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"{{$.inputs.parameters[''pipelinechannel--loop-item-param-1'']}}
                   and {{$.inputs.parameters[''pipelinechannel--get-random-int-op-Output'']}}
@@ -286,26 +264,8 @@ spec:
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
                 value: "8080"
-              taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
-              when:
-              - input: $(tasks.condition-4-dag-driver.results.condition)
-                operator: notin
-                values:
-                - "false"
-            - name: print-op
-              params:
-              - name: executor-input
-                value: $(tasks.print-op-driver.results.executor-input)
-              - name: execution-id
-                value: $(tasks.print-op-driver.results.execution-id)
-              - name: run-id
-                value: $(context.pipelineRun.uid)
               - name: component-spec
                 value: '{"executorLabel":"exec-print-op","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
-              - name: pod-spec-patch
-                value: $(tasks.print-op-driver.results.pod-spec-patch)
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: KFPTask
@@ -330,10 +290,10 @@ spec:
                       - launcher-v2
                       - --copy
                       - /tekton/home/launch
+                      computeResources: {}
                       image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
                       imagePullPolicy: Always
                       name: kfp-launcher
-                      computeResources: {}
                     - args:
                       - sh
                       - -c
@@ -386,6 +346,7 @@ spec:
                       - --mlmd_server_port
                       - $(METADATA_GRPC_SERVICE_PORT)
                       - --
+                      computeResources: {}
                       env:
                       - name: KFP_POD_NAME
                         valueFrom:
@@ -404,7 +365,7 @@ spec:
                       - name: ML_PIPELINE_SERVICE_PORT_GRPC
                         value: "8887"
                       - name: MINIO_SERVICE_SERVICE_HOST
-                        value: "minio-service.kubeflow.svc.cluster.local"
+                        value: minio-service.kubeflow.svc.cluster.local
                       - name: MINIO_SERVICE_SERVICE_PORT
                         value: "9000"
                       envFrom:
@@ -413,10 +374,9 @@ spec:
                           optional: true
                       image: python:3.7
                       name: user-main
-                      computeResources: {}
               when:
-              - input: $(tasks.print-op-driver.results.cached-decision)
-                operator: in
+              - input: $(tasks.condition-4-dag-driver.results.condition)
+                operator: notin
                 values:
                 - "false"
             - name: condition-4-dag-driver
@@ -425,11 +385,11 @@ spec:
                 value: DAG
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(tasks.condition-3-dag-driver.results.execution-id)
-              - name: component
+              - name: component-spec
                 value: '{"dag":{"tasks":{"print-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"{{$.inputs.parameters[''pipelinechannel--loop-item-param-1'']}}
                   and {{$.inputs.parameters[''pipelinechannel--get-random-int-op-Output'']}}
                   \u003e 5!"}},"pipelinechannel--get-random-int-op-Output":{"componentInputParameter":"pipelinechannel--get-random-int-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"print-op"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--get-random-int-op-Output":{"parameterType":"NUMBER_INTEGER"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
@@ -447,15 +407,15 @@ spec:
               runAfter:
               - get-random-int-op
               taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: KFPTask
             - name: condition-4-dag-pub-driver
               params:
               - name: type
                 value: DAG-PUB
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(tasks.condition-4-dag-driver.results.execution-id)
@@ -466,20 +426,18 @@ spec:
               runAfter:
               - print-op
               taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
-            - name: print-op-2-driver
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: KFPTask
+            - name: print-op-2
               params:
               - name: type
                 value: CONTAINER
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(tasks.condition-5-dag-driver.results.execution-id)
-              - name: component
-                value: '{"executorLabel":"exec-print-op-2","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"{{$.inputs.parameters[''pipelinechannel--loop-item-param-1'']}}
                   and {{$.inputs.parameters[''pipelinechannel--get-random-int-op-Output'']}}
@@ -502,26 +460,8 @@ spec:
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
                 value: "8080"
-              taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
-              when:
-              - input: $(tasks.condition-5-dag-driver.results.condition)
-                operator: notin
-                values:
-                - "false"
-            - name: print-op-2
-              params:
-              - name: executor-input
-                value: $(tasks.print-op-2-driver.results.executor-input)
-              - name: execution-id
-                value: $(tasks.print-op-2-driver.results.execution-id)
-              - name: run-id
-                value: $(context.pipelineRun.uid)
               - name: component-spec
                 value: '{"executorLabel":"exec-print-op-2","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
-              - name: pod-spec-patch
-                value: $(tasks.print-op-2-driver.results.pod-spec-patch)
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: KFPTask
@@ -546,10 +486,10 @@ spec:
                       - launcher-v2
                       - --copy
                       - /tekton/home/launch
+                      computeResources: {}
                       image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
                       imagePullPolicy: Always
                       name: kfp-launcher
-                      computeResources: {}
                     - args:
                       - sh
                       - -c
@@ -602,6 +542,7 @@ spec:
                       - --mlmd_server_port
                       - $(METADATA_GRPC_SERVICE_PORT)
                       - --
+                      computeResources: {}
                       env:
                       - name: KFP_POD_NAME
                         valueFrom:
@@ -620,7 +561,7 @@ spec:
                       - name: ML_PIPELINE_SERVICE_PORT_GRPC
                         value: "8887"
                       - name: MINIO_SERVICE_SERVICE_HOST
-                        value: "minio-service.kubeflow.svc.cluster.local"
+                        value: minio-service.kubeflow.svc.cluster.local
                       - name: MINIO_SERVICE_SERVICE_PORT
                         value: "9000"
                       envFrom:
@@ -629,10 +570,9 @@ spec:
                           optional: true
                       image: python:3.7
                       name: user-main
-                      computeResources: {}
               when:
-              - input: $(tasks.print-op-2-driver.results.cached-decision)
-                operator: in
+              - input: $(tasks.condition-5-dag-driver.results.condition)
+                operator: notin
                 values:
                 - "false"
             - name: condition-5-dag-driver
@@ -641,11 +581,11 @@ spec:
                 value: DAG
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(tasks.condition-3-dag-driver.results.execution-id)
-              - name: component
+              - name: component-spec
                 value: '{"dag":{"tasks":{"print-op-2":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"{{$.inputs.parameters[''pipelinechannel--loop-item-param-1'']}}
                   and {{$.inputs.parameters[''pipelinechannel--get-random-int-op-Output'']}}
                   \u003c= 5!"}},"pipelinechannel--get-random-int-op-Output":{"componentInputParameter":"pipelinechannel--get-random-int-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"print-op-2"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--get-random-int-op-Output":{"parameterType":"NUMBER_INTEGER"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
@@ -663,15 +603,15 @@ spec:
               runAfter:
               - get-random-int-op
               taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: KFPTask
             - name: condition-5-dag-pub-driver
               params:
               - name: type
                 value: DAG-PUB
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(tasks.condition-5-dag-driver.results.execution-id)
@@ -682,20 +622,18 @@ spec:
               runAfter:
               - print-op-2
               taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
-            - name: get-random-int-op-driver
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: KFPTask
+            - name: get-random-int-op
               params:
               - name: type
                 value: CONTAINER
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(tasks.condition-3-dag-driver.results.execution-id)
-              - name: component
-                value: '{"executorLabel":"exec-get-random-int-op","inputDefinitions":{"parameters":{"maximum":{"parameterType":"NUMBER_INTEGER"},"minimum":{"parameterType":"NUMBER_INTEGER"}}},"outputDefinitions":{"parameters":{"Output":{"parameterType":"NUMBER_INTEGER"}}}}'
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-get-random-int-op"},"inputs":{"parameters":{"maximum":{"runtimeValue":{"constant":9}},"minimum":{"runtimeValue":{"constant":0}}}},"taskInfo":{"name":"get-random-int-op"}}'
               - name: container
@@ -719,26 +657,8 @@ spec:
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
                 value: "8080"
-              taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
-              when:
-              - input: $(tasks.condition-3-dag-driver.results.condition)
-                operator: notin
-                values:
-                - "false"
-            - name: get-random-int-op
-              params:
-              - name: executor-input
-                value: $(tasks.get-random-int-op-driver.results.executor-input)
-              - name: execution-id
-                value: $(tasks.get-random-int-op-driver.results.execution-id)
-              - name: run-id
-                value: $(context.pipelineRun.uid)
               - name: component-spec
                 value: '{"executorLabel":"exec-get-random-int-op","inputDefinitions":{"parameters":{"maximum":{"parameterType":"NUMBER_INTEGER"},"minimum":{"parameterType":"NUMBER_INTEGER"}}},"outputDefinitions":{"parameters":{"Output":{"parameterType":"NUMBER_INTEGER"}}}}'
-              - name: pod-spec-patch
-                value: $(tasks.get-random-int-op-driver.results.pod-spec-patch)
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: KFPTask
@@ -763,10 +683,10 @@ spec:
                       - launcher-v2
                       - --copy
                       - /tekton/home/launch
+                      computeResources: {}
                       image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
                       imagePullPolicy: Always
                       name: kfp-launcher
-                      computeResources: {}
                     - args:
                       - sh
                       - -c
@@ -822,6 +742,7 @@ spec:
                       - --mlmd_server_port
                       - $(METADATA_GRPC_SERVICE_PORT)
                       - --
+                      computeResources: {}
                       env:
                       - name: KFP_POD_NAME
                         valueFrom:
@@ -840,7 +761,7 @@ spec:
                       - name: ML_PIPELINE_SERVICE_PORT_GRPC
                         value: "8887"
                       - name: MINIO_SERVICE_SERVICE_HOST
-                        value: "minio-service.kubeflow.svc.cluster.local"
+                        value: minio-service.kubeflow.svc.cluster.local
                       - name: MINIO_SERVICE_SERVICE_PORT
                         value: "9000"
                       envFrom:
@@ -849,10 +770,9 @@ spec:
                           optional: true
                       image: python:3.7
                       name: user-main
-                      computeResources: {}
               when:
-              - input: $(tasks.get-random-int-op-driver.results.cached-decision)
-                operator: in
+              - input: $(tasks.condition-3-dag-driver.results.condition)
+                operator: notin
                 values:
                 - "false"
             - name: condition-3-dag-driver
@@ -861,11 +781,11 @@ spec:
                 value: DAG
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
-              - name: component
+              - name: component-spec
                 value: '{"dag":{"tasks":{"condition-4":{"componentRef":{"name":"comp-condition-4"},"dependentTasks":["get-random-int-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--get-random-int-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"get-random-int-op"}},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-4"},"triggerPolicy":{"condition":"int(inputs.parameter_values[''pipelinechannel--get-random-int-op-Output''])
                   \u003e 5"}},"condition-5":{"componentRef":{"name":"comp-condition-5"},"dependentTasks":["get-random-int-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--get-random-int-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"get-random-int-op"}},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-5"},"triggerPolicy":{"condition":"int(inputs.parameter_values[''pipelinechannel--get-random-int-op-Output''])
                   \u003c= 5"}},"get-random-int-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-get-random-int-op"},"inputs":{"parameters":{"maximum":{"runtimeValue":{"constant":9}},"minimum":{"runtimeValue":{"constant":0}}}},"taskInfo":{"name":"get-random-int-op"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
@@ -881,15 +801,15 @@ spec:
               - name: mlmd_server_port
                 value: "8080"
               taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: KFPTask
             - name: condition-3-dag-pub-driver
               params:
               - name: type
                 value: DAG-PUB
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(tasks.condition-3-dag-driver.results.execution-id)
@@ -901,19 +821,19 @@ spec:
               - print-op
               - print-op-2
               taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: KFPTask
     - name: for-loop-2-dag-driver
       params:
       - name: type
         value: DAG
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
-      - name: component
+      - name: component-spec
         value: '{"dag":{"tasks":{"condition-3":{"componentRef":{"name":"comp-condition-3"},"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-3"},"triggerPolicy":{"condition":"inputs.parameter_values[''pipelinechannel--loop-item-param-1'']
           == inputs.parameter_values[''pipelinechannel--flip-coin-op-Output'']"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
       - name: task
@@ -930,15 +850,15 @@ spec:
       runAfter:
       - flip-coin-op
       taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
     - name: for-loop-2-dag-pub-driver
       params:
       - name: type
         value: DAG-PUB
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.for-loop-2-dag-driver.results.execution-id)
@@ -949,19 +869,19 @@ spec:
       runAfter:
       - for-loop-2-pipelineloop
       taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
     - name: root-system-dag-driver
       params:
       - name: type
         value: ROOT_DAG
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: "0"
-      - name: component
+      - name: component-spec
         value: '{"dag":{"tasks":{"flip-coin-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-flip-coin-op"},"taskInfo":{"name":"flip-coin-op"}},"for-loop-2":{"componentRef":{"name":"comp-for-loop-2"},"dependentTasks":["flip-coin-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"flip-coin-op"}}}},"iteratorPolicy":{"parallelismLimit":2},"parameterIterator":{"itemInput":"pipelinechannel--loop-item-param-1","items":{"raw":"[\"heads\",
           \"tails\"]"}},"taskInfo":{"name":"for-loop-2"}}}}}'
       - name: task
@@ -975,15 +895,15 @@ spec:
       - name: mlmd_server_port
         value: "8080"
       taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
     - name: root-system-dag-pub-driver
       params:
       - name: type
         value: DAG-PUB
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
@@ -994,6 +914,7 @@ spec:
       runAfter:
       - for-loop-2-pipelineloop
       taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
+  taskRunTemplate: {}
 status: {}

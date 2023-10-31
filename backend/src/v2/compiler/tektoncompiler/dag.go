@@ -233,8 +233,8 @@ func (c *pipelinerunCompiler) dagDriverTask(
 	t := &pipelineapi.PipelineTask{
 		Name: name,
 		TaskRef: &pipelineapi.TaskRef{
-			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
-			Kind:       "KFPDriver",
+			APIVersion: "custom.tekton.dev/v1alpha1",
+			Kind:       "KFPTask",
 		},
 		Params: []pipelineapi.Param{
 			// "--type"
@@ -247,9 +247,9 @@ func (c *pipelinerunCompiler) dagDriverTask(
 				Name:  paramNamePipelineName,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
-			// "--run_id"
+			// "--run-id"
 			{
-				Name:  paramNameRunId,
+				Name:  paramRunId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
@@ -257,9 +257,9 @@ func (c *pipelinerunCompiler) dagDriverTask(
 				Name:  paramNameDagExecutionId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
 			},
-			// "--component"
+			// "--component-spec"
 			{
-				Name:  paramComponent,
+				Name:  paramComponentSpec,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
 			},
 			// "--task"
@@ -309,8 +309,8 @@ func (c *pipelinerunCompiler) dagPubDriverTask(
 	t := &pipelineapi.PipelineTask{
 		Name: name,
 		TaskRef: &pipelineapi.TaskRef{
-			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
-			Kind:       "KFPDriver",
+			APIVersion: "custom.tekton.dev/v1alpha1",
+			Kind:       "KFPTask",
 		},
 		Params: []pipelineapi.Param{
 			// "--type"
@@ -323,9 +323,9 @@ func (c *pipelinerunCompiler) dagPubDriverTask(
 				Name:  paramNamePipelineName,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
-			// "--run_id"
+			// "--run-id"
 			{
-				Name:  paramNameRunId,
+				Name:  paramRunId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"

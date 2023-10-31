@@ -27,18 +27,16 @@ spec:
             - name: parent-dag-id
               type: string
             tasks:
-            - name: print-op-driver
+            - name: print-op
               params:
               - name: type
                 value: CONTAINER
               - name: pipeline_name
                 value: pipeline-with-exit-handler
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(params.parent-dag-id)
-              - name: component
-                value: '{"executorLabel":"exec-print-op","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"Exit
                   handler has worked!"}}}},"taskInfo":{"name":"print-op"},"triggerPolicy":{"strategy":"ALL_UPSTREAM_TASKS_COMPLETED"}}'
@@ -60,21 +58,8 @@ spec:
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
                 value: "8080"
-              taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
-            - name: print-op
-              params:
-              - name: executor-input
-                value: $(tasks.print-op-driver.results.executor-input)
-              - name: execution-id
-                value: $(tasks.print-op-driver.results.execution-id)
-              - name: run-id
-                value: $(context.pipelineRun.uid)
               - name: component-spec
                 value: '{"executorLabel":"exec-print-op","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
-              - name: pod-spec-patch
-                value: $(tasks.print-op-driver.results.pod-spec-patch)
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: KFPTask
@@ -99,10 +84,10 @@ spec:
                       - launcher-v2
                       - --copy
                       - /tekton/home/launch
+                      computeResources: {}
                       image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
                       imagePullPolicy: Always
                       name: kfp-launcher
-                      computeResources: {}
                     - args:
                       - sh
                       - -c
@@ -155,6 +140,7 @@ spec:
                       - --mlmd_server_port
                       - $(METADATA_GRPC_SERVICE_PORT)
                       - --
+                      computeResources: {}
                       env:
                       - name: KFP_POD_NAME
                         valueFrom:
@@ -173,7 +159,7 @@ spec:
                       - name: ML_PIPELINE_SERVICE_PORT_GRPC
                         value: "8887"
                       - name: MINIO_SERVICE_SERVICE_HOST
-                        value: "minio-service.kubeflow.svc.cluster.local"
+                        value: minio-service.kubeflow.svc.cluster.local
                       - name: MINIO_SERVICE_SERVICE_PORT
                         value: "9000"
                       envFrom:
@@ -182,19 +168,13 @@ spec:
                           optional: true
                       image: python:3.7
                       name: user-main
-                      computeResources: {}
-              when:
-              - input: $(tasks.print-op-driver.results.cached-decision)
-                operator: in
-                values:
-                - "false"
             - name: root-system-dag-pub-driver
               params:
               - name: type
                 value: DAG-PUB
               - name: pipeline_name
                 value: pipeline-with-exit-handler
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(params.parent-dag-id)
@@ -205,21 +185,19 @@ spec:
               runAfter:
               - print-op
               taskRef:
-                apiVersion: kfp-driver.tekton.dev/v1alpha1
-                kind: KFPDriver
+                apiVersion: custom.tekton.dev/v1alpha1
+                kind: KFPTask
     tasks:
-    - name: fail-op-driver
+    - name: fail-op
       params:
       - name: type
         value: CONTAINER
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.exit-handler-1-dag-driver.results.execution-id)
-      - name: component
-        value: '{"executorLabel":"exec-fail-op","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-fail-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"Task
           failed."}}}},"taskInfo":{"name":"fail-op"}}'
@@ -241,21 +219,8 @@ spec:
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port
         value: "8080"
-      taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
-    - name: fail-op
-      params:
-      - name: executor-input
-        value: $(tasks.fail-op-driver.results.executor-input)
-      - name: execution-id
-        value: $(tasks.fail-op-driver.results.execution-id)
-      - name: run-id
-        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-fail-op","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
-      - name: pod-spec-patch
-        value: $(tasks.fail-op-driver.results.pod-spec-patch)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: KFPTask
@@ -280,10 +245,10 @@ spec:
               - launcher-v2
               - --copy
               - /tekton/home/launch
+              computeResources: {}
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
               imagePullPolicy: Always
               name: kfp-launcher
-              computeResources: {}
             - args:
               - sh
               - -c
@@ -338,6 +303,7 @@ spec:
               - --mlmd_server_port
               - $(METADATA_GRPC_SERVICE_PORT)
               - --
+              computeResources: {}
               env:
               - name: KFP_POD_NAME
                 valueFrom:
@@ -356,7 +322,7 @@ spec:
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
               - name: MINIO_SERVICE_SERVICE_HOST
-                value: "minio-service.kubeflow.svc.cluster.local"
+                value: minio-service.kubeflow.svc.cluster.local
               - name: MINIO_SERVICE_SERVICE_PORT
                 value: "9000"
               envFrom:
@@ -365,24 +331,16 @@ spec:
                   optional: true
               image: python:3.7
               name: user-main
-              computeResources: {}
-      when:
-      - input: $(tasks.fail-op-driver.results.cached-decision)
-        operator: in
-        values:
-        - "false"
-    - name: print-op-2-driver
+    - name: print-op-2
       params:
       - name: type
         value: CONTAINER
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.exit-handler-1-dag-driver.results.execution-id)
-      - name: component
-        value: '{"executorLabel":"exec-print-op-2","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"inputs":{"parameters":{"message":{"componentInputParameter":"pipelinechannel--message"}}},"taskInfo":{"name":"print-op-2"}}'
       - name: container
@@ -403,21 +361,8 @@ spec:
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port
         value: "8080"
-      taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
-    - name: print-op-2
-      params:
-      - name: executor-input
-        value: $(tasks.print-op-2-driver.results.executor-input)
-      - name: execution-id
-        value: $(tasks.print-op-2-driver.results.execution-id)
-      - name: run-id
-        value: $(context.pipelineRun.uid)
       - name: component-spec
         value: '{"executorLabel":"exec-print-op-2","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
-      - name: pod-spec-patch
-        value: $(tasks.print-op-2-driver.results.pod-spec-patch)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: KFPTask
@@ -442,10 +387,10 @@ spec:
               - launcher-v2
               - --copy
               - /tekton/home/launch
+              computeResources: {}
               image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
               imagePullPolicy: Always
               name: kfp-launcher
-              computeResources: {}
             - args:
               - sh
               - -c
@@ -498,6 +443,7 @@ spec:
               - --mlmd_server_port
               - $(METADATA_GRPC_SERVICE_PORT)
               - --
+              computeResources: {}
               env:
               - name: KFP_POD_NAME
                 valueFrom:
@@ -516,7 +462,7 @@ spec:
               - name: ML_PIPELINE_SERVICE_PORT_GRPC
                 value: "8887"
               - name: MINIO_SERVICE_SERVICE_HOST
-                value: "minio-service.kubeflow.svc.cluster.local"
+                value: minio-service.kubeflow.svc.cluster.local
               - name: MINIO_SERVICE_SERVICE_PORT
                 value: "9000"
               envFrom:
@@ -525,23 +471,17 @@ spec:
                   optional: true
               image: python:3.7
               name: user-main
-              computeResources: {}
-      when:
-      - input: $(tasks.print-op-2-driver.results.cached-decision)
-        operator: in
-        values:
-        - "false"
     - name: exit-handler-1-dag-driver
       params:
       - name: type
         value: DAG
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.root-system-dag-driver.results.execution-id)
-      - name: component
+      - name: component-spec
         value: '{"dag":{"tasks":{"fail-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-fail-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"Task
           failed."}}}},"taskInfo":{"name":"fail-op"}},"print-op-2":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"inputs":{"parameters":{"message":{"componentInputParameter":"pipelinechannel--message"}}},"taskInfo":{"name":"print-op-2"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--message":{"parameterType":"STRING"}}}}'
       - name: task
@@ -555,15 +495,15 @@ spec:
       - name: mlmd_server_port
         value: "8080"
       taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
     - name: exit-handler-1-dag-pub-driver
       params:
       - name: type
         value: DAG-PUB
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: $(tasks.exit-handler-1-dag-driver.results.execution-id)
@@ -575,19 +515,19 @@ spec:
       - fail-op
       - print-op-2
       taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
     - name: root-system-dag-driver
       params:
       - name: type
         value: ROOT_DAG
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: "0"
-      - name: component
+      - name: component-spec
         value: '{"dag":{"tasks":{"exit-handler-1":{"componentRef":{"name":"comp-exit-handler-1"},"inputs":{"parameters":{"pipelinechannel--message":{"componentInputParameter":"message"}}},"taskInfo":{"name":"exit-handler-1"}},"print-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"Exit
           handler has worked!"}}}},"taskInfo":{"name":"print-op"},"triggerPolicy":{"strategy":"ALL_UPSTREAM_TASKS_COMPLETED"}}}},"inputDefinitions":{"parameters":{"message":{"defaultValue":"Hello
           World!","parameterType":"STRING"}}}}'
@@ -602,6 +542,7 @@ spec:
       - name: mlmd_server_port
         value: "8080"
       taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
+  taskRunTemplate: {}
 status: {}
