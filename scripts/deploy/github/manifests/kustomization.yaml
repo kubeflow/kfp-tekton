@@ -35,6 +35,9 @@ images:
 # - name: '*/aipipeline/tekton-driver'
 #   newName: kind-registry:5000/tekton-driver
 #   newTag: latest
+# - name: '*/aipipeline/tekton-driver'
+#   newName: kind-registry:5000/tekton-driver
+#   newTag: latest
 
 labels:
 - includeSelectors: true
