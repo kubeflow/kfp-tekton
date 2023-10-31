@@ -21,11 +21,19 @@ import (
 	"errors"
 	"fmt"
 
+	"bytes"
+	"strconv"
+
 	"github.com/google/uuid"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/apis/kfptask"
 	kfptaskv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/apis/kfptask/v1alpha1"
 	kfptaskClient "github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/client/clientset/versioned"
 	kfptaskListers "github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/client/listers/kfptask/v1alpha1"
+	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
+	"github.com/kubeflow/pipelines/backend/src/v2/cacheutils"
+	"github.com/kubeflow/pipelines/backend/src/v2/driver"
+	"github.com/kubeflow/pipelines/backend/src/v2/metadata"
+	"github.com/kubeflow/pipelines/kubernetes_platform/go/kubernetesplatform"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
 	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
@@ -43,6 +51,8 @@ import (
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
+
+	"github.com/golang/protobuf/jsonpb"
 )
 
 // Check that our Reconciler implements Interface
@@ -63,12 +73,35 @@ type Reconciler struct {
 // borrow from kubeflow/pipeline/backend/src/common/util
 const LabelKeyWorkflowRunId = "pipeline/runid"
 
-// for kfptaskState
+// for kfptaskState and driver
 const (
 	StateInit = iota
 	StateRunning
 	StateDone
+	// ReasonFailedValidation indicates that the reason for failure status is that Run failed runtime validation
+	ReasonFailedValidation = "RunValidationFailed"
+
+	// ReasonDriverError indicates that an error is throw while running the driver
+	ReasonDriverError = "DriverError"
+
+	// ReasonDriverSuccess indicates that driver finished successfully
+	ReasonDriverSuccess = "DriverSuccess"
+	ReasonTaskCached    = "TaskCached"
+
+	ExecutionID    = "execution-id"
+	ExecutorInput  = "executor-input"
+	CacheDecision  = "cached-decision"
+	Condition      = "condition"
+	IterationCount = "iteration-count"
+	PodSpecPatch   = "pod-spec-patch"
 )
+
+type driverOptions struct {
+	driverType  string
+	options     driver.Options
+	mlmdClient  *metadata.Client
+	cacheClient *cacheutils.Client
+}
 
 type kfptaskState uint8
 
@@ -80,11 +113,21 @@ type kfptaskFS struct {
 	logger     *zap.SugaredLogger
 }
 
+// newReconciledNormal makes a new reconciler event with event type Normal, and reason RunReconciled.
+func newReconciledNormal(namespace, name string) reconciler.Event {
+	return reconciler.NewEvent(k8score.EventTypeNormal, "RunReconciled", "Run reconciled: \"%s/%s\"", namespace, name)
+}
+
 func newKfpTaskFS(ctx context.Context, r *Reconciler, run *tektonv1beta1.CustomRun, logger *zap.SugaredLogger) *kfptaskFS {
 	var state kfptaskState
 	if !run.HasStarted() {
 		state = StateInit
 		run.Status.InitializeConditions()
+		// In case node time was not synchronized, when controller has been scheduled to other nodes.
+		if run.Status.StartTime.Sub(run.CreationTimestamp.Time) < 0 {
+			logger.Warnf("Run %s/%s createTimestamp %s is after the Run started %s", run.Namespace, run.Name, run.CreationTimestamp, run.Status.StartTime)
+			run.Status.StartTime = &run.CreationTimestamp
+		}
 	} else if run.IsDone() || run.IsCancelled() {
 		state = StateDone
 	} else {
@@ -94,8 +137,8 @@ func newKfpTaskFS(ctx context.Context, r *Reconciler, run *tektonv1beta1.CustomR
 }
 
 // check if the run is in StateDone or not
-func (kts *kfptaskFS) isDone() bool {
-	return kts.state == StateDone
+func (kts *kfptaskFS) isRunning() bool {
+	return kts.state == StateRunning
 }
 
 // Not to propagate these labels to the spawned TaskRun
@@ -112,12 +155,13 @@ var annotationToDrop = map[string]string{
 }
 
 // transite to next state based on current state
-func (kts *kfptaskFS) next() error {
+func (kts *kfptaskFS) next(executionID string, executorInput string, podSpecPatch string) error {
+	kts.logger.Infof("kts state is %s", kts.state)
 	switch kts.state {
 	case StateInit:
 		// create the corresponding TaskRun CRD and start the task
 		// compose TaskRun
-		tr, err := kts.constructTaskRun()
+		tr, err := kts.constructTaskRun(executionID, executorInput, podSpecPatch)
 		if err != nil {
 			kts.logger.Infof("Failed to construct a TaskRun:%v", err)
 			kts.run.Status.MarkCustomRunFailed(kfptaskv1alpha1.KfpTaskRunReasonInternalError.String(), "Failed to construct a TaskRun: %v", err)
@@ -172,7 +216,7 @@ func (kts *kfptaskFS) next() error {
 	return nil
 }
 
-func (kts *kfptaskFS) constructTaskRun() (*tektonv1.TaskRun, error) {
+func (kts *kfptaskFS) constructTaskRun(executionID string, executorInput string, podSpecPatch string) (*tektonv1.TaskRun, error) {
 	ktSpec, err := kts.reconciler.getKfpTaskSpec(kts.ctx, kts.run)
 	if err != nil {
 		return nil, err
@@ -183,17 +227,16 @@ func (kts *kfptaskFS) constructTaskRun() (*tektonv1.TaskRun, error) {
 		return nil, err
 	}
 
-	var podSpecPatch string
 	params := kts.run.Spec.Params
-	// get pod-spec-patch from params and remove it
-	for idx, param := range kts.run.Spec.Params {
-		if param.Name == "pod-spec-patch" {
-			podSpecPatch = param.Value.StringVal
-			params[idx] = kts.run.Spec.Params[len(kts.run.Spec.Params)-1]
-			params = params[:len(params)-1]
-			break
-		}
-	}
+	// Pass execution ID to executor Input to task spec
+	params = append(params, tektonv1beta1.Param{Name: ExecutionID, Value: tektonv1beta1.ParamValue{
+		Type:      "string",
+		StringVal: executionID,
+	}})
+	params = append(params, tektonv1beta1.Param{Name: ExecutorInput, Value: tektonv1beta1.ParamValue{
+		Type:      "string",
+		StringVal: executorInput,
+	}})
 
 	tr := &tektonv1.TaskRun{
 		ObjectMeta: metav1.ObjectMeta{
@@ -281,21 +324,47 @@ func dupStringMaps(source map[string]string, excludsive map[string]string) map[s
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.CustomRun) reconciler.Event {
 	logger := logging.FromContext(ctx)
-	logger.Infof("Reconciling %s/%s", run.Namespace, run.Name)
+	logger.Infof("Reconciling Run %s/%s", run.Namespace, run.Name)
+	executionID := ""
+	executorInput := ""
+	PodSpecPatch := ""
+	ktstate := newKfpTaskFS(ctx, r, run, logger)
+
+	if run.IsDone() {
+		logger.Infof("Run %s/%s is done", run.Namespace, run.Name)
+		return nil
+	}
+	if ktstate.isRunning() {
+		return ktstate.next(executionID, executorInput, PodSpecPatch)
+	}
+	options, err := parseParams(run)
+	if err != nil {
+		logger.Errorf("Run %s/%s is invalid because of %s", run.Namespace, run.Name, err)
+		run.Status.MarkCustomRunFailed(ReasonFailedValidation,
+			"Run can't be run because it has an invalid param - %v", err)
+		return nil
+	}
+
+	runResults, runTask, executionID, executorInput, PodSpecPatch, driverErr := execDriver(ctx, options)
+	if driverErr != nil {
+		logger.Errorf("kfp-driver execution failed when reconciling Run %s/%s: %v", run.Namespace, run.Name, driverErr)
+		run.Status.MarkCustomRunFailed(ReasonDriverError,
+			"kfp-driver execution failed: %v", driverErr)
+		return nil
+	}
+
+	run.Status.Results = append(run.Status.Results, *runResults...)
+	if !runTask {
+		run.Status.MarkCustomRunSucceeded(ReasonDriverSuccess, "kfp-driver finished successfully")
+		return newReconciledNormal(run.Namespace, run.Name)
+	}
 
 	if err := checkRefAndSpec(run); err != nil {
 		logger.Infof("check error: %s", err.Error())
 		return nil
 	}
 
-	ktstate := newKfpTaskFS(ctx, r, run, logger)
-	// Ignore completed task.
-	if ktstate.isDone() {
-		logger.Debugf("Run is finished, done reconciling")
-		return nil
-	}
-
-	return ktstate.next()
+	return ktstate.next(executionID, executorInput, PodSpecPatch)
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, run *tektonv1beta1.CustomRun) reconciler.Event {
@@ -374,14 +443,6 @@ func (r *Reconciler) getKfpTaskSpec(ctx context.Context, run *tektonv1beta1.Cust
 	return nil, fmt.Errorf("run doesn't have taskRef or taskSpec")
 }
 
-// func getJsonString(obj interface{}) string {
-// 	raw, err := json.MarshalIndent(obj, "", "  ")
-// 	if err != nil {
-// 		return ""
-// 	}
-// 	return string(raw)
-// }
-
 func paramConvertTo(ctx context.Context, p *tektonv1beta1.Param, sink *tektonv1.Param) {
 	sink.Name = p.Name
 	newValue := tektonv1.ParamValue{}
@@ -404,4 +465,221 @@ func v1ParamsConversion(ctx context.Context, v1beta1Params tektonv1beta1.Params)
 		v1Params = append(v1Params, v1Param)
 	}
 	return v1Params
+}
+
+func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.CustomRunResult, bool, string, string, string, error) {
+	var execution *driver.Execution
+	var err error
+	logger := logging.FromContext(ctx)
+	taskRunDecision := false
+	executionID := ""
+	executorInput := ""
+	PodSpecPatch := ""
+
+	switch options.driverType {
+	case "ROOT_DAG":
+		execution, err = driver.RootDAG(ctx, options.options, options.mlmdClient)
+	case "CONTAINER":
+		execution, err = driver.Container(ctx, options.options, options.mlmdClient, options.cacheClient)
+	case "DAG":
+		execution, err = driver.DAG(ctx, options.options, options.mlmdClient)
+	case "DAG-PUB":
+		// no-op for now
+		return &[]tektonv1beta1.CustomRunResult{}, taskRunDecision, executionID, executorInput, PodSpecPatch, nil
+	default:
+		err = fmt.Errorf("unknown driverType %s", options.driverType)
+	}
+
+	if err != nil {
+		return nil, taskRunDecision, executionID, executorInput, PodSpecPatch, err
+	}
+
+	var runResults []tektonv1beta1.CustomRunResult
+
+	if execution.ID != 0 {
+		logger.Infof("output execution.ID=%v", execution.ID)
+		runResults = append(runResults, tektonv1beta1.CustomRunResult{
+			Name:  ExecutionID,
+			Value: fmt.Sprint(execution.ID),
+		})
+		executionID = fmt.Sprint(execution.ID)
+	}
+	if execution.IterationCount != nil {
+		count := *execution.IterationCount
+		// the count would be use as 'to' in PipelineLoop. since PipelineLoop's numberic iteration includes to,
+		// need to substract 1 to compensate that.
+		count = count - 1
+		if count < 0 {
+			count = 0
+		}
+		logger.Infof("output execution.IterationCount=%v, count:=%v", *execution.IterationCount, count)
+		runResults = append(runResults, tektonv1beta1.CustomRunResult{
+			Name:  IterationCount,
+			Value: fmt.Sprint(count),
+		})
+	}
+
+	logger.Infof("output execution.Condition=%v", execution.Condition)
+	if execution.Condition == nil {
+		runResults = append(runResults, tektonv1beta1.CustomRunResult{
+			Name:  Condition,
+			Value: "",
+		})
+	} else {
+		runResults = append(runResults, tektonv1beta1.CustomRunResult{
+			Name:  Condition,
+			Value: strconv.FormatBool(*execution.Condition),
+		})
+	}
+
+	if execution.ExecutorInput != nil {
+		marshaler := jsonpb.Marshaler{}
+		executorInputJSON, err := marshaler.MarshalToString(execution.ExecutorInput)
+		if err != nil {
+			return nil, taskRunDecision, executionID, executorInput, PodSpecPatch, fmt.Errorf("failed to marshal ExecutorInput to JSON: %w", err)
+		}
+		logger.Infof("output ExecutorInput:%s\n", prettyPrint(executorInputJSON))
+		executorInput = fmt.Sprint(executorInputJSON)
+	}
+	// seems no need to handle the PodSpecPatch
+	if execution.Cached != nil {
+		taskRunDecision = strconv.FormatBool(*execution.Cached) == "false"
+	}
+
+	if options.driverType == "CONTAINER" {
+		PodSpecPatch = execution.PodSpecPatch
+	}
+
+	return &runResults, taskRunDecision, executionID, executorInput, PodSpecPatch, nil
+}
+
+func prettyPrint(jsonStr string) string {
+	var prettyJSON bytes.Buffer
+	err := json.Indent(&prettyJSON, []byte(jsonStr), "", "  ")
+	if err != nil {
+		return jsonStr
+	}
+	return prettyJSON.String()
+}
+
+func parseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError) {
+	if len(run.Spec.Params) == 0 {
+		return nil, apis.ErrMissingField("params")
+	}
+
+	opts := &driverOptions{
+		driverType: "",
+	}
+	opts.options.Namespace = run.Namespace
+	mlmdOpts := metadata.ServerConfig{
+		Address: "metadata-grpc-service.kubeflow.svc.cluster.local",
+		Port:    "8080",
+	}
+
+	for _, param := range run.Spec.Params {
+		switch param.Name {
+		case "type":
+			opts.driverType = param.Value.StringVal
+		case "pipeline_name":
+			opts.options.PipelineName = param.Value.StringVal
+		case "run-id":
+			opts.options.RunID = param.Value.StringVal
+		case "component-spec":
+			if param.Value.StringVal != "" {
+				componentSpec := &pipelinespec.ComponentSpec{}
+				if err := jsonpb.UnmarshalString(param.Value.StringVal, componentSpec); err != nil {
+					return nil, apis.ErrInvalidValue(
+						fmt.Sprintf("failed to unmarshal component spec, error: %v\ncomponentSpec: %v", err, param.Value.StringVal),
+						"component-spec",
+					)
+				}
+				opts.options.Component = componentSpec
+			}
+		case "task":
+			if param.Value.StringVal != "" {
+				taskSpec := &pipelinespec.PipelineTaskSpec{}
+				if err := jsonpb.UnmarshalString(param.Value.StringVal, taskSpec); err != nil {
+					return nil, apis.ErrInvalidValue(
+						fmt.Sprintf("failed to unmarshal task spec, error: %v\ntask: %v", err, param.Value.StringVal),
+						"task",
+					)
+				}
+				opts.options.Task = taskSpec
+			}
+		case "runtime_config":
+			if param.Value.StringVal != "" {
+				runtimeConfig := &pipelinespec.PipelineJob_RuntimeConfig{}
+				if err := jsonpb.UnmarshalString(param.Value.StringVal, runtimeConfig); err != nil {
+					return nil, apis.ErrInvalidValue(
+						fmt.Sprintf("failed to unmarshal runtime config, error: %v\nruntimeConfig: %v", err, param.Value.StringVal),
+						"runtime-config",
+					)
+				}
+				opts.options.RuntimeConfig = runtimeConfig
+			}
+		case "container":
+			if param.Value.StringVal != "" {
+				containerSpec := &pipelinespec.PipelineDeploymentConfig_PipelineContainerSpec{}
+				if err := jsonpb.UnmarshalString(param.Value.StringVal, containerSpec); err != nil {
+					return nil, apis.ErrInvalidValue(
+						fmt.Sprintf("failed to unmarshal container spec, error: %v\ncontainerSpec: %v", err, param.Value.StringVal),
+						"container",
+					)
+				}
+				opts.options.Container = containerSpec
+			}
+		case "iteration_index":
+			if param.Value.StringVal != "" {
+				tmp, _ := strconv.ParseInt(param.Value.StringVal, 10, 32)
+				opts.options.IterationIndex = int(tmp)
+			} else {
+				opts.options.IterationIndex = -1
+			}
+		case "dag_execution_id":
+			if param.Value.StringVal != "" {
+				opts.options.DAGExecutionID, _ = strconv.ParseInt(param.Value.StringVal, 10, 64)
+			}
+		case "mlmd_server_address":
+			mlmdOpts.Address = param.Value.StringVal
+		case "mlmd_server_port":
+			mlmdOpts.Port = param.Value.StringVal
+		case "kubernetes_config":
+			var k8sExecCfg *kubernetesplatform.KubernetesExecutorConfig
+			if param.Value.StringVal != "" {
+				k8sExecCfg = &kubernetesplatform.KubernetesExecutorConfig{}
+				if err := jsonpb.UnmarshalString(param.Value.StringVal, k8sExecCfg); err != nil {
+					return nil, apis.ErrInvalidValue(
+						fmt.Sprintf("failed to unmarshal Kubernetes config, error: %v\nKubernetesConfig: %v", err, param.Value.StringVal),
+						"kubernetes_config",
+					)
+				}
+				opts.options.KubernetesExecutorConfig = k8sExecCfg
+			}
+		}
+	}
+
+	//Check all options
+	if opts.driverType == "" {
+		return nil, apis.ErrMissingField("type")
+	}
+
+	if opts.options.RunID == "" {
+		return nil, apis.ErrMissingField("run-id")
+	}
+
+	if opts.driverType == "ROOT_DAG" && opts.options.RuntimeConfig == nil {
+		return nil, apis.ErrMissingField("runtime-config")
+	}
+
+	client, err := metadata.NewClient(mlmdOpts.Address, mlmdOpts.Port)
+	if err != nil {
+		return nil, apis.ErrGeneric(fmt.Sprintf("can't estibalish MLMD connection: %v", err))
+	}
+	opts.mlmdClient = client
+	cacheClient, err := cacheutils.NewClient()
+	if err != nil {
+		return nil, apis.ErrGeneric(fmt.Sprintf("can't estibalish cache connection: %v", err))
+	}
+	opts.cacheClient = cacheClient
+	return opts, nil
 }
