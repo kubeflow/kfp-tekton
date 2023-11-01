@@ -469,7 +469,7 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.C
 	taskRunDecision := false
 	executionID := ""
 	executorInput := ""
-	PodSpecPatch := ""
+	podSpecPatch := ""
 
 	switch options.driverType {
 	case "ROOT_DAG":
@@ -480,13 +480,13 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.C
 		execution, err = driver.DAG(ctx, options.options, options.mlmdClient)
 	case "DAG-PUB":
 		// no-op for now
-		return &[]tektonv1beta1.CustomRunResult{}, taskRunDecision, executionID, executorInput, PodSpecPatch, nil
+		return &[]tektonv1beta1.CustomRunResult{}, taskRunDecision, executionID, executorInput, podSpecPatch, nil
 	default:
 		err = fmt.Errorf("unknown driverType %s", options.driverType)
 	}
 
 	if err != nil {
-		return nil, taskRunDecision, executionID, executorInput, PodSpecPatch, err
+		return nil, taskRunDecision, executionID, executorInput, podSpecPatch, err
 	}
 
 	var runResults []tektonv1beta1.CustomRunResult
@@ -531,7 +531,7 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.C
 		marshaler := jsonpb.Marshaler{}
 		executorInputJSON, err := marshaler.MarshalToString(execution.ExecutorInput)
 		if err != nil {
-			return nil, taskRunDecision, executionID, executorInput, PodSpecPatch, fmt.Errorf("failed to marshal ExecutorInput to JSON: %w", err)
+			return nil, taskRunDecision, executionID, executorInput, podSpecPatch, fmt.Errorf("failed to marshal ExecutorInput to JSON: %w", err)
 		}
 		logger.Infof("output ExecutorInput:%s\n", prettyPrint(executorInputJSON))
 		executorInput = fmt.Sprint(executorInputJSON)
@@ -542,10 +542,10 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.C
 	}
 
 	if options.driverType == "CONTAINER" {
-		PodSpecPatch = execution.PodSpecPatch
+		podSpecPatch = execution.PodSpecPatch
 	}
 
-	return &runResults, taskRunDecision, executionID, executorInput, PodSpecPatch, nil
+	return &runResults, taskRunDecision, executionID, executorInput, podSpecPatch, nil
 }
 
 func prettyPrint(jsonStr string) string {
