@@ -88,12 +88,10 @@ const (
 	ReasonDriverSuccess = "DriverSuccess"
 	ReasonTaskCached    = "TaskCached"
 
-	ExecutionID    = "execution-id"
-	ExecutorInput  = "executor-input"
-	CacheDecision  = "cached-decision"
+	ExecutionID    = "execution_id"
+	ExecutorInput  = "executor_input"
 	Condition      = "condition"
 	IterationCount = "iteration-count"
-	PodSpecPatch   = "pod-spec-patch"
 )
 
 type driverOptions struct {
@@ -136,7 +134,7 @@ func newKfpTaskFS(ctx context.Context, r *Reconciler, run *tektonv1beta1.CustomR
 	return &kfptaskFS{ctx: ctx, reconciler: r, run: run, state: state, logger: logger}
 }
 
-// check if the run is in StateDone or not
+// check if the run is in StateRunning or not
 func (kts *kfptaskFS) isRunning() bool {
 	return kts.state == StateRunning
 }
@@ -228,7 +226,7 @@ func (kts *kfptaskFS) constructTaskRun(executionID string, executorInput string,
 	}
 
 	params := kts.run.Spec.Params
-	// Pass execution ID to executor Input to task spec
+	// Pass execution ID to executor Input and task spec
 	params = append(params, tektonv1beta1.Param{Name: ExecutionID, Value: tektonv1beta1.ParamValue{
 		Type:      "string",
 		StringVal: executionID,
@@ -325,9 +323,6 @@ func dupStringMaps(source map[string]string, excludsive map[string]string) map[s
 func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.CustomRun) reconciler.Event {
 	logger := logging.FromContext(ctx)
 	logger.Infof("Reconciling Run %s/%s", run.Namespace, run.Name)
-	executionID := ""
-	executorInput := ""
-	PodSpecPatch := ""
 	ktstate := newKfpTaskFS(ctx, r, run, logger)
 
 	if run.IsDone() {
@@ -335,7 +330,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.Custo
 		return nil
 	}
 	if ktstate.isRunning() {
-		return ktstate.next(executionID, executorInput, PodSpecPatch)
+		return ktstate.next("", "", "")
 	}
 	options, err := parseParams(run)
 	if err != nil {
@@ -345,7 +340,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.Custo
 		return nil
 	}
 
-	runResults, runTask, executionID, executorInput, PodSpecPatch, driverErr := execDriver(ctx, options)
+	runResults, runTask, executionID, executorInput, podSpecPatch, driverErr := execDriver(ctx, options)
 	if driverErr != nil {
 		logger.Errorf("kfp-driver execution failed when reconciling Run %s/%s: %v", run.Namespace, run.Name, driverErr)
 		run.Status.MarkCustomRunFailed(ReasonDriverError,
@@ -364,7 +359,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.Custo
 		return nil
 	}
 
-	return ktstate.next(executionID, executorInput, PodSpecPatch)
+	return ktstate.next(executionID, executorInput, podSpecPatch)
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, run *tektonv1beta1.CustomRun) reconciler.Event {
@@ -582,15 +577,15 @@ func parseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError
 			opts.driverType = param.Value.StringVal
 		case "pipeline_name":
 			opts.options.PipelineName = param.Value.StringVal
-		case "run-id":
+		case "run_id":
 			opts.options.RunID = param.Value.StringVal
-		case "component-spec":
+		case "component":
 			if param.Value.StringVal != "" {
 				componentSpec := &pipelinespec.ComponentSpec{}
 				if err := jsonpb.UnmarshalString(param.Value.StringVal, componentSpec); err != nil {
 					return nil, apis.ErrInvalidValue(
 						fmt.Sprintf("failed to unmarshal component spec, error: %v\ncomponentSpec: %v", err, param.Value.StringVal),
-						"component-spec",
+						"component",
 					)
 				}
 				opts.options.Component = componentSpec
@@ -664,7 +659,7 @@ func parseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError
 	}
 
 	if opts.options.RunID == "" {
-		return nil, apis.ErrMissingField("run-id")
+		return nil, apis.ErrMissingField("run_id")
 	}
 
 	if opts.driverType == "ROOT_DAG" && opts.options.RuntimeConfig == nil {
