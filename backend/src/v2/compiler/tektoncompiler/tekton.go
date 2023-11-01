@@ -634,11 +634,9 @@ const (
 	paramImporter       = "importer"       // importer spec
 	paramRuntimeConfig  = "runtime-config" // job runtime config, pipeline level inputs
 	paramParentDagID    = "parent-dag-id"
-	paramExecutionID    = "execution-id"
 	paramIterationItem  = "iteration-item"
 	paramIterationCount = "iteration-count"
 	paramIterationIndex = "iteration-index"
-	paramExecutorInput  = "executor-input"
 	paramDriverType     = "driver-type"
 	paramCachedDecision = "cached-decision" // indicate hit cache or not
 	paramPodSpecPatch   = "pod-spec-patch"  // a strategic patch merged with the pod spec
@@ -661,6 +659,8 @@ const (
 	paramNameMLMDServerHost   = "mlmd_server_address"
 	paramNameMLMDServerPort   = "mlmd_server_port"
 	paramKubernetesConfig     = "kubernetes_config" // stores Kubernetes config
+	paramExecutionID          = "execution_id"
+	paramExecutorInput        = "executor_input"
 
 	kindPipelineLoop   = "PipelineLoop"
 	subfixPipelineLoop = "-pipelineloop"

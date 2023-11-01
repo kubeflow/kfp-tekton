@@ -22,8 +22,8 @@ spec:
       - name: importer
         value: '{"artifactUri":{"constantValue":{"stringValue":"gs://ml-pipeline-playground/shakespeare1.txt"}},"typeSchema":{"schemaTitle":"system.Dataset"}}'
       - name: parent-dag-id
-        value: $(tasks.root-system-dag-driver.results.execution-id)
-      - name: run-id
+        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: run_id
         value: $(context.pipelineRun.uid)
       runAfter:
       - root-system-dag-driver
@@ -44,9 +44,9 @@ spec:
           type: string
         results:
         - description: execution id
-          name: execution-id
+          name: execution_id
         - description: executor input
-          name: executor-input
+          name: executor_input
         spec: null
         steps:
         - args:
@@ -61,7 +61,7 @@ spec:
           - --pipeline_name
           - pipeline-with-importer
           - --run_id
-          - $(params.run-id)
+          - $(params.run_id)
           - --parent_dag_id
           - $(params.parent-dag-id)
           - --pod_name
@@ -96,11 +96,11 @@ spec:
         value: ROOT_DAG
       - name: pipeline_name
         value: pipeline-with-importer
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: "0"
-      - name: component-spec
+      - name: component
         value: '{"dag":{"tasks":{"importer":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-importer"},"inputs":{"parameters":{"uri":{"runtimeValue":{"constantValue":{"stringValue":"gs://ml-pipeline-playground/shakespeare1.txt"}}}}},"taskInfo":{"name":"importer"}}}},"inputDefinitions":{"parameters":{"dataset2":{"type":"STRING"}}}}'
       - name: task
         value: ""
@@ -121,10 +121,10 @@ spec:
         value: DAG-PUB
       - name: pipeline_name
         value: pipeline-with-importer
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution-id)
+        value: $(tasks.root-system-dag-driver.results.execution_id)
       - name: mlmd_server_address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port

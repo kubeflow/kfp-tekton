@@ -16,7 +16,7 @@ spec:
     - name: exithandler
       params:
       - name: parent-dag-id
-        value: $(tasks.root-system-dag-driver.results.execution-id)
+        value: $(tasks.root-system-dag-driver.results.execution_id)
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: ExitHandler
@@ -33,7 +33,7 @@ spec:
                 value: CONTAINER
               - name: pipeline_name
                 value: pipeline-with-exit-handler
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(params.parent-dag-id)
@@ -58,7 +58,7 @@ spec:
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
                 value: "8080"
-              - name: component-spec
+              - name: component
                 value: '{"executorLabel":"exec-print-op","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
@@ -71,13 +71,13 @@ spec:
                 spec:
                   taskSpec:
                     params:
-                    - name: executor-input
+                    - name: executor_input
                       type: string
-                    - name: execution-id
+                    - name: execution_id
                       type: string
-                    - name: run-id
+                    - name: run_id
                       type: string
-                    - name: component-spec
+                    - name: component
                       type: string
                     steps:
                     - command:
@@ -124,13 +124,13 @@ spec:
                       - --pipeline_name
                       - pipeline-with-exit-handler
                       - --run_id
-                      - $(params.run-id)
+                      - $(params.run_id)
                       - --execution_id
-                      - $(params.execution-id)
+                      - $(params.execution_id)
                       - --executor_input
-                      - $(params.executor-input)
+                      - $(params.executor_input)
                       - --component_spec
-                      - $(params.component-spec)
+                      - $(params.component)
                       - --pod_name
                       - $(KFP_POD_NAME)
                       - --pod_uid
@@ -174,7 +174,7 @@ spec:
                 value: DAG-PUB
               - name: pipeline_name
                 value: pipeline-with-exit-handler
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(params.parent-dag-id)
@@ -194,10 +194,10 @@ spec:
         value: CONTAINER
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.exit-handler-1-dag-driver.results.execution-id)
+        value: $(tasks.exit-handler-1-dag-driver.results.execution_id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-fail-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"Task
           failed."}}}},"taskInfo":{"name":"fail-op"}}'
@@ -219,7 +219,7 @@ spec:
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port
         value: "8080"
-      - name: component-spec
+      - name: component
         value: '{"executorLabel":"exec-fail-op","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -232,13 +232,13 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor-input
+            - name: executor_input
               type: string
-            - name: execution-id
+            - name: execution_id
               type: string
-            - name: run-id
+            - name: run_id
               type: string
-            - name: component-spec
+            - name: component
               type: string
             steps:
             - command:
@@ -287,13 +287,13 @@ spec:
               - --pipeline_name
               - pipeline-with-exit-handler
               - --run_id
-              - $(params.run-id)
+              - $(params.run_id)
               - --execution_id
-              - $(params.execution-id)
+              - $(params.execution_id)
               - --executor_input
-              - $(params.executor-input)
+              - $(params.executor_input)
               - --component_spec
-              - $(params.component-spec)
+              - $(params.component)
               - --pod_name
               - $(KFP_POD_NAME)
               - --pod_uid
@@ -337,10 +337,10 @@ spec:
         value: CONTAINER
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.exit-handler-1-dag-driver.results.execution-id)
+        value: $(tasks.exit-handler-1-dag-driver.results.execution_id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"inputs":{"parameters":{"message":{"componentInputParameter":"pipelinechannel--message"}}},"taskInfo":{"name":"print-op-2"}}'
       - name: container
@@ -361,7 +361,7 @@ spec:
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port
         value: "8080"
-      - name: component-spec
+      - name: component
         value: '{"executorLabel":"exec-print-op-2","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -374,13 +374,13 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor-input
+            - name: executor_input
               type: string
-            - name: execution-id
+            - name: execution_id
               type: string
-            - name: run-id
+            - name: run_id
               type: string
-            - name: component-spec
+            - name: component
               type: string
             steps:
             - command:
@@ -427,13 +427,13 @@ spec:
               - --pipeline_name
               - pipeline-with-exit-handler
               - --run_id
-              - $(params.run-id)
+              - $(params.run_id)
               - --execution_id
-              - $(params.execution-id)
+              - $(params.execution_id)
               - --executor_input
-              - $(params.executor-input)
+              - $(params.executor_input)
               - --component_spec
-              - $(params.component-spec)
+              - $(params.component)
               - --pod_name
               - $(KFP_POD_NAME)
               - --pod_uid
@@ -477,11 +477,11 @@ spec:
         value: DAG
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution-id)
-      - name: component-spec
+        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: component
         value: '{"dag":{"tasks":{"fail-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-fail-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"Task
           failed."}}}},"taskInfo":{"name":"fail-op"}},"print-op-2":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"inputs":{"parameters":{"message":{"componentInputParameter":"pipelinechannel--message"}}},"taskInfo":{"name":"print-op-2"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--message":{"parameterType":"STRING"}}}}'
       - name: task
@@ -503,10 +503,10 @@ spec:
         value: DAG-PUB
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.exit-handler-1-dag-driver.results.execution-id)
+        value: $(tasks.exit-handler-1-dag-driver.results.execution_id)
       - name: mlmd_server_address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port
@@ -523,11 +523,11 @@ spec:
         value: ROOT_DAG
       - name: pipeline_name
         value: pipeline-with-exit-handler
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: "0"
-      - name: component-spec
+      - name: component
         value: '{"dag":{"tasks":{"exit-handler-1":{"componentRef":{"name":"comp-exit-handler-1"},"inputs":{"parameters":{"pipelinechannel--message":{"componentInputParameter":"message"}}},"taskInfo":{"name":"exit-handler-1"}},"print-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"Exit
           handler has worked!"}}}},"taskInfo":{"name":"print-op"},"triggerPolicy":{"strategy":"ALL_UPSTREAM_TASKS_COMPLETED"}}}},"inputDefinitions":{"parameters":{"message":{"defaultValue":"Hello
           World!","parameterType":"STRING"}}}}'

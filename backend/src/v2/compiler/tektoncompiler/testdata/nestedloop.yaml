@@ -19,10 +19,10 @@ spec:
         value: CONTAINER
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution-id)
+        value: $(tasks.root-system-dag-driver.results.execution_id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-flip-coin-op"},"taskInfo":{"name":"flip-coin-op"}}'
       - name: container
@@ -45,7 +45,7 @@ spec:
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port
         value: "8080"
-      - name: component-spec
+      - name: component
         value: '{"executorLabel":"exec-flip-coin-op","outputDefinitions":{"parameters":{"Output":{"parameterType":"STRING"}}}}'
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -58,13 +58,13 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor-input
+            - name: executor_input
               type: string
-            - name: execution-id
+            - name: execution_id
               type: string
-            - name: run-id
+            - name: run_id
               type: string
-            - name: component-spec
+            - name: component
               type: string
             steps:
             - command:
@@ -114,13 +114,13 @@ spec:
               - --pipeline_name
               - tutorial-control-flows
               - --run_id
-              - $(params.run-id)
+              - $(params.run_id)
               - --execution_id
-              - $(params.execution-id)
+              - $(params.execution_id)
               - --executor_input
-              - $(params.executor-input)
+              - $(params.executor_input)
               - --component_spec
-              - $(params.component-spec)
+              - $(params.component)
               - --pod_name
               - $(KFP_POD_NAME)
               - --pod_uid
@@ -161,7 +161,7 @@ spec:
     - name: for-loop-2-pipelineloop
       params:
       - name: parent-dag-id
-        value: $(tasks.for-loop-2-dag-driver.results.execution-id)
+        value: $(tasks.for-loop-2-dag-driver.results.execution_id)
       - name: from
         value: "0"
       - name: step
@@ -191,11 +191,11 @@ spec:
                 value: DAG
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(params.parent-dag-id)
-              - name: component-spec
+              - name: component
                 value: '{"dag":{"tasks":{"condition-3":{"componentRef":{"name":"comp-condition-3"},"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-3"},"triggerPolicy":{"condition":"inputs.parameter_values[''pipelinechannel--loop-item-param-1'']
                   == inputs.parameter_values[''pipelinechannel--flip-coin-op-Output'']"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
               - name: task
@@ -218,7 +218,7 @@ spec:
                 value: DAG-PUB
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
                 value: $(params.parent-dag-id)
@@ -238,10 +238,10 @@ spec:
                 value: CONTAINER
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
-                value: $(tasks.condition-4-dag-driver.results.execution-id)
+                value: $(tasks.condition-4-dag-driver.results.execution_id)
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"{{$.inputs.parameters[''pipelinechannel--loop-item-param-1'']}}
                   and {{$.inputs.parameters[''pipelinechannel--get-random-int-op-Output'']}}
@@ -264,7 +264,7 @@ spec:
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
                 value: "8080"
-              - name: component-spec
+              - name: component
                 value: '{"executorLabel":"exec-print-op","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
@@ -277,13 +277,13 @@ spec:
                 spec:
                   taskSpec:
                     params:
-                    - name: executor-input
+                    - name: executor_input
                       type: string
-                    - name: execution-id
+                    - name: execution_id
                       type: string
-                    - name: run-id
+                    - name: run_id
                       type: string
-                    - name: component-spec
+                    - name: component
                       type: string
                     steps:
                     - command:
@@ -330,13 +330,13 @@ spec:
                       - --pipeline_name
                       - tutorial-control-flows
                       - --run_id
-                      - $(params.run-id)
+                      - $(params.run_id)
                       - --execution_id
-                      - $(params.execution-id)
+                      - $(params.execution_id)
                       - --executor_input
-                      - $(params.executor-input)
+                      - $(params.executor_input)
                       - --component_spec
-                      - $(params.component-spec)
+                      - $(params.component)
                       - --pod_name
                       - $(KFP_POD_NAME)
                       - --pod_uid
@@ -385,11 +385,11 @@ spec:
                 value: DAG
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
-                value: $(tasks.condition-3-dag-driver.results.execution-id)
-              - name: component-spec
+                value: $(tasks.condition-3-dag-driver.results.execution_id)
+              - name: component
                 value: '{"dag":{"tasks":{"print-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"{{$.inputs.parameters[''pipelinechannel--loop-item-param-1'']}}
                   and {{$.inputs.parameters[''pipelinechannel--get-random-int-op-Output'']}}
                   \u003e 5!"}},"pipelinechannel--get-random-int-op-Output":{"componentInputParameter":"pipelinechannel--get-random-int-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"print-op"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--get-random-int-op-Output":{"parameterType":"NUMBER_INTEGER"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
@@ -415,10 +415,10 @@ spec:
                 value: DAG-PUB
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
-                value: $(tasks.condition-4-dag-driver.results.execution-id)
+                value: $(tasks.condition-4-dag-driver.results.execution_id)
               - name: mlmd_server_address
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
@@ -434,10 +434,10 @@ spec:
                 value: CONTAINER
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
-                value: $(tasks.condition-5-dag-driver.results.execution-id)
+                value: $(tasks.condition-5-dag-driver.results.execution_id)
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"{{$.inputs.parameters[''pipelinechannel--loop-item-param-1'']}}
                   and {{$.inputs.parameters[''pipelinechannel--get-random-int-op-Output'']}}
@@ -460,7 +460,7 @@ spec:
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
                 value: "8080"
-              - name: component-spec
+              - name: component
                 value: '{"executorLabel":"exec-print-op-2","inputDefinitions":{"parameters":{"message":{"parameterType":"STRING"}}}}'
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
@@ -473,13 +473,13 @@ spec:
                 spec:
                   taskSpec:
                     params:
-                    - name: executor-input
+                    - name: executor_input
                       type: string
-                    - name: execution-id
+                    - name: execution_id
                       type: string
-                    - name: run-id
+                    - name: run_id
                       type: string
-                    - name: component-spec
+                    - name: component
                       type: string
                     steps:
                     - command:
@@ -526,13 +526,13 @@ spec:
                       - --pipeline_name
                       - tutorial-control-flows
                       - --run_id
-                      - $(params.run-id)
+                      - $(params.run_id)
                       - --execution_id
-                      - $(params.execution-id)
+                      - $(params.execution_id)
                       - --executor_input
-                      - $(params.executor-input)
+                      - $(params.executor_input)
                       - --component_spec
-                      - $(params.component-spec)
+                      - $(params.component)
                       - --pod_name
                       - $(KFP_POD_NAME)
                       - --pod_uid
@@ -581,11 +581,11 @@ spec:
                 value: DAG
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
-                value: $(tasks.condition-3-dag-driver.results.execution-id)
-              - name: component-spec
+                value: $(tasks.condition-3-dag-driver.results.execution_id)
+              - name: component
                 value: '{"dag":{"tasks":{"print-op-2":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"inputs":{"parameters":{"message":{"runtimeValue":{"constant":"{{$.inputs.parameters[''pipelinechannel--loop-item-param-1'']}}
                   and {{$.inputs.parameters[''pipelinechannel--get-random-int-op-Output'']}}
                   \u003c= 5!"}},"pipelinechannel--get-random-int-op-Output":{"componentInputParameter":"pipelinechannel--get-random-int-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"print-op-2"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--get-random-int-op-Output":{"parameterType":"NUMBER_INTEGER"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
@@ -611,10 +611,10 @@ spec:
                 value: DAG-PUB
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
-                value: $(tasks.condition-5-dag-driver.results.execution-id)
+                value: $(tasks.condition-5-dag-driver.results.execution_id)
               - name: mlmd_server_address
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
@@ -630,10 +630,10 @@ spec:
                 value: CONTAINER
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
-                value: $(tasks.condition-3-dag-driver.results.execution-id)
+                value: $(tasks.condition-3-dag-driver.results.execution_id)
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-get-random-int-op"},"inputs":{"parameters":{"maximum":{"runtimeValue":{"constant":9}},"minimum":{"runtimeValue":{"constant":0}}}},"taskInfo":{"name":"get-random-int-op"}}'
               - name: container
@@ -657,7 +657,7 @@ spec:
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
                 value: "8080"
-              - name: component-spec
+              - name: component
                 value: '{"executorLabel":"exec-get-random-int-op","inputDefinitions":{"parameters":{"maximum":{"parameterType":"NUMBER_INTEGER"},"minimum":{"parameterType":"NUMBER_INTEGER"}}},"outputDefinitions":{"parameters":{"Output":{"parameterType":"NUMBER_INTEGER"}}}}'
               taskSpec:
                 apiVersion: custom.tekton.dev/v1alpha1
@@ -670,13 +670,13 @@ spec:
                 spec:
                   taskSpec:
                     params:
-                    - name: executor-input
+                    - name: executor_input
                       type: string
-                    - name: execution-id
+                    - name: execution_id
                       type: string
-                    - name: run-id
+                    - name: run_id
                       type: string
-                    - name: component-spec
+                    - name: component
                       type: string
                     steps:
                     - command:
@@ -726,13 +726,13 @@ spec:
                       - --pipeline_name
                       - tutorial-control-flows
                       - --run_id
-                      - $(params.run-id)
+                      - $(params.run_id)
                       - --execution_id
-                      - $(params.execution-id)
+                      - $(params.execution_id)
                       - --executor_input
-                      - $(params.executor-input)
+                      - $(params.executor_input)
                       - --component_spec
-                      - $(params.component-spec)
+                      - $(params.component)
                       - --pod_name
                       - $(KFP_POD_NAME)
                       - --pod_uid
@@ -781,11 +781,11 @@ spec:
                 value: DAG
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
-                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
-              - name: component-spec
+                value: $(tasks.for-loop-2-loop-dag-driver.results.execution_id)
+              - name: component
                 value: '{"dag":{"tasks":{"condition-4":{"componentRef":{"name":"comp-condition-4"},"dependentTasks":["get-random-int-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--get-random-int-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"get-random-int-op"}},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-4"},"triggerPolicy":{"condition":"int(inputs.parameter_values[''pipelinechannel--get-random-int-op-Output''])
                   \u003e 5"}},"condition-5":{"componentRef":{"name":"comp-condition-5"},"dependentTasks":["get-random-int-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--get-random-int-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"get-random-int-op"}},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-5"},"triggerPolicy":{"condition":"int(inputs.parameter_values[''pipelinechannel--get-random-int-op-Output''])
                   \u003c= 5"}},"get-random-int-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-get-random-int-op"},"inputs":{"parameters":{"maximum":{"runtimeValue":{"constant":9}},"minimum":{"runtimeValue":{"constant":0}}}},"taskInfo":{"name":"get-random-int-op"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
@@ -809,10 +809,10 @@ spec:
                 value: DAG-PUB
               - name: pipeline_name
                 value: tutorial-control-flows
-              - name: run-id
+              - name: run_id
                 value: $(context.pipelineRun.uid)
               - name: dag_execution_id
-                value: $(tasks.condition-3-dag-driver.results.execution-id)
+                value: $(tasks.condition-3-dag-driver.results.execution_id)
               - name: mlmd_server_address
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd_server_port
@@ -829,11 +829,11 @@ spec:
         value: DAG
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution-id)
-      - name: component-spec
+        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: component
         value: '{"dag":{"tasks":{"condition-3":{"componentRef":{"name":"comp-condition-3"},"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-3"},"triggerPolicy":{"condition":"inputs.parameter_values[''pipelinechannel--loop-item-param-1'']
           == inputs.parameter_values[''pipelinechannel--flip-coin-op-Output'']"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
       - name: task
@@ -858,10 +858,10 @@ spec:
         value: DAG-PUB
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.for-loop-2-dag-driver.results.execution-id)
+        value: $(tasks.for-loop-2-dag-driver.results.execution_id)
       - name: mlmd_server_address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port
@@ -877,11 +877,11 @@ spec:
         value: ROOT_DAG
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: "0"
-      - name: component-spec
+      - name: component
         value: '{"dag":{"tasks":{"flip-coin-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-flip-coin-op"},"taskInfo":{"name":"flip-coin-op"}},"for-loop-2":{"componentRef":{"name":"comp-for-loop-2"},"dependentTasks":["flip-coin-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"flip-coin-op"}}}},"iteratorPolicy":{"parallelismLimit":2},"parameterIterator":{"itemInput":"pipelinechannel--loop-item-param-1","items":{"raw":"[\"heads\",
           \"tails\"]"}},"taskInfo":{"name":"for-loop-2"}}}}}'
       - name: task
@@ -903,10 +903,10 @@ spec:
         value: DAG-PUB
       - name: pipeline_name
         value: tutorial-control-flows
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution-id)
+        value: $(tasks.root-system-dag-driver.results.execution_id)
       - name: mlmd_server_address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port

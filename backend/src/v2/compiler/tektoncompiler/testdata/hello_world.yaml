@@ -19,10 +19,10 @@ spec:
         value: CONTAINER
       - name: pipeline_name
         value: namespace/n1/pipeline/hello-world
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution-id)
+        value: $(tasks.root-system-dag-driver.results.execution_id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-hello-world"},"inputs":{"parameters":{"text":{"componentInputParameter":"text"}}},"taskInfo":{"name":"hello-world"}}'
       - name: container
@@ -40,7 +40,7 @@ spec:
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port
         value: "8080"
-      - name: component-spec
+      - name: component
         value: '{"executorLabel":"exec-hello-world","inputDefinitions":{"parameters":{"text":{"type":"STRING"}}}}'
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -53,13 +53,13 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor-input
+            - name: executor_input
               type: string
-            - name: execution-id
+            - name: execution_id
               type: string
-            - name: run-id
+            - name: run_id
               type: string
-            - name: component-spec
+            - name: component
               type: string
             steps:
             - command:
@@ -95,13 +95,13 @@ spec:
               - --pipeline_name
               - namespace/n1/pipeline/hello-world
               - --run_id
-              - $(params.run-id)
+              - $(params.run_id)
               - --execution_id
-              - $(params.execution-id)
+              - $(params.execution_id)
               - --executor_input
-              - $(params.executor-input)
+              - $(params.executor_input)
               - --component_spec
-              - $(params.component-spec)
+              - $(params.component)
               - --pod_name
               - $(KFP_POD_NAME)
               - --pod_uid
@@ -145,11 +145,11 @@ spec:
         value: ROOT_DAG
       - name: pipeline_name
         value: namespace/n1/pipeline/hello-world
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
         value: "0"
-      - name: component-spec
+      - name: component
         value: '{"dag":{"tasks":{"hello-world":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-hello-world"},"inputs":{"parameters":{"text":{"componentInputParameter":"text"}}},"taskInfo":{"name":"hello-world"}}}},"inputDefinitions":{"parameters":{"text":{"type":"STRING"}}}}'
       - name: task
         value: ""
@@ -170,10 +170,10 @@ spec:
         value: DAG-PUB
       - name: pipeline_name
         value: namespace/n1/pipeline/hello-world
-      - name: run-id
+      - name: run_id
         value: $(context.pipelineRun.uid)
       - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution-id)
+        value: $(tasks.root-system-dag-driver.results.execution_id)
       - name: mlmd_server_address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
       - name: mlmd_server_port

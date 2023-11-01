@@ -256,9 +256,9 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 				Name:  paramNamePipelineName,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
-			// "--run-id", runID(),
+			// "--run_id", runID(),
 			{
-				Name:  paramRunId,
+				Name:  paramNameRunId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
@@ -296,9 +296,9 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 				Name:  paramNameMLMDServerPort,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDPort()},
 			},
-			// "--component-spec"
+			// "--component"
 			{
-				Name:  paramComponentSpec,
+				Name:  paramComponent,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
 			},
 			// produce the following outputs:
@@ -338,10 +338,10 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 	launcherCmd := []string{
 		kfpLauncherPath,
 		"--pipeline_name", pipelineName,
-		"--run_id", inputValue(paramRunId),
+		"--run_id", inputValue(paramNameRunId),
 		"--execution_id", inputValue(paramExecutionID),
 		"--executor_input", inputValue(paramExecutorInput),
-		"--component_spec", inputValue(paramComponentSpec),
+		"--component_spec", inputValue(paramComponent),
 		"--pod_name",
 		"$(KFP_POD_NAME)",
 		"--pod_uid",
@@ -358,8 +358,8 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 			Params: []pipelineapi.ParamSpec{
 				{Name: paramExecutorInput, Type: "string"}, // --executor_input
 				{Name: paramExecutionID, Type: "string"},   // --execution_id
-				{Name: paramRunId, Type: "string"},         // --run_id
-				{Name: paramComponentSpec, Type: "string"}, // --component_spec
+				{Name: paramNameRunId, Type: "string"},     // --run_id
+				{Name: paramComponent, Type: "string"},     // --component
 			},
 			Steps: []pipelineapi.Step{
 				// step 1: copy launcher

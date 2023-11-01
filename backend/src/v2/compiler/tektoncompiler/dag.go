@@ -247,9 +247,9 @@ func (c *pipelinerunCompiler) dagDriverTask(
 				Name:  paramNamePipelineName,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
-			// "--run-id"
+			// "--run_id"
 			{
-				Name:  paramRunId,
+				Name:  paramNameRunId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
@@ -257,9 +257,9 @@ func (c *pipelinerunCompiler) dagDriverTask(
 				Name:  paramNameDagExecutionId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
 			},
-			// "--component-spec"
+			// "--component"
 			{
-				Name:  paramComponentSpec,
+				Name:  paramComponent,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
 			},
 			// "--task"
@@ -323,9 +323,9 @@ func (c *pipelinerunCompiler) dagPubDriverTask(
 				Name:  paramNamePipelineName,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
-			// "--run-id"
+			// "--run_id"
 			{
-				Name:  paramRunId,
+				Name:  paramNameRunId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
 			// "--dag_execution_id"
