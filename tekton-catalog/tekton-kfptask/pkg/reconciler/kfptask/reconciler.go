@@ -88,8 +88,8 @@ const (
 	ReasonDriverSuccess = "DriverSuccess"
 	ReasonTaskCached    = "TaskCached"
 
-	ExecutionID    = "execution_id"
-	ExecutorInput  = "executor_input"
+	ExecutionID    = "execution-id"
+	ExecutorInput  = "executor-input"
 	Condition      = "condition"
 	IterationCount = "iteration-count"
 )
@@ -478,7 +478,7 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.C
 		execution, err = driver.Container(ctx, options.options, options.mlmdClient, options.cacheClient)
 	case "DAG":
 		execution, err = driver.DAG(ctx, options.options, options.mlmdClient)
-	case "DAG-PUB":
+	case "DAG_PUB":
 		// no-op for now
 		return &[]tektonv1beta1.CustomRunResult{}, taskRunDecision, executionID, executorInput, podSpecPatch, nil
 	default:
@@ -575,9 +575,9 @@ func parseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError
 		switch param.Name {
 		case "type":
 			opts.driverType = param.Value.StringVal
-		case "pipeline_name":
+		case "pipeline-name":
 			opts.options.PipelineName = param.Value.StringVal
-		case "run_id":
+		case "run-id":
 			opts.options.RunID = param.Value.StringVal
 		case "component":
 			if param.Value.StringVal != "" {
@@ -601,7 +601,7 @@ func parseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError
 				}
 				opts.options.Task = taskSpec
 			}
-		case "runtime_config":
+		case "runtime-config":
 			if param.Value.StringVal != "" {
 				runtimeConfig := &pipelinespec.PipelineJob_RuntimeConfig{}
 				if err := jsonpb.UnmarshalString(param.Value.StringVal, runtimeConfig); err != nil {
@@ -623,29 +623,29 @@ func parseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError
 				}
 				opts.options.Container = containerSpec
 			}
-		case "iteration_index":
+		case "iteration-index":
 			if param.Value.StringVal != "" {
 				tmp, _ := strconv.ParseInt(param.Value.StringVal, 10, 32)
 				opts.options.IterationIndex = int(tmp)
 			} else {
 				opts.options.IterationIndex = -1
 			}
-		case "dag_execution_id":
+		case "dag-execution-id":
 			if param.Value.StringVal != "" {
 				opts.options.DAGExecutionID, _ = strconv.ParseInt(param.Value.StringVal, 10, 64)
 			}
-		case "mlmd_server_address":
+		case "mlmd-server-address":
 			mlmdOpts.Address = param.Value.StringVal
-		case "mlmd_server_port":
+		case "mlmd-server-port":
 			mlmdOpts.Port = param.Value.StringVal
-		case "kubernetes_config":
+		case "kubernetes-config":
 			var k8sExecCfg *kubernetesplatform.KubernetesExecutorConfig
 			if param.Value.StringVal != "" {
 				k8sExecCfg = &kubernetesplatform.KubernetesExecutorConfig{}
 				if err := jsonpb.UnmarshalString(param.Value.StringVal, k8sExecCfg); err != nil {
 					return nil, apis.ErrInvalidValue(
 						fmt.Sprintf("failed to unmarshal Kubernetes config, error: %v\nKubernetesConfig: %v", err, param.Value.StringVal),
-						"kubernetes_config",
+						"kubernetes-config",
 					)
 				}
 				opts.options.KubernetesExecutorConfig = k8sExecCfg
@@ -659,7 +659,7 @@ func parseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError
 	}
 
 	if opts.options.RunID == "" {
-		return nil, apis.ErrMissingField("run_id")
+		return nil, apis.ErrMissingField("run-id")
 	}
 
 	if opts.driverType == "ROOT_DAG" && opts.options.RuntimeConfig == nil {
