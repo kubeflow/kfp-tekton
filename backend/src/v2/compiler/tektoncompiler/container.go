@@ -251,17 +251,17 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 				Name:  paramNameType,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: "CONTAINER"},
 			},
-			// "--pipeline_name", c.spec.GetPipelineInfo().GetName(),
+			// "--pipeline-name", c.spec.GetPipelineInfo().GetName(),
 			{
 				Name:  paramNamePipelineName,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
-			// "--run_id", runID(),
+			// "--run-id", runID(),
 			{
-				Name:  paramNameRunId,
+				Name:  paramRunId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
-			// "--dag_execution_id"
+			// "--dag-execution-id"
 			{
 				Name:  paramNameDagExecutionId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
@@ -276,22 +276,22 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 				Name:  paramContainer,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.container},
 			},
-			// "--iteration_index", inputValue(paramIterationIndex),
+			// "--iteration-index", inputValue(paramIterationIndex),
 			{
 				Name:  paramNameIterationIndex,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.iterationIndex},
 			},
-			// "--kubernetes_config"
+			// "--kubernetes-config"
 			{
 				Name:  paramKubernetesConfig,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.kubernetesConfig},
 			},
-			// "--mlmd_server_address"
+			// "--mlmd-server-address"
 			{
 				Name:  paramNameMLMDServerHost,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDHost()},
 			},
-			// "--mlmd_server_port"
+			// "--mlmd-server-port"
 			{
 				Name:  paramNameMLMDServerPort,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDPort()},
@@ -338,7 +338,7 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 	launcherCmd := []string{
 		kfpLauncherPath,
 		"--pipeline_name", pipelineName,
-		"--run_id", inputValue(paramNameRunId),
+		"--run_id", inputValue(paramRunId),
 		"--execution_id", inputValue(paramExecutionID),
 		"--executor_input", inputValue(paramExecutorInput),
 		"--component_spec", inputValue(paramComponent),
@@ -358,7 +358,7 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 			Params: []pipelineapi.ParamSpec{
 				{Name: paramExecutorInput, Type: "string"}, // --executor_input
 				{Name: paramExecutionID, Type: "string"},   // --execution_id
-				{Name: paramNameRunId, Type: "string"},     // --run_id
+				{Name: paramRunId, Type: "string"},         // --run_id
 				{Name: paramComponent, Type: "string"},     // --component
 			},
 			Steps: []pipelineapi.Step{

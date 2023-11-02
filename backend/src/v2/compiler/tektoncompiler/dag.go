@@ -242,17 +242,17 @@ func (c *pipelinerunCompiler) dagDriverTask(
 				Name:  paramNameType,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getDagType()},
 			},
-			// "--pipeline_name"
+			// "--pipeline-name"
 			{
 				Name:  paramNamePipelineName,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
-			// "--run_id"
+			// "--run-id"
 			{
-				Name:  paramNameRunId,
+				Name:  paramRunId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
-			// "--dag_execution_id"
+			// "--dag-execution-id"
 			{
 				Name:  paramNameDagExecutionId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
@@ -267,17 +267,17 @@ func (c *pipelinerunCompiler) dagDriverTask(
 				Name:  paramTask,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.task},
 			},
-			// "--runtime_config"
+			// "--runtime-config"
 			{
 				Name:  paramNameRuntimeConfig,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runtimeConfigJson},
 			},
-			// "--iteration_index"
+			// "--iteration-index"
 			{
 				Name:  paramNameIterationIndex,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getIterationIndex()},
 			},
-			// "--mlmd_server_address"
+			// "--mlmd-server-address"
 			{
 				Name:  paramNameMLMDServerHost,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDHost()},
@@ -318,27 +318,27 @@ func (c *pipelinerunCompiler) dagPubDriverTask(
 				Name:  paramNameType,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getDagType()},
 			},
-			// "--pipeline_name"
+			// "--pipeline-name"
 			{
 				Name:  paramNamePipelineName,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
-			// "--run_id"
+			// "--run-id"
 			{
-				Name:  paramNameRunId,
+				Name:  paramRunId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
-			// "--dag_execution_id"
+			// "--dag-execution-id"
 			{
 				Name:  paramNameDagExecutionId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope() || rootDagPub)},
 			},
-			// "--mlmd_server_address"
+			// "--mlmd-server-address"
 			{
 				Name:  paramNameMLMDServerHost,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDHost()},
 			},
-			// "--mlmd_server_port"
+			// "--mlmd-server-port"
 			{
 				Name:  paramNameMLMDServerPort,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDPort()},
@@ -368,7 +368,7 @@ type pubDagDriverInputs struct {
 }
 
 func (i *pubDagDriverInputs) getDagType() string {
-	return "DAG-PUB"
+	return "DAG_PUB"
 }
 
 func (i *pubDagDriverInputs) getParentDagID(isExitHandler bool) string {

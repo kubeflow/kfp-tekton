@@ -17,12 +17,12 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: namespace/n1/pipeline/hello-world
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-hello-world"},"inputs":{"parameters":{"text":{"componentInputParameter":"text"}}},"taskInfo":{"name":"hello-world"}}'
       - name: container
@@ -32,13 +32,13 @@ spec:
           = argparse.ArgumentParser(prog=''Hello world'', description='''')\n_parser.add_argument(\"--text\",
           dest=\"text\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
           = vars(_parser.parse_args())\n\n_outputs = hello_world(**_parsed_args)\n"],"image":"python:3.7"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-hello-world","inputDefinitions":{"parameters":{"text":{"type":"STRING"}}}}'
@@ -53,11 +53,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -95,11 +95,11 @@ spec:
               - --pipeline_name
               - namespace/n1/pipeline/hello-world
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -143,23 +143,23 @@ spec:
       params:
       - name: type
         value: ROOT_DAG
-      - name: pipeline_name
+      - name: pipeline-name
         value: namespace/n1/pipeline/hello-world
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
+      - name: dag-execution-id
         value: "0"
       - name: component
         value: '{"dag":{"tasks":{"hello-world":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-hello-world"},"inputs":{"parameters":{"text":{"componentInputParameter":"text"}}},"taskInfo":{"name":"hello-world"}}}},"inputDefinitions":{"parameters":{"text":{"type":"STRING"}}}}'
       - name: task
         value: ""
-      - name: runtime_config
+      - name: runtime-config
         value: '{"parameters":{"text":{"stringValue":"hi there"}}}'
-      - name: iteration_index
+      - name: iteration-index
         value: "-1"
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -167,16 +167,16 @@ spec:
     - name: root-system-dag-pub-driver
       params:
       - name: type
-        value: DAG-PUB
-      - name: pipeline_name
+        value: DAG_PUB
+      - name: pipeline-name
         value: namespace/n1/pipeline/hello-world
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
-      - name: mlmd_server_address
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       runAfter:
       - hello-world

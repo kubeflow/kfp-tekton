@@ -16,7 +16,7 @@ spec:
     - name: for-loop-2-pipelineloop
       params:
       - name: parent-dag-id
-        value: $(tasks.for-loop-2-dag-driver.results.execution_id)
+        value: $(tasks.for-loop-2-dag-driver.results.execution-id)
       - name: from
         value: "0"
       - name: step
@@ -41,24 +41,24 @@ spec:
               params:
               - name: type
                 value: DAG
-              - name: pipeline_name
+              - name: pipeline-name
                 value: pipeline-with-loop-static
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
-              - name: dag_execution_id
+              - name: dag-execution-id
                 value: $(params.parent-dag-id)
               - name: component
                 value: '{"dag":{"tasks":{"concat-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-concat-op"},"inputs":{"parameters":{"a":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"a\"]"},"b":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"b\"]"}}},"taskInfo":{"name":"concat-op"}},"print-op-2":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"dependentTasks":["concat-op"],"inputs":{"parameters":{"text":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"concat-op"}}}},"taskInfo":{"name":"print-op-2"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--loop-item-param-1":{"parameterType":"STRUCT"}}}}'
               - name: task
                 value: '{"componentRef":{"name":"comp-for-loop-2"},"parameterIterator":{"itemInput":"pipelinechannel--loop-item-param-1","items":{"raw":"[{\"a\":
                   \"1\", \"b\": \"2\"}, {\"a\": \"10\", \"b\": \"20\"}]"}},"taskInfo":{"name":"for-loop-2"}}'
-              - name: runtime_config
+              - name: runtime-config
                 value: ""
-              - name: iteration_index
+              - name: iteration-index
                 value: $(params.iteration-index)
-              - name: mlmd_server_address
+              - name: mlmd-server-address
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
-              - name: mlmd_server_port
+              - name: mlmd-server-port
                 value: "8080"
               taskRef:
                 apiVersion: custom.tekton.dev/v1alpha1
@@ -66,16 +66,16 @@ spec:
             - name: for-loop-2-loop-dag-pub-driver
               params:
               - name: type
-                value: DAG-PUB
-              - name: pipeline_name
+                value: DAG_PUB
+              - name: pipeline-name
                 value: pipeline-with-loop-static
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
-              - name: dag_execution_id
+              - name: dag-execution-id
                 value: $(params.parent-dag-id)
-              - name: mlmd_server_address
+              - name: mlmd-server-address
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
-              - name: mlmd_server_port
+              - name: mlmd-server-port
                 value: "8080"
               runAfter:
               - print-op-2
@@ -86,12 +86,12 @@ spec:
               params:
               - name: type
                 value: CONTAINER
-              - name: pipeline_name
+              - name: pipeline-name
                 value: pipeline-with-loop-static
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
-              - name: dag_execution_id
-                value: $(tasks.for-loop-2-loop-dag-driver.results.execution_id)
+              - name: dag-execution-id
+                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-concat-op"},"inputs":{"parameters":{"a":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"a\"]"},"b":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"b\"]"}}},"taskInfo":{"name":"concat-op"}}'
               - name: container
@@ -105,13 +105,13 @@ spec:
                   kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import
                   *\n\ndef concat_op(a: str, b: str) -\u003e str:\n    print(a + b)\n    return
                   a + b\n\n"],"image":"python:3.7"}'
-              - name: iteration_index
+              - name: iteration-index
                 value: ""
-              - name: kubernetes_config
+              - name: kubernetes-config
                 value: ""
-              - name: mlmd_server_address
+              - name: mlmd-server-address
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
-              - name: mlmd_server_port
+              - name: mlmd-server-port
                 value: "8080"
               - name: component
                 value: '{"executorLabel":"exec-concat-op","inputDefinitions":{"parameters":{"a":{"parameterType":"STRING"},"b":{"parameterType":"STRING"}}},"outputDefinitions":{"parameters":{"Output":{"parameterType":"STRING"}}}}'
@@ -126,11 +126,11 @@ spec:
                 spec:
                   taskSpec:
                     params:
-                    - name: executor_input
+                    - name: executor-input
                       type: string
-                    - name: execution_id
+                    - name: execution-id
                       type: string
-                    - name: run_id
+                    - name: run-id
                       type: string
                     - name: component
                       type: string
@@ -179,11 +179,11 @@ spec:
                       - --pipeline_name
                       - pipeline-with-loop-static
                       - --run_id
-                      - $(params.run_id)
+                      - $(params.run-id)
                       - --execution_id
-                      - $(params.execution_id)
+                      - $(params.execution-id)
                       - --executor_input
-                      - $(params.executor_input)
+                      - $(params.executor-input)
                       - --component_spec
                       - $(params.component)
                       - --pod_name
@@ -227,12 +227,12 @@ spec:
               params:
               - name: type
                 value: CONTAINER
-              - name: pipeline_name
+              - name: pipeline-name
                 value: pipeline-with-loop-static
-              - name: run_id
+              - name: run-id
                 value: $(context.pipelineRun.uid)
-              - name: dag_execution_id
-                value: $(tasks.for-loop-2-loop-dag-driver.results.execution_id)
+              - name: dag-execution-id
+                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"dependentTasks":["concat-op"],"inputs":{"parameters":{"text":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"concat-op"}}}},"taskInfo":{"name":"print-op-2"}}'
               - name: container
@@ -246,13 +246,13 @@ spec:
                   kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import
                   *\n\ndef print_op(text: str) -\u003e str:\n    print(text)\n    return
                   text\n\n"],"image":"python:3.7"}'
-              - name: iteration_index
+              - name: iteration-index
                 value: ""
-              - name: kubernetes_config
+              - name: kubernetes-config
                 value: ""
-              - name: mlmd_server_address
+              - name: mlmd-server-address
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
-              - name: mlmd_server_port
+              - name: mlmd-server-port
                 value: "8080"
               - name: component
                 value: '{"executorLabel":"exec-print-op-2","inputDefinitions":{"parameters":{"text":{"parameterType":"STRING"}}},"outputDefinitions":{"parameters":{"Output":{"parameterType":"STRING"}}}}'
@@ -269,11 +269,11 @@ spec:
                 spec:
                   taskSpec:
                     params:
-                    - name: executor_input
+                    - name: executor-input
                       type: string
-                    - name: execution_id
+                    - name: execution-id
                       type: string
-                    - name: run_id
+                    - name: run-id
                       type: string
                     - name: component
                       type: string
@@ -322,11 +322,11 @@ spec:
                       - --pipeline_name
                       - pipeline-with-loop-static
                       - --run_id
-                      - $(params.run_id)
+                      - $(params.run-id)
                       - --execution_id
-                      - $(params.execution_id)
+                      - $(params.execution-id)
                       - --executor_input
-                      - $(params.executor_input)
+                      - $(params.executor-input)
                       - --component_spec
                       - $(params.component)
                       - --pod_name
@@ -370,24 +370,24 @@ spec:
       params:
       - name: type
         value: DAG
-      - name: pipeline_name
+      - name: pipeline-name
         value: pipeline-with-loop-static
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
         value: '{"dag":{"tasks":{"concat-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-concat-op"},"inputs":{"parameters":{"a":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"a\"]"},"b":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"b\"]"}}},"taskInfo":{"name":"concat-op"}},"print-op-2":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"dependentTasks":["concat-op"],"inputs":{"parameters":{"text":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"concat-op"}}}},"taskInfo":{"name":"print-op-2"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--loop-item-param-1":{"parameterType":"STRUCT"}}}}'
       - name: task
         value: '{"componentRef":{"name":"comp-for-loop-2"},"parameterIterator":{"itemInput":"pipelinechannel--loop-item-param-1","items":{"raw":"[{\"a\":
           \"1\", \"b\": \"2\"}, {\"a\": \"10\", \"b\": \"20\"}]"}},"taskInfo":{"name":"for-loop-2"}}'
-      - name: runtime_config
+      - name: runtime-config
         value: ""
-      - name: iteration_index
+      - name: iteration-index
         value: "-1"
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -395,16 +395,16 @@ spec:
     - name: for-loop-2-dag-pub-driver
       params:
       - name: type
-        value: DAG-PUB
-      - name: pipeline_name
+        value: DAG_PUB
+      - name: pipeline-name
         value: pipeline-with-loop-static
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.for-loop-2-dag-driver.results.execution_id)
-      - name: mlmd_server_address
+      - name: dag-execution-id
+        value: $(tasks.for-loop-2-dag-driver.results.execution-id)
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       runAfter:
       - for-loop-2-pipelineloop
@@ -415,12 +415,12 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: pipeline-with-loop-static
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op"},"inputs":{"parameters":{"text":{"componentInputParameter":"greeting"}}},"taskInfo":{"name":"print-op"}}'
       - name: container
@@ -433,13 +433,13 @@ spec:
           kfp.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n","\nimport
           kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef
           print_op(text: str) -\u003e str:\n    print(text)\n    return text\n\n"],"image":"python:3.7"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-print-op","inputDefinitions":{"parameters":{"text":{"parameterType":"STRING"}}},"outputDefinitions":{"parameters":{"Output":{"parameterType":"STRING"}}}}'
@@ -454,11 +454,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -507,11 +507,11 @@ spec:
               - --pipeline_name
               - pipeline-with-loop-static
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -555,11 +555,11 @@ spec:
       params:
       - name: type
         value: ROOT_DAG
-      - name: pipeline_name
+      - name: pipeline-name
         value: pipeline-with-loop-static
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
+      - name: dag-execution-id
         value: "0"
       - name: component
         value: '{"dag":{"tasks":{"for-loop-2":{"componentRef":{"name":"comp-for-loop-2"},"parameterIterator":{"itemInput":"pipelinechannel--loop-item-param-1","items":{"raw":"[{\"a\":
@@ -567,14 +567,14 @@ spec:
           is a test for looping through parameters","isOptional":true,"parameterType":"STRING"}}}}'
       - name: task
         value: ""
-      - name: runtime_config
+      - name: runtime-config
         value: '{"parameterValues":{"greeting":"this is a test for looping through
           parameters"}}'
-      - name: iteration_index
+      - name: iteration-index
         value: "-1"
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -582,16 +582,16 @@ spec:
     - name: root-system-dag-pub-driver
       params:
       - name: type
-        value: DAG-PUB
-      - name: pipeline_name
+        value: DAG_PUB
+      - name: pipeline-name
         value: pipeline-with-loop-static
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
-      - name: mlmd_server_address
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       runAfter:
       - print-op

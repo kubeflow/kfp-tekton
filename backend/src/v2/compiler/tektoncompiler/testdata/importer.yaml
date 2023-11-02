@@ -22,8 +22,8 @@ spec:
       - name: importer
         value: '{"artifactUri":{"constantValue":{"stringValue":"gs://ml-pipeline-playground/shakespeare1.txt"}},"typeSchema":{"schemaTitle":"system.Dataset"}}'
       - name: parent-dag-id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
-      - name: run_id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
+      - name: run-id
         value: $(context.pipelineRun.uid)
       runAfter:
       - root-system-dag-driver
@@ -44,9 +44,9 @@ spec:
           type: string
         results:
         - description: execution id
-          name: execution_id
+          name: execution-id
         - description: executor input
-          name: executor_input
+          name: executor-input
         spec: null
         steps:
         - args:
@@ -61,7 +61,7 @@ spec:
           - --pipeline_name
           - pipeline-with-importer
           - --run_id
-          - $(params.run_id)
+          - $(params.run-id)
           - --parent_dag_id
           - $(params.parent-dag-id)
           - --pod_name
@@ -94,23 +94,23 @@ spec:
       params:
       - name: type
         value: ROOT_DAG
-      - name: pipeline_name
+      - name: pipeline-name
         value: pipeline-with-importer
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
+      - name: dag-execution-id
         value: "0"
       - name: component
         value: '{"dag":{"tasks":{"importer":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-importer"},"inputs":{"parameters":{"uri":{"runtimeValue":{"constantValue":{"stringValue":"gs://ml-pipeline-playground/shakespeare1.txt"}}}}},"taskInfo":{"name":"importer"}}}},"inputDefinitions":{"parameters":{"dataset2":{"type":"STRING"}}}}'
       - name: task
         value: ""
-      - name: runtime_config
+      - name: runtime-config
         value: '{}'
-      - name: iteration_index
+      - name: iteration-index
         value: "-1"
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -118,16 +118,16 @@ spec:
     - name: root-system-dag-pub-driver
       params:
       - name: type
-        value: DAG-PUB
-      - name: pipeline_name
+        value: DAG_PUB
+      - name: pipeline-name
         value: pipeline-with-importer
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
-      - name: mlmd_server_address
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       runAfter:
       - importer

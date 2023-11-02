@@ -17,12 +17,12 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-convert-experiment-spec-to-str"},"dependentTasks":["create-katib-experiment-task"],"inputs":{"parameters":{"experiment_spec_json":{"taskOutputParameter":{"outputParameterKey":"experiment_spec_json","producerTask":"create-katib-experiment-task"}}}},"taskInfo":{"name":"convert-experiment-spec-to-str"}}'
       - name: container
@@ -38,13 +38,13 @@ spec:
           NamedTuple(''Outputs'', [(''experiment_spec_str_output'', str)]):\n    import
           json\n    output = NamedTuple(''Outputs'', [(''experiment_spec_str_output'',
           str)])\n    return output(json.dumps(experiment_spec_json))\n\n"],"image":"python:3.7"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-convert-experiment-spec-to-str","inputDefinitions":{"parameters":{"experiment_spec_json":{"parameterType":"STRUCT"}}},"outputDefinitions":{"parameters":{"experiment_spec_str_output":{"parameterType":"STRING"}}}}'
@@ -61,11 +61,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -115,11 +115,11 @@ spec:
               - --pipeline_name
               - end-to-end-pipeline
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -163,12 +163,12 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-convert-katib-results"},"dependentTasks":["create-dataset"],"inputs":{"artifacts":{"katib_results":{"taskOutputArtifact":{"outputArtifactKey":"parameter_set","producerTask":"create-dataset"}}}},"taskInfo":{"name":"convert-katib-results"}}'
       - name: container
@@ -189,13 +189,13 @@ spec:
           + pa[\"value\"])\n        elif pa[\"name\"] == \"batch_size\":\n            best_hps.append(\"--tf-batch-size=\"
           + pa[\"value\"])\n    print(\"Best Hyperparameters: {}\".format(best_hps))\n    return
           \" \".join(best_hps)\n\n"],"image":"python:3.7"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-convert-katib-results","inputDefinitions":{"artifacts":{"katib_results":{"artifactType":{"schemaTitle":"system.Artifact","schemaVersion":"0.0.1"}}}},"outputDefinitions":{"parameters":{"Output":{"parameterType":"STRING"}}}}'
@@ -212,11 +212,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -279,11 +279,11 @@ spec:
               - --pipeline_name
               - end-to-end-pipeline
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -327,23 +327,23 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-create-dataset"},"dependentTasks":["convert-experiment-spec-to-str"],"inputs":{"parameters":{"experiment_name":{"componentInputParameter":"name"},"experiment_namespace":{"componentInputParameter":"namespace"},"experiment_spec_json":{"taskOutputParameter":{"outputParameterKey":"experiment_spec_str_output","producerTask":"convert-experiment-spec-to-str"}},"experiment_timeout_minutes":{"runtimeValue":{"constant":60}}}},"taskInfo":{"name":"create-dataset"}}'
       - name: container
         value: '{"args":["--experiment-name","{{$.inputs.parameters[''experiment_name'']}}","--experiment-namespace","{{$.inputs.parameters[''experiment_namespace'']}}","--experiment-spec","{{$.inputs.parameters[''experiment_spec_json'']}}","--experiment-timeout-minutes","{{$.inputs.parameters[''experiment_timeout_minutes'']}}","--delete-after-done","False","--output-file","{{$.outputs.artifacts[''parameter_set''].path}}"],"command":["python","src/launch_experiment.py"],"image":"docker.io/kubeflowkatib/kubeflow-pipelines-launcher"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-create-dataset","inputDefinitions":{"parameters":{"experiment_name":{"parameterType":"STRING"},"experiment_namespace":{"parameterType":"STRING"},"experiment_spec_json":{"parameterType":"STRING"},"experiment_timeout_minutes":{"parameterType":"NUMBER_INTEGER"}}},"outputDefinitions":{"artifacts":{"parameter_set":{"artifactType":{"schemaTitle":"system.Artifact","schemaVersion":"0.0.1"}}}}}'
@@ -360,11 +360,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -397,11 +397,11 @@ spec:
               - --pipeline_name
               - end-to-end-pipeline
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -445,12 +445,12 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-create-katib-experiment-task"},"inputs":{"parameters":{"experiment_name":{"componentInputParameter":"name"},"experiment_namespace":{"componentInputParameter":"namespace"},"training_steps":{"componentInputParameter":"training_steps"}}},"taskInfo":{"name":"create-katib-experiment-task"}}'
       - name: container
@@ -502,13 +502,13 @@ spec:
           Convert experiment_spec to Dict type.\n    experiment_spec_json = ApiClient().sanitize_for_serialization(experiment_spec)\n    output
           = NamedTuple(''Outputs'', [(''experiment_spec_json'', Dict[str, str])])\n    return
           output(experiment_spec_json)\n\n"],"image":"python:3.8"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-create-katib-experiment-task","inputDefinitions":{"parameters":{"experiment_name":{"parameterType":"STRING"},"experiment_namespace":{"parameterType":"STRING"},"training_steps":{"parameterType":"STRING"}}},"outputDefinitions":{"parameters":{"experiment_spec_json":{"parameterType":"STRUCT"}}}}'
@@ -523,11 +523,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -719,11 +719,11 @@ spec:
               - --pipeline_name
               - end-to-end-pipeline
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -767,12 +767,12 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-create-tfjob-task"},"dependentTasks":["convert-katib-results"],"inputs":{"parameters":{"best_hps":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"convert-katib-results"}},"model_volume_name":{"componentInputParameter":"model_volume_name"},"tfjob_name":{"componentInputParameter":"name"},"tfjob_namespace":{"componentInputParameter":"namespace"},"training_steps":{"componentInputParameter":"training_steps"}}},"taskInfo":{"name":"create-tfjob-task"}}'
       - name: container
@@ -813,13 +813,13 @@ spec:
           --tf-train-steps={} {}\".format(training_steps, best_hps) \n                        ],\n                    }\n                ],\n            }\n        }\n    }\n\n    output
           = NamedTuple(''Outputs'', [(''chief_spec'', Dict[str, str]), (''worker_spec'',
           Dict[str, str])])\n    return output(tfjob_chief_spec, tfjob_worker_spec)\n\n"],"image":"python:3.7"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-create-tfjob-task","inputDefinitions":{"parameters":{"best_hps":{"parameterType":"STRING"},"model_volume_name":{"parameterType":"STRING"},"tfjob_name":{"parameterType":"STRING"},"tfjob_namespace":{"parameterType":"STRING"},"training_steps":{"parameterType":"STRING"}}},"outputDefinitions":{"parameters":{"chief_spec":{"parameterType":"STRUCT"},"worker_spec":{"parameterType":"STRUCT"}}}}'
@@ -836,11 +836,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -920,11 +920,11 @@ spec:
               - --pipeline_name
               - end-to-end-pipeline
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -968,12 +968,12 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.serving-pipeline-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.serving-pipeline-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-convert-inference-service-to-artifact"},"dependentTasks":["create-serving-task"],"inputs":{"parameters":{"inferenceservice_yaml":{"taskOutputParameter":{"outputParameterKey":"inferenceservice_yaml","producerTask":"create-serving-task"}}}},"taskInfo":{"name":"convert-inference-service-to-artifact"}}'
       - name: container
@@ -988,13 +988,13 @@ spec:
           convert_inference_service_to_artifact(inferenceservice_yaml: Dict[str, str],
           inferenceservice_artifact: Output[Artifact]):\n    import json\n    with
           open(inferenceservice_artifact.path, ''w'') as f:\n        f.write(json.dumps(inferenceservice_yaml))\n\n"],"image":"python:3.7"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-convert-inference-service-to-artifact","inputDefinitions":{"parameters":{"inferenceservice_yaml":{"parameterType":"STRUCT"}}},"outputDefinitions":{"artifacts":{"inferenceservice_artifact":{"artifactType":{"schemaTitle":"system.Artifact","schemaVersion":"0.0.1"}}}}}'
@@ -1011,11 +1011,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -1065,11 +1065,11 @@ spec:
               - --pipeline_name
               - end-to-end-pipeline
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -1113,12 +1113,12 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.serving-pipeline-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.serving-pipeline-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-create-serving-task"},"inputs":{"parameters":{"model_name":{"componentInputParameter":"model_name"},"model_namespace":{"componentInputParameter":"model_namespace"},"model_volume_name":{"componentInputParameter":"model_volume_name"}}},"taskInfo":{"name":"create-serving-task"}}'
       - name: container
@@ -1139,13 +1139,13 @@ spec:
           {\n              \"storageUri\": \"pvc://{}/\".format(model_volume_name)\n            }\n          }\n        }\n    }\n\n    output
           = NamedTuple(''Outputs'', [(''inferenceservice_yaml'', Dict[str, str])])\n    return
           output(inference_service)\n\n"],"image":"python:3.7"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-create-serving-task","inputDefinitions":{"parameters":{"model_name":{"parameterType":"STRING"},"model_namespace":{"parameterType":"STRING"},"model_volume_name":{"parameterType":"STRING"}}},"outputDefinitions":{"parameters":{"inferenceservice_yaml":{"parameterType":"STRUCT"}}}}'
@@ -1160,11 +1160,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -1235,11 +1235,11 @@ spec:
               - --pipeline_name
               - end-to-end-pipeline
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -1283,23 +1283,23 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.serving-pipeline-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.serving-pipeline-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-serving-launcher"},"dependentTasks":["convert-inference-service-to-artifact","create-serving-task"],"inputs":{"parameters":{"action":{"runtimeValue":{"constant":"apply"}},"inferenceservice_yaml":{"taskOutputParameter":{"outputParameterKey":"inferenceservice_yaml","producerTask":"create-serving-task"}}}},"taskInfo":{"name":"serving-launcher"}}'
       - name: container
         value: '{"args":["--action","{{$.inputs.parameters[''action'']}}","--inferenceservice-yaml","{{$.inputs.parameters[''inferenceservice_yaml'']}}"],"command":["python","kservedeployer.py"],"image":"quay.io/aipipeline/kserve-component:v0.7.0"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-serving-launcher","inputDefinitions":{"parameters":{"action":{"parameterType":"STRING"},"inferenceservice_yaml":{"parameterType":"STRUCT"}}}}'
@@ -1317,11 +1317,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -1346,11 +1346,11 @@ spec:
               - --pipeline_name
               - end-to-end-pipeline
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -1394,23 +1394,23 @@ spec:
       params:
       - name: type
         value: DAG
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: component
         value: '{"dag":{"outputs":{"artifacts":{"Output":{"artifactSelectors":[{"outputArtifactKey":"inferenceservice_artifact","producerSubtask":"convert-inference-service-to-artifact"}]}}},"tasks":{"convert-inference-service-to-artifact":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-convert-inference-service-to-artifact"},"dependentTasks":["create-serving-task"],"inputs":{"parameters":{"inferenceservice_yaml":{"taskOutputParameter":{"outputParameterKey":"inferenceservice_yaml","producerTask":"create-serving-task"}}}},"taskInfo":{"name":"convert-inference-service-to-artifact"}},"create-serving-task":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-create-serving-task"},"inputs":{"parameters":{"model_name":{"componentInputParameter":"model_name"},"model_namespace":{"componentInputParameter":"model_namespace"},"model_volume_name":{"componentInputParameter":"model_volume_name"}}},"taskInfo":{"name":"create-serving-task"}},"serving-launcher":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-serving-launcher"},"dependentTasks":["convert-inference-service-to-artifact","create-serving-task"],"inputs":{"parameters":{"action":{"runtimeValue":{"constant":"apply"}},"inferenceservice_yaml":{"taskOutputParameter":{"outputParameterKey":"inferenceservice_yaml","producerTask":"create-serving-task"}}}},"taskInfo":{"name":"serving-launcher"}}}},"inputDefinitions":{"parameters":{"model_name":{"parameterType":"STRING"},"model_namespace":{"parameterType":"STRING"},"model_volume_name":{"parameterType":"STRING"}}},"outputDefinitions":{"artifacts":{"Output":{"artifactType":{"schemaTitle":"system.Artifact","schemaVersion":"0.0.1"}}}}}'
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-serving-pipeline"},"dependentTasks":["tfjob-launcher"],"inputs":{"parameters":{"model_name":{"componentInputParameter":"name"},"model_namespace":{"componentInputParameter":"namespace"},"model_volume_name":{"componentInputParameter":"model_volume_name"}}},"taskInfo":{"name":"serving-pipeline"}}'
-      - name: runtime_config
+      - name: runtime-config
         value: ""
-      - name: iteration_index
+      - name: iteration-index
         value: "-1"
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       runAfter:
       - tfjob-launcher
@@ -1420,16 +1420,16 @@ spec:
     - name: serving-pipeline-dag-pub-driver
       params:
       - name: type
-        value: DAG-PUB
-      - name: pipeline_name
+        value: DAG_PUB
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.serving-pipeline-dag-driver.results.execution_id)
-      - name: mlmd_server_address
+      - name: dag-execution-id
+        value: $(tasks.serving-pipeline-dag-driver.results.execution-id)
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       runAfter:
       - serving-launcher
@@ -1440,23 +1440,23 @@ spec:
       params:
       - name: type
         value: CONTAINER
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
       - name: task
         value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-tfjob-launcher"},"dependentTasks":["convert-katib-results","create-tfjob-task"],"inputs":{"parameters":{"chief_spec":{"taskOutputParameter":{"outputParameterKey":"chief_spec","producerTask":"create-tfjob-task"}},"tfjob_name":{"componentInputParameter":"name"},"tfjob_namespace":{"componentInputParameter":"namespace"},"tfjob_timeout_minutes":{"runtimeValue":{"constant":60}},"worker_spec":{"taskOutputParameter":{"outputParameterKey":"worker_spec","producerTask":"create-tfjob-task"}}}},"taskInfo":{"name":"tfjob-launcher"}}'
       - name: container
         value: '{"args":["--name","{{$.inputs.parameters[''tfjob_name'']}}","--namespace","{{$.inputs.parameters[''tfjob_namespace'']}}","--workerSpec","{{$.inputs.parameters[''worker_spec'']}}","--chiefSpec","{{$.inputs.parameters[''chief_spec'']}}","--tfjobTimeoutMinutes","{{$.inputs.parameters[''tfjob_timeout_minutes'']}}","--deleteAfterDone","False"],"command":["python","/ml/launch_tfjob.py"],"image":"nikenano/launchernew:latest"}'
-      - name: iteration_index
+      - name: iteration-index
         value: ""
-      - name: kubernetes_config
+      - name: kubernetes-config
         value: ""
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       - name: component
         value: '{"executorLabel":"exec-tfjob-launcher","inputDefinitions":{"parameters":{"chief_spec":{"parameterType":"STRUCT"},"tfjob_name":{"parameterType":"STRING"},"tfjob_namespace":{"parameterType":"STRING"},"tfjob_timeout_minutes":{"parameterType":"NUMBER_INTEGER"},"worker_spec":{"parameterType":"STRUCT"}}}}'
@@ -1474,11 +1474,11 @@ spec:
         spec:
           taskSpec:
             params:
-            - name: executor_input
+            - name: executor-input
               type: string
-            - name: execution_id
+            - name: execution-id
               type: string
-            - name: run_id
+            - name: run-id
               type: string
             - name: component
               type: string
@@ -1511,11 +1511,11 @@ spec:
               - --pipeline_name
               - end-to-end-pipeline
               - --run_id
-              - $(params.run_id)
+              - $(params.run-id)
               - --execution_id
-              - $(params.execution_id)
+              - $(params.execution-id)
               - --executor_input
-              - $(params.executor_input)
+              - $(params.executor-input)
               - --component_spec
               - $(params.component)
               - --pod_name
@@ -1559,23 +1559,23 @@ spec:
       params:
       - name: type
         value: ROOT_DAG
-      - name: pipeline_name
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
+      - name: dag-execution-id
         value: "0"
       - name: component
         value: '{"dag":{"tasks":{"convert-experiment-spec-to-str":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-convert-experiment-spec-to-str"},"dependentTasks":["create-katib-experiment-task"],"inputs":{"parameters":{"experiment_spec_json":{"taskOutputParameter":{"outputParameterKey":"experiment_spec_json","producerTask":"create-katib-experiment-task"}}}},"taskInfo":{"name":"convert-experiment-spec-to-str"}},"convert-katib-results":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-convert-katib-results"},"dependentTasks":["create-dataset"],"inputs":{"artifacts":{"katib_results":{"taskOutputArtifact":{"outputArtifactKey":"parameter_set","producerTask":"create-dataset"}}}},"taskInfo":{"name":"convert-katib-results"}},"create-dataset":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-create-dataset"},"dependentTasks":["convert-experiment-spec-to-str"],"inputs":{"parameters":{"experiment_name":{"componentInputParameter":"name"},"experiment_namespace":{"componentInputParameter":"namespace"},"experiment_spec_json":{"taskOutputParameter":{"outputParameterKey":"experiment_spec_str_output","producerTask":"convert-experiment-spec-to-str"}},"experiment_timeout_minutes":{"runtimeValue":{"constant":60}}}},"taskInfo":{"name":"create-dataset"}},"create-katib-experiment-task":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-create-katib-experiment-task"},"inputs":{"parameters":{"experiment_name":{"componentInputParameter":"name"},"experiment_namespace":{"componentInputParameter":"namespace"},"training_steps":{"componentInputParameter":"training_steps"}}},"taskInfo":{"name":"create-katib-experiment-task"}},"create-tfjob-task":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-create-tfjob-task"},"dependentTasks":["convert-katib-results"],"inputs":{"parameters":{"best_hps":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"convert-katib-results"}},"model_volume_name":{"componentInputParameter":"model_volume_name"},"tfjob_name":{"componentInputParameter":"name"},"tfjob_namespace":{"componentInputParameter":"namespace"},"training_steps":{"componentInputParameter":"training_steps"}}},"taskInfo":{"name":"create-tfjob-task"}},"serving-pipeline":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-serving-pipeline"},"dependentTasks":["tfjob-launcher"],"inputs":{"parameters":{"model_name":{"componentInputParameter":"name"},"model_namespace":{"componentInputParameter":"namespace"},"model_volume_name":{"componentInputParameter":"model_volume_name"}}},"taskInfo":{"name":"serving-pipeline"}},"tfjob-launcher":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-tfjob-launcher"},"dependentTasks":["convert-katib-results","create-tfjob-task"],"inputs":{"parameters":{"chief_spec":{"taskOutputParameter":{"outputParameterKey":"chief_spec","producerTask":"create-tfjob-task"}},"tfjob_name":{"componentInputParameter":"name"},"tfjob_namespace":{"componentInputParameter":"namespace"},"tfjob_timeout_minutes":{"runtimeValue":{"constant":60}},"worker_spec":{"taskOutputParameter":{"outputParameterKey":"worker_spec","producerTask":"create-tfjob-task"}}}},"taskInfo":{"name":"tfjob-launcher"}}}},"inputDefinitions":{"parameters":{"model_volume_name":{"defaultValue":"workflow1-model-volume","parameterType":"STRING"},"name":{"defaultValue":"mnist-e2e","parameterType":"STRING"},"namespace":{"defaultValue":"kubeflow-user-project","parameterType":"STRING"},"training_steps":{"defaultValue":"200","parameterType":"STRING"}}}}'
       - name: task
         value: ""
-      - name: runtime_config
+      - name: runtime-config
         value: '{"parameterValues":{"model_volume_name":"workflow1-model-volume","name":"mnist-e2e","namespace":"kubeflow-user-project","training_steps":"200"}}'
-      - name: iteration_index
+      - name: iteration-index
         value: "-1"
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
@@ -1583,16 +1583,16 @@ spec:
     - name: root-system-dag-pub-driver
       params:
       - name: type
-        value: DAG-PUB
-      - name: pipeline_name
+        value: DAG_PUB
+      - name: pipeline-name
         value: end-to-end-pipeline
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
-        value: $(tasks.root-system-dag-driver.results.execution_id)
-      - name: mlmd_server_address
+      - name: dag-execution-id
+        value: $(tasks.root-system-dag-driver.results.execution-id)
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       runAfter:
       - serving-launcher
