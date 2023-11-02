@@ -74,6 +74,7 @@ spec:
           - $(METADATA_GRPC_SERVICE_PORT)
           command:
           - launcher-v2
+          computeResources: {}
           env:
           - name: KFP_POD_NAME
             valueFrom:
@@ -89,49 +90,49 @@ spec:
             value: "8080"
           image: gcr.io/ml-pipeline/kfp-launcher@sha256:50151a8615c8d6907aa627902dce50a2619fd231f25d1e5c2a72737a2ea4001e
           name: importer-main
-          computeResources: {}
     - name: root-system-dag-driver
       params:
       - name: type
         value: ROOT_DAG
-      - name: pipeline_name
+      - name: pipeline-name
         value: pipeline-with-importer
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
+      - name: dag-execution-id
         value: "0"
       - name: component
         value: '{"dag":{"tasks":{"importer":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-importer"},"inputs":{"parameters":{"uri":{"runtimeValue":{"constantValue":{"stringValue":"gs://ml-pipeline-playground/shakespeare1.txt"}}}}},"taskInfo":{"name":"importer"}}}},"inputDefinitions":{"parameters":{"dataset2":{"type":"STRING"}}}}'
       - name: task
         value: ""
-      - name: runtime_config
+      - name: runtime-config
         value: '{}'
-      - name: iteration_index
+      - name: iteration-index
         value: "-1"
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
     - name: root-system-dag-pub-driver
       params:
       - name: type
-        value: DAG-PUB
-      - name: pipeline_name
+        value: DAG_PUB
+      - name: pipeline-name
         value: pipeline-with-importer
-      - name: run_id
+      - name: run-id
         value: $(context.pipelineRun.uid)
-      - name: dag_execution_id
+      - name: dag-execution-id
         value: $(tasks.root-system-dag-driver.results.execution-id)
-      - name: mlmd_server_address
+      - name: mlmd-server-address
         value: metadata-grpc-service.kubeflow.svc.cluster.local
-      - name: mlmd_server_port
+      - name: mlmd-server-port
         value: "8080"
       runAfter:
       - importer
       taskRef:
-        apiVersion: kfp-driver.tekton.dev/v1alpha1
-        kind: KFPDriver
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: KFPTask
+  taskRunTemplate: {}
 status: {}

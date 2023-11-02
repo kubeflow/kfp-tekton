@@ -237,38 +237,34 @@ func (i *containerDriverInputs) getParentDagCondition(isExitHandler bool) string
 
 func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *containerDriverInputs) error {
 
-	containerDriverName := getContainerDriverTaskName(name)
+	t, err := c.containerExecutorTemplate(name, inputs.containerDef, c.spec.PipelineInfo.GetName())
+
+	if err != nil {
+		return err
+	}
 	driverTask := &pipelineapi.PipelineTask{
-		Name: containerDriverName,
-		TaskRef: &pipelineapi.TaskRef{
-			APIVersion: "kfp-driver.tekton.dev/v1alpha1",
-			Kind:       "KFPDriver",
-		},
+		Name:     name,
+		TaskSpec: t,
 		Params: []pipelineapi.Param{
 			// "--type", "CONTAINER",
 			{
 				Name:  paramNameType,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: "CONTAINER"},
 			},
-			// "--pipeline_name", c.spec.GetPipelineInfo().GetName(),
+			// "--pipeline-name", c.spec.GetPipelineInfo().GetName(),
 			{
 				Name:  paramNamePipelineName,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
 			},
-			// "--run_id", runID(),
+			// "--run-id", runID(),
 			{
-				Name:  paramNameRunId,
+				Name:  paramRunId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
 			},
-			// "--dag_execution_id"
+			// "--dag-execution-id"
 			{
 				Name:  paramNameDagExecutionId,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.getParentDagID(c.ExitHandlerScope())},
-			},
-			// "--component"
-			{
-				Name:  paramComponent,
-				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
 			},
 			// "--task"
 			{
@@ -280,30 +276,33 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 				Name:  paramContainer,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.container},
 			},
-			// "--iteration_index", inputValue(paramIterationIndex),
+			// "--iteration-index", inputValue(paramIterationIndex),
 			{
 				Name:  paramNameIterationIndex,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.iterationIndex},
 			},
-			// "--kubernetes_config"
+			// "--kubernetes-config"
 			{
 				Name:  paramKubernetesConfig,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.kubernetesConfig},
 			},
-			// "--mlmd_server_address"
+			// "--mlmd-server-address"
 			{
 				Name:  paramNameMLMDServerHost,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDHost()},
 			},
-			// "--mlmd_server_port"
+			// "--mlmd-server-port"
 			{
 				Name:  paramNameMLMDServerPort,
 				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDPort()},
 			},
+			// "--component"
+			{
+				Name:  paramComponent,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
+			},
 			// produce the following outputs:
 			// - execution-id
-			// - executor-input
-			// - cached-decision
 			// - condition
 		},
 	}
@@ -325,57 +324,6 @@ func (c *pipelinerunCompiler) containerDriverTask(name string, inputs *container
 
 	c.addPipelineTask(driverTask)
 
-	// need container driver's output for executor
-	containerDriverOutputs := containerDriverOutputs{
-		executionId:    taskOutputParameter(containerDriverName, paramExecutionID),
-		condition:      taskOutputParameter(containerDriverName, paramCondition),
-		executiorInput: taskOutputParameter(containerDriverName, paramExecutorInput),
-		cached:         taskOutputParameter(containerDriverName, paramCachedDecision),
-		podSpecPatch:   taskOutputParameter(containerDriverName, paramPodSpecPatch),
-	}
-
-	t, err := c.containerExecutorTemplate(name, inputs.containerDef, c.spec.PipelineInfo.GetName())
-
-	if err != nil {
-		return err
-	}
-
-	executorTask := &pipelineapi.PipelineTask{
-		Name:     name,
-		TaskSpec: t,
-		When: pipelineapi.WhenExpressions{
-			{
-				Input:    containerDriverOutputs.cached,
-				Operator: "in",
-				Values:   []string{"false"},
-			},
-		},
-		Params: []pipelineapi.Param{
-			{
-				Name:  paramExecutorInput,
-				Value: pipelineapi.ParamValue{Type: "string", StringVal: containerDriverOutputs.executiorInput},
-			},
-			{
-				Name:  paramExecutionID,
-				Value: pipelineapi.ParamValue{Type: "string", StringVal: containerDriverOutputs.executionId},
-			},
-			{
-				Name:  paramRunId,
-				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
-			},
-			{
-				Name:  paramComponentSpec,
-				Value: pipelineapi.ParamValue{Type: "string", StringVal: inputs.component},
-			},
-			{
-				Name:  paramPodSpecPatch,
-				Value: pipelineapi.ParamValue{Type: "string", StringVal: containerDriverOutputs.podSpecPatch},
-			},
-		},
-	}
-
-	c.addPipelineTask(executorTask)
-
 	return nil
 }
 
@@ -393,7 +341,7 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 		"--run_id", inputValue(paramRunId),
 		"--execution_id", inputValue(paramExecutionID),
 		"--executor_input", inputValue(paramExecutorInput),
-		"--component_spec", inputValue(paramComponentSpec),
+		"--component_spec", inputValue(paramComponent),
 		"--pod_name",
 		"$(KFP_POD_NAME)",
 		"--pod_uid",
@@ -411,7 +359,7 @@ func (c *pipelinerunCompiler) containerExecutorTemplate(
 				{Name: paramExecutorInput, Type: "string"}, // --executor_input
 				{Name: paramExecutionID, Type: "string"},   // --execution_id
 				{Name: paramRunId, Type: "string"},         // --run_id
-				{Name: paramComponentSpec, Type: "string"}, // --component_spec
+				{Name: paramComponent, Type: "string"},     // --component
 			},
 			Steps: []pipelineapi.Step{
 				// step 1: copy launcher
