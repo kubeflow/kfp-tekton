@@ -21,6 +21,7 @@ COPY . .
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh gcc musl-dev patch
 
+RUN go mod vendor && patch -u vendor/k8s.io/klog/v2/klog.go pkg/controller/klog.patch
 RUN CGO_ENABLED=0 GO111MODULE=on go build -o /bin/webhook ./cmd/webhook/*.go
 
 FROM alpine:3.17
