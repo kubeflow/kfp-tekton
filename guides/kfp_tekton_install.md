@@ -109,9 +109,9 @@ To install the standalone Kubeflow Pipelines V1 with Tekton , run the following 
 
 To install the standalone Kubeflow Pipelines V2 with Tekton, run the following steps:
 
-1. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v2.0.2` along with Tekton `v0.47.4`
+1. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v2.0.3` along with Tekton `v0.47.5`
    ```shell
-   kubectl apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/platform-agnostic-tekton\?ref\=v2.0.2
+   kubectl apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/env/platform-agnostic-tekton\?ref\=v2.0.3
    ```
 
 2. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
@@ -179,7 +179,7 @@ To install the standalone Kubeflow Pipelines with Openshift Pipelines, run the f
 
 1. Follow the [Kubeflow install instructions](https://www.kubeflow.org/docs/ibm/deploy/install-kubeflow-on-iks/#kubeflow-installation)
    to install the entire Kubeflow stack with `kfp-tekton`.
-   Kubeflow `v1.8.0` uses Tekton `v0.47.3` and `kfp-tekton` `v2.0.1` or `v1.7.1`. <!-- TODO update-->
+   Kubeflow `v1.8.0` uses Tekton `v0.47.3` and `kfp-tekton` `v2.0.3` or `v1.7.1`. <!-- TODO update-->
 
 2. Visit [KFP Tekton User Guide](/guides/kfp-user-guide) and start learning how to use Kubeflow pipeline.
 
