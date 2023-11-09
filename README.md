@@ -9,7 +9,7 @@ according to this [design doc](http://bit.ly/kfp-tekton). The current code allow
   with logging and artifacts tracking enabled.
 * In KFP-Tekton V2, the SDK compiler will generate the same intermediate representation as in the main Kubeflow pipelines SDK. All the Tekton related implementations are all embedded into the V2 backend API service.
 
-For more details about the project please follow this detailed [blog post](https://developer.ibm.com/blogs/kubeflow-pipelines-and-tekton-advances-data-workloads/). For latest KFP-Tekton V2 implementation and [supported offerings](https://developer.ibm.com/articles/advance-machine-learning-workflows-with-ibm-watson-pipelines/), please follow our latest [OSS Talk](https://www.youtube.com/watch?v=KQOee-XZtvc&list=PLbzoR-pLrL6pzNRLzcLZ33fFxcyITtMWn&index=4). For information on the KFP-Tekton V1 implementation, look at these [slides](https://www.slideshare.net/AnimeshSingh/kubeflow-pipelines-with-tekton-236769976) as well as this [deep dive presentation](https://www.youtube.com/watch?v=AYIeNtXLT_k) for demos.
+For more details about the project please follow this detailed [blog post](https://developer.ibm.com/blogs/awb-tekton-optimizations-for-kubeflow-pipelines-2-0) . For latest KFP-Tekton V2 implementation and [supported offerings](https://developer.ibm.com/articles/advance-machine-learning-workflows-with-ibm-watson-pipelines/), please follow our latest [OSS Talk](https://www.youtube.com/watch?v=KQOee-XZtvc&list=PLbzoR-pLrL6pzNRLzcLZ33fFxcyITtMWn&index=4). For information on the KFP-Tekton V1 implementation, look at these [slides](https://www.slideshare.net/AnimeshSingh/kubeflow-pipelines-with-tekton-236769976) as well as this [deep dive presentation](https://www.youtube.com/watch?v=AYIeNtXLT_k) for demos.
 
 **Note**: If you are interested in a sister project built on top of Kubeflow Pipelines with Tekton, please try [Machine Learning eXchange (MLX)](https://github.com/machine-learning-exchange), Data and AI Assets Catalog and Execution Engine. It introduces a 'Component Registry' for Kubeflow Pipelines, amongst other things.
 
@@ -19,8 +19,8 @@ We are currently using [Kubeflow Pipelines 1.8.4](https://github.com/kubeflow/pi
 [Tekton >= 0.50.2](https://github.com/tektoncd/pipeline/releases/tag/v0.50.2)
 in the master branch for this project.
 
-For [Kubeflow Pipelines 2.0.2](https://github.com/kubeflow/pipelines/releases/tag/2.0.2) and
-[Tekton >= 0.47.4](https://github.com/tektoncd/pipeline/releases/tag/v0.47.4)
+For [Kubeflow Pipelines 2.0.3](https://github.com/kubeflow/pipelines/releases/tag/2.0.3) and
+[Tekton >= 0.50.3](https://github.com/tektoncd/pipeline/releases/tag/v0.50.3)
 integration, please check out the [kfp-tekton v2-integration](https://github.com/kubeflow/kfp-tekton/tree/v2-integration) branch and [KFP-Tekton V2 deployment](/guides/kfp_tekton_install.md#standalone-kubeflow-pipelines-v2-with-tekton-backend-deployment) instead.
 
 ![kfp-tekton](images/kfp-tekton.png)
