@@ -945,13 +945,18 @@ func (pri *PipelineRunInformer) Get(namespace string, name string) (ExecutionSpe
 			"Error retrieving PipelineRun (%v) in namespace (%v): %v", name, namespace, err)
 	}
 	newWorkflow := NewPipelineRun(pipelinerun)
-	if err := pri.getStatusFromChildReferences(namespace,
-		fmt.Sprintf("%s=%s", LabelKeyWorkflowRunId, pipelinerun.Labels[LabelKeyWorkflowRunId]),
-		newWorkflow.Status); err != nil {
+	// TODO: Remove the unnecessary ChildReferences when Status-IR is implemented.
+	//
+	// if err := pri.getStatusFromChildReferences(namespace,
+	// 	fmt.Sprintf("%s=%s", LabelKeyWorkflowRunId, pipelinerun.Labels[LabelKeyWorkflowRunId]),
+	// 	newWorkflow.Status); err != nil {
 
-		return nil, IsNotFound(err), errors.Wrapf(err,
-			"Error retrieving the Status of the PipelineRun (%v) in namespace (%v): %v", name, namespace, err)
-	}
+	// 	return nil, IsNotFound(err), errors.Wrapf(err,
+	// 		"Error retrieving the Status of the PipelineRun (%v) in namespace (%v): %v", name, namespace, err)
+	// }
+
+	// Reduce newWorkflow size
+	newWorkflow.Spec = pipelineapi.PipelineRunSpec{}
 	return newWorkflow, false, nil
 }
 
