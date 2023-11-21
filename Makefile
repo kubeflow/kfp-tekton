@@ -203,7 +203,6 @@ build-v2-custom-controller-images: \
 	build-tekton-exithandler-webhook-image \
 	build-tekton-kfptask-controller-image \
 	build-tekton-kfptask-webhook-image \
-	build-tekton-driver-image \
 	## Build V2 Tekton custom task controller images 
 	@echo "$@: OK"
 
@@ -256,7 +255,6 @@ run-go-unittests: \
 	run-cacheserver-unittests \
 	run-tekton-exithandler-unittests \
 	run-tekton-kfptask-unittests \
-	run-tekton-driver-unittests \
 	## Verify go backend unit tests
 	@echo "$@: OK"
 
