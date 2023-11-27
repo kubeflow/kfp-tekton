@@ -20,7 +20,7 @@ We are currently using [Kubeflow Pipelines 1.8.4](https://github.com/kubeflow/pi
 in the master branch for this project.
 
 For [Kubeflow Pipelines 2.0.3](https://github.com/kubeflow/pipelines/releases/tag/2.0.3) and
-[Tekton >= 0.50.3](https://github.com/tektoncd/pipeline/releases/tag/v0.50.3)
+[Tekton >= 0.53.2](https://github.com/tektoncd/pipeline/releases/tag/v0.53.2)
 integration, please check out the [kfp-tekton v2-integration](https://github.com/kubeflow/kfp-tekton/tree/v2-integration) branch and [KFP-Tekton V2 deployment](/guides/kfp_tekton_install.md#standalone-kubeflow-pipelines-v2-with-tekton-backend-deployment) instead.
 
 ![kfp-tekton](images/kfp-tekton.png)
