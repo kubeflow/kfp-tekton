@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/apis/kfptask"
+	ktv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/apis/kfptask/v1alpha1"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
-	"github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/apis/kfptask"
-	ktv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-kfptask/apis/kfptask/v1alpha1"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"google.golang.org/protobuf/types/known/structpb"
 	k8score "k8s.io/api/core/v1"

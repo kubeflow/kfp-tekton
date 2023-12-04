@@ -21,10 +21,10 @@ import (
 	"strings"
 
 	pipelineloopapi "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-exithandler/pkg/apis/exithandler"
+	ehv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-exithandler/pkg/apis/exithandler/v1alpha1"
 	"github.com/kubeflow/pipelines/api/v2alpha1/go/pipelinespec"
 	"github.com/kubeflow/pipelines/backend/src/v2/compiler"
-	"github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis/exithandler"
-	ehv1alpha1 "github.com/kubeflow/pipelines/backend/src/v2/tekton-exithandler/apis/exithandler/v1alpha1"
 	pipelineapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
