@@ -1,4 +1,19 @@
 ## Upcoming release
+* Fix `v1.automl.training_job.AutoMLImageTrainingJobRunOp` `ModuleNotFoundError`
+
+
+## Release 2.6.0
+* Bump supported KFP versions to kfp>=2.0.0b10,<=2.4.0
+* Add LLM Eval pipeline parameter for customizing eval dataset reference ground truth field
+* Create new eval dataset preprocessor for formatting eval dataset in tuning dataset format.
+* Support customizing eval dataset format in Eval LLM Text Generation Pipeline (`preview.model_evaluation.evaluation_llm_text_generation_pipeline`) and LLM Text Classification Pipeline (`preview.model_evaluation.evaluation_llm_classification_pipeline`). Include new LLM Eval Preprocessor component in both pipelines.
+* Fix the output parameter `output_dir` of `preview.automl.vision.DataConverterJobOp`.
+* Fix batch prediction model parameters payload sanitization error .
+* Add ability to perform inference with chat datasets to `preview.llm.infer_pipeline`.
+* Add ability to tune chat models with `preview.llm.rlhf_pipeline`.
+* Group `preview.llm.rlhf_pipeline` components for better readability.
+* Add environment variable support to GCPC's `create_custom_training_job_from_component` (both `v1` and `preview` namespaces)
+* Apply latest GCPC image vulnerability resolutions (base OS and software updates).
 
 ## Release 2.5.0
 * Upload tensorboard metrics from `preview.llm.rlhf_pipeline` if a `tensorboard_resource_id` is provided at runtime.

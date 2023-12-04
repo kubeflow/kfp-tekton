@@ -21,6 +21,7 @@ from kfp import dsl
 def preprocess_chat_dataset(
     large_model_reference: str,
     input_dataset_uri: str,
+    dataset_type: str,
     processed_dataset: dsl.OutputPath(dsl.Artifact),  # pytype: disable=invalid-annotation
     processed_dataset_uri: dsl.OutputPath(str),  # pytype: disable=invalid-annotation
     default_context: str = '',
@@ -36,9 +37,10 @@ def preprocess_chat_dataset(
     input_dataset_uri: Path to an unprocessed JSONL dataset.
     default_context: Default context to apply to each example if a chat model is specified.
     allow_local_files: Whether input URIs can specify local file paths.
+    is_prompt_dataset: Whether the input dataset contains prompts for inference. In this case, the last author in `messages` should be the `user`, and the output dataset will only contain `input_text`.
 
   Returns:
-    processed_dataset: Processed chat dataset. Each example will contain fields `input_text` and `output_text`.
+    processed_dataset: Processed chat dataset. Each example will contain fields `input_text`, and if the input dataset is not a prompt dataset example will also contain `output_text`.
     processed_dataset_uri: String pattern that can be used to find the processed dataset in downstream components.
 
   """
@@ -57,13 +59,20 @@ def preprocess_chat_dataset(
   OUTPUT_TEXT_KEY = 'output_text'
   CONTEXT_KEY = 'context'
   MESSAGES_KEY = 'messages'
+  CANDIDATE_0_KEY = 'candidate_0'
+  CANDIDATE_1_KEY = 'candidate_1'
+  CHOICE_KEY = 'choice'
   AUTHOR_KEY = 'author'
   CONTENT_KEY = 'content'
   AUTHOR_USER = 'user'
   AUTHOR_ASSISTANT = 'assistant'
   VALID_AUTHORS = {AUTHOR_USER, AUTHOR_ASSISTANT}
-
+  SUPERVISED_DATASET = 'supervised'
+  PROMPT_DATASET = 'prompt'
+  PREFERENCE_DATASET = 'preference'
+  VALID_DATASETS = {SUPERVISED_DATASET, PROMPT_DATASET, PREFERENCE_DATASET}
   # pylint: enable=invalid-name
+
   @dataclasses.dataclass
   class PromptSchema:
     global_prefix: str
@@ -141,38 +150,62 @@ def preprocess_chat_dataset(
   class ChatDatasetProcessor(beam.DoFn):
     """Converts chat data from input format to the format expected by the model."""
 
-    def __init__(self, default_context: str, prompt_schema: PromptSchema):
+    def __init__(
+        self,
+        default_context: str,
+        prompt_schema: PromptSchema,
+        dataset_type: str,
+    ):
       self._default_context = default_context
       self._schema = prompt_schema
+      self._dataset_type = dataset_type
 
     def _get_messages_or_fail(
         self, element: Mapping[str, Any]
     ) -> List[Mapping[str, str]]:
       messages = element.get(MESSAGES_KEY)
-      if not messages or len(messages) <= 1:
+      if not messages:
         raise ValueError(
-            'Chat messages length should be greater than 1. Please include a '
+            'No messages present. Please include a non-empty '
             f'`messages` field in each line of dataset: {element}.'
+        )
+      elif messages[0].get(AUTHOR_KEY) != AUTHOR_USER:
+        raise ValueError(f'First author must be the {AUTHOR_USER}: {element}')
+      elif (
+          self._dataset_type in {PROMPT_DATASET, PREFERENCE_DATASET}
+          and messages[-1].get(AUTHOR_KEY) != AUTHOR_USER
+      ):
+        raise ValueError(
+            f'Last author in the {self._dataset_type} dataset must be the'
+            f' {AUTHOR_USER}: {element}'
+        )
+      elif (
+          self._dataset_type == SUPERVISED_DATASET
+          and messages[-1].get(AUTHOR_KEY) != AUTHOR_ASSISTANT
+      ):
+        raise ValueError(
+            f'Last author in the {self._dataset_type} dataset must be the'
+            f' {AUTHOR_ASSISTANT}: {element}'
         )
       return messages
 
+    def _get_or_fail(self, message: Mapping[str, str], key: str) -> str:
+      value = message.get(key)
+      if not value and value != 0:
+        raise ValueError(
+            f'Each message must contain non-empty value for {key}. '
+            f'Invalid message: {message}'
+        )
+      return value
+
     def _get_author_or_fail(self, message: Mapping[str, str]) -> str:
-      author = message.get(AUTHOR_KEY)
-      if not author or author not in VALID_AUTHORS:
+      author = self._get_or_fail(message, AUTHOR_KEY)
+      if author not in VALID_AUTHORS:
         raise ValueError(
             'The `author` of each message needs to be from one of'
             f' {VALID_AUTHORS}. Got author = {author}.'
         )
       return author
-
-    def _get_content_or_fail(self, message: Mapping[str, str]) -> str:
-      content = message.get(CONTENT_KEY)
-      if not content:
-        raise ValueError(
-            'The `content` of each message needs to be non-empty. '
-            f'Invalid message: {message}'
-        )
-      return content
 
     def process(self, element):
       context = element.get(CONTEXT_KEY, self._default_context)
@@ -184,7 +217,7 @@ def preprocess_chat_dataset(
       ]
       for message in messages:
         author = self._get_author_or_fail(message)
-        content = self._get_content_or_fail(message)
+        content = self._get_or_fail(message, CONTENT_KEY)
         if author == AUTHOR_USER:
           message_history.append(
               f'{self._schema.user_prefix}{content}{self._schema.user_postfix}'
@@ -192,7 +225,13 @@ def preprocess_chat_dataset(
         elif author == AUTHOR_ASSISTANT:
           message_history.append(self._schema.assistant_prefix)
           input_text = ''.join(message_history)
-          yield {INPUT_TEXT_KEY: input_text.rstrip(), OUTPUT_TEXT_KEY: content}
+          # For training datasets yield an example for each user/assistant
+          # exchange:
+          if self._dataset_type == SUPERVISED_DATASET:
+            yield {
+                INPUT_TEXT_KEY: input_text.rstrip(),
+                OUTPUT_TEXT_KEY: content,
+            }
           message_history = [
               input_text,
               f'{content}{self._schema.assistant_postfix}',
@@ -201,6 +240,21 @@ def preprocess_chat_dataset(
           raise ValueError(
               f'Unknown author {author}. Must be one of {VALID_AUTHORS}.'
           )
+      # For prompt and preference datasets, only yield an example after the
+      # final user message:
+      if self._dataset_type == PROMPT_DATASET:
+        message_history.append(self._schema.assistant_prefix)
+        input_text = ''.join(message_history)
+        yield {INPUT_TEXT_KEY: input_text.rstrip()}
+      elif self._dataset_type == PREFERENCE_DATASET:
+        message_history.append(self._schema.assistant_prefix)
+        input_text = ''.join(message_history)
+        yield {
+            INPUT_TEXT_KEY: input_text.rstrip(),
+            CANDIDATE_0_KEY: self._get_or_fail(element, CANDIDATE_0_KEY),
+            CANDIDATE_1_KEY: self._get_or_fail(element, CANDIDATE_1_KEY),
+            CHOICE_KEY: self._get_or_fail(element, CHOICE_KEY),
+        }
 
   # ]
 
@@ -219,6 +273,11 @@ def preprocess_chat_dataset(
   processed_dataset = get_gs_path(processed_dataset, allow_local_files)
   os.makedirs(processed_dataset, exist_ok=True)
   processed_dataset_prefix = os.path.join(processed_dataset, 'shard')
+  dataset_type = dataset_type.lower()
+  if dataset_type not in VALID_DATASETS:
+    raise ValueError(
+        f'Unknown dataset type {dataset_type}. Must be one of {VALID_DATASETS}.'
+    )
 
   pipeline_options = (
       beam.options.pipeline_options.PipelineOptions.from_dictionary({
@@ -233,7 +292,9 @@ def preprocess_chat_dataset(
         | 'Process chat dataset'
         >> beam.ParDo(
             ChatDatasetProcessor(
-                default_context=default_context, prompt_schema=prompt_schema
+                default_context=default_context,
+                prompt_schema=prompt_schema,
+                dataset_type=dataset_type,
             )
         )
         | 'Write processed JSON to output file'
