@@ -496,7 +496,7 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.C
 	case "DAG":
 		execution, err = driver.DAG(ctx, options.options, options.mlmdClient)
 	case "DAG_PUB":
-		// no-op for now
+		// current DAG_PUB only scheduled when the dag execution is completed
 		err = DAGPublisher(ctx, options.options, options.mlmdClient)
 		return &[]tektonv1beta1.CustomRunResult{}, taskRunDecision, executionID, executorInput, podSpecPatch, err
 	default:
