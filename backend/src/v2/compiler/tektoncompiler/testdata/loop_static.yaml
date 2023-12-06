@@ -72,7 +72,7 @@ spec:
               - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag-execution-id
-                value: $(params.parent-dag-id)
+                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
               - name: mlmd-server-address
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd-server-port
@@ -98,7 +98,7 @@ spec:
                 value: '{"args":["--executor_input","{{$}}","--function_to_execute","concat_op"],"command":["sh","-c","\nif
                   ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||
                   python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1
-                  python3 -m pip install --quiet     --no-warn-script-location ''kfp==2.0.0-beta.15''
+                  python3 -m pip install --quiet     --no-warn-script-location ''kfp==2.0.1''
                   \u0026\u0026 \"$0\" \"$@\"\n","sh","-ec","program_path=$(mktemp
                   -d)\nprintf \"%s\" \"$0\" \u003e \"$program_path/ephemeral_component.py\"\npython3
                   -m kfp.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n","\nimport
@@ -152,7 +152,7 @@ spec:
                             python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip
                         fi
 
-                        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.15' && "$0" "$@"
+                        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.1' && "$0" "$@"
                       - sh
                       - -ec
                       - |
@@ -239,7 +239,7 @@ spec:
                 value: '{"args":["--executor_input","{{$}}","--function_to_execute","print_op"],"command":["sh","-c","\nif
                   ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||
                   python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1
-                  python3 -m pip install --quiet     --no-warn-script-location ''kfp==2.0.0-beta.15''
+                  python3 -m pip install --quiet     --no-warn-script-location ''kfp==2.0.1''
                   \u0026\u0026 \"$0\" \"$@\"\n","sh","-ec","program_path=$(mktemp
                   -d)\nprintf \"%s\" \"$0\" \u003e \"$program_path/ephemeral_component.py\"\npython3
                   -m kfp.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n","\nimport
@@ -295,7 +295,7 @@ spec:
                             python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip
                         fi
 
-                        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.15' && "$0" "$@"
+                        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.1' && "$0" "$@"
                       - sh
                       - -ec
                       - |
@@ -427,7 +427,7 @@ spec:
         value: '{"args":["--executor_input","{{$}}","--function_to_execute","print_op"],"command":["sh","-c","\nif
           ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3
           -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1
-          python3 -m pip install --quiet     --no-warn-script-location ''kfp==2.0.0-beta.15''
+          python3 -m pip install --quiet     --no-warn-script-location ''kfp==2.0.1''
           \u0026\u0026 \"$0\" \"$@\"\n","sh","-ec","program_path=$(mktemp -d)\nprintf
           \"%s\" \"$0\" \u003e \"$program_path/ephemeral_component.py\"\npython3 -m
           kfp.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n","\nimport
@@ -480,7 +480,7 @@ spec:
                     python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip
                 fi
 
-                PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.15' && "$0" "$@"
+                PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.1' && "$0" "$@"
               - sh
               - -ec
               - |

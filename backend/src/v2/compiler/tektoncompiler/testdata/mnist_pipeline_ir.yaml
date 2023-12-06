@@ -208,7 +208,7 @@ pipelineSpec:
           - -c
           - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
             \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
-            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.6'\
+            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.1'\
             \ && \"$0\" \"$@\"\n"
           - sh
           - -ec
@@ -237,7 +237,7 @@ pipelineSpec:
           - -c
           - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
             \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
-            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.6'\
+            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.1'\
             \ && \"$0\" \"$@\"\n"
           - sh
           - -ec
@@ -266,7 +266,7 @@ pipelineSpec:
           - -c
           - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
             \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
-            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.6'\
+            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.1'\
             \ && \"$0\" \"$@\"\n"
           - sh
           - -ec
@@ -322,7 +322,7 @@ pipelineSpec:
           - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
             \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
             \ python3 -m pip install --quiet     --no-warn-script-location 'kubeflow-katib==0.12.0'\
-            \ 'kfp==2.0.0-beta.6' && \"$0\" \"$@\"\n"
+            \ 'kfp==2.0.1' && \"$0\" \"$@\"\n"
           - sh
           - -ec
           - 'program_path=$(mktemp -d)
@@ -422,7 +422,7 @@ pipelineSpec:
           - -c
           - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
             \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
-            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.6'\
+            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.1'\
             \ && \"$0\" \"$@\"\n"
           - sh
           - -ec
@@ -459,7 +459,7 @@ pipelineSpec:
           - -c
           - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
             \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
-            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.6'\
+            \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.1'\
             \ && \"$0\" \"$@\"\n"
           - sh
           - -ec
@@ -698,4 +698,4 @@ pipelineSpec:
           defaultValue: '200'
           parameterType: STRING
   schemaVersion: 2.1.0
-  sdkVersion: kfp-2.0.0-beta.6
+  sdkVersion: kfp-2.0.1

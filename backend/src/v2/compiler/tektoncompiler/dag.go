@@ -378,7 +378,7 @@ func (i *pubDagDriverInputs) getParentDagID(isExitHandler bool) string {
 	if isExitHandler && i.parentDagID == compiler.RootComponentName {
 		return fmt.Sprintf("$(params.%s)", paramParentDagID)
 	} else if i.inLoopDag {
-		return fmt.Sprintf("$(params.%s)", paramParentDagID)
+		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
 	} else {
 		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
 	}
