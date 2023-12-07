@@ -473,6 +473,9 @@ func DAGPublisher(ctx context.Context, opts driver.Options, mlmd *metadata.Clien
 	var outputParameters map[string]*structpb.Value
 	status := pb.Execution_COMPLETE
 	execution, err := mlmd.GetExecution(ctx, opts.DAGExecutionID)
+	if err != nil {
+		return fmt.Errorf("failed to get execution: %w", err)
+	}
 	if err = mlmd.PublishExecution(ctx, execution, outputParameters, nil, status); err != nil {
 		return fmt.Errorf("failed to publish: %w", err)
 	}
