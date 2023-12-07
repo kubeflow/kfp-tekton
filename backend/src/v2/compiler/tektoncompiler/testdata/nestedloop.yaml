@@ -221,14 +221,14 @@ spec:
               - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag-execution-id
-                value: $(params.parent-dag-id)
+                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
               - name: mlmd-server-address
                 value: metadata-grpc-service.kubeflow.svc.cluster.local
               - name: mlmd-server-port
                 value: "8080"
               runAfter:
-              - print-op-2
               - print-op
+              - print-op-2
               taskRef:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: KFPTask
