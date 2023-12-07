@@ -34,6 +34,7 @@ import (
 	"github.com/kubeflow/pipelines/backend/src/v2/driver"
 	"github.com/kubeflow/pipelines/backend/src/v2/metadata"
 	"github.com/kubeflow/pipelines/kubernetes_platform/go/kubernetesplatform"
+	pb "github.com/kubeflow/pipelines/third_party/ml-metadata/go/ml_metadata"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
 	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
@@ -43,6 +44,7 @@ import (
 	listeners "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1"
 	listenersv1beta1 "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1beta1"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/structpb"
 	k8score "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -462,6 +464,24 @@ func v1ParamsConversion(ctx context.Context, v1beta1Params tektonv1beta1.Params)
 	return v1Params
 }
 
+func DAGPublisher(ctx context.Context, opts driver.Options, mlmd *metadata.Client) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("failed to publish driver DAG execution %s: %w", fmt.Sprint(opts.DAGExecutionID), err)
+		}
+	}()
+	var outputParameters map[string]*structpb.Value
+	status := pb.Execution_COMPLETE
+	execution, err := mlmd.GetExecution(ctx, opts.DAGExecutionID)
+	if err != nil {
+		return fmt.Errorf("failed to get execution: %w", err)
+	}
+	if err = mlmd.PublishExecution(ctx, execution, outputParameters, nil, status); err != nil {
+		return fmt.Errorf("failed to publish: %w", err)
+	}
+	return nil
+}
+
 func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.CustomRunResult, bool, string, string, string, error) {
 	var execution *driver.Execution
 	var err error
@@ -479,8 +499,9 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.C
 	case "DAG":
 		execution, err = driver.DAG(ctx, options.options, options.mlmdClient)
 	case "DAG_PUB":
-		// no-op for now
-		return &[]tektonv1beta1.CustomRunResult{}, taskRunDecision, executionID, executorInput, podSpecPatch, nil
+		// current DAG_PUB only scheduled when the dag execution is completed
+		err = DAGPublisher(ctx, options.options, options.mlmdClient)
+		return &[]tektonv1beta1.CustomRunResult{}, taskRunDecision, executionID, executorInput, podSpecPatch, err
 	default:
 		err = fmt.Errorf("unknown driverType %s", options.driverType)
 	}
