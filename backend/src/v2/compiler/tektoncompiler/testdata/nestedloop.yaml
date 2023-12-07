@@ -227,8 +227,8 @@ spec:
               - name: mlmd-server-port
                 value: "8080"
               runAfter:
-              - print-op-2
               - print-op
+              - print-op-2
               taskRef:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: KFPTask

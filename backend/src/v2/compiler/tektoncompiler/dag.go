@@ -371,14 +371,12 @@ func (i *pubDagDriverInputs) getDagType() string {
 	return "DAG_PUB"
 }
 
+// pubDagDriverInputs getParentDagID returns the parent node of the DAG publisher
+// which should always be the DAG driver DAG ID. However, exit handler doesn't
+// have driver so it's point to the root DAG ID instead.
 func (i *pubDagDriverInputs) getParentDagID(isExitHandler bool) string {
-	if i.parentDagID == "" {
-		return "0"
-	}
 	if isExitHandler && i.parentDagID == compiler.RootComponentName {
 		return fmt.Sprintf("$(params.%s)", paramParentDagID)
-	} else if i.inLoopDag {
-		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
 	} else {
 		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
 	}
