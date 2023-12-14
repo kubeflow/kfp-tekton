@@ -18,7 +18,6 @@ package pipelinelooprun
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -180,6 +179,13 @@ func initLogger(ctx context.Context, kubeClientSet kubernetes.Interface) *zap.Su
 	return logger
 }
 
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
 // NewController instantiates a new controller.Impl from knative.dev/pkg/controller
 func NewController(namespace string) func(context.Context, configmap.Watcher) *controller.Impl {
 	return func(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
@@ -192,7 +198,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 		logger := initLogger(ctx, kubeClientSet)
 		ctx = logging.WithLogger(ctx, logger)
 		cacheStore := initCache(ctx, kubeClientSet, params)
-		runKFPV2Driver := flag.String("KFPV2", "false", "Flag to enable KFPV2 Driver within pipelineloops, defaults to false.")
+		runKFPV2Driver := getEnv("KFPV2", "false")
 		c := &Reconciler{
 			KubeClientSet:         kubeClientSet,
 			pipelineClientSet:     pipelineClientSet,
@@ -202,7 +208,7 @@ func NewController(namespace string) func(context.Context, configmap.Watcher) *c
 			pipelineRunLister:     pipelineRunInformer.Lister(),
 			cacheStore:            cacheStore,
 			clock:                 clock.RealClock{},
-			runKFPV2Driver:        strings.ToLower(*runKFPV2Driver),
+			runKFPV2Driver:        strings.ToLower(runKFPV2Driver),
 		}
 
 		impl := customRunReconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
