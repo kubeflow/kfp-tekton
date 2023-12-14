@@ -62,7 +62,7 @@ images: build-linux
 update:
 	go mod download
 	go mod tidy
-	go mod vendor
+	go mod vendor && patch -u vendor/k8s.io/klog/v2/klog.go pkg/controller/klog.patch
 
 clean:
 	rm -r ${BIN_DIR}
