@@ -17,7 +17,7 @@ import os
 import tempfile
 import time
 
-from datetime import datetime
+import datetime
 from typing import Mapping, Callable, Optional
 
 import kfp
@@ -832,7 +832,7 @@ class TektonClient(kfp.Client):
 
       # TODO: Check arguments against the pipeline function
       pipeline_name = pipeline_func.__name__
-      run_name = run_name or pipeline_name + ' ' + datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+      run_name = run_name or pipeline_name + ' ' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
       try:
           (_, pipeline_package_path) = tempfile.mkstemp(suffix='.zip')
           TektonCompiler().compile(pipeline_func,
