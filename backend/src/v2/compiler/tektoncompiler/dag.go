@@ -47,10 +47,6 @@ func (c *pipelinerunCompiler) LoopDAG(taskName, compRef string, task *pipelinesp
 		return err
 	}
 
-	if err := c.addDagPubTask(newTaskName, dagSpec, c.spec, true, false); err != nil {
-		return err
-	}
-
 	// add the Loop DAG into DAG Stack
 	c.PushDagStack(newTaskName)
 	return nil
@@ -70,6 +66,16 @@ func (c *pipelinerunCompiler) EmbedLoopDAG(taskName, compRef string, task *pipel
 		return fmt.Errorf("unable to Marshal pipelineSpec:%v", err)
 	}
 
+	componentSpecStr, err := c.useComponentSpec(compRef)
+	if err != nil {
+		return err
+	}
+
+	taskSpecJson, err := stablyMarshalJSON(task)
+	if err != nil {
+		return err
+	}
+
 	pipelinelooptask := pipelineapi.PipelineTask{
 		Name: taskName + subfixPipelineLoop,
 		Params: []pipelineapi.Param{
@@ -78,6 +84,51 @@ func (c *pipelinerunCompiler) EmbedLoopDAG(taskName, compRef string, task *pipel
 			{Name: "from", Value: pipelineapi.ParamValue{Type: "string", StringVal: "0"}},
 			{Name: "step", Value: pipelineapi.ParamValue{Type: "string", StringVal: "1"}},
 			{Name: "to", Value: pipelineapi.ParamValue{Type: "string", StringVal: taskOutputParameter(getDAGDriverTaskName(taskName), paramIterationCount)}},
+			// "--type"
+			{
+				Name:  paramNameType,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: "DAG"},
+			},
+			// "--pipeline-name"
+			{
+				Name:  paramNamePipelineName,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: c.spec.GetPipelineInfo().GetName()},
+			},
+			// "--run-id"
+			{
+				Name:  paramRunId,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: runID()},
+			},
+			// "--dag-execution-id"
+			{
+				Name:  paramNameDagExecutionId,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: taskOutputParameter(getDAGDriverTaskName(taskName), paramExecutionID)},
+			},
+			// "--component"
+			{
+				Name:  paramComponent,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: componentSpecStr},
+			},
+			// "--task"
+			{
+				Name:  paramTask,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: taskSpecJson},
+			},
+			// "--runtime-config"
+			{
+				Name:  paramNameRuntimeConfig,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: ""},
+			},
+			// "--mlmd-server-address"
+			{
+				Name:  paramNameMLMDServerHost,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDHost()},
+			},
+			// "--mlmd_server_port"
+			{
+				Name:  paramNameMLMDServerPort,
+				Value: pipelineapi.ParamValue{Type: "string", StringVal: GetMLMDPort()},
+			},
 		},
 		TaskSpec: &pipelineapi.EmbeddedTask{
 			TypeMeta: runtime.TypeMeta{
@@ -149,18 +200,20 @@ func (c *pipelinerunCompiler) addDagTask(name, compRef string, task *pipelinespe
 		inputs.task = taskSpecJson
 		inputs.deps = task.GetDependentTasks()
 		inputs.parentDagID = c.CurrentDag()
+		inputs.inLoopDag = c.GetLoopName(c.CurrentDag())
 	}
 
 	if loopDag {
 		inputs.iterationIndex = inputValue(paramIterationIndex)
 		inputs.loopDag = true
+		c.AddLoopName(name)
+	} else {
+		driver, err := c.dagDriverTask(driverTaskName, &inputs)
+		if err != nil {
+			return err
+		}
+		c.addPipelineTask(driver)
 	}
-
-	driver, err := c.dagDriverTask(driverTaskName, &inputs)
-	if err != nil {
-		return err
-	}
-	c.addPipelineTask(driver)
 	return nil
 }
 
@@ -206,7 +259,7 @@ func (c *pipelinerunCompiler) createPipelineLoop() *pipelineloopapi.PipelineLoop
 		Spec: pipelineloopapi.PipelineLoopSpec{
 			PipelineSpec: &pipelineapi.PipelineSpec{
 				Params: []pipelineapi.ParamSpec{
-					{Name: paramParentDagID, Type: "string"},
+					{Name: paramNameDagExecutionId, Type: "string"},
 					{Name: paramIterationIndex, Type: "string"},
 				}},
 			IterateNumeric: paramIterationIndex,
@@ -359,6 +412,7 @@ type dagDriverInputs struct {
 	iterationIndex string                                  // optional, iterator passes iteration index to iteration tasks
 	deps           []string
 	loopDag        bool
+	inLoopDag      bool
 }
 
 type pubDagDriverInputs struct {
@@ -388,8 +442,8 @@ func (i *dagDriverInputs) getParentDagID(isExitHandler bool) string {
 	}
 	if isExitHandler && i.parentDagID == compiler.RootComponentName {
 		return fmt.Sprintf("$(params.%s)", paramParentDagID)
-	} else if i.loopDag {
-		return fmt.Sprintf("$(params.%s)", paramParentDagID)
+	} else if i.loopDag || i.inLoopDag {
+		return fmt.Sprintf("$(params.%s)", paramNameDagExecutionId)
 	} else {
 		return taskOutputParameter(getDAGDriverTaskName(i.parentDagID), paramExecutionID)
 	}

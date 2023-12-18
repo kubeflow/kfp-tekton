@@ -32,7 +32,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-var update = flag.Bool("update", false, "update golden files")
+var update = flag.Bool("update", true, "update golden files")
 
 func Test_tekton_compiler(t *testing.T) {
 	tests := []struct {

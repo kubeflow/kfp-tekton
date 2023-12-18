@@ -23,6 +23,25 @@ spec:
         value: "1"
       - name: to
         value: $(tasks.for-loop-2-dag-driver.results.iteration-count)
+      - name: type
+        value: DAG
+      - name: pipeline-name
+        value: pipeline-with-loop-static
+      - name: run-id
+        value: $(context.pipelineRun.uid)
+      - name: dag-execution-id
+        value: $(tasks.for-loop-2-dag-driver.results.execution-id)
+      - name: component
+        value: '{"dag":{"tasks":{"concat-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-concat-op"},"inputs":{"parameters":{"a":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"a\"]"},"b":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"b\"]"}}},"taskInfo":{"name":"concat-op"}},"print-op-2":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"dependentTasks":["concat-op"],"inputs":{"parameters":{"text":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"concat-op"}}}},"taskInfo":{"name":"print-op-2"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--loop-item-param-1":{"parameterType":"STRUCT"}}}}'
+      - name: task
+        value: '{"componentRef":{"name":"comp-for-loop-2"},"parameterIterator":{"itemInput":"pipelinechannel--loop-item-param-1","items":{"raw":"[{\"a\":
+          \"1\", \"b\": \"2\"}, {\"a\": \"10\", \"b\": \"20\"}]"}},"taskInfo":{"name":"for-loop-2"}}'
+      - name: runtime-config
+        value: ""
+      - name: mlmd-server-address
+        value: metadata-grpc-service.kubeflow.svc.cluster.local
+      - name: mlmd-server-port
+        value: "8080"
       taskSpec:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: PipelineLoop
@@ -32,56 +51,11 @@ spec:
           iterateParam: ""
           pipelineSpec:
             params:
-            - name: parent-dag-id
+            - name: dag-execution-id
               type: string
             - name: iteration-index
               type: string
             tasks:
-            - name: for-loop-2-loop-dag-driver
-              params:
-              - name: type
-                value: DAG
-              - name: pipeline-name
-                value: pipeline-with-loop-static
-              - name: run-id
-                value: $(context.pipelineRun.uid)
-              - name: dag-execution-id
-                value: $(params.parent-dag-id)
-              - name: component
-                value: '{"dag":{"tasks":{"concat-op":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-concat-op"},"inputs":{"parameters":{"a":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"a\"]"},"b":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"b\"]"}}},"taskInfo":{"name":"concat-op"}},"print-op-2":{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"dependentTasks":["concat-op"],"inputs":{"parameters":{"text":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"concat-op"}}}},"taskInfo":{"name":"print-op-2"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--loop-item-param-1":{"parameterType":"STRUCT"}}}}'
-              - name: task
-                value: '{"componentRef":{"name":"comp-for-loop-2"},"parameterIterator":{"itemInput":"pipelinechannel--loop-item-param-1","items":{"raw":"[{\"a\":
-                  \"1\", \"b\": \"2\"}, {\"a\": \"10\", \"b\": \"20\"}]"}},"taskInfo":{"name":"for-loop-2"}}'
-              - name: runtime-config
-                value: ""
-              - name: iteration-index
-                value: $(params.iteration-index)
-              - name: mlmd-server-address
-                value: metadata-grpc-service.kubeflow.svc.cluster.local
-              - name: mlmd-server-port
-                value: "8080"
-              taskRef:
-                apiVersion: custom.tekton.dev/v1alpha1
-                kind: KFPTask
-            - name: for-loop-2-loop-dag-pub-driver
-              params:
-              - name: type
-                value: DAG_PUB
-              - name: pipeline-name
-                value: pipeline-with-loop-static
-              - name: run-id
-                value: $(context.pipelineRun.uid)
-              - name: dag-execution-id
-                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
-              - name: mlmd-server-address
-                value: metadata-grpc-service.kubeflow.svc.cluster.local
-              - name: mlmd-server-port
-                value: "8080"
-              runAfter:
-              - print-op-2
-              taskRef:
-                apiVersion: custom.tekton.dev/v1alpha1
-                kind: KFPTask
             - name: concat-op
               params:
               - name: type
@@ -91,7 +65,7 @@ spec:
               - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag-execution-id
-                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
+                value: $(params.dag-execution-id)
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-concat-op"},"inputs":{"parameters":{"a":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"a\"]"},"b":{"componentInputParameter":"pipelinechannel--loop-item-param-1","parameterExpressionSelector":"parseJson(string_value)[\"b\"]"}}},"taskInfo":{"name":"concat-op"}}'
               - name: container
@@ -232,7 +206,7 @@ spec:
               - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag-execution-id
-                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
+                value: $(params.dag-execution-id)
               - name: task
                 value: '{"cachingOptions":{"enableCache":true},"componentRef":{"name":"comp-print-op-2"},"dependentTasks":["concat-op"],"inputs":{"parameters":{"text":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"concat-op"}}}},"taskInfo":{"name":"print-op-2"}}'
               - name: container

@@ -189,6 +189,7 @@ func (c *pipelinerunCompiler) Container(taskName, compRef string,
 		containerDef:     container,
 		exitHandler:      exitHandler,
 		kubernetesConfig: kubernetesConfigPlaceholder,
+		inLoopDag:        c.GetLoopName(c.CurrentDag()),
 	})
 }
 
@@ -211,6 +212,7 @@ type containerDriverInputs struct {
 	iterationIndex   string // optional, when this is an iteration task
 	exitHandler      bool
 	kubernetesConfig string
+	inLoopDag        bool
 }
 
 func (i *containerDriverInputs) getParentDagID(isExitHandler bool) string {
@@ -219,6 +221,8 @@ func (i *containerDriverInputs) getParentDagID(isExitHandler bool) string {
 	}
 	if isExitHandler && i.parentDag == compiler.RootComponentName {
 		return fmt.Sprintf("$(params.%s)", paramParentDagID)
+	} else if i.inLoopDag {
+		return fmt.Sprintf("$(params.%s)", paramNameDagExecutionId)
 	} else {
 		return taskOutputParameter(getDAGDriverTaskName(i.parentDag), paramExecutionID)
 	}
