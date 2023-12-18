@@ -802,7 +802,7 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 	status.CurrentRunning = 0
 	for _, pr := range pipelineRuns {
 		lbls := pr.GetLabels()
-		if lbls["deleted"] == "True" || lbls["updated"] != "True" {
+		if lbls["deleted"] == "True" {
 			// PipelineRun is already retried, skipping...
 			continue
 		}
@@ -826,8 +826,8 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 			} else {
 				DAGStatus = pb.Execution_COMPLETE
 			}
-			// Run DAG Driver if KFP V2 is enabled
-			if c.runKFPV2Driver == "true" {
+			// Run DAG Driver if KFP V2 is enabled and is not yet updated
+			if c.runKFPV2Driver == "true" && lbls["updated"] != "True" {
 				pipelineRunParams := pr.Spec.Params
 				options, err := kfptask.ParseParams(customRun)
 				if err != nil {

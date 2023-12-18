@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM alpine:3.19
 ARG bin_dir=_output/bin
 ARG bin_name
 ENV BIN ${bin_name}
