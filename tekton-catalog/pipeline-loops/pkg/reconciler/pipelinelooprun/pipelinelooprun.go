@@ -40,6 +40,8 @@ import (
 	pipelineloopv1alpha1 "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/apis/pipelineloop/v1alpha1"
 	pipelineloopclientset "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/clientset/versioned"
 	listerspipelineloop "github.com/kubeflow/kfp-tekton/tekton-catalog/pipeline-loops/pkg/client/listers/pipelineloop/v1alpha1"
+	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/reconciler/kfptask"
+	pb "github.com/kubeflow/pipelines/third_party/ml-metadata/go/ml_metadata"
 	"github.com/tektoncd/pipeline/pkg/apis/config"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -106,6 +108,7 @@ type Reconciler struct {
 	pipelineRunLister     listers.PipelineRunLister
 	cacheStore            *cache.TaskCacheStore
 	clock                 clock.RealClock
+	runKFPV2Driver        string
 }
 type CacheKey struct {
 	Params           []tektonv1.Param                       `json:"params"`
@@ -674,6 +677,34 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 	}
 	currentIterationItemBytes, _ := json.Marshal(iterationElements[currentIndex])
 	pipelineRunAnnotations[pipelineloop.GroupName+pipelineLoopCurrentIterationItemAnnotationKey] = string(currentIterationItemBytes)
+	pipelineRunParams := getParameters(customRun, tls, iteration, string(currentIterationItemBytes))
+	// Run DAG Driver if KFP V2 is enabled
+	if c.runKFPV2Driver == "true" {
+		options, err := kfptask.ParseParams(customRun)
+		if err != nil {
+			logger.Errorf("Run %s/%s is invalid because of %s", customRun.Namespace, customRun.Name, err)
+			customRun.Status.MarkCustomRunFailed(kfptask.ReasonFailedValidation,
+				"Run can't be run because it has an invalid param - %v", err)
+			return nil, err
+		}
+		tmp, _ := strconv.ParseInt(string(currentIterationItemBytes), 10, 32)
+		kfptask.UpdateOptionsIterationIndex(options, int(tmp))
+
+		_, _, executionID, _, _, driverErr := kfptask.ExecDriver(ctx, options)
+		if driverErr != nil {
+			logger.Errorf("kfp-driver execution failed when reconciling Run %s/%s: %v", customRun.Namespace, customRun.Name, driverErr)
+			customRun.Status.MarkCustomRunFailed(kfptask.ReasonDriverError,
+				"kfp-driver execution failed: %v", driverErr)
+			return nil, err
+		}
+		for i, pipelineRunParam := range pipelineRunParams {
+			if pipelineRunParam.Name == "dag-execution-id" {
+				pipelineRunParam.Value.StringVal = executionID
+				pipelineRunParams[i] = pipelineRunParam
+				break
+			}
+		}
+	}
 	pr := &tektonv1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      prName,
@@ -684,7 +715,7 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 			Annotations: pipelineRunAnnotations,
 		},
 		Spec: tektonv1.PipelineRunSpec{
-			Params:   getParameters(customRun, tls, iteration, string(currentIterationItemBytes)),
+			Params:   pipelineRunParams,
 			Timeouts: nil,
 			TaskRunTemplate: tektonv1.PipelineTaskRunTemplate{
 				ServiceAccountName: tls.ServiceAccountName,
@@ -787,9 +818,53 @@ func (c *Reconciler) updatePipelineRunStatus(ctx context.Context, iterationEleme
 		if !pr.IsDone() {
 			status.CurrentRunning++
 			currentRunningPrs = append(currentRunningPrs, pr)
-		}
-		if pr.IsDone() && !pr.Status.GetCondition(apis.ConditionSucceeded).IsTrue() {
-			failedPrs = append(failedPrs, pr)
+		} else {
+			var DAGStatus pb.Execution_State
+			if !pr.Status.GetCondition(apis.ConditionSucceeded).IsTrue() {
+				failedPrs = append(failedPrs, pr)
+				DAGStatus = pb.Execution_FAILED
+			} else {
+				DAGStatus = pb.Execution_COMPLETE
+			}
+			// Run DAG Driver if KFP V2 is enabled and is not yet updated
+			if c.runKFPV2Driver == "true" && lbls["updated"] != "True" {
+				pipelineRunParams := pr.Spec.Params
+				options, err := kfptask.ParseParams(customRun)
+				if err != nil {
+					logger.Errorf("Run %s/%s is invalid because of %s", customRun.Namespace, customRun.Name, err)
+					customRun.Status.MarkCustomRunFailed(kfptask.ReasonFailedValidation,
+						"Run can't be run because it has an invalid param - %v", err)
+					return 0, nil, nil, err
+				}
+				var executionID string
+				for _, pipelineRunParam := range pipelineRunParams {
+					if pipelineRunParam.Name == "dag-execution-id" {
+						executionID = pipelineRunParam.Value.StringVal
+						break
+					}
+				}
+				kfptask.UpdateOptionsDAGExecutionID(options, executionID)
+				DAGErr := kfptask.UpdateDAGPublisher(ctx, options, DAGStatus)
+				if err != nil {
+					logger.Errorf("kfp publisher failed when reconciling Run %s/%s: %v", customRun.Namespace, customRun.Name, DAGErr)
+					customRun.Status.MarkCustomRunFailed(kfptask.ReasonDriverError,
+						"kfp publisher execution failed: %v", DAGErr)
+					return 0, nil, nil, DAGErr
+				}
+				// add lable to skip updated pipelines
+				updatedLabel := map[string]string{"updated": "True"}
+				mergePatch := map[string]interface{}{
+					"metadata": map[string]interface{}{
+						"labels": updatedLabel,
+					},
+				}
+				patch, updateErr := json.Marshal(mergePatch)
+				if updateErr != nil {
+					return 0, nil, nil, updateErr
+				}
+				_, _ = c.pipelineClientSet.TektonV1().PipelineRuns(pr.Namespace).
+					Patch(ctx, pr.Name, types.MergePatchType, patch, metav1.PatchOptions{})
+			}
 		}
 
 		// Mark customRun successful if the condition are met.

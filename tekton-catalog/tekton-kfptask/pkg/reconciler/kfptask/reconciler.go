@@ -334,7 +334,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.Custo
 	if ktstate.isRunning() {
 		return ktstate.next("", "", "")
 	}
-	options, err := parseParams(run)
+	options, err := ParseParams(run)
 	if err != nil {
 		logger.Errorf("Run %s/%s is invalid because of %s", run.Namespace, run.Name, err)
 		run.Status.MarkCustomRunFailed(ReasonFailedValidation,
@@ -342,7 +342,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.Custo
 		return nil
 	}
 
-	runResults, runTask, executionID, executorInput, podSpecPatch, driverErr := execDriver(ctx, options)
+	runResults, runTask, executionID, executorInput, podSpecPatch, driverErr := ExecDriver(ctx, options)
 	if driverErr != nil {
 		logger.Errorf("kfp-driver execution failed when reconciling Run %s/%s: %v", run.Namespace, run.Name, driverErr)
 		run.Status.MarkCustomRunFailed(ReasonDriverError,
@@ -464,14 +464,13 @@ func v1ParamsConversion(ctx context.Context, v1beta1Params tektonv1beta1.Params)
 	return v1Params
 }
 
-func DAGPublisher(ctx context.Context, opts driver.Options, mlmd *metadata.Client) (err error) {
+func DAGPublisher(ctx context.Context, opts driver.Options, mlmd *metadata.Client, status pb.Execution_State) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("failed to publish driver DAG execution %s: %w", fmt.Sprint(opts.DAGExecutionID), err)
 		}
 	}()
 	var outputParameters map[string]*structpb.Value
-	status := pb.Execution_COMPLETE
 	execution, err := mlmd.GetExecution(ctx, opts.DAGExecutionID)
 	if err != nil {
 		return fmt.Errorf("failed to get execution: %w", err)
@@ -482,7 +481,19 @@ func DAGPublisher(ctx context.Context, opts driver.Options, mlmd *metadata.Clien
 	return nil
 }
 
-func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.CustomRunResult, bool, string, string, string, error) {
+func UpdateDAGPublisher(ctx context.Context, options *driverOptions, status pb.Execution_State) (err error) {
+	return DAGPublisher(ctx, options.options, options.mlmdClient, status)
+}
+
+func UpdateOptionsDAGExecutionID(options *driverOptions, DAGExecutionID string) {
+	options.options.DAGExecutionID, _ = strconv.ParseInt(DAGExecutionID, 10, 64)
+}
+
+func UpdateOptionsIterationIndex(options *driverOptions, iterationIndex int) {
+	options.options.IterationIndex = iterationIndex
+}
+
+func ExecDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.CustomRunResult, bool, string, string, string, error) {
 	var execution *driver.Execution
 	var err error
 	logger := logging.FromContext(ctx)
@@ -500,7 +511,7 @@ func execDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.C
 		execution, err = driver.DAG(ctx, options.options, options.mlmdClient)
 	case "DAG_PUB":
 		// current DAG_PUB only scheduled when the dag execution is completed
-		err = DAGPublisher(ctx, options.options, options.mlmdClient)
+		err = DAGPublisher(ctx, options.options, options.mlmdClient, pb.Execution_COMPLETE)
 		return &[]tektonv1beta1.CustomRunResult{}, taskRunDecision, executionID, executorInput, podSpecPatch, err
 	default:
 		err = fmt.Errorf("unknown driverType %s", options.driverType)
@@ -578,7 +589,7 @@ func prettyPrint(jsonStr string) string {
 	return prettyJSON.String()
 }
 
-func parseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError) {
+func ParseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError) {
 	if len(run.Spec.Params) == 0 {
 		return nil, apis.ErrMissingField("params")
 	}
