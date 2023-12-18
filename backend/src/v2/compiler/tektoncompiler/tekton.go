@@ -368,6 +368,7 @@ type pipelinerunCompiler struct {
 	pr               *pipelineapi.PipelineRun
 	exithandler      *ehv1alpha1.ExitHandler
 	loops            []*pipelineloopapi.PipelineLoop
+	loopNames        map[string]string
 	launcherImage    string
 	dagStack         []string
 	exitHandlerScope bool
@@ -479,6 +480,24 @@ func (c *pipelinerunCompiler) PushLoop(loop *pipelineloopapi.PipelineLoop) {
 		return
 	}
 	c.loops = append(c.loops, loop)
+}
+
+func (c *pipelinerunCompiler) AddLoopName(name string) {
+	if c.loopNames == nil {
+		c.loopNames = make(map[string]string)
+	}
+	if name == "" {
+		return
+	}
+	c.loopNames[name] = "true"
+}
+
+func (c *pipelinerunCompiler) HasLoopName(name string) bool {
+	if c.loopNames == nil {
+		return false
+	}
+	_, ok := c.loopNames[name]
+	return ok
 }
 
 func (c *pipelinerunCompiler) PopLoop() *pipelineloopapi.PipelineLoop {

@@ -168,6 +168,26 @@ spec:
         value: "1"
       - name: to
         value: $(tasks.for-loop-2-dag-driver.results.iteration-count)
+      - name: type
+        value: DAG
+      - name: pipeline-name
+        value: tutorial-control-flows
+      - name: run-id
+        value: $(context.pipelineRun.uid)
+      - name: dag-execution-id
+        value: $(tasks.for-loop-2-dag-driver.results.execution-id)
+      - name: component
+        value: '{"dag":{"tasks":{"condition-3":{"componentRef":{"name":"comp-condition-3"},"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-3"},"triggerPolicy":{"condition":"inputs.parameter_values[''pipelinechannel--loop-item-param-1'']
+          == inputs.parameter_values[''pipelinechannel--flip-coin-op-Output'']"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
+      - name: task
+        value: '{"componentRef":{"name":"comp-for-loop-2"},"dependentTasks":["flip-coin-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"flip-coin-op"}}}},"iteratorPolicy":{"parallelismLimit":2},"parameterIterator":{"itemInput":"pipelinechannel--loop-item-param-1","items":{"raw":"[\"heads\",
+          \"tails\"]"}},"taskInfo":{"name":"for-loop-2"}}'
+      - name: runtime-config
+        value: ""
+      - name: mlmd-server-address
+        value: metadata-grpc-service.kubeflow.svc.cluster.local
+      - name: mlmd-server-port
+        value: "8080"
       runAfter:
       - flip-coin-op
       taskSpec:
@@ -180,58 +200,11 @@ spec:
           parallelism: 2
           pipelineSpec:
             params:
-            - name: parent-dag-id
+            - name: dag-execution-id
               type: string
             - name: iteration-index
               type: string
             tasks:
-            - name: for-loop-2-loop-dag-driver
-              params:
-              - name: type
-                value: DAG
-              - name: pipeline-name
-                value: tutorial-control-flows
-              - name: run-id
-                value: $(context.pipelineRun.uid)
-              - name: dag-execution-id
-                value: $(params.parent-dag-id)
-              - name: component
-                value: '{"dag":{"tasks":{"condition-3":{"componentRef":{"name":"comp-condition-3"},"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-3"},"triggerPolicy":{"condition":"inputs.parameter_values[''pipelinechannel--loop-item-param-1'']
-                  == inputs.parameter_values[''pipelinechannel--flip-coin-op-Output'']"}}}},"inputDefinitions":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"parameterType":"STRING"},"pipelinechannel--loop-item-param-1":{"parameterType":"STRING"}}}}'
-              - name: task
-                value: '{"componentRef":{"name":"comp-for-loop-2"},"dependentTasks":["flip-coin-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"flip-coin-op"}}}},"iteratorPolicy":{"parallelismLimit":2},"parameterIterator":{"itemInput":"pipelinechannel--loop-item-param-1","items":{"raw":"[\"heads\",
-                  \"tails\"]"}},"taskInfo":{"name":"for-loop-2"}}'
-              - name: runtime-config
-                value: ""
-              - name: iteration-index
-                value: $(params.iteration-index)
-              - name: mlmd-server-address
-                value: metadata-grpc-service.kubeflow.svc.cluster.local
-              - name: mlmd-server-port
-                value: "8080"
-              taskRef:
-                apiVersion: custom.tekton.dev/v1alpha1
-                kind: KFPTask
-            - name: for-loop-2-loop-dag-pub-driver
-              params:
-              - name: type
-                value: DAG_PUB
-              - name: pipeline-name
-                value: tutorial-control-flows
-              - name: run-id
-                value: $(context.pipelineRun.uid)
-              - name: dag-execution-id
-                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
-              - name: mlmd-server-address
-                value: metadata-grpc-service.kubeflow.svc.cluster.local
-              - name: mlmd-server-port
-                value: "8080"
-              runAfter:
-              - print-op
-              - print-op-2
-              taskRef:
-                apiVersion: custom.tekton.dev/v1alpha1
-                kind: KFPTask
             - name: print-op
               params:
               - name: type
@@ -784,7 +757,7 @@ spec:
               - name: run-id
                 value: $(context.pipelineRun.uid)
               - name: dag-execution-id
-                value: $(tasks.for-loop-2-loop-dag-driver.results.execution-id)
+                value: $(params.dag-execution-id)
               - name: component
                 value: '{"dag":{"tasks":{"condition-4":{"componentRef":{"name":"comp-condition-4"},"dependentTasks":["get-random-int-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--get-random-int-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"get-random-int-op"}},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-4"},"triggerPolicy":{"condition":"int(inputs.parameter_values[''pipelinechannel--get-random-int-op-Output''])
                   \u003e 5"}},"condition-5":{"componentRef":{"name":"comp-condition-5"},"dependentTasks":["get-random-int-op"],"inputs":{"parameters":{"pipelinechannel--flip-coin-op-Output":{"componentInputParameter":"pipelinechannel--flip-coin-op-Output"},"pipelinechannel--get-random-int-op-Output":{"taskOutputParameter":{"outputParameterKey":"Output","producerTask":"get-random-int-op"}},"pipelinechannel--loop-item-param-1":{"componentInputParameter":"pipelinechannel--loop-item-param-1"}}},"taskInfo":{"name":"condition-5"},"triggerPolicy":{"condition":"int(inputs.parameter_values[''pipelinechannel--get-random-int-op-Output''])
@@ -818,8 +791,8 @@ spec:
               - name: mlmd-server-port
                 value: "8080"
               runAfter:
-              - print-op
               - print-op-2
+              - print-op
               taskRef:
                 apiVersion: custom.tekton.dev/v1alpha1
                 kind: KFPTask
