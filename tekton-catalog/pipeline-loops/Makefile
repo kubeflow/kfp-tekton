@@ -46,14 +46,14 @@ validate-examples: cli $(info validate-examples: validate example yamls for pipe
 		\( -type f -name "*yaml" \) -print0 | xargs -0 -n1 ${BIN_DIR}/pipelineloop-cli -f
 
 local: update init
-	go build -o=${BIN_DIR}/pipelineloop-controller ./cmd/controller
-	go build -o=${BIN_DIR}/pipelineloop-webhook ./cmd/webhook
-	go build -o=${BIN_DIR}/pipelineloop-cli ./cmd/cli
+	CGO_ENABLED=0 GO111MODULE=on go build -mod=vendor -o=${BIN_DIR}/pipelineloop-controller ./cmd/controller
+	CGO_ENABLED=0 GO111MODULE=on go build -mod=vendor -o=${BIN_DIR}/pipelineloop-webhook ./cmd/webhook
+	CGO_ENABLED=0 GO111MODULE=on go build -mod=vendor -o=${BIN_DIR}/pipelineloop-cli ./cmd/cli
 
 build-linux: update init
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/pipelineloop-controller ./cmd/controller
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/pipelineloop-webhook ./cmd/webhook
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/pipelineloop-cli ./cmd/cli
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -mod=vendor -o=${BIN_DIR}/pipelineloop-controller ./cmd/controller
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -mod=vendor -o=${BIN_DIR}/pipelineloop-webhook ./cmd/webhook
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -mod=vendor -o=${BIN_DIR}/pipelineloop-cli ./cmd/cli
 
 images: build-linux
 	docker build --build-arg bin_name=pipelineloop-controller . -t ${DOCKER_REGISTRY}/pipelineloop-controller:$(TAG)
@@ -62,7 +62,8 @@ images: build-linux
 update:
 	go mod download
 	go mod tidy
-	go mod vendor && patch -u vendor/k8s.io/klog/v2/klog.go pkg/controller/klog.patch
+	go mod vendor
+	patch -u vendor/k8s.io/klog/v2/klog.go pkg/controller/klog.patch
 
 clean:
 	rm -r ${BIN_DIR}

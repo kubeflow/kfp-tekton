@@ -687,6 +687,8 @@ func (c *Reconciler) createPipelineRun(ctx context.Context, logger *zap.SugaredL
 				"Run can't be run because it has an invalid param - %v", err)
 			return nil, err
 		}
+		tmp, _ := strconv.ParseInt(string(currentIterationItemBytes), 10, 32)
+		kfptask.UpdateOptionsIterationIndex(options, int(tmp))
 
 		_, _, executionID, _, _, driverErr := kfptask.ExecDriver(ctx, options)
 		if driverErr != nil {

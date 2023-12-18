@@ -489,6 +489,10 @@ func UpdateOptionsDAGExecutionID(options *driverOptions, DAGExecutionID string) 
 	options.options.DAGExecutionID, _ = strconv.ParseInt(DAGExecutionID, 10, 64)
 }
 
+func UpdateOptionsIterationIndex(options *driverOptions, iterationIndex int) {
+	options.options.IterationIndex = iterationIndex
+}
+
 func ExecDriver(ctx context.Context, options *driverOptions) (*[]tektonv1beta1.CustomRunResult, bool, string, string, string, error) {
 	var execution *driver.Execution
 	var err error
