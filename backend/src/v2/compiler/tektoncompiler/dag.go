@@ -200,7 +200,7 @@ func (c *pipelinerunCompiler) addDagTask(name, compRef string, task *pipelinespe
 		inputs.task = taskSpecJson
 		inputs.deps = task.GetDependentTasks()
 		inputs.parentDagID = c.CurrentDag()
-		inputs.inLoopDag = c.GetLoopName(c.CurrentDag())
+		inputs.inLoopDag = c.HasLoopName(c.CurrentDag())
 	}
 
 	if loopDag {

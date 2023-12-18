@@ -492,7 +492,7 @@ func (c *pipelinerunCompiler) AddLoopName(name string) {
 	c.loopNames[name] = "true"
 }
 
-func (c *pipelinerunCompiler) GetLoopName(name string) bool {
+func (c *pipelinerunCompiler) HasLoopName(name string) bool {
 	if c.loopNames == nil {
 		return false
 	}

@@ -189,7 +189,7 @@ func (c *pipelinerunCompiler) Container(taskName, compRef string,
 		containerDef:     container,
 		exitHandler:      exitHandler,
 		kubernetesConfig: kubernetesConfigPlaceholder,
-		inLoopDag:        c.GetLoopName(c.CurrentDag()),
+		inLoopDag:        c.HasLoopName(c.CurrentDag()),
 	})
 }
 
