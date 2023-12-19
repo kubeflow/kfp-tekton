@@ -46,6 +46,12 @@ type driverOptions struct {
 }
 
 const (
+	// ReasonFailedValidation indicates that the reason for failure status is that Run failed runtime validation
+	ReasonFailedValidation = "RunValidationFailed"
+
+	// ReasonDriverError indicates that an error is throw while running the driver
+	ReasonDriverError = "DriverError"
+
 	ExecutionID    = "execution-id"
 	Condition      = "condition"
 	IterationCount = "iteration-count"
