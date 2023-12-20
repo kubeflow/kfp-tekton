@@ -12,9 +12,9 @@ namespace: tekton-pipelines
 
 images:
   - name: quay.io/aipipeline/pipelineloop-controller
-    newTag: 1.9.0-rc0
+    newTag: 1.9.1-rc0
   - name: quay.io/aipipeline/pipelineloop-webhook
-    newTag: 1.9.0-rc0
+    newTag: 1.9.1-rc0
   - name: tekton-exithandler-controller
     newName: quay.io/aipipeline/tekton-exithandler-controller
     newTag: 2.1.0-rc0
