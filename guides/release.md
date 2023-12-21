@@ -28,6 +28,7 @@
     cd sdk/python
     pip install -e .
     export KFP_TEKTON_VERSION=${KFP_TEKTON_VERSION}
+    python3 setup.py sdist
     twine check dist/kfp-tekton-${KFP_TEKTON_VERSION}.tar.gz
     twine upload --repository pypi dist/kfp-tekton-${KFP_TEKTON_VERSION}.tar.gz
     ```

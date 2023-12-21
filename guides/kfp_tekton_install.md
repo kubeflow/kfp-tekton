@@ -73,14 +73,14 @@ To install the standalone Kubeflow Pipelines V1 with Tekton , run the following 
          -p '{"data":{"default-timeout-minutes": "0"}}'
    ```
 
-3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.9.0` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
+3. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.9.1` [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)(CRDs).
     ```shell
-    kubectl apply --selector kubeflow/crd-install=true -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.9.0/kfp-tekton.yaml
+    kubectl apply --selector kubeflow/crd-install=true -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.9.1/kfp-tekton.yaml
     ```
 
-4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.9.0` deployment
+4. Install Kubeflow Pipelines with Tekton backend (`kfp-tekton`) `v1.9.1` deployment
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.9.0/kfp-tekton.yaml
+    kubectl apply -f https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.9.1/kfp-tekton.yaml
     ```
 
 5. Then, if you want to expose the Kubeflow Pipelines endpoint outside the cluster, run the following commands:
@@ -101,7 +101,7 @@ To install the standalone Kubeflow Pipelines V1 with Tekton , run the following 
 
 7. (OpenShift only) If you are running the standalone KFP-Tekton on OpenShift, apply the necessary security context constraint below
    ```shell
-   curl -L https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.9.0/kfp-tekton.yaml | yq 'del(.spec.template.spec.containers[].securityContext.runAsUser, .spec.template.spec.containers[].securityContext.runAsGroup)' | oc apply -f -
+   curl -L https://raw.githubusercontent.com/kubeflow/kfp-tekton/master/install/v1.9.1/kfp-tekton.yaml | yq 'del(.spec.template.spec.containers[].securityContext.runAsUser, .spec.template.spec.containers[].securityContext.runAsGroup)' | oc apply -f -
    oc apply -k https://github.com/kubeflow/kfp-tekton//manifests/kustomize/third-party/openshift/standalone
    oc adm policy add-scc-to-user anyuid -z tekton-pipelines-controller
    oc adm policy add-scc-to-user anyuid -z tekton-pipelines-webhook
