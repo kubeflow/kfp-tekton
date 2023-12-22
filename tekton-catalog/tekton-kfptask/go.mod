@@ -7,6 +7,7 @@ require (
 	github.com/kubeflow/pipelines/api v0.0.0-20231027040853-58ce09e07d03
 	github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20231027040853-58ce09e07d03
 	github.com/kubeflow/pipelines/third_party/ml-metadata v0.0.0-20231027040853-58ce09e07d03
+	github.com/stretchr/testify v1.8.4
 	github.com/tektoncd/pipeline v0.53.2
 	go.uber.org/zap v1.26.0
 	google.golang.org/protobuf v1.31.0
@@ -73,6 +74,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
