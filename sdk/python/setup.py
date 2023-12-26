@@ -186,6 +186,7 @@ setup(
     packages=[
         'kfp_tekton',
         'kfp_tekton.compiler',
+        'kfp_tekton.cli',
     ],
     classifiers=[
         'Intended Audience :: Developers',
