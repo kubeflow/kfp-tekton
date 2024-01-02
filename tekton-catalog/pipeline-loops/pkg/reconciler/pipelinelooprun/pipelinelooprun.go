@@ -211,6 +211,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, customRun *tektonv1beta1
 	}
 	logger.Infof("Received control for a CustomRun %s/%s %-v", customRun.Namespace, customRun.Name, customRun.Spec.CustomSpec)
 	// If the CustomRun has not started, initialize the Condition and set the start time.
+	firstIteration := false
 	if !customRun.HasStarted() {
 		logger.Infof("Starting new CustomRun %s/%s", customRun.Namespace, customRun.Name)
 		customRun.Status.InitializeConditions()
@@ -226,6 +227,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, customRun *tektonv1beta1
 		// on the event to perform user facing initialisations, such has reset a CI check status
 		afterCondition := customRun.Status.GetCondition(apis.ConditionSucceeded)
 		events.Emit(ctx, nil, afterCondition, customRun)
+		firstIteration = true
 	}
 
 	// Store the condition before reconcile
@@ -264,7 +266,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, customRun *tektonv1beta1
 		return nil
 	}
 	// Reconcile the Run
-	if err := c.reconcile(ctx, customRun, status); err != nil {
+	if err := c.reconcile(ctx, customRun, status, firstIteration); err != nil {
 		logger.Errorf("Reconcile error: %v", err.Error())
 		merr = multierror.Append(merr, err)
 	}
@@ -341,7 +343,7 @@ func (c *Reconciler) setMaxNestedStackDepth(ctx context.Context, pipelineLoopSpe
 			}
 		} else if t.TaskRef != nil {
 			if t.TaskRef.Kind == "PipelineLoop" {
-				tl, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(customRun.Namespace).Get(ctx, t.TaskRef.Name, metav1.GetOptions{})
+				tl, err := c.pipelineLoopLister.PipelineLoops(customRun.Namespace).Get(t.TaskRef.Name)
 				if err == nil && tl != nil {
 					if len(tl.ObjectMeta.Annotations) == 0 {
 						tl.ObjectMeta.Annotations = map[string]string{MaxNestedStackDepthKey: fmt.Sprint(depth)}
@@ -360,12 +362,12 @@ func (c *Reconciler) setMaxNestedStackDepth(ctx context.Context, pipelineLoopSpe
 	}
 }
 
-func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.CustomRun, status *pipelineloopv1alpha1.PipelineLoopRunStatus) error {
+func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.CustomRun, status *pipelineloopv1alpha1.PipelineLoopRunStatus, firstIteration bool) error {
 	ctx = EnableCustomTaskFeatureFlag(ctx)
 	logger := logging.FromContext(ctx)
 	var hashSum string
 	// Get the PipelineLoop referenced by the CustomRun
-	pipelineLoopMeta, pipelineLoopSpec, err := c.getPipelineLoop(ctx, customRun)
+	pipelineLoopMeta, pipelineLoopSpec, err := c.getPipelineLoop(ctx, customRun, firstIteration)
 	if err != nil {
 		return nil
 	}
@@ -599,16 +601,20 @@ func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.Cus
 	return nil
 }
 
-func (c *Reconciler) getPipelineLoop(ctx context.Context, customRun *tektonv1beta1.CustomRun) (*metav1.ObjectMeta, *pipelineloopv1alpha1.PipelineLoopSpec, error) {
+func (c *Reconciler) getPipelineLoop(ctx context.Context, customRun *tektonv1beta1.CustomRun, firstIteration bool) (*metav1.ObjectMeta, *pipelineloopv1alpha1.PipelineLoopSpec, error) {
 	pipelineLoopMeta := metav1.ObjectMeta{}
 	pipelineLoopSpec := pipelineloopv1alpha1.PipelineLoopSpec{}
 	if customRun.Spec.CustomRef != nil && customRun.Spec.CustomRef.Name != "" {
-		// Use the k8 client to get the PipelineLoop rather than the lister.  This avoids a timing issue where
+		// Use the k8 client to get the PipelineLoop rather than the Lister on the first reconcile. This avoids a timing issue where
 		// the PipelineLoop is not yet in the lister cache if it is created at nearly the same time as the Run.
 		// See https://github.com/tektoncd/pipeline/issues/2740 for discussion on this issue.
-		//
-		// tl, err := c.pipelineLoopLister.PipelineLoops(customRun.Namespace).Get(customRun.Spec.Ref.Name)
-		tl, err := c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(customRun.Namespace).Get(ctx, customRun.Spec.CustomRef.Name, metav1.GetOptions{})
+		var tl *pipelineloopv1alpha1.PipelineLoop
+		var err error
+		if firstIteration {
+			tl, err = c.pipelineloopClientSet.CustomV1alpha1().PipelineLoops(customRun.Namespace).Get(ctx, customRun.Spec.CustomRef.Name, metav1.GetOptions{})
+		} else {
+			tl, err = c.pipelineLoopLister.PipelineLoops(customRun.Namespace).Get(customRun.Spec.CustomRef.Name)
+		}
 		if err != nil {
 			customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonCouldntGetPipelineLoop.String(),
 				"Error retrieving PipelineLoop for CustomRun %s/%s: %s",
