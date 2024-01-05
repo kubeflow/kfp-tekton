@@ -448,7 +448,6 @@ func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.Cus
 			DAGStatus = pb.Execution_CANCELED
 		}
 		if c.runKFPV2Driver == "true" {
-			pipelineRunParams := customRun.Spec.Params
 			options, err := kfptask.ParseParams(customRun)
 			if err != nil {
 				logger.Errorf("Run %s/%s is invalid because of %s", customRun.Namespace, customRun.Name, err)
@@ -456,14 +455,6 @@ func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.Cus
 					"Run can't be run because it has an invalid param - %v", err)
 				return err
 			}
-			var executionID string
-			for _, pipelineRunParam := range pipelineRunParams {
-				if pipelineRunParam.Name == "dag-execution-id" {
-					executionID = pipelineRunParam.Value.StringVal
-					break
-				}
-			}
-			kfptask.UpdateOptionsDAGExecutionID(options, executionID)
 			DAGErr := kfptask.UpdateDAGPublisher(ctx, options, DAGStatus)
 			if err != nil {
 				logger.Errorf("kfp publisher failed when reconciling Run %s/%s: %v", customRun.Namespace, customRun.Name, DAGErr)
