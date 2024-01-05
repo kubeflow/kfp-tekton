@@ -433,18 +433,36 @@ func (c *Reconciler) reconcile(ctx context.Context, customRun *tektonv1beta1.Cus
 	}
 	// CustomRun is cancelled, just cancel all the running instance and return
 	if customRun.IsCancelled() {
+		var DAGStatus pb.Execution_State
 		if len(failedPrs) > 0 {
 			customRun.Status.MarkCustomRunFailed(pipelineloopv1alpha1.PipelineLoopRunReasonFailed.String(),
 				"CustomRun %s/%s was failed",
 				customRun.Namespace, customRun.Name)
+			DAGStatus = pb.Execution_FAILED
 		} else {
 			reason := pipelineloopv1alpha1.PipelineLoopRunReasonCancelled.String()
 			if customRun.HasTimedOut(c.clock) { // This check is only possible if we are on tekton 0.27.0 +
 				reason = string(tektonv1beta1.CustomRunReasonTimedOut)
 			}
 			customRun.Status.MarkCustomRunFailed(reason, "CustomRun %s/%s was cancelled", customRun.Namespace, customRun.Name)
+			DAGStatus = pb.Execution_CANCELED
 		}
-
+		if c.runKFPV2Driver == "true" {
+			options, err := kfptask.ParseParams(customRun)
+			if err != nil {
+				logger.Errorf("Run %s/%s is invalid because of %s", customRun.Namespace, customRun.Name, err)
+				customRun.Status.MarkCustomRunFailed(kfptask.ReasonFailedValidation,
+					"Run can't be run because it has an invalid param - %v", err)
+				return err
+			}
+			DAGErr := kfptask.UpdateDAGPublisher(ctx, options, DAGStatus)
+			if err != nil {
+				logger.Errorf("kfp publisher failed when reconciling Run %s/%s: %v", customRun.Namespace, customRun.Name, DAGErr)
+				customRun.Status.MarkCustomRunFailed(kfptask.ReasonDriverError,
+					"kfp publisher execution failed: %v", DAGErr)
+				return DAGErr
+			}
+		}
 		for _, currentRunningPr := range currentRunningPrs {
 			logger.Infof("CustomRun %s/%s is cancelled.  Cancelling PipelineRun %s.", customRun.Namespace, customRun.Name, currentRunningPr.Name)
 			if _, err := c.pipelineClientSet.TektonV1().PipelineRuns(customRun.Namespace).Patch(ctx, currentRunningPr.Name, types.JSONPatchType, cancelPatchBytes, metav1.PatchOptions{}); err != nil {
