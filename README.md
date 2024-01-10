@@ -11,8 +11,6 @@ according to this [design doc](http://bit.ly/kfp-tekton). The current code allow
 
 For more details about the project please follow this detailed [blog post](https://developer.ibm.com/blogs/awb-tekton-optimizations-for-kubeflow-pipelines-2-0) . For the latest KFP-Tekton V2 implementation and [supported offerings](https://developer.ibm.com/articles/advance-machine-learning-workflows-with-ibm-watson-pipelines/), please follow our latest [Kubecon Talk](https://www.youtube.com/watch?v=ecx-yp4g7YU) and [slides](https://docs.google.com/presentation/d/1Su42ApXzZvVwhNSYRAk3bd0heHOtrdEX/edit?usp=sharing&ouid=103716780892927252554&rtpof=true&sd=true). For information on the KFP-Tekton V1 implementation, look at these [slides](https://www.slideshare.net/AnimeshSingh/kubeflow-pipelines-with-tekton-236769976) as well as this [deep dive presentation](https://www.youtube.com/watch?v=AYIeNtXLT_k) for demos.
 
-**Note**: If you are interested in a sister project built on top of Kubeflow Pipelines with Tekton, please try [Machine Learning eXchange (MLX)](https://github.com/machine-learning-exchange), Data and AI Assets Catalog and Execution Engine. It introduces a 'Component Registry' for Kubeflow Pipelines, amongst other things.
-
 ## Architecture
 
 We are currently using [Kubeflow Pipelines 1.8.4](https://github.com/kubeflow/pipelines/releases/tag/1.8.4) and
