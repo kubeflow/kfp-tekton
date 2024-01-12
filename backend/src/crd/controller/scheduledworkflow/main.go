@@ -35,6 +35,7 @@ import (
 )
 
 var (
+	logLevel                    string
 	masterURL                   string
 	kubeconfig                  string
 	namespace                   string
@@ -76,6 +77,16 @@ func main() {
 	}
 	cfg.QPS = float32(clientQPS)
 	cfg.Burst = clientBurst
+
+	if logLevel == "" {
+		logLevel = "info"
+	}
+
+	level, err := log.ParseLevel(logLevel)
+	if err != nil {
+		log.Fatal("Invalid log level:", err)
+	}
+	log.SetLevel(level)
 
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
@@ -149,6 +160,7 @@ func initEnv() {
 func init() {
 	initEnv()
 
+	flag.StringVar(&logLevel, "logLevel", "", "Defines the log level for the application.")
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&namespace, "namespace", "", "The namespace name used for Kubernetes informers to obtain the listers.")

@@ -46,5 +46,6 @@ COPY --from=builder /tmp/NOTICES /third_party/NOTICES
 
 ENV NAMESPACE ""
 ENV EXECUTIONTYPE Workflow
+ENV LOG_LEVEL info
 
-CMD /bin/controller --logtostderr=true --namespace=${NAMESPACE} --executionType ${EXECUTIONTYPE}
+CMD /bin/controller --logtostderr=true --namespace=${NAMESPACE} --executionType ${EXECUTIONTYPE} --logLevel=${LOG_LEVEL}

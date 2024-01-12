@@ -40,6 +40,7 @@ def evaluation_llm_text_generation_pipeline(  # pylint: disable=dangerous-defaul
     batch_predict_instances_format: str = 'jsonl',
     batch_predict_predictions_format: str = 'jsonl',
     batch_predict_model_parameters: Dict[str, str] = {},
+    enable_row_based_metrics: bool = False,
     machine_type: str = 'e2-highmem-16',
     service_account: str = '',
     network: str = '',
@@ -55,10 +56,10 @@ def evaluation_llm_text_generation_pipeline(  # pylint: disable=dangerous-defaul
   models, performing the following generative tasks: `summarization`, `question-answering`, and `text-generation`.
 
   Args:
-    project: The GCP project that runs the pipeline components.
-    location: The GCP region that runs the pipeline components.
-    batch_predict_gcs_source_uris: Google Cloud Storage URI(-s) to your eval dataset instances data to run batch prediction on. The instances data should also contain the ground truth (target) data, used for evaluation. May contain wildcards. For more information on wildcards, see https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames. For more details about this input config, see https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.batchPredictionJobs#InputConfig.
-    batch_predict_gcs_destination_output_uri: The Google Cloud Storage location of the directory where the eval pipeline output is to be written to.
+    project: Required. The GCP project that runs the pipeline components.
+    location: Required. The GCP region that runs the pipeline components.
+    batch_predict_gcs_source_uris: Required. Google Cloud Storage URI(-s) to your eval dataset instances data to run batch prediction on. The instances data should also contain the ground truth (target) data, used for evaluation. May contain wildcards. For more information on wildcards, see https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames. For more details about this input config, see https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.batchPredictionJobs#InputConfig.
+    batch_predict_gcs_destination_output_uri: Required. The Google Cloud Storage location of the directory where the eval pipeline output is to be written to.
     model_name: The Model name used to run evaluation. Must be a publisher Model or a managed Model sharing the same ancestor location. Starting this job has no impact on any existing deployments of the Model and their resources.
     evaluation_task: The task that the large language model will be evaluated on. The evaluation component computes a set of metrics relevant to that specific task. Currently supported tasks are: `summarization`, `question-answering`, `text-generation`.
     input_field_name: The field name of the input eval dataset instances that contains the input prompts to the LLM.
@@ -74,7 +75,7 @@ def evaluation_llm_text_generation_pipeline(  # pylint: disable=dangerous-defaul
 
   Returns:
     evaluation_metrics: Metrics Artifact for LLM Text Generation.
-    evaluation_resource_name: If run on an user's managed VertexModel, the imported evaluation resource name. Empty if run on a publisher model.
+    evaluation_resource_name: If run on a user's managed VertexModel, the imported evaluation resource name. Empty if run on a publisher model.
   """
   # fmt: on
   outputs = NamedTuple(
@@ -123,6 +124,7 @@ def evaluation_llm_text_generation_pipeline(  # pylint: disable=dangerous-defaul
       evaluation_task=evaluation_task,
       target_field_name=f'instance.{target_field_name}',
       predictions_format=batch_predict_predictions_format,
+      enable_row_based_metrics=enable_row_based_metrics,
       joined_predictions_gcs_source=batch_predict_task.outputs[
           'gcs_output_directory'
       ],
@@ -134,6 +136,9 @@ def evaluation_llm_text_generation_pipeline(  # pylint: disable=dangerous-defaul
 
   import_evaluation_task = ModelImportEvaluationOp(
       metrics=eval_task.outputs['evaluation_metrics'],
+      row_based_metrics=eval_task.outputs['row_based_metrics']
+      if enable_row_based_metrics
+      else None,
       model=get_vertex_model_task.outputs['artifact'],
       problem_type=evaluation_task,
       dataset_type=batch_predict_predictions_format,

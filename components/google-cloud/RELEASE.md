@@ -1,7 +1,17 @@
 ## Upcoming release
-* Fix `v1.automl.training_job.AutoMLImageTrainingJobRunOp` `ModuleNotFoundError`
-* Append `tune-type` to existing labels when uploading models tuned by `preview.llm.rlhf_pipeline` instead of overriding them.
+* Use `large_model_reference` for `model_reference_name` when uploading models from `preview.llm.rlhf_pipeline` instead of hardcoding value as `text-bison@001`.
+* Disable caching when resolving model display names for RLHF-tuned models so a unique name is generated on each `preview.llm.rlhf_pipeline` run.
+* Upload the tuned adapter to Model Registry instead of model checkpoint from `preview.llm.rlhf_pipeline`.
 
+## Release 2.8.0
+* Release AutoSxS pipeline to preview.
+* Apply latest GCPC image vulnerability resolutions (base OS and software updates).
+
+## Release 2.7.0
+* Fix `v1.automl.training_job.AutoMLImageTrainingJobRunOp` `ModuleNotFoundError`.
+* Append `tune-type` to existing labels when uploading models tuned by `preview.llm.rlhf_pipeline` instead of overriding them.
+* Use `llama-2-7b` for the base reward model when tuning `llama-2-13b` with the `preview.llm.rlhf_pipeline`
+* Apply latest GCPC image vulnerability resolutions (base OS and software updates).
 
 ## Release 2.6.0
 * Bump supported KFP versions to kfp>=2.0.0b10,<=2.4.0

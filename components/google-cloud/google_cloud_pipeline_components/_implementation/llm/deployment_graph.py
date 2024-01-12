@@ -61,10 +61,14 @@ def pipeline(
       upload_location=upload_location
   ).set_display_name('Resolve Regional Endpoint')
 
-  display_name = function_based.resolve_model_display_name(
-      large_model_reference=large_model_reference,
-      model_display_name=model_display_name,
-  ).set_display_name('Resolve Model Display Name')
+  display_name = (
+      function_based.resolve_model_display_name(
+          large_model_reference=large_model_reference,
+          model_display_name=model_display_name,
+      )
+      .set_caching_options(False)
+      .set_display_name('Resolve Model Display Name')
+  )
 
   reference_model_metadata = function_based.resolve_reference_model_metadata(
       large_model_reference=large_model_reference,
@@ -81,7 +85,7 @@ def pipeline(
       regional_endpoint=regional_endpoint.output,
       artifact_uri=adapter_artifact.output,
       model_display_name=display_name.output,
-      model_reference_name='text-bison@001',
+      model_reference_name=large_model_reference,
       upload_model=upload_model.output,
       tune_type='rlhf',
   ).set_display_name('Upload Model')
