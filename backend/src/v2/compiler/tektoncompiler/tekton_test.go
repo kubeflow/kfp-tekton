@@ -51,9 +51,9 @@ func Test_tekton_compiler(t *testing.T) {
 			tektonYAMLPath:   "testdata/importer.yaml",
 		},
 		{
-			jobPath:          "../testdata/importer.json",
-			platformSpecPath: "",
-			tektonYAMLPath:   "testdata/importer.yaml",
+			jobPath:          "../testdata/hello_world.json",
+			platformSpecPath: "../testdata/create_pod_metadata.json",
+			tektonYAMLPath:   "testdata/pod_metadata.yaml",
 		},
 	}
 	for _, tt := range tests {
