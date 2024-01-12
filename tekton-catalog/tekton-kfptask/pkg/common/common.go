@@ -295,6 +295,10 @@ func ParseParams(run *tektonv1beta1.CustomRun) (*driverOptions, *apis.FieldError
 	return opts, nil
 }
 
+func GetKubernetesExecutorConfig(options *driverOptions) *kubernetesplatform.KubernetesExecutorConfig {
+	return options.options.KubernetesExecutorConfig
+}
+
 func prettyPrint(jsonStr string) string {
 	var prettyJSON bytes.Buffer
 	err := json.Indent(&prettyJSON, []byte(jsonStr), "", "  ")

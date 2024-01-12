@@ -27,7 +27,6 @@ import (
 	kfptaskClient "github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/client/clientset/versioned"
 	kfptaskListers "github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/client/listers/kfptask/v1alpha1"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/common"
-	"github.com/kubeflow/pipelines/backend/src/v2/driver"
 	"github.com/kubeflow/pipelines/kubernetes_platform/go/kubernetesplatform"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
@@ -137,13 +136,13 @@ var annotationToDrop = map[string]string{
 }
 
 // transite to next state based on current state
-func (kts *kfptaskFS) next(executionID string, executorInput string, podSpecPatch string, options driver.Options) error {
+func (kts *kfptaskFS) next(executionID string, executorInput string, podSpecPatch string, executorConfig *kubernetesplatform.KubernetesExecutorConfig) error {
 	kts.logger.Infof("kts state is %s", kts.state)
 	switch kts.state {
 	case StateInit:
 		// create the corresponding TaskRun CRD and start the task
 		// compose TaskRun
-		tr, err := kts.constructTaskRun(executionID, executorInput, podSpecPatch, options)
+		tr, err := kts.constructTaskRun(executionID, executorInput, podSpecPatch, executorConfig)
 		if err != nil {
 			kts.logger.Infof("Failed to construct a TaskRun:%v", err)
 			kts.run.Status.MarkCustomRunFailed(kfptaskv1alpha1.KfpTaskRunReasonInternalError.String(), "Failed to construct a TaskRun: %v", err)
@@ -238,7 +237,7 @@ func extendMetadataMap(
 	return lowPriorityMap
 }
 
-func (kts *kfptaskFS) constructTaskRun(executionID string, executorInput string, podSpecPatch string, options driver.Options) (*tektonv1.TaskRun, error) {
+func (kts *kfptaskFS) constructTaskRun(executionID string, executorInput string, podSpecPatch string, executorConfig *kubernetesplatform.KubernetesExecutorConfig) (*tektonv1.TaskRun, error) {
 	ktSpec, err := kts.reconciler.getKfpTaskSpec(kts.ctx, kts.run)
 	if err != nil {
 		return nil, err
@@ -277,8 +276,8 @@ func (kts *kfptaskFS) constructTaskRun(executionID string, executorInput string,
 		},
 	}
 
-	if options.KubernetesExecutorConfig != nil {
-		extendPodMetadata(&tr.ObjectMeta, options.KubernetesExecutorConfig)
+	if executorConfig != nil {
+		extendPodMetadata(&tr.ObjectMeta, executorConfig)
 	}
 
 	if podSpecPatch != "" {
@@ -358,7 +357,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.Custo
 		return nil
 	}
 	if ktstate.isRunning() {
-		return ktstate.next("", "", "")
+		return ktstate.next("", "", "", nil)
 	}
 	options, err := common.ParseParams(run)
 	if err != nil {
@@ -367,6 +366,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.Custo
 			"Run can't be run because it has an invalid param - %v", err)
 		return nil
 	}
+	executorConfig := common.GetKubernetesExecutorConfig(options)
 
 	runResults, runTask, executionID, executorInput, podSpecPatch, driverErr := common.ExecDriver(ctx, options)
 	if driverErr != nil {
@@ -387,7 +387,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.Custo
 		return nil
 	}
 
-	return ktstate.next(executionID, executorInput, podSpecPatch, options)
+	return ktstate.next(executionID, executorInput, podSpecPatch, executorConfig)
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, run *tektonv1beta1.CustomRun) reconciler.Event {
