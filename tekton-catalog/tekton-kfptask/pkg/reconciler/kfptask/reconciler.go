@@ -27,6 +27,8 @@ import (
 	kfptaskClient "github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/client/clientset/versioned"
 	kfptaskListers "github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/client/listers/kfptask/v1alpha1"
 	"github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask/pkg/common"
+	"github.com/kubeflow/pipelines/backend/src/v2/driver"
+	"github.com/kubeflow/pipelines/kubernetes_platform/go/kubernetesplatform"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
 	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
@@ -135,13 +137,13 @@ var annotationToDrop = map[string]string{
 }
 
 // transite to next state based on current state
-func (kts *kfptaskFS) next(executionID string, executorInput string, podSpecPatch string) error {
+func (kts *kfptaskFS) next(executionID string, executorInput string, podSpecPatch string, options driver.Options) error {
 	kts.logger.Infof("kts state is %s", kts.state)
 	switch kts.state {
 	case StateInit:
 		// create the corresponding TaskRun CRD and start the task
 		// compose TaskRun
-		tr, err := kts.constructTaskRun(executionID, executorInput, podSpecPatch)
+		tr, err := kts.constructTaskRun(executionID, executorInput, podSpecPatch, options)
 		if err != nil {
 			kts.logger.Infof("Failed to construct a TaskRun:%v", err)
 			kts.run.Status.MarkCustomRunFailed(kfptaskv1alpha1.KfpTaskRunReasonInternalError.String(), "Failed to construct a TaskRun: %v", err)
@@ -196,7 +198,47 @@ func (kts *kfptaskFS) next(executionID string, executorInput string, podSpecPatc
 	return nil
 }
 
-func (kts *kfptaskFS) constructTaskRun(executionID string, executorInput string, podSpecPatch string) (*tektonv1.TaskRun, error) {
+// Extends the PodMetadata to include Kubernetes-specific executor config.
+// Although the current podMetadata object is always empty, this function
+// doesn't overwrite the existing podMetadata because for security reasons
+// the existing podMetadata should have higher privilege than the user definition.
+func extendPodMetadata(
+	podMetadata *metav1.ObjectMeta,
+	kubernetesExecutorConfig *kubernetesplatform.KubernetesExecutorConfig,
+) {
+	// Get pod metadata information
+	if kubernetesExecutorConfig.GetPodMetadata() != nil {
+		if kubernetesExecutorConfig.GetPodMetadata().GetLabels() != nil {
+			if podMetadata.Labels == nil {
+				podMetadata.Labels = kubernetesExecutorConfig.GetPodMetadata().GetLabels()
+			} else {
+				podMetadata.Labels = extendMetadataMap(podMetadata.Labels, kubernetesExecutorConfig.GetPodMetadata().GetLabels())
+			}
+		}
+		if kubernetesExecutorConfig.GetPodMetadata().GetAnnotations() != nil {
+			if podMetadata.Annotations == nil {
+				podMetadata.Annotations = kubernetesExecutorConfig.GetPodMetadata().GetAnnotations()
+			} else {
+				podMetadata.Annotations = extendMetadataMap(podMetadata.Annotations, kubernetesExecutorConfig.GetPodMetadata().GetAnnotations())
+			}
+		}
+	}
+}
+
+// Extends metadata map values, highPriorityMap should overwrites lowPriorityMap values
+// The original Map inputs should have higher priority since its defined by admin
+// TODO: Use maps.Copy after moving to go 1.21+
+func extendMetadataMap(
+	highPriorityMap map[string]string,
+	lowPriorityMap map[string]string,
+) map[string]string {
+	for k, v := range highPriorityMap {
+		lowPriorityMap[k] = v
+	}
+	return lowPriorityMap
+}
+
+func (kts *kfptaskFS) constructTaskRun(executionID string, executorInput string, podSpecPatch string, options driver.Options) (*tektonv1.TaskRun, error) {
 	ktSpec, err := kts.reconciler.getKfpTaskSpec(kts.ctx, kts.run)
 	if err != nil {
 		return nil, err
@@ -233,6 +275,10 @@ func (kts *kfptaskFS) constructTaskRun(executionID string, executorInput string,
 			ServiceAccountName: kts.run.Spec.ServiceAccountName,
 			TaskSpec:           ktSpec.TaskSpec,
 		},
+	}
+
+	if options.KubernetesExecutorConfig != nil {
+		extendPodMetadata(&tr.ObjectMeta, options.KubernetesExecutorConfig)
 	}
 
 	if podSpecPatch != "" {
@@ -341,7 +387,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, run *tektonv1beta1.Custo
 		return nil
 	}
 
-	return ktstate.next(executionID, executorInput, podSpecPatch)
+	return ktstate.next(executionID, executorInput, podSpecPatch, options)
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, run *tektonv1beta1.CustomRun) reconciler.Event {

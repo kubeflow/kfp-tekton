@@ -5,7 +5,7 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/kubeflow/pipelines v0.0.0-20231027040853-58ce09e07d03
 	github.com/kubeflow/pipelines/api v0.0.0-20231027040853-58ce09e07d03
-	github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20231027040853-58ce09e07d03
+	github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20240111221413-aac4408237df
 	github.com/kubeflow/pipelines/third_party/ml-metadata v0.0.0-20231027040853-58ce09e07d03
 	github.com/stretchr/testify v1.8.4
 	github.com/tektoncd/pipeline v0.53.2
