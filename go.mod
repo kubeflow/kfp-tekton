@@ -54,6 +54,10 @@ replace (
 	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.4
 	go.opencensus.io => go.opencensus.io v0.22.5
 	gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	k8s.io/api => k8s.io/api v0.26.7
+	k8s.io/apimachinery => k8s.io/apimachinery v0.26.7
+	k8s.io/client-go => k8s.io/client-go v0.26.7
+	k8s.io/code-generator => k8s.io/code-generator v0.26.7
 )
 
 go 1.13
