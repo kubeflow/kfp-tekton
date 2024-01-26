@@ -584,8 +584,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
-    version: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
+    version: "v0.56.0"
 spec:
   group: tekton.dev
   preserveUnknownFields: false
@@ -647,8 +647,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
-    version: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
+    version: "v0.56.0"
 spec:
   group: tekton.dev
   preserveUnknownFields: false
@@ -715,8 +715,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
-    version: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
+    version: "v0.56.0"
 spec:
   group: tekton.dev
   preserveUnknownFields: false
@@ -794,8 +794,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
-    version: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
+    version: "v0.56.0"
 spec:
   group: tekton.dev
   preserveUnknownFields: false
@@ -1007,8 +1007,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
-    version: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
+    version: "v0.56.0"
 spec:
   group: tekton.dev
   preserveUnknownFields: false
@@ -1062,8 +1062,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
-    version: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
+    version: "v0.56.0"
 spec:
   group: tekton.dev
   preserveUnknownFields: false
@@ -1144,8 +1144,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
-    version: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
+    version: "v0.56.0"
 spec:
   group: tekton.dev
   preserveUnknownFields: false
@@ -1254,8 +1254,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
-    version: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
+    version: "v0.56.0"
 spec:
   group: tekton.dev
   versions:
@@ -1306,7 +1306,7 @@ metadata:
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
 # The data is populated at install time.
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -1317,7 +1317,7 @@ metadata:
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
 webhooks:
   - admissionReviewVersions: ["v1"]
     clientConfig:
@@ -1336,7 +1336,7 @@ metadata:
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
 webhooks:
   - admissionReviewVersions: ["v1"]
     clientConfig:
@@ -1355,7 +1355,7 @@ metadata:
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
 webhooks:
   - admissionReviewVersions: ["v1"]
     clientConfig:
@@ -1543,6 +1543,59 @@ data:
     # no default-resolver-type is specified by default
     default-resolver-type:
 
+    # default-container-resource-requirements allow users to update default resource requirements
+    # to a init-containers and containers of a pods create by the controller
+    # Onet: All the resource requirements are applied to init-containers and containers
+    # only if the existing resource requirements are empty.
+    # default-container-resource-requirements: |
+    #   place-scripts: # updates resource requirements of a 'place-scripts' container
+    #     requests:
+    #       memory: "64Mi"
+    #       cpu: "250m"
+    #     limits:
+    #       memory: "128Mi"
+    #       cpu: "500m"
+    #
+    #   prepare: # updates resource requirements of a 'prepare' container
+    #     requests:
+    #       memory: "64Mi"
+    #       cpu: "250m"
+    #     limits:
+    #       memory: "256Mi"
+    #       cpu: "500m"
+    #
+    #   working-dir-initializer: # updates resource requirements of a 'working-dir-initializer' container
+    #     requests:
+    #       memory: "64Mi"
+    #       cpu: "250m"
+    #     limits:
+    #       memory: "512Mi"
+    #       cpu: "500m"
+    #
+    #   prefix-scripts: # updates resource requirements of containers which starts with 'scripts-'
+    #     requests:
+    #       memory: "64Mi"
+    #       cpu: "250m"
+    #     limits:
+    #       memory: "128Mi"
+    #       cpu: "500m"
+    #
+    #   prefix-sidecar-scripts: # updates resource requirements of containers which starts with 'sidecar-scripts-'
+    #     requests:
+    #       memory: "64Mi"
+    #       cpu: "250m"
+    #     limits:
+    #       memory: "128Mi"
+    #       cpu: "500m"
+    #
+    #   default: # updates resource requirements of init-containers and containers which has empty resource resource requirements
+    #     requests:
+    #       memory: "64Mi"
+    #       cpu: "250m"
+    #     limits:
+    #       memory: "256Mi"
+    #       cpu: "500m"
+
 ---
 # Copyright 2023 The Tekton Authors
 #
@@ -1723,6 +1776,8 @@ data:
   # Setting this flag to "true" will enable the use of StepActions in Steps
   # This feature is in preview mode and not implemented yet. Please check #7259 for updates.
   enable-step-actions: "false"
+  # Setting this flag to "true" will enable the built-in param input validation via param enum.
+  enable-param-enum: "false"
 
 ---
 # Copyright 2021 The Tekton Authors
@@ -1753,7 +1808,7 @@ data:
   # this ConfigMap such that even if we don't have access to
   # other resources in the namespace we still can have access to
   # this ConfigMap.
-  version: "v0.53.2"
+  version: "v0.56.0"
 
 ---
 # Copyright 2020 Tekton Authors LLC
@@ -2156,6 +2211,8 @@ data:
     # API endpoint to send the traces to
     # (optional): The default value is given below
     endpoint: "http://jaeger-collector.jaeger.svc.cluster.local:14268/api/traces"
+    # (optional) Name of the k8s secret which contains basic auth credentials
+    credentialsSecret: "jaeger-creds"
 
 ---
 # Copyright 2019 The Tekton Authors
@@ -2181,12 +2238,12 @@ metadata:
     app.kubernetes.io/name: controller
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "v0.53.2"
+    app.kubernetes.io/version: "v0.56.0"
     app.kubernetes.io/part-of: tekton-pipelines
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
     # labels below are related to istio and should not be used for resource lookup
-    version: "v0.53.2"
+    version: "v0.56.0"
 spec:
   replicas: 1
   selector:
@@ -2201,13 +2258,13 @@ spec:
         app.kubernetes.io/name: controller
         app.kubernetes.io/component: controller
         app.kubernetes.io/instance: default
-        app.kubernetes.io/version: "v0.53.2"
+        app.kubernetes.io/version: "v0.56.0"
         app.kubernetes.io/part-of: tekton-pipelines
         # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-        pipeline.tekton.dev/release: "v0.53.2"
+        pipeline.tekton.dev/release: "v0.56.0"
         # labels below are related to istio and should not be used for resource lookup
         app: tekton-pipelines-controller
-        version: "v0.53.2"
+        version: "v0.56.0"
     spec:
       affinity:
         nodeAffinity:
@@ -2221,11 +2278,11 @@ spec:
       serviceAccountName: tekton-pipelines-controller
       containers:
         - name: tekton-pipelines-controller
-          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/controller:v0.53.2@sha256:2cab05747826e7c32e2c588f0fefd354e03f643bd33dbe20533eada00562e6b1
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/controller:v0.56.0@sha256:fc5669e1bbabbf24b0ee4591ff20793643d778942e91ae52b3f7cca26d81a99b
           args: [
             # These images are built on-demand by `ko resolve` and are replaced
             # by image references by digest.
-            "-entrypoint-image", "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint:v0.53.2@sha256:7a4269475491e3e9b70e173de6871596e63a9eefd792f2127ca7004145915a76", "-nop-image", "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/nop:v0.53.2@sha256:1793eb2b13d86e084d603ec174904176e5e68b7161be9ed66786deda8f728f30", "-sidecarlogresults-image", "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/sidecarlogresults:v0.53.2@sha256:cf55af7c850b6f6b83d7565b728969cc6cf548ae0c72abf7261c42ce07eefe2d", "-workingdirinit-image", "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/workingdirinit:v0.53.2@sha256:5c0b96d1f1ac9a5c1d8fa50ba07a1174812190707c4abb939b6c41b0b8e72093",
+            "-entrypoint-image", "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint:v0.56.0@sha256:381ca58f0f911b6954530ea820bdda12850e535db9c6a85a17a02e3dd49345fb", "-nop-image", "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/nop:v0.56.0@sha256:4e627be53f78f30f73084ea0695d97397930d6f12d4cfab28d97b1aa57842881", "-sidecarlogresults-image", "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/sidecarlogresults:v0.56.0@sha256:4db16701d6e54d80cbb7b51e021d3f5698196d08d2f1ff33728154807ef1fe86", "-workingdirinit-image", "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/workingdirinit:v0.56.0@sha256:c488368eff45a745dd58e65f526d746abcad431796bb0e719ecf2d5f71491692",
             # The shell image must allow root in order to create directories and copy files to PVCs.
             # cgr.dev/chainguard/busybox as of April 14 2022
             # image shall not contains tag, so it will be supported on a runtime like cri-o
@@ -2264,13 +2321,6 @@ spec:
               value: /etc/ssl/certs
             - name: METRICS_DOMAIN
               value: tekton.dev/pipeline
-              # The following variables can be uncommented with correct values to enable Jaeger tracing
-              #- name: OTEL_EXPORTER_JAEGER_ENDPOINT
-              #  value: http://jaeger-collector.jaeger:14268/api/traces
-              #- name: OTEL_EXPORTER_JAEGER_USER
-              #  value: username
-              #- name: OTEL_EXPORTER_JAEGER_PASSWORD
-              #  value: password
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -2320,13 +2370,13 @@ metadata:
     app.kubernetes.io/name: controller
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "v0.53.2"
+    app.kubernetes.io/version: "v0.56.0"
     app.kubernetes.io/part-of: tekton-pipelines
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
     # labels below are related to istio and should not be used for resource lookup
     app: tekton-pipelines-controller
-    version: "v0.53.2"
+    version: "v0.56.0"
   name: tekton-pipelines-controller
   namespace: tekton-pipelines
 spec:
@@ -2370,12 +2420,12 @@ metadata:
     app.kubernetes.io/name: events
     app.kubernetes.io/component: events
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "v0.53.2"
+    app.kubernetes.io/version: "v0.56.0"
     app.kubernetes.io/part-of: tekton-pipelines
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
     # labels below are related to istio and should not be used for resource lookup
-    version: "v0.53.2"
+    version: "v0.56.0"
 spec:
   replicas: 1
   selector:
@@ -2390,13 +2440,13 @@ spec:
         app.kubernetes.io/name: events
         app.kubernetes.io/component: events
         app.kubernetes.io/instance: default
-        app.kubernetes.io/version: "v0.53.2"
+        app.kubernetes.io/version: "v0.56.0"
         app.kubernetes.io/part-of: tekton-pipelines
         # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-        pipeline.tekton.dev/release: "v0.53.2"
+        pipeline.tekton.dev/release: "v0.56.0"
         # labels below are related to istio and should not be used for resource lookup
         app: tekton-events-controller
-        version: "v0.53.2"
+        version: "v0.56.0"
     spec:
       affinity:
         nodeAffinity:
@@ -2410,7 +2460,7 @@ spec:
       serviceAccountName: tekton-events-controller
       containers:
         - name: tekton-events-controller
-          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/events:v0.53.2@sha256:0cf6f0be5319efdd8909ed8f987837d89146fd0632a744bf6d54bf83e5b13ca0
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/events:v0.56.0@sha256:c7fe97153fc32ea3eae343bcaf96761c9b0d80c8098ee35922550f0caf6887e0
           args: []
           volumeMounts:
             - name: config-logging
@@ -2486,13 +2536,13 @@ metadata:
     app.kubernetes.io/name: events
     app.kubernetes.io/component: events
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "v0.53.2"
+    app.kubernetes.io/version: "v0.56.0"
     app.kubernetes.io/part-of: tekton-pipelines
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
     # labels below are related to istio and should not be used for resource lookup
     app: tekton-events-controller
-    version: "v0.53.2"
+    version: "v0.56.0"
   name: tekton-events-controller
   namespace: tekton-pipelines
 spec:
@@ -2722,8 +2772,6 @@ metadata:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: tekton-pipelines
 data:
-  # the default service account name to use for bundle requests.
-  default-service-account: "default"
   # The default layer kind in the bundle image.
   default-kind: "task"
 
@@ -3013,6 +3061,34 @@ data:
   default-org: ""
 
 ---
+# Copyright 2023 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: http-resolver-config
+  namespace: tekton-pipelines-resolvers
+  labels:
+    app.kubernetes.io/component: resolvers
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: tekton-pipelines
+data:
+  # The maximum amount of time the http resolver will wait for a response from the server.
+  fetch-timeout: "1m"
+
+---
 # Copyright 2022 The Tekton Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -3071,12 +3147,12 @@ metadata:
     app.kubernetes.io/name: resolvers
     app.kubernetes.io/component: resolvers
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "v0.53.2"
+    app.kubernetes.io/version: "v0.56.0"
     app.kubernetes.io/part-of: tekton-pipelines
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
     # labels below are related to istio and should not be used for resource lookup
-    version: "v0.53.2"
+    version: "v0.56.0"
 spec:
   replicas: 1
   selector:
@@ -3091,13 +3167,13 @@ spec:
         app.kubernetes.io/name: resolvers
         app.kubernetes.io/component: resolvers
         app.kubernetes.io/instance: default
-        app.kubernetes.io/version: "v0.53.2"
+        app.kubernetes.io/version: "v0.56.0"
         app.kubernetes.io/part-of: tekton-pipelines
         # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-        pipeline.tekton.dev/release: "v0.53.2"
+        pipeline.tekton.dev/release: "v0.56.0"
         # labels below are related to istio and should not be used for resource lookup
         app: tekton-pipelines-resolvers
-        version: "v0.53.2"
+        version: "v0.56.0"
     spec:
       affinity:
         podAntiAffinity:
@@ -3114,7 +3190,7 @@ spec:
       serviceAccountName: tekton-pipelines-resolvers
       containers:
         - name: controller
-          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/resolvers:v0.53.2@sha256:6578d145acd9cd288e501023429439334de15de8bd77af132c57a1d5f982e940
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/resolvers:v0.56.0@sha256:8c0598a04420caa0ee3aeb6fef7521f93f4c41f7308ccb0c616167dc1d5fa00a
           resources:
             requests:
               cpu: 100m
@@ -3186,13 +3262,13 @@ metadata:
     app.kubernetes.io/name: resolvers
     app.kubernetes.io/component: resolvers
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "v0.53.2"
+    app.kubernetes.io/version: "v0.56.0"
     app.kubernetes.io/part-of: tekton-pipelines
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
     # labels below are related to istio and should not be used for resource lookup
     app: tekton-pipelines-remote-resolvers
-    version: "v0.53.2"
+    version: "v0.56.0"
   name: tekton-pipelines-remote-resolvers
   namespace: tekton-pipelines-resolvers
 spec:
@@ -3236,12 +3312,12 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "v0.53.2"
+    app.kubernetes.io/version: "v0.56.0"
     app.kubernetes.io/part-of: tekton-pipelines
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
     # labels below are related to istio and should not be used for resource lookup
-    version: "v0.53.2"
+    version: "v0.56.0"
 spec:
   minReplicas: 1
   maxReplicas: 5
@@ -3284,12 +3360,12 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "v0.53.2"
+    app.kubernetes.io/version: "v0.56.0"
     app.kubernetes.io/part-of: tekton-pipelines
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
     # labels below are related to istio and should not be used for resource lookup
-    version: "v0.53.2"
+    version: "v0.56.0"
 spec:
   selector:
     matchLabels:
@@ -3303,13 +3379,13 @@ spec:
         app.kubernetes.io/name: webhook
         app.kubernetes.io/component: webhook
         app.kubernetes.io/instance: default
-        app.kubernetes.io/version: "v0.53.2"
+        app.kubernetes.io/version: "v0.56.0"
         app.kubernetes.io/part-of: tekton-pipelines
         # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-        pipeline.tekton.dev/release: "v0.53.2"
+        pipeline.tekton.dev/release: "v0.56.0"
         # labels below are related to istio and should not be used for resource lookup
         app: tekton-pipelines-webhook
-        version: "v0.53.2"
+        version: "v0.56.0"
     spec:
       affinity:
         nodeAffinity:
@@ -3336,7 +3412,7 @@ spec:
         - name: webhook
           # This is the Go import path for the binary that is containerized
           # and substituted here.
-          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/webhook:v0.53.2@sha256:1e8f8be3b51be378747b4589dde970582f50e1e69f59527f0a9aa7a75c5833e3
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/webhook:v0.56.0@sha256:99824836bb47c1d9e21efdeff56e02b9426fe2323a22625b7af4f66a4028a5b4
           # Resource request required for autoscaler to take any action for a metric
           resources:
             requests:
@@ -3430,13 +3506,13 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/component: webhook
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "v0.53.2"
+    app.kubernetes.io/version: "v0.56.0"
     app.kubernetes.io/part-of: tekton-pipelines
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "v0.53.2"
+    pipeline.tekton.dev/release: "v0.56.0"
     # labels below are related to istio and should not be used for resource lookup
     app: tekton-pipelines-webhook
-    version: "v0.53.2"
+    version: "v0.56.0"
   name: tekton-pipelines-webhook
   namespace: tekton-pipelines
 spec:

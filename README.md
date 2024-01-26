@@ -14,7 +14,7 @@ For more details about the project please follow this detailed [blog post](https
 ## Architecture
 
 We are currently using [Kubeflow Pipelines 1.8.4](https://github.com/kubeflow/pipelines/releases/tag/1.8.4) and
-[Tekton >= 0.53.2](https://github.com/tektoncd/pipeline/releases/tag/v0.53.2)
+[Tekton >= 0.56.0](https://github.com/tektoncd/pipeline/releases/tag/v0.56.0)
 in the master branch for this project.
 
 For [Kubeflow Pipelines 2.0.5](https://github.com/kubeflow/pipelines/releases/tag/2.0.5) and
