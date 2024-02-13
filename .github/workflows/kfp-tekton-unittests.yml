@@ -9,7 +9,6 @@ on:
 
 env:
   GITHUB_ACTION: "true"
-  SETUPTOOLS_USE_DISTUTILS: "stdlib"
 
 jobs:
   python-unittest:
@@ -23,13 +22,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install setuptools
-        env:
-          SETUPTOOLS_USE_DISTUTILS: ""
-        run: python -m pip install "setuptools>=69.1"
       - name: Install dependencies
-        env:
-          SETUPTOOLS_USE_DISTUTILS: ""
         run: python -m pip install -e sdk/python
       - name: Unit Tests
         run: VENV=$VIRTUAL_ENV make ci_unit_test
