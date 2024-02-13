@@ -61,7 +61,8 @@ logger.setLevel(logging.INFO)
 REQUIRES = [
     "kfp>=1.8.10,<1.8.23",
     "kfp-tekton-server-api==1.8.0rc8",
-    "PyYAML>=6,<7"
+    "PyYAML>=6,<7",
+    "setuptools>=68.2.2"
 ]
 
 TESTS_REQUIRE = [
