@@ -24,7 +24,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        run: SETUPTOOLS_USE_DISTUTILS="" python -m pip install -e sdk/python
+        env:
+          SETUPTOOLS_USE_DISTUTILS: ""
+        run: python -m pip install -e sdk/python
       - name: Unit Tests
         run: VENV=$VIRTUAL_ENV make ci_unit_test
   validate-testdata:
