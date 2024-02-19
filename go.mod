@@ -32,7 +32,7 @@ require (
 	github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-exithandler v0.0.0-20231127195001-a75d4b3711ff
 	github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask v0.0.0-20231127195001-a75d4b3711ff
 	github.com/kubeflow/pipelines/api v0.0.0-20231027040853-58ce09e07d03
-	github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20240111221413-aac4408237df
+	github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20240207171236-f51dc39614e4
 	github.com/kubeflow/pipelines/third_party/ml-metadata v0.0.0-20230810215105-e1f0c010f800
 	github.com/lestrrat-go/strftime v1.0.4
 	github.com/mattn/go-sqlite3 v1.14.16
