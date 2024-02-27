@@ -16,6 +16,7 @@
 import os
 import tempfile
 import time
+import warnings
 
 import datetime
 from typing import Mapping, Callable, Optional
@@ -27,6 +28,7 @@ from kfp_tekton_server_api import ApiException
 
 from .compiler import TektonCompiler
 from .compiler.pipeline_utils import TektonPipelineConf
+from kfp._auth import get_auth_token, get_gcp_access_token
 
 import json
 import logging
@@ -106,7 +108,8 @@ class TektonClient(kfp.Client):
                  ssl_ca_cert=None,
                  kube_context=None,
                  credentials=None,
-                 ui_host=None):
+                 ui_host=None,
+                 verify_ssl=None):
         """Create a new instance of kfp client."""
         host = host or os.environ.get(KF_PIPELINES_ENDPOINT_ENV)
         self._uihost = os.environ.get(KF_PIPELINES_UI_ENDPOINT_ENV, ui_host or
@@ -120,7 +123,7 @@ class TektonClient(kfp.Client):
 
         config = self._load_config(host, client_id, namespace, other_client_id,
                                    other_client_secret, existing_token, proxy,
-                                   ssl_ca_cert, kube_context, credentials)
+                                   ssl_ca_cert, kube_context, credentials, verify_ssl)
         # Save the loaded API client configuration, as a reference if update is
         # needed.
         self._load_context_setting_or_default()
@@ -162,7 +165,106 @@ class TektonClient(kfp.Client):
             except FileNotFoundError:
                 logging.info(
                     'Failed to automatically set namespace.', exc_info=False)
-                
+
+    def _load_config(self, host, client_id, namespace, other_client_id,
+                     other_client_secret, existing_token, proxy, ssl_ca_cert,
+                     kube_context, credentials, verify_ssl):
+        config = kfp_server_api.configuration.Configuration()
+
+        if proxy:
+            # https://github.com/kubeflow/pipelines/blob/c6ac5e0b1fd991e19e96419f0f508ec0a4217c29/backend/api/python_http_client/kfp_server_api/rest.py#L100
+            config.proxy = proxy
+        if verify_ssl is not None:
+            config.verify_ssl = verify_ssl
+
+        if ssl_ca_cert:
+            config.ssl_ca_cert = ssl_ca_cert
+
+        host = host or ''
+
+        # Defaults to 'https' if host does not contain 'http' or 'https' protocol.
+        if host and not host.startswith('http'):
+            warnings.warn(
+                'The host %s does not contain the "http" or "https" protocol.'
+                ' Defaults to "https".' % host)
+            host = 'https://' + host
+
+        # Preprocess the host endpoint to prevent some common user mistakes.
+        if not client_id:
+            # always preserving the protocol (http://localhost requires it)
+            host = host.rstrip('/')
+
+        if host:
+            config.host = host
+
+        token = None
+
+        # "existing_token" is designed to accept token generated outside of SDK. Here is an example.
+        #
+        # https://cloud.google.com/functions/docs/securing/function-identity
+        # https://cloud.google.com/endpoints/docs/grpc/service-account-authentication
+        #
+        # import requests
+        # import kfp
+        #
+        # def get_access_token():
+        #     url = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token'
+        #     r = requests.get(url, headers={'Metadata-Flavor': 'Google'})
+        #     r.raise_for_status()
+        #     access_token = r.json()['access_token']
+        #     return access_token
+        #
+        # client = kfp.Client(host='<KFPHost>', existing_token=get_access_token())
+        #
+        if existing_token:
+            token = existing_token
+            self._is_refresh_token = False
+        elif client_id:
+            token = get_auth_token(client_id, other_client_id,
+                                   other_client_secret)
+            self._is_refresh_token = True
+        elif self._is_inverse_proxy_host(host):
+            token = get_gcp_access_token()
+            self._is_refresh_token = False
+        elif credentials:
+            config.api_key['authorization'] = 'placeholder'
+            config.api_key_prefix['authorization'] = 'Bearer'
+            config.refresh_api_key_hook = credentials.refresh_api_key_hook
+
+        if token:
+            config.api_key['authorization'] = token
+            config.api_key_prefix['authorization'] = 'Bearer'
+            return config
+
+        if host:
+            # if host is explicitly set with auth token, it's probably a port forward address.
+            return config
+
+        import kubernetes as k8s
+        in_cluster = True
+        try:
+            k8s.config.load_incluster_config()
+        except:
+            in_cluster = False
+            pass
+
+        if in_cluster:
+            config.host = TektonClient.IN_CLUSTER_DNS_NAME.format(namespace)
+            config = self._get_config_with_default_credentials(config)
+            return config
+
+        try:
+            k8s.config.load_kube_config(
+                client_configuration=config, context=kube_context)
+        except:
+            print('Failed to load kube config.')
+            return config
+
+        if config.host:
+            config.host = config.host + '/' + TektonClient.KUBE_PROXY_PATH.format(
+                namespace)
+        return config
+
     def wait_for_run_completion(self, run_id: str, timeout: int):
         """Waits for a run to complete.
 
