@@ -36,7 +36,7 @@ require (
 	github.com/blendle/zapdriver v1.3.1 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/cloudevents/sdk-go/v2 v2.14.0 // indirect
+	github.com/cloudevents/sdk-go/v2 v2.15.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
@@ -76,7 +76,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/kubeflow/pipelines v0.0.0-20231027040853-58ce09e07d03 // indirect
 	github.com/kubeflow/pipelines/api v0.0.0-20231027040853-58ce09e07d03 // indirect
-	github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20231027040853-58ce09e07d03 // indirect
+	github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20240111221413-aac4408237df // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
