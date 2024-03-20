@@ -104,7 +104,7 @@ google.golang.org/genproto/googleapis/api,https://github.com/googleapis/go-genpr
 google.golang.org/genproto/googleapis/rpc/status,https://github.com/googleapis/go-genproto/blob/8bfb1ae86b6c/googleapis/rpc/LICENSE,Apache-2.0
 google.golang.org/genproto/protobuf/field_mask,https://github.com/googleapis/go-genproto/blob/d307bd883b97/LICENSE,Apache-2.0
 google.golang.org/grpc,https://github.com/grpc/grpc-go/blob/v1.58.3/LICENSE,Apache-2.0
-google.golang.org/protobuf,https://github.com/protocolbuffers/protobuf-go/blob/v1.31.0/LICENSE,BSD-3-Clause
+google.golang.org/protobuf,https://github.com/protocolbuffers/protobuf-go/blob/v1.33.0/LICENSE,BSD-3-Clause
 gopkg.in/inf.v0,https://github.com/go-inf/inf/blob/v0.9.1/LICENSE,BSD-3-Clause
 gopkg.in/ini.v1,https://github.com/go-ini/ini/blob/v1.66.2/LICENSE,Apache-2.0
 gopkg.in/yaml.v2,https://github.com/go-yaml/yaml/blob/v2.4.0/LICENSE,Apache-2.0
