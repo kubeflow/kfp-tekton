@@ -22,19 +22,26 @@ from kfp import dsl
 
 @dsl.component(base_image=_image.GCPC_IMAGE_TAG, install_kfp_package=False)
 def resolve_machine_spec(
-    location: str,
+    accelerator_type: str = '',
     use_test_spec: bool = False,
 ) -> NamedTuple(
-    'MachineSpec', machine_type=str, accelerator_type=str, accelerator_count=int
+    'MachineSpec',
+    machine_type=str,
+    tuning_location=str,
+    accelerator_type=str,
+    accelerator_count=int,
 ):
-  """Returns machine spec to use for a given location.
+  """Returns machine spec to use for a given accelerator_type.
 
   Args:
-    location: Where the machine will run.
+    accelerator_type: One of 'TPU' or 'GPU'. If 'TPU' is specified, tuning
+      components run in europe-west4. Otherwise tuning components run in
+      us-central1 on GPUs. Default is 'GPU'.
     use_test_spec: Whether to use a lower resource machine for testing.
 
   Returns:
     Machine spec.
+    tuning_location: Where the machine will run.
 
   Raises:
     ValueError: If accelerators are requested in an unsupported location.
@@ -42,57 +49,64 @@ def resolve_machine_spec(
   outputs = NamedTuple(
       'MachineSpec',
       machine_type=str,
-      accelerator_type=str,
       accelerator_count=int,
+      tuning_location=str,
+      accelerator_type=str,
   )
-  tpu_regions = {'europe-west4'}
-  gpu_regions = {'us-central1'}
   if use_test_spec:
-    return outputs(
-        machine_type='a2-highgpu-1g',
-        accelerator_type='NVIDIA_TESLA_A100',
-        accelerator_count=1,
-    )
-  elif location in tpu_regions:
+    if accelerator_type == 'TPU':
+      return outputs(
+          machine_type='cloud-tpu',
+          accelerator_type='TPU_V3',
+          accelerator_count=32,
+          tuning_location='europe-west4',
+      )
+    else:
+      return outputs(
+          machine_type='a2-highgpu-1g',
+          accelerator_type='NVIDIA_TESLA_A100',
+          accelerator_count=1,
+          tuning_location='us-central1',
+      )
+  elif accelerator_type == 'TPU':
     return outputs(
         machine_type='cloud-tpu',
         accelerator_type='TPU_V3',
         accelerator_count=64,
+        tuning_location='europe-west4',
     )
-  elif location in gpu_regions:
+  elif accelerator_type == 'GPU':
     return outputs(
         machine_type='a2-ultragpu-8g',
         accelerator_type='NVIDIA_A100_80GB',
         accelerator_count=8,
+        tuning_location='us-central1',
     )
   raise ValueError(
-      f'Unsupported accelerator location {location}. Must be one of'
-      f' {tpu_regions | gpu_regions}.'
+      f'Unsupported accelerator type {accelerator_type}. Must be one of'
+      'TPU or GPU.'
   )
 
 
 @dsl.component(base_image=_image.GCPC_IMAGE_TAG, install_kfp_package=False)
-def resolve_image_uri(
-    image_name: str,
+def resolve_refined_image_uri(
     project: str,
     location: str,
     artifact_registry: str,
-    image_name_prefix: str,
     tag: str,
     accelerator_type: str = '',
-    accelerator_count: int = 0,
+    use_experimental_image: bool = False,
 ) -> str:
   """Generates image uri based on base image name and accelerator type.
 
   Args:
-    image_name: Base image name, e.g. ``'sft'`` or ``'reward_model'``.
     project: Project that contains the artifact registry.
     location: Region that contains the artifact registry.
     artifact_registry: Registry that contains Docker images.
-    image_name_prefix: Text to prepend to the base image name.
     tag: Image tag.
     accelerator_type: One of the supported accelerator types, e.g. ``'TPU_V3'``.
-    accelerator_count: Number of accelerators.
+    use_experimental_image: Whether to use refined experimental image. Default
+      is False.
 
   Returns:
     Docker image uri
@@ -100,41 +114,32 @@ def resolve_image_uri(
   Raises:
     ValueError: if an unsupported accelerator type is provided.
   """
-  cpu_only_images = {
-      'text_importer',
-      'text_comparison_importer',
-  }
-
-  if image_name in cpu_only_images:
-    accelerator_postfix = ''
-  elif accelerator_type == 'TPU_V3':
-    accelerator_postfix = '_tpu'
-  elif accelerator_type == 'NVIDIA_A100_80GB' and accelerator_count == 8:
-    accelerator_postfix = '_gpu_test'
+  if not accelerator_type:
+    accelerator_postfix = 'cpu'
+  elif 'TPU' in accelerator_type:
+    accelerator_postfix = 'tpu'
+  elif 'A100' in accelerator_type:
+    accelerator_postfix = 'gpu'
   else:
-    accelerator_postfix = '_gpu'
+    raise ValueError(
+        f'Unsupported accelerator type {accelerator_type}. Must a TPU, an A100'
+        'variant or empty if using a CPU-only machine.'
+    )
 
-  backup_images = {
-      'sft',
-      'reward_model',
-      'reinforcer',
-      'infer',
-      'text_importer',
-      'text_comparison_importer',
-  }
-  if image_name in backup_images and accelerator_postfix != '_gpu_test':
-    accelerator_postfix += '_backup'
-  return f'{location}-docker.pkg.dev/{project}/{artifact_registry}/{image_name_prefix}{image_name}{accelerator_postfix}:{tag}'
+  image_name_prefix = 'refined_'
+  if use_experimental_image:
+    image_name_prefix += 'experimental_'
+
+  return f'{location}-docker.pkg.dev/{project}/{artifact_registry}/{image_name_prefix}{accelerator_postfix}:{tag}'
 
 
 # Resolves image uri from the environment's private artifact registry.
 # By default this resolves an image in the vertex private registry.
-resolve_private_image_uri = functools.partial(
-    resolve_image_uri,
+resolve_private_refined_image_uri = functools.partial(
+    resolve_refined_image_uri,
     project=env.PRIVATE_ARTIFACT_REGISTRY_PROJECT,
     location=env.PRIVATE_ARTIFACT_REGISTRY_LOCATION,
     artifact_registry=env.PRIVATE_ARTIFACT_REGISTRY,
-    image_name_prefix=env.PRIVATE_IMAGE_NAME_PREFIX,
     tag=env.get_private_image_tag(),
 )
 
@@ -462,14 +467,6 @@ def value_exists(value: Optional[str] = None) -> bool:
 
 
 @dsl.component(base_image=_image.GCPC_IMAGE_TAG, install_kfp_package=False)
-def resolve_candidate_columns(
-    candidate_columns: Optional[List[str]] = None,
-) -> List[str]:
-  """Returns candidate columns provided by the user or the default: ['candidate_0', 'candidate_1']."""
-  return candidate_columns or ['candidate_0', 'candidate_1']
-
-
-@dsl.component(base_image=_image.GCPC_IMAGE_TAG, install_kfp_package=False)
 def resolve_upload_model(large_model_reference: str) -> bool:
   """Returns whether the model should be uploaded."""
   supported_models = {'BISON'}
@@ -572,31 +569,3 @@ def get_uri(artifact: dsl.Input[dsl.Artifact], is_dir: bool = False) -> str:  # 
 @dsl.component(base_image=_image.GCPC_IMAGE_TAG, install_kfp_package=False)
 def get_empty_string() -> str:
   return ''
-
-
-@dsl.component(base_image=_image.GCPC_IMAGE_TAG, install_kfp_package=False)
-def validate_rlhf_inputs(
-    large_model_reference: str,
-    eval_dataset: Optional[str] = None,
-) -> None:
-  """Checks user-provided arguments are valid for the RLHF pipeline."""
-  models_that_support_bulk_inference = {
-      't5-small',
-      't5-large',
-      't5-xl',
-      't5-xxl',
-      'llama-2-7b',
-      'llama-2-7b-chat',
-      'llama-2-13b',
-      'llama-2-13b-chat',
-  }
-  if (
-      eval_dataset
-      and large_model_reference not in models_that_support_bulk_inference
-  ):
-    raise ValueError(
-        f'eval_dataset not supported for {large_model_reference}. '
-        'Please set this value to None when tuning this model. '
-        'This model can be evaluated after tuning using Batch or Online '
-        'Prediction.'
-    )

@@ -154,9 +154,8 @@ func TestCondition(t *testing.T) {
 		name:      "errorOnTypeMismatch",
 		input:     input,
 		condition: "inputs.parameter_values['num'] == 1",
-		// Note, inputs.parameter_values['num'] is double type, but 1 is integer type.
 		// https://github.com/google/cel-spec/blob/master/doc/langdef.md#numbers
-		// in order to support JSON and match user expectation, the result is true
+		// overload double and integer is now supported, so the result is true
 		output: true,
 	}, {
 		input:     input,

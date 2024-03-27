@@ -1,8 +1,24 @@
 ## Upcoming release
+
+## Release 2.11.0
+* Fix bug in `preview.llm.rlhf_pipeline` that caused wrong output artifact to be used for inference after training.
+* Fix issue where AutoSxS was not propagating location to all sub-components.
+* Add CMEK support to `preview.llm.infer_pipeline`.
+* Use `eval_dataset` for train-time evalutation when training a reward model. Requires `eval_dataset` to contain the same fields as the [preference dataset](https://cloud.google.com/vertex-ai/docs/generative-ai/models/tune-text-models-rlhf#human-preference-dataset).
+* Update the documentation of `GetModel`.
+* Add CMEK support to `preview.model_evaluation.autosxs_pipeline`.
+* Updated component and pipeline inputs/outputs to support creating ModelEvaluations for ModelRegistry models in the AutoSxS pipeline.
+* Add DRZ-at-rest to `preview.llm.rlhf_pipeline`.
+* Apply latest GCPC image vulnerability resolutions (base OS and software updates).
+
+## Release 2.10.0
 * Fix the missing output of pipeline remote runner. `AutoMLImageTrainingJobRunOp` now passes the model artifacts correctly to downstream components.
 * Fix the metadata of Model Evaluation resource when row based metrics is disabled in `preview.model_evaluation.evaluation_llm_text_generation_pipeline`.
 * Support `Jinja2>=3.1.2,<4`.
-
+* Support custom AutoSxS tasks.
+* Bump supported KFP versions to `kfp>=2.6.0,<=2.7.0`.
+* Apply latest GCPC image vulnerability resolutions (base OS and software updates).
+* Add CMEK support to `preview.llm.rlhf_pipeline` when tuning in `us-central1` with GPUs.
 ## Release 2.9.0
 * Use `large_model_reference` for `model_reference_name` when uploading models from `preview.llm.rlhf_pipeline` instead of hardcoding value as `text-bison@001`.
 * Disable caching when resolving model display names for RLHF-tuned models so a unique name is generated on each `preview.llm.rlhf_pipeline` run.

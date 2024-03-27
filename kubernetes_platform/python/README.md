@@ -4,6 +4,7 @@ The `kfp-kubernetes` Python library enables authoring [Kubeflow pipelines](https
 
 * [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
 * [PersistentVolumeClaims](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims)
+* [ImagePullPolicy](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy)
 
 See the [`kfp-kubernetes` reference documentation](https://kfp-kubernetes.readthedocs.io/).
 
@@ -56,6 +57,44 @@ def pipeline():
                                     secret_name='my-secret',
                                     mount_path='/mnt/my_vol')
 ```
+
+### ConfigMap: As environment variable
+```python
+from kfp import dsl
+from kfp import kubernetes
+
+@dsl.component
+def print_config_map():
+    import os
+    print(os.environ['my-cm'])
+
+@dsl.pipeline
+def pipeline():
+    task = print_config_map()
+    kubernetes.use_config_map_as_env(task,
+                                 config_map_name='my-cm',
+                                 secret_key_to_env={'foo': 'CM_VAR'})
+```
+
+### ConfigMap: As mounted volume
+```python
+from kfp import dsl
+from kfp import kubernetes
+
+@dsl.component
+def print_config_map():
+    with open('/mnt/my_vol') as f:
+        print(f.read())
+
+@dsl.pipeline
+def pipeline():
+    task = print_config_map()
+    kubernetes.use_secret_as_volume(task,
+                                    config_map_name='my-cm',
+                                    mount_path='/mnt/my_vol')
+```
+
+
 
 ### PersistentVolumeClaim: Dynamically create PVC, mount, then delete
 ```python
@@ -127,4 +166,55 @@ def my_pipeline():
         annotation_key='run_id',
         annotation_value='123456',
     )
+```
+
+# Kubernetes Field: Use Kubernetes Field Path as enviornment variable
+```python
+from kfp import dsl
+from kfp import kubernetes
+
+
+@dsl.component
+def comp():
+    pass
+
+
+@dsl.pipeline
+def my_pipeline():
+    task = comp()
+    kubernetes.use_field_path_as_env(
+        task,
+        env_name='KFP_RUN_NAME',
+        field_path="metadata.annotations['pipelines.kubeflow.org/run_name']"
+    )
+```
+
+### Timeout: Set timeout in seconds defined as pod spec's activeDeadlineSeconds
+```python
+from kfp import dsl
+from kfp import kubernetes
+
+@dsl.component
+def comp():
+    pass
+
+@dsl.pipeline
+def my_pipeline():
+    task = comp()
+    kubernetes.set_timeout(task, 20)
+```
+
+### ImagePullPolicy: One of "Always" "Never", "IfNotPresent".
+```python
+from kfp import dsl
+from kfp import kubernetes
+
+@dsl.component
+def simple_task():
+    print("hello-world")
+
+@dsl.pipeline
+def pipeline():
+    task = simple_task()
+    kubernetes.set_image_pull_policy(task, "Always")
 ```

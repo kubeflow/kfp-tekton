@@ -50,6 +50,10 @@ def batch_prediction_pairwise(
     model_a_parameters: Dict[str, str] = {},
     model_b_parameters: Dict[str, str] = {},
     human_preference_column: str = '',
+    experimental_args: Dict[str, Any] = {},
+    project: str = _placeholders.PROJECT_ID_PLACEHOLDER,
+    location: str = _placeholders.LOCATION_PLACEHOLDER,
+    encryption_spec_key_name: str = '',
 ) -> dsl.ContainerSpec:  # pylint: disable=g-doc-args
   """Runs up to two LLM Batch Prediction jobs side-by-side.
 
@@ -81,6 +85,12 @@ def batch_prediction_pairwise(
       such as temperature or maximum output tokens.
     human_preference_column: The column containing ground truths. The default
       value is an empty string if not be provided by users.
+    experimental_args: Experimentally released arguments. Subject to change.
+    project: Project used to run batch prediction jobs.
+    location: Location used to run batch prediction jobs.
+    encryption_spec_key_name: Customer-managed encryption key options. If this
+      is set, then all resources created by the component will be encrypted with
+      the provided encryption key.
 
   Returns:
     preprocessed_evaluation_dataset: Dataset of the table containing the inputs
@@ -92,8 +102,8 @@ def batch_prediction_pairwise(
       metadata for the task preprocess component.
   """
   return gcpc_utils.build_serverless_customjob_container_spec(
-      project=_placeholders.PROJECT_ID_PLACEHOLDER,
-      location=_placeholders.LOCATION_PLACEHOLDER,
+      project=project,
+      location=location,
       custom_job_payload=utils.build_payload(
           display_name='batch_prediction_pairwise',
           machine_type='n1-standard-4',
@@ -108,8 +118,8 @@ def batch_prediction_pairwise(
                   "{{$.inputs.parameters['id_columns'].json_escape[0]}}"
               ),
               f'--task={task}',
-              f'--project={_placeholders.PROJECT_ID_PLACEHOLDER}',
-              f'--location={_placeholders.LOCATION_PLACEHOLDER}',
+              f'--project={project}',
+              f'--location={location}',
               f'--model_a={model_a}',
               f'--model_b={model_b}',
               (
@@ -137,13 +147,19 @@ def batch_prediction_pairwise(
                   '--model_b_parameters='
                   "{{$.inputs.parameters['model_b_parameters'].json_escape[0]}}"
               ),
+              (
+                  '--experimental_args='
+                  "{{$.inputs.parameters['experimental_args'].json_escape[0]}}"
+              ),
               f'--human_preference_column={human_preference_column}',
               f'--staging_dir={dsl.PIPELINE_ROOT_PLACEHOLDER}',
               f'--preprocessed_evaluation_dataset_uri={preprocessed_evaluation_dataset_uri}',
               f'--metadata_path={metadata}',
+              f'--kms_key_name={encryption_spec_key_name}',
               f'--gcp_resources_path={gcp_resources}',
               '--executor_input={{$.json_escape[1]}}',
           ],
+          encryption_spec_key_name=encryption_spec_key_name,
       ),
       gcp_resources=gcp_resources,
   )

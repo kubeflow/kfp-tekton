@@ -7,8 +7,10 @@
 ## Deprecations
 
 ## Bug fixes and other changes
+* Throw compilation error when trying to iterate over a single parameter with ParallelFor [\#10494](https://github.com/kubeflow/pipelines/pull/10494)
 
 ## Documentation updates
+* Make full version dropdown visible on all KFP SDK docs versions [\#10577](https://github.com/kubeflow/pipelines/pull/10577)
 
 # 2.7.0
 
