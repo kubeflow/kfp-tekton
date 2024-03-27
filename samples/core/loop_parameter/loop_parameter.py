@@ -1,4 +1,5 @@
 from kfp import compiler, dsl
+from typing import List
 
 
 @dsl.component
@@ -14,7 +15,7 @@ def concat_op(a: str, b: str) -> str:
 
 
 @dsl.component
-def generate_op() -> str:
+def generate_op() -> List[str]:
     import json
     return json.dumps([{'a': i, 'b': i * 10} for i in range(1, 5)])
 
