@@ -13,10 +13,11 @@
 # limitations under the License.
 
 from kfp import compiler, dsl
+from typing import List
 
 
 @dsl.component
-def args_generator_op() -> str:
+def args_generator_op() -> List[str]:
     return '[1.1, 1.2, 1.3]'
 
 
