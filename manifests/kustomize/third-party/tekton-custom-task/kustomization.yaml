@@ -17,16 +17,16 @@ images:
     newTag: 1.9.2
   - name: tekton-exithandler-controller
     newName: quay.io/aipipeline/tekton-exithandler-controller
-    newTag: 2.0.5
+    newTag: 2.1.0
   - name: tekton-exithandler-webhook
     newName: quay.io/aipipeline/tekton-exithandler-webhook
-    newTag: 2.0.5
+    newTag: 2.1.0
   - name: tekton-kfptask-controller
     newName: quay.io/aipipeline/tekton-kfptask-controller
-    newTag: 2.0.5
+    newTag: 2.1.0
   - name: tekton-kfptask-webhook
     newName: quay.io/aipipeline/tekton-kfptask-webhook
-    newTag: 2.0.5
+    newTag: 2.1.0
   # Deprecated controller
   # - name: kfp-v2-dev-driver-controller
   #   newName: quay.io/aipipeline/tekton-driver
