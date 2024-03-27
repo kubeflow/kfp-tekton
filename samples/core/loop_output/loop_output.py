@@ -18,7 +18,7 @@ from typing import List
 
 @dsl.component
 def args_generator_op() -> List[str]:
-    return '[1.1, 1.2, 1.3]'
+    return ['1.1', '1.2', '1.3']
 
 
 # TODO(Bobgy): how can we make this component with type float?
