@@ -50,7 +50,7 @@ def pipeline(
     project: str = _placeholders.PROJECT_ID_PLACEHOLDER,
     accelerator_type: str = 'GPU',
     location: str = _placeholders.LOCATION_PLACEHOLDER,
-    tensorboard_resource_id: Optional[str] = None,
+    tensorboard_resource_id: str = '',
     encryption_spec_key_name: str = '',
 ) -> PipelineOutput:
   # fmt: off
@@ -178,27 +178,12 @@ def pipeline(
           lora_dim=lora_dim,
           num_microbatches=num_microbatches.output,
           encryption_spec_key_name=encryption_spec_key_name,
+          tensorboard_resource_id=tensorboard_resource_id,
       )
       .set_display_name('Reward Model Trainer')
       .set_caching_options(False)
   )
 
-  has_tensorboard_id = function_based.value_exists(
-      value=tensorboard_resource_id
-  ).set_display_name('Resolve TensorBoard Resource ID')
-  with kfp.dsl.Condition(  # pytype: disable=wrong-arg-types
-      has_tensorboard_id.output == True,  # pylint: disable=singleton-comparison, g-explicit-bool-comparison
-      name='Upload Reward Model TensorBoard Metrics',
-  ):
-    _ = upload_tensorboard_metrics.upload_tensorboard_metrics(
-        tensorboard_resource_id=tensorboard_resource_id,
-        metrics_directory=reward_model.outputs['tensorboard_metrics'],
-        experiment_name=(
-            'reward-model-tuner-'
-            f'{kfp.dsl.PIPELINE_JOB_ID_PLACEHOLDER}-'
-            f'{kfp.dsl.PIPELINE_TASK_ID_PLACEHOLDER}'
-        ),
-    ).set_display_name('Reward Model TensorBoard Metrics Uploader')
   return PipelineOutput(
       reward_model_base_path=reference_model_metadata.outputs[
           'reward_model_path'

@@ -2190,8 +2190,8 @@ github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask v0.0.0-202311271950
 github.com/kubeflow/kfp-tekton/tekton-catalog/tekton-kfptask v0.0.0-20231127195001-a75d4b3711ff/go.mod h1:lAFdPugzj3bcAXyN3+8y0NByidZ88zwGxMc+gdc8cHw=
 github.com/kubeflow/pipelines/api v0.0.0-20231027040853-58ce09e07d03 h1:reL3LbkRIozBkKSUYjtQFV2kVC1R4WHG9FrTClRT1FY=
 github.com/kubeflow/pipelines/api v0.0.0-20231027040853-58ce09e07d03/go.mod h1:T7TOQB36gGe97yUdfVAnYK5uuT0+uQbLNHDUHxYkmE4=
-github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20240305195700-19a24e3e99db h1:fnuYUNy9r96oujmJaBOICcom1SUZl9CVONa8pKZAA2Q=
-github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20240305195700-19a24e3e99db/go.mod h1:CJkKr356RlpZP/gQRuHf3Myrn1qJtoUVe4EMCmtwarg=
+github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20240403164522-8b2a099e8c9f h1:O5GmJN8tALpiqL0dUo4uhOkqHG8xOkNCgT7QI9q9GnE=
+github.com/kubeflow/pipelines/kubernetes_platform v0.0.0-20240403164522-8b2a099e8c9f/go.mod h1:CJkKr356RlpZP/gQRuHf3Myrn1qJtoUVe4EMCmtwarg=
 github.com/kubeflow/pipelines/third_party/ml-metadata v0.0.0-20230810215105-e1f0c010f800 h1:YAW+X9xCW8Yq5tQaBBQaLTNU9CJj8Nr7lx1+k66ZHJ0=
 github.com/kubeflow/pipelines/third_party/ml-metadata v0.0.0-20230810215105-e1f0c010f800/go.mod h1:chIDffBaVQ/asNl1pTTdbAymYcuBKf8BR3YtSP+3FEU=
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
@@ -2766,7 +2766,6 @@ github.com/tektoncd/plumbing v0.0.0-20220817140952-3da8ce01aeeb/go.mod h1:uJBaI0
 github.com/theupdateframework/go-tuf v0.5.2/go.mod h1:SyMV5kg5n4uEclsyxXJZI2UxPFJNDc4Y+r7wv+MlvTA=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/tidwall/pretty v1.2.0 h1:RWIZEg2iJ8/g6fDDYzMpobmaoGh5OLl4AXtGUGPcqCs=
-github.com/tidwall/pretty v1.2.0/go.mod h1:ITEVvHYasfjBbM0u2Pg8T2nJnzm8xPwvNhhsoaGGjNU=
 github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399/go.mod h1:LdwHTNJT99C5fTAzDz0ud328OgXz+gierycbcIx2fRs=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
