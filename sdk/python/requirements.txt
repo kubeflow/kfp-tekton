@@ -96,7 +96,7 @@ pyasn1-modules==0.2.8
     # via google-auth
 pycparser==2.20
     # via cffi
-pydantic==1.8.2
+pydantic==1.10.13
     # via kfp
 pyparsing==2.4.7
     # via
@@ -153,7 +153,7 @@ termcolor==1.1.0
     # via fire
 typer==0.4.0
     # via kfp
-typing-extensions==3.10.0.2
+typing-extensions==4.11.0
     # via pydantic
 uritemplate==3.0.1
     # via
