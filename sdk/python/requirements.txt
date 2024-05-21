@@ -18,7 +18,7 @@ certifi==2023.7.22
     #   requests
 cffi==1.14.5
     # via google-crc32c
-chardet==4.0.0
+charset-normalizer==3.3.2
     # via requests
 click==7.1.2
     # via
@@ -116,7 +116,7 @@ pyyaml==6.0.1
     #   -r requirements.in
     #   kfp
     #   kubernetes
-requests==2.25.1
+requests==2.32.0
     # via
     #   google-api-core
     #   google-cloud-storage
