@@ -159,7 +159,7 @@ uritemplate==3.0.1
     # via
     #   google-api-python-client
     #   kfp
-urllib3==1.26.18
+urllib3==1.26.19
     # via
     #   kfp
     #   kfp-server-api
